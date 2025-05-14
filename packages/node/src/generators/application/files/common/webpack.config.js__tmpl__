@@ -1,10 +1,10 @@
-<% if (webpackPluginOptions) { %>
+<%_ if (webpackPluginOptions) { _%>
 const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
 module.exports = {
   output: {
-    path: join(__dirname, '<%= offset %><%= webpackPluginOptions.outputPath %>'),
+    path: join(__dirname, '<%= webpackPluginOptions.outputPath %>'),
   },
   plugins: [
     new NxAppWebpackPlugin({
@@ -19,7 +19,7 @@ module.exports = {
     })
   ],
 };
-<% } else { %>
+<%_ } else { _%>
 const { composePlugins, withNx} = require('@nx/webpack');
 
 // Nx plugins for webpack.
@@ -33,4 +33,4 @@ module.exports = composePlugins(
     return config;
   }
 );
-<% } %>
+<%_ } _%>

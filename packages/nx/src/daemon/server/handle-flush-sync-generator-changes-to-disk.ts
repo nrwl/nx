@@ -4,10 +4,10 @@ import { flushSyncGeneratorChangesToDisk } from './sync-generators';
 export async function handleFlushSyncGeneratorChangesToDisk(
   generators: string[]
 ): Promise<HandlerResult> {
-  await flushSyncGeneratorChangesToDisk(generators);
+  const result = await flushSyncGeneratorChangesToDisk(generators);
 
   return {
-    response: '{}',
+    response: JSON.stringify(result),
     description: 'handleFlushSyncGeneratorChangesToDisk',
   };
 }

@@ -1,6 +1,5 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import { Tree } from '@nx/devkit';
 import { writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -13,27 +12,15 @@ import {
 } from '../utils/testing';
 import { angularStoriesGenerator } from './stories';
 
-// need to mock cypress otherwise it'll use the nx installed version from package.json
-//  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/cypress-version');
-// TODO(katerina): Nx 19 -> remove Cypress
-
 describe('angularStories generator: libraries', () => {
   const libName = 'test-ui-lib';
-  let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
-
-  beforeEach(() => {
-    mockedInstalledCypressVersion.mockReturnValue(10);
-  });
 
   describe('Stories for empty Angular library', () => {
     let tree: Tree;
 
     beforeEach(async () => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await generateTestLibrary(tree, { name: libName, skipFormat: true });
+      await generateTestLibrary(tree, { directory: libName, skipFormat: true });
     });
 
     it('should not fail on empty NgModule declarations', () => {
@@ -64,8 +51,7 @@ describe('angularStories generator: libraries', () => {
       // add a standalone component to the secondary entrypoint
       await componentGenerator(tree, {
         name: 'secondary-button',
-        project: libName,
-        path: `${libName}/secondary-entry-point/src/lib`,
+        path: `${libName}/secondary-entry-point/src/lib/secondary-button/secondary-button`,
         skipFormat: true,
       });
 
@@ -181,7 +167,7 @@ describe('angularStories generator: libraries', () => {
     it('should generate stories file for scam component', async () => {
       await scamGenerator(tree, {
         name: 'my-scam',
-        project: libName,
+        path: `${libName}/src/lib/my-scam/my-scam`,
         skipFormat: true,
       });
 
@@ -195,7 +181,7 @@ describe('angularStories generator: libraries', () => {
     it('should generate stories file for inline scam component', async () => {
       await scamGenerator(tree, {
         name: 'my-scam',
-        project: libName,
+        path: `${libName}/src/lib/my-scam/my-scam`,
         inlineScam: true,
         skipFormat: true,
       });
@@ -211,7 +197,7 @@ describe('angularStories generator: libraries', () => {
       // add standalone component
       await componentGenerator(tree, {
         name: 'standalone',
-        project: libName,
+        path: `${libName}/src/lib/standalone/standalone`,
         standalone: true,
         skipFormat: true,
       });
@@ -225,8 +211,7 @@ describe('angularStories generator: libraries', () => {
       // add a standalone component to the secondary entrypoint
       await componentGenerator(tree, {
         name: 'secondary-standalone',
-        project: libName,
-        path: `${libName}/secondary-entry-point/src/lib`,
+        path: `${libName}/secondary-entry-point/src/lib/secondary-standalone/secondary-standalone`,
         standalone: true,
         skipFormat: true,
       });
@@ -268,8 +253,7 @@ describe('angularStories generator: libraries', () => {
       // add a standalone component to the secondary entrypoint
       await componentGenerator(tree, {
         name: 'secondary-button',
-        project: libName,
-        path: `${libName}/secondary-entry-point/src/lib`,
+        path: `${libName}/secondary-entry-point/src/lib/secondary-button/seconday-button`,
         skipFormat: true,
       });
 

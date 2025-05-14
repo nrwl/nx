@@ -30,27 +30,26 @@ const rollupPlugin = (matchers: RegExp[]) => ({
 
 export default defineConfig({
   root: __dirname,
-  cacheDir: '../../node_modules/.vite/<%= fileName %>',
+  cacheDir: '<%= offsetFromRoot %>node_modules/.vite/<%= projectRoot %>',
   define: {
     global: 'window',
   },
-
   resolve: {
     extensions,
     alias: {
       'react-native': 'react-native-web',
+      'react-native-svg': 'react-native-svg-web',
+      '@react-native/assets-registry/registry': 'react-native-web/dist/modules/AssetRegistry/index',
     },
   },
-
   build: {
     reportCompressedSize: true,
     commonjsOptions: { transformMixedEsModules: true },
-    outDir: '../../dist/apps/<%= fileName %>/web',
+    outDir: '<%= offsetFromRoot %>dist/<%= projectRoot %>/web',
     rollupOptions: {
       plugins: [rollupPlugin([/react-native-vector-icons/])],
     },
   },
-
   server: {
     port: 4200,
     host: 'localhost',
@@ -59,12 +58,10 @@ export default defineConfig({
       allow: ['..'],
     },
   },
-
   preview: {
     port: 4300,
     host: 'localhost',
   },
-
   optimizeDeps: {
     esbuildOptions: {
       resolveExtensions: extensions,
@@ -72,9 +69,7 @@ export default defineConfig({
       loader: { '.js': 'jsx' },
     },
   },
-
   plugins: [react(), nxViteTsPaths()],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],

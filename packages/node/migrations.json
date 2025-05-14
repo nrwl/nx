@@ -1,45 +1,31 @@
 {
-  "generators": {
-    "update-16-0-0-add-nx-packages": {
-      "cli": "nx",
-      "version": "16.0.0-beta.1",
-      "description": "Replace @nrwl/node with @nx/node",
-      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
-    },
-    "update-16-0-0-update-executor": {
-      "cli": "nx",
-      "version": "16.0.0-beta.5",
-      "description": "Replace @nrwl/node:webpack with @nx/node:webpack",
-      "implementation": "./src/migrations/update-16-0-0/update-webpack-executor"
-    },
-    "update-16-3-1-update-executor": {
-      "cli": "nx",
-      "version": "16.3.1-beta.0",
-      "description": "Replace @nrwl/node:webpack and @nx/node:webpack with @nx/webpack:webpack for all project targets",
-      "implementation": "./src/migrations/update-16-3-1/update-webpack-executor"
-    },
-    "update-16-4-0-replace-node-executor": {
-      "cli": "nx",
-      "version": "16.4.0-beta.8",
-      "description": "Replace @nx/node:node with @nx/js:node for all project targets",
-      "implementation": "./src/migrations/update-16-4-0/replace-node-executor"
-    }
-  },
+  "generators": {},
   "packageJsonUpdates": {
-    "17.3.0": {
-      "version": "17.3.0-beta.3",
+    "20.4.0": {
+      "version": "20.4.0-beta.3",
       "packages": {
-        "@types/node": {
-          "version": "18.16.9",
+        "fastify": {
+          "version": "~5.2.1",
           "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "17.3.1": {
-      "version": "17.3.1-beta.0",
-      "packages": {
-        "axios": {
-          "version": "^1.6.0",
+        },
+        "fastify-plugin": {
+          "version": "~5.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@fastify/autoload": {
+          "version": "~6.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@fastify/sensible": {
+          "version": "~6.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "express": {
+          "version": "^4.21.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/express": {
+          "version": "^4.17.21",
           "alwaysAddToPackageJson": false
         }
       }

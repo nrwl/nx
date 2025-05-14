@@ -140,7 +140,7 @@ exports[`moveProjectConfiguration should rename the project correctly except for
         "default",
         "{workspaceRoot}/.eslintrc.json",
         "{workspaceRoot}/.eslintignore",
-        "{workspaceRoot}/eslint.config.js",
+        "{workspaceRoot}/eslint.config.cjs",
       ],
       "options": {},
       "outputs": [

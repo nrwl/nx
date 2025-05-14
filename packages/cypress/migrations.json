@@ -1,94 +1,54 @@
 {
   "generators": {
-    "update-16-0-0-add-nx-packages": {
-      "cli": "nx",
-      "version": "16.0.0-beta.1",
-      "description": "Replace @nrwl/cypress with @nx/cypress",
-      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
-    },
-    "update-16-2-0-normalize-tsconfigs": {
-      "cli": "nx",
-      "version": "16.2.0-beta.0",
-      "description": "Normalize tsconfig.cy.json files to be located at '<projectRoot>/cypress/tsconfig.json'",
-      "implementation": "./src/migrations/update-16-2-0/update-cy-tsconfig"
-    },
-    "update-16-3-0-remove-old-tsconfigs": {
-      "cli": "nx",
-      "version": "16.4.0-beta.10",
-      "description": "Remove tsconfig.e2e.json and add settings to project tsconfig.json. tsConfigs executor option is now deprecated. The project level tsconfig.json file should be used instead.",
-      "implementation": "./src/migrations/update-16-4-0/tsconfig-sourcemaps"
-    },
-    "update-16-8-0-cypress-13": {
-      "cli": "nx",
-      "version": "16.8.0-beta.4",
-      "description": "Update to Cypress v13. Most noteable change is video recording is off by default. This migration will only update if the workspace is already on Cypress v12. https://docs.cypress.io/guides/references/migration-guide#Migrating-to-Cypress-130",
-      "implementation": "./src/migrations/update-16-8-0/cypress-13"
-    },
-    "update-cypress-version-13-6-6": {
-      "cli": "nx",
-      "version": "18.1.0-beta.3",
-      "description": "Update to Cypress ^13.6.6 if the workspace is using Cypress v13 to ensure workspaces don't use v13.6.5 which has an issue when verifying Cypress.",
-      "implementation": "./src/migrations/update-18-1-0/update-cypress-version-13-6-6"
-    },
     "update-19-6-0-update-ci-webserver-for-vite": {
       "cli": "nx",
       "version": "19.6.0-beta.4",
       "description": "Update ciWebServerCommand to use static serve for the application.",
       "implementation": "./src/migrations/update-19-6-0/update-ci-webserver-for-static-serve"
+    },
+    "set-inject-document-domain": {
+      "cli": "nx",
+      "version": "20.8.0-beta.0",
+      "requires": {
+        "cypress": ">=14.0.0"
+      },
+      "description": "Replaces the `experimentalSkipDomainInjection` configuration option with the new `injectDocumentDomain` configuration option.",
+      "implementation": "./src/migrations/update-20-8-0/set-inject-document-domain"
+    },
+    "remove-experimental-fetch-polyfill": {
+      "cli": "nx",
+      "version": "20.8.0-beta.0",
+      "requires": {
+        "cypress": ">=14.0.0"
+      },
+      "description": "Removes the `experimentalFetchPolyfill` configuration option.",
+      "implementation": "./src/migrations/update-20-8-0/remove-experimental-fetch-polyfill"
+    },
+    "replace-experimental-just-in-time-compile": {
+      "cli": "nx",
+      "version": "20.8.0-beta.0",
+      "requires": {
+        "cypress": ">=14.0.0"
+      },
+      "description": "Replaces the `experimentalJustInTimeCompile` configuration option with the new `justInTimeCompile` configuration option.",
+      "implementation": "./src/migrations/update-20-8-0/replace-experimental-just-in-time-compile"
+    },
+    "update-component-testing-mount-imports": {
+      "cli": "nx",
+      "version": "20.8.0-beta.0",
+      "requires": {
+        "cypress": ">=14.0.0"
+      },
+      "description": "Updates the module specifier for the Component Testing `mount` function.",
+      "implementation": "./src/migrations/update-20-8-0/update-component-testing-mount-imports"
+    },
+    "remove-tsconfig-and-copy-files-options-from-cypress-executor": {
+      "version": "21.0.0-beta.10",
+      "description": "Removes the `tsConfig` and `copyFiles` options from the `@nx/cypress:cypress` executor.",
+      "implementation": "./src/migrations/update-21-0-0/remove-tsconfig-and-copy-files-options-from-cypress-executor"
     }
   },
   "packageJsonUpdates": {
-    "16.1.0": {
-      "version": "16.1.0-beta.0",
-      "requires": {
-        "cypress": ">=12.0.0 <12.11.0"
-      },
-      "packages": {
-        "cypress": {
-          "version": "^12.11.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "16.5.0": {
-      "version": "16.5.0-beta.0",
-      "requires": {
-        "cypress": ">=12.0.0 <12.16.0"
-      },
-      "packages": {
-        "cypress": {
-          "version": "^12.16.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "16.7.0": {
-      "version": "16.7.0-beta.3",
-      "packages": {
-        "eslint-plugin-cypress": {
-          "version": "^2.13.4",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "17.2.0-beta.2": {
-      "version": "17.2.0-beta.2",
-      "packages": {
-        "vite": {
-          "version": "^5.0.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "17.3.0": {
-      "version": "17.3.0-beta.3",
-      "packages": {
-        "@types/node": {
-          "version": "18.16.9",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "19.1.0": {
       "version": "19.1.0-beta.0",
       "requires": {
@@ -113,6 +73,27 @@
       "packages": {
         "cypress": {
           "version": "^13.13.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.8.0": {
+      "version": "20.8.0-beta.0",
+      "x-prompt": "Do you want to update the Cypress version to v14?",
+      "requires": {
+        "cypress": ">=13.0.0 <14.0.0"
+      },
+      "packages": {
+        "cypress": {
+          "version": "^14.2.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@cypress/vite-dev-server": {
+          "version": "^6.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@cypress/webpack-dev-server": {
+          "version": "^4.0.2",
           "alwaysAddToPackageJson": false
         }
       }

@@ -8,7 +8,6 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'lib-my-lib',
-  standalone: true,
   imports: [CommonModule],
   templateUrl: './my-lib.component.html',
   styleUrl: './my-lib.component.css'
@@ -54,7 +53,6 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'lib-my-lib',
-  standalone: true,
   imports: [CommonModule],
   templateUrl: './my-lib.component.html',
   styleUrl: './my-lib.component.css'
@@ -106,7 +104,6 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'lib-my-lib',
-  standalone: true,
   imports: [CommonModule],
   templateUrl: './my-lib.component.html',
   styleUrl: './my-lib.component.css'
@@ -148,9 +145,8 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'lib-my-lib',
-  standalone: true,
   imports: [CommonModule],
-  template: \`<p>my-lib works!</p>\`,
+  template: \`<p>MyLib works!</p>\`,
   styles: \`\`,
   encapsulation: ViewEncapsulation.ShadowDom,
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -167,9 +163,8 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'lib-my-lib',
-  standalone: true,
   imports: [CommonModule],
-  template: \`<p>my-lib works!</p>\`,
+  template: \`<p>MyLib works!</p>\`,
   styles: \`\`
 })
 export class MyLibComponent {}
@@ -184,9 +179,8 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'lib-my-lib',
-  standalone: true,
   imports: [CommonModule],
-  template: \`<p>my-lib works!</p>\`,
+  template: \`<p>MyLib works!</p>\`,
   styles: \`\`
 })
 export class MyLibComponent {}
@@ -240,7 +234,6 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'lib-my-lib',
-  standalone: true,
   imports: [CommonModule],
   templateUrl: './my-lib.component.html',
   styleUrl: './my-lib.component.css'
@@ -354,7 +347,6 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'lib-my-lib',
-  standalone: true,
   imports: [CommonModule],
   templateUrl: './my-lib.component.html',
   styleUrl: './my-lib.component.css'
@@ -396,7 +388,6 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'lib-my-lib',
-  standalone: true,
   imports: [CommonModule],
   templateUrl: './my-lib.component.html',
   styleUrl: './my-lib.component.css'
@@ -427,6 +418,22 @@ describe('MyLibComponent', () => {
     expect(component).toBeTruthy();
   });
 });
+"
+`;
+
+exports[`lib --standalone should generate a library with a valid selector for the standalone component when library name has a slash 1`] = `"export * from './lib/auth/common/auth/common.component';"`;
+
+exports[`lib --standalone should generate a library with a valid selector for the standalone component when library name has a slash 2`] = `
+"import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'lib-auth-common',
+  imports: [CommonModule],
+  templateUrl: './common.component.html',
+  styleUrl: './common.component.css'
+})
+export class AuthCommonComponent {}
 "
 `;
 

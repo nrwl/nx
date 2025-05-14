@@ -23,32 +23,34 @@ import { updateModuleFederationE2eProject } from './lib/update-module-federation
 import { NormalizedSchema, Schema } from './schema';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { isValidVariable } from '@nx/js';
-import { moduleFederationEnhancedVersion } from '../../utils/versions';
+import {
+  moduleFederationEnhancedVersion,
+  nxVersion,
+} from '../../utils/versions';
+import { ensureRootProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { updateModuleFederationTsconfig } from './lib/update-module-federation-tsconfig';
+import { normalizeHostName } from './lib/normalize-host-name';
 
 export async function hostGenerator(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  return hostGeneratorInternal(host, {
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
-}
-
-export async function hostGeneratorInternal(
-  host: Tree,
-  schema: Schema
-): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
+  const name = await normalizeHostName(host, schema.directory, schema.name);
   const options: NormalizedSchema = {
-    ...(await normalizeOptions<Schema>(host, schema, '@nx/react:host')),
+    ...(await normalizeOptions<Schema>(host, {
+      ...schema,
+      name,
+      useProjectJson: true,
+    })),
     js: schema.js ?? false,
     typescriptConfiguration: schema.js
       ? false
       : schema.typescriptConfiguration ?? true,
     dynamic: schema.dynamic ?? false,
-    // TODO(colum): remove when MF works with Crystal
-    addPlugin: false,
+    // TODO(colum): remove when Webpack MF works with Crystal
+    addPlugin: !schema.bundler || schema.bundler === 'rspack' ? true : false,
+    bundler: schema.bundler ?? 'rspack',
   };
 
   // Check to see if remotes are provided and also check if --dynamic is provided
@@ -64,13 +66,15 @@ export async function hostGeneratorInternal(
     });
   }
 
+  await ensureRootProjectName(options, 'application');
   const initTask = await applicationGenerator(host, {
     ...options,
+    directory: options.appProjectRoot,
+    name: options.name,
     // The target use-case is loading remotes as child routes, thus always enable routing.
     routing: true,
-    // Only webpack works with module federation for now.
-    bundler: 'webpack',
     skipFormat: true,
+    useProjectJson: true,
   });
   tasks.push(initTask);
 
@@ -92,12 +96,12 @@ export async function hostGeneratorInternal(
         devServerPort: remotePort,
         ssr: options.ssr,
         skipFormat: true,
-        projectNameAndRootFormat: options.projectNameAndRootFormat,
         typescriptConfiguration: options.typescriptConfiguration,
         js: options.js,
         dynamic: options.dynamic,
-        host: options.name,
+        host: options.projectName,
         skipPackageJson: options.skipPackageJson,
+        bundler: options.bundler,
       });
       tasks.push(remoteTask);
       remotePort++;
@@ -105,16 +109,19 @@ export async function hostGeneratorInternal(
   }
 
   addModuleFederationFiles(host, options, remotesWithPorts);
-  updateModuleFederationProject(host, options);
+  updateModuleFederationProject(host, options, true);
   updateModuleFederationE2eProject(host, options);
+  updateModuleFederationTsconfig(host, options);
 
   if (options.ssr) {
-    const setupSsrTask = await setupSsrGenerator(host, {
-      project: options.projectName,
-      serverPort: options.devServerPort,
-      skipFormat: true,
-    });
-    tasks.push(setupSsrTask);
+    if (options.bundler !== 'rspack') {
+      const setupSsrTask = await setupSsrGenerator(host, {
+        project: options.projectName,
+        serverPort: options.devServerPort,
+        skipFormat: true,
+      });
+      tasks.push(setupSsrTask);
+    }
 
     const setupSsrForHostTask = await setupSsrForHost(
       host,
@@ -125,10 +132,12 @@ export async function hostGeneratorInternal(
     tasks.push(setupSsrForHostTask);
 
     const projectConfig = readProjectConfiguration(host, options.projectName);
-    projectConfig.targets.server.options.webpackConfig = joinPathFragments(
-      projectConfig.root,
-      `webpack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
-    );
+    if (options.bundler !== 'rspack') {
+      projectConfig.targets.server.options.webpackConfig = joinPathFragments(
+        projectConfig.root,
+        `webpack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
+      );
+    }
     updateProjectConfiguration(host, options.projectName, projectConfig);
   }
 
@@ -138,12 +147,15 @@ export async function hostGeneratorInternal(
     );
   }
 
-  addMfEnvToTargetDefaultInputs(host);
+  addMfEnvToTargetDefaultInputs(host, options.bundler);
 
   const installTask = addDependenciesToPackageJson(
     host,
-    {},
-    { '@module-federation/enhanced': moduleFederationEnhancedVersion }
+    { '@module-federation/enhanced': moduleFederationEnhancedVersion },
+    {
+      '@nx/web': nxVersion,
+      '@nx/module-federation': nxVersion,
+    }
   );
   tasks.push(installTask);
 

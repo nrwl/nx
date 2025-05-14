@@ -6,7 +6,12 @@ import {
   UpdatePackageJsonOption,
 } from './update-package-json';
 import { vol } from 'memfs';
-import { DependencyType, ExecutorContext, ProjectGraph } from '@nx/devkit';
+import {
+  DependencyType,
+  ExecutorContext,
+  ProjectGraph,
+  readProjectsConfigurationFromProjectGraph,
+} from '@nx/devkit';
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
 
 jest.mock('nx/src/utils/workspace-root', () => ({
@@ -151,7 +156,12 @@ describe('getUpdatedPackageJsonContent', () => {
         types: './src/index.d.ts',
         version: '0.0.1',
         exports: {
-          '.': './src/index.js',
+          '.': {
+            development: './src/index.ts',
+            default: './src/index.js',
+            import: './src/index.js',
+            types: './src/index.d.ts',
+          },
           './package.json': './package.json',
         },
       });
@@ -180,7 +190,11 @@ describe('getUpdatedPackageJsonContent', () => {
         version: '0.0.1',
         type: 'commonjs',
         exports: {
-          '.': './src/index.cjs',
+          '.': {
+            development: './src/index.ts',
+            default: './src/index.cjs',
+            types: './src/index.d.ts',
+          },
           './package.json': './package.json',
         },
       });
@@ -215,13 +229,29 @@ describe('getUpdatedPackageJsonContent', () => {
         types: './src/index.d.ts',
         version: '0.0.1',
         exports: {
-          '.': './src/index.js',
-          './foo': './src/foo.js',
-          './bar': './src/bar.js',
+          '.': {
+            development: './src/index.ts',
+            default: './src/index.js',
+            types: './src/index.d.ts',
+          },
+          './foo': {
+            development: './src/foo.ts',
+            default: './src/foo.js',
+          },
+          './bar': {
+            development: './src/bar.ts',
+            default: './src/bar.js',
+          },
           './package.json': './package.json',
           './migrations.json': './migrations.json',
-          './feature': './feature/index.js',
-          './feature/index': './feature/index.js',
+          './feature': {
+            development: './feature/index.ts',
+            default: './feature/index.js',
+          },
+          './feature/index': {
+            development: './feature/index.ts',
+            default: './feature/index.js',
+          },
         },
       });
 
@@ -253,12 +283,33 @@ describe('getUpdatedPackageJsonContent', () => {
         types: './src/index.d.ts',
         version: '0.0.1',
         exports: {
-          '.': './src/index.js',
-          './foo': './src/foo.js',
-          './bar': './src/bar.js',
+          '.': {
+            development: './src/index.ts',
+            default: './src/index.js',
+            import: './src/index.js',
+            types: './src/index.d.ts',
+          },
+          './foo': {
+            development: './src/foo.ts',
+            import: './src/foo.js',
+            default: './src/foo.js',
+          },
+          './bar': {
+            development: './src/bar.ts',
+            import: './src/bar.js',
+            default: './src/bar.js',
+          },
           './package.json': './package.json',
-          './feature': './feature/index.js',
-          './feature/index': './feature/index.js',
+          './feature': {
+            development: './feature/index.ts',
+            import: './feature/index.js',
+            default: './feature/index.js',
+          },
+          './feature/index': {
+            development: './feature/index.ts',
+            import: './feature/index.js',
+            default: './feature/index.js',
+          },
         },
       });
 
@@ -291,22 +342,28 @@ describe('getUpdatedPackageJsonContent', () => {
         version: '0.0.1',
         exports: {
           '.': {
+            development: './src/index.ts',
             import: './src/index.js',
             default: './src/index.cjs',
+            types: './src/index.d.ts',
           },
           './foo': {
+            development: './src/foo.ts',
             import: './src/foo.js',
             default: './src/foo.cjs',
           },
           './bar': {
+            development: './src/bar.ts',
             import: './src/bar.js',
             default: './src/bar.cjs',
           },
           './feature': {
+            development: './feature/index.ts',
             import: './feature/index.js',
             default: './feature/index.cjs',
           },
           './feature/index': {
+            development: './feature/index.ts',
             import: './feature/index.js',
             default: './feature/index.cjs',
           },
@@ -344,8 +401,10 @@ describe('getUpdatedPackageJsonContent', () => {
       version: '0.0.1',
       exports: {
         '.': {
+          development: './src/index.ts',
           import: './src/index.js',
           default: './src/index.cjs',
+          types: './src/index.d.ts',
         },
         './package.json': './package.json',
         './custom': './custom.js',
@@ -378,7 +437,44 @@ describe('getUpdatedPackageJsonContent', () => {
       version: '0.0.1',
       type: 'module',
       exports: {
-        '.': './src/index.cjs',
+        '.': {
+          development: './src/index.ts',
+          default: './src/index.cjs',
+          types: './src/index.d.ts',
+        },
+        './package.json': './package.json',
+      },
+    });
+  });
+
+  it('should handle outputFileName correctly', () => {
+    expect(
+      getUpdatedPackageJsonContent(
+        {
+          name: 'test',
+          version: '0.0.1',
+        },
+        {
+          main: 'proj/src/index.ts',
+          outputPath: 'dist/proj',
+          projectRoot: 'proj',
+          format: ['cjs'],
+          generateExportsField: true,
+          outputFileName: 'src/index.js',
+        }
+      )
+    ).toEqual({
+      name: 'test',
+      main: './src/index.js',
+      types: './src/index.d.ts',
+      version: '0.0.1',
+      type: 'commonjs',
+      exports: {
+        '.': {
+          development: './src/index.ts',
+          default: './src/index.js',
+          types: './src/index.d.ts',
+        },
         './package.json': './package.json',
       },
     });
@@ -471,6 +567,9 @@ describe('updatePackageJson', () => {
     cwd: '',
     targetName: 'build',
     projectGraph,
+    projectsConfigurations:
+      readProjectsConfigurationFromProjectGraph(projectGraph),
+    nxJsonConfiguration: {},
   };
 
   it('should generate new package if missing', () => {

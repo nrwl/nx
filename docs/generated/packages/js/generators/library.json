@@ -9,34 +9,36 @@
     "description": "Create a TypeScript Library.",
     "type": "object",
     "properties": {
-      "name": {
-        "type": "string",
-        "description": "Library name.",
-        "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the library?",
-        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$"
-      },
       "directory": {
         "type": "string",
         "description": "A directory where the lib is placed.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "Which directory do you want to create the library in?"
+      },
+      "name": {
+        "type": "string",
+        "description": "Library name.",
         "x-priority": "important"
       },
-      "projectNameAndRootFormat": {
-        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "bundler": {
+        "description": "The bundler to use. Choosing 'none' means this library is not buildable.",
         "type": "string",
-        "enum": ["as-provided", "derived"]
+        "enum": ["swc", "tsc", "rollup", "vite", "esbuild", "none"],
+        "default": "tsc",
+        "x-prompt": "Which bundler would you like to use to build the library? Choose 'none' to skip build setup.",
+        "x-priority": "important"
       },
       "linter": {
         "description": "The tool to use for running lint checks.",
         "type": "string",
-        "enum": ["eslint", "none"],
-        "default": "eslint"
+        "enum": ["none", "eslint"],
+        "x-priority": "important"
       },
       "unitTestRunner": {
-        "type": "string",
-        "enum": ["jest", "vitest", "none"],
         "description": "Test runner to use for unit tests.",
-        "x-prompt": "Which unit test runner would you like to use?"
+        "type": "string",
+        "enum": ["none", "jest", "vitest"],
+        "x-priority": "important"
       },
       "tags": {
         "type": "string",
@@ -69,12 +71,6 @@
         "enum": ["jsdom", "node"],
         "description": "The test environment to use if unitTestRunner is set to jest or vitest.",
         "default": "node"
-      },
-      "pascalCaseFiles": {
-        "type": "boolean",
-        "description": "Use pascal case file names.",
-        "alias": "P",
-        "default": false
       },
       "js": {
         "type": "boolean",
@@ -118,17 +114,8 @@
       "compiler": {
         "type": "string",
         "enum": ["tsc", "swc"],
-        "default": "tsc",
         "description": "The compiler used by the build and test targets",
         "x-deprecated": "Use the `bundler` option for greater control (swc, tsc, rollup, vite, esbuild, none)."
-      },
-      "bundler": {
-        "description": "The bundler to use. Choosing 'none' means this library is not buildable.",
-        "type": "string",
-        "enum": ["swc", "tsc", "rollup", "vite", "esbuild", "none"],
-        "default": "tsc",
-        "x-prompt": "Which bundler would you like to use to build the library? Choose 'none' to skip build setup.",
-        "x-priority": "important"
       },
       "skipTypeCheck": {
         "type": "boolean",
@@ -144,10 +131,14 @@
         "description": "Don't include the directory in the generated file name.",
         "type": "boolean",
         "default": false
+      },
+      "useProjectJson": {
+        "type": "boolean",
+        "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
       }
     },
-    "required": ["name"],
-    "examplesFile": "---\ntitle: JS library generator examples\ndescription: This page contains examples for the @nx/js:lib generator.\n---\n\nThe `@nx/js:lib` generator will generate a library for you, and it will configure it according to the options you provide.\n\n```bash\nnpx nx g @nx/js:lib mylib\n```\n\nBy default, the library that is generated when you use this executor without passing any options, like the example above, will be a buildable library, using the `@nx/js:tsc` executor as a builder.\n\nYou may configure the tools you want to use to build your library, or bundle it too, by passing the `--bundler` flag. The `--bundler` flag controls the compiler and/or the bundler that will be used to build your library. If you choose `tsc` or `swc`, the result will be a buildable library using either `tsc` or `swc` as the compiler. If you choose `rollup` or `vite`, the result will be a buildable library using `rollup` or `vite` as the bundler. In the case of `rollup`, it will default to the `tsc` compiler. If you choose `esbuild`, you may use the [`esbuildOptions` property](https://esbuild.github.io/api/) in your `project.json` under the `build` target options to specify whether you wish to bundle your library or not.\n\n## Examples\n\n{% tabs %}\n\n{% tab label=\"Buildable with default compiler (tsc)\" %}\n\nGenerate a buildable library using the `@nx/js:tsc` executor. This uses `tsc` as the compiler.\n\n```bash\nnpx nx g @nx/js:lib mylib\n```\n\n{% /tab %}\n\n{% tab label=\"Buildable with SWC compiler\" %}\n\nGenerate a buildable library using [SWC](https://swc.rs) as the compiler. This will use the `@nx/js:swc` executor.\n\n```bash\nnpx nx g @nx/js:lib mylib --bundler=swc\n```\n\n{% /tab %}\n\n{% tab label=\"Buildable with tsc\" %}\n\nGenerate a buildable library using tsc as the compiler. This will use the `@nx/js:tsc` executor.\n\n```bash\nnpx nx g @nx/js:lib mylib --bundler=tsc\n```\n\n{% /tab %}\n\n{% tab label=\"Buildable, with Rollup as a bundler\" %}\n\nGenerate a buildable library using [Rollup](https://rollupjs.org) as the bundler. This will use the `@nx/rollup:rollup` executor. It will also use [SWC](https://swc.rs) as the compiler.\n\n```bash\nnpx nx g @nx/js:lib mylib --bundler=rollup\n```\n\nIf you do not want to use `swc` as the compiler, and want to use the default `babel` compiler, you can do so in your `project.json` under the `build` target options, using the [`compiler` property](/nx-api/rollup/executors/rollup#compiler):\n\n```jsonc {% fileName=\"libs/mylib/project.json\" %}\n\"build\": {\n  \"executor\": \"@nx/rollup:rollup\",\n  \"options\": {\n    //...\n    \"compiler\": \"babel\"\n  }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"Buildable, with Vite as a bundler\" %}\n\nGenerate a buildable library using [Vite](https://vitejs.dev/) as the bundler. This will use the `@nx/vite:build` executor.\n\n```bash\nnpx nx g @nx/js:lib mylib --bundler=vite\n```\n\n{% /tab %}\n\n{% tab label=\"Using ESBuild\" %}\n\nGenerate a buildable library using [ESBuild](https://esbuild.github.io/) as the bundler. This will use the `@nx/esbuild:esbuild` executor.\n\n```bash\nnpx nx g @nx/js:lib mylib --bundler=esbuild\n```\n\nIf you want to specify whether you want to bundle your library or not, you can do so in your `project.json` under the `build` target options, using the [`esbuildOptions` property](https://esbuild.github.io/api/):\n\n```jsonc {% fileName=\"libs/mylib/project.json\" %}\n\"build\": {\n  \"executor\": \"@nx/esbuild:esbuild\",\n  \"options\": {\n    //...\n    \"esbuildOptions\": {\n        \"bundle\": true\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"Minimal publishing target\" %}\n\nGenerate a **publishable** library with a minimal publishing target. The result will be a buildable library using the `@nx/js:tsc` executor, using `tsc` as the compiler. You can change the compiler or the bundler by passing the `--bundler` flag.\n\n```bash\nnpx nx g lib mylib --publishable\n```\n\n{% /tab %}\n\n{% tab label=\"Using directory flag\" %}\n\nGenerate a library named `mylib` and put it under a directory named `myapp` (`libs/myapp/mylib`)\n\n{% callout type=\"note\" title=\"Directory Flag Behavior Changes\" %}\nThe command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, use `--directory=myapp`. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.\n{% /callout %}\n\n```shell\nnpx nx g lib mylib --directory=libs/myapp/mylib\n```\n\n{% /tab %}\n\n{% tab label=\"Non-buildable library\" %}\n\nGenerate a non-buildable library.\n\n```bash\nnpx nx g @nx/js:lib mylib --bundler=none\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
+    "required": ["directory"],
+    "examplesFile": "---\ntitle: JS library generator examples\ndescription: This page contains examples for the @nx/js:lib generator.\n---\n\nThe `@nx/js:lib` generator will generate a library for you, and it will configure it according to the options you provide.\n\n```bash\nnpx nx g @nx/js:lib libs/mylib\n```\n\nBy default, the library that is generated when you use this executor without passing any options, like the example above, will be a buildable library, using the `@nx/js:tsc` executor as a builder.\n\nYou may configure the tools you want to use to build your library, or bundle it too, by passing the `--bundler` flag. The `--bundler` flag controls the compiler and/or the bundler that will be used to build your library. If you choose `tsc` or `swc`, the result will be a buildable library using either `tsc` or `swc` as the compiler. If you choose `rollup` or `vite`, the result will be a buildable library using `rollup` or `vite` as the bundler. In the case of `rollup`, it will default to the `tsc` compiler. If you choose `esbuild`, you may use the [`esbuildOptions` property](https://esbuild.github.io/api/) in your `project.json` under the `build` target options to specify whether you wish to bundle your library or not.\n\n## Examples\n\n{% tabs %}\n\n{% tab label=\"Buildable with default compiler (tsc)\" %}\n\nGenerate a buildable library using the `@nx/js:tsc` executor. This uses `tsc` as the compiler.\n\n```bash\nnpx nx g @nx/js:lib libs/mylib\n```\n\n{% /tab %}\n\n{% tab label=\"Buildable with SWC compiler\" %}\n\nGenerate a buildable library using [SWC](https://swc.rs) as the compiler. This will use the `@nx/js:swc` executor.\n\n```bash\nnpx nx g @nx/js:lib libs/mylib --bundler=swc\n```\n\n{% /tab %}\n\n{% tab label=\"Buildable with tsc\" %}\n\nGenerate a buildable library using tsc as the compiler. This will use the `@nx/js:tsc` executor.\n\n```bash\nnpx nx g @nx/js:lib libs/mylib --bundler=tsc\n```\n\n{% /tab %}\n\n{% tab label=\"Buildable, with Rollup as a bundler\" %}\n\nGenerate a buildable library using [Rollup](https://rollupjs.org) as the bundler. This will use the `@nx/rollup:rollup` executor. It will also use [SWC](https://swc.rs) as the compiler.\n\n```bash\nnpx nx g @nx/js:lib libs/mylib --bundler=rollup\n```\n\nIf you do not want to use `swc` as the compiler, and want to use the default `babel` compiler, you can do so in your `project.json` under the `build` target options, using the [`compiler` property](/nx-api/rollup/executors/rollup#compiler):\n\n```jsonc {% fileName=\"libs/mylib/project.json\" %}\n\"build\": {\n  \"executor\": \"@nx/rollup:rollup\",\n  \"options\": {\n    //...\n    \"compiler\": \"babel\"\n  }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"Buildable, with Vite as a bundler\" %}\n\nGenerate a buildable library using [Vite](https://vitejs.dev/) as the bundler. This will use the `@nx/vite:build` executor.\n\n```bash\nnpx nx g @nx/js:lib libs/mylib --bundler=vite\n```\n\n{% /tab %}\n\n{% tab label=\"Using ESBuild\" %}\n\nGenerate a buildable library using [ESBuild](https://esbuild.github.io/) as the bundler. This will use the `@nx/esbuild:esbuild` executor.\n\n```bash\nnpx nx g @nx/js:lib libs/mylib --bundler=esbuild\n```\n\nIf you want to specify whether you want to bundle your library or not, you can do so in your `project.json` under the `build` target options, using the [`esbuildOptions` property](https://esbuild.github.io/api/):\n\n```jsonc {% fileName=\"libs/mylib/project.json\" %}\n\"build\": {\n  \"executor\": \"@nx/esbuild:esbuild\",\n  \"options\": {\n    //...\n    \"esbuildOptions\": {\n        \"bundle\": true\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"Minimal publishing target\" %}\n\nGenerate a **publishable** library with a minimal publishing target. The result will be a buildable library using the `@nx/js:tsc` executor, using `tsc` as the compiler. You can change the compiler or the bundler by passing the `--bundler` flag.\n\n```bash\nnpx nx g lib libs/mylib --publishable\n```\n\n{% /tab %}\n\n{% tab label=\"In a nested directory\" %}\n\nGenerate a library named `mylib` and put it under a directory named `nested` (`libs/nested/mylib`).\n\n```shell\nnpx nx g lib libs/nested/mylib\n```\n\n{% /tab %}\n\n{% tab label=\"Non-buildable library\" %}\n\nGenerate a non-buildable library.\n\n```bash\nnpx nx g @nx/js:lib libs/mylib --bundler=none\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
     "presets": []
   },
   "aliases": ["lib"],

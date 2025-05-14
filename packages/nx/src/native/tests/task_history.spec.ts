@@ -3,7 +3,9 @@ import { join } from 'path';
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 import { rmSync } from 'fs';
 import { getDbConnection } from '../../utils/db-connection';
+import { randomBytes } from 'crypto';
 
+const dbOutputFolder = 'temp-db-task';
 describe('NxTaskHistory', () => {
   let taskHistory: NxTaskHistory;
   let tempFs: TempFs;
@@ -12,12 +14,10 @@ describe('NxTaskHistory', () => {
   beforeEach(() => {
     tempFs = new TempFs('task-history');
 
-    rmSync(join(__dirname, 'temp-db'), {
-      recursive: true,
-      force: true,
+    const dbConnection = getDbConnection({
+      directory: join(__dirname, dbOutputFolder),
+      dbName: `temp-db-${randomBytes(4).toString('hex')}`,
     });
-
-    const dbConnection = getDbConnection(join(__dirname, 'temp-db'));
     taskHistory = new NxTaskHistory(dbConnection);
     taskDetails = new TaskDetails(dbConnection);
 
@@ -36,6 +36,13 @@ describe('NxTaskHistory', () => {
         configuration: 'production',
       },
     ]);
+  });
+
+  afterAll(() => {
+    rmSync(join(__dirname, dbOutputFolder), {
+      recursive: true,
+      force: true,
+    });
   });
 
   it('should record task history', () => {
@@ -63,7 +70,7 @@ describe('NxTaskHistory', () => {
         hash: '123',
         code: 0,
         status: 'success',
-        start: Date.now() - 1000 * 60 * 30,
+        start: Date.now() - 1000 * 60 * 60,
         end: Date.now(),
       },
       {
@@ -81,5 +88,39 @@ describe('NxTaskHistory', () => {
     const r2 = taskHistory.getFlakyTasks([]);
     expect(r2).not.toContain('123');
     expect(r2).not.toContain('234');
+  });
+
+  it('should get estimated task timings', () => {
+    taskHistory.recordTaskRuns([
+      {
+        hash: '123',
+        code: 1,
+        status: 'failure',
+        start: Date.now() - 1000 * 60 * 60,
+        end: Date.now(),
+      },
+      {
+        hash: '123',
+        code: 0,
+        status: 'success',
+        start: Date.now() - 1000 * 60 * 60,
+        end: Date.now(),
+      },
+      {
+        hash: '234',
+        code: 0,
+        status: 'success',
+        start: Date.now() - 1000 * 60 * 60,
+        end: Date.now(),
+      },
+    ]);
+    const r = taskHistory.getEstimatedTaskTimings([
+      {
+        project: 'proj',
+        target: 'build',
+        configuration: 'production',
+      },
+    ]);
+    expect(r['proj:build:production']).toEqual(60 * 60 * 1000);
   });
 });

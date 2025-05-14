@@ -1,17 +1,15 @@
 import { addProjectConfiguration, names, Tree } from '@nx/devkit';
 import applicationGenerator from '../generators/application/application';
-import { Linter } from '@nx/eslint';
 
 export async function createApp(tree: Tree, appName: string): Promise<void> {
   await applicationGenerator(tree, {
-    linter: Linter.EsLint,
+    linter: 'eslint',
     skipFormat: true,
     style: 'css',
     unitTestRunner: 'none',
-    name: appName,
+    directory: appName,
     e2eTestRunner: 'none',
     install: false,
-    projectNameAndRootFormat: 'as-provided',
     bundler: 'webpack',
   });
 }

@@ -2,12 +2,15 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
+  detectPackageManager,
+  getPackageManagerCommand,
   newProject,
   readFile,
   readJson,
   rmDist,
   runCLI,
   runCLIAsync,
+  runCommand,
   uniq,
   updateFile,
   updateJson,
@@ -25,7 +28,7 @@ describe('js e2e', () => {
   it('should create libs with npm scripts', () => {
     const npmScriptsLib = uniq('npmscriptslib');
     runCLI(
-      `generate @nx/js:lib ${npmScriptsLib} --config=npm-scripts --no-interactive`
+      `generate @nx/js:lib libs/${npmScriptsLib} --config=npm-scripts --no-interactive`
     );
     const libPackageJson = readJson(`libs/${npmScriptsLib}/package.json`);
     expect(libPackageJson.scripts.test).toBeDefined();
@@ -42,7 +45,9 @@ describe('js e2e', () => {
     const libName = uniq('mylib');
     const dirName = uniq('dir');
 
-    runCLI(`generate @nx/js:lib ${libName} --directory ${dirName}`);
+    runCLI(
+      `generate @nx/js:lib --name=${dirName}-${libName} --directory libs/${dirName}/${libName}`
+    );
 
     checkFilesExist(
       `libs/${dirName}/${libName}/src/index.ts`,
@@ -65,11 +70,13 @@ describe('js e2e', () => {
   it('should be able to add build to non-buildable projects', () => {
     const nonBuildable = uniq('nonbuildable');
 
-    runCLI(`generate @nx/js:lib ${nonBuildable} --bundler=none`);
+    runCLI(`generate @nx/js:lib libs/${nonBuildable} --bundler=none`);
     expect(() => runCLI(`build ${nonBuildable}`)).toThrow();
     checkFilesDoNotExist(`dist/libs/${nonBuildable}/src/index.js`);
 
-    runCLI(`generate @nx/js:setup-build ${nonBuildable} --bundler=tsc`);
+    runCLI(
+      `generate @nx/js:setup-build ${nonBuildable} --directory=libs/${nonBuildable} --bundler=tsc`
+    );
     runCLI(`build ${nonBuildable}`);
     checkFilesExist(`dist/libs/${nonBuildable}/src/index.js`);
   });
@@ -77,8 +84,8 @@ describe('js e2e', () => {
   it('should build buildable libraries using the task graph and handle more scenarios than current implementation', () => {
     const lib1 = uniq('lib1');
     const lib2 = uniq('lib2');
-    runCLI(`generate @nx/js:lib ${lib1} --bundler=tsc --no-interactive`);
-    runCLI(`generate @nx/js:lib ${lib2} --bundler=tsc --no-interactive`);
+    runCLI(`generate @nx/js:lib libs/${lib1} --bundler=tsc --no-interactive`);
+    runCLI(`generate @nx/js:lib libs/${lib2} --bundler=tsc --no-interactive`);
 
     // add dep between lib1 and lib2
     updateFile(
@@ -142,10 +149,10 @@ describe('js e2e', () => {
     updateFile('nx.json', () => originalNxJson);
   });
 
-  it('should generate project with name and directory as provided when --project-name-and-root-format=as-provided', async () => {
+  it('should generate project with name and directory as provided', async () => {
     const lib1 = uniq('lib1');
     runCLI(
-      `generate @nx/js:lib ${lib1} --directory=shared --bundler=tsc --project-name-and-root-format=as-provided`
+      `generate @nx/js:lib --name=${lib1} --directory=shared --bundler=tsc`
     );
 
     // check files are generated without the layout directory ("libs/") and
@@ -162,19 +169,10 @@ describe('js e2e', () => {
     );
   }, 500_000);
 
-  it('should support generating with a scoped project name when --project-name-and-root-format=as-provided', async () => {
+  it('should support generating with a scoped project name', async () => {
     const scopedLib = uniq('@my-org/lib1');
 
-    // assert scoped project names are not supported when --project-name-and-root-format=derived
-    expect(() =>
-      runCLI(
-        `generate @nx/js:lib ${scopedLib} --bundler=tsc --project-name-and-root-format=derived`
-      )
-    ).toThrow();
-
-    runCLI(
-      `generate @nx/js:lib ${scopedLib} --bundler=tsc --project-name-and-root-format=as-provided`
-    );
+    runCLI(`generate @nx/js:lib ${scopedLib} --bundler=tsc`);
 
     // check files are generated without the layout directory ("libs/") and
     // using the project name as the directory when no directory is provided
@@ -192,4 +190,23 @@ describe('js e2e', () => {
       'Test Suites: 1 passed, 1 total'
     );
   }, 500_000);
+
+  it('should not update dependencies if they already exist', () => {
+    const lib = uniq('@my-org/mylib');
+    const currentJestVersion = '28.0.0';
+    const pm = detectPackageManager();
+    // set jest version
+    updateJson('package.json', (json) => {
+      json.devDependencies['jest'] = currentJestVersion;
+      return json;
+    });
+
+    runCommand(getPackageManagerCommand({ packageManager: pm }).install);
+
+    runCLI(`generate @nx/js:lib ${lib} --bundler=tsc --unitTestRunner=jest`);
+
+    const jestVersionAfterInstall =
+      readJson('package.json').devDependencies['jest'];
+    expect(jestVersionAfterInstall).toEqual(currentJestVersion);
+  });
 });

@@ -13,7 +13,7 @@ describe('CypressComponentConfiguration', () => {
     const tree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(tree, {
-      name: 'cypress-test',
+      directory: 'cypress-test',
       unitTestRunner: 'vitest',
       style: 'css',
       addPlugin: false,

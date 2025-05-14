@@ -19,9 +19,13 @@ export function updateWorkspace(
   projectConfig.targets[options.targetName] = {
     executor: '@nx/jest:jest',
     outputs: [
-      options.rootProject
-        ? joinPathFragments('{workspaceRoot}', 'coverage', '{projectName}')
-        : joinPathFragments('{workspaceRoot}', 'coverage', '{projectRoot}'),
+      options.isTsSolutionSetup
+        ? '{projectRoot}/test-output/jest/coverage'
+        : joinPathFragments(
+            '{workspaceRoot}',
+            'coverage',
+            options.rootProject ? '{projectName}' : '{projectRoot}'
+          ),
     ],
     options: {
       jestConfig: joinPathFragments(

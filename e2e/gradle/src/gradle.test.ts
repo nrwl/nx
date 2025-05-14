@@ -2,17 +2,14 @@ import {
   checkFilesExist,
   cleanupProject,
   createFile,
-  e2eConsoleLogger,
-  isWindows,
   newProject,
   runCLI,
-  runCommand,
-  tmpProjPath,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e/utils';
-import { execSync } from 'child_process';
-import { resolve } from 'path';
+
+import { createGradleProject } from './utils/create-gradle-project';
 
 describe('Gradle', () => {
   describe.each([{ type: 'kotlin' }, { type: 'groovy' }])(
@@ -22,6 +19,7 @@ describe('Gradle', () => {
       beforeAll(() => {
         newProject();
         createGradleProject(gradleProjectName, type);
+        runCLI(`add @nx/gradle`);
       });
       afterAll(() => cleanupProject());
 
@@ -32,8 +30,7 @@ describe('Gradle', () => {
         expect(projects).toContain('utilities');
         expect(projects).toContain(gradleProjectName);
 
-        const buildOutput = runCLI('build app', { verbose: true });
-        // app depends on list and utilities
+        let buildOutput = runCLI('build app', { verbose: true });
         expect(buildOutput).toContain(':list:classes');
         expect(buildOutput).toContain(':utilities:classes');
 
@@ -43,9 +40,9 @@ describe('Gradle', () => {
           `utilities/build/libs/utilities.jar`
         );
 
-        expect(() => {
-          runCLI(`build ${gradleProjectName}`, { verbose: true });
-        }).not.toThrow();
+        buildOutput = runCLI('build app --batch', { verbose: true });
+        expect(buildOutput).toContain(':list:classes');
+        expect(buildOutput).toContain(':utilities:classes');
       });
 
       it('should track dependencies for new app', () => {
@@ -85,40 +82,34 @@ dependencies {
             return content;
           }
         );
+
+        let buildOutput = runCLI('build app2', { verbose: true });
+        // app2 depends on app
+        expect(buildOutput).toContain(':app:classes');
+        expect(buildOutput).toContain(':list:classes');
+        expect(buildOutput).toContain(':utilities:classes');
+
+        checkFilesExist(`app2/build/libs/app2.jar`);
+
+        buildOutput = runCLI('build app2 --batch', { verbose: true });
+        expect(buildOutput).toContain(':app:classes');
+        expect(buildOutput).toContain(':list:classes');
+        expect(buildOutput).toContain(':utilities:classes');
+      });
+
+      it('should run atomized test target', () => {
+        updateJson('nx.json', (json) => {
+          json.plugins.find((p) => p.plugin === '@nx/gradle').options[
+            'ciTestTargetName'
+          ] = 'test-ci';
+          return json;
+        });
+
         expect(() => {
-          runCLI('build app2', { verbose: true });
+          runCLI('run app:test-ci--MessageUtilsTest', { verbose: true });
+          runCLI('run list:test-ci--LinkedListTest', { verbose: true });
         }).not.toThrow();
       });
     }
   );
 });
-
-function createGradleProject(
-  projectName: string,
-  type: 'kotlin' | 'groovy' = 'kotlin'
-) {
-  e2eConsoleLogger(`Using java version: ${execSync('java -version')}`);
-  const gradleCommand = isWindows()
-    ? resolve(`${__dirname}/../gradlew.bat`)
-    : resolve(`${__dirname}/../gradlew`);
-  e2eConsoleLogger(
-    'Using gradle version: ' +
-      execSync(`${gradleCommand} --version`, {
-        cwd: tmpProjPath(),
-      })
-  );
-  e2eConsoleLogger(
-    execSync(`${gradleCommand} help --task :init`, {
-      cwd: tmpProjPath(),
-    }).toString()
-  );
-  e2eConsoleLogger(
-    runCommand(
-      `${gradleCommand} init --type ${type}-application --dsl ${type} --project-name ${projectName} --package gradleProject --no-incubating --split-project`,
-      {
-        cwd: tmpProjPath(),
-      }
-    )
-  );
-  runCLI(`add @nx/gradle`);
-}

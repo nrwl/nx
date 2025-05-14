@@ -2,8 +2,9 @@
 title: Qwikify your Development with Nx
 slug: 'qwikify-your-development-with-nx'
 authors: ['Colum Ferry']
-cover_image: '/blog/images/2023-08-15/featured_img.png'
+cover_image: '/blog/images/2023-08-15/featured_img.avif'
 tags: [nx, changelog, release]
+description: Learn how to integrate Qwik with Nx for a todo app, covering setup, routes, libraries, Qwik Context, and modular development best practices.
 ---
 
 In the ever-evolving web development landscape, efficiency and modularity have become paramount. This is where [Nx]() and [Qwik](https://qwik.dev/) come into play.
@@ -12,7 +13,7 @@ Qwik is a modern web framework that focuses on application performance by reduci
 
 Nx is a powerful tool that helps you build extensible and maintainable codebases that scale as your application and team grows. Nx utilises computation cache and workspace analysis to ensure maximum efficiency and developer experience. You can [learn more about Nx here](/getting-started/why-nx).
 
-In this blog post, we’ll explore how to combine the strengths of Nx and Qwik to create a todo app. To do this, we’ll take advantage of an Nx Plugin that was created by the Qwikifiers team to maximise the integration between Qwik and Nx, called [`qwik-nx`](https://github.com/qwikifiers/qwik-nx).
+In this blog post, we'll explore how to combine the strengths of Nx and Qwik to create a todo app. To do this, we'll take advantage of an Nx Plugin that was created by the Qwikifiers team to maximise the integration between Qwik and Nx, called [`qwik-nx`](https://github.com/qwikifiers/qwik-nx).
 
 > You do not necessarily need to use an Nx Plugin for Qwik. Instead, you could use the [Qwik CLI](https://qwik.dev/docs/getting-started/#create-an-app-using-the-cli) to create your application and [add Nx later](/recipes/adopting-nx/adding-to-existing-project#install-nx-on-a-nonmonorepo-project).
 > In this blog post we use the `qwik-nx` plugin to leverage better DX provided by the generators offered by the Plugin.
@@ -39,7 +40,7 @@ You can learn more about this integration in the video below:
 
 ## Creating the Workspace
 
-Let’s start by setting up our development environment. We’ll create an Nx workspace and integrate Qwik into it. Begin by generating an empty integrated workspace:
+Let's start by setting up our development environment. We'll create an Nx workspace and integrate Qwik into it. Begin by generating an empty integrated workspace:
 
 ```shell
 npx create-nx-workspace@latest qwik-todo-app
@@ -49,7 +50,7 @@ npx create-nx-workspace@latest qwik-todo-app
 
 > You can also use the `preset` created by the `qwik-nx` plugin by running `npx create-qwik-nx` or `npx -y create-nx-workspace@latest --preset=qwik-nx`. This will skip a few of the next steps by installing the appropriate dependencies and generating your Qwik app.
 >
-> The `create-qwik-nx` package is an example of creating an Install Package with Nx. You can learn more here: [https://nx.dev/extending-nx/recipes/create-install-package](/extending-nx/recipes/create-install-package)
+> The `create-qwik-nx` package is an example of creating an Install Package with Nx. You can learn more here: [/extending-nx/recipes/create-install-package](/extending-nx/recipes/create-install-package)
 
 Next, navigate into the workspace and install the `qwik-nx` plugin.
 
@@ -63,7 +64,7 @@ npm install --save-dev qwik-nx
 
 One of the benefits of using an Nx Plugin is that it comes with additional features such as automatic migrations, executors to act on your code and generators to scaffold code (_like CodeMods_).
 
-Now, let’s use the application generator provided by `qwik-nx` to scaffold the todo application:
+Now, let's use the application generator provided by `qwik-nx` to scaffold the todo application:
 
 ```shell
 nx g qwik-nx:app todo
@@ -77,13 +78,13 @@ At this point, you can already run the `nx serve todo` and `nx build todo` comma
 
 Qwik has another package called Qwik City that uses directory-based routing to handle navigation within your application. [Learn more about directory-based routing with Qwik City](https://qwik.dev/docs/qwikcity/).
 
-The `qwik-nx` plugin can help generate new routes within our application. Let’s use it to generate a route where we can store our todo logic.
+The `qwik-nx` plugin can help generate new routes within our application. Let's use it to generate a route where we can store our todo logic.
 
 ```shell
 nx g qwik-nx:route --name=todo --project=todo
 ```
 
-After running this command, you’ll see a new directory and file created in your workspace:
+After running this command, you'll see a new directory and file created in your workspace:
 
 ![Create apps/todo/src/routes/todo/index.tsx](/blog/images/2023-08-15/bodyimg2.webp)
 
@@ -97,7 +98,7 @@ export default component$(() => {
 });
 ```
 
-As you can see, it’s very simple, just a standard Qwik Component.
+As you can see, it's very simple, just a standard Qwik Component.
 
 If you run `nx serve todo` and navigate to `http://localhost:4200/todo` you can see that the route works and the component renders the content correctly.
 
@@ -105,7 +106,7 @@ If you run `nx serve todo` and navigate to `http://localhost:4200/todo` you can 
 
 ## Build a Basic UI
 
-We want to build a todo application, so let’s add some UI elements to make this look more like an actual todo application.
+We want to build a todo application, so let's add some UI elements to make this look more like an actual todo application.
 
 Update `apps/todo/src/routes/todo/index.tsx` to match the following:
 
@@ -132,19 +133,19 @@ export default component$(() => {
 });
 ```
 
-You’ll see the page update and look like the following:
+You'll see the page update and look like the following:
 
 ![Qwik now the heading, a labeled checkbox, and a formfield to add a todo](/blog/images/2023-08-15/bodyimg4.webp)
 
 Awesome!
 
-However, you’ll notice that when you click `Add`, nothing happens! Let’s add some logic to store new todos.
+However, you'll notice that when you click `Add`, nothing happens! Let's add some logic to store new todos.
 
 ## Generate a Library
 
 Nx helps you organise your workspace in a modular fashion by creating workspace libraries that focus on specific functionality.
 
-Instead of organising your features into subfolders of your application, with Nx, you’ll extract them into workspace libraries (libraries that are not intended to be published, but still used by other libraries and applications in your repository). This helps to create a much stronger boundary between modules and features in your application as libraries have a public API (the `index.ts` file), allowing you to control exactly what can be accessed by consumers.
+Instead of organising your features into subfolders of your application, with Nx, you'll extract them into workspace libraries (libraries that are not intended to be published, but still used by other libraries and applications in your repository). This helps to create a much stronger boundary between modules and features in your application as libraries have a public API (the `index.ts` file), allowing you to control exactly what can be accessed by consumers.
 
 > [Learn more about defining and ensuring project boundaries in the Nx docs.](/features/enforce-module-boundaries)
 >
@@ -154,7 +155,7 @@ Instead of organising your features into subfolders of your application, with Nx
 
 Using this feature of Nx, we can organise the state management of our todo application into its own library, separating the logic from the application itself.
 
-Let’s generate a new library with the help of `qwik-nx`.
+Let's generate a new library with the help of `qwik-nx`.
 
 ```shell
 nx g qwik-nx:lib data-access
@@ -174,7 +175,7 @@ libs/data-access/src/lib/data-access.spec.tsx
 
 Qwik uses [Contexts](https://qwik.dev/docs/components/context/) to help store state across both the server-side and client-side and across routes within the application.
 
-We’ll use a Context to store the todos in the application, but first, let’s create a file to store the TS Interfaces we’ll use in our application.
+We'll use a Context to store the todos in the application, but first, let's create a file to store the TS Interfaces we'll use in our application.
 
 Create `libs/data-access/src/lib/api.ts` and add the following:
 
@@ -185,7 +186,7 @@ export interface Todo {
 }
 ```
 
-Next, let’s create a new file `libs/data-access/src/lib/todo.context.tsx` and add the following content:
+Next, let's create a new file `libs/data-access/src/lib/todo.context.tsx` and add the following content:
 
 ```tsx {% fileName="libs/data-access/src/lib/todo.context.tsx" %}
 import {
@@ -217,11 +218,11 @@ This will create our Context and set up a Store within our application to store 
 
 > [Learn more about how Qwik uses Signals.](https://qwik.dev/docs/components/state/)
 
-Finally, let’s update the public entry point to the library to expose our Context and Interface.
+Finally, let's update the public entry point to the library to expose our Context and Interface.
 
 ## Using the Context
 
-Let’s update the root page to add our Context Provider. Open `apps/todo/src/root.tsx` and add `TodoContextProvider` after `QwikCityProvider` in the component tree. Your file should look like the following:
+Let's update the root page to add our Context Provider. Open `apps/todo/src/root.tsx` and add `TodoContextProvider` after `QwikCityProvider` in the component tree. Your file should look like the following:
 
 ```tsx {% fileName="apps/todo/src/root.tsx" %}
 import { component$, useStyles$ } from '@builder.io/qwik';
@@ -267,7 +268,7 @@ export * from './lib/todo.context';
 export * from './lib/api';
 ```
 
-Now that our Context is in place, let’s use it in our todo route to manage our todos.
+Now that our Context is in place, let's use it in our todo route to manage our todos.
 
 Update `apps/todo/src/routes/todo/index.tsx` to match the following:
 
@@ -298,7 +299,7 @@ export default component$(() => {
 });
 ```
 
-Our store has no todos in it when the application starts up, so if you serve the application you will no longer see any todos listed. Let’s fix that!
+Our store has no todos in it when the application starts up, so if you serve the application you will no longer see any todos listed. Let's fix that!
 
 ## Adding a `routeLoader$` to load data on Navigation
 
@@ -306,11 +307,11 @@ Qwik allows you to fetch data when a route is navigated to, allowing you to fetc
 
 > [Learn more about routeLoader$.](https://qwik.dev/docs/route-loader/)
 
-It does this by providing a function called `routeLoader$`. We’ll use this function to preload our store with some todos that will theoretically exist in a database.
+It does this by providing a function called `routeLoader$`. We'll use this function to preload our store with some todos that will theoretically exist in a database.
 
-For this blog post, we’ll create an in-memory db to store some initial todos.
+For this blog post, we'll create an in-memory db to store some initial todos.
 
-We’ll start by updating our `libs/data-access/src/lib/api.ts` to add our in-memory DB.
+We'll start by updating our `libs/data-access/src/lib/api.ts` to add our in-memory DB.
 
 ```ts {% fileName="libs/data-access/src/lib/api.ts" %}
 export interface Todo {
@@ -348,7 +349,7 @@ export const db: DB = {
 };
 ```
 
-Now that we have this, let’s use it in our `/todo` route to load some data when the user navigates to `/todo`.
+Now that we have this, let's use it in our `/todo` route to load some data when the user navigates to `/todo`.
 
 Update `apps/todo/src/routes/todo/index.tsx` to match the following:
 
@@ -406,11 +407,11 @@ export default component$(() => {
 });
 ```
 
-When you serve the application, you’ll see the first todo is fetched and rendered correctly!
+When you serve the application, you'll see the first todo is fetched and rendered correctly!
 
 ## Handle the Form Action to add todos
 
-Qwik also allows you to handle form actions on the server using the `routeAction$` API. Let’s create the logic to add new todos to the store.
+Qwik also allows you to handle form actions on the server using the `routeAction$` API. Let's create the logic to add new todos to the store.
 
 > [Learn more about `routeAction$`](https://qwik.dev/docs/action/)
 
@@ -485,7 +486,7 @@ export default component$(() => {
 
 Awesome! We can now add todos to our application!
 
-However, you might have noticed that our file is starting to get very long. Not only that there’s a lot of logic in the route file itself. Let’s use Nx to separate the logic into the library we created earlier to keep logic collocated.
+However, you might have noticed that our file is starting to get very long. Not only that there's a lot of logic in the route file itself. Let's use Nx to separate the logic into the library we created earlier to keep logic collocated.
 
 ## Improve the Architecture
 
@@ -527,7 +528,7 @@ export * from './lib/api';
 export * from './lib/todo';
 ```
 
-Finally, let’s update `apps/todo/src/routes/todo/index.tsx` to use our newly created functions:
+Finally, let's update `apps/todo/src/routes/todo/index.tsx` to use our newly created functions:
 
 ```tsx {% fileName="apps/todo/src/routes/todo/index.tsx" %}
 import { component$, useContext, useTask$ } from '@builder.io/qwik';
@@ -580,7 +581,7 @@ export default component$(() => {
 });
 ```
 
-If you run `nx serve todo` again, you’ll notice that our refactor will not have changed anything for the user, but it has made the codebase more manageable!
+If you run `nx serve todo` again, you'll notice that our refactor will not have changed anything for the user, but it has made the codebase more manageable!
 
 Now, if we need to update the logic for loading or adding todos, we only need to retest the library, and not the full application, improving our CI times!
 
@@ -588,7 +589,7 @@ Now, if we need to update the logic for loading or adding todos, we only need to
 
 ## Conclusion
 
-The collaboration between Nx and Qwik has led us to create a todo app that showcases efficient development practices and modular design. By centralizing route logic in a library, we’ve not only demonstrated the capabilities of Nx and Qwik but also highlighted how this approach can significantly improve cache and CI times.
+The collaboration between Nx and Qwik has led us to create a todo app that showcases efficient development practices and modular design. By centralizing route logic in a library, we've not only demonstrated the capabilities of Nx and Qwik but also highlighted how this approach can significantly improve cache and CI times.
 
 This journey through Qwik and Nx demonstrates how thoughtful architecture and the right tools can significantly enhance your development experience. So go ahead, Qwikify your development and build amazing web applications with ease!
 
@@ -608,4 +609,4 @@ This journey through Qwik and Nx demonstrates how thoughtful architecture and th
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app/)
+- [Speed up your CI](/nx-cloud)

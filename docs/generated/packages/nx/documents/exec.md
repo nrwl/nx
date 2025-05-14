@@ -10,7 +10,7 @@ description: 'Executes any command as if it was a target on the project'
 
 ## Usage
 
-In package.json, adding a script with `nx exec` will run the command as if it is a target that project:
+In package.json, adding a script with `nx exec` will run the command as if it is a target on that project:
 
 ```json
 {
@@ -37,7 +37,7 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 ## Examples
 
-You can use `npm run <command>` for a project and leverage the caching by wrap your command with `nx exec`.
+You can use `npm run <command>` for a project and leverage the caching by wrapping your command with `nx exec`.
 
 For example, you can run `npm run docs` as a Nx target for `myorg`:
 

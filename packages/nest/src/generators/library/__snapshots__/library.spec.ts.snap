@@ -1,8 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`lib --testEnvironment should set target jest testEnvironment to jsdom 1`] = `
-"/* eslint-disable */
-export default {
+"export default {
   displayName: 'my-lib',
   preset: '../jest.preset.js',
   transform: {
@@ -15,8 +14,7 @@ export default {
 `;
 
 exports[`lib --testEnvironment should set target jest testEnvironment to node by default 1`] = `
-"/* eslint-disable */
-export default {
+"export default {
   displayName: 'my-lib',
   preset: '../jest.preset.js',
   testEnvironment: 'node',
@@ -33,6 +31,7 @@ exports[`lib --unit-test-runner none should not generate test configuration 1`] 
 {
   "compilerOptions": {
     "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
     "module": "commonjs",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
@@ -55,6 +54,7 @@ exports[`lib nested should create a local tsconfig.json 1`] = `
 {
   "compilerOptions": {
     "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
     "module": "commonjs",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
@@ -93,6 +93,7 @@ exports[`lib not nested should create a local tsconfig.json 1`] = `
 {
   "compilerOptions": {
     "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
     "module": "commonjs",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,

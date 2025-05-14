@@ -5,7 +5,15 @@
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {}
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "name": "chalk",
+            "message": "Please use `picocolors` in place of `chalk` for rendering terminal colors"
+          }
+        ]
+      }
     },
     {
       "files": ["*.ts", "*.tsx"],
@@ -48,7 +56,6 @@
               "vite",
               "rxjs",
               "semver",
-              // These are installed by ensurePackage so missing in package.json
               "@nx/cypress",
               "@nx/playwright",
               "@nx/jest",
@@ -58,7 +65,7 @@
               "@nx/webpack",
               "prettier",
               "typescript",
-              // These are installed by generators
+              "@schematics/angular",
               "@angular-devkit/core",
               "@angular-devkit/architect",
               "@angular-devkit/build-angular",
@@ -73,9 +80,7 @@
               "@storybook/angular",
               "@module-federation/node",
               "@nguniversal/builders",
-              // installed dynamically by the library generator
               "ng-packagr",
-              // ng-packagr deps, some are handled if not installed
               "injection-js",
               "browserslist",
               "cacache",
@@ -90,13 +95,17 @@
               "sass",
               "stylus",
               "tailwindcss",
-              // used in the CT angular plugin where Cy is already installed to use it.
               "cypress",
-              // we have only one type import, so it's not a runtime dependency
               "esbuild"
             ]
           }
         ]
+      }
+    },
+    {
+      "files": ["*.ts"],
+      "rules": {
+        "@angular-eslint/prefer-standalone": "off"
       }
     }
   ]

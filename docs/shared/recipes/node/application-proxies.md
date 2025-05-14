@@ -1,3 +1,8 @@
+---
+title: Set Up Application Proxies
+description: Learn how to configure proxies for your frontend applications to communicate with backend services during local development, avoiding CORS issues with Webpack, Vite, and Nx executors.
+---
+
 # Set Up App Proxies
 
 It is useful to set up frontend proxies to your backend app during local development. By proxying requests, you won't need to set up [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) when communicating with the backend.
@@ -91,9 +96,9 @@ using executors, then the Node, Nest and Express app generators have an option t
 can be done by passing the `--frontendProject` with the project name you wish to enable proxy support for.
 
 ```shell
-nx g @nx/node:app <node-app> --frontendProject my-react-app
-nx g @nx/nest:app <nest-app> --frontendProject my-react-app
-nx g @nx/express:app <express-app> --frontendProject my-react-app
+nx g @nx/node:app apps/<node-app> --frontendProject my-react-app
+nx g @nx/nest:app apps/<nest-app> --frontendProject my-react-app
+nx g @nx/express:app apps/<express-app> --frontendProject my-react-app
 ```
 
 This command will generate and configure a `proxy.conf.json` file that will be used by the frontend project's `serve` target to redirect calls to `/api` to instead go to `http://localhost:3000/api`.

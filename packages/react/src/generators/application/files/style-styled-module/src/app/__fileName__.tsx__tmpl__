@@ -1,39 +1,48 @@
-<% if (classComponent) { %>
+<%_ if (classComponent) { _%>
 import { Component } from 'react';
-<% } %>
+<%_ } _%>
 import styled from '<%= styledModule %>';
-<% if (!minimal) { %>
+<%_ if (!minimal) { _%>
 import NxWelcome from "./nx-welcome";
-<% } %>
+<%_ } _%>
 
 const StyledApp = styled.div`
     // Your style here
 `;
 
-<% if (classComponent) { %>
+<%_ if (classComponent) { _%>
 export class App extends Component {
-  render() {
-<% } else { %>
-export function App() {
-<% } %>
-  return (
+  override render() {
+    return (
       <StyledApp>
-        <% if (!minimal) { %>
+        <%_ if (!minimal) { _%>
         <NxWelcome title="<%= projectName %>"/>
-        <% } else { %>
-          <h1>
-            <span> Hello there, </span>
-            Welcome <%= projectName %> 👋
-          </h1>
-        <% } %>
+        <%_ } else { _%>
+        <h1>
+          <span> Hello there, </span>
+          Welcome <%= projectName %> 👋
+        </h1>
+        <%_ } _%>
       </StyledApp>
-  );
-<% if (classComponent) { %>
+    );
   }
 }
-<% } else { %>
+<%_ } else { _%>
+export function App() {
+  return (
+    <StyledApp>
+    <%_ if (!minimal) { _%>
+      <NxWelcome title="<%= projectName %>"/>
+    <%_ } else { _%>
+      <h1>
+        <span> Hello there, </span>
+        Welcome <%= projectName %> 👋
+      </h1>
+    <%_ } _%>
+    </StyledApp>
+  );
 }
-<% } %>
+<%_ } _%>
 
 export default App;
 

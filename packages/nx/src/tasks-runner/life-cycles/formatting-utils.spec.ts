@@ -1,4 +1,5 @@
-import { formatFlags } from './formatting-utils';
+import { output } from '../../utils/output';
+import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 
 describe('formatFlags', () => {
   it('should properly show string values', () => {
@@ -39,6 +40,363 @@ describe('formatFlags', () => {
   it('should handle indentation with positionals', () => {
     expect(formatFlags('_____', '_', ['foo', 'bar', 42, 'baz'])).toBe(
       '_____  foo bar 42 baz'
+    );
+  });
+});
+
+describe('formatTargetsAndProjects', () => {
+  it('should handle single project and target', () => {
+    expect(
+      formatTargetsAndProjects(
+        ['myproject'],
+        ['lint', 'build', 'test'],
+        [
+          {
+            id: 'myproject:build',
+            target: {
+              project: 'myproject',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            continuous: false,
+            outputs: [],
+          },
+        ]
+      )
+    ).toEqual(`target ${output.bold('build')} for project myproject`);
+
+    expect(
+      formatTargetsAndProjects(
+        ['myproject'],
+        ['lint', 'build', 'test'],
+        [
+          {
+            id: 'myproject:lint',
+            target: {
+              project: 'myproject',
+              target: 'lint',
+            },
+            overrides: {},
+            parallelism: false,
+            continuous: false,
+            outputs: [],
+          },
+        ]
+      )
+    ).toEqual(`target ${output.bold('lint')} for project myproject`);
+  });
+
+  it('should handle single project and multiple targets', () => {
+    expect(
+      formatTargetsAndProjects(
+        ['myproject'],
+        ['lint', 'build', 'test'],
+        [
+          {
+            id: 'myproject:build',
+            target: {
+              project: 'myproject',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            continuous: false,
+            outputs: [],
+          },
+          {
+            id: 'myproject:test',
+            target: {
+              project: 'myproject',
+              target: 'test',
+            },
+            overrides: {},
+            parallelism: false,
+            continuous: false,
+            outputs: [],
+          },
+        ]
+      )
+    ).toEqual(
+      `targets ${output.bold('build')}, ${output.bold(
+        'test'
+      )} for project myproject`
+    );
+    expect(
+      formatTargetsAndProjects(
+        ['myproject', 'myproject2'],
+        ['lint', 'build', 'test'],
+        [
+          {
+            id: 'myproject:lint',
+            target: {
+              project: 'myproject',
+              target: 'lint',
+            },
+            overrides: {},
+            parallelism: false,
+            continuous: false,
+            outputs: [],
+          },
+        ]
+      )
+    ).toEqual(`target ${output.bold('lint')} for project myproject`);
+
+    expect(
+      formatTargetsAndProjects(
+        ['myproject', 'myproject2'],
+        ['lint', 'build', 'test'],
+        [
+          {
+            id: 'myproject2:lint',
+            target: {
+              project: 'myproject2',
+              target: 'lint',
+            },
+            overrides: {},
+            parallelism: false,
+            continuous: false,
+            outputs: [],
+          },
+        ]
+      )
+    ).toEqual(`target ${output.bold('lint')} for project myproject2`);
+  });
+
+  it('should handle multiple projects and targets', () => {
+    expect(
+      formatTargetsAndProjects(
+        ['myproject', 'myproject2'],
+        ['lint', 'build', 'test'],
+        [
+          {
+            id: 'myproject:build',
+            target: {
+              project: 'myproject',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            continuous: false,
+            outputs: [],
+          },
+          {
+            id: 'myproject2:build',
+            target: {
+              project: 'myproject2',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            continuous: false,
+            outputs: [],
+          },
+        ]
+      )
+    ).toEqual(`target ${output.bold('build')} for 2 projects`);
+
+    expect(
+      formatTargetsAndProjects(
+        ['myproject', 'myproject2'],
+        ['lint', 'build', 'test'],
+        [
+          {
+            id: 'myproject:lint',
+            target: {
+              project: 'myproject',
+              target: 'lint',
+            },
+            overrides: {},
+            parallelism: false,
+            continuous: false,
+            outputs: [],
+          },
+          {
+            id: 'myproject2:lint',
+            target: {
+              project: 'myproject2',
+              target: 'lint',
+            },
+            overrides: {},
+            parallelism: false,
+            continuous: false,
+            outputs: [],
+          },
+        ]
+      )
+    ).toEqual(`target ${output.bold('lint')} for 2 projects`);
+
+    expect(
+      formatTargetsAndProjects(
+        ['myproject', 'myproject2'],
+        ['lint', 'build', 'test'],
+        [
+          {
+            id: 'myproject:lint',
+            target: {
+              project: 'myproject',
+              target: 'lint',
+            },
+            overrides: {},
+            parallelism: false,
+            continuous: false,
+            outputs: [],
+          },
+          {
+            id: 'myproject2:build',
+            target: {
+              project: 'myproject2',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            continuous: false,
+            outputs: [],
+          },
+        ]
+      )
+    ).toEqual(
+      `targets ${output.bold('lint')}, ${output.bold('build')} for 2 projects`
+    );
+  });
+
+  it('should handle dependent tasks', () => {
+    expect(
+      formatTargetsAndProjects(
+        ['myproject', 'myproject2'],
+        ['lint', 'build', 'test'],
+        [
+          {
+            id: 'myproject:build',
+            target: {
+              project: 'myproject',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            continuous: false,
+            outputs: [],
+          },
+          {
+            id: 'myproject3:build',
+            target: {
+              project: 'myproject3',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            continuous: false,
+            outputs: [],
+          },
+        ]
+      )
+    ).toEqual(
+      `target ${output.bold('build')} for project myproject and ${output.bold(
+        1
+      )} task it depends on`
+    );
+
+    expect(
+      formatTargetsAndProjects(
+        ['myproject', 'myproject2'],
+        ['lint', 'build', 'test'],
+        [
+          {
+            id: 'myproject:lint',
+            target: {
+              project: 'myproject',
+              target: 'lint',
+            },
+            overrides: {},
+            parallelism: false,
+            continuous: false,
+            outputs: [],
+          },
+          {
+            id: 'myproject2:lint',
+            target: {
+              project: 'myproject2',
+              target: 'lint',
+            },
+            overrides: {},
+            parallelism: false,
+            continuous: false,
+            outputs: [],
+          },
+          {
+            id: 'myproject3:lint',
+            target: {
+              project: 'myproject3',
+              target: 'lint',
+            },
+            overrides: {},
+            parallelism: false,
+            continuous: false,
+            outputs: [],
+          },
+        ]
+      )
+    ).toEqual(
+      `target ${output.bold('lint')} for 2 projects and ${output.bold(
+        1
+      )} task they depend on`
+    );
+
+    expect(
+      formatTargetsAndProjects(
+        ['myproject', 'myproject2'],
+        ['lint', 'build', 'test'],
+        [
+          {
+            id: 'myproject:lint',
+            target: {
+              project: 'myproject',
+              target: 'lint',
+            },
+            overrides: {},
+            parallelism: false,
+            continuous: false,
+            outputs: [],
+          },
+          {
+            id: 'myproject2:build',
+            target: {
+              project: 'myproject2',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            continuous: false,
+            outputs: [],
+          },
+          {
+            id: 'myproject3:build',
+            target: {
+              project: 'myproject3',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            continuous: false,
+            outputs: [],
+          },
+          {
+            id: 'myproject3:bundle',
+            target: {
+              project: 'myproject3',
+              target: 'bundle',
+            },
+            overrides: {},
+            parallelism: false,
+            continuous: false,
+            outputs: [],
+          },
+        ]
+      )
+    ).toEqual(
+      `targets ${output.bold('lint')}, ${output.bold(
+        'build'
+      )} for 2 projects and ${output.bold(2)} tasks they depend on`
     );
   });
 });

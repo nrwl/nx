@@ -1,3 +1,4 @@
+export * from './lib/animated-beam';
 export * from './lib/animate-value';
 export * from './lib/blur-fade';
 export * from './lib/fit-text';

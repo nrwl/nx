@@ -6,6 +6,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { SectionHeading } from '@nx/nx-dev/ui-common';
 import Link from 'next/link';
+import { ReactElement } from 'react';
 
 const features = [
   {
@@ -41,9 +42,9 @@ const features = [
   },
 ];
 
-export function EnhancedWithAi(): JSX.Element {
+export function EnhancedWithAi(): ReactElement {
   return (
-    <section id="ai-for-your-ci">
+    <section id="ai-for-your-ci" className="scroll-mt-24">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <SectionHeading as="h2" variant="title" id="deep-understanding">

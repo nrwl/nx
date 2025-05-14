@@ -1,3 +1,8 @@
+---
+title: Creating Files with a Generator
+description: Learn how to create, update, and manage files in your Nx workspace using generators, including working with static and dynamic file templates.
+---
+
 # Creating files with a generator
 
 Generators provide an API for managing files within your workspace. You can use generators to do things such as create, update, move, and delete files. Files with static or dynamic content can also be created.
@@ -45,7 +50,10 @@ import {
 import { libraryGenerator } from '@nx/js';
 
 export default async function (tree: Tree, schema: any) {
-  await libraryGenerator(tree, { name: schema.name });
+  await libraryGenerator(tree, {
+    name: schema.name,
+    directory: `libs/${schema.name}`,
+  });
   const libraryRoot = readProjectConfiguration(tree, schema.name).root;
   generateFiles(
     tree, // the virtual file system

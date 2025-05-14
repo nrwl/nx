@@ -1,0 +1,15 @@
+{
+  "name": "update-angular-cli-version-17-3-0",
+  "cli": "nx",
+  "version": "18.2.0-beta.0",
+  "requires": { "@angular/core": ">=17.3.0" },
+  "description": "Update the @angular/cli package version to ~17.3.0.",
+  "factory": "./src/migrations/update-18-2-0/update-angular-cli",
+  "implementation": "/packages/angular/src/migrations/update-18-2-0/update-angular-cli.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

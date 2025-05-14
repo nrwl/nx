@@ -1,34 +1,27 @@
 import { Tree } from '@nx/devkit';
 import {
-  addDependenciesToPackageJson,
   addProjectConfiguration,
   ensurePackage,
   getPackageManagerCommand,
   joinPathFragments,
   readNxJson,
-  readProjectConfiguration,
-  updateProjectConfiguration,
 } from '@nx/devkit';
 import { nxVersion } from '../../../utils/versions';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
-import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { E2EWebServerDetails } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 
 export async function addE2e(tree: Tree, options: NormalizedSchema) {
   // since e2e are separate projects, default to adding plugins
   const nxJson = readNxJson(tree);
   const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
+    nxJson['useInferencePlugins'] !== false &&
+    process.env.NX_ADD_PLUGINS !== 'false';
 
   const e2eWebServerInfo = getAngularE2EWebServerInfo(
     tree,
     options.name,
     options.port
   );
-  // TODO: This can call `@nx/web:static-config` generator when ready
-  addFileServerTarget(tree, options, 'serve-static', e2eWebServerInfo.e2ePort);
 
   if (options.e2eTestRunner === 'cypress') {
     const { configurationGenerator } = ensurePackage<
@@ -60,14 +53,6 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       rootProject: options.rootProject,
       addPlugin,
     });
-    if (addPlugin) {
-      await addE2eCiTargetDefaults(
-        tree,
-        '@nx/cypress/plugin',
-        '^build',
-        joinPathFragments(options.e2eProjectRoot, 'cypress.config.ts')
-      );
-    }
   } else if (options.e2eTestRunner === 'playwright') {
     const { configurationGenerator } = ensurePackage<
       typeof import('@nx/playwright')
@@ -92,44 +77,9 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       rootProject: options.rootProject,
       addPlugin,
     });
-    if (addPlugin) {
-      await addE2eCiTargetDefaults(
-        tree,
-        '@nx/playwright/plugin',
-        '^build',
-        joinPathFragments(options.e2eProjectRoot, 'playwright.config.ts')
-      );
-    }
-  }
-}
-
-function addFileServerTarget(
-  tree: Tree,
-  options: NormalizedSchema,
-  targetName: string,
-  e2ePort: number
-) {
-  if (!options.skipPackageJson) {
-    addDependenciesToPackageJson(tree, {}, { '@nx/web': nxVersion });
   }
 
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-  const isUsingApplicationBuilder =
-    angularMajorVersion >= 17 && options.bundler === 'esbuild';
-
-  const projectConfig = readProjectConfiguration(tree, options.name);
-  projectConfig.targets[targetName] = {
-    executor: '@nx/web:file-server',
-    options: {
-      buildTarget: `${options.name}:build`,
-      port: e2ePort,
-      staticFilePath: isUsingApplicationBuilder
-        ? joinPathFragments(options.outputPath, 'browser')
-        : undefined,
-      spa: true,
-    },
-  };
-  updateProjectConfiguration(tree, options.name, projectConfig);
+  return e2eWebServerInfo.e2ePort;
 }
 
 function getAngularE2EWebServerInfo(

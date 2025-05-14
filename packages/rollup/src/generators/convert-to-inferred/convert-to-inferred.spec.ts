@@ -100,7 +100,7 @@ describe('Rollup - Convert Executors To Plugin', () => {
           include: [`${project.root}/**/*`],
         },
       ]);
-      expect(tree.read('mypkg/rollup.config.js', 'utf-8'))
+      expect(tree.read('mypkg/rollup.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { withNx } = require('@nx/rollup/with-nx');
 
@@ -124,8 +124,8 @@ describe('Rollup - Convert Executors To Plugin', () => {
         module.exports = config;
         "
       `);
-      expect(tree.exists('otherpkg1/rollup.config.js')).toBe(false);
-      expect(tree.exists('otherpkg2/rollup.config.js')).toBe(false);
+      expect(tree.exists('otherpkg1/rollup.config.cjs')).toBe(false);
+      expect(tree.exists('otherpkg2/rollup.config.cjs')).toBe(false);
       expect(readProjectConfiguration(tree, project.name).targets).toEqual({});
     });
 
@@ -187,7 +187,7 @@ describe('Rollup - Convert Executors To Plugin', () => {
         project: projectWithMultipleConfigsAndEntries.name,
       });
 
-      expect(tree.read('mypkg1/rollup.config.js', 'utf-8'))
+      expect(tree.read('mypkg1/rollup.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { withNx } = require('@nx/rollup/with-nx');
 
@@ -213,7 +213,7 @@ describe('Rollup - Convert Executors To Plugin', () => {
         module.exports = config;
         "
       `);
-      expect(tree.read('mypkg2/rollup.config.js', 'utf-8'))
+      expect(tree.read('mypkg2/rollup.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { withNx } = require('@nx/rollup/with-nx');
 
@@ -254,31 +254,31 @@ describe('Rollup - Convert Executors To Plugin', () => {
       ).toEqual({});
     });
 
-    it('should handle conflicts with existing rollup.config.js file', async () => {
+    it('should handle conflicts with existing rollup.config.cjs file', async () => {
       const project = createProject(tree, {
         name: 'mypkg1',
         root: 'mypkg1',
         targetOptions: {
           rollupConfig: [
-            'mypkg1/rollup.config.js',
+            'mypkg1/rollup.config.cjs',
             'mypkg1/rollup.other.config.js',
           ],
         },
       });
       tree.write(
-        'mypkg1/rollup.config.js',
+        'mypkg1/rollup.config.cjs',
         '// existing config\nmodule.exports = {};'
       );
 
       await convertToInferred(tree, { project: project.name });
 
-      expect(tree.read('mypkg1/rollup.migrated.config.js', 'utf-8'))
+      expect(tree.read('mypkg1/rollup.migrated.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
         "// existing config
         module.exports = {};
         "
       `);
-      expect(tree.read('mypkg1/rollup.config.js', 'utf-8'))
+      expect(tree.read('mypkg1/rollup.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { withNx } = require('@nx/rollup/with-nx');
 
@@ -299,7 +299,7 @@ describe('Rollup - Convert Executors To Plugin', () => {
           // output: { sourcemap: true },
         });
 
-        config = require('./rollup.migrated.config.js')(config, options);
+        config = require('./rollup.migrated.config.cjs')(config, options);
         config = require('./rollup.other.config.js')(config, options);
 
         module.exports = config;
@@ -422,7 +422,7 @@ describe('Rollup - Convert Executors To Plugin', () => {
 
       await convertToInferred(tree, { project: project.name });
 
-      expect(tree.read('mypkg/rollup.config.js', 'utf-8'))
+      expect(tree.read('mypkg/rollup.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { withNx } = require('@nx/rollup/with-nx');
 
@@ -521,7 +521,7 @@ describe('Rollup - Convert Executors To Plugin', () => {
         readProjectConfiguration(tree, project.name).targets.build.cache
       ).toBe(true);
       // Plugin options are read from targetDefaults since they were missing in project.json
-      expect(tree.read('mypkg1/rollup.config.js', 'utf-8'))
+      expect(tree.read('mypkg1/rollup.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { withNx } = require('@nx/rollup/with-nx');
 
@@ -574,7 +574,7 @@ describe('Rollup - Convert Executors To Plugin', () => {
           plugin: '@nx/rollup/plugin',
         },
       ]);
-      expect(tree.read('mypkg/rollup.config.js', 'utf-8'))
+      expect(tree.read('mypkg/rollup.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { withNx } = require('@nx/rollup/with-nx');
 
@@ -599,8 +599,8 @@ describe('Rollup - Convert Executors To Plugin', () => {
         module.exports = config;
         "
       `);
-      expect(tree.exists('otherpkg1/rollup.config.js')).toBe(false);
-      expect(tree.exists('otherpkg2/rollup.config.js')).toBe(false);
+      expect(tree.exists('otherpkg1/rollup.config.cjs')).toBe(false);
+      expect(tree.exists('otherpkg2/rollup.config.cjs')).toBe(false);
       expect(readProjectConfiguration(tree, project.name).targets).toEqual({});
     });
   });
@@ -623,7 +623,7 @@ describe('Rollup - Convert Executors To Plugin', () => {
 
       await convertToInferred(tree, {});
 
-      expect(tree.read('pkg1/rollup.config.js', 'utf-8'))
+      expect(tree.read('pkg1/rollup.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { withNx } = require('@nx/rollup/with-nx');
 
@@ -647,7 +647,7 @@ describe('Rollup - Convert Executors To Plugin', () => {
         module.exports = config;
         "
       `);
-      expect(tree.read('pkg2/rollup.config.js', 'utf-8'))
+      expect(tree.read('pkg2/rollup.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { withNx } = require('@nx/rollup/with-nx');
 

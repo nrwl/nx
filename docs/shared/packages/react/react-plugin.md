@@ -1,3 +1,9 @@
+---
+title: React Plugin for Nx
+description: Learn how to use the @nx/react plugin to create and manage React applications and libraries in your Nx workspace, including components, hooks, and more.
+keywords: [react]
+---
+
 The React plugin contains executors and generators for managing React applications and libraries within an Nx workspace.
 It provides:
 
@@ -12,8 +18,8 @@ It provides:
 
 To create a new workspace with React, run `npx create-nx-workspace@latest --preset=react-standalone`.
 
-{% callout type="note" title="React Tutorials" %}
-For a full tutorial experience, follow the [React Standalone Tutorial](/getting-started/tutorials/react-standalone-tutorial) or the [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
+{% callout type="note" title="React Tutorial" %}
+For a full tutorial experience, follow the [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
 {% /callout %}
 
 ### Installation
@@ -24,26 +30,11 @@ Make sure to install the `@nx/react` version that matches the version of `nx` in
 
 In any Nx workspace, you can install `@nx/react` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/react
 ```
 
 This will install the correct version of `@nx/react`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/react` package with your package manager.
-
-```shell
-npm add -D @nx/react
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Using the @nx/react Plugin
 
@@ -52,7 +43,7 @@ npm add -D @nx/react
 You can add a new application with the following:
 
 ```shell
-nx g @nx/react:app my-new-app
+nx g @nx/react:app apps/my-new-app
 ```
 
 To start the application in development mode, run `nx serve my-new-app`.
@@ -60,12 +51,12 @@ To start the application in development mode, run `nx serve my-new-app`.
 And add a new library as follows:
 
 ```shell
-nx g @nx/react:lib my-new-lib
+nx g @nx/react:lib libs/my-new-lib
 
 # If you want the library to be buildable or publishable to npm
-nx g @nx/react:lib my-new-lib --bundler=vite
-nx g @nx/react:lib my-new-lib --bundler=rollup
-nx g @nx/react:lib my-new-lib \
+nx g @nx/react:lib libs/my-new-lib --bundler=vite
+nx g @nx/react:lib libs/my-new-lib --bundler=rollup
+nx g @nx/react:lib libs/my-new-lib \
 --publishable \
 --importPath=@myorg/my-new-lib
 ```
@@ -77,14 +68,11 @@ Read more about [building and publishing libraries here](/concepts/buildable-and
 Adding a component to an existing project can be done with:
 
 ```shell
-nx g @nx/react:component my-new-component \
---project=my-new-app
+nx g @nx/react:component libs/my-new-lib/src/lib/my-new-component
 
 # Note: If you want to export the component
 # from the library use  --export
-nx g @nx/react:component my-new-component \
---project=my-new-lib \
---export
+nx g @nx/react:component libs/my-new-lib/src/lib/my-new-component --export
 ```
 
 Replace `my-new-app` and `my-new-lib` with the name of your projects.
@@ -94,7 +82,7 @@ Replace `my-new-app` and `my-new-lib` with the name of your projects.
 If you want to add a new hook, run the following
 
 ```shell
-nx g @nx/react:hook my-new-hook --project=my-new-lib
+nx g @nx/react:hook libs/my-new-lib/src/lib/my-new-hook
 ```
 
 Replace `my-new-lib` with the name of your project.
@@ -147,7 +135,6 @@ The library in `dist` is publishable to npm or a private registry.
 
 ## More Documentation
 
-- [React Standalone Tutorial](/getting-started/tutorials/react-standalone-tutorial)
 - [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
 - [Using Cypress](/nx-api/cypress)
 - [Using Jest](/nx-api/jest)

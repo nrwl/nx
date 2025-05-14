@@ -91,6 +91,13 @@ export function registerTsProject(
   //       Based on limited testing, it doesn't seem to matter if we register it multiple times, but just in
   //       case let's keep a flag to prevent it.
   if (!isTsEsmLoaderRegistered) {
+    // We need a way to ensure that `.ts` files are treated as ESM not CJS.
+    // Since there is no way to pass compilerOptions like we do with the programmatic API, we should default
+    // the environment variable that ts-node checks.
+    process.env.TS_NODE_COMPILER_OPTIONS ??= JSON.stringify({
+      moduleResolution: 'nodenext',
+      module: 'nodenext',
+    });
     const module = require('node:module');
     if (module.register && packageIsInstalled('ts-node/esm')) {
       const url = require('node:url');
@@ -238,6 +245,7 @@ export function getTranspiler(
   // use NodeJs module resolution until support for TS 4.x is dropped and then
   // we can switch to Node10
   compilerOptions.moduleResolution = ts.ModuleResolutionKind.NodeJs;
+  compilerOptions.customConditions = null;
   compilerOptions.target = ts.ScriptTarget.ES2021;
   compilerOptions.inlineSourceMap = true;
   compilerOptions.skipLibCheck = true;
@@ -286,8 +294,7 @@ export function getTranspiler(
  * @returns cleanup method
  */
 export function registerTranspiler(
-  compilerOptions: CompilerOptions,
-  tsConfigRaw?: unknown
+  compilerOptions: CompilerOptions
 ): () => void {
   // Function to register transpiler that returns cleanup function
   const transpiler = getTranspiler(compilerOptions);

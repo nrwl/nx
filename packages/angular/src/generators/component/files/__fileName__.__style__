@@ -2,5 +2,5 @@
   display: block;
 }
 <% } else { %>\:host
-  display: block;
+  display: block
 <% }} %>

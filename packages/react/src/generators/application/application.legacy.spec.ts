@@ -1,30 +1,31 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
-import { getProjects, readProjectConfiguration, Tree } from '@nx/devkit';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
+import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/versions', () => ({
+  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+  getInstalledCypressMajorVersion: jest.fn(),
+}));
 describe('react app generator (legacy)', () => {
   let appTree: Tree;
   let schema: Schema = {
     compiler: 'babel',
     e2eTestRunner: 'cypress',
     skipFormat: false,
-    name: 'my-app',
-    linter: Linter.EsLint,
+    directory: 'my-app',
+    linter: 'eslint',
     style: 'css',
     strict: true,
-    projectNameAndRootFormat: 'as-provided',
     addPlugin: false,
   };
   let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
+    ReturnType<typeof getInstalledCypressMajorVersion>
+  > = getInstalledCypressMajorVersion as never;
 
   beforeEach(() => {
     mockedInstalledCypressVersion.mockReturnValue(10);
@@ -34,7 +35,7 @@ describe('react app generator (legacy)', () => {
   it('should setup webpack config that is compatible without project targets', async () => {
     await applicationGenerator(appTree, {
       ...schema,
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'webpack',
     });
 
@@ -133,7 +134,7 @@ describe('react app generator (legacy)', () => {
   it('should setup vite', async () => {
     await applicationGenerator(appTree, {
       ...schema,
-      name: 'my-vite-app',
+      directory: 'my-vite-app',
       bundler: 'vite',
       skipFormat: true,
     });

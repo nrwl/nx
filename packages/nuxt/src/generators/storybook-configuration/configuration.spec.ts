@@ -2,7 +2,6 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import { logger, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import applicationGenerator from '../application/application';
 import storybookConfigurationGenerator from './configuration';
 import { componentGenerator } from '@nx/vue';
@@ -84,18 +83,16 @@ export async function createTestApp(
 
   await applicationGenerator(appTree, {
     e2eTestRunner: 'none',
-    linter: Linter.EsLint,
+    linter: 'eslint',
     skipFormat: false,
     style: 'css',
     unitTestRunner: 'none',
-    name: appName,
+    directory: appName,
     js: plainJS,
-    projectNameAndRootFormat: 'as-provided',
   });
 
   await componentGenerator(appTree, {
-    name: 'my-component',
-    project: appName,
+    path: `${appName}/src/components/my-component`,
   });
 
   return appTree;

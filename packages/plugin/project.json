@@ -44,14 +44,8 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/plugin"],
-      "options": {
-        "command": "node ./scripts/copy-readme.js plugin"
-      }
-    },
-    "add-extra-dependencies": {
-      "command": "node ./scripts/add-dependency-to-build.js plugin @nrwl/nx-plugin"
+      "outputs": ["{workspaceRoot}/build/packages/plugin/README.md"],
+      "command": "node ./scripts/copy-readme.js plugin"
     }
   }
 }

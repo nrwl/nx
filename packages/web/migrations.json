@@ -1,27 +1,4 @@
 {
-  "generators": {
-    "update-16-0-0-add-nx-packages": {
-      "cli": "nx",
-      "version": "16.0.0-beta.1",
-      "description": "Replace @nrwl/web with @nx/web",
-      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
-    },
-    "update-16-0-0-update-executors": {
-      "cli": "nx",
-      "version": "16.0.0-beta.4",
-      "description": "Replace @nrwl/web executors with @nx/webpack and @nx/rollup",
-      "implementation": "./src/migrations/update-16-0-0-update-executors/update-16-0-0-update-executors"
-    }
-  },
-  "packageJsonUpdates": {
-    "17.3.0": {
-      "version": "17.3.0-beta.3",
-      "packages": {
-        "@types/node": {
-          "version": "18.16.9",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    }
-  }
+  "generators": {},
+  "packageJsonUpdates": {}
 }

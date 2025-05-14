@@ -37,11 +37,9 @@
   "dependencies": {
     "@nx/devkit": "file:../devkit",
     "@babel/plugin-proposal-decorators": "^7.22.7",
-    "@svgr/webpack": "^8.0.1",
-    "chalk": "^4.1.0",
+    "@svgr/webpack": "^8.1.0",
     "copy-webpack-plugin": "^10.2.4",
     "file-loader": "^6.2.0",
-    "fs-extra": "^11.1.0",
     "ignore": "^5.0.4",
     "semver": "^7.5.3",
     "tslib": "^2.3.0",
@@ -51,7 +49,6 @@
     "@nx/react": "file:../react",
     "@nx/web": "file:../web",
     "@nx/webpack": "file:../webpack",
-    "@nx/workspace": "file:../workspace",
     "@phenomnomnominal/tsquery": "~5.0.1"
   },
   "publishConfig": {

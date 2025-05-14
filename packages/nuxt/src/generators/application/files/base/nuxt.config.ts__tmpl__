@@ -19,9 +19,9 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
-  <% if (style !== 'none') { %>
+  <%_ if (style !== 'none') { _%>
   css: ['~/assets/css/styles.<%= style %>'],
-  <% } %>
+  <%_ } _%>
   vite: {
     plugins: [
       nxViteTsPaths()

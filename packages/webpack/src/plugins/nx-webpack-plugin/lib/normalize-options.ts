@@ -1,5 +1,5 @@
-import { basename, dirname, join, relative, resolve } from 'path';
-import { statSync } from 'fs';
+import { basename, dirname, join, parse, relative, resolve } from 'path';
+import { existsSync, statSync } from 'fs';
 import {
   normalizePath,
   parseTargetString,
@@ -74,7 +74,11 @@ export function normalizeOptions(
     );
   }
 
-  const sourceRoot = projectNode.data.sourceRoot ?? projectNode.data.root;
+  const sourceRoot =
+    projectNode.data.sourceRoot ??
+    (existsSync(join(workspaceRoot, projectNode.data.root, 'src'))
+      ? join(projectNode.data.root, 'src')
+      : projectNode.data.root);
 
   if (!combinedPluginAndMaybeExecutorOptions.main) {
     throw new Error(
@@ -128,6 +132,9 @@ export function normalizeOptions(
     target: combinedPluginAndMaybeExecutorOptions.target,
     targetName,
     vendorChunk: combinedPluginAndMaybeExecutorOptions.vendorChunk ?? !isProd,
+    sassImplementation:
+      combinedPluginAndMaybeExecutorOptions.sassImplementation ??
+      'sass-embedded',
   };
 }
 
@@ -204,6 +211,18 @@ function normalizeRelativePaths(
   for (const [fieldName, fieldValue] of Object.entries(options)) {
     if (isRelativePath(fieldValue)) {
       options[fieldName] = join(projectRoot, fieldValue);
+    } else if (fieldName === 'additionalEntryPoints') {
+      for (let i = 0; i < fieldValue.length; i++) {
+        const v = fieldValue[i];
+        if (isRelativePath(v)) {
+          fieldValue[i] = {
+            entryName: parse(v).name,
+            entryPath: join(projectRoot, v),
+          };
+        } else if (isRelativePath(v.entryPath)) {
+          v.entryPath = join(projectRoot, v.entryPath);
+        }
+      }
     } else if (Array.isArray(fieldValue)) {
       for (let i = 0; i < fieldValue.length; i++) {
         if (isRelativePath(fieldValue[i])) {

@@ -3,100 +3,147 @@
 exports[`lib --bundler none, unit test runner vitest should configure vite 1`] = `
 "
 import { defineConfig } from 'vite';
-      import react from '@vitejs/plugin-react';
-      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-      import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
-      
-      export default defineConfig({
-        root: __dirname,
-        cacheDir: '../node_modules/.vite/my-lib',
-        
-        
-        
-        plugins: [react(),
-nxViteTsPaths(),
-nxCopyAssetsPlugin(['*.md']),
-],
-        
-    // Uncomment this if you are using workers. 
-    // worker: {
-    //  plugins: [ nxViteTsPaths() ],
-    // },
-        
-        
-        test: {
-          'watch': false,
-'globals': true,
-'environment': "jsdom",
-'include': ["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
-'reporters': ["default"],
-'coverage': {"reportsDirectory":"../coverage/my-lib","provider":"v8"},
+import react from '@vitejs/plugin-react';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-        },
-      });"
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../node_modules/.vite/my-lib',
+  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md']), ],
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+  test: {
+    'watch': false,
+    'globals': true,
+    'environment': "jsdom",
+    'include': ["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    'reporters': ["default"],
+    'coverage': {
+    'reportsDirectory': '../coverage/my-lib',
+    'provider': 'v8' as const,
+}
+  },
+}));
+"
+`;
+
+exports[`lib --style none should not use styles when style none 1`] = `
+"
+
+export function MyLib() {
+  return (
+    <div>
+      <h1>Welcome to MyLib!</h1>
+    </div>
+  );
+}
+
+export default MyLib;
+
+
+
+"
+`;
+
+exports[`lib --style scss should use scss for styles 1`] = `
+"
+import styles from './my-lib.module.scss';
+
+export function MyLib() {
+  return (
+    <div className={styles['container']}>
+      <h1>Welcome to MyLib!</h1>
+    </div>
+  );
+}
+
+export default MyLib;
+
+
+
+"
+`;
+
+exports[`lib --style tailwind should not generate any styles file when style is tailwind 1`] = `
+"
+
+export function MyLib() {
+  return (
+    <div>
+      <h1>Welcome to MyLib!</h1>
+    </div>
+  );
+}
+
+export default MyLib;
+
+
+
+"
 `;
 
 exports[`lib should add vite types to tsconfigs 1`] = `
-"
-      /// <reference types='vitest' />
-      import { defineConfig } from 'vite';
-      import react from '@vitejs/plugin-react';
+"/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
 import * as path from 'path';
-      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-      import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
-      
-      export default defineConfig({
-        root: __dirname,
-        cacheDir: '../node_modules/.vite/my-lib',
-        
-        
-        
-        plugins: [react(),
-nxViteTsPaths(),
-nxCopyAssetsPlugin(['*.md']),
-dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json') })],
-        
-    // Uncomment this if you are using workers. 
-    // worker: {
-    //  plugins: [ nxViteTsPaths() ],
-    // },
-        
-      // Configuration for building your library.
-      // See: https://vitejs.dev/guide/build.html#library-mode
-      build: {
-        outDir: '../dist/my-lib',
-        emptyOutDir: true,
-        reportCompressedSize: true,
-        commonjsOptions: {
-          transformMixedEsModules: true,
-        },
-        lib: {
-          // Could also be a dictionary or array of multiple entry points.
-          entry: 'src/index.ts',
-          name: 'my-lib',
-          fileName: 'index',
-          // Change this to the formats you want to support.
-          // Don't forget to update your package.json as well.
-          formats: ['es', 'cjs']
-        },
-        rollupOptions: {
-          // External packages that should not be bundled into your library.
-          external: ['react','react-dom','react/jsx-runtime']
-        },
-      },
-        
-        test: {
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../node_modules/.vite/my-lib',
+  plugins: [
+    react(),
+    nxViteTsPaths(),
+    nxCopyAssetsPlugin(['*.md']),
+    dts({
+      entryRoot: 'src',
+      tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
+    }),
+  ],
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+  // Configuration for building your library.
+  // See: https://vitejs.dev/guide/build.html#library-mode
+  build: {
+    outDir: '../dist/my-lib',
+    emptyOutDir: true,
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+    lib: {
+      // Could also be a dictionary or array of multiple entry points.
+      entry: 'src/index.ts',
+      name: 'my-lib',
+      fileName: 'index',
+      // Change this to the formats you want to support.
+      // Don't forget to update your package.json as well.
+      formats: ['es' as const],
+    },
+    rollupOptions: {
+      // External packages that should not be bundled into your library.
+      external: ['react', 'react-dom', 'react/jsx-runtime'],
+    },
+  },
+  test: {
     watch: false,
     globals: true,
     environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/my-lib',
-      provider: 'v8',
-    }
+      provider: 'v8' as const,
+    },
   },
-      });"
+}));
+"
 `;

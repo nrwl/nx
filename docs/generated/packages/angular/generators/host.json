@@ -1,44 +1,46 @@
 {
   "name": "host",
-  "factory": "./src/generators/host/host#hostInternal",
+  "factory": "./src/generators/host/host",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxMFHost",
     "cli": "nx",
-    "title": "Nx Module Federation Host Application",
-    "description": "Create an Angular Host Module Federation Application.",
+    "title": "Nx Module Federation Consumer (Host) Application",
+    "description": "Create an Angular Consumer (Host) Module Federation Application.",
     "type": "object",
     "examples": [
       {
         "command": "nx g @nx/angular:host appName --remotes=remote1",
-        "description": "Create an Angular application with configuration in place for Module Federation. If the `remotes` option is provided, attach the remote application to this application's configuration"
+        "description": "Create an Angular application with configuration in place for Module Federation. If the `remotes` option is provided, attach the Producer (remote) application to this application's configuration"
+      },
+      {
+        "command": "nx g @nx/angular:consumer appName --producers=remote1",
+        "description": "Create an Angular application with configuration in place for Module Federation. If the `producers` option is provided, attach the Producer (remote) application to this application's configuration"
       }
     ],
     "properties": {
+      "directory": {
+        "description": "The directory of the new application.",
+        "type": "string",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "Which directory do you want to create the application in?"
+      },
       "name": {
         "type": "string",
-        "description": "The name to give to the host Angular application.",
-        "$default": { "$source": "argv", "index": 0 },
-        "pattern": "^[a-zA-Z][^:]*$"
+        "description": "The name to give to the Consumer (host) Angular application.",
+        "pattern": "^[a-zA-Z][^:]*$",
+        "x-priority": "important"
       },
       "remotes": {
         "type": "array",
-        "description": "The names of the remote applications to add to the host.",
-        "x-priority": "important"
+        "description": "The names of the Producers (remote) applications to add to the Consumer (host).",
+        "x-priority": "important",
+        "alias": "producers"
       },
       "dynamic": {
         "type": "boolean",
         "description": "Should the host application use dynamic federation?",
         "default": false
-      },
-      "directory": {
-        "description": "The directory of the new application.",
-        "type": "string"
-      },
-      "projectNameAndRootFormat": {
-        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
-        "type": "string",
-        "enum": ["as-provided", "derived"]
       },
       "style": {
         "description": "The file extension to be used for style files.",
@@ -108,8 +110,9 @@
       },
       "unitTestRunner": {
         "type": "string",
-        "enum": ["jest", "none"],
+        "enum": ["jest", "vitest", "none"],
         "description": "Test runner to use for unit tests.",
+        "x-prompt": "Which unit test runner would you like to use?",
         "default": "jest"
       },
       "e2eTestRunner": {
@@ -138,12 +141,6 @@
         "description": "Create an application with stricter type checking and build optimization options.",
         "default": true
       },
-      "standaloneConfig": {
-        "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-        "type": "boolean",
-        "default": true,
-        "x-deprecated": "Nx only supports standaloneConfig"
-      },
       "setParserOptionsProject": {
         "type": "boolean",
         "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
@@ -162,14 +159,18 @@
       },
       "standalone": {
         "type": "boolean",
-        "description": "Whether to generate a host application that uses standalone components.",
+        "description": "Whether to generate a Consumer (host) application that uses standalone components.",
         "default": true
       },
       "ssr": {
-        "description": "Whether to configure SSR for the host application",
+        "description": "Whether to configure SSR for the Consumer (host) application",
         "type": "boolean",
         "default": false,
         "x-priority": "important"
+      },
+      "serverRouting": {
+        "description": "Creates a server application using the Server Routing and App Engine APIs (Developer Preview). _Note: this is only supported in Angular versions >= 19.0.0_.",
+        "type": "boolean"
       },
       "typescriptConfiguration": {
         "type": "boolean",
@@ -178,13 +179,13 @@
       }
     },
     "additionalProperties": false,
-    "required": ["name"],
+    "required": ["directory"],
     "presets": []
   },
   "x-type": "application",
   "description": "Generate a Host Angular Module Federation Application.",
-  "implementation": "/packages/angular/src/generators/host/host#hostInternal.ts",
-  "aliases": [],
+  "aliases": ["consumer"],
+  "implementation": "/packages/angular/src/generators/host/host.ts",
   "hidden": false,
   "path": "/packages/angular/src/generators/host/schema.json",
   "type": "generator"

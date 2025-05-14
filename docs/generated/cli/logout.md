@@ -1,11 +1,11 @@
 ---
 title: 'logout - CLI command'
-description: 'Logout from Nx Cloud.'
+description: 'Logout from Nx Cloud. This command is an alias for [`nx-cloud logout`](/ci/reference/nx-cloud-cli#npx-nxcloud-logout).'
 ---
 
 # logout
 
-Logout from Nx Cloud.
+Logout from Nx Cloud. This command is an alias for [`nx-cloud logout`](/ci/reference/nx-cloud-cli#npx-nxcloud-logout).
 
 ## Usage
 

@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from 'next';
+import type { ReactNode } from 'react';
 import AppRouterAnalytics from './app-router-analytics';
 import GlobalScripts from './global-scripts';
-
+// import { LiveStreamNotifier } from '@nx/nx-dev/ui-common';
 import '../styles/main.css';
+import { FrontendObservability } from '../lib/components/frontend-observability';
 
 // Metadata for the entire site
 export const metadata: Metadata = {
@@ -48,11 +50,7 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   const gaMeasurementId = 'UA-88380372-10';
   return (
     <html lang="en" className="h-full scroll-smooth" suppressHydrationWarning>
@@ -80,6 +78,8 @@ export default function RootLayout({
       </head>
       <body className="h-full bg-white text-slate-700 antialiased selection:bg-blue-500 selection:text-white dark:bg-slate-900 dark:text-slate-400 dark:selection:bg-sky-500">
         {children}
+        {/* <LiveStreamNotifier /> */}
+        <FrontendObservability />
         <GlobalScripts gaMeasurementId={gaMeasurementId} />
       </body>
     </html>

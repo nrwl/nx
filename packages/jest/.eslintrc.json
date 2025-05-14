@@ -4,13 +4,15 @@
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {}
-    },
-    {
-      "files": ["**/*.ts"],
-      "excludedFiles": ["./src/migrations/**"],
       "rules": {
-        "no-restricted-imports": ["error", "@nx/workspace"]
+        "no-restricted-imports": [
+          "error",
+          "@nx/workspace",
+          {
+            "name": "chalk",
+            "message": "Please use `picocolors` in place of `chalk` for rendering terminal colors"
+          }
+        ]
       }
     },
     {
@@ -39,6 +41,7 @@
               "prettier",
               "jest",
               "@jest/types",
+              "jest-runtime",
               // require.resolve is used for these packages
               "identity-obj-proxy"
             ]

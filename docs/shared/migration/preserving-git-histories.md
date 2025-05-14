@@ -1,4 +1,15 @@
+---
+title: Preserving Git Histories when Migrating Projects to Nx
+description: Learn techniques for maintaining git history when importing standalone projects into your Nx workspace, including proper directory reorganization and merge strategies.
+---
+
 # Preserving Git Histories when Migrating other Projects to your Nx Workspace
+
+{% callout type="note" title="Automatically import with 'nx import'" %}
+
+In Nx 19.8 we introduced `nx import` which helps you import projects into your Nx workspace, including preserving the Git history. [Read more in the according doc](/recipes/adopting-nx/import-project).
+
+{% /callout %}
 
 The nature of a monorepo is to swallow up standalone projects as your organization buys into the benefits of a monorepo workflow.
 
@@ -16,12 +27,19 @@ In order to avoid merge conflicts later, it's best to first do the folder reorga
 
 ```shell
 cd my-standalone-app
+git checkout main
 git fetch
-git checkout -b monorepo-migration origin/master
+git checkout -b monorepo-migration main
 mkdir -p apps/my-standalone-app
 git ls-files | sed 's!/.*!!'| uniq | xargs -i git mv {} apps/my-standalone-app
+```
+
+Check if you need to move back the `.gitignore` file to the root and/or update any paths so you don't commit previously ignored files/folders.
+If all is well proceed with the commit and push.
+
+```shell
 git commit -m "Move files in preparation for monorepo migration"
-git push -u
+git push --set-upstream origin monorepo-migration
 ```
 
 Next, in your monorepo, we'll add a remote repository url for where the standalone app is located:

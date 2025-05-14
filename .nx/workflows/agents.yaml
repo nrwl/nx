@@ -1,43 +1,55 @@
 launch-templates:
   linux-medium:
     resource-class: 'docker_linux_amd64/medium+'
-    image: 'ubuntu22.04-node20.11-v10'
+    image: 'us-east1-docker.pkg.dev/nxcloudoperations/nx-cloud/nx-agents-base-images:ubuntu22.04-node20.19-v1'
     env:
       GIT_AUTHOR_EMAIL: test@test.com
       GIT_AUTHOR_NAME: Test
       GIT_COMMITTER_EMAIL: test@test.com
       GIT_COMMITTER_NAME: Test
       SELECTED_PM: 'pnpm'
-      NPM_CONFIG_PREFIX: '/home/workflows/.npm-global'
+
+      NX_NATIVE_LOGGING: 'nx::native::db'
     init-steps:
       - name: Checkout
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+
+      - name: Check Node Version
+        script: node --version
+
       - name: Cache restore
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
         inputs:
           key: 'pnpm-lock.yaml'
-          paths: |
-            node_modules
-            ~/.cache/Cypress
-            ~/.cache/ms-playwright
-            ~/.pnpm-store
-          base_branch: 'master'
+          paths: .pnpm-store
+          base-branch: 'master'
+
+      - name: Install zip and unzip
+        script: sudo apt-get -yqq install zip unzip
+
+      - name: Install bun
+        script: |
+          curl -fsSL https://bun.sh/install | bash
+          echo "BUN_INSTALL=$HOME/.bun" >> $NX_CLOUD_ENV
+          echo "PATH=$HOME/.bun/bin:$PATH" >> $NX_CLOUD_ENV
+
+      - name: Check bun
+        script: |
+          bun --version
+
       - name: Install e2e deps
         script: |
           sudo apt-get update
           sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev
-      - name: Install Pnpm
-        script: |
-          npm install -g pnpm@9.8.0
 
-      - name: Pnpm Install
+      - name: Pnpm Install from lockfile
         script: |
           pnpm install --frozen-lockfile
 
       - name: Install Browsers
         script: |
           pnpm exec cypress install
-          pnpm exec playwright install
+          pnpm exec playwright install --with-deps
 
       - name: Install Rust
         script: |
@@ -53,5 +65,86 @@ launch-templates:
       - name: Load Cargo Env
         script: echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
 
+      - name: Setup Java 17
+        script: |
+          sudo apt update
+          sudo apt install -y openjdk-17-jdk
+          sudo update-alternatives --set java /usr/lib/jvm/java-17-openjdk-amd64/bin/java
+          java -version
+
+      - name: Setup Gradle
+        script: |
+          ./gradlew wrapper
+          ./gradlew --version
+
+  linux-extra-large:
+    resource-class: 'docker_linux_amd64/extra_large'
+    image: 'us-east1-docker.pkg.dev/nxcloudoperations/nx-cloud/nx-agents-base-images:ubuntu22.04-node20.19-v1'
+    env:
+      GIT_AUTHOR_EMAIL: test@test.com
+      GIT_AUTHOR_NAME: Test
+      GIT_COMMITTER_EMAIL: test@test.com
+      GIT_COMMITTER_NAME: Test
+      SELECTED_PM: 'pnpm'
+      NX_NATIVE_LOGGING: 'nx::native::db'
+    init-steps:
+      - name: Checkout
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+
+      - name: Check Node Version
+        script: node --version
+
+      - name: Cache restore
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+        inputs:
+          key: 'pnpm-lock.yaml'
+          paths: .pnpm-store
+          base-branch: 'master'
+
       - name: Install zip and unzip
         script: sudo apt-get -yqq install zip unzip
+
+      - name: Install bun
+        script: |
+          curl -fsSL https://bun.sh/install | bash
+          echo "BUN_INSTALL=$HOME/.bun" >> $NX_CLOUD_ENV
+          echo "PATH=$HOME/.bun/bin:$PATH" >> $NX_CLOUD_ENV
+
+      - name: Check bun
+        script: |
+          bun --version
+
+      - name: Install e2e deps
+        script: |
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev
+
+      - name: Pnpm Install from lockfile
+        script: |
+          pnpm install --frozen-lockfile
+
+      - name: Install Browsers
+        script: |
+          pnpm exec cypress install
+          pnpm exec playwright install --with-deps
+
+      - name: Install Rust
+        script: |
+          curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
+          source "$HOME/.cargo/env"
+          rustup toolchain install 1.70.0
+
+      - name: Configure git metadata (needed for lerna smoke tests)
+        script: |
+          git config --global user.email test@test.com
+          git config --global user.name "Test Test"
+
+      - name: Load Cargo Env
+        script: echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
+
+      - name: Setup Java 21
+        script: |
+          sudo apt update
+          sudo apt install -y openjdk-21-jdk
+          sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java
+          java -version

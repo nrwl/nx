@@ -15,6 +15,16 @@ import {
 import * as ts from 'typescript';
 
 describe('Linter', () => {
+  let originalEslintUseFlatConfigVal: string | undefined;
+  beforeAll(() => {
+    // Opt into legacy .eslintrc config format for these tests
+    originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+  });
+  afterAll(() => {
+    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
+  });
+
   describe('Integrated', () => {
     const myapp = uniq('myapp');
     const mylib = uniq('mylib');
@@ -25,8 +35,10 @@ describe('Linter', () => {
       projScope = newProject({
         packages: ['@nx/react', '@nx/js', '@nx/eslint'],
       });
-      runCLI(`generate @nx/react:app ${myapp} --tags=validtag`);
-      runCLI(`generate @nx/js:lib ${mylib}`);
+      runCLI(
+        `generate @nx/react:app apps/${myapp} --tags=validtag --linter eslint --unitTestRunner vitest`
+      );
+      runCLI(`generate @nx/js:lib libs/${mylib} --linter eslint`);
     });
     afterAll(() => cleanupProject());
 
@@ -54,7 +66,10 @@ describe('Linter', () => {
         });
         updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
 
-        let out = runCLI(`lint ${myapp}`, { silenceError: true });
+        let out = runCLI(`lint ${myapp}`, {
+          silenceError: true,
+          env: { CI: 'false' },
+        });
         expect(out).toContain('Unexpected console statement');
 
         eslintrc.overrides.forEach((override) => {
@@ -65,7 +80,10 @@ describe('Linter', () => {
         updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
 
         // 3. linting should not error when all rules are followed
-        out = runCLI(`lint ${myapp}`, { silenceError: true });
+        out = runCLI(`lint ${myapp}`, {
+          silenceError: true,
+          env: { CI: 'false' },
+        });
         expect(out).toContain('Successfully ran target lint');
       }, 1000000);
 
@@ -80,7 +98,10 @@ describe('Linter', () => {
         // should generate a default cache file
         let cachePath = path.join('apps', myapp, '.eslintcache');
         expect(() => checkFilesExist(cachePath)).toThrow();
-        runCLI(`lint ${myapp} --cache`, { silenceError: true });
+        runCLI(`lint ${myapp} --cache`, {
+          silenceError: true,
+          env: { CI: 'false' },
+        });
         expect(() => checkFilesExist(cachePath)).not.toThrow();
         expect(readCacheFile(cachePath)).toContain(
           path.normalize(`${myapp}/src/app/app.spec.tsx`)
@@ -91,6 +112,7 @@ describe('Linter', () => {
         expect(() => checkFilesExist(cachePath)).toThrow();
         runCLI(`lint ${myapp} --cache --cache-location="my-cache"`, {
           silenceError: true,
+          env: { CI: 'false' },
         });
         expect(() => checkFilesExist(cachePath)).not.toThrow();
         expect(readCacheFile(cachePath)).toContain(
@@ -116,6 +138,7 @@ describe('Linter', () => {
           `lint ${myapp} --output-file="${outputFile}" --format=json`,
           {
             silenceError: true,
+            env: { CI: 'false' },
           }
         );
         expect(stdout).not.toContain('Unexpected console statement');
@@ -146,9 +169,17 @@ describe('Linter', () => {
         const newRuleName = 'e2e-test-rule-name';
         runCLI(`generate @nx/eslint:workspace-rule ${newRuleName}`);
 
+        // TODO(@AgentEnder): This reset gets rid of a lockfile changed error... we should fix this in another way
+        runCLI(`reset`, {
+          env: { CI: 'false' },
+        });
+
         // Ensure that the unit tests for the new rule are runnable
-        const unitTestsOutput = runCLI(`test eslint-rules`);
-        expect(unitTestsOutput).toContain('Successfully ran target test');
+        expect(() =>
+          runCLI(`test eslint-rules`, {
+            env: { CI: 'false' },
+          })
+        ).not.toThrow();
 
         // Update the rule for the e2e test so that we can assert that it produces the expected lint failure when used
         const knownLintErrorMessage = 'e2e test known error message';
@@ -177,6 +208,7 @@ describe('Linter', () => {
 
         const lintOutput = runCLI(`lint ${myapp} --verbose`, {
           silenceError: true,
+          env: { CI: 'false' },
         });
         expect(lintOutput).toContain(newRuleNameForUsage);
         expect(lintOutput).toContain(knownLintErrorMessage);
@@ -188,10 +220,14 @@ describe('Linter', () => {
         const invalidtaglib = uniq('invalidtaglib');
         const validtaglib = uniq('validtaglib');
 
-        runCLI(`generate @nx/react:app ${myapp2}`);
-        runCLI(`generate @nx/react:lib ${lazylib}`);
-        runCLI(`generate @nx/js:lib ${invalidtaglib} --tags=invalidtag`);
-        runCLI(`generate @nx/js:lib ${validtaglib} --tags=validtag`);
+        runCLI(`generate @nx/react:app apps/${myapp2} --linter eslint`);
+        runCLI(`generate @nx/react:lib libs/${lazylib} --linter eslint`);
+        runCLI(
+          `generate @nx/js:lib libs/${invalidtaglib} --linter eslint --tags=invalidtag`
+        );
+        runCLI(
+          `generate @nx/js:lib libs/${validtaglib} --linter eslint --tags=validtag`
+        );
 
         const eslint = readJson('.eslintrc.json');
         eslint.overrides[0].rules[
@@ -232,7 +268,10 @@ describe('Linter', () => {
       `
         );
 
-        const out = runCLI(`lint ${myapp}`, { silenceError: true });
+        const out = runCLI(`lint ${myapp}`, {
+          silenceError: true,
+          env: { CI: 'false' },
+        });
         expect(out).toContain(
           'Projects cannot be imported by a relative or absolute path, and must begin with a npm scope'
         );
@@ -250,9 +289,15 @@ describe('Linter', () => {
 
       beforeAll(() => {
         // make these libs non-buildable to avoid dep-checks triggering lint errors
-        runCLI(`generate @nx/js:lib ${libA} --bundler=none`);
-        runCLI(`generate @nx/js:lib ${libB} --bundler=none`);
-        runCLI(`generate @nx/js:lib ${libC} --bundler=none`);
+        runCLI(
+          `generate @nx/js:lib libs/${libA} --bundler=none --linter eslint`
+        );
+        runCLI(
+          `generate @nx/js:lib libs/${libB} --bundler=none --linter eslint`
+        );
+        runCLI(
+          `generate @nx/js:lib libs/${libC} --bundler=none --linter eslint`
+        );
 
         /**
          * create tslib-a structure
@@ -379,6 +424,7 @@ describe('Linter', () => {
       it('should fix noSelfCircularDependencies', () => {
         const stdout = runCLI(`lint ${libC}`, {
           silenceError: true,
+          env: { CI: 'false' },
         });
         expect(stdout).toContain(
           'Projects should use relative imports to import from other files within the same project'
@@ -387,6 +433,7 @@ describe('Linter', () => {
         // fix them
         const fixedStout = runCLI(`lint ${libC} --fix`, {
           silenceError: true,
+          env: { CI: 'false' },
         });
         expect(fixedStout).toContain(
           `Successfully ran target lint for project ${libC}`
@@ -407,6 +454,7 @@ describe('Linter', () => {
       it('should fix noRelativeOrAbsoluteImportsAcrossLibraries', () => {
         const stdout = runCLI(`lint ${libB}`, {
           silenceError: true,
+          env: { CI: 'false' },
         });
         expect(stdout).toContain(
           'Projects cannot be imported by a relative or absolute path, and must begin with a npm scope'
@@ -415,6 +463,7 @@ describe('Linter', () => {
         // fix them
         const fixedStout = runCLI(`lint ${libB} --fix`, {
           silenceError: true,
+          env: { CI: 'false' },
         });
         expect(fixedStout).toContain(
           `Successfully ran target lint for project ${libB}`
@@ -466,9 +515,14 @@ describe('Linter', () => {
       it('should report dependency check issues', () => {
         const rootPackageJson = readJson('package.json');
         const nxVersion = rootPackageJson.devDependencies.nx;
-        const tslibVersion = rootPackageJson.dependencies['tslib'];
+        const tslibVersion =
+          rootPackageJson.dependencies['tslib'] ||
+          rootPackageJson.devDependencies['tslib'];
 
-        let out = runCLI(`lint ${mylib}`, { silenceError: true });
+        let out = runCLI(`lint ${mylib}`, {
+          silenceError: true,
+          env: { CI: 'false' },
+        });
         expect(out).toContain('Successfully ran target lint');
 
         // make an explict dependency to nx
@@ -485,7 +539,10 @@ describe('Linter', () => {
         });
 
         // output should now report missing dependency and obsolete dependency
-        out = runCLI(`lint ${mylib}`, { silenceError: true });
+        out = runCLI(`lint ${mylib}`, {
+          silenceError: true,
+          env: { CI: 'false' },
+        });
         expect(out).toContain('they are missing');
         expect(out).toContain('@nx/devkit');
         expect(out).toContain(
@@ -493,38 +550,45 @@ describe('Linter', () => {
         );
 
         // should fix the missing and obsolete dependency issues
-        out = runCLI(`lint ${mylib} --fix`, { silenceError: true });
+        out = runCLI(`lint ${mylib} --fix`, {
+          silenceError: true,
+          env: { CI: 'false' },
+        });
         expect(out).toContain(
           `Successfully ran target lint for project ${mylib}`
         );
         const packageJson = readJson(`libs/${mylib}/package.json`);
-        expect(packageJson).toMatchInlineSnapshot(`
-          {
-            "dependencies": {
-              "@nx/devkit": "${nxVersion}",
-              "tslib": "${tslibVersion}",
-            },
-            "main": "./src/index.js",
-            "name": "@proj/${mylib}",
-            "private": true,
-            "type": "commonjs",
-            "typings": "./src/index.d.ts",
-            "version": "0.0.1",
-          }
-        `);
+        expect(packageJson).toMatchObject({
+          dependencies: {
+            '@nx/devkit': nxVersion,
+            tslib: tslibVersion,
+          },
+          main: './src/index.js',
+          name: `@proj/${mylib}`,
+          private: true,
+          type: 'commonjs',
+          types: './src/index.d.ts',
+          version: '0.0.1',
+        });
 
         // intentionally set the invalid version
         updateJson(`libs/${mylib}/package.json`, (json) => {
           json.dependencies['@nx/devkit'] = '100.0.0';
           return json;
         });
-        out = runCLI(`lint ${mylib}`, { silenceError: true });
+        out = runCLI(`lint ${mylib}`, {
+          silenceError: true,
+          env: { CI: 'false' },
+        });
         expect(out).toContain(
           'version specifier does not contain the installed version of "@nx/devkit"'
         );
 
         // should fix the version mismatch issue
-        out = runCLI(`lint ${mylib} --fix`, { silenceError: true });
+        out = runCLI(`lint ${mylib} --fix`, {
+          silenceError: true,
+          env: { CI: 'false' },
+        });
         expect(out).toContain(
           `Successfully ran target lint for project ${mylib}`
         );
@@ -532,24 +596,27 @@ describe('Linter', () => {
     });
 
     describe('flat config', () => {
+      let envVar: string | undefined;
       beforeAll(() => {
         runCLI(`generate @nx/eslint:convert-to-flat-config`);
+        envVar = process.env.ESLINT_USE_FLAT_CONFIG;
+        // Now that we have converted the existing configs to flat config we need to clear the explicitly set env var to allow it to infer things from the root config file type
+        delete process.env.ESLINT_USE_FLAT_CONFIG;
+      });
+      afterAll(() => {
+        process.env.ESLINT_USE_FLAT_CONFIG = envVar;
       });
 
       it('should generate new projects using flat config', () => {
         const reactLib = uniq('react-lib');
         const jsLib = uniq('js-lib');
 
-        runCLI(
-          `generate @nx/react:lib ${reactLib} --directory=${reactLib} --projectNameAndRootFormat=as-provided`
-        );
-        runCLI(
-          `generate @nx/js:lib ${jsLib} --directory=${jsLib} --projectNameAndRootFormat=as-provided`
-        );
+        runCLI(`generate @nx/react:lib ${reactLib} --linter eslint`);
+        runCLI(`generate @nx/js:lib ${jsLib} --linter eslint`);
 
         checkFilesExist(
-          `${reactLib}/eslint.config.js`,
-          `${jsLib}/eslint.config.js`
+          `${reactLib}/eslint.config.mjs`,
+          `${jsLib}/eslint.config.mjs`
         );
         checkFilesDoNotExist(
           `${reactLib}/.eslintrc.json`,
@@ -557,14 +624,16 @@ describe('Linter', () => {
         );
 
         // validate that the new projects are linted successfully
-        let output = runCLI(`lint ${reactLib}`);
-        expect(output).toContain(
-          `Successfully ran target lint for project ${reactLib}`
-        );
-        output = runCLI(`lint ${jsLib}`);
-        expect(output).toContain(
-          `Successfully ran target lint for project ${jsLib}`
-        );
+        expect(() =>
+          runCLI(`lint ${reactLib}`, {
+            env: { CI: 'false' },
+          })
+        ).not.toThrow();
+        expect(() =>
+          runCLI(`lint ${jsLib}`, {
+            env: { CI: 'false' },
+          })
+        ).not.toThrow();
       });
     });
   });
@@ -578,12 +647,12 @@ describe('Linter', () => {
     afterEach(() => cleanupProject());
 
     function verifySuccessfulStandaloneSetup(myapp: string) {
-      expect(runCLI(`lint ${myapp}`, { silenceError: true })).toContain(
-        'Successfully ran target lint'
-      );
-      expect(runCLI(`lint e2e`, { silenceError: true })).toContain(
-        'Successfully ran target lint'
-      );
+      expect(
+        runCLI(`lint ${myapp}`, { silenceError: true, env: { CI: 'false' } })
+      ).toContain('Successfully ran target lint');
+      expect(
+        runCLI(`lint e2e`, { silenceError: true, env: { CI: 'false' } })
+      ).toContain('Successfully ran target lint');
       expect(() => checkFilesExist(`.eslintrc.base.json`)).toThrow();
 
       const rootEslint = readJson('.eslintrc.json');
@@ -595,15 +664,15 @@ describe('Linter', () => {
     }
 
     function verifySuccessfulMigratedSetup(myapp: string, mylib: string) {
-      expect(runCLI(`lint ${myapp}`, { silenceError: true })).toContain(
-        'Successfully ran target lint'
-      );
-      expect(runCLI(`lint e2e`, { silenceError: true })).toContain(
-        'Successfully ran target lint'
-      );
-      expect(runCLI(`lint ${mylib}`, { silenceError: true })).toContain(
-        'Successfully ran target lint'
-      );
+      expect(
+        runCLI(`lint ${myapp}`, { silenceError: true, env: { CI: 'false' } })
+      ).toContain('Successfully ran target lint');
+      expect(
+        runCLI(`lint e2e`, { silenceError: true, env: { CI: 'false' } })
+      ).toContain('Successfully ran target lint');
+      expect(
+        runCLI(`lint ${mylib}`, { silenceError: true, env: { CI: 'false' } })
+      ).toContain('Successfully ran target lint');
       expect(() => checkFilesExist(`.eslintrc.base.json`)).not.toThrow();
 
       const rootEslint = readJson('.eslintrc.base.json');
@@ -629,7 +698,10 @@ describe('Linter', () => {
       const myapp = uniq('myapp');
       const mylib = uniq('mylib');
 
-      runCLI(`generate @nx/react:app ${myapp} --rootProject=true`);
+      runCLI(
+        `generate @nx/react:app --name=${myapp} --unitTestRunner=jest --linter eslint --directory="."`
+      );
+      runCLI('reset', { env: { CI: 'false' } });
       verifySuccessfulStandaloneSetup(myapp);
 
       let appEslint = readJson('.eslintrc.json');
@@ -642,7 +714,10 @@ describe('Linter', () => {
       let e2eOverrides = JSON.stringify(e2eEslint.overrides);
       expect(e2eOverrides).toContain('plugin:@nx/javascript');
 
-      runCLI(`generate @nx/js:lib ${mylib} --unitTestRunner=jest`);
+      runCLI(
+        `generate @nx/js:lib libs/${mylib} --unitTestRunner=jest --linter eslint`
+      );
+      runCLI('reset', { env: { CI: 'false' } });
       verifySuccessfulMigratedSetup(myapp, mylib);
 
       appEslint = readJson(`.eslintrc.json`);
@@ -662,8 +737,9 @@ describe('Linter', () => {
       const mylib = uniq('mylib');
 
       runCLI(
-        `generate @nx/angular:app ${myapp} --rootProject=true --no-interactive`
+        `generate @nx/angular:app --name=${myapp} --directory="." --linter eslint --no-interactive`
       );
+      runCLI('reset', { env: { CI: 'false' } });
       verifySuccessfulStandaloneSetup(myapp);
 
       let appEslint = readJson('.eslintrc.json');
@@ -675,7 +751,10 @@ describe('Linter', () => {
       let e2eOverrides = JSON.stringify(e2eEslint.overrides);
       expect(e2eOverrides).toContain('plugin:@nx/javascript');
 
-      runCLI(`generate @nx/js:lib ${mylib} --no-interactive`);
+      runCLI(
+        `generate @nx/js:lib libs/${mylib} --linter eslint --no-interactive`
+      );
+      runCLI('reset', { env: { CI: 'false' } });
       verifySuccessfulMigratedSetup(myapp, mylib);
 
       appEslint = readJson(`.eslintrc.json`);
@@ -693,8 +772,9 @@ describe('Linter', () => {
       const mylib = uniq('mylib');
 
       runCLI(
-        `generate @nx/node:app ${myapp} --rootProject=true --no-interactive`
+        `generate @nx/node:app --name=${myapp} --linter=eslint --directory="." --unitTestRunner=jest --e2eTestRunner=jest --no-interactive`
       );
+      runCLI('reset', { env: { CI: 'false' } });
       verifySuccessfulStandaloneSetup(myapp);
 
       let appEslint = readJson('.eslintrc.json');
@@ -708,7 +788,10 @@ describe('Linter', () => {
       expect(e2eOverrides).toContain('plugin:@nx/javascript');
       expect(e2eOverrides).toContain('plugin:@nx/typescript');
 
-      runCLI(`generate @nx/js:lib ${mylib} --no-interactive`);
+      runCLI(
+        `generate @nx/js:lib libs/${mylib} --linter eslint --no-interactive`
+      );
+      runCLI('reset', { env: { CI: 'false' } });
       verifySuccessfulMigratedSetup(myapp, mylib);
 
       appEslint = readJson(`.eslintrc.json`);

@@ -18,8 +18,6 @@ export function createTaskHasher(
   } else {
     const { fileMap, allWorkspaceFiles, rustReferences } = getFileMap();
     return new InProcessTaskHasher(
-      fileMap?.projectFileMap,
-      allWorkspaceFiles,
       projectGraph,
       nxJson,
       rustReferences,

@@ -15,6 +15,7 @@ import {
 import {
   calculateProjectBuildableDependencies,
   computeCompilerOptionsPaths,
+  createTmpTsConfig,
   DependentBuildableProjectNode,
 } from '@nx/js/src/utils/buildable-libs-utils';
 import nodeResolve from '@rollup/plugin-node-resolve';
@@ -28,6 +29,7 @@ import { deleteOutput } from '../delete-output';
 import { AssetGlobPattern, RollupWithNxPluginOptions } from './with-nx-options';
 import { normalizeOptions } from './normalize-options';
 import { PackageJson } from 'nx/src/utils/package-json';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 // These use require because the ES import isn't correct.
 const commonjs = require('@rollup/plugin-commonjs');
@@ -79,7 +81,15 @@ export function withNx(
   const useBabel = options.compiler === 'babel';
   const useSwc = options.compiler === 'swc';
 
-  const tsConfigPath = joinPathFragments(workspaceRoot, options.tsConfig);
+  const tsConfigPath =
+    options.buildLibsFromSource || global.NX_GRAPH_CREATION
+      ? joinPathFragments(workspaceRoot, options.tsConfig)
+      : createTmpTsConfig(
+          options.tsConfig,
+          workspaceRoot,
+          projectRoot,
+          dependencies
+        );
   const tsConfigFile = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
   const tsConfig = ts.parseJsonConfigFileContent(
     tsConfigFile.config,
@@ -182,6 +192,22 @@ export function withNx(
   }
 
   if (!global.NX_GRAPH_CREATION) {
+    const isTsSolutionSetup = isUsingTsSolutionSetup();
+    if (isTsSolutionSetup) {
+      if (options.generatePackageJson) {
+        throw new Error(
+          `Setting 'generatePackageJson: true' is not supported with the current TypeScript setup. Update the 'package.json' file at the project root as needed and unset the 'generatePackageJson' option.`
+        );
+      }
+      if (options.generateExportsField) {
+        throw new Error(
+          `Setting 'generateExportsField: true' is not supported with the current TypeScript setup. Set 'exports' field in the 'package.json' file at the project root and unset the 'generateExportsField' option.`
+        );
+      }
+    } else {
+      options.generatePackageJson ??= true;
+    }
+
     finalConfig.plugins = [
       copy({
         targets: convertCopyAssetsToRollupOptions(
@@ -194,7 +220,7 @@ export function withNx(
       // Needed to generate type definitions, even if we're using babel or swc.
       require('rollup-plugin-typescript2')({
         check: !options.skipTypeCheck,
-        tsconfig: options.tsConfig,
+        tsconfig: tsConfigPath,
         tsconfigOverride: {
           compilerOptions: createTsCompilerOptions(
             projectRoot,
@@ -247,8 +273,8 @@ export function withNx(
         }),
       commonjs(),
       analyze(),
-      generatePackageJson(options, packageJson),
-    ];
+      options.generatePackageJson && generatePackageJson(options, packageJson),
+    ].filter(Boolean);
     if (Array.isArray(rollupConfig.plugins)) {
       finalConfig.plugins.push(...rollupConfig.plugins);
     }

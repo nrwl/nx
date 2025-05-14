@@ -8,7 +8,7 @@ A node describing a project in a workspace
 
 - [data](../../devkit/documents/ProjectGraphProjectNode#data): ProjectConfiguration & Object
 - [name](../../devkit/documents/ProjectGraphProjectNode#name): string
-- [type](../../devkit/documents/ProjectGraphProjectNode#type): "app" | "e2e" | "lib"
+- [type](../../devkit/documents/ProjectGraphProjectNode#type): "lib" | "app" | "e2e"
 
 ## Properties
 
@@ -28,4 +28,4 @@ Additional metadata about a project
 
 ### type
 
-• **type**: `"app"` \| `"e2e"` \| `"lib"`
+• **type**: `"lib"` \| `"app"` \| `"e2e"`

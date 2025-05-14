@@ -11,6 +11,24 @@
       "cli": "nx",
       "description": "This function changes !{projectRoot}/test/**/* in nx.json for production to !{projectRoot}/src/test/**/*",
       "factory": "./src/migrations/19-4-1/change-regex-test-production"
+    },
+    "add-include-subprojects-tasks": {
+      "version": "20.2.0-beta.4",
+      "cli": "nx",
+      "description": "Add includeSubprojectsTasks to build.gradle file",
+      "factory": "./src/migrations/20-2-0/add-include-subprojects-tasks"
+    },
+    "change-plugin-to-v1": {
+      "version": "21.0.0-beta.5",
+      "cli": "nx",
+      "description": "Change @nx/gradle plugin to version 1",
+      "factory": "./src/migrations/21-0-0/change-plugin-to-v1"
+    },
+    "change-ciTargetName-to-ciTestTargetName": {
+      "version": "21.0.0-beta.13",
+      "cli": "nx",
+      "description": "Change @nx/gradle option from ciTargetName to ciTestTargetName",
+      "factory": "./src/migrations/21-0-0/change-ciTargetName-to-ciTestTargetName"
     }
   },
   "packageJsonUpdates": {}

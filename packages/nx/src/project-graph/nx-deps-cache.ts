@@ -1,5 +1,4 @@
-import { existsSync } from 'fs';
-import { ensureDirSync, renameSync } from 'fs-extra';
+import { existsSync, mkdirSync, renameSync } from 'node:fs';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { NxJsonConfiguration, PluginConfiguration } from '../config/nx-json';
@@ -19,11 +18,16 @@ import {
 } from '../utils/fileutils';
 import { PackageJson } from '../utils/package-json';
 import { nxVersion } from '../utils/versions';
+import { ConfigurationSourceMaps } from './utils/project-configuration-utils';
+import {
+  ProjectGraphError,
+  ProjectGraphErrorTypes,
+  StaleProjectGraphCacheError,
+} from './error-types';
 
 export interface FileMapCache {
   version: string;
   nxVersion: string;
-  deps: Record<string, string>;
   pathMappings: Record<string, any>;
   nxJsonPlugins: PluginData[];
   pluginsConfig?: any;
@@ -36,10 +40,12 @@ export const nxProjectGraph = join(
 );
 export const nxFileMap = join(workspaceDataDirectory, 'file-map.json');
 
+export const nxSourceMaps = join(workspaceDataDirectory, 'source-maps.json');
+
 export function ensureCacheDirectory(): void {
   try {
     if (!existsSync(workspaceDataDirectory)) {
-      ensureDirSync(workspaceDataDirectory);
+      mkdirSync(workspaceDataDirectory, { recursive: true });
     }
   } catch (e) {
     /*
@@ -79,27 +85,93 @@ export function readFileMapCache(): null | FileMapCache {
   return data ?? null;
 }
 
-export function readProjectGraphCache(): null | ProjectGraph {
+export function readProjectGraphCache(
+  minimumComputedAt?: number
+): null | ProjectGraph {
   performance.mark('read project-graph:start');
   ensureCacheDirectory();
 
-  let data = null;
   try {
     if (fileExists(nxProjectGraph)) {
-      data = readJsonFile(nxProjectGraph);
+      const {
+        computedAt,
+        errors,
+        ...projectGraphCache
+      }: ProjectGraph & {
+        errors?: Error[];
+        computedAt?: number;
+      } = readJsonFile(nxProjectGraph);
+
+      if (
+        minimumComputedAt &&
+        (!computedAt || computedAt < minimumComputedAt)
+      ) {
+        throw new StaleProjectGraphCacheError();
+      }
+
+      if (errors && errors.length > 0) {
+        if (!minimumComputedAt) {
+          // If you didn't pass minimum computed at, we do not know if
+          // the errors on the cached graph would be relevant to what you
+          // are running. Prior to adding error handling here, the graph
+          // would not have been written to the cache. As such, this matches
+          // existing behavior of the public API.
+          return null;
+        }
+        throw new ProjectGraphError(
+          errors,
+          projectGraphCache,
+          readSourceMapsCache()
+        );
+      }
+
+      return projectGraphCache;
+    } else {
+      return null;
     }
   } catch (error) {
+    if (
+      error instanceof StaleProjectGraphCacheError ||
+      error instanceof ProjectGraphError
+    ) {
+      throw error;
+    }
     console.log(
       `Error reading '${nxProjectGraph}'. Continue the process without the cache.`
     );
     console.log(error);
+    return null;
+  } finally {
+    performance.mark('read project-graph:end');
+    performance.measure(
+      'read cache',
+      'read project-graph:start',
+      'read project-graph:end'
+    );
+  }
+}
+
+export function readSourceMapsCache(): null | ConfigurationSourceMaps {
+  performance.mark('read source-maps:start');
+  ensureCacheDirectory();
+
+  let data = null;
+  try {
+    if (fileExists(nxSourceMaps)) {
+      data = readJsonFile(nxSourceMaps);
+    }
+  } catch (error) {
+    console.log(
+      `Error reading '${nxSourceMaps}'. Continue the process without the cache.`
+    );
+    console.log(error);
   }
 
-  performance.mark('read project-graph:end');
+  performance.mark('read source-maps:end');
   performance.measure(
     'read cache',
-    'read project-graph:start',
-    'read project-graph:end'
+    'read source-maps:start',
+    'read source-maps:end'
   );
   return data ?? null;
 }
@@ -114,7 +186,6 @@ export function createProjectFileMapCache(
   const newValue: FileMapCache = {
     version: '6.0',
     nxVersion: nxVersion,
-    deps: packageJsonDeps, // TODO(v19): We can remove this in favor of nxVersion
     // compilerOptions may not exist, especially for package-based repos
     pathMappings: tsConfig?.compilerOptions?.paths || {},
     nxJsonPlugins,
@@ -126,7 +197,9 @@ export function createProjectFileMapCache(
 
 export function writeCache(
   cache: FileMapCache,
-  projectGraph: ProjectGraph
+  projectGraph: ProjectGraph,
+  sourceMaps: ConfigurationSourceMaps,
+  errors: ProjectGraphErrorTypes[]
 ): void {
   performance.mark('write cache:start');
   let retry = 1;
@@ -140,13 +213,26 @@ export function writeCache(
     const unique = (Math.random().toString(16) + '0000000').slice(2, 10);
     const tmpProjectGraphPath = `${nxProjectGraph}~${unique}`;
     const tmpFileMapPath = `${nxFileMap}~${unique}`;
+    const tmpSourceMapPath = `${nxSourceMaps}~${unique}`;
 
     try {
-      writeJsonFile(tmpProjectGraphPath, projectGraph);
+      writeJsonFile(tmpProjectGraphPath, {
+        ...projectGraph,
+        errors,
+        computedAt: Date.now(),
+      });
       renameSync(tmpProjectGraphPath, nxProjectGraph);
 
-      writeJsonFile(tmpFileMapPath, cache);
-      renameSync(tmpFileMapPath, nxFileMap);
+      writeJsonFile(tmpSourceMapPath, sourceMaps);
+      renameSync(tmpSourceMapPath, nxSourceMaps);
+
+      // only write the file map if there are no errors
+      // if there were errors, the errors make the filemap invalid
+      // TODO: We should be able to keep the valid part of the filemap if the errors being thrown told us which parts of the filemap were invalid
+      if (errors.length === 0) {
+        writeJsonFile(tmpFileMapPath, cache);
+        renameSync(tmpFileMapPath, nxFileMap);
+      }
       done = true;
     } catch (err: any) {
       if (err instanceof Error) {

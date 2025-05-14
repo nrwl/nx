@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "Application",
+  "title": "Application generator for React + rspack",
+  "type": "object",
+  "description": "React + Rspack application generator.",
+  "examples": [
+    {
+      "command": "nx g app myorg/myapp",
+      "description": "Generate `apps/myorg/myapp` and `apps/myorg/myapp-e2e`"
+    }
+  ],
+  "properties": {
+    "directory": {
+      "type": "string",
+      "description": "The directory to nest the app under.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What directory would you like to use for the application?"
+    },
+    "name": {
+      "description": "The name of the application.",
+      "type": "string",
+      "pattern": "^[a-zA-Z].*$"
+    },
+    "framework": {
+      "type": "string",
+      "description": "The framework to use for the application.",
+      "x-prompt": "What framework do you want to use when generating this application?",
+      "enum": ["none", "react", "web", "nest"],
+      "alias": ["uiFramework"],
+      "x-priority": "important",
+      "default": "react"
+    },
+    "style": {
+      "description": "The file extension to be used for style files.",
+      "type": "string",
+      "default": "css",
+      "alias": "s",
+      "x-prompt": {
+        "message": "Which stylesheet format would you like to use?",
+        "type": "list",
+        "items": [
+          {
+            "value": "css",
+            "label": "CSS"
+          },
+          {
+            "value": "scss",
+            "label": "SASS(.scss)       [ http://sass-lang.com                     ]"
+          },
+          {
+            "value": "styl",
+            "label": "Stylus(.styl)     [ http://stylus-lang.com                   ]"
+          },
+          {
+            "value": "less",
+            "label": "LESS              [ http://lesscss.org                       ]"
+          },
+          {
+            "value": "none",
+            "label": "None"
+          }
+        ]
+      }
+    },
+    "unitTestRunner": {
+      "type": "string",
+      "description": "The unit test runner to use.",
+      "enum": ["none", "jest"],
+      "default": "jest"
+    },
+    "e2eTestRunner": {
+      "type": "string",
+      "description": "The e2e test runner to use.",
+      "enum": ["none", "cypress"],
+      "default": "cypress"
+    },
+    "tags": {
+      "type": "string",
+      "description": "Add tags to the application (used for linting).",
+      "alias": "t"
+    },
+    "monorepo": {
+      "type": "boolean",
+      "description": "Creates an integrated monorepo.",
+      "aliases": ["integrated"]
+    },
+    "rootProject": {
+      "type": "boolean",
+      "x-priority": "internal"
+    }
+  },
+  "required": ["directory"]
+}

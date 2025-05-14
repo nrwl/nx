@@ -26,6 +26,7 @@ export type {
  */
 export type {
   Generator,
+  Migration,
   GeneratorCallback,
   PromiseExecutor,
   AsyncIteratorExecutor,
@@ -57,21 +58,28 @@ export type {
   CreateMetadata,
   CreateMetadataContext,
   ProjectsMetadata,
+  PreTasksExecution,
+  PreTasksExecutionContext,
+  PostTasksExecution,
+  PostTasksExecutionContext,
 } from './project-graph/plugins';
 
-export { AggregateCreateNodesError } from './project-graph/error-types';
+export {
+  AggregateCreateNodesError,
+  StaleProjectGraphCacheError,
+} from './project-graph/error-types';
 
 export { createNodesFromFiles } from './project-graph/plugins';
 
-export type {
-  NxPluginV1,
-  ProjectTargetConfigurator,
-} from './utils/nx-plugin.deprecated';
-
 /**
- * @category Workspace
+ * @category Tasks
  */
 export type { Task, TaskGraph } from './config/task-graph';
+
+/**
+ * @category Tasks
+ */
+export type { TaskResult, TaskResults } from './tasks-runner/life-cycle';
 
 /**
  * @category Workspace
@@ -153,10 +161,8 @@ export type {
   FileData,
   ProjectGraph,
   ProjectGraphDependency,
-  ProjectGraphNode,
   ProjectGraphProjectNode,
   ProjectGraphExternalNode,
-  ProjectGraphProcessorContext,
 } from './config/project-graph';
 
 export type { GraphJson } from './command-line/graph/graph';
@@ -170,7 +176,6 @@ export { DependencyType } from './config/project-graph';
  * @category Project Graph
  */
 export {
-  ProjectGraphBuilder,
   RawProjectGraphDependency,
   DynamicDependency,
   ImplicitDependency,
@@ -208,11 +213,10 @@ export { stripIndents } from './utils/strip-indents';
  */
 export { joinPathFragments, normalizePath } from './utils/path';
 
-// TODO(v16): Change this to export from './utils/workspace-root'
 /**
  * @category Utils
  */
-export { workspaceRoot, appRootPath } from './utils/app-root';
+export { workspaceRoot } from './utils/workspace-root';
 
 /**
  * @category Utils

@@ -5,7 +5,10 @@ import {
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { migrateProjectExecutorsToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
+import {
+  migrateProjectExecutorsToPlugin,
+  NoTargetsToMigrateError,
+} from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 import {
   processTargetOutputs,
   toProjectRelativePath,
@@ -40,7 +43,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
     );
 
   if (migratedProjects.size === 0) {
-    throw new Error('Could not find any targets to migrate.');
+    throw new NoTargetsToMigrateError();
   }
 
   if (!options.skipFormat) {

@@ -6,11 +6,11 @@
 /tools/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 package.json @nrwl/nx-core-reviewers
 pnpm-lock.yaml @nrwl/nx-core-reviewers
-rust-toolchain @nrwl/nx-native-reviewers
+rust-toolchain.toml @nrwl/nx-native-reviewers
 
 # Docs Site + Graph
 /docs @nrwl/nx-docs-reviewers
-/docs/nx-cloud @StalkAltan @rarmatei @nrwl/nx-docs-reviewers
+/docs/nx-cloud @StalkAltan @rarmatei @nixallover @nrwl/nx-docs-reviewers
 /graph/** @philipjfulcher @FrozenPandaz @bcabanes @MaxKless @xiongemi
 /images @nrwl/nx-docs-reviewers
 /nx-dev/** @nrwl/nx-docs-reviewers
@@ -79,12 +79,14 @@ rust-toolchain @nrwl/nx-native-reviewers
 /docs/generated/packages/js/** @nrwl/nx-js-reviewers @nrwl/nx-docs-reviewers
 /docs/generated/packages/web/** @nrwl/nx-js-reviewers @nrwl/nx-docs-reviewers
 /docs/generated/packages/webpack/** @nrwl/nx-js-reviewers @nrwl/nx-docs-reviewers
+/docs/generated/packages/rspack/** @nrwl/nx-js-reviewers @nrwl/nx-docs-reviewers
 /docs/generated/packages/esbuild/** @nrwl/nx-js-reviewers @nrwl/nx-docs-reviewers
 /docs/generated/packages/rollup/** @nrwl/nx-js-reviewers @nrwl/nx-docs-reviewers
 /docs/generated/packages/vite/** @nrwl/nx-js-reviewers @nrwl/nx-docs-reviewers
 /docs/shared/packages/js/** @nrwl/nx-js-reviewers @nrwl/nx-docs-reviewers
 /docs/shared/packages/web/** @nrwl/nx-js-reviewers @nrwl/nx-docs-reviewers
 /docs/shared/packages/webpack/** @nrwl/nx-js-reviewers @nrwl/nx-docs-reviewers
+/docs/shared/packages/rspack/** @nrwl/nx-js-reviewers @nrwl/nx-docs-reviewers
 /docs/shared/packages/esbuild/** @nrwl/nx-js-reviewers @nrwl/nx-docs-reviewers
 /docs/shared/packages/vite/** @nrwl/nx-js-reviewers @nrwl/nx-docs-reviewers
 /packages/js/** @nrwl/nx-js-reviewers
@@ -92,14 +94,19 @@ rust-toolchain @nrwl/nx-native-reviewers
 /packages/web/** @nrwl/nx-js-reviewers
 /e2e/web/** @nrwl/nx-js-reviewers
 /packages/webpack/** @nrwl/nx-js-reviewers
-/packages/webpack/src/utils/module-federation @jaysoo @Coly010
 /e2e/webpack/** @nrwl/nx-js-reviewers
+/packages/rspack/** @nrwl/nx-js-reviewers
+/e2e/rspack/** @nrwl/nx-js-reviewers
+/packages/rsbuild/** @nrwl/nx-js-reviewers
 /packages/esbuild/** @nrwl/nx-js-reviewers
 /e2e/esbuild/** @nrwl/nx-js-reviewers
 /packages/rollup/** @nrwl/nx-js-reviewers
 /e2e/rollup/** @nrwl/nx-js-reviewers
 /packages/vite/** @nrwl/nx-js-reviewers
 /e2e/vite/** @nrwl/nx-js-reviewers
+
+## Module Federation
+/packages/module-federation/** @nrwl/nx-js-reviewers
 
 ## Tools
 /docs/generated/packages/cypress/** @nrwl/nx-testing-tools-reviewers @nrwl/nx-docs-reviewers
@@ -138,8 +145,8 @@ rust-toolchain @nrwl/nx-native-reviewers
 /packages/devkit/public-api.ts @FrozenPandaz @vsavkin
 
 # Gradle
-/packages/gradle/** @FrozenPandaz @xiongemi
-/e2e/gradle/** @FrozenPandaz @xiongemi
+/packages/gradle/** @FrozenPandaz @MaxKless @xiongemi
+/e2e/gradle/** @FrozenPandaz @MaxKless @xiongemi
 
 # Nx-Plugin
 /docs/generated/packages/plugin/** @nrwl/nx-devkit-reviewers @nrwl/nx-docs-reviewers
@@ -179,7 +186,6 @@ rust-toolchain @nrwl/nx-native-reviewers
 /scripts/angular-support-upgrades @nrwl/nx-angular-reviewers
 
 # CI
-/.circleci/** @nrwl/nx-pipelines-reviewers
 /.nx/workflows/** @nrwl/nx-pipelines-reviewers
 /.github/** @nrwl/nx-pipelines-reviewers
 /.husky/** @nrwl/nx-pipelines-reviewers

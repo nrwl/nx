@@ -44,14 +44,8 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/cypress"],
-      "options": {
-        "command": "node ./scripts/copy-readme.js cypress"
-      }
-    },
-    "add-extra-dependencies": {
-      "command": "node ./scripts/add-dependency-to-build.js cypress @nrwl/cypress"
+      "outputs": ["{workspaceRoot}/build/packages/cypress/README.md"],
+      "command": "node ./scripts/copy-readme.js cypress"
     }
   }
 }

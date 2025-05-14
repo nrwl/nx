@@ -1,10 +1,15 @@
+---
+title: Migrating an Angular CLI Project to Nx
+description: Learn how to transform your Angular CLI workspace into an Nx workspace, either as a standalone app or a full monorepo, with automated migration tools.
+---
+
 # Migrating an Angular CLI project to Nx
 
 Within an Nx workspace, you gain many capabilities that help you build applications and libraries. If you are currently using an Angular CLI workspace, you can transform it into an Nx workspace.
 
 ## Migrating to a Standalone Angular App with Nx
 
-You can migrate to a [Standalone Angular App](/concepts/integrated-vs-package-based#standalone-applications) with the command:
+You can migrate to a standalone Angular app with the command:
 
 ```shell
 npx nx@latest init
@@ -20,9 +25,9 @@ This will enable you to use the Nx CLI in your existing Angular CLI workspace wh
 
 **Note:** The changes will be slightly different for Angular 13 and lower.
 
-## Migrating to an Integrated Nx Monorepo
+## Migrating to an Nx Monorepo
 
-If you want to migrate your Angular CLI project to an [Integrated Nx Monorepo](/concepts/integrated-vs-package-based#integrated-repos), run the following command:
+If you want to migrate your Angular CLI project to an Nx Monorepo, run the following command:
 
 ```shell
 npx nx@latest init --integrated
@@ -147,7 +152,7 @@ And make sure you pull the latest changes locally:
 git pull
 ```
 
-You should now have an `nxCloudAccessToken` property specified in the `nx.json` file.
+You should now have an `nxCloudId` property specified in the `nx.json` file.
 
 ### Create a CI Workflow
 
@@ -171,6 +176,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
+
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
@@ -222,7 +229,7 @@ Learn more about the advantages of Nx in the following guides:
 
 ## From Nx Console
 
-Nx Console no longer supports the Angular CLI. Angular CLI users will receive a notice, asking if they want to switch to Nx. When you click this button, we’ll run the `nx init` command to set up the Nx CLI, allowing for cached builds, and for you to share this cache with your teammates via Nx Cloud.
+Nx Console no longer supports the Angular CLI. Angular CLI users will receive a notice, asking if they want to switch to Nx. When you click this button, we'll run the `nx init` command to set up the Nx CLI, allowing for cached builds, and for you to share this cache with your teammates via Nx Cloud.
 
 If you're not ready to make the change yet, you can come back to this later:
 

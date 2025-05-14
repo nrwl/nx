@@ -124,11 +124,20 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
     );
   }
 
+  if (projectConfig.targets.build.executor === '@nx/rspack:rspack') {
+    options.bundler = 'rspack';
+  } else if (projectConfig.targets.build.executor === '@nx/webpack:webpack') {
+    options.bundler = 'webpack';
+  }
+
   projectConfig.targets = {
     ...projectConfig.targets,
     server: {
       dependsOn: ['build'],
-      executor: '@nx/webpack:webpack',
+      executor:
+        options.bundler === 'rspack'
+          ? '@nx/rspack:rspack'
+          : '@nx/webpack:webpack',
       outputs: ['{options.outputPath}'],
       defaultConfiguration: 'production',
       options: {
@@ -140,7 +149,14 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
         compiler: 'babel',
         externalDependencies: 'all',
         outputHashing: 'none',
-        webpackConfig: joinPathFragments(projectRoot, 'webpack.config.js'),
+        ...(options.bundler === 'rspack'
+          ? { rspackConfig: joinPathFragments(projectRoot, 'rspack.config.js') }
+          : {
+              webpackConfig: joinPathFragments(
+                projectRoot,
+                'webpack.config.js'
+              ),
+            }),
       },
       configurations: {
         development: {
@@ -176,7 +192,10 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
       },
     },
     serve: {
-      executor: '@nx/webpack:ssr-dev-server',
+      executor:
+        options.bundler === 'rspack'
+          ? '@nx/rspack:ssr-dev-server'
+          : '@nx/webpack:ssr-dev-server',
       defaultConfiguration: 'development',
       options: {
         browserTarget: `${options.project}:build:development`,

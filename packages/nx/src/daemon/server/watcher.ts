@@ -1,23 +1,11 @@
 import { workspaceRoot } from '../../utils/workspace-root';
-import { dirname, relative } from 'path';
-import { getFullOsSocketPath } from '../socket-utils';
+import { relative } from 'path';
 import { handleServerProcessTermination } from './shutdown-utils';
 import { Server } from 'net';
 import { normalizePath } from '../../utils/path';
-import {
-  getAlwaysIgnore,
-  getIgnoredGlobs,
-  getIgnoreObject,
-} from '../../utils/ignore';
-import { platform } from 'os';
 import { getDaemonProcessIdSync, serverProcessJsonPath } from '../cache';
 import type { WatchEvent } from '../../native';
 import { openSockets } from './server';
-
-const ALWAYS_IGNORE = [
-  ...getAlwaysIgnore(workspaceRoot),
-  getFullOsSocketPath(),
-];
 
 export type FileWatcherCallback = (
   err: Error | string | null,
@@ -27,28 +15,13 @@ export type FileWatcherCallback = (
 export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {
   const { Watcher } = await import('../../native');
 
-  let relativeServerProcess = normalizePath(
-    relative(workspaceRoot, serverProcessJsonPath)
-  );
-
-  let watcher = new Watcher(workspaceRoot, [`!${relativeServerProcess}`]);
+  const watcher = new Watcher(workspaceRoot);
   watcher.watch((err, events) => {
     if (err) {
       return cb(err, null);
     }
 
     for (const event of events) {
-      if (
-        event.path == relativeServerProcess &&
-        getDaemonProcessIdSync() !== process.pid
-      ) {
-        handleServerProcessTermination({
-          server,
-          reason: 'this process is no longer the current daemon (native)',
-          sockets: openSockets,
-        });
-      }
-
       if (event.path.endsWith('.gitignore') || event.path === '.nxignore') {
         // If the ignore files themselves have changed we need to dynamically update our cached ignoreGlobs
         handleServerProcessTermination({
@@ -66,13 +39,36 @@ export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {
   return watcher;
 }
 
-export async function watchOutputFiles(cb: FileWatcherCallback) {
+export async function watchOutputFiles(
+  server: Server,
+  cb: FileWatcherCallback
+) {
   const { Watcher } = await import('../../native');
 
-  let watcher = new Watcher(workspaceRoot, null, false);
+  const relativeServerProcess = normalizePath(
+    relative(workspaceRoot, serverProcessJsonPath)
+  );
+  const watcher = new Watcher(
+    workspaceRoot,
+    [`!${relativeServerProcess}`],
+    false
+  );
   watcher.watch((err, events) => {
     if (err) {
       return cb(err, null);
+    }
+
+    for (const event of events) {
+      if (
+        event.path == relativeServerProcess &&
+        getDaemonProcessIdSync() !== process.pid
+      ) {
+        return handleServerProcessTermination({
+          server,
+          reason: 'this process is no longer the current daemon (native)',
+          sockets: openSockets,
+        });
+      }
     }
 
     if (events.length !== 0) {

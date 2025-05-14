@@ -136,7 +136,7 @@ describe('setup-verdaccio generator', () => {
     await generator(tree, options);
     const packageJson: PackageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies).toEqual({
-      verdaccio: '^5.0.4',
+      verdaccio: '^6.0.5',
     });
   });
 });

@@ -1,10 +1,7 @@
 import {
-  PackageManager,
   ProjectGraphProjectNode,
   Tree,
-  detectPackageManager,
   formatFiles,
-  getPackageManagerVersion,
   joinPathFragments,
   output,
   readJson,
@@ -13,8 +10,9 @@ import {
   writeJson,
 } from '@nx/devkit';
 import * as chalk from 'chalk';
-import { remove } from 'fs-extra';
+import { prompt } from 'enquirer';
 import { exec } from 'node:child_process';
+import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP } from 'nx/src/command-line/release/config/config';
 import {
@@ -35,10 +33,12 @@ import {
   VersionData,
   deriveNewSemverVersion,
   validReleaseVersionPrefixes,
-} from 'nx/src/command-line/release/version';
+} from 'nx/src/command-line/release/version-legacy';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
-import { ReleaseType, gt, inc, lt, prerelease } from 'semver';
+import { ReleaseType, gt, inc, prerelease } from 'semver';
+import { updateLockFile } from '../../release/utils/update-lock-file';
+import { isLocallyLinkedPackageVersion } from '../../utils/is-locally-linked-package-version';
 import { parseRegistryOptions } from '../../utils/npm-config';
 import { ReleaseVersionGeneratorSchema } from './schema';
 import {
@@ -46,7 +46,14 @@ import {
   resolveLocalPackageDependencies,
 } from './utils/resolve-local-package-dependencies';
 import { sortProjectsTopologically } from './utils/sort-projects-topologically';
-import { updateLockFile } from './utils/update-lock-file';
+
+function resolvePreIdSpecifier(currentSpecifier: string, preid?: string) {
+  if (!currentSpecifier.startsWith('pre') && preid) {
+    return `pre${currentSpecifier}`;
+  }
+
+  return currentSpecifier;
+}
 
 export async function releaseVersionGenerator(
   tree: Tree,
@@ -89,13 +96,16 @@ Valid values are: ${validReleaseVersionPrefixes
     }
 
     // Set default for updateDependents
-    const updateDependents = options.updateDependents ?? 'never';
-    const updateDependentsBump = 'patch';
+    const updateDependents = options.updateDependents ?? 'auto';
+    const updateDependentsBump = resolvePreIdSpecifier(
+      'patch',
+      options.preid
+    ) as ReleaseType;
 
     // Sort the projects topologically if update dependents is enabled
-    // TODO: maybe move this sorting to the command level?
     const projects =
-      updateDependents === 'never'
+      updateDependents === 'never' ||
+      options.releaseGroup.projectsRelationship !== 'independent'
         ? options.projects
         : sortProjectsTopologically(options.projectGraph, options.projects);
     const projectToDependencyBumps = new Map<string, any>();
@@ -212,6 +222,9 @@ To fix this you will either need to add a package.json file at that location, or
               currentVersion = await new Promise<string>((resolve, reject) => {
                 exec(
                   `npm view ${packageName} version --"${registryConfigKey}=${registry}" --tag=${tag}`,
+                  {
+                    windowsHide: false,
+                  },
                   (error, stdout, stderr) => {
                     if (error) {
                       return reject(error);
@@ -233,11 +246,26 @@ To fix this you will either need to add a package.json file at that location, or
               spinner.stop();
 
               if (options.fallbackCurrentVersionResolver === 'disk') {
-                logger.buffer(
-                  `📄 Unable to resolve the current version from the registry ${registry}. Falling back to the version on disk of ${currentVersionFromDisk}`
-                );
-                currentVersion = currentVersionFromDisk;
-                currentVersionResolvedFromFallback = true;
+                if (
+                  !currentVersionFromDisk &&
+                  (options.specifierSource === 'conventional-commits' ||
+                    options.specifierSource === 'version-plans')
+                ) {
+                  currentVersion = await handleNoAvailableDiskFallback({
+                    logger,
+                    projectName,
+                    packageJsonPath,
+                    specifierSource: options.specifierSource,
+                    currentVersionSourceMessage: `from the registry ${registry}`,
+                    resolutionSuggestion: `you should publish an initial version to the registry`,
+                  });
+                } else {
+                  logger.buffer(
+                    `📄 Unable to resolve the current version from the registry ${registry}. Falling back to the version on disk of ${currentVersionFromDisk}`
+                  );
+                  currentVersion = currentVersionFromDisk;
+                  currentVersionResolvedFromFallback = true;
+                }
               } else {
                 throw new Error(
                   `Unable to resolve the current version from the registry ${registry}. Please ensure that the package exists in the registry in order to use the "registry" currentVersionResolver. Alternatively, you can use the --first-release option or set "release.version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when the registry lookup fails.`
@@ -261,7 +289,7 @@ To fix this you will either need to add a package.json file at that location, or
           currentVersion = currentVersionFromDisk;
           if (!currentVersion) {
             throw new Error(
-              `Unable to determine the current version for project "${project.name}" from ${packageJsonPath}`
+              `Unable to determine the current version for project "${project.name}" from ${packageJsonPath}, please ensure that the "version" field is set within the file`
             );
           }
           logger.buffer(
@@ -279,15 +307,31 @@ To fix this you will either need to add a package.json file at that location, or
               releaseTagPattern,
               {
                 projectName: project.name,
-              }
+              },
+              options.releaseGroup.releaseTagPatternCheckAllBranchesWhen
             );
             if (!latestMatchingGitTag) {
               if (options.fallbackCurrentVersionResolver === 'disk') {
-                logger.buffer(
-                  `📄 Unable to resolve the current version from git tag using pattern "${releaseTagPattern}". Falling back to the version on disk of ${currentVersionFromDisk}`
-                );
-                currentVersion = currentVersionFromDisk;
-                currentVersionResolvedFromFallback = true;
+                if (
+                  !currentVersionFromDisk &&
+                  (options.specifierSource === 'conventional-commits' ||
+                    options.specifierSource === 'version-plans')
+                ) {
+                  currentVersion = await handleNoAvailableDiskFallback({
+                    logger,
+                    projectName,
+                    packageJsonPath,
+                    specifierSource: options.specifierSource,
+                    currentVersionSourceMessage: `from git tag using pattern "${releaseTagPattern}"`,
+                    resolutionSuggestion: `you should set an initial git tag on a relevant commit`,
+                  });
+                } else {
+                  logger.buffer(
+                    `📄 Unable to resolve the current version from git tag using pattern "${releaseTagPattern}". Falling back to the version on disk of ${currentVersionFromDisk}`
+                  );
+                  currentVersion = currentVersionFromDisk;
+                  currentVersionResolvedFromFallback = true;
+                }
               } else {
                 throw new Error(
                   `No git tags matching pattern "${releaseTagPattern}" for project "${project.name}" were found. You will need to create an initial matching tag to use as a base for determining the next version. Alternatively, you can use the --first-release option or set "release.version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when no matching git tags are found.`
@@ -383,7 +427,11 @@ To fix this you will either need to add a package.json file at that location, or
             );
 
             if (!specifier) {
-              if (projectToDependencyBumps.has(projectName)) {
+              if (
+                updateDependents !== 'never' &&
+                options.releaseGroup.projectsRelationship === 'independent' &&
+                projectToDependencyBumps.has(projectName)
+              ) {
                 // No applicable changes to the project directly by the user, but one or more dependencies have been bumped and updateDependents is enabled
                 specifier = updateDependentsBump;
                 logger.buffer(
@@ -397,8 +445,6 @@ To fix this you will either need to add a package.json file at that location, or
               break;
             }
 
-            // TODO: reevaluate this prerelease logic/workflow for independent projects
-            //
             // Always assume that if the current version is a prerelease, then the next version should be a prerelease.
             // Users must manually graduate from a prerelease to a release by providing an explicit specifier.
             if (prerelease(currentVersion ?? '')) {
@@ -408,8 +454,13 @@ To fix this you will either need to add a package.json file at that location, or
               );
             } else {
               let extraText = '';
-              if (options.preid && !specifier.startsWith('pre')) {
-                specifier = `pre${specifier}`;
+              const prereleaseSpecifier = resolvePreIdSpecifier(
+                specifier,
+                options.preid
+              );
+
+              if (prereleaseSpecifier !== specifier) {
+                specifier = prereleaseSpecifier;
                 extraText = `, combined with your given preid "${options.preid}"`;
               }
               logger.buffer(
@@ -506,6 +557,7 @@ To fix this you will either need to add a package.json file at that location, or
             if (!specifier) {
               if (
                 updateDependents !== 'never' &&
+                options.releaseGroup.projectsRelationship === 'independent' &&
                 projectToDependencyBumps.has(projectName)
               ) {
                 // No applicable changes to the project directly by the user, but one or more dependencies have been bumped and updateDependents is enabled
@@ -529,7 +581,7 @@ To fix this you will either need to add a package.json file at that location, or
               (options.releaseGroup.resolvedVersionPlans || []).forEach((p) => {
                 deleteVersionPlanCallbacks.push(async (dryRun?: boolean) => {
                   if (!dryRun) {
-                    await remove(p.absolutePath);
+                    await rm(p.absolutePath, { recursive: true, force: true });
                     // the relative path is easier to digest, so use that for
                     // git operations and logging
                     return [p.relativePath];
@@ -560,13 +612,16 @@ To fix this you will either need to add a package.json file at that location, or
         options.releaseGroup.projectsRelationship === 'independent'
       );
 
+      // list of projects that depend on the current package
       const allDependentProjects = Object.values(localPackageDependencies)
         .flat()
         .filter((localPackageDependency) => {
-          return localPackageDependency.target === project.name;
+          return localPackageDependency.target === projectName;
         });
 
-      const includeTransitiveDependents = updateDependents === 'auto';
+      const includeTransitiveDependents =
+        updateDependents !== 'never' &&
+        options.releaseGroup.projectsRelationship === 'independent';
       const transitiveLocalPackageDependents: LocalPackageDependency[] = [];
       if (includeTransitiveDependents) {
         for (const directDependent of allDependentProjects) {
@@ -585,10 +640,14 @@ To fix this you will either need to add a package.json file at that location, or
       const dependentProjectsOutsideCurrentBatch = [];
       // Track circular dependencies using value of project1:project2
       const circularDependencies = new Set<string>();
+      const projectsDependOnCurrentProject =
+        localPackageDependencies[projectName]?.map(
+          (localPackageDependencies) => localPackageDependencies.target
+        ) ?? [];
 
       for (const dependentProject of allDependentProjects) {
         // Track circular dependencies (add both directions for easy look up)
-        if (dependentProject.target === projectName) {
+        if (projectsDependOnCurrentProject.includes(dependentProject.source)) {
           circularDependencies.add(
             `${dependentProject.source}:${dependentProject.target}`
           );
@@ -621,7 +680,10 @@ To fix this you will either need to add a package.json file at that location, or
       }
 
       // If not always updating dependents (when they don't already appear in the batch itself), print a warning to the user about what is being skipped and how to change it
-      if (updateDependents === 'never') {
+      if (
+        updateDependents === 'never' ||
+        options.releaseGroup.projectsRelationship !== 'independent'
+      ) {
         if (dependentProjectsOutsideCurrentBatch.length > 0) {
           let logMsg = `⚠️  Warning, the following packages depend on "${project.name}"`;
           const reason =
@@ -639,7 +701,7 @@ To fix this you will either need to add a package.json file at that location, or
           logMsg += `\n${dependentProjectsOutsideCurrentBatch
             .map((dependentProject) => `${indent}- ${dependentProject.source}`)
             .join('\n')}`;
-          logMsg += `\n${indent}=> You can adjust this behavior by setting \`version.generatorOptions.updateDependents\` to "auto"`;
+          logMsg += `\n${indent}=> You can adjust this behavior by removing the usage of \`version.generatorOptions.updateDependents\` with "never"`;
           logger.buffer(logMsg);
         }
       }
@@ -654,7 +716,8 @@ To fix this you will either need to add a package.json file at that location, or
         currentVersion,
         newVersion: null, // will stay as null in the final result in the case that no changes are detected
         dependentProjects:
-          updateDependents === 'auto'
+          updateDependents === 'auto' &&
+          options.releaseGroup.projectsRelationship === 'independent'
             ? allDependentProjects
             : dependentProjectsInCurrentBatch,
       };
@@ -688,9 +751,16 @@ To fix this you will either need to add a package.json file at that location, or
 
       if (allDependentProjects.length > 0) {
         const totalProjectsToUpdate =
-          updateDependents === 'auto'
+          updateDependents === 'auto' &&
+          options.releaseGroup.projectsRelationship === 'independent'
             ? allDependentProjects.length +
-              transitiveLocalPackageDependents.length -
+              // Only count transitive dependents that aren't already direct dependents
+              transitiveLocalPackageDependents.filter(
+                (transitive) =>
+                  !allDependentProjects.some(
+                    (direct) => direct.source === transitive.source
+                  )
+              ).length -
               // There are two entries per circular dep
               circularDependencies.size / 2
             : dependentProjectsInCurrentBatch.length;
@@ -714,7 +784,7 @@ To fix this you will either need to add a package.json file at that location, or
         dependentProject: LocalPackageDependency;
         dependencyPackageName: string;
         newDependencyVersion: string;
-        forceVersionBump: 'major' | 'minor' | 'patch' | false;
+        forceVersionBump: ReleaseType | false;
       }) => {
         const updatedFilePath = joinPathFragments(
           projectNameToPackageRootMap.get(dependentProject.source),
@@ -761,10 +831,16 @@ To fix this you will either need to add a package.json file at that location, or
             }
           }
 
-          // Apply the new version of the dependency to the dependent
-          const newDepVersion = `${versionPrefix}${newDependencyVersion}`;
-          json[dependentProject.dependencyCollection][dependencyPackageName] =
-            newDepVersion;
+          // Apply the new version of the dependency to the dependent (if not preserving locally linked package protocols)
+          const shouldUpdateDependency = !(
+            isLocallyLinkedPackageVersion(currentDependencyVersion) &&
+            options.preserveLocalDependencyProtocols
+          );
+          if (shouldUpdateDependency) {
+            const newDepVersion = `${versionPrefix}${newDependencyVersion}`;
+            json[dependentProject.dependencyCollection][dependencyPackageName] =
+              newDepVersion;
+          }
 
           // Bump the dependent's version if applicable and record it in the version data
           if (forceVersionBump) {
@@ -814,7 +890,10 @@ To fix this you will either need to add a package.json file at that location, or
         });
       }
 
-      if (updateDependents === 'auto') {
+      if (
+        updateDependents === 'auto' &&
+        options.releaseGroup.projectsRelationship === 'independent'
+      ) {
         for (const dependentProject of dependentProjectsOutsideCurrentBatch) {
           if (
             options.specifierSource === 'version-plans' &&
@@ -841,6 +920,39 @@ To fix this you will either need to add a package.json file at that location, or
         }
       }
       for (const transitiveDependentProject of transitiveLocalPackageDependents) {
+        const isAlreadyDirectDependent = allDependentProjects.some(
+          (dep) => dep.source === transitiveDependentProject.source
+        );
+        if (isAlreadyDirectDependent) {
+          // Don't continue directly in this scenario - we still need to update the dependency version
+          // but we don't want to bump the project's own version as it will end up being double patched
+          const dependencyProjectName = transitiveDependentProject.target;
+          const dependencyPackageRoot = projectNameToPackageRootMap.get(
+            dependencyProjectName
+          );
+          if (!dependencyPackageRoot) {
+            throw new Error(
+              `The project "${dependencyProjectName}" does not have a packageRoot available. Please report this issue on https://github.com/nrwl/nx`
+            );
+          }
+          const dependencyPackageJsonPath = joinPathFragments(
+            dependencyPackageRoot,
+            'package.json'
+          );
+          const dependencyPackageJson = readJson(
+            tree,
+            dependencyPackageJsonPath
+          );
+
+          updateDependentProjectAndAddToVersionData({
+            dependentProject: transitiveDependentProject,
+            dependencyPackageName: dependencyPackageJson.name,
+            newDependencyVersion: dependencyPackageJson.version,
+            forceVersionBump: false, // Never bump version for direct dependents
+          });
+          continue;
+        }
+
         // Check if the transitive dependent originates from a circular dependency
         const isFromCircularDependency = circularDependencies.has(
           `${transitiveDependentProject.source}:${transitiveDependentProject.target}`
@@ -888,7 +1000,7 @@ To fix this you will either need to add a package.json file at that location, or
     // Return the version data so that it can be leveraged by the overall version command
     return {
       data: versionData,
-      callback: async (tree, opts) => {
+      callback: async (tree, { generatorOptions, ...opts }) => {
         const changedFiles: string[] = [];
         const deletedFiles: string[] = [];
 
@@ -897,7 +1009,13 @@ To fix this you will either need to add a package.json file at that location, or
         }
 
         const cwd = tree.root;
-        changedFiles.push(...(await updateLockFile(cwd, opts)));
+        changedFiles.push(
+          ...(await updateLockFile(cwd, {
+            ...opts,
+            useLegacyVersioning: true,
+            options: generatorOptions,
+          }))
+        );
         return { changedFiles, deletedFiles };
       },
     };
@@ -929,7 +1047,8 @@ function createResolvePackageRoot(customPackageRoot?: string) {
       return projectNode.data.root;
     }
     if (projectNode.data.root === '.') {
-      // TODO This is a temporary workaround to fix NXC-574 until NXC-573 is resolved
+      // This is a temporary workaround to fix NXC-574 until NXC-573 is resolved.
+      // This has been fixed in "versioning v2"
       return projectNode.data.root;
     }
     return interpolate(customPackageRoot, {
@@ -987,41 +1106,57 @@ class ProjectLogger {
   }
 }
 
-let pm: PackageManager | undefined;
-let pmVersion: string | undefined;
-
-const localPackageProtocols = [
-  'file:', // all package managers
-  'workspace:', // not npm
-  'portal:', // modern yarn only
-];
-
-function isLocallyLinkedPackageVersion(version: string): boolean {
-  // Not using a supported local protocol
-  if (!localPackageProtocols.some((protocol) => version.startsWith(protocol))) {
-    return false;
+/**
+ * Allow users to be unblocked when locally running releases for the very first time with certain combinations that require an initial
+ * version in order to function (e.g. a relative semver bump derived via conventional commits or version plans) by providing an interactive
+ * prompt to let them opt into using 0.0.0 as the implied current version.
+ */
+async function handleNoAvailableDiskFallback({
+  logger,
+  projectName,
+  packageJsonPath,
+  specifierSource,
+  currentVersionSourceMessage,
+  resolutionSuggestion,
+}: {
+  logger: ProjectLogger;
+  projectName: string;
+  packageJsonPath: string;
+  specifierSource: Exclude<
+    ReleaseVersionGeneratorSchema['specifierSource'],
+    'prompt'
+  >;
+  currentVersionSourceMessage: string;
+  resolutionSuggestion: string;
+}): Promise<string> {
+  const unresolvableCurrentVersionError = new Error(
+    `Unable to resolve the current version ${currentVersionSourceMessage} and there is no version on disk to fall back to. This is invalid with ${specifierSource} because the new version is determined by relatively bumping the current version. To resolve this, ${resolutionSuggestion}, or set an appropriate value for "version" in ${packageJsonPath}`
+  );
+  if (process.env.CI === 'true') {
+    // We can't prompt in CI, so error immediately
+    throw unresolvableCurrentVersionError;
   }
-  // Supported by all package managers
-  if (version.startsWith('file:')) {
-    return true;
-  }
-  // Determine specific package manager in use
-  if (!pm) {
-    pm = detectPackageManager();
-    pmVersion = getPackageManagerVersion(pm);
-  }
-  if (pm === 'npm' && version.startsWith('workspace:')) {
-    throw new Error(
-      `The "workspace:" protocol is not yet supported by npm (https://github.com/npm/rfcs/issues/765). Please ensure you have a valid setup according to your package manager before attempting to release packages.`
+  try {
+    const reply = await prompt<{ useZero: boolean }>([
+      {
+        name: 'useZero',
+        message: `\n${chalk.yellow(
+          `Warning: Unable to resolve the current version for "${projectName}" ${currentVersionSourceMessage} and there is no version on disk to fall back to. This is invalid with ${specifierSource} because the new version is determined by relatively bumping the current version.\n\nTo resolve this, ${resolutionSuggestion}, or set an appropriate value for "version" in ${packageJsonPath}`
+        )}. \n\nAlternatively, would you like to continue now by using 0.0.0 as the current version?`,
+        type: 'confirm',
+        initial: false,
+      },
+    ]);
+    if (!reply.useZero) {
+      // Throw any error to skip the fallback to 0.0.0, may as well use the one we already have
+      throw unresolvableCurrentVersionError;
+    }
+    const currentVersion = '0.0.0';
+    logger.buffer(
+      `📄 Forcibly resolved the current version as "${currentVersion}" based on your response to the prompt above.`
     );
+    return currentVersion;
+  } catch {
+    throw unresolvableCurrentVersionError;
   }
-  if (
-    version.startsWith('portal:') &&
-    (pm !== 'yarn' || lt(pmVersion, '2.0.0'))
-  ) {
-    throw new Error(
-      `The "portal:" protocol is only supported by yarn@2.0.0 and above. Please ensure you have a valid setup according to your package manager before attempting to release packages.`
-    );
-  }
-  return true;
 }

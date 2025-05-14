@@ -11,7 +11,7 @@ describe('markdown utils', () => {
 
 - **baz:** bugfix for baz
 
-### ❤️  Thank You
+### ❤️ Thank You
 
 - James Henry
 
@@ -26,7 +26,7 @@ describe('markdown utils', () => {
 
 - **bar:** some bugfix in bar
 
-### ❤️  Thank You
+### ❤️ Thank You
 
 - James Henry
     `;
@@ -38,7 +38,7 @@ describe('markdown utils', () => {
 
         - **baz:** bugfix for baz
 
-        ### ❤️  Thank You
+        ### ❤️ Thank You
 
         - James Henry",
               "version": "0.0.3",
@@ -52,7 +52,7 @@ describe('markdown utils', () => {
 
         - **bar:** some bugfix in bar
 
-        ### ❤️  Thank You
+        ### ❤️ Thank You
 
         - James Henry",
               "version": "0.0.2",
@@ -71,7 +71,7 @@ describe('markdown utils', () => {
 
 - **baz:** bugfix for baz
 
-### ❤️  Thank You
+### ❤️ Thank You
 
 - James Henry
 
@@ -86,7 +86,7 @@ describe('markdown utils', () => {
 
 - **bar:** some bugfix in bar
 
-### ❤️  Thank You
+### ❤️ Thank You
 
 - James Henry
     `;
@@ -98,7 +98,7 @@ describe('markdown utils', () => {
 
         - **baz:** bugfix for baz
 
-        ### ❤️  Thank You
+        ### ❤️ Thank You
 
         - James Henry",
               "version": "0.0.3-alpha.1",
@@ -112,7 +112,7 @@ describe('markdown utils', () => {
 
         - **bar:** some bugfix in bar
 
-        ### ❤️  Thank You
+        ### ❤️ Thank You
 
         - James Henry",
               "version": "0.0.2-beta.256",
@@ -131,7 +131,7 @@ describe('markdown utils', () => {
 
 - **baz:** bugfix for baz
 
-### ❤️  Thank You
+### ❤️ Thank You
 
 - James Henry
 
@@ -146,7 +146,7 @@ describe('markdown utils', () => {
 
 - **bar:** some bugfix in bar
 
-### ❤️  Thank You
+### ❤️ Thank You
 
 - James Henry
     `;
@@ -158,7 +158,7 @@ describe('markdown utils', () => {
 
         - **baz:** bugfix for baz
 
-        ### ❤️  Thank You
+        ### ❤️ Thank You
 
         - James Henry",
               "version": "1.0.1",
@@ -172,7 +172,7 @@ describe('markdown utils', () => {
 
         - **bar:** some bugfix in bar
 
-        ### ❤️  Thank You
+        ### ❤️ Thank You
 
         - James Henry",
               "version": "1.0.0",

@@ -4,7 +4,19 @@
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {}
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "name": "chalk",
+            "message": "Please use `picocolors` in place of `chalk` for rendering terminal colors"
+          },
+          {
+            "name": "minimatch",
+            "message": "Please use `picomatch` instead."
+          }
+        ]
+      }
     },
     {
       "files": ["*.ts", "*.tsx"],
@@ -33,9 +45,8 @@
               "nx",
               "typescript",
               "@swc/core", // Installed to workspace and only used in swc() plugin
-              // Used in require.resolve calls
-              "babel-plugin-transform-async-to-promises",
-              "postcss"
+              "postcss",
+              "@rollup/plugin-typescript"
             ]
           }
         ]

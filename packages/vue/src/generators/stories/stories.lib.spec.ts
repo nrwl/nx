@@ -1,7 +1,6 @@
 import { Tree } from '@nx/devkit';
 import storiesGenerator from './stories';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import libraryGenerator from '../library/library';
 
 const componentContent = `<script setup lang="ts">
@@ -177,13 +176,12 @@ export async function createTestUILib(
   let appTree = createTreeWithEmptyWorkspace();
 
   await libraryGenerator(appTree, {
-    linter: Linter.EsLint,
+    linter: 'eslint',
     component: true,
     skipFormat: true,
     skipTsConfig: false,
     unitTestRunner: 'none',
-    name: libName,
-    projectNameAndRootFormat: 'as-provided',
+    directory: libName,
   });
 
   return appTree;

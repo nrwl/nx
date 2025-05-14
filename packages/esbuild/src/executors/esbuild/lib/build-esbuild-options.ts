@@ -1,11 +1,12 @@
 import * as esbuild from 'esbuild';
 import * as path from 'path';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync, lstatSync } from 'fs';
 import {
   ExecutorContext,
   joinPathFragments,
   normalizePath,
   ProjectGraphProjectNode,
+  readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
 
@@ -74,7 +75,10 @@ export function buildEsbuildOptions(
   } else if (options.platform === 'node' && format === 'cjs') {
     // When target platform Node and target format is CJS, then also transpile workspace libs used by the app.
     // Provide a `require` override in the main entry file so workspace libs can be loaded when running the app.
-    const paths = getTsConfigCompilerPaths(context);
+    const paths = options.isTsSolutionSetup
+      ? createPathsFromTsConfigReferences(context)
+      : getTsConfigCompilerPaths(context);
+
     const entryPointsFromProjects = getEntryPoints(
       context.projectName,
       context,
@@ -123,9 +127,135 @@ export function buildEsbuildOptions(
   return esbuildOptions;
 }
 
+/**
+ * When using TS project references we need to map the paths to the referenced projects.
+ * This is necessary because esbuild does not support project references out of the box.
+ * @param context ExecutorContext
+ */
+export function createPathsFromTsConfigReferences(
+  context: ExecutorContext
+): Record<string, string[]> {
+  const {
+    findAllProjectNodeDependencies,
+  } = require('nx/src/utils/project-graph-utils');
+  const {
+    isValidPackageJsonBuildConfig,
+  } = require('@nx/js/src/plugins/typescript/util');
+  const { readTsConfig } = require('@nx/js');
+  const {
+    findRuntimeTsConfigName,
+  } = require('@nx/js/src/utils/typescript/ts-solution-setup');
+
+  const deps = findAllProjectNodeDependencies(
+    context.projectName,
+    context.projectGraph
+  );
+  const tsConfig = readJsonFile(
+    joinPathFragments(context.root, 'tsconfig.json')
+  );
+  const referencesAsPaths = new Set(
+    tsConfig.references.reduce((acc, ref) => {
+      if (!ref.path) return acc;
+
+      const fullPath = joinPathFragments(workspaceRoot, ref.path);
+
+      try {
+        if (lstatSync(fullPath).isDirectory()) {
+          acc.push(fullPath);
+        }
+      } catch {
+        // Ignore errors (e.g., path doesn't exist)
+      }
+
+      return acc;
+    }, [])
+  );
+
+  // for each dep we check if it contains a build target
+  // we only want to add the paths for projects that do not have a build target
+  return deps.reduce((acc, dep) => {
+    const projectNode = context.projectGraph.nodes[dep];
+    const projectPath = joinPathFragments(workspaceRoot, projectNode.data.root);
+    const resolvedTsConfigPath =
+      findRuntimeTsConfigName(projectPath) ?? 'tsconfig.json';
+    const projTsConfig = readTsConfig(resolvedTsConfigPath) as any;
+
+    const projectPkgJson = readJsonFile(
+      joinPathFragments(projectPath, 'package.json')
+    );
+
+    if (
+      projTsConfig &&
+      !isValidPackageJsonBuildConfig(
+        projTsConfig,
+        workspaceRoot,
+        projectPath
+      ) &&
+      projectPkgJson?.name
+    ) {
+      const entryPoint = getProjectEntryPoint(projectPkgJson, projectPath);
+      if (referencesAsPaths.has(projectPath)) {
+        acc[projectPkgJson.name] = [path.relative(workspaceRoot, entryPoint)];
+      }
+    }
+
+    return acc;
+  }, {});
+}
+
+// Get the entry point for the project
+function getProjectEntryPoint(projectPkgJson: any, projectPath: string) {
+  let entryPoint = null;
+  if (typeof projectPkgJson.exports === 'string') {
+    // If exports is a string, use it as the entry point
+    entryPoint = path.relative(
+      workspaceRoot,
+      joinPathFragments(projectPath, projectPkgJson.exports)
+    );
+  } else if (
+    typeof projectPkgJson.exports === 'object' &&
+    projectPkgJson.exports['.']
+  ) {
+    // If exports is an object and has a '.' key, process it
+    const exportEntry = projectPkgJson.exports['.'];
+    if (typeof exportEntry === 'object') {
+      entryPoint =
+        exportEntry.import ||
+        exportEntry.require ||
+        exportEntry.default ||
+        null;
+    } else if (typeof exportEntry === 'string') {
+      entryPoint = exportEntry;
+    }
+
+    if (entryPoint) {
+      entryPoint = path.relative(
+        workspaceRoot,
+        joinPathFragments(projectPath, entryPoint)
+      );
+    }
+  }
+
+  // If no exports were found, fall back to main and module
+  if (!entryPoint) {
+    if (projectPkgJson.main) {
+      entryPoint = path.relative(
+        workspaceRoot,
+        joinPathFragments(projectPath, projectPkgJson.main)
+      );
+    } else if (projectPkgJson.module) {
+      entryPoint = path.relative(
+        workspaceRoot,
+        joinPathFragments(projectPath, projectPkgJson.module)
+      );
+    }
+  }
+  return entryPoint;
+}
+
 export function getOutExtension(
   format: 'cjs' | 'esm',
-  options: NormalizedEsBuildExecutorOptions
+  options: Pick<NormalizedEsBuildExecutorOptions, 'userDefinedBuildOptions'>
 ): '.cjs' | '.mjs' | '.js' {
   const userDefinedExt = options.userDefinedBuildOptions?.outExtension?.['.js'];
   // Allow users to change the output extensions from default CJS and ESM extensions.

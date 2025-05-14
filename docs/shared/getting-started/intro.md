@@ -1,6 +1,13 @@
+---
+title: Intro to Nx
+description: Nx is a powerful open-source build system that enhances developer productivity, optimizes CI performance, and maintains code quality with features like task caching and distribution.
+---
+
 # Intro to Nx
 
 Nx is a powerful open-source build system that provides tools and techniques for enhancing developer productivity, optimizing CI performance, and maintaining code quality. [Check out our video](/getting-started/why-nx) to learn more about what Nx is about.
+
+{% github-repository title="Star Nx on GitHub" url="https://github.com/nrwl/nx" /%}
 
 ## Core Features
 
@@ -39,6 +46,8 @@ Also, here are some recipes that give you more details based on the technology s
 
 {% link-card title="Migrate from Angular CLI" appearance="small" url="/recipes/angular/migration/angular" icon="angular" /%}
 
+{% link-card title="Import Projects into Your Nx Workspace" appearance="small" url="/recipes/adopting-nx/import-project" icon="ArrowDownOnSquareStackIcon" /%}
+
 {% /cards %}
 
 ## Learn Nx
@@ -49,27 +58,17 @@ Also, here are some recipes that give you more details based on the technology s
 
 {% link-card title="What is Nx Cloud?" type="video" url="https://youtu.be/4VI-q943J3o" icon="nxcloud" /%}
 
-{% link-card title="PNPM Monorepos with Nx" type="video" url="https://youtu.be/ngdoUQBvAjo" icon="pnpm" /%}
+{% link-card title="PNPM Workspaces to Distributed CI" type="course" url="/courses/pnpm-nx-next" icon="pnpm" /%}
 
 {% link-card title="More On Youtube" type="video" url="https://www.youtube.com/@nxdevtools" icon="youtube" /%}
 
 {% /cards %}
 
-{% cards cols="2" lgCols="3" mdCols="3" smCols="2" %}
-
-{% link-card title="NPM Workspaces" type="tutorial" url="/getting-started/tutorials/npm-workspaces-tutorial" icon="jsMono" /%}
-
-{% link-card title="Single React App" type="tutorial" url="/getting-started/tutorials/react-standalone-tutorial" icon="react" /%}
-
-{% link-card title="React Monorepo" type="tutorial" url="/getting-started/tutorials/react-monorepo-tutorial" icon="reactMono" /%}
-
-{% /cards %}
-
 {% cards cols="2" lgCols="4" mdCols="4" smCols="2" %}
 
-{% link-card title="Single Vue App" type="tutorial" url="/getting-started/tutorials/vue-standalone-tutorial" icon="vue" /%}
+{% link-card title="TypeScript Monorepo" type="tutorial" url="/getting-started/tutorials/typescript-packages-tutorial" icon="jsMono" /%}
 
-{% link-card title="Single Angular App" type="tutorial" url="/getting-started/tutorials/angular-standalone-tutorial" icon="angular" /%}
+{% link-card title="React Monorepo" type="tutorial" url="/getting-started/tutorials/react-monorepo-tutorial" icon="reactMono" /%}
 
 {% link-card title="Angular Monorepo" type="tutorial" url="/getting-started/tutorials/angular-monorepo-tutorial" icon="angularMono" /%}
 
@@ -112,6 +111,7 @@ Also, here are some recipes that give you more details based on the technology s
 
 Connect on our channels and with the Nx Community to ask questions, get help and keep up to date with the latest news.
 
+- ⭐️ [Star us on GitHub](https://github.com/nrwl/nx) to show your support and stay updated on new releases!
 - Join our [Discord Community](https://go.nx.dev/community)
 - Subscribe to our [Youtube Channel](https://www.youtube.com/@nxdevtools)
 - Follow us on [Twitter](https://twitter.com/nxdevtools)

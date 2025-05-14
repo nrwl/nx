@@ -4,9 +4,6 @@ import type {
   ProjectsConfigurations,
   TargetConfiguration,
 } from '../config/workspace-json-project-json';
-import { output } from './output';
-import type { ProjectGraphError } from '../project-graph/error-types';
-import { daemonClient } from '../daemon/client/client';
 
 type PropertyDescription = {
   type?: string | string[];
@@ -88,56 +85,6 @@ export type Options = {
   '--'?: Unmatched[];
   [k: string]: string | number | boolean | string[] | Unmatched[] | undefined;
 };
-
-export async function handleErrors(
-  isVerbose: boolean,
-  fn: Function
-): Promise<number> {
-  try {
-    const result = await fn();
-    if (typeof result === 'number') {
-      return result;
-    }
-    return 0;
-  } catch (err) {
-    err ||= new Error('Unknown error caught');
-    if (err.constructor.name === 'UnsuccessfulWorkflowExecution') {
-      logger.error('The generator workflow failed. See above.');
-    } else if (err.name === 'ProjectGraphError') {
-      const projectGraphError = err as ProjectGraphError;
-      let title = projectGraphError.message;
-      if (isVerbose) {
-        title += ' See errors below.';
-      }
-
-      const bodyLines = isVerbose
-        ? [projectGraphError.stack]
-        : ['Pass --verbose to see the stacktraces.'];
-
-      output.error({
-        title,
-        bodyLines: bodyLines,
-      });
-    } else {
-      const lines = (err.message ? err.message : err.toString()).split('\n');
-      const bodyLines = lines.slice(1);
-      if (err.stack && !isVerbose) {
-        bodyLines.push('Pass --verbose to see the stacktrace.');
-      }
-      output.error({
-        title: lines[0],
-        bodyLines,
-      });
-      if (err.stack && isVerbose) {
-        logger.info(err.stack);
-      }
-    }
-    if (daemonClient.enabled()) {
-      daemonClient.reset();
-    }
-    return 1;
-  }
-}
 
 function camelCase(input: string): string {
   if (input.indexOf('-') > 1) {
@@ -589,15 +536,13 @@ function setPropertyDefault(
   schema: any,
   definitions: Properties
 ) {
+  let defaultValueToSet: any | undefined;
+
   if (schema.$ref) {
     schema = resolveDefinition(schema.$ref, definitions);
   }
 
-  if (schema.type !== 'object' && schema.type !== 'array') {
-    if (opts[propName] === undefined && schema.default !== undefined) {
-      opts[propName] = schema.default;
-    }
-  } else if (schema.type === 'array') {
+  if (schema.type === 'array') {
     const items = schema.items || {};
     if (
       opts[propName] &&
@@ -608,20 +553,33 @@ function setPropertyDefault(
         setDefaultsInObject(valueInArray, items.properties || {}, definitions)
       );
     } else if (!opts[propName] && schema.default) {
-      opts[propName] = schema.default;
+      defaultValueToSet = schema.default;
     }
   } else {
-    const wasUndefined = opts[propName] === undefined;
-    if (wasUndefined) {
-      // We need an object to set values onto
-      opts[propName] = {};
+    if (opts[propName] === undefined && schema.default !== undefined) {
+      defaultValueToSet = schema.default;
     }
 
-    setDefaultsInObject(opts[propName], schema.properties || {}, definitions);
+    if (schema.type === 'object') {
+      const wasUndefined = opts[propName] === undefined;
+      if (!wasUndefined) {
+        setDefaultsInObject(
+          opts[propName],
+          schema.properties || {},
+          definitions
+        );
+      }
+    }
+  }
 
-    // If the property was initially undefined but no properties were added, we remove it again instead of having an {}
-    if (wasUndefined && Object.keys(opts[propName]).length === 0) {
-      delete opts[propName];
+  if (defaultValueToSet !== undefined) {
+    try {
+      validateProperty(propName, defaultValueToSet, schema, definitions);
+      opts[propName] = defaultValueToSet;
+    } catch (e) {
+      // If the default value is invalid, we don't set it...
+      // this should honestly never be needed... but some notable
+      // 3rd party schema's are invalid.
     }
   }
 }

@@ -3,7 +3,7 @@ import {
   TargetConfigurationGroupList,
   TargetConfigurationGroupListProps,
 } from './target-configuration-details-group-list';
-import { ExpandedTargetsProvider } from '@nx/graph/shared';
+import { ExpandedTargetsProvider } from '@nx/graph/legacy/shared';
 
 const meta: Meta<typeof TargetConfigurationGroupList> = {
   component: TargetConfigurationGroupList,
@@ -81,6 +81,28 @@ export const TwoTargets: Story = {
             build: ['build1', 'build2'],
           },
         },
+      },
+    },
+    sourceMap: {
+      react: ['react'],
+    },
+    variant: 'default',
+    onRunTarget: () => {},
+    onViewInTaskGraph: () => {},
+    selectedTargetGroup: 'build',
+    setExpandTargets: () => {},
+    collapseAllTargets: () => {},
+  } as TargetConfigurationGroupListProps,
+};
+
+export const NoTargets: Story = {
+  args: {
+    project: {
+      name: 'react',
+      type: 'lib',
+      data: {
+        root: 'libs/react',
+        targets: {},
       },
     },
     sourceMap: {

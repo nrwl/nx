@@ -1,10 +1,16 @@
 import { glob, joinPathFragments, type Tree } from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import type {
+  BinaryExpression,
+  ExportAssignment,
+  Expression,
+  ExpressionStatement,
   InterfaceDeclaration,
   MethodSignature,
   ObjectLiteralExpression,
   PropertyAssignment,
   PropertySignature,
+  SourceFile,
 } from 'typescript';
 import type {
   NxComponentTestingOptions,
@@ -39,32 +45,40 @@ export async function addDefaultE2EConfig(
   let updatedConfigContents = cyConfigContents;
 
   if (testingTypeConfig.length === 0) {
-    const configValue = `nxE2EPreset(__filename, ${JSON.stringify(options)})`;
+    const configValue = `nxE2EPreset(__filename, ${JSON.stringify(
+      options,
+      null,
+      2
+    )
+      .split('\n')
+      .join('\n    ')})`;
 
     updatedConfigContents = tsquery.replace(
       cyConfigContents,
       `${TS_QUERY_EXPORT_CONFIG_PREFIX} ObjectLiteralExpression:first-child`,
       (node: ObjectLiteralExpression) => {
-        let baseUrlContents = baseUrl ? `,\nbaseUrl: '${baseUrl}'` : '';
+        let baseUrlContents = baseUrl ? `,\n    baseUrl: '${baseUrl}'` : '';
         if (node.properties.length > 0) {
           return `{
   ${node.properties.map((p) => p.getText()).join(',\n')},
-  e2e: { ...${configValue}${baseUrlContents} } 
+  e2e: {
+    ...${configValue}${baseUrlContents}
+  } 
 }`;
         }
         return `{
-  e2e: { ...${configValue}${baseUrlContents} }
+  e2e: {
+    ...${configValue}${baseUrlContents}
+  }
 }`;
       }
     );
 
     return isCommonJS
       ? `const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
-    
-    ${updatedConfigContents}`
+${updatedConfigContents}`
       : `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-    
-    ${updatedConfigContents}`;
+${updatedConfigContents}`;
   }
   return updatedConfigContents;
 }
@@ -175,4 +189,89 @@ export function getProjectCypressConfigPath(
   }
 
   return cypressConfigPaths[0];
+}
+
+export function resolveCypressConfigObject(
+  cypressConfigContents: string
+): ObjectLiteralExpression | null {
+  const ts = ensureTypescript();
+
+  const { tsquery } = <typeof import('@phenomnomnominal/tsquery')>(
+    require('@phenomnomnominal/tsquery')
+  );
+  const sourceFile = tsquery.ast(cypressConfigContents);
+
+  const exportDefaultStatement = sourceFile.statements.find(
+    (statement): statement is ExportAssignment =>
+      ts.isExportAssignment(statement)
+  );
+
+  if (exportDefaultStatement) {
+    return resolveCypressConfigObjectFromExportExpression(
+      exportDefaultStatement.expression,
+      sourceFile
+    );
+  }
+
+  const moduleExportsStatement = sourceFile.statements.find(
+    (
+      statement
+    ): statement is ExpressionStatement & { expression: BinaryExpression } =>
+      ts.isExpressionStatement(statement) &&
+      ts.isBinaryExpression(statement.expression) &&
+      statement.expression.left.getText() === 'module.exports'
+  );
+
+  if (moduleExportsStatement) {
+    return resolveCypressConfigObjectFromExportExpression(
+      moduleExportsStatement.expression.right,
+      sourceFile
+    );
+  }
+
+  return null;
+}
+
+function resolveCypressConfigObjectFromExportExpression(
+  exportExpression: Expression,
+  sourceFile: SourceFile
+): ObjectLiteralExpression | null {
+  const ts = ensureTypescript();
+
+  if (ts.isObjectLiteralExpression(exportExpression)) {
+    return exportExpression;
+  }
+
+  if (ts.isIdentifier(exportExpression)) {
+    // try to locate the identifier in the source file
+    const variableStatements = sourceFile.statements.filter((statement) =>
+      ts.isVariableStatement(statement)
+    );
+
+    for (const variableStatement of variableStatements) {
+      for (const declaration of variableStatement.declarationList
+        .declarations) {
+        if (
+          ts.isIdentifier(declaration.name) &&
+          declaration.name.getText() === exportExpression.getText() &&
+          ts.isObjectLiteralExpression(declaration.initializer)
+        ) {
+          return declaration.initializer;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  if (
+    ts.isCallExpression(exportExpression) &&
+    ts.isIdentifier(exportExpression.expression) &&
+    exportExpression.expression.getText() === 'defineConfig' &&
+    ts.isObjectLiteralExpression(exportExpression.arguments[0])
+  ) {
+    return exportExpression.arguments[0];
+  }
+
+  return null;
 }

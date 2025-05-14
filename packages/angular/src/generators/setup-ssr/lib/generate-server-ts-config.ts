@@ -1,24 +1,33 @@
 import {
   generateFiles,
+  joinPathFragments,
+  offsetFromRoot,
+  readJson,
   readProjectConfiguration,
   updateJson,
   type Tree,
-  joinPathFragments,
 } from '@nx/devkit';
 import { join } from 'path';
-import type { Schema } from '../schema';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import type { NormalizedGeneratorOptions } from '../schema';
 
 export function setServerTsConfigOptionsForApplicationBuilder(
   tree: Tree,
-  options: Schema
+  options: NormalizedGeneratorOptions
 ) {
   const { targets } = readProjectConfiguration(tree, options.project);
   const tsConfigPath = targets.build.options.tsConfig;
 
   updateJson(tree, tsConfigPath, (json) => {
+    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+
     const files = new Set(json.files ?? []);
     files.add(joinPathFragments('src', options.main));
-    files.add(joinPathFragments(options.serverFileName));
+    if (angularMajorVersion >= 19) {
+      files.add(joinPathFragments('src', options.serverFileName));
+    } else {
+      files.add(joinPathFragments(options.serverFileName));
+    }
     json.files = Array.from(files);
 
     json.compilerOptions ??= {};
@@ -32,12 +41,29 @@ export function setServerTsConfigOptionsForApplicationBuilder(
 
 export function generateTsConfigServerJsonForBrowserBuilder(
   tree: Tree,
-  options: Schema
+  options: NormalizedGeneratorOptions
 ) {
-  const { root } = readProjectConfiguration(tree, options.project);
+  const project = readProjectConfiguration(tree, options.project);
 
-  generateFiles(tree, join(__dirname, '..', 'files', 'root'), root, {
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+
+  const packageJson = readJson(tree, 'package.json');
+  const hasLocalizePackage =
+    !!packageJson.dependencies?.['@angular/localize'] ||
+    !!packageJson.devDependencies?.['@angular/localize'];
+
+  const baseFilesPath = join(__dirname, '..', 'files');
+  let pathToFiles: string;
+  if (angularMajorVersion >= 19) {
+    pathToFiles = join(baseFilesPath, 'v19+', 'server-builder', 'root');
+  } else {
+    pathToFiles = join(baseFilesPath, 'pre-v19', 'root');
+  }
+
+  generateFiles(tree, pathToFiles, project.root, {
     ...options,
+    rootOffset: offsetFromRoot(project.root),
+    hasLocalizePackage,
     tpl: '',
   });
 }

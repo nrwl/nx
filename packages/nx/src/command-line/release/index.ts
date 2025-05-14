@@ -28,6 +28,10 @@ export const releaseChangelog = defaultClient.releaseChangelog.bind(
 /**
  * @public
  */
+export { PublishProjectsResult } from './publish';
+/**
+ * @public
+ */
 export const releasePublish = defaultClient.releasePublish.bind(
   defaultClient
 ) as typeof defaultClient.releasePublish;
@@ -45,3 +49,11 @@ export const releaseVersion = defaultClient.releaseVersion.bind(
 export const release = defaultClient.release.bind(
   defaultClient
 ) as typeof defaultClient.release;
+
+/**
+ * @public
+ */
+export {
+  AfterAllProjectsVersioned,
+  VersionActions,
+} from './version/version-actions';

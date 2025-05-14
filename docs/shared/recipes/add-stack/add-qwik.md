@@ -1,3 +1,8 @@
+---
+title: Add a New Qwik Project
+description: Learn how to integrate Qwik with Nx using the qwik-nx plugin, including creating applications, libraries, and leveraging Nx features.
+---
+
 # Add a New Qwik Project
 
 The code for this example is available on GitHub:
@@ -67,10 +72,6 @@ If you need help finding the version of `nx` you are currently using, run `nx re
 
 Let's generate a new application using `qwik-nx`.
 
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
-
 ```shell
 nx g qwik-nx:app todo --directory=apps/todo
 ```
@@ -78,10 +79,6 @@ nx g qwik-nx:app todo --directory=apps/todo
 ## Create a library
 
 Let's generate a new library using `qwik-nx`.
-
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
 
 ```shell
 nx g qwik-nx:lib data-access --directory=libs/data-access

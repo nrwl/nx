@@ -1,3 +1,8 @@
+---
+title: Module Federation with Server-Side Rendering
+description: Learn how to set up Module Federation with Server-Side Rendering (SSR) for Angular and React applications using Nx generators.
+---
+
 # Setup Module Federation with SSR for Angular and React
 
 This guide will walk you through creating a Module Federated setup with Server Side Rendering (SSR) for Angular and React using Nx and its generators.
@@ -8,14 +13,12 @@ This guide will walk you through creating a Module Federated setup with Server S
 
 Run the following command with the options listed to create an empty workspace.
 
-```{% command="npx create-nx-workspace@latest" path="~" %}
+```{% command="npx create-nx-workspace@latest myorg --preset=apps" path="~" %}
 
 NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
-✔ Where would you like to create your workspace? · myorg
-✔ Which stack do you want to use? · none
-✔ Package-based or integrated? · integrated
-✔ Do you want Nx Cloud to make your CI fast? · Yes
+✔ Which CI provider would you like to use? · skip
+✔ Would you like remote caching to make your build faster? · skip
 ```
 
 {% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this recipe, but you can see the introduction to Nx Cloud for more details." url="/ci/intro/ci-with-nx" /%}
@@ -61,7 +64,7 @@ Nx allows you to do this with a single command:
 
 {% tab label="Angular" %}
 
-```{% command="npx nx g @nx/angular:host store --ssr --remotes=product,checkout" path="~/myorg" %}
+```{% command="npx nx g @nx/angular:host apps/store --ssr --remotes=product,checkout" path="~/myorg" %}
 
 ```
 
@@ -69,7 +72,7 @@ Nx allows you to do this with a single command:
 
 {% tab label="React" %}
 
-```{% command="npx nx g @nx/react:host store --ssr --remotes=product,checkout" path="~/myorg" %}
+```{% command="npx nx g @nx/react:host apps/store --ssr --remotes=product,checkout" path="~/myorg" %}
 
 ```
 

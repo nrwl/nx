@@ -23,7 +23,8 @@ export default async function* serveExecutor(
     parseTargetString(options.buildTarget, context),
     context
   );
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
   // This is required for the default custom server to work. See the @nx/next:app generator.
   const nextDir =
     !options.dev && resolve(context.root, buildOptions.outputPath);

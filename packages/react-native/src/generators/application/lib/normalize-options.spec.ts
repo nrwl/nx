@@ -1,6 +1,5 @@
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { Schema } from '../schema';
 import { normalizeOptions } from './normalize-options';
 
@@ -13,11 +12,10 @@ describe('Normalize Options', () => {
 
   it('should normalize options with name in kebab case', async () => {
     const schema: Schema = {
-      name: 'my-app',
-      linter: Linter.EsLint,
+      directory: 'my-app',
+      linter: 'eslint',
       e2eTestRunner: 'none',
       install: false,
-      projectNameAndRootFormat: 'as-provided',
       unitTestRunner: 'none',
       bundler: 'vite',
     };
@@ -26,16 +24,17 @@ describe('Normalize Options', () => {
       addPlugin: true,
       androidProjectRoot: 'my-app/android',
       appProjectRoot: 'my-app',
+      importPath: '@proj/my-app',
       fileName: 'my-app',
       className: 'MyApp',
+      directory: 'my-app',
       displayName: 'MyApp',
       iosProjectRoot: 'my-app/ios',
       lowerCaseName: 'myapp',
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
-      projectNameAndRootFormat: 'as-provided',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'none',
@@ -44,16 +43,17 @@ describe('Normalize Options', () => {
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'my-app-e2e',
+      isTsSolutionSetup: false,
+      useProjectJson: true,
     });
   });
 
   it('should normalize options with name in camel case', async () => {
     const schema: Schema = {
-      name: 'myApp',
+      directory: 'myApp',
       e2eTestRunner: 'none',
       install: false,
-      projectNameAndRootFormat: 'as-provided',
-      linter: Linter.None,
+      linter: 'none',
       unitTestRunner: 'none',
       bundler: 'vite',
     };
@@ -62,24 +62,27 @@ describe('Normalize Options', () => {
       addPlugin: true,
       androidProjectRoot: 'myApp/android',
       appProjectRoot: 'myApp',
+      importPath: '@proj/myApp',
       className: 'MyApp',
       fileName: 'my-app',
+      directory: 'myApp',
       displayName: 'MyApp',
       iosProjectRoot: 'myApp/ios',
       lowerCaseName: 'myapp',
       name: 'myApp',
       parsedTags: [],
       projectName: 'myApp',
-      projectNameAndRootFormat: 'as-provided',
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'none',
       install: false,
       bundler: 'vite',
-      linter: Linter.None,
+      linter: 'none',
       rootProject: false,
       e2eProjectName: 'myApp-e2e',
       e2eProjectRoot: 'myApp-e2e',
+      isTsSolutionSetup: false,
+      useProjectJson: true,
     });
   });
 
@@ -89,8 +92,7 @@ describe('Normalize Options', () => {
       directory: 'directory/my-app',
       e2eTestRunner: 'none',
       install: false,
-      projectNameAndRootFormat: 'as-provided',
-      linter: Linter.None,
+      linter: 'none',
       unitTestRunner: 'none',
       bundler: 'vite',
     };
@@ -99,35 +101,36 @@ describe('Normalize Options', () => {
       addPlugin: true,
       androidProjectRoot: 'directory/my-app/android',
       appProjectRoot: 'directory/my-app',
+      importPath: '@proj/my-app',
       className: 'MyApp',
       fileName: 'my-app',
+      directory: 'directory/my-app',
       displayName: 'MyApp',
       iosProjectRoot: 'directory/my-app/ios',
       lowerCaseName: 'myapp',
       name: 'my-app',
-      directory: 'directory/my-app',
       parsedTags: [],
       projectName: 'my-app',
-      projectNameAndRootFormat: 'as-provided',
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'none',
       install: false,
       bundler: 'vite',
-      linter: Linter.None,
+      linter: 'none',
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'directory/my-app-e2e',
+      isTsSolutionSetup: false,
+      useProjectJson: true,
     });
   });
 
   it('should normalize options that has directory in its name', async () => {
     const schema: Schema = {
-      name: 'directory/my-app',
+      directory: 'directory/my-app',
       e2eTestRunner: 'none',
       install: false,
-      projectNameAndRootFormat: 'as-provided',
-      linter: Linter.None,
+      linter: 'none',
       unitTestRunner: 'none',
       bundler: 'vite',
     };
@@ -136,35 +139,37 @@ describe('Normalize Options', () => {
       addPlugin: true,
       androidProjectRoot: 'directory/my-app/android',
       appProjectRoot: 'directory/my-app',
-      className: 'DirectoryMyApp',
-      fileName: 'directory/my-app',
-      displayName: 'DirectoryMyApp',
+      importPath: '@proj/my-app',
+      className: 'MyApp',
+      directory: 'directory/my-app',
+      fileName: 'my-app',
+      displayName: 'MyApp',
       iosProjectRoot: 'directory/my-app/ios',
-      lowerCaseName: 'directorymyapp',
+      lowerCaseName: 'myapp',
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
-      projectNameAndRootFormat: 'as-provided',
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'none',
       install: false,
       bundler: 'vite',
-      linter: Linter.None,
+      linter: 'none',
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'directory/my-app-e2e',
+      isTsSolutionSetup: false,
+      useProjectJson: true,
     });
   });
 
   it('should normalize options with display name', async () => {
     const schema: Schema = {
-      name: 'my-app',
+      directory: 'my-app',
       displayName: 'My App',
       e2eTestRunner: 'none',
       install: false,
-      projectNameAndRootFormat: 'as-provided',
-      linter: Linter.None,
+      linter: 'none',
       unitTestRunner: 'none',
       bundler: 'vite',
     };
@@ -173,24 +178,27 @@ describe('Normalize Options', () => {
       addPlugin: true,
       androidProjectRoot: 'my-app/android',
       appProjectRoot: 'my-app',
+      importPath: '@proj/my-app',
       className: 'MyApp',
       fileName: 'my-app',
+      directory: 'my-app',
       displayName: 'My App',
       iosProjectRoot: 'my-app/ios',
       lowerCaseName: 'myapp',
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
-      projectNameAndRootFormat: 'as-provided',
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'none',
       install: false,
       bundler: 'vite',
-      linter: Linter.None,
+      linter: 'none',
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'my-app-e2e',
+      isTsSolutionSetup: false,
+      useProjectJson: true,
     });
   });
 });

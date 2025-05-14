@@ -1,5 +1,4 @@
 import { Tree, getProjects } from '@nx/devkit';
-import { removeSync } from 'fs-extra';
 import { join } from 'path';
 
 /**

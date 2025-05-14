@@ -1,7 +1,13 @@
 import { createHash } from 'crypto';
 import { execSync } from 'node:child_process';
-import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';
-import { copySync, ensureDirSync } from 'fs-extra';
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import * as http from 'http';
 import { minimatch } from 'minimatch';
 import { URL } from 'node:url';
@@ -38,13 +44,9 @@ import {
   createProjectGraphAsync,
   handleProjectGraphError,
 } from '../../project-graph/project-graph';
-import {
-  createTaskGraph,
-  mapTargetDefaultsToDependencies,
-} from '../../tasks-runner/create-task-graph';
+import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { allFileData } from '../../utils/all-file-data';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
-import { NxJsonConfiguration } from '../../config/nx-json';
 import { HashPlanner, transferProjectGraph } from '../../native';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
@@ -78,6 +80,7 @@ export interface ProjectGraphClientResponse {
   isPartial: boolean;
   errors?: GraphError[];
   connectedToCloud?: boolean;
+  disabledTaskSyncGenerators?: string[];
 }
 
 export interface TaskGraphClientResponse {
@@ -415,7 +418,7 @@ export async function generateGraph(
     if (ext === '.html') {
       const assetsFolder = join(fileFolderPath, 'static');
       const assets: string[] = [];
-      copySync(join(__dirname, '../../core/graph'), assetsFolder, {
+      cpSync(join(__dirname, '../../core/graph'), assetsFolder, {
         filter: (_src, dest) => {
           const isntHtml = !/index\.html/.test(dest);
           if (isntHtml && dest.includes('.')) {
@@ -423,6 +426,7 @@ export async function generateGraph(
           }
           return isntHtml;
         },
+        recursive: true,
       });
 
       const { projectGraphClientResponse } =
@@ -456,7 +460,7 @@ export async function generateGraph(
         bodyLines: [fileFolderPath, ...assets],
       });
     } else if (ext === '.json') {
-      ensureDirSync(dirname(fullFilePath));
+      mkdirSync(dirname(fullFilePath), { recursive: true });
 
       const json = await createJsonOutput(
         prunedGraph,
@@ -773,13 +777,16 @@ async function createProjectGraphAndSourceMapClientResponse(
   let isPartial = false;
   let errors: GraphError[] | undefined;
   let connectedToCloud: boolean | undefined;
+  let disabledTaskSyncGenerators: string[] | undefined;
   try {
     const projectGraphAndSourceMaps =
       await createProjectGraphAndSourceMapsAsync({ exitOnError: false });
     projectGraph = projectGraphAndSourceMaps.projectGraph;
     sourceMaps = projectGraphAndSourceMaps.sourceMaps;
 
-    connectedToCloud = isNxCloudUsed(readNxJson());
+    const nxJson = readNxJson();
+    connectedToCloud = isNxCloudUsed(nxJson);
+    disabledTaskSyncGenerators = nxJson.sync?.disabledTaskSyncGenerators;
   } catch (e) {
     if (e instanceof ProjectGraphError) {
       projectGraph = e.getPartialProjectGraph();
@@ -820,6 +827,7 @@ async function createProjectGraphAndSourceMapClientResponse(
       sourceMaps,
       errors,
       connectedToCloud,
+      disabledTaskSyncGenerators,
     })
   );
 
@@ -851,6 +859,7 @@ async function createProjectGraphAndSourceMapClientResponse(
       isPartial,
       errors,
       connectedToCloud,
+      disabledTaskSyncGenerators,
     },
     sourceMapResponse: sourceMaps,
   };
@@ -874,7 +883,7 @@ async function createTaskGraphClientResponse(
   const nxJson = readNxJson();
 
   performance.mark('task graph generation:start');
-  const taskGraphs = getAllTaskGraphsForWorkspace(nxJson, graph);
+  const taskGraphs = getAllTaskGraphsForWorkspace(graph);
   performance.mark('task graph generation:end');
 
   const planner = new HashPlanner(
@@ -944,17 +953,10 @@ async function createExpandedTaskInputResponse(
   return response;
 }
 
-function getAllTaskGraphsForWorkspace(
-  nxJson: NxJsonConfiguration,
-  projectGraph: ProjectGraph
-): {
+function getAllTaskGraphsForWorkspace(projectGraph: ProjectGraph): {
   taskGraphs: Record<string, TaskGraph>;
   errors: Record<string, string>;
 } {
-  const defaultDependencyConfigs = mapTargetDefaultsToDependencies(
-    nxJson.targetDefaults
-  );
-
   const taskGraphs: Record<string, TaskGraph> = {};
   const taskGraphErrors: Record<string, string> = {};
 
@@ -968,7 +970,7 @@ function getAllTaskGraphsForWorkspace(
       try {
         taskGraphs[taskId] = createTaskGraph(
           projectGraph,
-          defaultDependencyConfigs,
+          {},
           [projectName],
           [target],
           undefined,
@@ -978,6 +980,7 @@ function getAllTaskGraphsForWorkspace(
         taskGraphs[taskId] = {
           tasks: {},
           dependencies: {},
+          continuousDependencies: {},
           roots: [],
         };
 
@@ -994,7 +997,7 @@ function getAllTaskGraphsForWorkspace(
           try {
             taskGraphs[taskId] = createTaskGraph(
               projectGraph,
-              defaultDependencyConfigs,
+              {},
               [projectName],
               [target],
               configuration,
@@ -1004,6 +1007,7 @@ function getAllTaskGraphsForWorkspace(
             taskGraphs[taskId] = {
               tasks: {},
               dependencies: {},
+              continuousDependencies: {},
               roots: [],
             };
 
@@ -1208,15 +1212,9 @@ async function createJsonOutput(
   };
 
   if (targets?.length) {
-    const nxJson = readNxJson();
-
-    const defaultDependencyConfigs = mapTargetDefaultsToDependencies(
-      nxJson.targetDefaults
-    );
-
     const taskGraph = createTaskGraph(
       rawGraph,
-      defaultDependencyConfigs,
+      {},
       projects,
       targets,
       undefined,
@@ -1257,5 +1255,6 @@ function getHelpTextFromTarget(
 
   return execSync(command, {
     cwd: target.options?.cwd ?? workspaceRoot,
+    windowsHide: false,
   }).toString();
 }

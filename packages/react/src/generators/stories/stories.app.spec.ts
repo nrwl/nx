@@ -1,21 +1,14 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import applicationGenerator from '../application/application';
 import storiesGenerator from './stories';
-// need to mock cypress otherwise it'll use the nx installed version from package.json
-//  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/cypress-version');
+
 describe('react:stories for applications', () => {
   let appTree: Tree;
-  let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
+
   beforeEach(async () => {
-    mockedInstalledCypressVersion.mockReturnValue(10);
     appTree = await createTestUIApp('test-ui-app');
 
     // create another component
@@ -327,13 +320,12 @@ export async function createTestUIApp(
 
   await applicationGenerator(appTree, {
     e2eTestRunner: 'cypress',
-    linter: Linter.EsLint,
+    linter: 'eslint',
     skipFormat: true,
     style: 'css',
     unitTestRunner: 'none',
-    name: libName,
+    directory: libName,
     js: plainJS,
-    projectNameAndRootFormat: 'as-provided',
   });
   return appTree;
 }

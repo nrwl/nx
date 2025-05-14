@@ -1,0 +1,66 @@
+const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+const { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } = require('@nx/module-federation/rspack');
+const { join } = require('path');
+
+const baseConfig = require('./module-federation.config');
+
+const prodConfig = {
+	...baseConfig,
+	/*
+		* Remote overrides for production.
+		* Each entry is a pair of a unique name and the URL where it is deployed.
+		*
+		* e.g.
+		* remotes: [
+		*   ['app1', 'http://app1.example.com'],
+		*   ['app2', 'http://app2.example.com'],
+		* ]
+		*
+		* You can also use a full path to the remoteEntry.js file if desired.
+		*
+		* remotes: [
+		*   ['app1', 'http://example.com/path/to/app1/remoteEntry.js'],
+		*   ['app2', 'http://example.com/path/to/app2/remoteEntry.js'],
+		* ]
+		*/
+	remotes: [
+		<%_ remotes.forEach(function(r) { _%>
+		['<%= r.fileName %>', 'http://localhost:<%= r.port %>/'],
+		<%_ }); _%>
+	],
+};
+
+module.exports = {
+  output: {
+    path: join(__dirname, '<%= rspackPluginOptions.outputPath %>'),
+    publicPath: 'auto'
+  },
+  devServer: {
+    port: <%= devServerPort %>,
+    historyApiFallback: {
+      index: '/index.html',
+      disableDotRule: true,
+      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+    },
+  },
+  plugins: [
+    new NxAppRspackPlugin({
+      tsConfig: '<%= rspackPluginOptions.tsConfig %>',
+      main: '<%= rspackPluginOptions.main %>',
+      index: '<%= rspackPluginOptions.index %>',
+      baseHref: '<%= rspackPluginOptions.baseHref %>',
+      assets: <%- JSON.stringify(rspackPluginOptions.assets) %>,
+      styles: <%- JSON.stringify(rspackPluginOptions.styles) %>,
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    }),
+    new NxReactRspackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+    }),
+    new NxModuleFederationPlugin({ config: prodConfig }, { dts: false }),
+    new NxModuleFederationDevServerPlugin({ config: prodConfig }),
+  ],
+};

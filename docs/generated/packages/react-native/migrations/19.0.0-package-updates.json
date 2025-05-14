@@ -1,0 +1,43 @@
+{
+  "name": "19.0.0-package-updates",
+  "version": "19.0.0-beta.7",
+  "packages": {
+    "react-native": { "version": "0.73.6", "alwaysAddToPackageJson": false },
+    "@react-native-community/cli-platform-android": {
+      "version": "~12.3.6",
+      "alwaysAddToPackageJson": false
+    },
+    "@react-native/babel-preset": {
+      "version": "^0.73.21",
+      "alwaysAddToPackageJson": false
+    },
+    "@react-native/metro-config": {
+      "version": "^0.73.5",
+      "alwaysAddToPackageJson": false
+    },
+    "react-native-web": {
+      "version": "^0.19.10",
+      "alwaysAddToPackageJson": false
+    },
+    "@testing-library/react-native": {
+      "version": "~12.4.5",
+      "alwaysAddToPackageJson": false
+    },
+    "react-native-svg-transformer": {
+      "version": "1.3.0",
+      "alwaysAddToPackageJson": false
+    },
+    "react-native-svg": {
+      "version": "15.1.0",
+      "alwaysAddToPackageJson": false
+    },
+    "@babel/runtime": { "version": "7.24.4", "alwaysAddToPackageJson": false }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/react-native",
+  "schema": null,
+  "type": "migration"
+}

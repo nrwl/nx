@@ -10,9 +10,9 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
-import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { gte } from 'semver';
-import { createNodes } from '../../plugins/plugin';
+import { createNodesV2 } from '../../plugins/plugin';
 import {
   getInstalledStorybookVersion,
   storybookMajorVersion,
@@ -30,18 +30,15 @@ function checkDependenciesInstalled(
     '@nx/web': nxVersion,
   };
 
-  if (schema.addPlugin) {
-    let storybookVersionToInstall = storybookVersion;
-    if (
-      storybookMajorVersion() >= 7 &&
-      getInstalledStorybookVersion() &&
-      gte(getInstalledStorybookVersion(), '7.0.0')
-    ) {
-      storybookVersionToInstall = getInstalledStorybookVersion();
-    }
-
-    devDependencies['storybook'] = storybookVersionToInstall;
+  let storybookVersionToInstall = storybookVersion;
+  if (
+    storybookMajorVersion() >= 7 &&
+    getInstalledStorybookVersion() &&
+    gte(getInstalledStorybookVersion(), '7.0.0')
+  ) {
+    storybookVersionToInstall = getInstalledStorybookVersion();
   }
+  devDependencies['storybook'] = storybookVersionToInstall;
 
   return addDependenciesToPackageJson(
     host,
@@ -57,7 +54,7 @@ function addCacheableOperation(tree: Tree) {
   const cacheableOperations: string[] | null =
     nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations;
 
-  if (cacheableOperations && cacheableOperations.includes('build-storybook')) {
+  if (cacheableOperations && !cacheableOperations.includes('build-storybook')) {
     nxJson.tasksRunnerOptions.default.options.cacheableOperations.push(
       'build-storybook'
     );
@@ -102,11 +99,11 @@ export async function initGeneratorInternal(tree: Tree, schema: Schema) {
   schema.addPlugin ??= addPluginDefault;
 
   if (schema.addPlugin) {
-    await addPluginV1(
+    await addPlugin(
       tree,
       await createProjectGraphAsync(),
       '@nx/storybook/plugin',
-      createNodes,
+      createNodesV2,
       {
         serveStorybookTargetName: [
           'storybook',

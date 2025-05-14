@@ -4,29 +4,38 @@ import {
   generateFiles,
   GeneratorCallback,
   joinPathFragments,
+  logger,
   offsetFromRoot,
+  ProjectType,
+  readJson,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
   updateJson,
+  updateNxJson,
 } from '@nx/devkit';
+import { initGenerator as jsInitGenerator } from '@nx/js';
+import {
+  getProjectType,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { typesNodeVersion } from '@nx/js/src/utils/versions';
+import { join } from 'path';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
 import {
   addOrChangeTestTarget,
   createOrEditViteConfig,
 } from '../../utils/generator-utils';
-import { VitestGeneratorSchema } from './schema';
-
 import initGenerator from '../init/init';
-import {
-  vitestCoverageIstanbulVersion,
-  vitestCoverageV8Version,
-} from '../../utils/versions';
+import { VitestGeneratorSchema } from './schema';
+import { detectUiFramework } from '../../utils/detect-ui-framework';
+import { getVitestDependenciesVersionsToInstall } from '../../utils/version-utils';
+import { coerce, major } from 'semver';
 
-import { addTsLibDependencies, initGenerator as jsInitGenerator } from '@nx/js';
-import { join } from 'path';
-import { ensureDependencies } from '../../utils/ensure-dependencies';
-
+/**
+ * @param hasPlugin some frameworks (e.g. Nuxt) provide their own plugin. Their generators handle the plugin detection.
+ */
 export function vitestGenerator(
   tree: Tree,
   schema: VitestGeneratorSchema,
@@ -44,38 +53,81 @@ export async function vitestGeneratorInternal(
   schema: VitestGeneratorSchema,
   hasPlugin = false
 ) {
+  // Setting default to jsdom since it is the most common use case (React, Web).
+  // The @nx/js:lib generator specifically sets this to node to be more generic.
+  schema.testEnvironment ??= 'jsdom';
+
   const tasks: GeneratorCallback[] = [];
 
-  const { root, projectType } = readProjectConfiguration(tree, schema.project);
+  const { root, projectType: _projectType } = readProjectConfiguration(
+    tree,
+    schema.project
+  );
+  const projectType = schema.projectType ?? _projectType;
+  const uiFramework =
+    schema.uiFramework ?? (await detectUiFramework(schema.project));
   const isRootProject = root === '.';
 
   tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
+
+  const pkgJson = readJson(tree, 'package.json');
+  const useVite5 =
+    major(coerce(pkgJson.devDependencies['vite']) ?? '6.0.0') === 5;
   const initTask = await initGenerator(tree, {
+    projectRoot: root,
     skipFormat: true,
     addPlugin: schema.addPlugin,
+    useViteV5: useVite5,
   });
   tasks.push(initTask);
-  tasks.push(ensureDependencies(tree, schema));
+  tasks.push(ensureDependencies(tree, { ...schema, uiFramework }));
 
-  const nxJson = readNxJson(tree);
-  const hasPluginCheck = nxJson.plugins?.some(
-    (p) =>
-      (typeof p === 'string'
-        ? p === '@nx/vite/plugin'
-        : p.plugin === '@nx/vite/plugin') || hasPlugin
-  );
-  if (!hasPluginCheck) {
-    const testTarget = schema.testTarget ?? 'test';
-    addOrChangeTestTarget(tree, schema, testTarget);
-  }
+  addOrChangeTestTarget(tree, schema, hasPlugin);
 
   if (!schema.skipViteConfig) {
-    if (schema.uiFramework === 'react') {
+    if (uiFramework === 'angular') {
+      const relativeTestSetupPath = joinPathFragments('src', 'test-setup.ts');
+
+      const setupFile = joinPathFragments(root, relativeTestSetupPath);
+      if (!tree.exists(setupFile)) {
+        tree.write(
+          setupFile,
+          `import '@analogjs/vitest-angular/setup-zone';
+
+import {
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting,
+} from '@angular/platform-browser-dynamic/testing';
+import { getTestBed } from '@angular/core/testing';
+
+getTestBed().initTestEnvironment(
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting()
+);
+`
+        );
+      }
+
       createOrEditViteConfig(
         tree,
         {
           project: schema.project,
-          includeLib: projectType === 'library',
+          includeLib: false,
+          includeVitest: true,
+          inSourceTests: false,
+          imports: [`import angular from '@analogjs/vite-plugin-angular'`],
+          plugins: ['angular()'],
+          setupFile: relativeTestSetupPath,
+          useEsmExtension: true,
+        },
+        true
+      );
+    } else if (uiFramework === 'react') {
+      createOrEditViteConfig(
+        tree,
+        {
+          project: schema.project,
+          includeLib: getProjectType(tree, root, projectType) === 'library',
           includeVitest: true,
           inSourceTests: schema.inSourceTests,
           rollupOptionsExternal: [
@@ -83,7 +135,11 @@ export async function vitestGeneratorInternal(
             "'react-dom'",
             "'react/jsx-runtime'",
           ],
-          imports: [`import react from '@vitejs/plugin-react'`],
+          imports: [
+            schema.compiler === 'swc'
+              ? `import react from '@vitejs/plugin-react-swc'`
+              : `import react from '@vitejs/plugin-react'`,
+          ],
           plugins: ['react()'],
           coverageProvider: schema.coverageProvider,
         },
@@ -95,26 +151,44 @@ export async function vitestGeneratorInternal(
         {
           ...schema,
           includeVitest: true,
-          includeLib: projectType === 'library',
+          includeLib: getProjectType(tree, root, projectType) === 'library',
         },
         true
       );
     }
   }
 
-  createFiles(tree, schema, root);
-  updateTsConfig(tree, schema, root);
+  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
 
-  const coverageProviderDependency = getCoverageProviderDependency(
+  createFiles(tree, schema, root, isTsSolutionSetup);
+  updateTsConfig(tree, schema, root, projectType);
+
+  if (isTsSolutionSetup) {
+    // in the TS solution setup, the test target depends on the build outputs
+    // so we need to setup the task pipeline accordingly
+    const nxJson = readNxJson(tree);
+    const testTarget = schema.testTarget ?? 'test';
+    nxJson.targetDefaults ??= {};
+    nxJson.targetDefaults[testTarget] ??= {};
+    nxJson.targetDefaults[testTarget].dependsOn ??= [];
+    nxJson.targetDefaults[testTarget].dependsOn = Array.from(
+      new Set([...nxJson.targetDefaults[testTarget].dependsOn, '^build'])
+    );
+    updateNxJson(tree, nxJson);
+  }
+
+  const devDependencies = await getCoverageProviderDependency(
+    tree,
     schema.coverageProvider
   );
+  devDependencies['@types/node'] = typesNodeVersion;
 
-  const installCoverageProviderTask = addDependenciesToPackageJson(
+  const installDependenciesTask = addDependenciesToPackageJson(
     tree,
     {},
-    coverageProviderDependency
+    devDependencies
   );
-  tasks.push(installCoverageProviderTask);
+  tasks.push(installDependenciesTask);
 
   // Setup workspace config file (https://vitest.dev/guide/workspace.html)
   if (
@@ -128,7 +202,7 @@ export async function vitestGeneratorInternal(
   ) {
     tree.write(
       'vitest.workspace.ts',
-      `export default ['**/*/vite.config.ts', '**/*/vitest.config.ts'];`
+      `export default ['**/vite.config.{mjs,js,ts,mts}', '**/vitest.config.{mjs,js,ts,mts}'];`
     );
   }
 
@@ -142,8 +216,11 @@ export async function vitestGeneratorInternal(
 function updateTsConfig(
   tree: Tree,
   options: VitestGeneratorSchema,
-  projectRoot: string
+  projectRoot: string,
+  projectType: ProjectType
 ) {
+  const setupFile = tryFindSetupFile(tree, projectRoot);
+
   if (tree.exists(joinPathFragments(projectRoot, 'tsconfig.spec.json'))) {
     updateJson(
       tree,
@@ -157,6 +234,11 @@ function updateTsConfig(
             json.compilerOptions.types = ['vitest'];
           }
         }
+
+        if (setupFile) {
+          json.files = [...(json.files ?? []), setupFile];
+        }
+
         return json;
       }
     );
@@ -194,62 +276,108 @@ function updateTsConfig(
     );
   }
 
-  if (options.inSourceTests) {
-    const tsconfigLibPath = joinPathFragments(projectRoot, 'tsconfig.lib.json');
-    const tsconfigAppPath = joinPathFragments(projectRoot, 'tsconfig.app.json');
-    if (tree.exists(tsconfigLibPath)) {
-      updateJson(
-        tree,
-        joinPathFragments(projectRoot, 'tsconfig.lib.json'),
-        (json) => {
-          (json.compilerOptions.types ??= []).push('vitest/importMeta');
-          return json;
-        }
-      );
-    } else if (tree.exists(tsconfigAppPath)) {
-      updateJson(
-        tree,
-        joinPathFragments(projectRoot, 'tsconfig.app.json'),
-        (json) => {
-          (json.compilerOptions.types ??= []).push('vitest/importMeta');
-          return json;
-        }
+  let runtimeTsconfigPath = joinPathFragments(
+    projectRoot,
+    getProjectType(tree, projectRoot, projectType) === 'application'
+      ? 'tsconfig.app.json'
+      : 'tsconfig.lib.json'
+  );
+  if (options.runtimeTsconfigFileName) {
+    runtimeTsconfigPath = joinPathFragments(
+      projectRoot,
+      options.runtimeTsconfigFileName
+    );
+    if (!tree.exists(runtimeTsconfigPath)) {
+      throw new Error(
+        `Cannot find the specified runtimeTsConfigFileName ("${options.runtimeTsconfigFileName}") at the project root "${projectRoot}".`
       );
     }
+  }
 
-    addTsLibDependencies(tree);
+  if (tree.exists(runtimeTsconfigPath)) {
+    updateJson(tree, runtimeTsconfigPath, (json) => {
+      if (options.inSourceTests) {
+        (json.compilerOptions.types ??= []).push('vitest/importMeta');
+      } else {
+        const uniqueExclude = new Set([
+          ...(json.exclude || []),
+          'vite.config.ts',
+          'vite.config.mts',
+          'vitest.config.ts',
+          'vitest.config.mts',
+          'src/**/*.test.ts',
+          'src/**/*.spec.ts',
+          'src/**/*.test.tsx',
+          'src/**/*.spec.tsx',
+          'src/**/*.test.js',
+          'src/**/*.spec.js',
+          'src/**/*.test.jsx',
+          'src/**/*.spec.jsx',
+        ]);
+        json.exclude = [...uniqueExclude];
+      }
+
+      if (setupFile) {
+        json.exclude = [...(json.exclude ?? []), setupFile];
+      }
+
+      return json;
+    });
+  } else {
+    logger.warn(
+      `Couldn't find a runtime tsconfig file at ${runtimeTsconfigPath} to exclude the test files from. ` +
+        `If you're using a different filename for your runtime tsconfig, please provide it with the '--runtimeTsconfigFileName' flag.`
+    );
   }
 }
 
 function createFiles(
   tree: Tree,
   options: VitestGeneratorSchema,
-  projectRoot: string
+  projectRoot: string,
+  isTsSolutionSetup: boolean
 ) {
+  const rootOffset = offsetFromRoot(projectRoot);
+
   generateFiles(tree, join(__dirname, 'files'), projectRoot, {
     tmpl: '',
     ...options,
     projectRoot,
-    offsetFromRoot: offsetFromRoot(projectRoot),
+    extendedConfig: isTsSolutionSetup
+      ? `${rootOffset}tsconfig.base.json`
+      : './tsconfig.json',
+    outDir: isTsSolutionSetup
+      ? `./out-tsc/vitest`
+      : `${rootOffset}dist/out-tsc`,
   });
 }
 
-function getCoverageProviderDependency(
+async function getCoverageProviderDependency(
+  tree: Tree,
   coverageProvider: VitestGeneratorSchema['coverageProvider']
-) {
+): Promise<Record<string, string>> {
+  const { vitestCoverageV8, vitestCoverageIstanbul } =
+    await getVitestDependenciesVersionsToInstall(tree);
   switch (coverageProvider) {
     case 'v8':
       return {
-        '@vitest/coverage-v8': vitestCoverageV8Version,
+        '@vitest/coverage-v8': vitestCoverageV8,
       };
     case 'istanbul':
       return {
-        '@vitest/coverage-istanbul': vitestCoverageIstanbulVersion,
+        '@vitest/coverage-istanbul': vitestCoverageIstanbul,
       };
     default:
       return {
-        '@vitest/coverage-v8': vitestCoverageV8Version,
+        '@vitest/coverage-v8': vitestCoverageV8,
       };
+  }
+}
+
+function tryFindSetupFile(tree: Tree, projectRoot: string) {
+  const setupFile = joinPathFragments('src', 'test-setup.ts');
+  if (tree.exists(joinPathFragments(projectRoot, setupFile))) {
+    return setupFile;
   }
 }
 

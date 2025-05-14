@@ -55,7 +55,7 @@ export default {
      * previously defined v5 of `@typescript-eslint`. v6 of `@typescript-eslint`
      * changed how configurations are defined.
      *
-     * TODO(v20): re-evalute these deviations from @typescript-eslint/recommended in v20 of Nx
+     * TODO(eslint): re-evalute these deviations from @typescript-eslint/recommended in v20 of Nx
      */
     '@typescript-eslint/no-non-null-assertion': 'warn',
     '@typescript-eslint/adjacent-overload-signatures': 'error',
@@ -66,5 +66,12 @@ export default {
     '@typescript-eslint/no-unused-vars': 'warn',
     '@typescript-eslint/no-empty-interface': 'error',
     '@typescript-eslint/no-explicit-any': 'warn',
+    /**
+     * During the migration to use ESLint v9 and typescript-eslint v8 for new workspaces,
+     * this rule would have created a lot of noise, so we are disabling it by default for now.
+     *
+     * TODO(eslint): we should make this part of what we re-evaluate in v20
+     */
+    '@typescript-eslint/no-require-imports': 'off',
   },
 };

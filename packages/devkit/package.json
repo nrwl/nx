@@ -29,16 +29,16 @@
   "homepage": "https://nx.dev",
   "dependencies": {
     "ejs": "^3.1.7",
-    "enquirer": "~2.3.6",
     "ignore": "^5.0.4",
     "tmp": "~0.2.1",
     "tslib": "^2.3.0",
     "semver": "^7.5.3",
     "yargs-parser": "21.1.1",
-    "minimatch": "9.0.3"
+    "minimatch": "9.0.3",
+    "enquirer": "~2.3.6"
   },
   "peerDependencies": {
-    "nx": ">= 17 <= 20"
+    "nx": ">= 20 <= 22"
   },
   "publishConfig": {
     "access": "public"

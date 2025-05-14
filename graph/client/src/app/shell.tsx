@@ -18,10 +18,11 @@ import {
   getProjectGraphDataService,
   useEnvironmentConfig,
   usePoll,
-} from '@nx/graph/shared';
-import { Dropdown, Spinner } from '@nx/graph/ui-components';
+} from '@nx/graph/legacy/shared';
+import { Dropdown, Spinner } from '@nx/graph/legacy/components';
+import { Tooltip } from '@nx/graph/legacy/tooltips';
+
 import { getSystemTheme, Theme, ThemePanel } from '@nx/graph-internal/ui-theme';
-import { Tooltip } from '@nx/graph/ui-tooltips';
 import classNames from 'classnames';
 import { useLayoutEffect, useState } from 'react';
 import {
@@ -31,7 +32,6 @@ import {
   useParams,
   useRouteLoaderData,
 } from 'react-router-dom';
-import { useSyncExternalStore } from 'use-sync-external-store/shim';
 import { RankdirPanel } from './feature-projects/panels/rankdir-panel';
 import { useCurrentPath } from './hooks/use-current-path';
 import { getProjectGraphService } from './machines/get-services';
@@ -43,13 +43,17 @@ import { TooltipDisplay } from './ui-tooltips/graph-tooltip-display';
 export function Shell(): JSX.Element {
   const projectGraphService = getProjectGraphService();
   const projectGraphDataService = getProjectGraphDataService();
-
   const graphService = getGraphService();
 
-  const lastPerfReport = useSyncExternalStore(
-    (callback) => graphService.listen(callback),
-    () => graphService.lastPerformanceReport
+  const [lastPerfReport, setLastPerfReport] = useState(
+    graphService.lastPerformanceReport
   );
+
+  useLayoutEffect(() => {
+    graphService.listen(() => {
+      setLastPerfReport(graphService.lastPerformanceReport);
+    });
+  }, []);
 
   const nodesVisible = lastPerfReport.numNodes !== 0;
 

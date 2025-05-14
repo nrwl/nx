@@ -34,9 +34,11 @@ describe('@nx/vite/plugin', () => {
         packages: ['@nx/react', '@nx/vue'],
       });
       runCLI(
-        `generate @nx/react:app ${myApp} --bundler=vite --unitTestRunner=vitest`
+        `generate @nx/react:app ${myApp} --directory=apps/${myApp} --bundler=vite --unitTestRunner=vitest`
       );
-      runCLI(`generate @nx/vue:app ${myVueApp} --unitTestRunner=vitest`);
+      runCLI(
+        `generate @nx/vue:app ${myVueApp} --directory=apps/${myVueApp} --unitTestRunner=vitest`
+      );
     });
 
     afterAll(() => {
@@ -45,24 +47,20 @@ describe('@nx/vite/plugin', () => {
 
     describe('build and test React app', () => {
       it('should build application', () => {
-        const result = runCLI(`build ${myApp}`);
-        expect(result).toContain('Successfully ran target build');
+        expect(() => runCLI(`build ${myApp}`)).not.toThrow();
       }, 200_000);
 
       it('should test application', () => {
-        const result = runCLI(`test ${myApp} --watch=false`);
-        expect(result).toContain('Successfully ran target test');
+        expect(() => runCLI(`test ${myApp} --watch=false`)).not.toThrow();
       }, 200_000);
     });
     describe('build and test Vue app', () => {
       it('should build application', () => {
-        const result = runCLI(`build ${myVueApp}`);
-        expect(result).toContain('Successfully ran target build');
+        expect(() => runCLI(`build ${myVueApp}`)).not.toThrow();
       }, 200_000);
 
       it('should test application', () => {
-        const result = runCLI(`test ${myVueApp} --watch=false`);
-        expect(result).toContain('Successfully ran target test');
+        expect(() => runCLI(`test ${myVueApp} --watch=false`)).not.toThrow();
       }, 200_000);
     });
 
@@ -70,12 +68,12 @@ describe('@nx/vite/plugin', () => {
       it('should build the library and application successfully', () => {
         const myApp = uniq('myapp');
         runCLI(
-          `generate @nx/react:app ${myApp} --bundler=vite --unitTestRunner=vitest`
+          `generate @nx/react:app ${myApp} --directory=apps/${myApp} --bundler=vite --unitTestRunner=vitest`
         );
 
         const myBuildableLib = uniq('mybuildablelib');
         runCLI(
-          `generate @nx/react:library ${myBuildableLib} --bundler=vite --unitTestRunner=vitest --buildable`
+          `generate @nx/react:library ${myBuildableLib} --directory=libs/${myBuildableLib} --bundler=vite --unitTestRunner=vitest --buildable`
         );
 
         const exportedLibraryComponent = names(myBuildableLib).className;
@@ -129,13 +127,7 @@ describe('@nx/vite/plugin', () => {
           });`
         );
 
-        const result = runCLI(`build ${myApp}`);
-        expect(result).toContain(
-          `Running target build for project ${myApp} and 1 task it depends on`
-        );
-        expect(result).toContain(
-          `Successfully ran target build for project ${myApp} and 1 task it depends on`
-        );
+        expect(() => runCLI(`build ${myApp}`)).not.toThrow();
       });
     });
 
@@ -163,10 +155,10 @@ describe('@nx/vite/plugin', () => {
     it('should support importing .js and .css files in tsconfig path', () => {
       const mylib = uniq('mylib');
       runCLI(
-        `generate @nx/react:library ${mylib} --bundler=none --unitTestRunner=vitest --directory=libs/${mylib} --project-name-and-root-format=as-provided`
+        `generate @nx/react:library libs/${mylib} --bundler=none --unitTestRunner=vitest`
       );
       updateFile(`libs/${mylib}/src/styles.css`, `.foo {}`);
-      updateFile(`libs/${mylib}/src/foo.mts`, `export const foo = 'foo';`);
+      updateFile(`libs/${mylib}/src/foo.mjs`, `export const foo = 'foo';`);
       updateFile(
         `libs/${mylib}/src/foo.spec.ts`,
         `
@@ -185,6 +177,76 @@ describe('@nx/vite/plugin', () => {
 
       expect(() => runCLI(`test ${mylib}`)).not.toThrow();
     });
+
+    it('should support importing files with "." in the name in tsconfig path', () => {
+      const mylib = uniq('mylib');
+      runCLI(
+        `generate @nx/react:library libs/${mylib} --bundler=none --unitTestRunner=vitest`
+      );
+      updateFile(`libs/${mylib}/src/styles.module.css`, `.foo {}`);
+      updateFile(`libs/${mylib}/src/foo.enum.ts`, `export const foo = 'foo';`);
+      updateFile(`libs/${mylib}/src/bar.enum.ts`, `export const bar = 'bar';`);
+      updateFile(
+        `libs/${mylib}/src/foo.spec.ts`,
+        `
+          import styles from '~/styles.module.css';
+          import { foo } from '~/foo.enum.ts';
+          import { bar } from '~/bar.enum';
+          test('should work', () => {
+            expect(styles).toBeDefined();
+            expect(foo).toBeDefined();
+            expect(bar).toBeDefined();
+          });
+        `
+      );
+      updateJson('tsconfig.base.json', (json) => {
+        json.compilerOptions.paths['~/*'] = [`libs/${mylib}/src/*`];
+        return json;
+      });
+
+      expect(() => runCLI(`test ${mylib}`)).not.toThrow();
+    });
+
+    it('should not partially match a path mapping', () => {
+      const lib1 = uniq('lib1');
+      const lib2 = uniq('lib2');
+      const lib3 = uniq('lib3');
+      runCLI(
+        `generate @nx/react:library libs/${lib1} --bundler=none --unitTestRunner=vitest`
+      );
+      runCLI(
+        `generate @nx/react:library libs/${lib2} --bundler=none --unitTestRunner=vitest`
+      );
+      runCLI(
+        `generate @nx/react:library libs/${lib3} --bundler=none --unitTestRunner=vitest`
+      );
+      updateFile(`libs/${lib1}/src/foo.enum.ts`, `export const foo = 'foo';`);
+      updateFile(`libs/${lib2}/src/bar.enum.ts`, `export const bar = 'bar';`);
+      updateFile(`libs/${lib3}/src/bam.enum.ts`, `export const bam = 'bam';`);
+      updateFile(
+        `libs/${lib1}/src/foo.spec.ts`,
+        `
+          import { foo } from 'match-lib-deep/foo.enum';
+          import { bar } from 'match-lib-top-level';
+          import { bam } from 'match-lib/bam.enum';
+          test('should work', () => {
+            expect(foo).toBeDefined();
+            expect(bar).toBeDefined();
+            expect(bam).toBeDefined();
+          });
+        `
+      );
+      updateJson('tsconfig.base.json', (json) => {
+        json.compilerOptions.paths['match-lib-deep/*'] = [`libs/${lib1}/src/*`];
+        json.compilerOptions.paths['match-lib-top-level'] = [
+          `libs/${lib2}/src/bar.enum.ts`,
+        ];
+        json.compilerOptions.paths['match-lib/*'] = [`libs/${lib3}/src/*`];
+        return json;
+      });
+
+      expect(() => runCLI(`test ${lib1}`)).not.toThrow();
+    });
   });
 
   describe('react with vitest only', () => {
@@ -195,7 +257,7 @@ describe('@nx/vite/plugin', () => {
         packages: ['@nx/vite', '@nx/react'],
       });
       runCLI(
-        `generate @nx/react:app ${reactVitest} --bundler=webpack --unitTestRunner=vitest --e2eTestRunner=none --projectNameAndRootFormat=as-provided`
+        `generate @nx/react:app ${reactVitest} --bundler=webpack --unitTestRunner=vitest --e2eTestRunner=none`
       );
     });
 

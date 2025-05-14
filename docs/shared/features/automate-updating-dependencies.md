@@ -1,4 +1,15 @@
+---
+title: Automate Updating Dependencies
+description: Learn how to use Nx migrate to automatically update package dependencies, configuration files, and source code to match new package versions.
+keywords: [update, migrate]
+---
+
 # Automate Updating Dependencies
+
+{% youtube
+src="https://youtu.be/A0FjwsTlZ8A"
+title="How Automated Code Migrations Work"
+/%}
 
 Keeping your tooling up to date is crucial for the health of your project. Tooling maintenance work can be tedious and time consuming, though. The **Nx migrate** functionality provides a way for you to
 
@@ -6,16 +17,15 @@ Keeping your tooling up to date is crucial for the health of your project. Tooli
 - migrate your **configuration files** (e.g. Jest, ESLint, Nx config)
 - **adjust your source code** to match the new versions of packages (e.g., migrating across breaking changes)
 
-{% youtube
-src="https://www.youtube.com/embed/Ss6MfcXi0jE"
-title="How Automated Code Migrations Work"
-/%}
-
 To update your workspace, run:
 
 ```shell
 npx nx migrate latest
 ```
+
+{% callout type="note" title="Visual migration tool from Nx Console" %}
+Want a more visual and guided way to migrate? Check out the [Migrate UI](/recipes/nx-console/console-migrate-ui) that comes with the [Nx Console extension](/getting-started/editor-setup).
+{% /callout %}
 
 ## How Does It Work?
 

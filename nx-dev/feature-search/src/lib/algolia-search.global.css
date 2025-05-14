@@ -2,6 +2,10 @@
   @apply overflow-hidden !important;
 }
 
+.DocSearch-VisuallyHiddenForAccessibility {
+  visibility: hidden;
+}
+
 body .DocSearch-Container {
   @apply fixed left-0 top-0 z-[50] flex h-screen w-screen cursor-auto flex-col bg-black/10 p-4 backdrop-blur-sm sm:p-6 md:p-[10vh] lg:p-[12vh] dark:bg-white/10;
 }

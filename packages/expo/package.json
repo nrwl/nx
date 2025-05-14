@@ -29,20 +29,18 @@
   "types": "index.d.ts",
   "dependencies": {
     "@nx/devkit": "file:../devkit",
-    "chalk": "^4.1.0",
-    "enhanced-resolve": "^5.8.3",
-    "fs-extra": "^11.1.0",
-    "metro-config": "~0.80.4",
-    "metro-resolver": "~0.80.4",
-    "node-fetch": "^2.6.7",
-    "tslib": "^2.3.0",
-    "tsconfig-paths": "^4.1.2",
+    "@nx/eslint": "file:../eslint",
     "@nx/jest": "file:../jest",
     "@nx/js": "file:../js",
-    "@nx/eslint": "file:../eslint",
     "@nx/react": "file:../react",
     "@nx/web": "file:../web",
-    "@nx/webpack": "file:../webpack"
+    "@nx/webpack": "file:../webpack",
+    "enhanced-resolve": "^5.8.3",
+    "metro-config": "~0.80.4",
+    "metro-resolver": "~0.80.4",
+    "picocolors": "^1.1.0",
+    "tsconfig-paths": "^4.1.2",
+    "tslib": "^2.3.0"
   },
   "executors": "./executors.json",
   "ng-update": {

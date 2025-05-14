@@ -1,4 +1,4 @@
-import { AxiosRequestConfig } from 'axios';
+import type { AxiosRequestConfig } from 'axios';
 import { join } from 'path';
 import {
   ACCESS_TOKEN,
@@ -6,8 +6,6 @@ import {
   UNLIMITED_TIMEOUT,
 } from './environment';
 import { CloudTaskRunnerOptions } from '../nx-cloud-tasks-runner-shell';
-
-const axios = require('axios');
 
 export function createApiAxiosInstance(options: CloudTaskRunnerOptions) {
   let axiosConfigBuilder = (axiosConfig: AxiosRequestConfig) => axiosConfig;
@@ -31,7 +29,7 @@ export function createApiAxiosInstance(options: CloudTaskRunnerOptions) {
     axiosConfigBuilder = nxCloudProxyConfig ?? axiosConfigBuilder;
   }
 
-  return axios.create(
+  return require('axios').create(
     axiosConfigBuilder({
       baseURL: baseUrl,
       timeout: NX_CLOUD_NO_TIMEOUTS ? UNLIMITED_TIMEOUT : 10000,

@@ -1,6 +1,8 @@
 import { names, Tree } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { Linter } from '@nx/eslint';
+import {
+  determineProjectNameAndRootOptions,
+  ensureRootProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import { Schema } from '../schema';
 import { NormalizedSchema } from './normalized-schema';
@@ -13,7 +15,7 @@ export async function normalizeOptions(
   // Create a schema with populated default values
   const options: Schema = {
     buildable: false,
-    linter: Linter.EsLint,
+    linter: 'eslint',
     publishable: false,
     simpleName: false,
     skipFormat: false,
@@ -26,6 +28,7 @@ export async function normalizeOptions(
     ...schema,
   };
 
+  await ensureRootProjectName(options, 'library');
   const {
     projectName,
     names: projectNames,
@@ -36,8 +39,6 @@ export async function normalizeOptions(
     projectType: 'library',
     directory: options.directory,
     importPath: options.importPath,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
-    callingGenerator: '@nx/angular:library',
   });
 
   const fileName = options.simpleName
@@ -53,7 +54,7 @@ export async function normalizeOptions(
   const ngCliSchematicLibRoot = projectName;
   const allNormalizedOptions = {
     ...options,
-    linter: options.linter ?? Linter.EsLint,
+    linter: options.linter ?? 'eslint',
     unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
     prefix: options.prefix ?? 'lib',
     name: projectName,
@@ -65,6 +66,7 @@ export async function normalizeOptions(
     fileName,
     importPath,
     ngCliSchematicLibRoot,
+    skipTests: options.unitTestRunner === 'none' ? true : options.skipTests,
     standaloneComponentName: `${
       names(projectNames.projectSimpleName).className
     }Component`,

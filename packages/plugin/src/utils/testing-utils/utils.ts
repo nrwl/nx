@@ -1,13 +1,13 @@
 import {
-  copySync,
-  ensureDirSync,
+  cpSync,
+  mkdirSync,
   readdirSync,
   readFileSync,
-  removeSync,
   renameSync,
+  rmSync,
   statSync,
   writeFileSync,
-} from 'fs-extra';
+} from 'node:fs';
 import { dirname, isAbsolute } from 'path';
 import { tmpFolder, tmpProjPath } from './paths';
 import { parseJson } from '@nx/devkit';
@@ -22,10 +22,14 @@ export { directoryExists, fileExists };
  */
 export function copyNodeModules(modules: string[]) {
   modules.forEach((module) => {
-    removeSync(`${tmpProjPath()}/node_modules/${module}`);
-    copySync(
+    rmSync(`${tmpProjPath()}/node_modules/${module}`, {
+      recursive: true,
+      force: true,
+    });
+    cpSync(
       `./node_modules/${module}`,
-      `${tmpProjPath()}/node_modules/${module}`
+      `${tmpProjPath()}/node_modules/${module}`,
+      { recursive: true }
     );
   });
 }
@@ -54,7 +58,7 @@ export function updateFile(
   file: string,
   content: string | ((originalFileContent: string) => string)
 ): void {
-  ensureDirSync(dirname(tmpProjPath(file)));
+  mkdirSync(dirname(tmpProjPath(file)), { recursive: true });
   if (typeof content === 'string') {
     writeFileSync(tmpProjPath(file), content);
   } else {
@@ -71,7 +75,7 @@ export function updateFile(
  * @param newPath New path
  */
 export function renameFile(path: string, newPath: string): void {
-  ensureDirSync(dirname(tmpProjPath(newPath)));
+  mkdirSync(dirname(tmpProjPath(newPath)), { recursive: true });
   renameSync(tmpProjPath(path), tmpProjPath(newPath));
 }
 
@@ -125,18 +129,18 @@ export function readFile(path: string): string {
  * Deletes the e2e directory
  */
 export function cleanup(): void {
-  removeSync(tmpProjPath());
+  rmSync(tmpProjPath(), { recursive: true, force: true });
 }
 
 /**
  * Remove the dist folder from the e2e directory
  */
 export function rmDist(): void {
-  removeSync(`${tmpProjPath()}/dist`);
+  rmSync(`${tmpProjPath()}/dist`, { recursive: true, force: true });
 }
 
 export function removeTmpProject(project: string): void {
-  removeSync(`${tmpFolder()}/${project}`);
+  rmSync(`${tmpFolder()}/${project}`, { recursive: true, force: true });
 }
 
 /**

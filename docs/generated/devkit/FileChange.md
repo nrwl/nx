@@ -6,7 +6,7 @@ Description of a file change in the Nx virtual file system/
 
 ### Properties
 
-- [content](../../devkit/documents/FileChange#content): Buffer
+- [content](../../devkit/documents/FileChange#content): Buffer<ArrayBufferLike>
 - [options](../../devkit/documents/FileChange#options): TreeWriteOptions
 - [path](../../devkit/documents/FileChange#path): string
 - [type](../../devkit/documents/FileChange#type): "CREATE" | "DELETE" | "UPDATE"
@@ -15,7 +15,7 @@ Description of a file change in the Nx virtual file system/
 
 ### content
 
-• **content**: `Buffer`
+• **content**: `Buffer`\<`ArrayBufferLike`\>
 
 The content of the file or null in case of delete.
 

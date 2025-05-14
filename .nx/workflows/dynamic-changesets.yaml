@@ -1,4 +1,32 @@
 distribute-on:
-  small-changeset: 8 linux-medium
-  medium-changeset: 10 linux-medium
-  large-changeset: 12 linux-medium
+  default: auto linux-medium, 1 linux-extra-large
+assignment-rules:
+  - targets:
+      - e2e-ci**
+    run-on:
+      - agent: linux-medium
+        parallelism: 1
+      - agent: linux-extra-large
+        parallelism: 1
+
+  - projects:
+      - nx-dev
+    targets:
+      - build*
+    run-on:
+      - agent: linux-extra-large
+        parallelism: 1
+
+  - targets:
+      - lint
+    run-on:
+      - agent: linux-medium
+        parallelism: 6
+
+  - targets:
+      - '*'
+    run-on:
+      - agent: linux-medium
+        parallelism: 3
+      - agent: linux-extra-large
+        parallelism: 3

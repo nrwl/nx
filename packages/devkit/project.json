@@ -44,14 +44,8 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/devkit"],
-      "options": {
-        "command": "node ./scripts/copy-readme.js devkit"
-      }
-    },
-    "add-extra-dependencies": {
-      "command": "node ./scripts/add-dependency-to-build.js devkit @nrwl/devkit"
+      "outputs": ["{workspaceRoot}/build/packages/devkit/README.md"],
+      "command": "node ./scripts/copy-readme.js devkit"
     }
   }
 }

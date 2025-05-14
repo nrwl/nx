@@ -3,7 +3,6 @@ import { componentGenerator } from './component';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Tree } from '@nx/devkit';
 import { libraryGenerator } from '@nx/react';
-import { Linter } from '@nx/eslint';
 
 describe('component', () => {
   let tree: Tree;
@@ -13,25 +12,36 @@ describe('component', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace();
     await applicationGenerator(tree, {
-      name: appName,
+      directory: appName,
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
-      name: libName,
-      linter: Linter.EsLint,
+      directory: libName,
+      linter: 'eslint',
       style: 'css',
       skipFormat: true,
       skipTsConfig: false,
       unitTestRunner: 'jest',
-      projectNameAndRootFormat: 'as-provided',
     });
   });
 
   it('should generate component in components directory for application', async () => {
     await componentGenerator(tree, {
       name: 'hello',
-      project: appName,
+      path: `${appName}/components/hello/hello`,
+      style: 'css',
+    });
+
+    expect(tree.exists('my-app/components/hello/hello.tsx')).toBeTruthy();
+    expect(tree.exists('my-app/components/hello/hello.spec.tsx')).toBeTruthy();
+    expect(
+      tree.exists('my-app/components/hello/hello.module.css')
+    ).toBeTruthy();
+  });
+
+  it('should handle path with file extension', async () => {
+    await componentGenerator(tree, {
+      path: `${appName}/components/hello/hello.tsx`,
       style: 'css',
     });
 
@@ -45,7 +55,7 @@ describe('component', () => {
   it('should generate component in default directory for library', async () => {
     await componentGenerator(tree, {
       name: 'hello',
-      project: libName,
+      path: `${libName}/src/lib/hello/hello`,
       style: 'css',
     });
 
@@ -57,14 +67,12 @@ describe('component', () => {
   it('should allow directory override', async () => {
     await componentGenerator(tree, {
       name: 'hello',
-      project: appName,
-      directory: 'foo',
+      path: `${appName}/foo/hello/hello`,
       style: 'css',
     });
     await componentGenerator(tree, {
       name: 'world',
-      project: libName,
-      directory: 'bar',
+      path: `${libName}/src/bar/world/world`,
       style: 'css',
     });
 
@@ -79,8 +87,7 @@ describe('component', () => {
   it('should work with path as-provided', async () => {
     await componentGenerator(tree, {
       name: 'hello',
-      directory: 'my-lib/src/foo',
-      nameAndDirectoryFormat: 'as-provided',
+      path: 'my-lib/src/foo/hello',
       style: 'css',
     });
 
@@ -89,12 +96,10 @@ describe('component', () => {
     expect(tree.exists('my-lib/src/foo/hello.module.css')).toBeTruthy();
   });
 
-  it('should work with directory as a part of the component name', async () => {
+  it('should work with path as a part of the component name', async () => {
     await componentGenerator(tree, {
-      name: `${libName}/src/btn/btn`,
-      project: appName,
+      path: `${libName}/src/btn/btn`,
       style: 'css',
-      nameAndDirectoryFormat: 'as-provided',
     });
 
     expect(tree.exists(`${libName}/src/btn/btn.tsx`)).toBeTruthy();

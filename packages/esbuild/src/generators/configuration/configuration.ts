@@ -1,18 +1,27 @@
 import {
   formatFiles,
   joinPathFragments,
+  readJson,
+  readNxJson,
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
-
-import { esbuildInitGenerator } from '../init/init';
-import { EsBuildExecutorOptions } from '../../executors/esbuild/schema';
-import { EsBuildProjectSchema } from './schema';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import { getOutputDir, getUpdatedPackageJsonContent } from '@nx/js';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import {
+  getProjectSourceRoot,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { basename, dirname, join } from 'node:path/posix';
+import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
+import { PackageJson } from 'nx/src/utils/package-json';
+import { getOutExtension } from '../../executors/esbuild/lib/build-esbuild-options';
+import { EsBuildExecutorOptions } from '../../executors/esbuild/schema';
+import { esbuildInitGenerator } from '../init/init';
+import { EsBuildProjectSchema } from './schema';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -23,8 +32,10 @@ export async function configurationGenerator(
     skipFormat: true,
   });
   options.buildTarget ??= 'build';
+  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
   checkForTargetConflicts(tree, options);
-  addBuildTarget(tree, options);
+  addBuildTarget(tree, options, isTsSolutionSetup);
+  updatePackageJson(tree, options, isTsSolutionSetup);
   await formatFiles(tree);
   return task;
 }
@@ -39,51 +50,57 @@ function checkForTargetConflicts(tree: Tree, options: EsBuildProjectSchema) {
   }
 }
 
-function addBuildTarget(tree: Tree, options: EsBuildProjectSchema) {
+function addBuildTarget(
+  tree: Tree,
+  options: EsBuildProjectSchema,
+  isTsSolutionSetup: boolean
+) {
   addBuildTargetDefaults(tree, '@nx/esbuild:esbuild', options.buildTarget);
   const project = readProjectConfiguration(tree, options.project);
-  const packageJsonPath = joinPathFragments(project.root, 'package.json');
-
-  if (!tree.exists(packageJsonPath)) {
-    const importPath =
-      options.importPath || getImportPath(tree, options.project);
-    writeJson(tree, packageJsonPath, {
-      name: importPath,
-      version: '0.0.1',
-    });
-  }
 
   const prevBuildOptions = project.targets?.[options.buildTarget]?.options;
-
   const tsConfig = prevBuildOptions?.tsConfig ?? getTsConfigFile(tree, options);
+
+  let outputPath = prevBuildOptions?.outputPath;
+  if (!outputPath) {
+    outputPath = isTsSolutionSetup
+      ? joinPathFragments(project.root, 'dist')
+      : joinPathFragments(
+          'dist',
+          project.root === '.' ? options.project : project.root
+        );
+  }
 
   const buildOptions: EsBuildExecutorOptions = {
     main: prevBuildOptions?.main ?? getMainFile(tree, options),
-    outputPath:
-      prevBuildOptions?.outputPath ??
-      joinPathFragments(
-        'dist',
-        project.root === '.' ? options.project : project.root
-      ),
+    outputPath,
     outputFileName: 'main.js',
     tsConfig,
-    assets: [],
     platform: options.platform,
+    format: options.format,
   };
+
+  if (isTsSolutionSetup) {
+    buildOptions.declarationRootDir = getProjectSourceRoot(
+      tree,
+      project.sourceRoot,
+      project.root
+    );
+  } else {
+    buildOptions.assets = [];
+
+    if (tree.exists(joinPathFragments(project.root, 'README.md'))) {
+      buildOptions.assets.push({
+        glob: `${project.root}/README.md`,
+        input: '.',
+        output: '.',
+      });
+    }
+  }
 
   if (options.platform === 'browser') {
     buildOptions.outputHashing = 'all';
     buildOptions.minify = true;
-  }
-
-  if (tree.exists(joinPathFragments(project.root, 'README.md'))) {
-    buildOptions.assets = [
-      {
-        glob: `${project.root}/README.md`,
-        input: '.',
-        output: '.',
-      },
-    ];
   }
 
   updateProjectConfiguration(tree, options.project, {
@@ -106,6 +123,96 @@ function addBuildTarget(tree: Tree, options: EsBuildProjectSchema) {
       },
     },
   });
+}
+
+function updatePackageJson(
+  tree: Tree,
+  options: EsBuildProjectSchema,
+  isTsSolutionSetup: boolean
+) {
+  const project = readProjectConfiguration(tree, options.project);
+
+  const packageJsonPath = join(project.root, 'package.json');
+  let packageJson: PackageJson;
+  if (tree.exists(packageJsonPath)) {
+    if (!isTsSolutionSetup) {
+      return;
+    }
+
+    packageJson = readJson(tree, packageJsonPath);
+  } else {
+    packageJson = {
+      name: getImportPath(tree, options.project),
+      version: '0.0.1',
+    };
+  }
+
+  if (isTsSolutionSetup) {
+    const nxJson = readNxJson(tree);
+    const projectTarget = project.targets[options.buildTarget];
+    const mergedTarget = mergeTargetConfigurations(
+      projectTarget,
+      (projectTarget.executor
+        ? nxJson.targetDefaults?.[projectTarget.executor]
+        : undefined) ?? nxJson.targetDefaults?.[options.buildTarget]
+    );
+
+    const {
+      declarationRootDir = '.',
+      main,
+      outputPath,
+      outputFileName,
+      // the executor option defaults to [esm]
+      format = ['esm'],
+      esbuildOptions,
+    } = mergedTarget.options;
+
+    // the file must exist in the TS solution setup
+    const tsconfigBase = readJson(tree, 'tsconfig.base.json');
+
+    // can't use the declarationRootDir as rootDir because it only affects the typings,
+    // not the runtime entry point
+    packageJson = getUpdatedPackageJsonContent(packageJson, {
+      main,
+      outputPath,
+      projectRoot: project.root,
+      generateExportsField: true,
+      packageJsonPath,
+      format,
+      outputFileName,
+      outputFileExtensionForCjs: getOutExtension('cjs', {
+        // there's very little chance that the user would have defined a custom esbuild config
+        // since that's an Nx specific file that we're not generating here and we're setting up
+        // the build for esbuild now
+        userDefinedBuildOptions: esbuildOptions,
+      }),
+      outputFileExtensionForEsm: getOutExtension('esm', {
+        userDefinedBuildOptions: esbuildOptions,
+      }),
+      skipDevelopmentExports:
+        !tsconfigBase.compilerOptions?.customConditions?.includes(
+          'development'
+        ),
+    });
+
+    if (declarationRootDir !== dirname(main)) {
+      // the declaration file entry point will be output to a location
+      // different than the runtime entry point, adjust accodingly
+      const outputDir = getOutputDir({
+        main,
+        outputPath,
+        projectRoot: project.root,
+        packageJsonPath,
+        rootDir: declarationRootDir,
+      });
+      const mainFile = basename(options.main).replace(/\.[tj]s$/, '');
+      const typingsFile = `${outputDir}${mainFile}.d.ts`;
+      packageJson.types = typingsFile;
+      packageJson.exports['.'].types = typingsFile;
+    }
+  }
+
+  writeJson(tree, packageJsonPath, packageJson);
 }
 
 function getMainFile(tree: Tree, options: EsBuildProjectSchema) {

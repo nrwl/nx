@@ -1,39 +1,48 @@
+import { joinPathFragments, logger, type ExecutorContext } from '@nx/devkit';
+import { readTsConfig } from '@nx/js';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import * as esbuild from 'esbuild';
 import * as fs from 'fs';
 import * as path from 'path';
-import {
+import * as pc from 'picocolors';
+import type {
   EsBuildExecutorOptions,
   NormalizedEsBuildExecutorOptions,
 } from '../schema';
-import { ExecutorContext, joinPathFragments, logger } from '@nx/devkit';
-import chalk = require('chalk');
-import * as esbuild from 'esbuild';
-import { readTsConfig } from '@nx/js';
 
 export function normalizeOptions(
   options: EsBuildExecutorOptions,
   context: ExecutorContext
 ): NormalizedEsBuildExecutorOptions {
+  const isTsSolutionSetup = isUsingTsSolutionSetup();
+  if (isTsSolutionSetup && options.generatePackageJson) {
+    throw new Error(
+      `Setting 'generatePackageJson: true' is not supported with the current TypeScript setup. Update the 'package.json' file at the project root as needed and unset the 'generatePackageJson' option.`
+    );
+  }
+
   const tsConfig = readTsConfig(options.tsConfig);
 
-  // If we're not generating package.json file, then copy it as-is as an asset.
-  const assets = options.generatePackageJson
-    ? options.assets
-    : [
-        ...options.assets,
-        joinPathFragments(
-          context.projectGraph.nodes[context.projectName].data.root,
-          'package.json'
-        ),
-      ];
+  // If we're not generating package.json file, then copy it as-is as an asset when not using ts solution setup.
+  const assets =
+    options.generatePackageJson || isTsSolutionSetup
+      ? options.assets ?? []
+      : [
+          ...options.assets,
+          joinPathFragments(
+            context.projectGraph.nodes[context.projectName].data.root,
+            'package.json'
+          ),
+        ];
 
   if (!options.bundle && options.thirdParty) {
     logger.info(
-      chalk.yellow(
-        `Your build has conflicting options, ${chalk.bold(
+      pc.yellow(
+        `Your build has conflicting options, ${pc.bold(
           'bundle:false'
-        )} and ${chalk.bold(
+        )} and ${pc.bold(
           'thirdParty:true'
-        )}. Your package.json depedencies might not be generated correctly so we added an update ${chalk.bold(
+        )}. Your package.json dependencies might not be generated correctly so we added an update ${pc.bold(
           'thirdParty:false'
         )}`
       )
@@ -42,8 +51,6 @@ export function normalizeOptions(
 
   const thirdParty = !options.bundle ? false : options.thirdParty;
 
-  const { root: projectRoot } =
-    context.projectsConfigurations.projects[context.projectName];
   const declarationRootDir = options.declarationRootDir
     ? path.join(context.root, options.declarationRootDir)
     : undefined;
@@ -55,12 +62,12 @@ export function normalizeOptions(
 
   if (options.skipTypeCheck && declaration) {
     logger.info(
-      chalk.yellow(
-        `Your build has conflicting options, ${chalk.bold(
+      pc.yellow(
+        `Your build has conflicting options, ${pc.bold(
           'skipTypeCheck:true'
-        )} and ${chalk.bold(
+        )} and ${pc.bold(
           'declaration:true'
-        )}. Your declarations won't be generated so we added an update ${chalk.bold(
+        )}. Your declarations won't be generated so we added an update ${pc.bold(
           'skipTypeCheck:false'
         )}`
       )
@@ -103,6 +110,7 @@ export function normalizeOptions(
       userDefinedBuildOptions,
       external: options.external ?? [],
       singleEntry: false,
+      isTsSolutionSetup,
       // Use the `main` file name as the output file name.
       // This is needed for `@nx/js:node` to know the main file to execute.
       // NOTE: The .js default extension may be replaced later in getOutfile() call.
@@ -119,6 +127,7 @@ export function normalizeOptions(
       userDefinedBuildOptions,
       external: options.external ?? [],
       singleEntry: true,
+      isTsSolutionSetup,
       outputFileName:
         // NOTE: The .js default extension may be replaced later in getOutfile() call.
         options.outputFileName ?? `${path.parse(options.main).name}.js`,

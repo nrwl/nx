@@ -15,26 +15,11 @@ Make sure to install the `@nx/js` version that matches the version of `nx` in yo
 
 In any Nx workspace, you can install `@nx/js` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/js
 ```
 
 This will install the correct version of `@nx/js`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/js` package with your package manager.
-
-```shell
-npm add -D @nx/js
-```
-
-{% /tab %}
-{% /tabs %}
 
 ### `ts` Preset
 
@@ -57,12 +42,116 @@ yarn create nx-workspace my-org --preset=ts
 {% /tab %}
 {% /tabs %}
 
+{% callout type="note" title="Modernized monorepo setup" %}
+Nx 20 updates the TS monorepo setup when using `--preset=ts`. The workspace is set up with [TypeScript Project References](https://www.typescriptlang.org/docs/handbook/project-references.html) along with the Workspaces feature from [npm](https://docs.npmjs.com/cli/using-npm/workspaces), [yarn](https://yarnpkg.com/features/workspaces), [pnpm](https://pnpm.io/workspaces), and [bun](https://bun.sh/docs/install/workspaces).
+
+To create with the older setup for TS monorepo with `compilerOptions.paths`, use `create-nx-workspace --preset=apps`.
+{% /callout %}
+
+### How @nx/js Infers Tasks
+
+The `@nx/js/typescript` plugin will add a `typecheck` task to projects that have a `tsconfig.json`.
+
+This plugin adds a `build` task for projects that:
+
+1. Have a runtime tsconfig file (defaults to `tsconfig.lib.json`).
+2. Have a `package.json` file containing entry points that are not source files.
+
+For example, this project is buildable and will have a `build` task.
+
+```json {% fileName="packages/pkg1/package.json" %}
+{
+  "name": "@acme/pkg1",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  }
+}
+```
+
+Whereas this project points to source files and will not have a `build` task.
+
+```json {% fileName="packages/pkg1/package.json" %}
+{
+  "name": "@acme/pkg1",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": "./src/index.ts"
+  }
+}
+```
+
+### View Inferred Tasks
+
+To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project` in the command line.
+
+### @nx/js Configuration
+
+The `@nx/js/typescript` plugin is configured in the `plugins` array in `nx.json`.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "typecheck": {
+          "targetName": "typecheck"
+        },
+        "build": {
+          "targetName": "build",
+          "configName": "tsconfig.lib.json"
+        }
+      }
+    }
+  ]
+}
+```
+
+You can also set `typecheck` and `build` options to `false` to not infer the corresponding tasks.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "build": false
+      }
+    }
+  ]
+}
+```
+
+### Disable Typechecking
+
+To disable `typecheck` task for a specific project, set the `nx.addTypecheckTarget` property to `false` in `tsconfig.json`.
+
+```json {% fileName="packages/pkg1/tsconfig.json" highlightLines=["10-12"] %}
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ],
+  "nx": {
+    "addTypecheckTarget": false
+  }
+}
+```
+
 ## Create Libraries
 
 You can add a new JS/TS library with the following command:
 
 ```shell
-nx g @nx/js:lib my-lib
+nx g @nx/js:lib libs/my-lib
 ```
 
 ## Build
@@ -70,7 +159,7 @@ nx g @nx/js:lib my-lib
 You can `build` libraries that are generated with a bundler specified.
 
 ```shell
-nx g @nx/js:lib my-buildable-lib --bundler=rollup
+nx g @nx/js:lib libs/my-buildable-lib --bundler=rollup
 ```
 
 Generating a library with `--bundler` specified will add a `build` target to the library's `project.json` file allows the library to be built.
@@ -108,7 +197,7 @@ Currently, `@nx/js` supports the following compilers:
 - Create a buildable library with `swc`
 
 ```shell
-nx g @nx/js:lib my-swc-lib --bundler=swc
+nx g @nx/js:lib libs/my-swc-lib --bundler=swc
 ```
 
 - Convert a `tsc` library to use `swc`

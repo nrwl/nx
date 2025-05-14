@@ -2,7 +2,6 @@ import type { ExecutorContext } from '@nx/devkit';
 import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import {
   calculateProjectBuildableDependencies,
-  checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
   type DependentBuildableProjectNode,
 } from '@nx/js/src/utils/buildable-libs-utils';
@@ -10,6 +9,7 @@ import type { NgPackagr } from 'ng-packagr';
 import { join, resolve } from 'path';
 import { from } from 'rxjs';
 import { mapTo, switchMap } from 'rxjs/operators';
+import { getInstalledAngularVersionInfo } from '../utilities/angular-version-utils';
 import { parseRemappedTsConfigAndMergeDefaults } from '../utilities/typescript';
 import { getNgPackagrInstance } from './ng-packagr-adjustments/ng-packagr';
 import type { BuildAngularLibraryExecutorOptions } from './schema';
@@ -19,7 +19,7 @@ async function initializeNgPackagr(
   context: ExecutorContext,
   projectDependencies: DependentBuildableProjectNode[]
 ): Promise<NgPackagr> {
-  const ngPackagr = await getNgPackagrInstance(options);
+  const ngPackagr = await getNgPackagrInstance();
   ngPackagr.forProject(resolve(context.root, options.project));
 
   if (options.tsConfig) {
@@ -56,25 +56,22 @@ export function createLibraryExecutor(
     options: BuildAngularLibraryExecutorOptions,
     context: ExecutorContext
   ) {
-    const { target, dependencies, topLevelDependencies } =
-      calculateProjectBuildableDependencies(
-        context.taskGraph,
-        context.projectGraph,
-        context.root,
-        context.projectName,
-        context.targetName,
-        context.configurationName
+    const { major: angularMajorVersion, version: angularVersion } =
+      getInstalledAngularVersionInfo();
+    if (angularMajorVersion < 18 && options.poll !== undefined) {
+      throw new Error(
+        `The "poll" option requires Angular version 18.0.0 or greater. You are currently using version ${angularVersion}.`
       );
-    if (
-      !checkDependentProjectsHaveBeenBuilt(
-        context.root,
-        context.projectName,
-        context.targetName,
-        dependencies
-      )
-    ) {
-      return Promise.resolve({ success: false });
     }
+
+    const { dependencies } = calculateProjectBuildableDependencies(
+      context.taskGraph,
+      context.projectGraph,
+      context.root,
+      context.projectName,
+      context.targetName,
+      context.configurationName
+    );
 
     if (options.watch) {
       return yield* eachValueFrom(

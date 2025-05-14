@@ -1,4 +1,3 @@
-import { execSync, fork } from 'child_process';
 import {
   ExecutorContext,
   getPackageManagerCommand,
@@ -6,6 +5,7 @@ import {
   output,
   workspaceRoot,
 } from '@nx/devkit';
+import { execSync, fork } from 'child_process';
 
 export interface PlaywrightExecutorSchema {
   /*
@@ -15,6 +15,7 @@ export interface PlaywrightExecutorSchema {
   browser?: 'all' | 'chromium' | 'firefox' | 'webkit' | string;
   config?: string;
   debug?: boolean;
+  lastFailed?: boolean;
   forbidOnly?: boolean;
   fullyParallel?: boolean;
   grep?: string;
@@ -80,6 +81,7 @@ export async function playwrightExecutor(
     execSync(`${pmc.exec} playwright install`, {
       cwd: workspaceRoot,
       stdio: 'inherit',
+      windowsHide: false,
     });
   }
 

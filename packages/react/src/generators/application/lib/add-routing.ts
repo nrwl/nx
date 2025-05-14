@@ -22,7 +22,13 @@ export function addRouting(host: Tree, options: NormalizedSchema) {
   }
   const appPath = joinPathFragments(
     options.appProjectRoot,
-    maybeJs(options, `src/app/${options.fileName}.tsx`)
+    maybeJs(
+      {
+        js: options.js,
+        useJsx: options.bundler === 'vite' || options.bundler === 'rspack',
+      },
+      `src/app/${options.fileName}.tsx`
+    )
   );
   const appFileContent = host.read(appPath, 'utf-8');
   const appSource = tsModule.createSourceFile(
@@ -34,7 +40,7 @@ export function addRouting(host: Tree, options: NormalizedSchema) {
 
   const changes = applyChangesToString(
     appFileContent,
-    addInitialRoutes(appPath, appSource)
+    addInitialRoutes(appPath, appSource, options.inSourceTests)
   );
   host.write(appPath, changes);
 

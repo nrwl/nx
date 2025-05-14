@@ -363,7 +363,7 @@ Including the issue number that the PR relates to also helps with tracking.
 ```plain
 feat(angular): add an option to generate lazy-loadable modules
 
-`nx generate lib mylib --lazy` provisions the mylib project in .eslintrc.json
+`nx generate lib libs/mylib --lazy` provisions the mylib project in .eslintrc.json
 
 Closes #157
 ```

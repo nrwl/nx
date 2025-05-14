@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "continuous": true,
+  "outputCapture": "direct-nodejs",
+  "title": "Module Federation Static Dev Server",
+  "description": "Serve a Consumer (host) application statically along with its Producers (remotes).",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "serveTarget": {
+      "type": "string"
+    }
+  },
+  "required": ["serveTarget"]
+}

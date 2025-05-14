@@ -1,0 +1,92 @@
+{
+  "generators": {
+    "update-20-2-0-update-with-module-federation-import": {
+      "cli": "nx",
+      "version": "20.2.0-beta.3",
+      "description": "Update the withModuleFederation import use @nx/module-federation/rspack.",
+      "factory": "./src/migrations/update-20-2-0/migrate-with-mf-import-to-new-package"
+    },
+    "ensure-nx-module-federation-package": {
+      "cli": "nx",
+      "version": "20.3.0-beta.2",
+      "description": "If workspace includes Module Federation projects, ensure the new @nx/module-federation package is installed.",
+      "factory": "./src/migrations/update-20-3-0/ensure-nx-module-federation-package"
+    }
+  },
+  "packageJsonUpdates": {
+    "19.3.0": {
+      "version": "19.3.0-beta.0",
+      "packages": {
+        "@rspack/core": {
+          "version": "^0.7.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@rspack/dev-server": {
+          "version": "^0.7.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@rspack/plugin-minify": {
+          "version": "^0.7.5",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "19.7.0": {
+      "version": "19.7.0-beta.1",
+      "packages": {
+        "@rspack/core": {
+          "version": "^1.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@rspack/dev-server": {
+          "version": "^1.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@rspack/plugin-react-refresh": {
+          "version": "^1.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.2.0": {
+      "version": "20.2.0-beta.7",
+      "packages": {
+        "@rspack/core": {
+          "version": "^1.1.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@rspack/dev-server": {
+          "version": "^1.0.9",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.5.0": {
+      "version": "20.5.0-beta.4",
+      "packages": {
+        "sass-loader": {
+          "version": "^16.0.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@rspack/core": {
+          "version": "^1.2.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "21.0.1": {
+      "version": "21.0.1-beta.0",
+      "packages": {
+        "@rspack/core": {
+          "version": "^1.3.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@rspack/dev-server": {
+          "version": "^1.1.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  },
+  "version": "0.1"
+}

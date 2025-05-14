@@ -1,8 +1,7 @@
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { mkdirpSync, removeSync, writeFileSync } from 'fs-extra';
 import { runTypeCheck } from './run-type-check';
-import { readFileSync } from 'fs';
 
 describe('runTypeCheck', () => {
   let workspaceRoot: string;
@@ -13,7 +12,7 @@ describe('runTypeCheck', () => {
     workspaceRoot = join(tmpdir(), 'nx-type-check-test');
     projectRoot = join(workspaceRoot, 'proj');
     tsConfigPath = join(workspaceRoot, 'tsconfig.json');
-    mkdirpSync(projectRoot);
+    mkdirSync(projectRoot, { recursive: true });
     writeFileSync(
       tsConfigPath,
       JSON.stringify(
@@ -34,7 +33,7 @@ describe('runTypeCheck', () => {
   });
 
   afterEach(() => {
-    removeSync(workspaceRoot);
+    rmSync(workspaceRoot, { recursive: true, force: true });
   });
 
   it('should find type errors', async () => {

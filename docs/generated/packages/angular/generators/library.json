@@ -1,6 +1,6 @@
 {
   "name": "library",
-  "factory": "./src/generators/library/library#libraryGeneratorInternal",
+  "factory": "./src/generators/library/library",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "GeneratorAngularLibrary",
@@ -12,19 +12,13 @@
       "name": {
         "type": "string",
         "description": "The name of the library.",
-        "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the library?",
-        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$"
+        "x-priority": "important"
       },
       "directory": {
         "type": "string",
         "description": "A directory where the library is placed.",
-        "x-priority": "important"
-      },
-      "projectNameAndRootFormat": {
-        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
-        "type": "string",
-        "enum": ["as-provided", "derived"]
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "Which directory do you want to create the library in?"
       },
       "publishable": {
         "type": "boolean",
@@ -94,8 +88,9 @@
       },
       "unitTestRunner": {
         "type": "string",
-        "enum": ["jest", "none"],
+        "enum": ["jest", "vitest", "none"],
         "description": "Test runner to use for unit tests.",
+        "x-prompt": "Which unit test runner would you like to use?",
         "default": "jest"
       },
       "importPath": {
@@ -112,12 +107,6 @@
         "type": "string",
         "enum": ["eslint", "none"],
         "default": "eslint"
-      },
-      "standaloneConfig": {
-        "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-        "type": "boolean",
-        "default": true,
-        "x-deprecated": "Nx only supports standaloneConfig"
       },
       "compilationMode": {
         "description": "Specifies the compilation mode to use. If not specified, it will default to `partial` for publishable libraries and to `full` for buildable libraries. The `full` value can not be used for publishable libraries.",
@@ -203,14 +192,14 @@
       }
     },
     "additionalProperties": false,
-    "required": ["name"],
-    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Library\" %}\n\nCreates the `my-ui-lib` library with an `ui` tag:\n\n```bash\nnx g @nx/angular:library my-ui-lib --tags=ui\n```\n\n{% /tab %}\n\n{% tab label=\"Publishable Library\" %}\n\nCreates the `my-lib` library that can be built producing an output following the Angular Package Format (APF) to be distributed as an NPM package:\n\n```bash\nnx g @nx/angular:library my-lib --publishable --import-path=@my-org/my-lib\n```\n\n{% /tab %}\n\n{% tab label=\"Buildable Library\" %}\n\nCreates the `my-lib` library with support for incremental builds:\n\n```bash\nnx g @nx/angular:library my-lib --buildable\n```\n\n{% /tab %}\n\n{% tab label=\"Nested Folder & Import\"%}\nCreates the `my-lib` library in the `nested` directory and sets the import path to `@myorg/nested/my-lib`:\n\n{% callout type=\"note\" title=\"Directory Flag Behavior Changes\" %}\nThe command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, use `--directory=nested`. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.\n{% /callout %}\n\n```bash\nnx g @nx/angular:library --directory=libs/nested/my-lib --importPath=@myorg/nested/my-lib my-lib\n```\n\n{% /tab %}\n",
+    "required": ["directory"],
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Library\" %}\n\nCreates the `my-ui-lib` library with an `ui` tag:\n\n```bash\nnx g @nx/angular:library libs/my-ui-lib --tags=ui\n```\n\n{% /tab %}\n\n{% tab label=\"Publishable Library\" %}\n\nCreates the `my-lib` library that can be built producing an output following the Angular Package Format (APF) to be distributed as an NPM package:\n\n```bash\nnx g @nx/angular:library libs/my-lib --publishable --import-path=@my-org/my-lib\n```\n\n{% /tab %}\n\n{% tab label=\"Buildable Library\" %}\n\nCreates the `my-lib` library with support for incremental builds:\n\n```bash\nnx g @nx/angular:library libs/my-lib --buildable\n```\n\n{% /tab %}\n\n{% tab label=\"Nested Folder & Import\"%}\nCreates the `my-lib` library in the `nested` directory and sets the import path to `@myorg/nested/my-lib`:\n\n```bash\nnx g @nx/angular:library libs/nested/my-lib --importPath=@myorg/nested/my-lib\n```\n\n{% /tab %}\n",
     "presets": []
   },
   "aliases": ["lib"],
   "x-type": "library",
   "description": "Creates an Angular library.",
-  "implementation": "/packages/angular/src/generators/library/library#libraryGeneratorInternal.ts",
+  "implementation": "/packages/angular/src/generators/library/library.ts",
   "hidden": false,
   "path": "/packages/angular/src/generators/library/schema.json",
   "type": "generator"

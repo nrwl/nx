@@ -7,34 +7,37 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g hook my-hook --project=mylib",
-      "description": "Generate a hook in the `mylib` library"
+      "description": "Generate a hook with the exported symbol matching the file name. It results in the hook `useFoo` at `mylib/src/lib/foo.ts`",
+      "command": "nx g @nx/react:hook mylib/src/lib/foo.ts"
+    },
+    {
+      "description": "Generate a hook with the exported symbol different from the file name. It results in the hook `useCustom` at `mylib/src/lib/foo.ts`",
+      "command": "nx g @nx/react:hook mylib/src/lib/foo.ts --name=useCustom"
+    },
+    {
+      "description": "Generate a hook without providing the file extension. It results in the hook `useFoo` at `mylib/src/lib/foo.ts`",
+      "command": "nx g @nx/react:hook mylib/src/lib/foo"
     }
   ],
   "properties": {
-    "project": {
+    "path": {
       "type": "string",
-      "description": "The name of the project.",
-      "alias": "p",
-      "$default": {
-        "$source": "projectName"
-      },
-      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20."
-    },
-    "name": {
-      "type": "string",
-      "description": "The name of the hook.",
+      "description": "The file path to the hook. Relative to the current working directory.",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the hook?",
+      "x-prompt": "What is the hook file path?",
       "x-priority": "important"
+    },
+    "name": {
+      "type": "string",
+      "description": "The hook symbol name. Defaults to the last segment of the file path."
     },
     "js": {
       "type": "boolean",
       "description": "Generate JavaScript files rather than TypeScript files.",
-      "default": false
+      "x-deprecated": "Provide the full file path including the file extension in the `path` option. This option will be removed in Nx v21."
     },
     "skipTests": {
       "type": "boolean",
@@ -42,43 +45,13 @@
       "default": false,
       "x-priority": "internal"
     },
-    "directory": {
-      "type": "string",
-      "description": "The directory at which to create the hook file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the project root.",
-      "x-priority": "important"
-    },
-    "nameAndDirectoryFormat": {
-      "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-      "type": "string",
-      "enum": ["as-provided", "derived"]
-    },
-    "flat": {
-      "type": "boolean",
-      "description": "Create hook at the source root rather than its own directory.",
-      "default": false,
-      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v20."
-    },
     "export": {
       "type": "boolean",
       "description": "When true, the hook is exported from the project `index.ts` (if it exists).",
       "alias": "e",
       "default": false,
       "x-prompt": "Should this hook be exported in the project?"
-    },
-    "pascalCaseFiles": {
-      "type": "boolean",
-      "description": "Use pascal case hook file name (e.g. `useHook.ts`).",
-      "alias": "P",
-      "default": false,
-      "x-deprecated": "Provide the `name` in pascal-case and use the `as-provided` format. This option will be removed in Nx v19."
-    },
-    "pascalCaseDirectory": {
-      "type": "boolean",
-      "description": "Use pascal case directory name (e.g. `useHook/useHook.ts`).",
-      "alias": "R",
-      "default": false,
-      "x-deprecated": "Provide the `directory` in pascal-case and use the `as-provided` format. This option will be removed in Nx v19."
     }
   },
-  "required": ["name"]
+  "required": ["path"]
 }

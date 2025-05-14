@@ -2,9 +2,10 @@
 title: Fast, Effortless CI
 slug: 'fast-effortless-ci'
 authors: [Isaac Mann]
-cover_image: '/blog/images/2024-02-07/featured_img.png'
+cover_image: '/blog/images/2024-02-07/featured_img.avif'
 tags: [nx, nx-cloud, release]
 reposts: []
+description: 'Discover how Nx Agents speeds up CI pipelines from 90 to 10 minutes by intelligently distributing tasks and managing resources.'
 ---
 
 ## From 90-minute to 10-minute CI Pipelines
@@ -59,7 +60,7 @@ At any point in the future, if a task is added to the system or there is a chang
 
 ## A Build System That Runs Your CI
 
-Part of the reason CI is so difficult to maintain is that it has no knowledge of your repository. Your CI provider can’t optimize your pipeline because it doesn’t even know the language you’re using, let alone relationships between your projects. A build system, on the other hand, must know all that information in order to properly function.
+Part of the reason CI is so difficult to maintain is that it has no knowledge of your repository. Your CI provider can't optimize your pipeline because it doesn't even know the language you're using, let alone relationships between your projects. A build system, on the other hand, must know all that information in order to properly function.
 
 The key that unlocks all the power of Nx Agents is this architectural shift:
 
@@ -102,19 +103,19 @@ Nx understands that some CI pipelines need more resources than others. To accoun
 
 ## Automatically Split E2E Tasks by File
 
-Typically, e2e tests are the tasks that take the longest in CI. In order to take advantage of parallelization and task distribution, these large tasks would need to be split into smaller tasks, but doing this manually would involve duplicating a lot of configuration code and making sure to keep that configuration synchronized. Nx 18’s [Project Crystal](/blog/what-if-nx-plugins-were-more-like-vscode-extensions) allows you to [automatically create separate Cypress and Playwright tasks](/ci/features/split-e2e-tasks) for each spec file in the e2e project. These individual tasks can all be triggered by running the `e2e-ci` task. What was once a tedious manual process can now be done for you automatically.
+Typically, e2e tests are the tasks that take the longest in CI. In order to take advantage of parallelization and task distribution, these large tasks would need to be split into smaller tasks, but doing this manually would involve duplicating a lot of configuration code and making sure to keep that configuration synchronized. Nx 18's [Project Crystal](/blog/what-if-nx-plugins-were-more-like-vscode-extensions) allows you to [automatically create separate Cypress and Playwright tasks](/ci/features/split-e2e-tasks) for each spec file in the e2e project. These individual tasks can all be triggered by running the `e2e-ci` task. What was once a tedious manual process can now be done for you automatically.
 
 ![](/blog/images/2024-02-07/bodyimg3.webp)
 
 ## Identify and Re-run Flaky Tasks
 
-There are some tasks that will fail or succeed in CI without any changes to the task’s code. These are flaky tasks and in order to merge a change in unrelated code, developers need to manually re-run the entire pipeline until that flaky task succeeds. Because Nx is already tracking inputs and outputs of tasks, it knows when a task is flaky. Now, Nx Cloud will [automatically re-run a flaky task if it fails](/ci/features/flaky-tasks), without a developer needing to manually trigger it.
+There are some tasks that will fail or succeed in CI without any changes to the task's code. These are flaky tasks and in order to merge a change in unrelated code, developers need to manually re-run the entire pipeline until that flaky task succeeds. Because Nx is already tracking inputs and outputs of tasks, it knows when a task is flaky. Now, Nx Cloud will [automatically re-run a flaky task if it fails](/ci/features/flaky-tasks), without a developer needing to manually trigger it.
 
 ![](/blog/images/2024-02-07/bodyimg4.webp)
 
 ## Run Some Tasks on Another CI Provider
 
-If you have a task that can’t be run on Nx Agents for some reason, you can easily [flag it to run directly on the main CI job](/ci/reference/nx-cloud-cli#enablingdisabling-distribution). Add a `--no-agents` flag to the command and Nx will not run it on an agent.
+If you have a task that can't be run on Nx Agents for some reason, you can easily [flag it to run directly on the main CI job](/ci/reference/nx-cloud-cli#enablingdisabling-distribution). Add a `--no-agents` flag to the command and Nx will not run it on an agent.
 
 ---
 
@@ -124,4 +125,4 @@ If you have a task that can’t be run on Nx Agents for some reason, you can eas
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app/)
+- [Speed up your CI](/nx-cloud)

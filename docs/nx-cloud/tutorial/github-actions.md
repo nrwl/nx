@@ -72,15 +72,16 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
 
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 9
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       - uses: actions/setup-node@v3
@@ -147,7 +148,7 @@ And make sure you pull the latest changes locally:
 git pull
 ```
 
-You should now have an `nxCloudAccessToken` property specified in the `nx.json` file.
+You should now have an `nxCloudId` property specified in the `nx.json` file.
 
 ## Understand Remote Caching
 
@@ -195,7 +196,7 @@ The Nx Agents feature
 - collects the results and logs of all the tasks and presents them in a single view
 - automatically shuts down agents when they are no longer needed
 
-To enable Nx Agents, make sure the following line is uncommented in the `.github/workflows/ci.yml` file.
+To enable Nx Agents, make sure the `nx-cloud start-ci-run` line is uncommented in the `.github/workflows/ci.yml` file and the `nx affected` line runs the `e2e-ci` task instead of `e2e`.
 
 ```yml {% fileName=".github/workflows/ci.yml" highlightLines=[19] %}
 name: CI
@@ -207,15 +208,16 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
 
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 9
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Uncomment this line to enable task distribution
       - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       - uses: actions/setup-node@v3

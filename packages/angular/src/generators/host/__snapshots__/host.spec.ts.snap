@@ -47,81 +47,12 @@ describe('AppComponent', () => {
 "
 `;
 
-exports[`Host App Generator --ssr compat should generate the correct main.server.ts 1`] = `
-"import 'zone.js/dist/zone-node';
-
-import { APP_BASE_HREF } from '@angular/common';
-import { ngExpressEngine } from '@nguniversal/express-engine';
-import * as express from 'express';
-import * as cors from 'cors';
-import { existsSync } from 'fs';
-import { join } from 'path';
-
-import bootstrap from './bootstrap.server';
-
-// The Express app is exported so that it can be used by serverless Functions.
-export function app(): express.Express {
-  const server = express();
-  const browserBundles = join(process.cwd(), 'dist/test/browser');
-
-  server.use(cors());
-  const indexHtml = existsSync(join(browserBundles, 'index.original.html'))
-    ? 'index.original.html'
-    : 'index';
-
-  // Our Universal express-engine (found @ https://github.com/angular/universal/tree/main/modules/express-engine)
-  server.engine(
-    'html',
-    ngExpressEngine({
-      bootstrap
-    })
-  );
-
-  server.set('view engine', 'html');
-  server.set('views', browserBundles);
-
-  // Serve static files from /browser
-  server.get(
-    '*.*',
-    express.static(browserBundles, {
-      maxAge: '1y',
-    })
-  );
-
-  // All regular routes use the Universal engine
-  server.get('*', (req, res) => {
-    // keep it async to avoid blocking the server thread
-
-    res.render(indexHtml, {
-      providers: [{ provide: APP_BASE_HREF, useValue: req.baseUrl }],
-      req,
-    });
-  });
-
-  return server;
-}
-
-function run(): void {
-  const port = process.env['PORT'] || 4000;
-
-  // Start up the Node server
-  const server = app();
-  server.listen(port, () => {
-    console.log(\`Node Express server listening on http://localhost:\${port}\`);
-  });
-}
-
-run();
-
-export default bootstrap;
-"
-`;
-
 exports[`Host App Generator --ssr should generate the correct files 1`] = `
 "import { NgModule } from '@angular/core';
 import {
   BrowserModule,
   provideClientHydration,
+  withEventReplay,
 } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import { AppComponent } from './app.component';
@@ -131,7 +62,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
 @NgModule({
   declarations: [AppComponent, NxWelcomeComponent],
   imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
-  providers: [provideClientHydration()],
+  providers: [provideClientHydration(withEventReplay())],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
@@ -159,7 +90,7 @@ exports[`Host App Generator --ssr should generate the correct files 4`] = `
 "import 'zone.js/node';
 
 import { APP_BASE_HREF } from '@angular/common';
-import { CommonEngine } from '@angular/ssr';
+import { CommonEngine } from '@angular/ssr/node';
 import * as express from 'express';
 import * as cors from 'cors';
 import { existsSync } from 'node:fs';
@@ -227,12 +158,15 @@ export default AppServerModule;
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 5`] = `
-"import('./src/main.server');
+"import('./main.server');
 "
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 6`] = `
-"module.exports = {
+"/**
+ * Nx requires a default export of the config to allow correct resolution of the module federation graph.
+ **/
+module.exports = {
   name: 'test',
   /**
    * To use a remote that does not exist in your current Nx Workspace
@@ -252,7 +186,7 @@ exports[`Host App Generator --ssr should generate the correct files 6`] = `
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 7`] = `
-"const { withModuleFederationForSSR } = require('@nx/angular/module-federation');
+"const { withModuleFederationForSSR } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 /**
  * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
@@ -298,7 +232,7 @@ exports[`Host App Generator --ssr should generate the correct files 9`] = `
     "customWebpackConfig": {
       "path": "test/webpack.server.config.js",
     },
-    "main": "test/server.ts",
+    "main": "test/src/server.ts",
     "outputPath": "dist/test/server",
     "tsConfig": "test/tsconfig.server.json",
   },
@@ -317,6 +251,7 @@ exports[`Host App Generator --ssr should generate the correct files 10`] = `
       "serverTarget": "test:server:production",
     },
   },
+  "continuous": true,
   "defaultConfiguration": "development",
   "executor": "@nx/angular:module-federation-dev-ssr",
 }
@@ -348,7 +283,7 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 "import 'zone.js/node';
 
 import { APP_BASE_HREF } from '@angular/common';
-import { CommonEngine } from '@angular/ssr';
+import { CommonEngine } from '@angular/ssr/node';
 import * as express from 'express';
 import * as cors from 'cors';
 import { existsSync } from 'node:fs';
@@ -416,12 +351,15 @@ export default bootstrap;
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 4`] = `
-"import('./src/main.server');
+"import('./main.server');
 "
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 5`] = `
-"module.exports = {
+"/**
+ * Nx requires a default export of the config to allow correct resolution of the module federation graph.
+ **/
+module.exports = {
   name: 'test',
   /**
    * To use a remote that does not exist in your current Nx Workspace
@@ -441,7 +379,7 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 6`] = `
-"const { withModuleFederationForSSR } = require('@nx/angular/module-federation');
+"const { withModuleFederationForSSR } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 /**
  * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
@@ -469,11 +407,14 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
-import { provideClientHydration } from '@angular/platform-browser';
+import {
+  provideClientHydration,
+  withEventReplay,
+} from '@angular/platform-browser';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideClientHydration(),
+    provideClientHydration(withEventReplay()),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes),
   ],
@@ -516,7 +457,7 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
     "customWebpackConfig": {
       "path": "test/webpack.server.config.js",
     },
-    "main": "test/server.ts",
+    "main": "test/src/server.ts",
     "outputPath": "dist/test/server",
     "tsConfig": "test/tsconfig.server.json",
   },
@@ -535,6 +476,7 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
       "serverTarget": "test:server:production",
     },
   },
+  "continuous": true,
   "defaultConfiguration": "development",
   "executor": "@nx/angular:module-federation-dev-ssr",
 }
@@ -566,7 +508,7 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 "import 'zone.js/node';
 
 import { APP_BASE_HREF } from '@angular/common';
-import { CommonEngine } from '@angular/ssr';
+import { CommonEngine } from '@angular/ssr/node';
 import * as express from 'express';
 import * as cors from 'cors';
 import { existsSync } from 'node:fs';
@@ -633,10 +575,10 @@ export default bootstrap;
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 4`] = `"import('./src/main.server');"`;
+exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 4`] = `"import('./main.server');"`;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 5`] = `
-"import { ModuleFederationConfig } from '@nx/webpack';
+"import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'test',
@@ -655,12 +597,15 @@ const config: ModuleFederationConfig = {
   remotes: []
 };
 
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
 export default config;
 "
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 6`] = `
-"import { withModuleFederationForSSR } from '@nx/angular/module-federation';
+"import { withModuleFederationForSSR } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 /**
@@ -688,11 +633,14 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
-import { provideClientHydration } from '@angular/platform-browser';
+import {
+  provideClientHydration,
+  withEventReplay,
+} from '@angular/platform-browser';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideClientHydration(),
+    provideClientHydration(withEventReplay()),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes),
   ],
@@ -735,7 +683,7 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
     "customWebpackConfig": {
       "path": "test/webpack.server.config.ts",
     },
-    "main": "test/server.ts",
+    "main": "test/src/server.ts",
     "outputPath": "dist/test/server",
     "tsConfig": "test/tsconfig.server.json",
   },
@@ -754,6 +702,7 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
       "serverTarget": "test:server:production",
     },
   },
+  "continuous": true,
   "defaultConfiguration": "development",
   "executor": "@nx/angular:module-federation-dev-ssr",
 }
@@ -764,6 +713,7 @@ exports[`Host App Generator --ssr should generate the correct files when --types
 import {
   BrowserModule,
   provideClientHydration,
+  withEventReplay,
 } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import { AppComponent } from './app.component';
@@ -773,7 +723,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
 @NgModule({
   declarations: [AppComponent, NxWelcomeComponent],
   imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
-  providers: [provideClientHydration()],
+  providers: [provideClientHydration(withEventReplay())],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
@@ -801,7 +751,7 @@ exports[`Host App Generator --ssr should generate the correct files when --types
 "import 'zone.js/node';
 
 import { APP_BASE_HREF } from '@angular/common';
-import { CommonEngine } from '@angular/ssr';
+import { CommonEngine } from '@angular/ssr/node';
 import * as express from 'express';
 import * as cors from 'cors';
 import { existsSync } from 'node:fs';
@@ -868,10 +818,10 @@ export default AppServerModule;
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files when --typescript=true 5`] = `"import('./src/main.server');"`;
+exports[`Host App Generator --ssr should generate the correct files when --typescript=true 5`] = `"import('./main.server');"`;
 
 exports[`Host App Generator --ssr should generate the correct files when --typescript=true 6`] = `
-"import { ModuleFederationConfig } from '@nx/webpack';
+"import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'test',
@@ -890,12 +840,15 @@ const config: ModuleFederationConfig = {
   remotes: []
 };
 
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
 export default config;
 "
 `;
 
 exports[`Host App Generator --ssr should generate the correct files when --typescript=true 7`] = `
-"import { withModuleFederationForSSR } from '@nx/angular/module-federation';
+"import { withModuleFederationForSSR } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 /**
@@ -941,7 +894,7 @@ exports[`Host App Generator --ssr should generate the correct files when --types
     "customWebpackConfig": {
       "path": "test/webpack.server.config.ts",
     },
-    "main": "test/server.ts",
+    "main": "test/src/server.ts",
     "outputPath": "dist/test/server",
     "tsConfig": "test/tsconfig.server.json",
   },
@@ -960,13 +913,14 @@ exports[`Host App Generator --ssr should generate the correct files when --types
       "serverTarget": "test:server:production",
     },
   },
+  "continuous": true,
   "defaultConfiguration": "development",
   "executor": "@nx/angular:module-federation-dev-ssr",
 }
 `;
 
 exports[`Host App Generator should generate a host app with a remote 1`] = `
-"const { withModuleFederation } = require('@nx/angular/module-federation');
+"const { withModuleFederation } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 
 /**
@@ -979,7 +933,7 @@ module.exports = withModuleFederation(config, { dts: false });
 `;
 
 exports[`Host App Generator should generate a host app with a remote 2`] = `
-"const { withModuleFederation } = require('@nx/angular/module-federation');
+"const { withModuleFederation } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 
 /**
@@ -992,7 +946,7 @@ module.exports = withModuleFederation(config, { dts: false });
 `;
 
 exports[`Host App Generator should generate a host app with a remote when --typesscript=true 1`] = `
-"import { withModuleFederation } from '@nx/angular/module-federation';
+"import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 /**
@@ -1005,7 +959,7 @@ export default withModuleFederation(config, { dts: false });
 `;
 
 exports[`Host App Generator should generate a host app with a remote when --typesscript=true 2`] = `
-"import { withModuleFederation } from '@nx/angular/module-federation';
+"import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 /**
@@ -1018,7 +972,7 @@ export default withModuleFederation(config, { dts: false });
 `;
 
 exports[`Host App Generator should generate a host app with no remotes 1`] = `
-"const { withModuleFederation } = require('@nx/angular/module-federation');
+"const { withModuleFederation } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 
 /**
@@ -1031,7 +985,7 @@ module.exports = withModuleFederation(config, { dts: false });
 `;
 
 exports[`Host App Generator should generate a host app with no remotes when --typescript=true 1`] = `
-"import { withModuleFederation } from '@nx/angular/module-federation';
+"import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 /**
@@ -1060,7 +1014,6 @@ import { RouterModule } from '@angular/router';
 import { NxWelcomeComponent } from './nx-welcome.component';
 
 @Component({
-  standalone: true,
   imports: [NxWelcomeComponent, RouterModule],
   selector: 'app-root',
   templateUrl: './app.component.html',

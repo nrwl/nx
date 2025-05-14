@@ -1,45 +1,65 @@
 import {
+  addDependenciesToPackageJson,
+  type GeneratorCallback,
   joinPathFragments,
   names,
   offsetFromRoot,
   readJson,
+  type Tree,
   updateJson,
 } from '@nx/devkit';
-import type { Tree } from '@nx/devkit';
 import type { Linter } from 'eslint';
+import { gte } from 'semver';
 import {
-  flatConfigEslintFilename,
+  baseEsLintConfigFile,
+  ESLINT_CONFIG_FILENAMES,
+  BASE_ESLINT_CONFIG_FILENAMES,
+  ESLINT_FLAT_CONFIG_FILENAMES,
+} from '../../utils/config-file';
+import {
+  eslintFlatConfigFilenames,
   useFlatConfig,
 } from '../../utils/flat-config';
+import { getInstalledEslintVersion } from '../../utils/version-utils';
+import {
+  eslint9__eslintVersion,
+  eslintCompat,
+  eslintrcVersion,
+} from '../../utils/versions';
 import {
   addBlockToFlatConfigExport,
-  addCompatToFlatConfig,
+  addFlatCompatToFlatConfig,
   addImportToFlatConfig,
+  addPatternsToFlatConfigIgnoresBlock,
   addPluginsToExportsBlock,
   generateAst,
   generateFlatOverride,
+  generateFlatPredefinedConfig,
   generatePluginExtendsElement,
+  generatePluginExtendsElementWithCompatFixup,
+  hasFlatConfigIgnoresBlock,
   hasOverride,
+  overrideNeedsCompat,
   removeOverridesFromLintConfig,
   replaceOverride,
 } from './flat-config/ast-utils';
-import ts = require('typescript');
 import { mapFilePath } from './flat-config/path-utils';
-import {
-  baseEsLintConfigFile,
-  baseEsLintFlatConfigFile,
-  ESLINT_CONFIG_FILENAMES,
-} from '../../utils/config-file';
+import ts = require('typescript');
+import { dirname } from 'node:path/posix';
 
 export function findEslintFile(
   tree: Tree,
   projectRoot?: string
 ): string | null {
-  if (projectRoot === undefined && tree.exists(baseEsLintConfigFile)) {
-    return baseEsLintConfigFile;
-  }
-  if (projectRoot === undefined && tree.exists(baseEsLintFlatConfigFile)) {
-    return baseEsLintFlatConfigFile;
+  if (projectRoot === undefined) {
+    for (const file of [
+      baseEsLintConfigFile,
+      ...BASE_ESLINT_CONFIG_FILENAMES,
+    ]) {
+      if (tree.exists(file)) {
+        return file;
+      }
+    }
   }
   projectRoot ??= '';
   for (const file of ESLINT_CONFIG_FILENAMES) {
@@ -56,7 +76,12 @@ export function isEslintConfigSupported(tree: Tree, projectRoot = ''): boolean {
   if (!eslintFile) {
     return false;
   }
-  return eslintFile.endsWith('.json') || eslintFile.endsWith('.config.js');
+  return (
+    eslintFile.endsWith('.json') ||
+    eslintFile.endsWith('.config.js') ||
+    eslintFile.endsWith('.config.cjs') ||
+    eslintFile.endsWith('.config.mjs')
+  );
 }
 
 export function updateRelativePathsInConfig(
@@ -128,6 +153,19 @@ function replaceFlatConfigPaths(
       `require('${newPath}')` +
       newConfig.slice(match.index + match[0].length);
   }
+
+  // Handle import statements
+  const importRegex = RegExp(/import\s+.*?\s+from\s+['"](.*)['"]/g);
+  while ((match = importRegex.exec(newConfig)) !== null) {
+    const oldPath = match[1];
+    const newPath = offsetFilePath(sourceRoot, oldPath, offset, tree);
+
+    // Replace the old path with the updated path
+    newConfig =
+      newConfig.slice(0, match.index + match[0].indexOf(oldPath)) +
+      newPath +
+      newConfig.slice(match.index + match[0].indexOf(oldPath) + oldPath.length);
+  }
   // replace projects
   const projectRegex = RegExp(/project:\s?\[?['"](.*)['"]\]?/g);
   while ((match = projectRegex.exec(newConfig)) !== null) {
@@ -164,10 +202,26 @@ function offsetFilePath(
   return joinPathFragments(offset, projectRoot, pathToFile);
 }
 
+export function determineEslintConfigFormat(content: string): 'mjs' | 'cjs' {
+  const sourceFile = ts.createSourceFile(
+    '',
+    content,
+    ts.ScriptTarget.Latest,
+    true
+  );
+
+  // Check if there's an `export default` in the AST
+  const hasExportDefault = sourceFile.statements.some(
+    (statement) => ts.isExportAssignment(statement) && !statement.isExportEquals
+  );
+
+  return hasExportDefault ? 'mjs' : 'cjs';
+}
+
 export function addOverrideToLintConfig(
   tree: Tree,
   root: string,
-  override: Linter.ConfigOverride<Linter.RulesRecord>,
+  override: Partial<Linter.ConfigOverride<Linter.RulesRecord>>,
   options: { insertAtTheEnd?: boolean; checkBaseConfig?: boolean } = {
     insertAtTheEnd: true,
   }
@@ -175,15 +229,30 @@ export function addOverrideToLintConfig(
   const isBase =
     options.checkBaseConfig && findEslintFile(tree, root).includes('.base');
   if (useFlatConfig(tree)) {
-    const fileName = joinPathFragments(
-      root,
-      isBase ? baseEsLintFlatConfigFile : flatConfigEslintFilename(tree)
-    );
-    const flatOverride = generateFlatOverride(override);
+    let fileName: string;
+    if (isBase) {
+      for (const file of BASE_ESLINT_CONFIG_FILENAMES) {
+        if (tree.exists(joinPathFragments(root, file))) {
+          fileName = joinPathFragments(root, file);
+          break;
+        }
+      }
+    } else {
+      for (const f of eslintFlatConfigFilenames) {
+        if (tree.exists(joinPathFragments(root, f))) {
+          fileName = joinPathFragments(root, f);
+          break;
+        }
+      }
+    }
+
     let content = tree.read(fileName, 'utf8');
-    // we will be using compat here so we need to make sure it's added
+    const format = content.includes('export default') ? 'mjs' : 'cjs';
+
+    const flatOverride = generateFlatOverride(override, format);
+    // Check if the provided override using legacy eslintrc properties or plugins, if so we need to add compat
     if (overrideNeedsCompat(override)) {
-      content = addCompatToFlatConfig(content);
+      content = addFlatCompatToFlatConfig(content);
     }
     tree.write(
       fileName,
@@ -206,29 +275,36 @@ export function addOverrideToLintConfig(
   }
 }
 
-function overrideNeedsCompat(
-  override: Linter.ConfigOverride<Linter.RulesRecord>
-) {
-  return (
-    override.env || override.extends || override.plugins || override.parser
-  );
-}
-
 export function updateOverrideInLintConfig(
   tree: Tree,
-  root: string,
+  rootOrFile: string,
   lookup: (override: Linter.ConfigOverride<Linter.RulesRecord>) => boolean,
   update: (
     override: Linter.ConfigOverride<Linter.RulesRecord>
   ) => Linter.ConfigOverride<Linter.RulesRecord>
 ) {
+  let fileName: string;
+  let root = rootOrFile;
+  if (tree.exists(rootOrFile) && tree.isFile(rootOrFile)) {
+    fileName = rootOrFile;
+    root = dirname(rootOrFile);
+  }
+
   if (useFlatConfig(tree)) {
-    const fileName = joinPathFragments(root, flatConfigEslintFilename(tree));
+    if (!fileName) {
+      for (const f of eslintFlatConfigFilenames) {
+        if (tree.exists(joinPathFragments(root, f))) {
+          fileName = joinPathFragments(root, f);
+          break;
+        }
+      }
+    }
+
     let content = tree.read(fileName, 'utf8');
     content = replaceOverride(content, root, lookup, update);
     tree.write(fileName, content);
   } else {
-    const fileName = joinPathFragments(root, '.eslintrc.json');
+    fileName ??= joinPathFragments(root, '.eslintrc.json');
     if (!tree.exists(fileName)) {
       return;
     }
@@ -253,24 +329,44 @@ export function updateOverrideInLintConfig(
 
 export function lintConfigHasOverride(
   tree: Tree,
-  root: string,
+  rootOrFile: string,
   lookup: (override: Linter.ConfigOverride<Linter.RulesRecord>) => boolean,
   checkBaseConfig = false
 ): boolean {
-  if (!isEslintConfigSupported(tree, root)) {
+  let fileName: string;
+  let root = rootOrFile;
+  if (tree.exists(rootOrFile) && tree.isFile(rootOrFile)) {
+    fileName = rootOrFile;
+    root = dirname(rootOrFile);
+  }
+  if (!fileName && !isEslintConfigSupported(tree, root)) {
     return false;
   }
   const isBase =
-    checkBaseConfig && findEslintFile(tree, root).includes('.base');
+    !fileName &&
+    checkBaseConfig &&
+    findEslintFile(tree, root).includes('.base');
+  if (isBase) {
+    for (const file of BASE_ESLINT_CONFIG_FILENAMES) {
+      if (tree.exists(joinPathFragments(root, file))) {
+        fileName = joinPathFragments(root, file);
+        break;
+      }
+    }
+  }
   if (useFlatConfig(tree)) {
-    const fileName = joinPathFragments(
-      root,
-      isBase ? baseEsLintFlatConfigFile : flatConfigEslintFilename(tree)
-    );
+    if (!fileName) {
+      for (const f of eslintFlatConfigFilenames) {
+        if (tree.exists(joinPathFragments(root, f))) {
+          fileName = joinPathFragments(root, f);
+          break;
+        }
+      }
+    }
     const content = tree.read(fileName, 'utf8');
     return hasOverride(content, lookup);
   } else {
-    const fileName = joinPathFragments(
+    fileName ??= joinPathFragments(
       root,
       isBase ? baseEsLintConfigFile : '.eslintrc.json'
     );
@@ -285,15 +381,22 @@ export function replaceOverridesInLintConfig(
   overrides: Linter.ConfigOverride<Linter.RulesRecord>[]
 ) {
   if (useFlatConfig(tree)) {
-    const fileName = joinPathFragments(root, flatConfigEslintFilename(tree));
+    let fileName: string;
+    for (const f of eslintFlatConfigFilenames) {
+      if (tree.exists(joinPathFragments(root, f))) {
+        fileName = joinPathFragments(root, f);
+        break;
+      }
+    }
     let content = tree.read(fileName, 'utf8');
-    // we will be using compat here so we need to make sure it's added
+    const format = content.includes('export default') ? 'mjs' : 'cjs';
+    // Check if any of the provided overrides using legacy eslintrc properties or plugins, if so we need to add compat
     if (overrides.some(overrideNeedsCompat)) {
-      content = addCompatToFlatConfig(content);
+      content = addFlatCompatToFlatConfig(content);
     }
     content = removeOverridesFromLintConfig(content);
     overrides.forEach((override) => {
-      const flatOverride = generateFlatOverride(override);
+      const flatOverride = generateFlatOverride(override, format);
       content = addBlockToFlatConfigExport(content, flatOverride);
     });
 
@@ -310,21 +413,110 @@ export function replaceOverridesInLintConfig(
 export function addExtendsToLintConfig(
   tree: Tree,
   root: string,
-  plugin: string | string[]
-) {
-  const plugins = Array.isArray(plugin) ? plugin : [plugin];
+  plugin:
+    | string
+    | { name: string; needCompatFixup: boolean }
+    | Array<string | { name: string; needCompatFixup: boolean }>,
+  insertAtTheEnd = false
+): GeneratorCallback {
   if (useFlatConfig(tree)) {
-    const fileName = joinPathFragments(root, flatConfigEslintFilename(tree));
-    const pluginExtends = generatePluginExtendsElement(plugins);
+    const pluginExtends: ts.SpreadElement[] = [];
+    let fileName: string;
+    for (const f of eslintFlatConfigFilenames) {
+      if (tree.exists(joinPathFragments(root, f))) {
+        fileName = joinPathFragments(root, f);
+        break;
+      }
+    }
+    // Check the file extension to determine the format of the config if it is .js we look for the export
+    const eslintConfigFormat = fileName.endsWith('.mjs')
+      ? 'mjs'
+      : fileName.endsWith('.cjs')
+      ? 'cjs'
+      : tree.read(fileName, 'utf-8').includes('module.exports')
+      ? 'cjs'
+      : 'mjs';
+
+    let shouldImportEslintCompat = false;
+    // assume eslint version is 9 if not found, as it's what we'd be generating by default
+    const eslintVersion =
+      getInstalledEslintVersion(tree) ?? eslint9__eslintVersion;
+    if (gte(eslintVersion, '9.0.0')) {
+      // eslint v9 requires the incompatible plugins to be wrapped with a helper from @eslint/compat
+      const plugins = (Array.isArray(plugin) ? plugin : [plugin]).map((p) =>
+        typeof p === 'string' ? { name: p, needCompatFixup: false } : p
+      );
+      let compatiblePluginsBatch: string[] = [];
+      plugins.forEach(({ name, needCompatFixup }) => {
+        if (needCompatFixup) {
+          if (compatiblePluginsBatch.length > 0) {
+            // flush the current batch of compatible plugins and reset it
+            pluginExtends.push(
+              generatePluginExtendsElement(compatiblePluginsBatch)
+            );
+            compatiblePluginsBatch = [];
+          }
+          // generate the extends for the incompatible plugin
+          pluginExtends.push(generatePluginExtendsElementWithCompatFixup(name));
+          shouldImportEslintCompat = true;
+        } else {
+          // add the compatible plugin to the current batch
+          compatiblePluginsBatch.push(name);
+        }
+      });
+
+      if (compatiblePluginsBatch.length > 0) {
+        // flush the batch of compatible plugins
+        pluginExtends.push(
+          generatePluginExtendsElement(compatiblePluginsBatch)
+        );
+      }
+    } else {
+      const plugins = (Array.isArray(plugin) ? plugin : [plugin]).map((p) =>
+        typeof p === 'string' ? p : p.name
+      );
+      pluginExtends.push(generatePluginExtendsElement(plugins));
+    }
+
     let content = tree.read(fileName, 'utf8');
-    content = addCompatToFlatConfig(content);
-    tree.write(
-      fileName,
-      addBlockToFlatConfigExport(content, pluginExtends, {
-        insertAtTheEnd: false,
-      })
+    if (shouldImportEslintCompat) {
+      content = addImportToFlatConfig(
+        content,
+        ['fixupConfigRules'],
+        '@eslint/compat'
+      );
+    }
+    content = addFlatCompatToFlatConfig(content);
+    // reverse the order to ensure they are added in the correct order at the
+    // start of the `extends` array
+    for (const pluginExtend of pluginExtends.reverse()) {
+      content = addBlockToFlatConfigExport(content, pluginExtend, {
+        insertAtTheEnd,
+      });
+    }
+    tree.write(fileName, content);
+
+    if (shouldImportEslintCompat) {
+      return addDependenciesToPackageJson(
+        tree,
+        {},
+        { '@eslint/compat': eslintCompat, '@eslint/eslintrc': eslintrcVersion },
+        undefined,
+        true
+      );
+    }
+
+    return addDependenciesToPackageJson(
+      tree,
+      {},
+      { '@eslint/eslintrc': eslintrcVersion },
+      undefined,
+      true
     );
   } else {
+    const plugins = (Array.isArray(plugin) ? plugin : [plugin]).map((p) =>
+      typeof p === 'string' ? p : p.name
+    );
     const fileName = joinPathFragments(root, '.eslintrc.json');
     updateJson(tree, fileName, (json) => {
       json.extends ??= [];
@@ -334,7 +526,40 @@ export function addExtendsToLintConfig(
       ];
       return json;
     });
+
+    return () => {};
   }
+}
+
+export function addPredefinedConfigToFlatLintConfig(
+  tree: Tree,
+  root: string,
+  predefinedConfigName: string,
+  moduleName = 'nx',
+  moduleImportPath = '@nx/eslint-plugin',
+  spread = true,
+  insertAtTheEnd = true
+): void {
+  if (!useFlatConfig(tree))
+    throw new Error('Predefined configs can only be used with flat configs');
+
+  let fileName: string;
+  for (const f of eslintFlatConfigFilenames) {
+    if (tree.exists(joinPathFragments(root, f))) {
+      fileName = joinPathFragments(root, f);
+      break;
+    }
+  }
+
+  let content = tree.read(fileName, 'utf8');
+  content = addImportToFlatConfig(content, moduleName, moduleImportPath);
+  content = addBlockToFlatConfigExport(
+    content,
+    generateFlatPredefinedConfig(predefinedConfigName, moduleName, spread),
+    { insertAtTheEnd }
+  );
+
+  tree.write(fileName, content);
 }
 
 export function addPluginsToLintConfig(
@@ -344,7 +569,14 @@ export function addPluginsToLintConfig(
 ) {
   const plugins = Array.isArray(plugin) ? plugin : [plugin];
   if (useFlatConfig(tree)) {
-    const fileName = joinPathFragments(root, flatConfigEslintFilename(tree));
+    let fileName: string;
+    for (const f of eslintFlatConfigFilenames) {
+      if (tree.exists(joinPathFragments(root, f))) {
+        fileName = joinPathFragments(root, f);
+        break;
+      }
+    }
+
     let content = tree.read(fileName, 'utf8');
     const mappedPlugins: { name: string; varName: string; imp: string }[] = [];
     plugins.forEach((name) => {
@@ -372,16 +604,33 @@ export function addIgnoresToLintConfig(
   ignorePatterns: string[]
 ) {
   if (useFlatConfig(tree)) {
-    const fileName = joinPathFragments(root, flatConfigEslintFilename(tree));
-    const block = generateAst<ts.ObjectLiteralExpression>({
-      ignores: ignorePatterns.map((path) => mapFilePath(path)),
-    });
-    tree.write(
-      fileName,
-      addBlockToFlatConfigExport(tree.read(fileName, 'utf8'), block)
-    );
+    let fileName: string;
+    for (const f of eslintFlatConfigFilenames) {
+      if (tree.exists(joinPathFragments(root, f))) {
+        fileName = joinPathFragments(root, f);
+        break;
+      }
+    }
+
+    if (!fileName) {
+      return;
+    }
+
+    let content = tree.read(fileName, 'utf8');
+    if (hasFlatConfigIgnoresBlock(content)) {
+      content = addPatternsToFlatConfigIgnoresBlock(content, ignorePatterns);
+      tree.write(fileName, content);
+    } else {
+      const block = generateAst<ts.ObjectLiteralExpression>({
+        ignores: ignorePatterns.map((path) => mapFilePath(path)),
+      });
+      tree.write(fileName, addBlockToFlatConfigExport(content, block));
+    }
   } else {
     const fileName = joinPathFragments(root, '.eslintrc.json');
+    if (!tree.exists(fileName)) {
+      return;
+    }
     updateJson(tree, fileName, (json) => {
       const ignoreSet = new Set([
         ...(json.ignorePatterns ?? []),

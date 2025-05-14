@@ -5,7 +5,7 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { copyFileSync, existsSync } from 'node:fs';
-import { join, parse, relative, resolve } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import {
   loadConfig,
   createMatchPath,
@@ -18,11 +18,14 @@ import {
 } from '@nx/js/src/utils/buildable-libs-utils';
 import { Plugin } from 'vite';
 import { nxViteBuildCoordinationPlugin } from './nx-vite-build-coordination.plugin';
+import { findFile } from '../src/utils/nx-tsconfig-paths-find-file';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export interface nxViteTsPathsOptions {
   /**
    * Enable debug logging
-   * @default false
+   * If set to false, it will always ignore the debug logging even when `--verbose` or `NX_VERBOSE_LOGGING` is set to true.
+   * @default undefined
    **/
   debug?: boolean;
   /**
@@ -46,6 +49,7 @@ export interface nxViteTsPathsOptions {
 }
 
 export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
+  let foundTsConfigPath: string;
   let matchTsPathEsm: MatchPath;
   let matchTsPathFallback: MatchPath | undefined;
   let tsConfigPathsEsm: ConfigLoaderSuccessResult;
@@ -77,19 +81,18 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
     async configResolved(config: any) {
       projectRoot = config.root;
       const projectRootFromWorkspaceRoot = relative(workspaceRoot, projectRoot);
-      let foundTsConfigPath = getTsConfig(
-        join(
-          workspaceRoot,
-          'tmp',
-          projectRootFromWorkspaceRoot,
-          process.env.NX_TASK_TARGET_TARGET ?? 'build',
-          'tsconfig.generated.json'
-        )
+      foundTsConfigPath = getTsConfig(
+        process.env.NX_TSCONFIG_PATH ??
+          join(
+            workspaceRoot,
+            'tmp',
+            projectRootFromWorkspaceRoot,
+            process.env.NX_TASK_TARGET_TARGET ?? 'build',
+            'tsconfig.generated.json'
+          )
       );
-      if (!foundTsConfigPath) {
-        throw new Error(stripIndents`Unable to find a tsconfig in the workspace! 
-There should at least be a tsconfig.base.json or tsconfig.json in the root of the workspace ${workspaceRoot}`);
-      }
+
+      if (!foundTsConfigPath) return;
 
       if (
         !options.buildLibsFromSource &&
@@ -161,6 +164,9 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
       }
     },
     resolveId(importPath: string) {
+      // Let other resolvers handle this path.
+      if (!foundTsConfigPath) return null;
+
       let resolvedFile: string;
       try {
         resolvedFile = matchTsPathEsm(importPath);
@@ -169,7 +175,7 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
         resolvedFile = matchTsPathFallback?.(importPath);
       }
 
-      if (!resolvedFile) {
+      if (!resolvedFile || !existsSync(resolvedFile)) {
         if (tsConfigPathsEsm || tsConfigPathsFallback) {
           logIt(
             `Unable to resolve ${importPath} with tsconfig paths. Using fallback file matching.`
@@ -188,6 +194,7 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
       return resolvedFile || null;
     },
     async writeBundle(options) {
+      if (isUsingTsSolutionSetup()) return;
       const outDir = options.dir || 'dist';
       const src = resolve(projectRoot, 'package.json');
       if (existsSync(src)) {
@@ -207,6 +214,7 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
       resolve(preferredTsConfigPath),
       resolve(join(workspaceRoot, 'tsconfig.base.json')),
       resolve(join(workspaceRoot, 'tsconfig.json')),
+      resolve(join(workspaceRoot, 'jsconfig.json')),
     ].find((tsPath) => {
       if (existsSync(tsPath)) {
         logIt('Found tsconfig at', tsPath);
@@ -216,7 +224,7 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
   }
 
   function logIt(...msg: any[]) {
-    if (process.env.NX_VERBOSE_LOGGING === 'true' || options?.debug) {
+    if (process.env.NX_VERBOSE_LOGGING === 'true' && options?.debug !== false) {
       console.debug('\n[Nx Vite TsPaths]', ...msg);
     }
   }
@@ -234,34 +242,35 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
 
       const normalizedImport = alias.replace(/\/\*$/, '');
 
-      if (importPath.startsWith(normalizedImport)) {
+      if (
+        importPath === normalizedImport ||
+        importPath.startsWith(normalizedImport + '/')
+      ) {
         const joinedPath = joinPathFragments(
           tsconfig.absoluteBaseUrl,
           paths[0].replace(/\/\*$/, '')
         );
 
         resolvedFile = findFile(
-          importPath.replace(normalizedImport, joinedPath)
+          importPath.replace(normalizedImport, joinedPath),
+          options.extensions
         );
+
+        if (
+          resolvedFile === undefined &&
+          options.extensions.some((ext) => importPath.endsWith(ext))
+        ) {
+          const foundExtension = options.extensions.find((ext) =>
+            importPath.endsWith(ext)
+          );
+          const pathWithoutExtension = importPath
+            .replace(normalizedImport, joinedPath)
+            .slice(0, -foundExtension.length);
+          resolvedFile = findFile(pathWithoutExtension, options.extensions);
+        }
       }
     }
 
     return resolvedFile;
-  }
-
-  function findFile(path: string): string {
-    for (const ext of options.extensions) {
-      // Support file extensions such as .css and .js in the import path.
-      const { dir, name } = parse(path);
-      const resolvedPath = resolve(dir, name + ext);
-      if (existsSync(resolvedPath)) {
-        return resolvedPath;
-      }
-
-      const resolvedIndexPath = resolve(path, `index${ext}`);
-      if (existsSync(resolvedIndexPath)) {
-        return resolvedIndexPath;
-      }
-    }
   }
 }

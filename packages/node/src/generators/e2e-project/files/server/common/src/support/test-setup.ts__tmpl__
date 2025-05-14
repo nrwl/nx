@@ -1,5 +1,4 @@
 /* eslint-disable */
-
 import axios from 'axios';
 
 module.exports = async function() {

@@ -30,12 +30,19 @@ export async function filterAffected(
 
   const touchedProjects = [];
   for (const locator of touchedProjectLocators) {
+    performance.mark(locator.name + ':start');
     const projects = await locator(
       touchedFiles,
       graph.nodes,
       nxJson,
       packageJson,
       graph
+    );
+    performance.mark(locator.name + ':end');
+    performance.measure(
+      locator.name,
+      locator.name + ':start',
+      locator.name + ':end'
     );
     touchedProjects.push(...projects);
   }

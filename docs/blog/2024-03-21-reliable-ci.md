@@ -2,22 +2,22 @@
 title: Reliable CI. A new execution model fixing both flakiness and slowness
 slug: 'reliable-ci-a-new-execution-model-fixing-both-flakiness-and-slowness'
 authors: [Victor Savkin]
-cover_image: '/blog/images/2024-03-21/featured_img.png'
+cover_image: '/blog/images/2024-03-21/featured_img.avif'
 tags: [nx, nx-cloud, releases]
-pinned: true
+description: 'Learn how Nx Cloud revolutionizes CI with a task-based execution model that solves both flaky tests and slow pipelines.'
 ---
 
-The proverbial slow and flaky CI isn’t the failure of the developers or even the testing tools. It’s the failure of the CI execution model we relied on for the last 20 years.
+The proverbial slow and flaky CI isn't the failure of the developers or even the testing tools. It's the failure of the CI execution model we relied on for the last 20 years.
 
 **By switching from the old CI model, implemented as a graph of VMs, to the new one, implemented as a graph of tasks, we can solve both the flakiness and slowness.**
 
-In this blog post I’ll explore why this is the case, and how you can do it by using Nx Cloud.
+In this blog post I'll explore why this is the case, and how you can do it by using Nx Cloud.
 
 ---
 
 ## History of CI
 
-It’s easy to forget that Continuous Integration has been around for only 20 years. For reference, UI frameworks have been around since the 1970s.
+It's easy to forget that Continuous Integration has been around for only 20 years. For reference, UI frameworks have been around since the 1970s.
 
 ![](/blog/images/2024-03-21/bodyimg1.webp)
 
@@ -37,9 +37,9 @@ A traditional CI execution is a directed acyclic graph (DAG) of virtual machines
 
 **Every distributed system needs efficient communication between nodes and the ability to tolerate failure.**
 
-The traditional CI execution model offers **very basic** means of communication: the status code propagation and ad-hoc ways of uploading/downloading files. Because the communication is effortful, in practice, **it’s either not done at all or very minimally.**
+The traditional CI execution model offers **very basic** means of communication: the status code propagation and ad-hoc ways of uploading/downloading files. Because the communication is effortful, in practice, **it's either not done at all or very minimally.**
 
-To understand why the traditional CI execution model fails to handle failures, let’s review the types of failures we can have.
+To understand why the traditional CI execution model fails to handle failures, let's review the types of failures we can have.
 
 Failures can be:
 
@@ -54,24 +54,24 @@ Tasks can fail:
 - for external reasons _(npm install fails cause npm is down)_
 - for unknown reasons _(a flaky test)_
 
-**The traditional CI execution model doesn’t tolerate any of these failures.**
+**The traditional CI execution model doesn't tolerate any of these failures.**
 
 ## Problem in numbers
 
-Let’s see how varying a few parameters affects the probability of the CI execution failing.
+Let's see how varying a few parameters affects the probability of the CI execution failing.
 
 | Number of VMS | Avg Tests per VM | Flaky Test Probability | Slow Test Probability | Broken CI Builds (Flaky) | Slow CI Builds |
-| ------------- | ---------------- | ---------------------- | --------------------- | ------------------------ | -------------- |
-| 5             | 10               | 0.1%                   | 0.3%                  | 5%                       | 15%            |
-| 10            | 10               | 0.1%                   | 0.3%                  | 10%                      | 26%            |
-| 50            | 10               | 0.1%                   | 0.3%                  | 39%                      | 78%            |
-| 5             | 10               | 0.5%                   | 1%                    | 23%                      | 41%            |
-| 10            | 10               | 0.5%                   | 1%                    | 40%                      | 65%            |
-| 50            | 10               | 0.5%                   | 1%                    | 92%                      | 99%            |
+| :-----------: | :--------------: | :--------------------: | :-------------------: | :----------------------: | :------------: |
+|       5       |        10        |          0.1%          |         0.3%          |            5%            |      15%       |
+|      10       |        10        |          0.1%          |         0.3%          |           10%            |      26%       |
+|      50       |        10        |          0.1%          |         0.3%          |           39%            |      78%       |
+|       5       |        10        |          0.5%          |          1%           |           23%            |      41%       |
+|      10       |        10        |          0.5%          |          1%           |           40%            |      65%       |
+|      50       |        10        |          0.5%          |          1%           |           92%            |      99%       |
 
-**The result is much worse than most intuitively expect.** For instance, assuming that an **e2e test has 1 in 1000 chance (0.1%) of failing** for a flaky reason, when the number of e2e tests reaches 500, **the probability of the CI failing for a flaky reason reaches 39%**, and the vast majority of CI executions are slowed down. Note, this is an exceptionally stable test suite. The bottom part of the table is more representative of a typical e2e suite, and the CI becomes “broken” at a much smaller scale.
+**The result is much worse than most intuitively expect.** For instance, assuming that an **e2e test has 1 in 1000 chance (0.1%) of failing** for a flaky reason, when the number of e2e tests reaches 500, **the probability of the CI failing for a flaky reason reaches 39%**, and the vast majority of CI executions are slowed down. Note, this is an exceptionally stable test suite. The bottom part of the table is more representative of a typical e2e suite, and the CI becomes "broken" at a much smaller scale.
 
-One can try to fix it by increasing the robustness of the tests, but at some point, doing this is costly. If an e2e test has a 10% chance of a flaky failure, it’s relatively easy to bring this number to 1%. Going from 1% to 0.5% is harder. Going from 0.5% to 0.1% is exceptionally hard and may be practically impossible. Testing complex systems is simply a difficult task.
+One can try to fix it by increasing the robustness of the tests, but at some point, doing this is costly. If an e2e test has a 10% chance of a flaky failure, it's relatively easy to bring this number to 1%. Going from 1% to 0.5% is harder. Going from 0.5% to 0.1% is exceptionally hard and may be practically impossible. Testing complex systems is simply a difficult task.
 
 This is the formula for the failed CI run:
 
@@ -171,11 +171,9 @@ The spirit of this post is similar to Alan Kay's quote, "A change of perspective
 
 ---
 
-You can learn more about Nx Cloud on [nx.app](https://nx.app) and Nx open source on [nx.dev]().
+You can learn more about Nx Cloud on [our docs](/nx-cloud).
 
-**Nx Cloud Pro includes a 2-month free trial** that is definitely worth trying out if you're curious what Cloud Pro can do for your CI. You can try out Nx Agents, e2e test splitting, deflaking and more. [Learn more about Nx Cloud Pro.](https://nx.app/campaigns/pro)
-
-We also have a **Pro for Startups** plan which offers agents that are 3.5x cheaper than analogous VMs on CircleCI or Github Actions. [Learn more about Nx Pro for Startups.](https://nx.app/campaigns/pro-for-startups)
+**Nx Cloud Pro includes a 2-month free trial** that is definitely worth trying out if you're curious what Cloud Pro can do for your CI. You can try out Nx Agents, e2e test splitting, deflaking and more. [Learn more about Nx Cloud Pro.](/pricing)
 
 ---
 
@@ -187,4 +185,4 @@ We also have a **Pro for Startups** plan which offers agents that are 3.5x cheap
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Community Discord](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app)
+- [Speed up your CI](/nx-cloud)

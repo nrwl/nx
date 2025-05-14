@@ -1,14 +1,19 @@
 import {
   formatFiles,
+  generateFiles,
   GeneratorCallback,
   installPackagesTask,
+  joinPathFragments,
   offsetFromRoot,
   readNxJson,
   Tree,
   updateNxJson,
 } from '@nx/devkit';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { initGenerator as jsInitGenerator } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { angularInitGenerator } from '../init/init';
+import { convertToRspack } from '../convert-to-rspack/convert-to-rspack';
 import { setupSsr } from '../setup-ssr/setup-ssr';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
@@ -16,6 +21,7 @@ import {
   addE2e,
   addLinting,
   addProxyConfig,
+  addServeStaticTarget,
   addUnitTestRunner,
   createFiles,
   createProject,
@@ -26,23 +32,18 @@ import {
   updateEditorTsConfig,
 } from './lib';
 import type { Schema } from './schema';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function applicationGenerator(
   tree: Tree,
   schema: Partial<Schema>
 ): Promise<GeneratorCallback> {
-  return await applicationGeneratorInternal(tree, {
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
-}
+  assertNotUsingTsSolutionSetup(tree, 'angular', 'application');
+  const isRspack = schema.bundler === 'rspack';
+  if (isRspack) {
+    schema.bundler = 'webpack';
+  }
 
-export async function applicationGeneratorInternal(
-  tree: Tree,
-  schema: Partial<Schema>
-): Promise<GeneratorCallback> {
-  const options = await normalizeOptions(tree, schema);
+  const options = await normalizeOptions(tree, schema, isRspack);
   const rootOffset = offsetFromRoot(options.appProjectRoot);
 
   await jsInitGenerator(tree, {
@@ -54,6 +55,7 @@ export async function applicationGeneratorInternal(
   await angularInitGenerator(tree, {
     ...options,
     skipFormat: true,
+    addPlugin: options.addPlugin,
   });
 
   if (!options.skipPackageJson) {
@@ -74,7 +76,12 @@ export async function applicationGeneratorInternal(
 
   await addLinting(tree, options);
   await addUnitTestRunner(tree, options);
-  await addE2e(tree, options);
+  const e2ePort = await addE2e(tree, options);
+  addServeStaticTarget(
+    tree,
+    options,
+    options.e2eTestRunner !== 'none' ? e2ePort : options.port
+  );
   updateEditorTsConfig(tree, options);
   setGeneratorDefaults(tree, options);
 
@@ -99,7 +106,32 @@ export async function applicationGeneratorInternal(
       project: options.name,
       standalone: options.standalone,
       skipPackageJson: options.skipPackageJson,
+      serverRouting: options.serverRouting,
     });
+  }
+
+  if (isRspack) {
+    await convertToRspack(tree, {
+      project: options.name,
+      skipInstall: options.skipPackageJson,
+      skipFormat: true,
+    });
+
+    if (options.ssr) {
+      generateFiles(
+        tree,
+        joinPathFragments(__dirname, './files/rspack-ssr'),
+        options.appProjectSourceRoot,
+        {
+          pathToDistFolder: joinPathFragments(
+            offsetFromRoot(options.appProjectRoot),
+            options.outputPath,
+            'browser'
+          ),
+          tmpl: '',
+        }
+      );
+    }
   }
 
   if (!options.skipFormat) {

@@ -4,6 +4,7 @@ import {
   Breadcrumbs,
   DocumentationHeader,
   Footer,
+  PluginType,
   SidebarContainer,
 } from '@nx/nx-dev/ui-common';
 import { PluginDirectory } from '@nx/nx-dev/ui-community';
@@ -21,7 +22,7 @@ interface PluginInfo {
   description: string;
   name: string;
   url: string;
-  isOfficial: boolean;
+  pluginType: PluginType;
 }
 interface BrowseProps {
   pluginList: PluginInfo[];
@@ -53,12 +54,14 @@ export async function getStaticProps(): Promise<{ props: BrowseProps }> {
           url: plugin.path,
           ...qualityIndicators[plugin.packageName],
           nxVersion: 'official',
-          isOfficial: true,
+          pluginType: plugin.name?.startsWith('powerpack-')
+            ? 'nxPowerpack'
+            : 'nxOpenSource',
         })),
         ...pluginList.map((plugin) => ({
           ...plugin,
           ...qualityIndicators[plugin.name],
-          isOfficial: false,
+          pluginType: 'community',
         })),
       ],
       menu: menusApi.getMenu('nx', ''),
@@ -77,11 +80,11 @@ export default function Browse(props: BrowseProps): JSX.Element {
   return (
     <>
       <NextSeo
-        title="Nx Plugin Listing"
+        title="Nx Plugin Registry"
         description="Nx Plugins enhance the developer experience in you workspace to make your life simpler. Browse the list of available Nx Plugins."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'Nx Plugin Listing',
+          title: 'Nx Plugin Registry',
           description:
             'Nx Plugins enhance the developer experience in you workspace to make your life simpler. Browse the list of available Nx Plugins.',
           images: [
@@ -93,7 +96,7 @@ export default function Browse(props: BrowseProps): JSX.Element {
               type: 'image/jpeg',
             },
           ],
-          siteName: 'NxDev',
+          siteName: 'Nx',
           type: 'website',
         }}
       />
@@ -127,7 +130,7 @@ export default function Browse(props: BrowseProps): JSX.Element {
                     Are you a plugin author? You can{' '}
                     <a
                       className="underline"
-                      href="/extending-nx/tutorials/tooling-plugin#list-your-nx-plugin"
+                      href="/extending-nx/recipes/publish-plugin#list-your-nx-plugin"
                     >
                       add your plugin to the registry
                     </a>{' '}

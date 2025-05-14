@@ -91,19 +91,46 @@ function handleBuildOrTestNode(
             propName !== 'reportsDirectory' &&
             propName !== 'provider'
           ) {
-            updatedPropsString += `'${propName}': ${prop.initializer.getText()},\n`;
+            // NOTE: Watch for formatting.
+            updatedPropsString += `    '${propName}': ${prop.initializer.getText()},\n`;
           }
         }
         for (const [propName, propValue] of Object.entries(
           configContentObject
         )) {
-          updatedPropsString += `'${propName}': ${JSON.stringify(
-            propValue
-          )},\n`;
+          // NOTE: Watch for formatting.
+          if (propName === 'coverage') {
+            let propString = `    '${propName}': {\n`;
+            for (const [pName, pValue] of Object.entries(propValue)) {
+              if (pName === 'provider') {
+                propString += `    '${pName}': ${pValue} as const,\n`;
+              } else {
+                propString += `    '${pName}': '${pValue}',\n`;
+              }
+            }
+            propString += `}`;
+            updatedPropsString += `${propString}\n`;
+          } else if (propName === 'lib') {
+            let propString = `    '${propName}': {\n`;
+            for (const [pName, pValue] of Object.entries(propValue)) {
+              if (pName === 'formats') {
+                propString += `      '${pName}': [${pValue
+                  .map((format: string) => `'${format}' as const`)
+                  .join(', ')}],\n`;
+              } else {
+                propString += `      '${pName}': ${JSON.stringify(pValue)},\n`;
+              }
+            }
+            propString += `    },`;
+            updatedPropsString += `${propString}\n`;
+          } else {
+            updatedPropsString += `    '${propName}': ${JSON.stringify(
+              propValue
+            )},\n`;
+          }
         }
         return `${name}: {
-          ${updatedPropsString}
-        }`;
+${updatedPropsString}  }`;
       }
     );
   } else {
@@ -324,7 +351,7 @@ function handlePluginNode(
         const existingPluginNodes = found?.[0].elements ?? [];
 
         for (const plugin of existingPluginNodes) {
-          updatedPluginsString += `${plugin.getText()},\n`;
+          updatedPluginsString += `${plugin.getText()}, `;
         }
 
         for (const plugin of plugins) {
@@ -333,7 +360,7 @@ function handlePluginNode(
               node.getText().includes(plugin)
             )
           ) {
-            updatedPluginsString += `${plugin},\n`;
+            updatedPluginsString += `${plugin}, `;
           }
         }
 
@@ -371,7 +398,7 @@ function handlePluginNode(
             {
               type: ChangeType.Insert,
               index: propertyAssignments[0].getStart(),
-              text: `plugins: [${plugins.join(',\n')}],`,
+              text: `plugins: [${plugins.join(', ')}],`,
             },
           ]);
           writeFile = true;
@@ -380,7 +407,7 @@ function handlePluginNode(
             {
               type: ChangeType.Insert,
               index: foundDefineConfig[0].getStart() + 14,
-              text: `plugins: [${plugins.join(',\n')}],`,
+              text: `plugins: [${plugins.join(', ')}],`,
             },
           ]);
           writeFile = true;
@@ -400,7 +427,7 @@ function handlePluginNode(
           {
             type: ChangeType.Insert,
             index: startOfObject + 1,
-            text: `plugins: [${plugins.join(',\n')}],`,
+            text: `plugins: [${plugins.join(', ')}],`,
           },
         ]);
         writeFile = true;
@@ -411,7 +438,7 @@ function handlePluginNode(
   }
   if (writeFile) {
     const filteredImports = filterImport(appFileContent, imports);
-    return filteredImports.join(';') + '\n' + appFileContent;
+    return filteredImports.join(';\n') + '\n' + appFileContent;
   }
 }
 

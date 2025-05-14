@@ -9,8 +9,11 @@ import { extraEslintDependencies } from '@nx/react/src/utils/lint';
 import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
+  addOverrideToLintConfig,
+  addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
 } from '@nx/eslint/src/generators/utils/eslint-file';
+import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
 interface NormalizedSchema {
   linter?: Linter | LinterType;
@@ -23,7 +26,7 @@ interface NormalizedSchema {
 }
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
-  if (options.linter === Linter.None) {
+  if (options.linter === 'none') {
     return () => {};
   }
   const tasks: GeneratorCallback[] = [];
@@ -34,13 +37,31 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     tsConfigPaths: options.tsConfigPaths,
     skipFormat: true,
     skipPackageJson: options.skipPackageJson,
+    setParserOptionsProject: options.setParserOptionsProject,
     addPlugin: options.addPlugin,
   });
 
   tasks.push(lintTask);
 
   if (isEslintConfigSupported(host)) {
-    addExtendsToLintConfig(host, options.projectRoot, 'plugin:@nx/react');
+    if (useFlatConfig(host)) {
+      addPredefinedConfigToFlatLintConfig(
+        host,
+        options.projectRoot,
+        'flat/react'
+      );
+      // Add an empty rules object to users know how to add/override rules
+      addOverrideToLintConfig(host, options.projectRoot, {
+        files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+        rules: {},
+      });
+    } else {
+      const addExtendsTask = addExtendsToLintConfig(host, options.projectRoot, {
+        name: 'plugin:@nx/react',
+        needCompatFixup: true,
+      });
+      tasks.push(addExtendsTask);
+    }
     addIgnoresToLintConfig(host, options.projectRoot, [
       'public',
       '.cache',
@@ -49,7 +70,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
   }
 
   if (!options.skipPackageJson) {
-    const installTask = await addDependenciesToPackageJson(
+    const installTask = addDependenciesToPackageJson(
       host,
       extraEslintDependencies.dependencies,
       extraEslintDependencies.devDependencies

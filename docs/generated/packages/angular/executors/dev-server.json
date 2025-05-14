@@ -3,11 +3,12 @@
   "implementation": "/packages/angular/src/builders/dev-server/dev-server.impl.ts",
   "schema": {
     "version": 2,
+    "continuous": true,
     "outputCapture": "direct-nodejs",
     "$schema": "http://json-schema.org/draft-07/schema",
     "title": "Schema for Webpack Dev Server",
     "description": "Serves an Angular application using [webpack](https://webpack.js.org/) when the build target is using a webpack-based executor, or [Vite](https://vitejs.dev/) when the build target uses an [esbuild](https://esbuild.github.io/)-based executor.",
-    "examplesFile": "This executor is a drop-in replacement for the `@angular-devkit/build-angular:dev-server` builder provided by the Angular CLI. In addition to the features provided by the Angular CLI builder, the `@nx/angular:dev-server` executor also supports the following:\n\n- Serving applications with Vite when using the `@nx/angular:application` or `@nx/angular:browser-esbuild` executors to build them\n- Serving applications with webpack when using the `@nx/angular:webpack-browser` executor\n- Providing HTTP request middleware functions when the build target is using an esbuild-based executor\n- Incremental builds\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Using a custom webpack configuration\" %}\n\nThis executor should be used along with `@nx/angular:webpack-browser` to serve an application using a custom webpack configuration.\n\nAdd the `serve` target using the `@nx/angular:dev-server` executor, set the `build` target executor as `@nx/angular:webpack-browser` and set the `customWebpackConfig` option as shown below:\n\n```json {% fileName=\"apps/my-app/project.json\" highlightLines=[2,\"5-7\",\"10-20\"] %}\n\"build\": {\n  \"executor\": \"@nx/angular:webpack-browser\",\n  \"options\": {\n    ...\n    \"customWebpackConfig\": {\n      \"path\": \"apps/my-app/webpack.config.js\"\n    }\n  }\n},\n\"serve\": {\n  \"executor\": \"@nx/angular:dev-server\",\n  \"configurations\": {\n    \"production\": {\n      \"buildTarget\": \"my-app:build:production\"\n    },\n    \"development\": {\n      \"buildTarget\": \"my-app:build:development\"\n    }\n  },\n  \"defaultConfiguration\": \"development\",\n}\n```\n\n```js {% fileName=\"apps/my-app/webpack.config.js\" %}\nmodule.exports = (config) => {\n  // update the config with your custom configuration\n\n  return config;\n};\n```\n\n{% /tab %}\n\n{% tab label=\"Providing HTTP request middleware function\" %}\n\n{% callout type=\"warning\" title=\"Overrides\" }\n\nAvailable for workspaces using Angular version 17.0.0 or greater and with `build` targets using an esbuild-based executor.\n\n{% /callout %}\n\nThe executor accepts an `esbuildMidleware` option that allows you to provide HTTP require middleware functions that will be used by the Vite development server.\n\n```json {% fileName=\"apps/my-app/project.json\" highlightLines=[8] %}\n{\n  ...\n  \"targets\": {\n    \"serve\": {\n      \"executor\": \"@nx/angular:dev-server\",\n      \"options\": {\n        ...\n        \"esbuildMidleware\": [\"apps/my-app/hello-world.middleware.ts\"]\n      }\n    }\n    ...\n  }\n}\n```\n\n```ts {% fileName=\"apps/my-app/hello-world.middleware.ts\" %}\nimport type { IncomingMessage, ServerResponse } from 'node:http';\n\nconst helloWorldMiddleware = (\n  req: IncomingMessage,\n  res: ServerResponse,\n  next: (err?: unknown) => void\n) => {\n  if (req.url === '/hello-world') {\n    res.end('<h1>Hello World!</h1>');\n  } else {\n    next();\n  }\n};\n\nexport default helloWorldMiddleware;\n```\n\n{% /tab %}\n",
+    "examplesFile": "This executor is a drop-in replacement for the `@angular-devkit/build-angular:dev-server` builder provided by the Angular CLI. In addition to the features provided by the Angular CLI builder, the `@nx/angular:dev-server` executor also supports the following:\n\n- Serving applications with Vite when using the `@nx/angular:application` or `@nx/angular:browser-esbuild` executors to build them\n- Serving applications with webpack when using the `@nx/angular:webpack-browser` executor\n- Providing HTTP request middleware functions when the build target is using an esbuild-based executor\n- Incremental builds\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Using a custom webpack configuration\" %}\n\nThis executor should be used along with `@nx/angular:webpack-browser` to serve an application using a custom webpack configuration.\n\nAdd the `serve` target using the `@nx/angular:dev-server` executor, set the `build` target executor as `@nx/angular:webpack-browser` and set the `customWebpackConfig` option as shown below:\n\n```json {% fileName=\"apps/my-app/project.json\" highlightLines=[2,\"5-7\",\"10-20\"] %}\n\"build\": {\n  \"executor\": \"@nx/angular:webpack-browser\",\n  \"options\": {\n    ...\n    \"customWebpackConfig\": {\n      \"path\": \"apps/my-app/webpack.config.js\"\n    }\n  }\n},\n\"serve\": {\n  \"executor\": \"@nx/angular:dev-server\",\n  \"configurations\": {\n    \"production\": {\n      \"buildTarget\": \"my-app:build:production\"\n    },\n    \"development\": {\n      \"buildTarget\": \"my-app:build:development\"\n    }\n  },\n  \"defaultConfiguration\": \"development\",\n}\n```\n\n```js {% fileName=\"apps/my-app/webpack.config.js\" %}\nmodule.exports = (config) => {\n  // update the config with your custom configuration\n\n  return config;\n};\n```\n\n{% /tab %}\n\n{% tab label=\"Providing HTTP request middleware function\" %}\n\n{% callout type=\"warning\" title=\"Overrides\" }\n\nAvailable for workspaces using Angular version 17.0.0 or greater and with `build` targets using an esbuild-based executor.\n\n{% /callout %}\n\nThe executor accepts an `esbuildMiddleware` option that allows you to provide HTTP require middleware functions that will be used by the Vite development server.\n\n```json {% fileName=\"apps/my-app/project.json\" highlightLines=[8] %}\n{\n  ...\n  \"targets\": {\n    \"serve\": {\n      \"executor\": \"@nx/angular:dev-server\",\n      \"options\": {\n        ...\n        \"esbuildMiddleware\": [\"apps/my-app/hello-world.middleware.ts\"]\n      }\n    }\n    ...\n  }\n}\n```\n\n```ts {% fileName=\"apps/my-app/hello-world.middleware.ts\" %}\nimport type { IncomingMessage, ServerResponse } from 'node:http';\n\nconst helloWorldMiddleware = (\n  req: IncomingMessage,\n  res: ServerResponse,\n  next: (err?: unknown) => void\n) => {\n  if (req.url === '/hello-world') {\n    res.end('<h1>Hello World!</h1>');\n  } else {\n    next();\n  }\n};\n\nexport default helloWorldMiddleware;\n```\n\n{% /tab %}\n",
     "type": "object",
     "presets": [
       { "name": "Using a Different Port", "keys": ["buildTarget", "port"] }
@@ -17,7 +18,7 @@
         "type": "string",
         "description": "A browser builder target to serve in the format of `project:target[:configuration]`. Ignored if `buildTarget` is set.",
         "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$",
-        "x-deprecated": "Use 'buildTarget' instead. It will be removed in Nx v20."
+        "x-deprecated": "Use 'buildTarget' instead. It will be removed when Angular v20 is released."
       },
       "buildTarget": {
         "type": "string",
@@ -74,11 +75,11 @@
       },
       "publicHost": {
         "type": "string",
-        "description": "The URL that the browser client (or live-reload client, if enabled) should use to connect to the development server. Use for a complex dev server setup, such as one with reverse proxies."
+        "description": "The URL that the browser client (or live-reload client, if enabled) should use to connect to the development server. Use for a complex dev server setup, such as one with reverse proxies. This option has no effect when using the 'application' or other esbuild-based builders."
       },
       "allowedHosts": {
         "type": "array",
-        "description": "List of hosts that are allowed to access the dev server.",
+        "description": "List of hosts that are allowed to access the dev server. This option has no effect when using the 'application' or other esbuild-based builders in Angular versions lower than 19.2.0.",
         "default": [],
         "items": { "type": "string" }
       },
@@ -88,13 +89,12 @@
       },
       "disableHostCheck": {
         "type": "boolean",
-        "description": "Don't verify connected clients are part of allowed hosts.",
+        "description": "Don't verify connected clients are part of allowed hosts. This option has no effect when using the 'application' or other esbuild-based builders in Angular versions lower than 19.2.0.",
         "default": false
       },
       "hmr": {
         "type": "boolean",
-        "description": "Enable hot module replacement.",
-        "default": false
+        "description": "Enable hot module replacement. It defaults to `false` in Angular versions < 19.0.0. Otherwise, the value will be `undefined`."
       },
       "watch": {
         "type": "boolean",
@@ -107,7 +107,7 @@
       },
       "forceEsbuild": {
         "type": "boolean",
-        "description": "Force the development server to use the 'browser-esbuild' builder when building. This is a developer preview option for the esbuild-based build system. _Note: this is only supported in Angular versions >= 16.1.0_.",
+        "description": "Force the development server to use the 'browser-esbuild' builder when building. This is a developer preview option for the esbuild-based build system.",
         "default": false
       },
       "inspect": {
@@ -145,12 +145,17 @@
         "x-priority": "important"
       },
       "esbuildMiddleware": {
-        "description": "A list of HTTP request middleware functions. _Note: this is only supported in Angular versions >= 17.0.0_.",
+        "description": "A list of HTTP request middleware functions.",
         "type": "array",
         "items": {
           "type": "string",
           "description": "The path to the middleware function. Relative to the workspace root."
         }
+      },
+      "watchDependencies": {
+        "type": "boolean",
+        "description": "Watch buildable dependencies and rebuild when they change.",
+        "default": true
       }
     },
     "additionalProperties": false,

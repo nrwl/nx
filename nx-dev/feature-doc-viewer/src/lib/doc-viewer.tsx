@@ -72,14 +72,14 @@ export function DocViewer({
         title={vm.title + ' | Nx'}
         description={
           vm.description ??
-          'Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution.'
+          'Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.'
         }
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: vm.title,
           description:
             vm.description ??
-            'Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution.',
+            'Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.',
           images: [
             {
               url: `https://nx.dev/images/open-graph/${router.asPath
@@ -96,79 +96,95 @@ export function DocViewer({
           siteName: 'Nx',
           type: 'website',
         }}
+        additionalMetaTags={
+          metadata.keywords
+            ? [
+                {
+                  name: 'keywords',
+                  content: metadata.keywords,
+                },
+              ]
+            : []
+        }
       />
 
       <div className="mx-auto w-full grow items-stretch px-4 sm:px-6 lg:px-8 2xl:max-w-6xl">
         <div id="content-wrapper" className="w-full flex-auto flex-col">
           <div className="mb-6 pt-8">
-            <Breadcrumbs path={router.asPath} />
+            <Breadcrumbs document={document} />
           </div>
           <div className="min-w-0 flex-auto pb-24 lg:pb-16">
             {/*MAIN CONTENT*/}
-            <div className="relative">
-              <div
-                ref={ref}
-                data-document="main"
-                className={cx(
-                  'prose prose-slate dark:prose-invert w-full max-w-none 2xl:max-w-4xl',
-                  { 'xl:max-w-2xl': !hideTableOfContent }
-                )}
-              >
-                {vm.content}
-              </div>
-              {!hideTableOfContent && (
+            <div className="justify-between xl:flex">
+              <div className="relative">
                 <div
+                  ref={ref}
+                  data-document="main"
                   className={cx(
-                    'fixed right-[max(2rem,calc(50%-55rem))] top-48 z-20 hidden w-60 overflow-y-auto bg-white text-sm xl:block dark:bg-slate-900'
+                    'prose prose-slate dark:prose-invert w-full max-w-none 2xl:max-w-4xl',
+                    { 'xl:max-w-2xl': !hideTableOfContent }
                   )}
                 >
-                  <TableOfContents
-                    elementRef={ref}
-                    path={router.basePath}
-                    headings={vm.tableOfContent}
-                    document={document}
+                  {vm.content}
+                </div>
+              </div>
+              {!hideTableOfContent && (
+                <div>
+                  <div
+                    className={cx(
+                      'sticky top-2 z-20 ml-[max(2rem,calc(50%-8rem))] hidden w-60 space-y-6 overflow-y-auto bg-white text-sm xl:block dark:bg-slate-900'
+                    )}
                   >
-                    <>
-                      {widgetData.githubStarsCount > 0 && (
+                    {widgetData.githubStarsCount > 0 && (
+                      <div className="px-6">
                         <GitHubStarWidget
                           starsCount={widgetData.githubStarsCount}
                         />
-                      )}
-                      <div className="my-4 flex items-center justify-center space-x-2 rounded-md border border-slate-200 pl-2 pr-2 hover:border-slate-400 dark:border-slate-700 print:hidden">
-                        <button
-                          type="button"
-                          aria-label="Give feedback on this page"
-                          title="Give feedback of this page"
-                          className="whitespace-nowrap border-transparent px-4 py-2 font-bold hover:text-slate-900 dark:hover:text-sky-400"
-                          onClick={() => setShowFeedback(true)}
-                        >
-                          Feedback
-                        </button>
                       </div>
-                      <div className="my-4 flex items-center justify-center space-x-2 rounded-md border border-slate-200 pl-2 pr-2 hover:border-slate-400 dark:border-slate-700 print:hidden">
-                        {document.filePath ? (
-                          <a
-                            aria-hidden="true"
-                            href={[
-                              'https://github.com/nrwl/nx/blob/master',
-                              document.filePath
-                                .replace(
-                                  'nx-dev/nx-dev/public/documentation',
-                                  'docs'
-                                )
-                                .replace('public/documentation', 'docs'),
-                            ].join('/')}
-                            target="_blank"
-                            rel="noreferrer"
-                            title="Edit this page on GitHub"
+                    )}
+                    <TableOfContents
+                      elementRef={ref}
+                      path={router.basePath}
+                      headings={vm.tableOfContent}
+                      document={document}
+                    >
+                      <>
+                        <div className="my-4 flex items-center justify-center space-x-2 rounded-md border border-slate-200 pl-2 pr-2 hover:border-slate-400 dark:border-slate-700 print:hidden">
+                          <button
+                            type="button"
+                            aria-label="Give feedback on this page"
+                            title="Give feedback of this page"
                             className="whitespace-nowrap border-transparent px-4 py-2 font-bold hover:text-slate-900 dark:hover:text-sky-400"
+                            onClick={() => setShowFeedback(true)}
                           >
-                            Edit this page
-                          </a>
-                        ) : null}
-                      </div>
-                    </>
-                  </TableOfContents>
+                            Feedback
+                          </button>
+                        </div>
+                        <div className="my-4 flex items-center justify-center space-x-2 rounded-md border border-slate-200 pl-2 pr-2 hover:border-slate-400 dark:border-slate-700 print:hidden">
+                          {document.filePath ? (
+                            <a
+                              aria-hidden="true"
+                              href={[
+                                'https://github.com/nrwl/nx/blob/master',
+                                document.filePath
+                                  .replace(
+                                    'nx-dev/nx-dev/public/documentation',
+                                    'docs'
+                                  )
+                                  .replace('public/documentation', 'docs'),
+                              ].join('/')}
+                              target="_blank"
+                              rel="noreferrer"
+                              title="Edit this page on GitHub"
+                              className="whitespace-nowrap border-transparent px-4 py-2 font-bold hover:text-slate-900 dark:hover:text-sky-400"
+                            >
+                              Edit this page
+                            </a>
+                          ) : null}
+                        </div>
+                      </>
+                    </TableOfContents>
+                  </div>
                 </div>
               )}
             </div>

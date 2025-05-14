@@ -19,6 +19,7 @@ import { UsersFacade } from './+state/users.facade';
   imports: [
     BrowserModule,
     RouterModule.forRoot(appRoutes),
+    EffectsModule.forRoot([]),
     StoreModule.forRoot(
       {},
       {
@@ -29,7 +30,6 @@ import { UsersFacade } from './+state/users.facade';
         },
       }
     ),
-    EffectsModule.forRoot([]),
     StoreRouterConnectingModule.forRoot(),
     StoreModule.forFeature(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
     EffectsModule.forFeature([UsersEffects]),
@@ -90,6 +90,7 @@ import { UsersEffects } from './+state/users.effects';
   imports: [
     BrowserModule,
     RouterModule.forRoot(appRoutes),
+    EffectsModule.forRoot([]),
     StoreModule.forRoot(
       {},
       {
@@ -100,7 +101,6 @@ import { UsersEffects } from './+state/users.effects';
         },
       }
     ),
-    EffectsModule.forRoot([]),
     StoreRouterConnectingModule.forRoot(),
     StoreModule.forFeature(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
     EffectsModule.forFeature([UsersEffects]),
@@ -373,6 +373,7 @@ import { StoreRouterConnectingModule } from '@ngrx/router-store';
   imports: [
     BrowserModule,
     RouterModule.forRoot(appRoutes),
+    EffectsModule.forRoot([]),
     StoreModule.forRoot({}, {
       metaReducers: [],
       runtimeChecks: {
@@ -380,7 +381,6 @@ import { StoreRouterConnectingModule } from '@ngrx/router-store';
         strictStateImmutability: true
       }
     }),
-    EffectsModule.forRoot([]),
     StoreRouterConnectingModule.forRoot(),
   ],
   providers: [],
@@ -399,14 +399,16 @@ import { appRoutes } from './app.routes';
 import { NxWelcomeComponent } from './nx-welcome.component';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
-import { StoreRouterConnectingModule } from '@ngrx/router-store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+import { StoreRouterConnectingModule } from '@ngrx/router-store';
 
 @NgModule({
   declarations: [AppComponent, NxWelcomeComponent],
   imports: [
     BrowserModule,
     RouterModule.forRoot(appRoutes),
+    EffectsModule.forRoot([]),
+    StoreDevtoolsModule.instrument({ logOnly: !isDevMode() }),
     StoreModule.forRoot({}, {
       metaReducers: [],
       runtimeChecks: {
@@ -414,9 +416,7 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
         strictStateImmutability: true
       }
     }),
-    EffectsModule.forRoot([]),
     StoreRouterConnectingModule.forRoot(),
-    StoreDevtoolsModule.instrument({ logOnly: !isDevMode() }),
   ],
   providers: [],
   bootstrap: [AppComponent],
@@ -436,7 +436,7 @@ import { UsersEffects } from './+state/users.effects';
 import { UsersFacade } from './+state/users.facade';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),UsersFacade,provideEffects(),provideStore(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
+  providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),UsersFacade,provideStore(),provideEffects(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
 };
 "
 `;
@@ -482,7 +482,7 @@ import * as fromUsers from './+state/users.reducer';
 import { UsersEffects } from './+state/users.effects';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),provideEffects(),provideStore(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
+  providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),provideStore(),provideEffects(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
 };
 "
 `;
@@ -729,7 +729,7 @@ import { provideStore } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideEffects(),provideStore(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
+  providers: [provideStore(),provideEffects(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
 };
 "
 `;
@@ -743,7 +743,7 @@ import { provideEffects } from '@ngrx/effects';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideStoreDevtools({ logOnly: !isDevMode() }),provideEffects(),provideStore(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
+  providers: [provideStore(),provideStoreDevtools({ logOnly: !isDevMode() }),provideEffects(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
 };
 "
 `;

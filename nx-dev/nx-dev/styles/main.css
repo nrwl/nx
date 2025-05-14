@@ -52,21 +52,24 @@ pre,
 iframe[src*='youtube'] {
   aspect-ratio: 16 / 9;
 }
-.prose iframe,
-.prose img {
+
+.prose iframe:not(.not-prose):not(.not-prose *),
+.prose img:not(.not-prose):not(.not-prose *) {
   display: block;
   margin: 2rem auto;
 }
-.prose iframe {
+
+.prose iframe:not(.not-prose):not(.not-prose *) {
   width: 100%;
   max-width: 560px;
 }
-.prose img {
+
+.prose img:not(.not-prose):not(.not-prose *) {
   width: max-content;
 }
 
-.prose iframe[src^="https://staging.nx.app"],
-.prose iframe[src^="https://nx.app"]
+.prose iframe:not(.not-prose):not(.not-prose *)[src^="https://staging.nx.app"],
+.prose iframe:not(.not-prose):not(.not-prose *)[src^="https://nx.app"]
 {
   height: 80vh;
   max-width: 100%;
@@ -254,4 +257,11 @@ html.dark .adaptive-icon {
   to {
     transform: translateY(0);
   }
+}
+
+.accordion {
+  border: none;
+}
+.accordion summary h3 {
+  display: inline-block;
 }

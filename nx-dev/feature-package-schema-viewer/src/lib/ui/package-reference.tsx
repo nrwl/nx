@@ -53,6 +53,10 @@ function DocumentListItem({
   );
 }
 
+interface MigrationFileMetadata extends FileMetadata {
+  version: string;
+}
+
 export function SchemaList({
   files,
   type,

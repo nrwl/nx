@@ -3,4 +3,7 @@ export interface Schema {
   skipInstall?: boolean;
   skipPackageJson?: boolean;
   keepExistingVersions?: boolean;
+  /* internal */
+  addPlugin?: boolean;
+  updatePackageScripts?: boolean;
 }

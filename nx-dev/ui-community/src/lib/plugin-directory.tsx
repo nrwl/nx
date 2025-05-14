@@ -6,14 +6,15 @@ import {
   StarIcon,
 } from '@heroicons/react/24/outline';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
-import { PluginCard, SectionHeading } from '@nx/nx-dev/ui-common';
-import { useState } from 'react';
+import { PluginCard, PluginType, SectionHeading } from '@nx/nx-dev/ui-common';
+import { useParams } from 'next/navigation';
+import { useEffect, useState, useRef, ElementRef } from 'react';
 
 interface Plugin {
   description: string;
   name: string;
   url: string;
-  isOfficial: boolean;
+  pluginType: PluginType;
   lastPublishedDate?: string;
   npmDownloads?: string;
   githubStars?: string;
@@ -36,11 +37,38 @@ interface Modifiers {
   orderDirection: 'ASC' | 'DESC';
 }
 
+const useUrlHash = (initialValue: string) => {
+  const [hash, setHash] = useState(initialValue);
+
+  const updateHash = (str: string) => {
+    if (!str) return;
+    setHash(str.split('#')[1]);
+  };
+
+  const params = useParams();
+
+  useEffect(() => {
+    updateHash(window.location.hash);
+  }, [params]);
+
+  return hash;
+};
+
 export function PluginDirectory({
   pluginList,
 }: {
   pluginList: Plugin[];
 }): JSX.Element {
+  const hash = decodeURIComponent(useUrlHash(''));
+  const searchRef = useRef<ElementRef<'input'>>(null);
+  useEffect(() => {
+    if (searchRef.current) {
+      // Set input value and trigger the onChange event
+      searchRef.current.setAttribute('value', hash);
+      const event = new Event('input', { bubbles: true });
+      searchRef.current.dispatchEvent(event);
+    }
+  }, [searchRef, hash]);
   const [modifiers, setModifiers] = useState<Modifiers>({
     term: '',
     officialStatus: undefined,
@@ -79,6 +107,7 @@ export function PluginDirectory({
             </div>
             <input
               id="search"
+              ref={searchRef}
               name="search"
               className="block w-full rounded-md border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-slate-500 transition focus:placeholder-slate-400 dark:border-slate-900 dark:bg-slate-700"
               placeholder="Quick search"
@@ -231,7 +260,7 @@ export function PluginDirectory({
               key={plugin.name}
               name={plugin.name}
               description={plugin.description}
-              isOfficial={plugin.isOfficial}
+              pluginType={plugin.pluginType}
               lastPublishedDate={plugin.lastPublishedDate}
               npmDownloads={plugin.npmDownloads}
               githubStars={plugin.githubStars}

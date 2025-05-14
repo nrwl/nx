@@ -1,17 +1,17 @@
-<% if ( unitTestRunner === 'vitest' ) { %>
+<%_ if ( unitTestRunner === 'vitest' ) { _%>
 import { describe, it, expect } from 'vitest'
-<% } %><% if( routing ) { %>
+<%_ } _%><%_ if( routing ) { _%>
 import router from '../router';
-<% } %>
+<%_ } _%>
 import { mount } from '@vue/test-utils'
 import App from './App.vue';
 
 describe('App', () => {
   it('renders properly', async () => {
     const wrapper = mount(App, <% if( routing ) { %>{ global: { plugins: [router] }}<% } else { %>{}<% } %>)
-    <% if( routing ) { %>
+    <%_ if( routing ) { _%>
     await router.isReady();
-    <% } %>
+    <%_ } _%>
     expect(wrapper.text()).toContain('Welcome <%= title %> 👋')
   })
 });

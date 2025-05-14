@@ -12,8 +12,7 @@ import {
 } from './nx-deps-cache';
 import { applyImplicitDependencies } from './utils/implicit-project-dependencies';
 import { normalizeProjectNodes } from './utils/normalize-project-nodes';
-import { LoadedNxPlugin } from './plugins/internal-api';
-import { isNxPluginV1, isNxPluginV2 } from './plugins/utils';
+import type { LoadedNxPlugin } from './plugins/loaded-nx-plugin';
 import {
   CreateDependenciesContext,
   CreateMetadataContext,
@@ -32,7 +31,6 @@ import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
 import { existsSync } from 'fs';
 import { PackageJson } from '../utils/package-json';
-import { output } from '../utils/output';
 import { NxWorkspaceFilesExternals } from '../native';
 import {
   AggregateProjectGraphError,
@@ -40,13 +38,13 @@ import {
   isAggregateProjectGraphError,
   isWorkspaceValidityError,
   ProcessDependenciesError,
-  ProcessProjectGraphError,
   WorkspaceValidityError,
 } from './error-types';
 import {
   ConfigurationSourceMaps,
   mergeMetadata,
 } from './utils/project-configuration-utils';
+import { DelayedSpinner } from '../utils/delayed-spinner';
 
 let storedFileMap: FileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;
@@ -75,6 +73,16 @@ export function getFileMap(): {
   }
 }
 
+export function hydrateFileMap(
+  fileMap: FileMap,
+  allWorkspaceFiles: FileData[],
+  rustReferences: NxWorkspaceFilesExternals
+) {
+  storedFileMap = fileMap;
+  storedAllWorkspaceFiles = allWorkspaceFiles;
+  storedRustReferences = rustReferences;
+}
+
 export async function buildProjectGraphUsingProjectFileMap(
   projectRootMap: Record<string, ProjectConfiguration>,
   externalNodes: Record<string, ProjectGraphExternalNode>,
@@ -99,10 +107,7 @@ export async function buildProjectGraphUsingProjectFileMap(
   }
 
   const errors: Array<
-    | CreateMetadataError
-    | ProcessDependenciesError
-    | ProcessProjectGraphError
-    | WorkspaceValidityError
+    CreateMetadataError | ProcessDependenciesError | WorkspaceValidityError
   > = [];
 
   const nxJson = readNxJson();
@@ -216,8 +221,6 @@ async function buildProjectGraphUsingContext(
   plugins: LoadedNxPlugin[],
   sourceMap: ConfigurationSourceMaps
 ) {
-  performance.mark('build project graph:start');
-
   const builder = new ProjectGraphBuilder(null, ctx.fileMap.projectFileMap);
   builder.setVersion(projectGraphVersion);
   for (const node in knownExternalNodes) {
@@ -268,13 +271,6 @@ async function buildProjectGraphUsingContext(
 
   const finalGraph = updatedBuilder.getUpdatedProjectGraph();
 
-  performance.mark('build project graph:end');
-  performance.measure(
-    'build project graph',
-    'build project graph:start',
-    'build project graph:end'
-  );
-
   if (!error) {
     return finalGraph;
   } else {
@@ -306,52 +302,7 @@ async function updateProjectGraphWithPlugins(
   sourceMap: ConfigurationSourceMaps
 ) {
   let graph = initProjectGraph;
-  const errors: Array<
-    ProcessDependenciesError | ProcessProjectGraphError | CreateMetadataError
-  > = [];
-  for (const plugin of plugins) {
-    try {
-      if (
-        isNxPluginV1(plugin) &&
-        plugin.processProjectGraph &&
-        !plugin.createDependencies
-      ) {
-        output.warn({
-          title: `${plugin.name} is a v1 plugin.`,
-          bodyLines: [
-            'Nx has recently released a v2 model for project graph plugins. The `processProjectGraph` method is deprecated. Plugins should use some combination of `createNodes` and `createDependencies` instead.',
-          ],
-        });
-        performance.mark(`${plugin.name}:processProjectGraph - start`);
-        graph = await plugin.processProjectGraph(graph, {
-          ...context,
-          projectsConfigurations: {
-            projects: context.projects,
-            version: 2,
-          },
-          fileMap: context.fileMap.projectFileMap,
-          filesToProcess: context.filesToProcess.projectFileMap,
-          workspace: {
-            version: 2,
-            projects: context.projects,
-            ...context.nxJsonConfiguration,
-          },
-        });
-        performance.mark(`${plugin.name}:processProjectGraph - end`);
-        performance.measure(
-          `${plugin.name}:processProjectGraph`,
-          `${plugin.name}:processProjectGraph - start`,
-          `${plugin.name}:processProjectGraph - end`
-        );
-      }
-    } catch (e) {
-      errors.push(
-        new ProcessProjectGraphError(plugin.name, {
-          cause: e,
-        })
-      );
-    }
-  }
+  const errors: Array<ProcessDependenciesError | CreateMetadataError> = [];
 
   const builder = new ProjectGraphBuilder(
     graph,
@@ -360,16 +311,55 @@ async function updateProjectGraphWithPlugins(
   );
 
   const createDependencyPlugins = plugins.filter(
-    (plugin) => isNxPluginV2(plugin) && plugin.createDependencies
+    (plugin) => plugin.createDependencies
   );
+  performance.mark('createDependencies:start');
+
+  let spinner: DelayedSpinner;
+  const inProgressPlugins = new Set<string>();
+
+  function updateSpinner() {
+    if (!spinner || inProgressPlugins.size === 0) {
+      return;
+    }
+
+    if (inProgressPlugins.size === 1) {
+      spinner.setMessage(
+        `Creating project graph dependencies with ${
+          inProgressPlugins.values().next().value
+        }`
+      );
+    } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      spinner.setMessage(
+        [
+          `Creating project graph dependencies with ${inProgressPlugins.size} plugins`,
+          ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
+        ].join('\n')
+      );
+    } else {
+      spinner.setMessage(
+        `Creating project graph dependencies with ${inProgressPlugins.size} plugins`
+      );
+    }
+  }
+
+  spinner = new DelayedSpinner(
+    `Creating project graph dependencies with ${plugins.length} plugins`
+  );
+
   await Promise.all(
     createDependencyPlugins.map(async (plugin) => {
       performance.mark(`${plugin.name}:createDependencies - start`);
-
+      inProgressPlugins.add(plugin.name);
       try {
-        const dependencies = await plugin.createDependencies({
-          ...context,
-        });
+        const dependencies = await plugin
+          .createDependencies({
+            ...context,
+          })
+          .finally(() => {
+            inProgressPlugins.delete(plugin.name);
+            updateSpinner();
+          });
 
         for (const dep of dependencies) {
           builder.addDependency(
@@ -395,6 +385,13 @@ async function updateProjectGraphWithPlugins(
       );
     })
   );
+  performance.mark('createDependencies:end');
+  performance.measure(
+    `createDependencies`,
+    `createDependencies:start`,
+    `createDependencies:end`
+  );
+  spinner?.cleanup();
 
   const graphWithDeps = builder.getUpdatedProjectGraph();
 
@@ -438,15 +435,51 @@ export async function applyProjectMetadata(
   const results: { metadata: ProjectsMetadata; pluginName: string }[] = [];
   const errors: CreateMetadataError[] = [];
 
+  performance.mark('createMetadata:start');
+  let spinner: DelayedSpinner;
+  const inProgressPlugins = new Set<string>();
+
+  function updateSpinner() {
+    if (!spinner || inProgressPlugins.size === 0) {
+      return;
+    }
+
+    if (inProgressPlugins.size === 1) {
+      spinner.setMessage(
+        `Creating project metadata with ${
+          inProgressPlugins.values().next().value
+        }`
+      );
+    } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      spinner.setMessage(
+        [
+          `Creating project metadata with ${inProgressPlugins.size} plugins`,
+          ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
+        ].join('\n')
+      );
+    } else {
+      spinner.setMessage(
+        `Creating project metadata with ${inProgressPlugins.size} plugins`
+      );
+    }
+  }
+
+  spinner = new DelayedSpinner(
+    `Creating project metadata with ${plugins.length} plugins`
+  );
+
   const promises = plugins.map(async (plugin) => {
-    if (isNxPluginV2(plugin) && plugin.createMetadata) {
+    if (plugin.createMetadata) {
       performance.mark(`${plugin.name}:createMetadata - start`);
+      inProgressPlugins.add(plugin.name);
       try {
-        const metadata = await plugin.createMetadata(graph, undefined, context);
+        const metadata = await plugin.createMetadata(graph, context);
         results.push({ metadata, pluginName: plugin.name });
       } catch (e) {
         errors.push(new CreateMetadataError(e, plugin.name));
       } finally {
+        inProgressPlugins.delete(plugin.name);
+        updateSpinner();
         performance.mark(`${plugin.name}:createMetadata - end`);
         performance.measure(
           `${plugin.name}:createMetadata`,
@@ -458,6 +491,8 @@ export async function applyProjectMetadata(
   });
 
   await Promise.all(promises);
+
+  spinner?.cleanup();
 
   for (const { metadata: projectsMetadata, pluginName } of results) {
     for (const project in projectsMetadata) {
@@ -474,6 +509,13 @@ export async function applyProjectMetadata(
       }
     }
   }
+
+  performance.mark('createMetadata:end');
+  performance.measure(
+    `createMetadata`,
+    `createMetadata:start`,
+    `createMetadata:end`
+  );
 
   return { errors, graph };
 }

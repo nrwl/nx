@@ -37,6 +37,25 @@ describe('Jest Executor', () => {
     mockContext = {
       root: '/root',
       projectName: 'proj',
+      projectGraph: {
+        nodes: {
+          proj: {
+            type: 'lib',
+            name: 'proj',
+            data: {
+              root: 'proj',
+              targets: {
+                test: {
+                  executor: '@nx/jest:jest',
+                },
+              },
+            },
+          },
+        },
+        dependencies: {
+          proj: [],
+        },
+      },
       projectsConfigurations: {
         version: 2,
         projects: {
@@ -108,6 +127,7 @@ describe('Jest Executor', () => {
         },
         mockContext
       );
+      expect(process.argv).toContain('--group=core');
       expect(runCLI).toHaveBeenCalledWith(
         expect.objectContaining({
           _: [],
@@ -117,6 +137,7 @@ describe('Jest Executor', () => {
         }),
         ['/root/jest.config.js']
       );
+      process.argv.pop(); // clean extra arg.
     });
 
     it('should send appropriate options to jestCLI when testFile is specified', async () => {

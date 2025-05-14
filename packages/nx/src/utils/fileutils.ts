@@ -9,7 +9,8 @@ import {
   mkdirSync,
   statSync,
   existsSync,
-} from 'fs';
+} from 'node:fs';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname } from 'path';
 import * as tar from 'tar-stream';
 import { createGunzip } from 'zlib';
@@ -93,6 +94,26 @@ export function writeJsonFile<T extends object = object>(
     ? `${serializedJson}\n`
     : serializedJson;
   writeFileSync(path, content, { encoding: 'utf-8' });
+}
+
+/**
+ * Serializes the given data to JSON and writes it to a file asynchronously.
+ *
+ * @param path A path to a file.
+ * @param data data which should be serialized to JSON and written to the file
+ * @param options JSON serialize options
+ */
+export async function writeJsonFileAsync<T extends object = object>(
+  path: string,
+  data: T,
+  options?: JsonWriteOptions
+): Promise<void> {
+  await mkdir(dirname(path), { recursive: true });
+  const serializedJson = serializeJson(data, options);
+  const content = options?.appendNewLine
+    ? `${serializedJson}\n`
+    : serializedJson;
+  await writeFile(path, content, { encoding: 'utf-8' });
 }
 
 /**

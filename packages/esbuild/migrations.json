@@ -1,36 +1,4 @@
 {
-  "generators": {
-    "update-16-0-0-add-nx-packages": {
-      "cli": "nx",
-      "version": "16.0.0-beta.1",
-      "description": "Replace @nrwl/esbuild with @nx/esbuild",
-      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
-    },
-    "update-16-0-1-set-thirdparty-true": {
-      "version": "16.0.1-beta.0",
-      "description": "Set thirdParty to true to maintain the existing behavior of bundling dependencies.",
-      "cli": "nx",
-      "implementation": "./src/migrations/update-16-0-1-set-thirdparty-true/update-16-0-1-set-thirdparty-true"
-    }
-  },
-  "packageJsonUpdates": {
-    "16.0.0": {
-      "version": "16.0.0-beta.5",
-      "packages": {
-        "esbuild": {
-          "version": "0.17.17",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "16.8.0": {
-      "version": "16.8.0-beta.2",
-      "packages": {
-        "esbuild": {
-          "version": "^0.19.2",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    }
-  }
+  "generators": {},
+  "packageJsonUpdates": {}
 }

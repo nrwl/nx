@@ -5,15 +5,15 @@ import { Schema } from './schema';
 import { Schema as remoteSchma } from '../remote/schema';
 import { federateModuleGenerator } from './federate-module';
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
-import { Linter } from '@nx/eslint';
 import remoteGenerator from '../remote/remote';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 
 describe('federate-module', () => {
   let schema: Schema = {
     name: 'my-federated-module',
-    remote: 'my-remote',
-    path: 'apps/my-remote/src/my-federated-module.ts',
+    remote: 'myremote',
+    path: 'apps/myremote/src/my-federated-module.ts',
+    remoteDirectory: 'apps/myremote',
   };
 
   describe('no remote', () => {
@@ -28,41 +28,45 @@ describe('federate-module', () => {
 
       const projects = getProjects(tree);
 
-      expect(projects.get('my-remote').root).toEqual('apps/my-remote');
+      expect(projects.get('myremote').root).toEqual('apps/myremote');
 
-      expect(tree.exists('apps/my-remote/module-federation.config.ts')).toBe(
+      expect(tree.exists('apps/myremote/module-federation.config.ts')).toBe(
         true
       );
 
       const content = tree.read(
-        'apps/my-remote/module-federation.config.ts',
+        'apps/myremote/module-federation.config.ts',
         'utf-8'
       );
       expect(content).toContain(
-        `'./my-federated-module': 'apps/my-remote/src/my-federated-module.ts'`
+        `'./my-federated-module': 'apps/myremote/src/my-federated-module.ts'`
       );
 
       const tsconfig = JSON.parse(tree.read('tsconfig.base.json', 'utf-8'));
       expect(
-        tsconfig.compilerOptions.paths['my-remote/my-federated-module']
-      ).toEqual(['apps/my-remote/src/my-federated-module.ts']);
+        tsconfig.compilerOptions.paths['myremote/my-federated-module']
+      ).toEqual(['apps/myremote/src/my-federated-module.ts']);
     });
   });
 
   describe('with remote', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     let remoteSchema: remoteSchma = {
-      name: 'my-remote',
+      name: 'myremote',
+      directory: 'myremote',
       e2eTestRunner: E2eTestRunner.Cypress,
       skipFormat: true,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       style: 'css',
       unitTestRunner: UnitTestRunner.Jest,
     };
 
     beforeEach(async () => {
       remoteSchema.name = uniq('remote');
-      await remoteGenerator(tree, remoteSchema);
+      await remoteGenerator(tree, {
+        ...remoteSchema,
+        directory: `apps/${remoteSchema.name}`,
+      });
       tree.write(schema.path, `export const isEven = true;`);
     });
 
@@ -73,7 +77,7 @@ describe('federate-module', () => {
       );
 
       expect(content).not.toContain(
-        `'./my-federated-module': 'apps/my-remote/src/my-federated-module.ts'`
+        `'./my-federated-module': 'apps/myremote/src/my-federated-module.ts'`
       );
 
       await federateModuleGenerator(tree, {
@@ -87,7 +91,7 @@ describe('federate-module', () => {
         'utf-8'
       );
       expect(content).toContain(
-        `'./my-federated-module': 'apps/my-remote/src/my-federated-module.ts'`
+        `'./my-federated-module': 'apps/myremote/src/my-federated-module.ts'`
       );
 
       const tsconfig = JSON.parse(tree.read('tsconfig.base.json', 'utf-8'));
@@ -95,7 +99,7 @@ describe('federate-module', () => {
         tsconfig.compilerOptions.paths[
           `${remoteSchema.name}/my-federated-module`
         ]
-      ).toEqual(['apps/my-remote/src/my-federated-module.ts']);
+      ).toEqual(['apps/myremote/src/my-federated-module.ts']);
     });
   });
 });

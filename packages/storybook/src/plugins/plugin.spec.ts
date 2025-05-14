@@ -2,10 +2,10 @@ import { CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import type { StorybookConfig } from '@storybook/types';
 import { join } from 'node:path';
-import { createNodes } from './plugin';
+import { createNodesV2 } from './plugin';
 
 describe('@nx/storybook/plugin', () => {
-  let createNodesFunction = createNodes[1];
+  let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
   let tempFs: TempFs;
 
@@ -54,7 +54,7 @@ describe('@nx/storybook/plugin', () => {
     });
 
     const nodes = await createNodesFunction(
-      'my-app/.storybook/main.ts',
+      ['my-app/.storybook/main.ts'],
       {
         buildStorybookTargetName: 'build-storybook',
         staticStorybookTargetName: 'static-storybook',
@@ -64,32 +64,62 @@ describe('@nx/storybook/plugin', () => {
       context
     );
 
-    expect(nodes?.['projects']?.['my-app']?.targets).toBeDefined();
-    expect(
-      nodes?.['projects']?.['my-app']?.targets?.['build-storybook']
-    ).toMatchObject({
-      command: 'storybook build',
-      options: {
-        cwd: 'my-app',
-      },
-      cache: true,
-      outputs: [
-        '{workspaceRoot}/{projectRoot}/storybook-static',
-        '{options.output-dir}',
-        '{options.outputDir}',
-        '{options.o}',
-      ],
-      inputs: [
-        'production',
-        '^production',
-        { externalDependencies: ['storybook', '@storybook/test-runner'] },
-      ],
-    });
-    expect(
-      nodes?.['projects']?.['my-app']?.targets?.['serve-storybook']
-    ).toMatchObject({
-      command: 'storybook dev',
-    });
+    expect(nodes).toMatchInlineSnapshot(`
+      [
+        [
+          "my-app/.storybook/main.ts",
+          {
+            "projects": {
+              "my-app": {
+                "root": "my-app",
+                "targets": {
+                  "build-storybook": {
+                    "cache": true,
+                    "command": "storybook build",
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "storybook",
+                        ],
+                      },
+                    ],
+                    "options": {
+                      "cwd": "my-app",
+                    },
+                    "outputs": [
+                      "{projectRoot}/storybook-static",
+                      "{options.output-dir}",
+                      "{options.outputDir}",
+                      "{options.o}",
+                    ],
+                  },
+                  "serve-storybook": {
+                    "command": "storybook dev",
+                    "continuous": true,
+                    "options": {
+                      "cwd": "my-app",
+                    },
+                  },
+                  "static-storybook": {
+                    "continuous": true,
+                    "dependsOn": [
+                      "build-storybook",
+                    ],
+                    "executor": "@nx/web:file-server",
+                    "options": {
+                      "buildTarget": "build-storybook",
+                      "staticFilePath": "my-app/storybook-static",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
+      ]
+    `);
   });
 
   it('should create angular nodes', async () => {
@@ -104,7 +134,7 @@ describe('@nx/storybook/plugin', () => {
     });
 
     const nodes = await createNodesFunction(
-      'my-ng-app/.storybook/main.ts',
+      ['my-ng-app/.storybook/main.ts'],
       {
         buildStorybookTargetName: 'build-storybook',
         staticStorybookTargetName: 'static-storybook',
@@ -114,46 +144,68 @@ describe('@nx/storybook/plugin', () => {
       context
     );
 
-    expect(nodes?.['projects']?.['my-ng-app']?.targets).toBeDefined();
-    expect(
-      nodes?.['projects']?.['my-ng-app']?.targets?.['build-storybook']
-    ).toMatchObject({
-      executor: '@storybook/angular:build-storybook',
-      options: {
-        outputDir: 'my-ng-app/storybook-static',
-        configDir: 'my-ng-app/.storybook',
-        browserTarget: 'my-ng-app:build-storybook',
-        compodoc: false,
-      },
-      cache: true,
-      outputs: [
-        '{workspaceRoot}/{projectRoot}/storybook-static',
-        '{options.output-dir}',
-        '{options.outputDir}',
-        '{options.o}',
-      ],
-      inputs: [
-        'production',
-        '^production',
-        {
-          externalDependencies: [
-            'storybook',
-            '@storybook/angular',
-            '@storybook/test-runner',
-          ],
-        },
-      ],
-    });
-    expect(
-      nodes?.['projects']?.['my-ng-app']?.targets?.['serve-storybook']
-    ).toMatchObject({
-      executor: '@storybook/angular:start-storybook',
-      options: {
-        browserTarget: 'my-ng-app:build-storybook',
-        configDir: 'my-ng-app/.storybook',
-        compodoc: false,
-      },
-    });
+    expect(nodes).toMatchInlineSnapshot(`
+      [
+        [
+          "my-ng-app/.storybook/main.ts",
+          {
+            "projects": {
+              "my-ng-app": {
+                "root": "my-ng-app",
+                "targets": {
+                  "build-storybook": {
+                    "cache": true,
+                    "executor": "@storybook/angular:build-storybook",
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "storybook",
+                          "@storybook/angular",
+                        ],
+                      },
+                    ],
+                    "options": {
+                      "browserTarget": "my-ng-app:build-storybook",
+                      "compodoc": false,
+                      "configDir": "my-ng-app/.storybook",
+                      "outputDir": "my-ng-app/storybook-static",
+                    },
+                    "outputs": [
+                      "{projectRoot}/storybook-static",
+                      "{options.output-dir}",
+                      "{options.outputDir}",
+                      "{options.o}",
+                    ],
+                  },
+                  "serve-storybook": {
+                    "continuous": true,
+                    "executor": "@storybook/angular:start-storybook",
+                    "options": {
+                      "browserTarget": "my-ng-app:build-storybook",
+                      "compodoc": false,
+                      "configDir": "my-ng-app/.storybook",
+                    },
+                  },
+                  "static-storybook": {
+                    "continuous": true,
+                    "dependsOn": [
+                      "build-storybook",
+                    ],
+                    "executor": "@nx/web:file-server",
+                    "options": {
+                      "buildTarget": "build-storybook",
+                      "staticFilePath": "my-ng-app/storybook-static",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
+      ]
+    `);
   });
 
   it('should support main.js', async () => {
@@ -172,7 +224,7 @@ describe('@nx/storybook/plugin', () => {
     });
 
     const nodes = await createNodesFunction(
-      'my-react-lib/.storybook/main.js',
+      ['my-react-lib/.storybook/main.js'],
       {
         buildStorybookTargetName: 'build-storybook',
         staticStorybookTargetName: 'static-storybook',
@@ -182,32 +234,62 @@ describe('@nx/storybook/plugin', () => {
       context
     );
 
-    expect(nodes?.['projects']?.['my-react-lib']?.targets).toBeDefined();
-    expect(
-      nodes?.['projects']?.['my-react-lib']?.targets?.['build-storybook']
-    ).toMatchObject({
-      command: 'storybook build',
-      options: {
-        cwd: 'my-react-lib',
-      },
-      cache: true,
-      outputs: [
-        '{workspaceRoot}/{projectRoot}/storybook-static',
-        '{options.output-dir}',
-        '{options.outputDir}',
-        '{options.o}',
-      ],
-      inputs: [
-        'production',
-        '^production',
-        { externalDependencies: ['storybook', '@storybook/test-runner'] },
-      ],
-    });
-    expect(
-      nodes?.['projects']?.['my-react-lib']?.targets?.['serve-storybook']
-    ).toMatchObject({
-      command: 'storybook dev',
-    });
+    expect(nodes).toMatchInlineSnapshot(`
+      [
+        [
+          "my-react-lib/.storybook/main.js",
+          {
+            "projects": {
+              "my-react-lib": {
+                "root": "my-react-lib",
+                "targets": {
+                  "build-storybook": {
+                    "cache": true,
+                    "command": "storybook build",
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "storybook",
+                        ],
+                      },
+                    ],
+                    "options": {
+                      "cwd": "my-react-lib",
+                    },
+                    "outputs": [
+                      "{projectRoot}/storybook-static",
+                      "{options.output-dir}",
+                      "{options.outputDir}",
+                      "{options.o}",
+                    ],
+                  },
+                  "serve-storybook": {
+                    "command": "storybook dev",
+                    "continuous": true,
+                    "options": {
+                      "cwd": "my-react-lib",
+                    },
+                  },
+                  "static-storybook": {
+                    "continuous": true,
+                    "dependsOn": [
+                      "build-storybook",
+                    ],
+                    "executor": "@nx/web:file-server",
+                    "options": {
+                      "buildTarget": "build-storybook",
+                      "staticFilePath": "my-react-lib/storybook-static",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
+      ]
+    `);
   });
 
   function mockStorybookMainConfig(

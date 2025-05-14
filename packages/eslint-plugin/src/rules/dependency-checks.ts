@@ -27,6 +27,7 @@ export type Options = [
     ignoredFiles?: string[];
     includeTransitiveDependencies?: boolean;
     useLocalPathsForWorkspaceDependencies?: boolean;
+    runtimeHelpers?: string[];
   }
 ];
 
@@ -47,7 +48,6 @@ export default ESLintUtils.RuleCreator(
     type: 'suggestion',
     docs: {
       description: `Checks dependencies in project's package.json for version mismatches`,
-      recommended: 'recommended',
     },
     fixable: 'code',
     schema: [
@@ -62,6 +62,7 @@ export default ESLintUtils.RuleCreator(
           checkVersionMismatches: { type: 'boolean' },
           includeTransitiveDependencies: { type: 'boolean' },
           useLocalPathsForWorkspaceDependencies: { type: 'boolean' },
+          runtimeHelpers: { type: 'array', items: { type: 'string' } },
         },
         additionalProperties: false,
       },
@@ -83,6 +84,7 @@ export default ESLintUtils.RuleCreator(
       ignoredFiles: [],
       includeTransitiveDependencies: false,
       useLocalPathsForWorkspaceDependencies: false,
+      runtimeHelpers: [],
     },
   ],
   create(
@@ -97,6 +99,7 @@ export default ESLintUtils.RuleCreator(
         checkVersionMismatches,
         includeTransitiveDependencies,
         useLocalPathsForWorkspaceDependencies,
+        runtimeHelpers,
       },
     ]
   ) {
@@ -148,6 +151,7 @@ export default ESLintUtils.RuleCreator(
         includeTransitiveDependencies,
         ignoredFiles,
         useLocalPathsForWorkspaceDependencies,
+        runtimeHelpers,
       }
     );
     const expectedDependencyNames = Object.keys(npmDependencies);
@@ -214,7 +218,13 @@ export default ESLintUtils.RuleCreator(
         packageRange.startsWith('file:') ||
         npmDependencies[packageName] === '*' ||
         packageRange === '*' ||
-        packageRange === 'workspace:*' ||
+        packageRange.startsWith('workspace:') ||
+        /**
+         * Catalogs can be named, or left unnamed
+         * So just checking up until the : will catch both cases
+         * e.g. catalog:some-catalog or catalog:
+         */
+        packageRange.startsWith('catalog:') ||
         satisfies(npmDependencies[packageName], packageRange, {
           includePrerelease: true,
         })

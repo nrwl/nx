@@ -58,7 +58,6 @@ describe('nx release lock file updates', () => {
     process.env.SELECTED_PM = packageManager;
 
     newProject({
-      unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
       packageManager,
     });
@@ -75,7 +74,8 @@ describe('nx release lock file updates', () => {
     // Update pkg2 to depend on pkg1
     updateJson(`${pkg2}/package.json`, (json) => {
       json.dependencies ??= {};
-      json.dependencies[`@proj/${pkg1}`] = '0.0.0';
+      json.dependencies[`@proj/${pkg1}`] =
+        packageManager === 'pnpm' ? 'workspace:' : '0.0.0';
       return json;
     });
   };
@@ -227,7 +227,7 @@ describe('nx release lock file updates', () => {
     `);
   });
 
-  it('should update pnpm-lock.yaml when package manager is pnpm', async () => {
+  it('should not update pnpm-lock.yaml when package manager is pnpm (>= 9)', async () => {
     initializeProject('pnpm');
 
     updateFile(
@@ -253,7 +253,6 @@ describe('nx release lock file updates', () => {
       {project-name}/package.json
       {project-name}/package.json
       {project-name}/package.json
-      pnpm-lock.yaml
 
     `);
   });

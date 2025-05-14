@@ -3,7 +3,6 @@ import { ChildProcess, fork } from 'child_process';
 import { join } from 'path';
 
 import { podInstall } from '../../utils/pod-install-task';
-import { installAsync } from '../install/install.impl';
 import { ExpoPrebuildOptions } from './schema';
 
 export interface ExpoPrebuildOutput {
@@ -23,7 +22,10 @@ export default async function* prebuildExecutor(
     await prebuildAsync(context.root, projectRoot, options);
 
     if (options.install) {
-      await installAsync(workspaceRoot, {});
+      const {
+        installAsync,
+      } = require('@expo/cli/build/src/install/installAsync');
+      await installAsync([], {});
       if (options.platform === 'ios') {
         podInstall(join(context.root, projectRoot, 'ios'));
       }

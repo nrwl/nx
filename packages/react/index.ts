@@ -1,7 +1,6 @@
 import { NxReactWebpackPlugin as _NxReactWebpackPlugin } from './plugins/nx-react-webpack-plugin/nx-react-webpack-plugin';
 
-// TODO(v20): Remove this in favor of deep imports in order to load configs faster (150-200ms faster).
-/** @deprecated Use '@nx/react/webpack-plugin' instead. */
+/** @deprecated Use '@nx/react/webpack-plugin' instead, which can improve graph creation by 150-200ms per file. */
 export const NxReactWebpackPlugin = _NxReactWebpackPlugin;
 
 export {
@@ -14,7 +13,6 @@ export { reactDomVersion, reactVersion } from './src/utils/versions';
 export { applicationGenerator } from './src/generators/application/application';
 export { componentGenerator } from './src/generators/component/component';
 export { hookGenerator } from './src/generators/hook/hook';
-export { componentCypressGenerator } from './src/generators/component-cypress-spec/component-cypress-spec';
 export { componentStoryGenerator } from './src/generators/component-story/component-story';
 export { libraryGenerator } from './src/generators/library/library';
 export { reactInitGenerator } from './src/generators/init/init';

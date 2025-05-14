@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "InferTargets",
+  "title": "",
+  "type": "object",
+  "description": "Convert Nx projects to use inferred targets.",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The project to convert to use inferred targets.",
+      "x-priority": "important"
+    },
+    "plugins": {
+      "type": "array",
+      "description": "The plugins used to infer targets. For example @nx/eslint or @nx/jest",
+      "items": {
+        "type": "string"
+      }
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Whether to format files.",
+      "default": false
+    }
+  }
+}

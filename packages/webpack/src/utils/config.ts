@@ -1,11 +1,13 @@
 import {
   ExecutorContext,
   readCachedProjectGraph,
+  readProjectsConfigurationFromProjectGraph,
   workspaceRoot,
 } from '@nx/devkit';
 import { Configuration } from 'webpack';
 
 import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';
+import { readNxJson } from 'nx/src/config/configuration';
 
 export const nxWebpackComposablePlugin = 'nxWebpackComposablePlugin';
 
@@ -97,11 +99,15 @@ function ensureNxWebpackExecutionContext(ctx: NxWebpackExecutionContext): void {
     outputPath: undefined,
     tsConfig: undefined,
     outputFileName: undefined,
+    useTsconfigPaths: undefined,
   };
   ctx.context ??= {
     projectName,
     targetName,
     configurationName,
+    projectsConfigurations:
+      readProjectsConfigurationFromProjectGraph(projectGraph),
+    nxJsonConfiguration: readNxJson(workspaceRoot),
     cwd: process.cwd(),
     root: workspaceRoot,
     isVerbose: process.env['NX_VERBOSE_LOGGING'] === 'true',

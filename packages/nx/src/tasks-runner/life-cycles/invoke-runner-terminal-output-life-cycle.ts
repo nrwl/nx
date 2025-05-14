@@ -7,7 +7,6 @@ import { Task } from '../../config/task-graph';
 export class InvokeRunnerTerminalOutputLifeCycle implements LifeCycle {
   failedTasks = [] as Task[];
   cachedTasks = [] as Task[];
-  private taskResults = {} as Record<string, TaskResult>;
 
   constructor(private readonly tasks: Task[]) {}
 
@@ -56,7 +55,6 @@ export class InvokeRunnerTerminalOutputLifeCycle implements LifeCycle {
 
   endTasks(taskResults: TaskResult[]): void {
     for (let t of taskResults) {
-      this.taskResults[t.task.id] = t;
       if (t.status === 'failure') {
         this.failedTasks.push(t.task);
       } else if (t.status === 'local-cache') {
@@ -76,9 +74,5 @@ export class InvokeRunnerTerminalOutputLifeCycle implements LifeCycle {
   ) {
     const args = getPrintableCommandArgsForTask(task);
     output.logCommandOutput(args.join(' '), cacheStatus, terminalOutput);
-  }
-
-  getTaskResults() {
-    return this.taskResults;
   }
 }

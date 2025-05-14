@@ -89,10 +89,10 @@ describe('collapseExpandedOutputs', () => {
   it('should collapse long lists of files in nested directories', async () => {
     const outputs = [];
     // Create dist/apps/app1/n/m.js + dist/apps/app1/n/m.d.ts
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 6000; i++) {
       outputs.push(`dist/apps/app1/${i}.js`);
       outputs.push(`dist/apps/app1/${i}.d.ts`);
-      for (let j = 0; j < 6; j++) {
+      for (let j = 0; j < 600; j++) {
         outputs.push(`dist/apps/app1/${i}/${j}.js`);
         outputs.push(`dist/apps/app1/${i}/${j}.d.ts`);
       }

@@ -1,8 +1,14 @@
+// AI
+export * from './lib/ai/cursor';
+export * from './lib/ai/github-copilot';
+export * from './lib/ai/intellij-ai';
+
 // CI PROVIDERS
 export * from './lib/ci-providers/azure-devops';
 export * from './lib/ci-providers/bitbucket';
 export * from './lib/ci-providers/github';
 export * from './lib/ci-providers/gitlab';
+export * from './lib/ci-providers/google-cloud';
 export * from './lib/ci-providers/jenkins';
 export * from './lib/ci-providers/travis-ci';
 
@@ -47,6 +53,7 @@ export * from './lib/customers/paramount';
 export * from './lib/customers/payfit';
 export * from './lib/customers/paylocity';
 export * from './lib/customers/philips';
+export * from './lib/customers/plex';
 export * from './lib/customers/react-query';
 export * from './lib/customers/red-bull';
 export * from './lib/customers/redwood-js';
@@ -55,6 +62,7 @@ export * from './lib/customers/sainsburys';
 export * from './lib/customers/sentry';
 export * from './lib/customers/sharp';
 export * from './lib/customers/shopify';
+export * from './lib/customers/siriusxm';
 export * from './lib/customers/splice';
 // export * from './lib/customers/storybook'; // Present in "Technologies".
 export * from './lib/customers/strapi';
@@ -76,6 +84,18 @@ export * from './lib/editors/visual-studio-code';
 
 // OTHERS
 export * from './lib/monorepo-world';
+export * from './lib/others/amazon-s3';
+export * from './lib/others/linux';
+export * from './lib/others/min-io';
+export * from './lib/others/windows';
+
+// PARTNERS
+export * from './lib/partners/bitovi';
+export * from './lib/partners/callstack';
+export * from './lib/partners/hero-devs';
+export * from './lib/partners/push-based';
+export * from './lib/partners/e-square';
+export * from './lib/partners/briebug';
 
 // PODCASTS
 export * from './lib/podcasts/amazon-music';

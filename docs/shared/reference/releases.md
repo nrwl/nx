@@ -1,4 +1,15 @@
-# Releases
+---
+title: Nx Release Schedule and Support Policy
+description: Information about Nx package releases, including version support timelines, LTS policy, and deprecation guidelines for the nx and @nx/* packages.
+---
+
+# Releases of the nx and @nx/\* packages
+
+{% callout type="info" title="Looking for guidance on releasing your projects with Nx Release?" %}
+This page covers the releases of the Nx tooling itself. If you are looking for guidance on releasing your project with Nx Release, [see the documentation on managing releases](/features/manage-releases).
+{% /callout %}
+
+The `nx` package, and all packages under the `@nx` namespace which live alongside each other in the [https://github.com/nrwl/nx](https://github.com/nrwl/nx) repository, are released together in lockstep. You should always use matching versions of the `nx` package and the `@nx` packages, e.g. `nx@19.2.0` and `@nx/js@19.2.0` should be used together.
 
 Major Nx versions are released as the _latest_ every six months, typically around April and October.
 After each major version release, the _previous_ major version moves to long-term support (LTS) for 12 months, after
@@ -19,13 +30,14 @@ should use `nx migrate` to ensure that they stay on a supported version.
 The following are the currently supported major versions of Nx.
 
 | Version | Support Type | Release Date |
-| ------- | ------------ | ------------ |
-| v19     | Current      | 2024-05-06   |
-| v18\*   | LTS          | 2024-02-03   |
-| v17     | LTS          | 2023-10-19   |
-| v16     | LTS          | 2023-04-27   |
+| :-----: | :----------: | :----------: |
+|   v21   |   Current    |  2025-05-05  |
+|   v20   |     LTS      |  2024-10-06  |
+|   v19   |     LTS      |  2024-05-06  |
+|  v18\*  |     LTS      |  2024-02-03  |
+|   v17   |     LTS      |  2023-10-19  |
 
-**\*Note:** v18 is a special release and does not fit into the normal release cycle. Thus, v16 continues to be supported
+**\*Note:** v18 is a special release and does not fit into the normal release cycle. Thus, v17 continues to be supported
 according to schedule.
 
 ### Current vs LTS

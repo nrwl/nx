@@ -2,8 +2,9 @@
 title: State Management Nx React Native/Expo Apps with TanStack Query and Redux
 slug: 'state-management-nx-react-native-expo-apps-with-tanstack-query-and-redux'
 authors: [Emily Xiong]
-image: '/blog/images/2023-11-08/featured_img.webp'
+cover_image: '/blog/images/2023-11-08/featured_img.avif'
 tags: [nx, React Native]
+description: Implementing state management in Nx React Native/Expo apps with TanStack Query and Redux, covering setup, dev tools, and unit testing.
 ---
 
 There are currently countless numbers of state management libraries out there. This blog will show you how to use state management for React Native in Nx monorepo with [TanStack Query](https://tanstack.com/query/latest) (which happens to use [Nx on their repo](https://cloud.nx.app/orgs/6412ca9d1c251d000efa21ba/workspaces/6412c827e6da5d7b4a0b1fe3/overview)) and Redux.
@@ -88,7 +89,7 @@ const App = () => {
 export default App;
 ```
 
-Note: the [React Query Devtools](https://tanstack.com/query/latest/docs/framework/react/devtools) currently do not support react native, and it only works on the web, so there is a condition: `{ Platform.OS === ‘web’ && <ReactQueryDevtools />}.`
+Note: the [React Query Devtools](https://tanstack.com/query/latest/docs/framework/react/devtools) currently do not support react native, and it only works on the web, so there is a condition: `{ Platform.OS === 'web' && <ReactQueryDevtools />}.`
 
 For the react native apps, in order to use this tool, you need to use [react-native-web](https://necolas.github.io/react-native-web/) to interpolate your native app to the web app first.
 
@@ -96,22 +97,22 @@ If you open my Expo app on the web by running `nx start cats` and choose the opt
 
 ![](/blog/images/2023-11-08/bodyimg2.webp)
 
-Or you can run npx nx serve cats to launch the app in a web browser and debug from there.
+Or you can run `npx nx serve cats` to launch the app in a web browser and debug from there.
 
 ### Create a Query
 
 What is a query?
 
-> “A query is a declarative dependency on an asynchronous source of data that is tied to a unique key. A query can be used with any Promise-based method (including GET and POST methods) to fetch data from a server.” [(https://tanstack.com/query/v4/docs/react/guides/queries)](https://tanstack.com/query/v4/docs/react/guides/queries)
+> "A query is a declarative dependency on an asynchronous source of data that is tied to a unique key. A query can be used with any Promise-based method (including GET and POST methods) to fetch data from a server." [(https://tanstack.com/query/v4/docs/react/guides/queries)](https://tanstack.com/query/v4/docs/react/guides/queries)
 
-Now let’s add our first query. In this example, it will be added under `lib/queries` folder. To create a query to fetch a new fact about cats, run the command:
+Now let's add our first query. In this example, it will be added under `lib/queries` folder. To create a query to fetch a new fact about cats, run the command:
 
 ```shell
 # expo workspace
-npx nx generate @nx/expo:lib use-cat-fact --directory=queries
+npx nx generate @nx/expo:lib libs/queries/use-cat-fact
 
 # react-native workspace
-npx nx generate @nx/react-native:lib use-cat-fact --directory=queries
+npx nx generate @nx/react-native:lib libs/queries/use-cat-fact
 ```
 
 Or use [Nx Console](/recipes/nx-console):
@@ -124,7 +125,7 @@ Now notice under libs folder, `use-cat-fact` folder got created under `libs/quer
 
 If you use React Native CLI, just add a folder in your workspace root.
 
-For this app, let’s use this API: [https://catfact.ninja/](https://catfact.ninja/). At `libs/queries/use-cat-fact/src/lib/use-cat-fact.ts`, add code to fetch the data from this API:
+For this app, let's use this API: [https://catfact.ninja/](https://catfact.ninja/). At `libs/queries/use-cat-fact/src/lib/use-cat-fact.ts`, add code to fetch the data from this API:
 
 ```ts
 import { useQuery } from '@tanstack/react-query';
@@ -160,7 +161,7 @@ Invalid hook call. Hooks can only be called inside of the body of a function com
 
 To solve this, you need to wrap your component inside the renderHook function from `@testing-library/react-native` library:
 
-1. **Install Library to Mock Fetch**
+**1\. Install Library to Mock Fetch**
 
 Depending on which library you use to make HTTP requests. (e.g. fetch, axios), you need to install a library to mock the response.
 
@@ -185,26 +186,26 @@ import fetchMock from 'jest-fetch-mock';
 fetchMock.enableMocks();
 ```
 
-2. **Create Mock Query Provider**
+**2\. Create Mock Query Provider**
 
-In order to test out `useQuery` hook, you need to wrap it inside a mock `QueryClientProvider`. Since this mock query provider is going to be used more than once, let’s create a library for this wrapper:
+In order to test out `useQuery` hook, you need to wrap it inside a mock `QueryClientProvider`. Since this mock query provider is going to be used more than once, let's create a library for this wrapper:
 
 ```shell
 # expo library
-npx nx generate @nx/expo:library test-wrapper --directory=queries
+npx nx generate @nx/expo:library libs/queries/test-wrapper
 
 # react native library
-npx nx generate @nx/react-native:library test-wrapper --directory=queries
+npx nx generate @nx/react-native:library libs/queries/test-wrapper
 ```
 
 Then a component inside this library:
 
 ```shell
 # expo library
-npx nx generate @nx/expo:component test-wrapper --project=queries-test-wrapper
+npx nx generate @nx/expo:component libs/queries/test-wrapper/src/lib/test-wrapper/test-wrapper
 
 # react native library
-npx nx generate @nx/react-native:component test-wrapper --project=queries-test-wrapper
+npx nx generate @nx/react-native:component libs/queries/test-wrapper/src/lib/test-wrapper/test-wrapper
 ```
 
 Add the mock `QueryClientProvider` in `libs/queries/test-wrapper/src/lib/test-wrapper/test-wrapper.tsx`:
@@ -227,7 +228,7 @@ export function TestWrapper({ children }: TestWrapperProps) {
 export default TestWrapper;
 ```
 
-3. **Use Mock Responses in Unit Test**
+**3\. Use Mock Responses in Unit Test**
 
 Then this is what the unit test for my query would look like:
 
@@ -416,10 +417,10 @@ First, you need to create a library for redux:
 
 ```shell
 # expo library
-npx nx generate @nx/expo:lib cat --directory=states
+npx nx generate @nx/expo:lib libs/states/cat
 
 # react native library
-npx nx generate @nx/react-native:lib cat --directory=states
+npx nx generate @nx/react-native:lib libs/states/cat
 ```
 
 This should create a folder under libs:
@@ -439,7 +440,7 @@ You can use the [Nx Console](/recipes/nx-console) to create a redux slice:
 Or run this command:
 
 ```shell
-npx nx generate @nx/react:redux likes --project=states-cat --directory=likes
+npx nx generate @nx/react:redux libs/states/cat/src/lib/likes/likes
 ```
 
 Then update the redux slice at `libs/states/cat/src/lib/likes/likes.slice.ts`:
@@ -516,8 +517,104 @@ This state has 3 actions:
 
 Then you have to add the root store and create a transform function to stringify the redux state:
 
-```html
-<script src="https://gist.github.com/xiongemi/5f364d84f89b647dcaaf7e5437ea789c.js"></script>
+```typescript {% fileName="persist-transform.ts" %}
+import { EntityState } from '@reduxjs/toolkit';
+import { createTransform } from 'redux-persist';
+import { LIKES_FEATURE_KEY } from '../likes/likes.slice';
+
+const transformEntityStateToPersist = createTransform(
+  // transform state on its way to being serialized and persisted.
+  (
+    entityState: EntityState<any>
+  ): {
+    ids: string;
+    entities: any;
+  } => {
+    return {
+      ...entityState,
+      ids: JSON.stringify(entityState.ids),
+      entities: JSON.stringify(entityState.entities),
+    };
+  },
+  // transform state being rehydrated
+  (entityState: { ids: string; entities: string }): EntityState<any> => {
+    return {
+      ...entityState,
+      ids: JSON.parse(entityState.ids),
+      entities: JSON.parse(entityState.entities),
+    };
+  },
+  // define which reducers this transform gets called for.
+  { whitelist: [LIKES_FEATURE_KEY] }
+);
+
+export { transformEntityStateToPersist };
+```
+
+```typescript {% fileName="root-state.initial.ts" %}
+import { initialLikesState } from '../likes/likes.slice';
+
+import { RootState } from './root-state.interface';
+
+export const initialRootState: RootState = {
+  likes: initialLikesState,
+};
+```
+
+```typescript {% fileName="root-state.interface.ts" %}
+import { LikesState } from '../likes/likes.slice';
+
+export interface RootState {
+  likes: LikesState;
+}
+```
+
+```typescript {% fileName="root-reducer.ts" %}
+import { combineReducers } from '@reduxjs/toolkit';
+
+import { likesReducer } from '../likes/likes.slice';
+import { RootState } from './root-state.interface';
+
+export const createRootReducer = combineReducers<RootState>({
+  likes: likesReducer,
+});
+```
+
+```typescript {% fileName="root.store.ts" %}
+import { configureStore } from '@reduxjs/toolkit';
+import logger from 'redux-logger';
+import { persistStore, persistReducer, PersistConfig } from 'redux-persist';
+
+import { initialRootState } from './root-state.initial';
+import { RootState } from './root-state.interface';
+import { createRootReducer } from './root.reducer';
+
+declare const process: any;
+
+export const createRootStore = (persistConfig: PersistConfig<RootState>) => {
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
+  const rootReducer = createRootReducer;
+  const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+  const store = configureStore({
+    reducer: persistedReducer,
+    middleware: (getDefaultMiddleware) => {
+      const defaultMiddleware = getDefaultMiddleware({
+        serializableCheck: false,
+      });
+      return isDevelopment
+        ? defaultMiddleware.concat(logger)
+        : defaultMiddleware;
+    },
+    devTools: isDevelopment,
+    preloadedState: initialRootState,
+  });
+
+  const persistor = persistStore(store);
+
+  return { store, persistor };
+};
 ```
 
 ### Connect Redux State with UI
@@ -621,4 +718,4 @@ Nx is a powerful monorepo tool. Together with Nx and these 2 state management to
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app/)
+- [Speed up your CI](/nx-cloud)

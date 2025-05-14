@@ -1,9 +1,14 @@
-import { getPackageManagerCommand, output } from '@nx/devkit';
+import {
+  detectPackageManager,
+  getPackageManagerCommand,
+  output,
+} from '@nx/devkit';
 import { execSync } from 'child_process';
 import { Schema } from './schema';
 
 export function callUpgrade(schema: Schema): 1 | Buffer {
-  const pm = getPackageManagerCommand();
+  const packageManager = detectPackageManager();
+  const pm = getPackageManagerCommand(packageManager);
   try {
     output.log({
       title: `Calling sb upgrade`,
@@ -15,11 +20,12 @@ export function callUpgrade(schema: Schema): 1 | Buffer {
     });
 
     execSync(
-      `${pm.dlx} storybook@latest upgrade ${
-        schema.autoAcceptAllPrompts ? '--yes' : ''
-      }`,
+      `${pm.dlx} ${
+        packageManager === 'yarn' ? 'storybook' : 'storybook@latest'
+      } upgrade ${schema.autoAcceptAllPrompts ? '--yes' : ''}`,
       {
         stdio: [0, 1, 2],
+        windowsHide: false,
       }
     );
 
@@ -37,7 +43,9 @@ export function callUpgrade(schema: Schema): 1 | Buffer {
       bodyLines: [
         `🚨 The Storybook CLI failed to upgrade your @storybook/* packages to the latest version.`,
         `Please try running the sb upgrade command manually:`,
-        `${pm.exec} storybook@latest upgrade`,
+        `${pm.exec} ${
+          packageManager === 'yarn' ? 'storybook' : 'storybook@latest'
+        } upgrade`,
       ],
       color: 'red',
     });
@@ -70,8 +78,11 @@ export function callAutomigrate(
 
   Object.entries(allStorybookProjects).forEach(
     ([projectName, storybookProjectInfo]) => {
-      const pm = getPackageManagerCommand();
-      const commandToRun = `${pm.dlx} storybook@latest automigrate --config-dir ${storybookProjectInfo.configDir}`;
+      const packageManager = detectPackageManager();
+      const pm = getPackageManagerCommand(packageManager);
+      const commandToRun = `${pm.dlx} ${
+        packageManager === 'yarn' ? 'storybook' : 'storybook@latest'
+      } automigrate --config-dir ${storybookProjectInfo.configDir}`;
       try {
         output.log({
           title: `Calling sb automigrate for ${projectName}`,
@@ -83,6 +94,7 @@ export function callAutomigrate(
           `${commandToRun}  ${schema.autoAcceptAllPrompts ? '--yes' : ''}`,
           {
             stdio: 'inherit',
+            windowsHide: false,
           }
         );
 

@@ -5,13 +5,15 @@ import {
   installPackagesTask,
   joinPathFragments,
   readProjectConfiguration,
-  toJS,
   type Tree,
 } from '@nx/devkit';
 
 import { upsertLinksFunction } from '../../utils/upsert-links-function';
-import { tailwindVersion } from '../../utils/versions';
-import { updateRemixConfig } from './lib';
+import {
+  autoprefixerVersion,
+  postcssVersion,
+  tailwindVersion,
+} from '../../utils/versions';
 import type { SetupTailwindSchema } from './schema';
 
 export default async function setupTailwind(
@@ -25,18 +27,10 @@ export default async function setupTailwind(
     );
   }
 
-  updateRemixConfig(tree, project.root);
-
   generateFiles(tree, joinPathFragments(__dirname, 'files'), project.root, {
     tpl: '',
   });
 
-  if (options.js) {
-    tree.rename(
-      joinPathFragments(project.root, 'app/root.js'),
-      joinPathFragments(project.root, 'app/root.tsx')
-    );
-  }
   const pathToRoot = joinPathFragments(project.root, 'app/root.tsx');
   upsertLinksFunction(
     tree,
@@ -50,13 +44,11 @@ export default async function setupTailwind(
     tree,
     {
       tailwindcss: tailwindVersion,
+      postcss: postcssVersion,
+      autoprefixer: autoprefixerVersion,
     },
     {}
   );
-
-  if (options.js) {
-    toJS(tree);
-  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);

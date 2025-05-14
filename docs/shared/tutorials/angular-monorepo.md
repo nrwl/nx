@@ -5,7 +5,7 @@ description: In this tutorial you'll create a frontend-focused workspace with Nx
 
 # Building Angular Apps in an Nx Monorepo
 
-In this tutorial you'll learn how to use Angular with Nx in a [monorepo (integrated) setup](/concepts/integrated-vs-package-based#integrated-repos).
+In this tutorial you'll learn how to use Angular with Nx in a monorepo setup.
 
 What will you learn?
 
@@ -14,10 +14,6 @@ What will you learn?
 - how to leverage code generators to scaffold components
 - how to modularize your codebase and impose architectural constraints for better maintainability
 - [how to speed up CI with Nx Cloud ⚡](#fast-ci)
-
-{% callout type="info" title="Looking for an Angular standalone app?" %}
-Note, this tutorial sets up a repo with applications and libraries in their own subfolders. If you are looking for an Angular standalone app setup then check out our [Angular standalone app tutorial](/getting-started/tutorials/angular-standalone-tutorial).
-{% /callout %}
 
 ## Nx CLI vs. Angular CLI
 
@@ -107,7 +103,7 @@ The setup includes:
 - ESLint preconfigured
 - Jest preconfigured
 
-Typically, an integrated Nx workspace places application projects in the `apps` folder and library projects in the `libs` folder. Applications are encouraged to be as light-weight as possible so that more code is pushed into libraries and can be reused in other projects. This folder structure is just a suggestion and can be modified to suit your organization's needs.
+One way to structure an Nx monorepo is to place application projects in the `apps` folder and library projects in the `libs` folder. Applications are encouraged to be as light-weight as possible so that more code is pushed into libraries and can be reused in other projects. This folder structure is just a suggestion and can be modified to suit your organization's needs.
 
 The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx itself and global default settings that individual projects inherit. The `apps/angular-store/project.json` file contains [settings that are specific to the `angular-store` project](/reference/project-configuration). We'll examine that file more in the next section.
 
@@ -118,6 +114,7 @@ The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx 
 To serve your new Angular application, just run:
 
 ```shell
+cd angular-monorepo
 npx nx serve angular-store
 ```
 
@@ -133,7 +130,7 @@ Nx uses the following syntax to run tasks:
 
 The project tasks are defined in the `project.json` file.
 
-```json {% fileName="apps/angular-store/project.json"}
+```json {% fileName="apps/angular-store/project.json" %}
 {
   "name": "angular-store",
   ...
@@ -150,7 +147,7 @@ The project tasks are defined in the `project.json` file.
 
 Each target contains a configuration object that tells Nx how to run that target.
 
-```json {% fileName="project.json"}
+```json {% fileName="project.json" %}
 {
   "name": "angular-store",
   ...
@@ -199,11 +196,10 @@ NX   Capabilities in @nx/angular:
    add-linting : Adds linting configuration to an Angular project.
    application : Creates an Angular application.
    component : Generate an Angular Component.
-   component-cypress-spec : Creates a Cypress spec for a UI component that has a story.
    component-story : Creates a stories.ts file for a component.
    component-test : Creates a cypress component test file for a component.
    convert-tslint-to-eslint : Converts a project from TSLint to ESLint.
-   init : Initializes the `@nrwl/angular` plugin.
+   init : Initializes the `@nx/angular` plugin.
    library : Creates an Angular library.
    library-secondary-entry-point : Creates a secondary entry point for an Angular publishable library.
    remote : Generate a Remote Angular Module Federation Application.
@@ -214,7 +210,7 @@ NX   Capabilities in @nx/angular:
 
    delegate-build : Delegates the build to a different target while supporting incremental builds.
    ng-packagr-lite : Builds a library with support for incremental builds.
-This executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nrwl/angular:package` executor but with some key differences:
+This executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nx/angular:package` executor but with some key differences:
 - It doesn't run `ngcc` automatically (`ngcc` needs to be run separately beforehand if needed, this can be done in a `postinstall` hook on `package.json`).
 - It only produces ESM2020 bundles.
 - It doesn't generate package exports in the `package.json`.
@@ -233,7 +229,7 @@ More info can be found in [the integrate with editors article](/getting-started/
 
 Run the following command to generate a new `inventory` application. Note how we append `--dry-run` to first check the output.
 
-```{% command="npx nx g @nx/angular:app inventory --directory=apps/inventory --dry-run" path="angular-monorepo" %}
+```{% command="npx nx g @nx/angular:app apps/inventory --dry-run" path="angular-monorepo" %}
 NX  Generating @nx/angular:application
 
 ✔ Would you like to configure routing for this application? (y/N) · false
@@ -273,7 +269,7 @@ NOTE: The "dryRun" flag means no changes were made.
 As you can see, it generates a new application in the `apps/inventory/` folder. Let's actually run the generator by removing the `--dry-run` flag.
 
 ```shell
-npx nx g @nx/angular:app inventory --directory=apps/inventory
+npx nx g @nx/angular:app apps/inventory
 ```
 
 ## Sharing Code with Local Libraries
@@ -318,9 +314,9 @@ Nx allows you to separate this logic into "local libraries". The main benefits i
 Let's assume our domain areas include `products`, `orders` and some more generic design system components, called `ui`. We can generate a new library for each of these areas using the Angular library generator:
 
 ```
-npx nx g @nx/angular:library products --directory=libs/products --standalone
-npx nx g @nx/angular:library orders --directory=libs/orders --standalone
-npx nx g @nx/angular:library shared-ui --directory=libs/shared/ui --standalone
+npx nx g @nx/angular:library libs/products --standalone
+npx nx g @nx/angular:library libs/orders --standalone
+npx nx g @nx/angular:library libs/shared/ui --standalone
 ```
 
 Note how we type out the full path in the `directory` flag to place the libraries into a subfolder. You can choose whatever folder structure you like to organize your projects. If you change your mind later, you can run the [move generator](/nx-api/workspace/generators/move) to move a project to a different folder.
@@ -472,16 +468,15 @@ export const appRoutes: Route[] = [
 
 Let's also show products in the `inventory` app.
 
-```ts {% fileName="apps/inventory/src/app/app.component.ts" highlightLines=[2,6] %}
+```ts {% fileName="apps/inventory/src/app/app.component.ts" highlightLines=[2,5] %}
 import { Component } from '@angular/core';
 import { ProductsComponent } from '@angular-monorepo/products';
 
 @Component({
-  standalone: true,
   imports: [ProductsComponent],
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  styleUrl: './app.component.css',
 })
 export class AppComponent {
   title = 'inventory';
@@ -1274,7 +1269,7 @@ Once you click the link, follow the steps provided and make sure Nx Cloud is ena
 
 ### Configure Your CI Workflow {% highlightColor="green" %}
 
-When you chose GitHub Actions as your CI provider at the beginning of the tutorial, `create-nx-workspace` created a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR. Since we are using Nx Cloud, the pipeline will also distribute tasks across multiple machines to ensure fast and reliable CI runs.
+When you chose GitHub Actions as your CI provider at the beginning of the tutorial, `create-nx-workspace` created a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR. If you would like to also distribute tasks across multiple machines to ensure fast and reliable CI runs, uncomment the `nx-cloud start-ci-run` line and have the `nx affected` line run the `e2e-ci` task instead of `e2e`.
 
 If you need to generate a new workflow file for GitHub Actions or other providers, you can do so with this command:
 
@@ -1284,7 +1279,7 @@ npx nx generate ci-workflow
 
 The key lines in the CI pipeline are:
 
-```yml {% fileName=".github/workflows/ci.yml" highlightLines=["10-14", "21-22"] %}
+```yml {% fileName=".github/workflows/ci.yml" highlightLines=["10-14", "21-23"] %}
 name: CI
 # ...
 jobs:
@@ -1294,11 +1289,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
+
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Uncomment this line to enable task distribution
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
       - uses: actions/setup-node@v3
         with:
           node-version: 20
@@ -1306,7 +1303,8 @@ jobs:
       - run: npm ci --legacy-peer-deps
       - uses: nrwl/nx-set-shas@v4
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected -t lint test build
+      # When you enable task distribution, run the e2e-ci task instead of e2e
+      - run: npx nx affected -t lint test build e2e
 ```
 
 ### Open a Pull Request {% highlightColor="green" %}
@@ -1344,6 +1342,7 @@ Here's some things you can dive into next:
 
 Also, make sure you
 
+- ⭐️ [Star us on GitHub](https://github.com/nrwl/nx) to show your support and stay updated on new releases!
 - [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
 - [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
 - [Read our Nx blog](/blog)

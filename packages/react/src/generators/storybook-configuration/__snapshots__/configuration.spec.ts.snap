@@ -32,7 +32,6 @@ export default config;
 exports[`react:storybook-configuration should generate stories for components 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react';
 import { MyComponent } from './my-component';
-
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
@@ -57,26 +56,8 @@ export const Heading: Story = {
 "
 `;
 
-exports[`react:storybook-configuration should generate stories for components without interaction tests 1`] = `
-"import type { Meta, StoryObj } from '@storybook/react';
-import { MyComponent } from './my-component';
-
-const meta: Meta<typeof MyComponent> = {
-  component: MyComponent,
-  title: 'MyComponent',
-};
-export default meta;
-type Story = StoryObj<typeof MyComponent>;
-
-export const Primary = {
-  args: {},
-};
-"
-`;
-
 exports[`react:storybook-configuration should generate stories for components written in plain JS 1`] = `
 "import componentName from './test-ui-libplain';
-
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 

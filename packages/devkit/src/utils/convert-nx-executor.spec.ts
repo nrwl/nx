@@ -29,7 +29,7 @@ describe('Convert Nx Executor', () => {
 
     const registry = new schema.CoreSchemaRegistry();
     registry.addPostTransform(schema.transforms.addUndefinedDefaults);
-    const testArchitectHost = new TestingArchitectHost();
+    const testArchitectHost = new TestingArchitectHost(fs.tempDir, fs.tempDir);
     testArchitectHost.workspaceRoot = fs.tempDir;
     const architect = new Architect(testArchitectHost, registry);
 

@@ -1,4 +1,3 @@
-use anyhow::anyhow;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::path::Path;
@@ -541,9 +540,12 @@ fn process_file(
     (source_project, file_path): (&String, &String),
 ) -> anyhow::Result<Option<ImportResult>> {
     let now = Instant::now();
-    let cm = Arc::<SourceMap>::default()
+    let Ok(cm) = Arc::<SourceMap>::default()
         .load_file(Path::new(file_path))
-        .map_err(|e| anyhow!("Unable to load {}: {}", file_path, e))?;
+        .inspect_err(|e| trace!("Unable to load {}: {}", file_path, e))
+    else {
+        return Ok(None);
+    };
 
     let comments = SingleThreadedComments::default();
 
@@ -713,8 +715,8 @@ mod find_imports {
     use super::*;
     use crate::native::glob::build_glob_set;
     use crate::native::walker::nx_walker;
-    use assert_fs::prelude::*;
     use assert_fs::TempDir;
+    use assert_fs::prelude::*;
     use std::env;
     use std::path::PathBuf;
     use swc_common::comments::NoopComments;
@@ -1480,7 +1482,7 @@ import(myTag`react@${version}`);
         let root = PathBuf::from(ancestors.next().unwrap());
 
         let glob = build_glob_set(&["**/*.[jt]s"]).unwrap();
-        let files = nx_walker(root.clone())
+        let files = nx_walker(root.clone(), true)
             .filter(|file| glob.is_match(&file.full_path))
             .map(|file| file.full_path)
             .collect::<Vec<_>>();

@@ -1,11 +1,13 @@
 {
   "extends": "<%= rootTsConfigPath %>",
+  <%_ if (!isUsingTsSolutionConfig) { _%>
   "compilerOptions": {
     "jsx": "react-jsx",
     "allowJs": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },
+  <%_ } _%>
   "files": [],
   "include": [],
   "references": [

@@ -11,13 +11,13 @@ export function resolveEas(workspaceRoot: string): string {
 
   let npmGlobalPath: string, yarnGlobalPath: string;
   try {
-    npmGlobalPath = execSync('npm root -g')
+    npmGlobalPath = execSync('npm root -g', { windowsHide: false })
       ?.toString()
       ?.trim()
       ?.replace('\u001b[2K\u001b[1G', ''); // strip out ansi codes
   } catch {}
   try {
-    yarnGlobalPath = execSync('yarn global dir')
+    yarnGlobalPath = execSync('yarn global dir', { windowsHide: false })
       ?.toString()
       ?.trim()
       ?.replace('\u001b[2K\u001b[1G', ''); // strip out ansi codes

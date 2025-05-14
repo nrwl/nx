@@ -45,11 +45,13 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
     if (!options.skipPackageJson) {
       installTask = addDependenciesToPackageJson(
         tree,
-        {},
+        {
+          '@module-federation/enhanced': moduleFederationEnhancedVersion,
+        },
         {
           '@nx/web': nxVersion,
           '@nx/webpack': nxVersion,
-          '@module-federation/enhanced': moduleFederationEnhancedVersion,
+          '@nx/module-federation': nxVersion,
         }
       );
     }
@@ -81,6 +83,7 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
         {
           '@nx/webpack': nxVersion,
           '@module-federation/enhanced': moduleFederationEnhancedVersion,
+          '@nx/module-federation': nxVersion,
         }
       );
     }

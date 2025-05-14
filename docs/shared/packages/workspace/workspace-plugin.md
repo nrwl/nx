@@ -1,8 +1,13 @@
+---
+title: Workspace Plugin for Nx
+description: Learn about the core workspace plugin that provides essential executors and generators for any Nx workspace, including tools for project management.
+---
+
 The workspace plugin contains executors and generators that are useful for any Nx workspace. It should be present in every Nx workspace and other plugins build on it.
 
 ## Creating Local Generators
 
-Codifying your organization's best practices into local generators is a great way to ensure that the best practices are easy to follow and implement. Running `nx g @nx/plugin:plugin feature` will create a local plugin with a generator which is written the same way generators are written for Nx plugins.
+Codifying your organization's best practices into local generators is a great way to ensure that the best practices are easy to follow and implement. Running `nx g @nx/plugin:plugin packages/feature` will create a local plugin with a generator which is written the same way generators are written for Nx plugins.
 
 > See more about [local generators](/extending-nx/recipes/local-generators)
 

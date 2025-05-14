@@ -57,10 +57,18 @@ export async function* vitestExecutor(
     process.on('exit', processExit);
   }
 
-  for await (const report of nxReporter) {
-    // vitest sets the exitCode = 1 when code coverage isn't met
-    hasErrors =
-      report.hasErrors || (process.exitCode && process.exitCode !== 0);
+  // vitest sets the exitCode in case of exception without notifying reporters
+  if (
+    process.exitCode === undefined ||
+    (watch && ctx.state.getFiles().length > 0)
+  ) {
+    for await (const report of nxReporter) {
+      // vitest sets the exitCode = 1 when code coverage isn't met
+      hasErrors =
+        report.hasErrors || (process.exitCode && process.exitCode !== 0);
+    }
+  } else {
+    hasErrors = process.exitCode !== 0;
   }
 
   return {

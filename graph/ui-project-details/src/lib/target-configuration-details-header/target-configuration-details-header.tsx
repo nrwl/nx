@@ -1,7 +1,7 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { TargetConfiguration } from '@nx/devkit';
-import { CopyToClipboardButton } from '@nx/graph/ui-components';
+import { CopyToClipboardButton } from '@nx/graph/legacy/components';
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -9,17 +9,15 @@ import {
   PlayIcon,
 } from '@heroicons/react/24/outline';
 
-import {
-  AtomizerTooltip,
-  PropertyInfoTooltip,
-  Tooltip,
-} from '@nx/graph/ui-tooltips';
+import { Tooltip } from '@nx/graph/legacy/tooltips';
 import { twMerge } from 'tailwind-merge';
 import { Pill } from '../pill';
 import { TargetTechnologies } from '../target-technologies/target-technologies';
 import { SourceInfo } from '../source-info/source-info';
 import { getDisplayHeaderFromTargetConfiguration } from '../utils/get-display-header-from-target-configuration';
 import { TargetExecutor } from '../target-executor/target-executor';
+import { AtomizerTooltip } from '../tooltips/atomizer-tooltip';
+import { PropertyInfoTooltip } from '../tooltips/property-info-tooltip';
 
 export interface TargetConfigurationDetailsHeaderProps {
   isCollasped: boolean;
@@ -150,25 +148,32 @@ export const TargetConfigurationDetailsHeader = ({
                 </span>
               </Tooltip>
             )}
+            {(targetConfiguration as any).continuous && (
+              <Tooltip
+                openAction="hover"
+                strategy="fixed"
+                content={(<PropertyInfoTooltip type="continuous" />) as any}
+              >
+                <span className="inline-flex">
+                  <Pill text="Continuous" color="grey" />
+                </span>
+              </Tooltip>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">
           <CopyToClipboardButton
             text={JSON.stringify(targetConfiguration, null, 2)}
-            tooltipText={!isCollasped ? 'Copy Target' : undefined}
+            tooltipText="Copy Target"
             tooltipAlignment="right"
             className="rounded-md bg-inherit p-1 text-sm text-slate-600 ring-1 ring-inset ring-slate-400/40 hover:bg-slate-200 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-700/60"
           />
           {onViewInTaskGraph && (
             <button
               className="rounded-md bg-inherit p-1 text-sm text-slate-600 ring-1 ring-inset ring-slate-400/40 hover:bg-slate-200 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-700/60"
-              // TODO: fix tooltip overflow in collapsed state
-              data-tooltip={isCollasped ? false : 'View in Task Graph'}
+              data-tooltip="View in Task Graph"
               data-tooltip-align-right
               onClick={(e) => {
-                if (isCollasped) {
-                  return;
-                }
                 e.stopPropagation();
                 onViewInTaskGraph({ projectName, targetName });
               }}
@@ -180,8 +185,7 @@ export const TargetConfigurationDetailsHeader = ({
           {onRunTarget && (
             <span
               className="rounded-md bg-inherit p-1 text-sm text-slate-600 ring-1 ring-inset ring-slate-400/40 hover:bg-slate-200 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-700/60"
-              // TODO: fix tooltip overflow in collapsed state
-              data-tooltip={isCollasped ? false : 'Run Target'}
+              data-tooltip="Run Target"
               data-tooltip-align-right
             >
               <PlayIcon

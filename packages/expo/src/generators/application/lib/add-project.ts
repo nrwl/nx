@@ -1,17 +1,17 @@
 import {
   addProjectConfiguration,
+  joinPathFragments,
   ProjectConfiguration,
-  readNxJson,
   TargetConfiguration,
   Tree,
+  writeJson,
 } from '@nx/devkit';
-
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import type { PackageJson } from 'nx/src/utils/package-json';
 import { hasExpoPlugin } from '../../../utils/has-expo-plugin';
 import { NormalizedSchema } from './normalize-options';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
-  const nxJson = readNxJson(host);
   const hasPlugin = hasExpoPlugin(host);
 
   if (!hasPlugin) {
@@ -26,12 +26,40 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     tags: options.parsedTags,
   };
 
-  addProjectConfiguration(
-    host,
-    options.projectName,
-    projectConfiguration,
-    options.standaloneConfig
-  );
+  const packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    private: true,
+  };
+
+  if (!options.useProjectJson) {
+    if (options.importPath !== options.projectName) {
+      packageJson.nx = { name: options.projectName };
+    }
+    if (!hasPlugin) {
+      packageJson.nx ??= {};
+      packageJson.nx.targets = getTargets(options);
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
+  } else {
+    addProjectConfiguration(
+      host,
+      options.projectName,
+      projectConfiguration,
+      options.standaloneConfig
+    );
+  }
+
+  if (!options.useProjectJson || options.isTsSolutionSetup) {
+    writeJson(
+      host,
+      joinPathFragments(options.appProjectRoot, 'package.json'),
+      packageJson
+    );
+  }
 }
 
 function getTargets(options: NormalizedSchema) {

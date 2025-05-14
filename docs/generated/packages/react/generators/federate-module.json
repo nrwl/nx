@@ -6,11 +6,15 @@
     "cli": "nx",
     "$id": "NxReactFederateModule",
     "title": "Federate Module",
-    "description": "Create a federated module, which can be loaded by a remote host.",
+    "description": "Create a federated module, which can be loaded by a Consumer (host) via a Producer (remote).",
     "examples": [
       {
-        "command": "nx g federate-module MyModule --path=./src/component/my-cmp.ts --remote=my-remote-app --remoteDirectory=apps/my-remote-app",
-        "description": "Create a federated module from my-remote-app, that exposes my-cmp from ./src/component/my-cmp.ts as MyModule."
+        "command": "nx g federate-module MyModule --path=./src/component/my-cmp.ts --remote=myRemote --remoteDirectory=apps/myRemote",
+        "description": "Create a federated module from myRemote, that exposes my-cmp from ./src/component/my-cmp.ts as MyModule."
+      },
+      {
+        "command": "nx g federate-module MyModule --path=./src/component/my-cmp.ts --producer=myProducer --producerDirectory=apps/myProducer",
+        "description": "Create a federated module from myProducer, that exposes my-cmp from ./src/component/my-cmp.ts as MyModule."
       }
     ],
     "type": "object",
@@ -30,17 +34,14 @@
       },
       "remote": {
         "type": "string",
-        "description": "The name of the remote.",
-        "x-prompt": "What is/should the remote be named?"
+        "description": "The name of the Producer (remote).",
+        "x-prompt": "What is/should the Producer (remote) be named?",
+        "alias": "producer"
       },
       "remoteDirectory": {
-        "description": "The directory of the new remote application if one needs to be created.",
-        "type": "string"
-      },
-      "projectNameAndRootFormat": {
-        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+        "description": "The directory of the new Producer (remote) application if one needs to be created.",
         "type": "string",
-        "enum": ["as-provided", "derived"]
+        "alias": "producerDirectory"
       },
       "style": {
         "description": "The file extension to be used for style files.",
@@ -75,7 +76,13 @@
       },
       "host": {
         "type": "string",
-        "description": "The host / shell application for this remote."
+        "description": "The Consumer (host) application for this Producer (remote)."
+      },
+      "bundler": {
+        "description": "The bundler to use.",
+        "type": "string",
+        "enum": ["rspack", "webpack"],
+        "default": "rspack"
       }
     },
     "required": ["name", "path", "remote"],

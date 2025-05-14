@@ -29,23 +29,23 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
+    "@nx/devkit": "file:../devkit",
+    "@nx/js": "file:../js",
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-image": "^3.0.3",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^12.1.0",
     "autoprefixer": "^10.4.9",
-    "babel-plugin-transform-async-to-promises": "^0.8.15",
-    "chalk": "^4.1.0",
-    "minimatch": "9.0.3",
+    "picocolors": "^1.1.0",
+    "picomatch": "4.0.2",
     "postcss": "^8.4.38",
     "rollup": "^4.14.0",
     "rollup-plugin-copy": "^3.5.0",
     "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-typescript2": "^0.36.0",
-    "tslib": "^2.3.0",
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js"
+    "tslib": "^2.3.0"
   },
   "publishConfig": {
     "access": "public"

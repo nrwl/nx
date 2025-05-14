@@ -13,9 +13,11 @@ import {
   addExtendsToLintConfig,
   addOverrideToLintConfig,
   addPluginsToLintConfig,
+  addPredefinedConfigToFlatLintConfig,
   findEslintFile,
   isEslintConfigSupported,
 } from '@nx/eslint/src/generators/utils/eslint-file';
+import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
 export interface PlaywrightLinterOptions {
   project: string;
@@ -35,7 +37,7 @@ export async function addLinterToPlaywrightProject(
   tree: Tree,
   options: PlaywrightLinterOptions
 ): Promise<GeneratorCallback> {
-  if (options.linter === Linter.None) {
+  if (options.linter === 'none') {
     return () => {};
   }
 
@@ -58,7 +60,7 @@ export async function addLinterToPlaywrightProject(
     );
   }
 
-  if (!options.linter || options.linter !== Linter.EsLint) {
+  if (!options.linter || options.linter !== 'eslint') {
     return runTasksInSerial(...tasks);
   }
 
@@ -76,24 +78,42 @@ export async function addLinterToPlaywrightProject(
     isEslintConfigSupported(tree, projectConfig.root) ||
     isEslintConfigSupported(tree)
   ) {
-    addExtendsToLintConfig(
-      tree,
-      projectConfig.root,
-      'plugin:playwright/recommended'
-    );
-    if (options.rootProject) {
-      addPluginsToLintConfig(tree, projectConfig.root, '@nx');
-      addOverrideToLintConfig(tree, projectConfig.root, javaScriptOverride);
+    if (useFlatConfig(tree)) {
+      addPredefinedConfigToFlatLintConfig(
+        tree,
+        projectConfig.root,
+        'flat/recommended',
+        'playwright',
+        'eslint-plugin-playwright',
+        false,
+        false
+      );
+      addOverrideToLintConfig(tree, projectConfig.root, {
+        files: ['*.ts', '*.js'],
+        rules: {},
+      });
+    } else {
+      const addExtendsTask = addExtendsToLintConfig(
+        tree,
+        projectConfig.root,
+        'plugin:playwright/recommended'
+      );
+      tasks.push(addExtendsTask);
+
+      if (options.rootProject) {
+        addPluginsToLintConfig(tree, projectConfig.root, '@nx');
+        addOverrideToLintConfig(tree, projectConfig.root, javaScriptOverride);
+      }
+      addOverrideToLintConfig(tree, projectConfig.root, {
+        files: [`${options.directory}/**/*.{ts,js,tsx,jsx}`],
+        parserOptions: !options.setParserOptionsProject
+          ? undefined
+          : {
+              project: `${projectConfig.root}/tsconfig.*?.json`,
+            },
+        rules: {},
+      });
     }
-    addOverrideToLintConfig(tree, projectConfig.root, {
-      files: [`${options.directory}/**/*.{ts,js,tsx,jsx}`],
-      parserOptions: !options.setParserOptionsProject
-        ? undefined
-        : {
-            project: `${projectConfig.root}/tsconfig.*?.json`,
-          },
-      rules: {},
-    });
   }
 
   return runTasksInSerial(...tasks);

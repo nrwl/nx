@@ -21,33 +21,32 @@ export async function updateSsrSetup(
   appName: string,
   typescriptConfiguration: boolean
 ) {
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   let project = readProjectConfiguration(tree, appName);
 
   tree.rename(
     joinPathFragments(project.sourceRoot, 'main.server.ts'),
     joinPathFragments(project.sourceRoot, 'bootstrap.server.ts')
   );
+  const pathToServerEntry = joinPathFragments(
+    angularMajorVersion >= 19
+      ? project.sourceRoot ?? joinPathFragments(project.root, 'src')
+      : project.root,
+    'server.ts'
+  );
   tree.write(
-    joinPathFragments(project.root, 'server.ts'),
-    "import('./src/main.server');"
+    pathToServerEntry,
+    `import('./${angularMajorVersion >= 19 ? '' : 'src/'}main.server');`
   );
 
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-  generateFiles(
-    tree,
-    join(
-      __dirname,
-      '../files/common',
-      angularMajorVersion >= 17 ? 'v17+' : 'pre-v17'
-    ),
-    project.root,
-    {
-      appName,
-      browserBundleOutput: project.targets.build.options.outputPath,
-      standalone: options.standalone,
-      tmpl: '',
-    }
-  );
+  generateFiles(tree, join(__dirname, '../files/common'), project.root, {
+    appName,
+    browserBundleOutput: project.targets.build.options.outputPath,
+    standalone: options.standalone,
+    commonEngineEntryPoint:
+      angularMajorVersion >= 19 ? '@angular/ssr/node' : '@angular/ssr',
+    tmpl: '',
+  });
 
   const pathToTemplateFiles = typescriptConfiguration ? 'ts' : 'js';
 

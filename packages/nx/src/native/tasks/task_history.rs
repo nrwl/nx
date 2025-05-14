@@ -1,8 +1,11 @@
-use std::rc::Rc;
-
+use crate::native::db::connection::NxDbConnection;
+use crate::native::tasks::types::TaskTarget;
 use napi::bindgen_prelude::*;
 use rusqlite::vtab::array;
-use rusqlite::{params, types::Value, Connection};
+use rusqlite::{params, types::Value};
+use std::collections::HashMap;
+use std::rc::Rc;
+use tracing::trace;
 
 #[napi(object)]
 pub struct TaskRun {
@@ -15,13 +18,13 @@ pub struct TaskRun {
 
 #[napi]
 pub struct NxTaskHistory {
-    db: External<Connection>,
+    db: External<NxDbConnection>,
 }
 
 #[napi]
 impl NxTaskHistory {
     #[napi(constructor)]
-    pub fn new(db: External<Connection>) -> anyhow::Result<Self> {
+    pub fn new(db: External<NxDbConnection>) -> anyhow::Result<Self> {
         let s = Self { db };
 
         s.setup()?;
@@ -30,11 +33,16 @@ impl NxTaskHistory {
     }
 
     fn setup(&self) -> anyhow::Result<()> {
-        array::load_module(&self.db)?;
+        array::load_module(
+            self.db
+                .conn
+                .as_ref()
+                .expect("Database connection should be available"),
+        )?;
         self.db
             .execute_batch(
                 "
-            BEGIN;
+            BEGIN IMMEDIATE;
             CREATE TABLE IF NOT EXISTS task_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                 hash TEXT NOT NULL,
@@ -52,24 +60,26 @@ impl NxTaskHistory {
     }
 
     #[napi]
-    pub fn record_task_runs(&self, task_runs: Vec<TaskRun>) -> anyhow::Result<()> {
-        for task_run in task_runs.iter() {
-            self.db
-                .execute(
-                    "
-            INSERT INTO task_history
-                (hash, status, code, start, end)
-                VALUES (?1, ?2, ?3, ?4, ?5)",
-                    params![
-                        task_run.hash,
-                        task_run.status,
-                        task_run.code,
-                        task_run.start,
-                        task_run.end
-                    ],
-                )
-                .map_err(anyhow::Error::from)?;
-        }
+    pub fn record_task_runs(&mut self, task_runs: Vec<TaskRun>) -> anyhow::Result<()> {
+        trace!("Recording task runs");
+        self.db.transaction(|conn| {
+            let mut stmt = conn.prepare(
+                "INSERT OR REPLACE INTO task_history
+        (hash, status, code, start, end)
+        VALUES (?1, ?2, ?3, ?4, ?5)",
+            )?;
+            for task_run in task_runs.iter() {
+                stmt.execute(params![
+                    task_run.hash,
+                    task_run.status,
+                    task_run.code,
+                    task_run.start,
+                    task_run.end
+                ])
+                .inspect_err(|e| trace!("Error trying to insert {:?}: {:?}", &task_run.hash, e))?;
+            }
+            Ok(())
+        })?;
         Ok(())
     }
 
@@ -91,6 +101,47 @@ impl NxTaskHistory {
                 ",
             )?
             .query_map([values], |row| row.get(0))?
+            .map(|r| r.map_err(anyhow::Error::from))
+            .collect()
+    }
+
+    #[napi]
+    pub fn get_estimated_task_timings(
+        &self,
+        targets: Vec<TaskTarget>,
+    ) -> anyhow::Result<HashMap<String, f64>> {
+        let values = Rc::new(
+            targets
+                .iter()
+                .map(|t| {
+                    Value::from(match &t.configuration {
+                        Some(configuration) => {
+                            format!("{}:{}:{}", t.project, t.target, configuration)
+                        }
+                        _ => format!("{}:{}", t.project, t.target),
+                    })
+                })
+                .collect::<Vec<Value>>(),
+        );
+
+        // for older query sql version, need to select:  (project || ':' || target || (CASE WHEN coalesce(configuration, '') <> '' THEN ':' || configuration ELSE '' END)) AS target_string,
+        self.db
+            .prepare(
+                "
+                SELECT
+                    CONCAT_WS(':', project, target, configuration) AS target_string,
+                    AVG(end - start) AS duration
+                    FROM task_history
+                        JOIN task_details ON task_history.hash = task_details.hash
+                    WHERE target_string in rarray(?1)
+                    GROUP BY target_string
+                ",
+            )?
+            .query_map([values], |row| {
+                let target_string: String = row.get(0)?;
+                let duration: f64 = row.get(1)?;
+                Ok((target_string, duration))
+            })?
             .map(|r| r.map_err(anyhow::Error::from))
             .collect()
     }

@@ -9,7 +9,9 @@ import {
   collectRegisteredGlobalSyncGenerators,
   flushSyncGeneratorChanges,
   runSyncGenerator,
-  type SyncGeneratorChangesResult,
+  type FlushSyncGeneratorChangesResult,
+  type SyncGeneratorRunResult,
+  type SyncGeneratorRunSuccessResult,
 } from '../../utils/sync-generators';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { serverLogger } from './logger';
@@ -17,14 +19,16 @@ import { getCachedSerializedProjectGraphPromise } from './project-graph-incremen
 
 const syncGeneratorsCacheResultPromises = new Map<
   string,
-  Promise<SyncGeneratorChangesResult>
+  Promise<SyncGeneratorRunResult>
 >();
 let registeredTaskSyncGenerators = new Set<string>();
 let registeredGlobalSyncGenerators = new Set<string>();
 const scheduledGenerators = new Set<string>();
 
 let waitPeriod = 100;
-let registeredSyncGenerators: Set<string> | undefined;
+let registeredSyncGenerators:
+  | { globalGenerators: Set<string>; taskGenerators: Set<string> }
+  | undefined;
 let scheduledTimeoutId: NodeJS.Timeout | undefined;
 let storedProjectGraphHash: string | undefined;
 let storedNxJsonHash: string | undefined;
@@ -36,7 +40,7 @@ const log = (...messageParts: unknown[]) => {
 
 export async function getCachedSyncGeneratorChanges(
   generators: string[]
-): Promise<SyncGeneratorChangesResult[]> {
+): Promise<SyncGeneratorRunResult[]> {
   try {
     log('get sync generators changes on demand', generators);
     // this is invoked imperatively, so we clear any scheduled run
@@ -70,7 +74,7 @@ export async function getCachedSyncGeneratorChanges(
 
 export async function flushSyncGeneratorChangesToDisk(
   generators: string[]
-): Promise<void> {
+): Promise<FlushSyncGeneratorChangesResult> {
   log('flush sync generators changes', generators);
 
   const results = await getCachedSyncGeneratorChanges(generators);
@@ -79,7 +83,7 @@ export async function flushSyncGeneratorChangesToDisk(
     syncGeneratorsCacheResultPromises.delete(generator);
   }
 
-  await flushSyncGeneratorChanges(results);
+  return await flushSyncGeneratorChanges(results);
 }
 
 export function collectAndScheduleSyncGenerators(
@@ -98,12 +102,19 @@ export function collectAndScheduleSyncGenerators(
   // make sure to schedule all the collected generators
   scheduledGenerators.clear();
 
-  if (!registeredSyncGenerators.size) {
+  if (
+    !registeredSyncGenerators.globalGenerators.size &&
+    !registeredSyncGenerators.taskGenerators.size
+  ) {
     // there are no generators to run
     return;
   }
 
-  for (const generator of registeredSyncGenerators) {
+  const uniqueSyncGenerators = new Set<string>([
+    ...registeredSyncGenerators.globalGenerators,
+    ...registeredSyncGenerators.taskGenerators,
+  ]);
+  for (const generator of uniqueSyncGenerators) {
     scheduledGenerators.add(generator);
   }
 
@@ -139,9 +150,12 @@ export function collectAndScheduleSyncGenerators(
   }, waitPeriod);
 }
 
-export async function getCachedRegisteredSyncGenerators(): Promise<string[]> {
+export async function getCachedRegisteredSyncGenerators(): Promise<{
+  globalGenerators: string[];
+  taskGenerators: string[];
+}> {
   log('get registered sync generators');
-  if (!registeredSyncGenerators) {
+  if (!registeredGlobalSyncGenerators && !registeredTaskSyncGenerators) {
     log('no registered sync generators, collecting them');
     const { projectGraph } = await getCachedSerializedProjectGraphPromise();
     collectAllRegisteredSyncGenerators(projectGraph);
@@ -149,12 +163,15 @@ export async function getCachedRegisteredSyncGenerators(): Promise<string[]> {
     log('registered sync generators already collected, returning them');
   }
 
-  return [...registeredSyncGenerators];
+  return {
+    globalGenerators: [...registeredGlobalSyncGenerators],
+    taskGenerators: [...registeredTaskSyncGenerators],
+  };
 }
 
 async function getFromCacheOrRunGenerators(
   generators: string[]
-): Promise<SyncGeneratorChangesResult[]> {
+): Promise<SyncGeneratorRunResult[]> {
   let projects: Record<string, ProjectConfiguration> | null;
   let errored = false;
   const getProjectsConfigurations = async () => {
@@ -223,7 +240,7 @@ async function getFromCacheOrRunGenerators(
 async function runConflictingGenerators(
   tree: Tree,
   generators: string[]
-): Promise<SyncGeneratorChangesResult[]> {
+): Promise<SyncGeneratorRunResult[]> {
   const { projectGraph } = await getCachedSerializedProjectGraphPromise();
   const projects = projectGraph
     ? readProjectsConfigurationFromProjectGraph(projectGraph).projects
@@ -246,7 +263,7 @@ async function runConflictingGenerators(
   }
 
   // we need to run conflicting generators sequentially because they use the same tree
-  const results: SyncGeneratorChangesResult[] = [];
+  const results: SyncGeneratorRunResult[] = [];
   for (const generator of generators) {
     log(generator, 'running it now');
     results.push(await runGenerator(generator, projects, tree));
@@ -257,16 +274,17 @@ async function runConflictingGenerators(
 
 async function processConflictingGenerators(
   conflicts: string[][],
-  initialResults: SyncGeneratorChangesResult[]
-): Promise<SyncGeneratorChangesResult[]> {
+  initialResults: SyncGeneratorRunResult[]
+): Promise<SyncGeneratorRunResult[]> {
   const conflictRunResults = (
     await Promise.all(
       conflicts.map((generators) => {
         const [firstGenerator, ...generatorsToRun] = generators;
         // it must exists because the conflicts were identified from the initial results
+        // and it's guaranteed to be a success result
         const firstGeneratorResult = initialResults.find(
           (r) => r.generatorName === firstGenerator
-        )!;
+        )! as SyncGeneratorRunSuccessResult;
 
         const tree = new FsTree(
           workspaceRoot,
@@ -319,10 +337,14 @@ async function processConflictingGenerators(
  * @internal
  */
 export function _getConflictingGeneratorGroups(
-  results: SyncGeneratorChangesResult[]
+  results: SyncGeneratorRunResult[]
 ): string[][] {
   const changedFileToGeneratorMap = new Map<string, Set<string>>();
   for (const result of results) {
+    if ('error' in result) {
+      continue;
+    }
+
     for (const change of result.changes) {
       if (!changedFileToGeneratorMap.has(change.path)) {
         changedFileToGeneratorMap.set(change.path, new Set());
@@ -391,26 +413,36 @@ function collectAllRegisteredSyncGenerators(projectGraph: ProjectGraph): void {
     log('nx.json hash is the same, not collecting global sync generators');
   }
 
-  const generators = new Set([
-    ...registeredTaskSyncGenerators,
-    ...registeredGlobalSyncGenerators,
-  ]);
-
   if (!registeredSyncGenerators) {
-    registeredSyncGenerators = generators;
+    registeredSyncGenerators = {
+      globalGenerators: registeredGlobalSyncGenerators,
+      taskGenerators: registeredTaskSyncGenerators,
+    };
     return;
   }
 
-  for (const generator of registeredSyncGenerators) {
-    if (!generators.has(generator)) {
-      registeredSyncGenerators.delete(generator);
+  for (const generator of registeredSyncGenerators.globalGenerators) {
+    if (!registeredGlobalSyncGenerators.has(generator)) {
+      registeredSyncGenerators.globalGenerators.delete(generator);
+      syncGeneratorsCacheResultPromises.delete(generator);
+    }
+  }
+  for (const generator of registeredSyncGenerators.taskGenerators) {
+    if (!registeredTaskSyncGenerators.has(generator)) {
+      registeredSyncGenerators.taskGenerators.delete(generator);
       syncGeneratorsCacheResultPromises.delete(generator);
     }
   }
 
-  for (const generator of generators) {
-    if (!registeredSyncGenerators.has(generator)) {
-      registeredSyncGenerators.add(generator);
+  for (const generator of registeredGlobalSyncGenerators) {
+    if (!registeredSyncGenerators.globalGenerators.has(generator)) {
+      registeredSyncGenerators.globalGenerators.add(generator);
+    }
+  }
+
+  for (const generator of registeredTaskSyncGenerators) {
+    if (!registeredSyncGenerators.taskGenerators.has(generator)) {
+      registeredSyncGenerators.taskGenerators.add(generator);
     }
   }
 }
@@ -419,7 +451,7 @@ function runGenerator(
   generator: string,
   projects: Record<string, ProjectConfiguration>,
   tree?: Tree
-): Promise<SyncGeneratorChangesResult> {
+): Promise<SyncGeneratorRunResult> {
   log('running scheduled generator', generator);
   // remove it from the scheduled set
   scheduledGenerators.delete(generator);
@@ -430,7 +462,11 @@ function runGenerator(
   );
 
   return runSyncGenerator(tree, generator, projects).then((result) => {
-    log(generator, 'changes:', result.changes.map((c) => c.path).join(', '));
+    if ('error' in result) {
+      log(generator, 'error:', result.error.message);
+    } else {
+      log(generator, 'changes:', result.changes.map((c) => c.path).join(', '));
+    }
     return result;
   });
 }

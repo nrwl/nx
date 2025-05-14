@@ -39,6 +39,15 @@ function withFormatOptions(yargs: Argv): Argv {
       type: 'string',
       coerce: parseCSV,
     })
+    .option('sort-root-tsconfig-paths', {
+      describe: `Ensure the workspace's tsconfig compilerOptions.paths are sorted. Warning: This will cause comments in the tsconfig to be lost.`,
+      type: 'boolean',
+      /**
+       * TODO(v22): Stop sorting tsconfig paths by default, paths are now less common/important
+       * in Nx workspace setups, and the sorting causes comments to be lost.
+       */
+      default: true,
+    })
     .option('all', {
       describe: 'Format all projects.',
       type: 'boolean',

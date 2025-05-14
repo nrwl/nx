@@ -6,28 +6,20 @@
   "description": "Create an Executor for an Nx Plugin.",
   "examplesFile": "../../../docs/generators/executor-examples.md",
   "type": "object",
-  "examples": [
-    {
-      "command": "nx g executor my-executor --project=my-plugin",
-      "description": "Generate `libs/my-plugin/src/executors/my-executor`"
-    }
-  ],
   "properties": {
-    "name": {
+    "path": {
       "type": "string",
-      "description": "Executor name.",
+      "description": "The file path to the executor. Relative to the current working directory.",
+      "x-prompt": "What is the executor file path?",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the executor?",
       "x-priority": "important"
     },
-    "directory": {
+    "name": {
       "type": "string",
-      "description": "The directory at which to create the executor file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
-      "aliases": ["dir"],
-      "x-priority": "important"
+      "description": "The executor name to export in the plugin executors collection."
     },
     "description": {
       "type": "string",
@@ -36,7 +28,7 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["jest", "none"],
+      "enum": ["jest", "vitest", "none"],
       "description": "Test runner to use for unit tests.",
       "default": "jest"
     },
@@ -50,20 +42,6 @@
       "default": false,
       "description": "Do not add an eslint configuration for plugin json files."
     },
-    "nameAndDirectoryFormat": {
-      "description": "Whether to generate the executor in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-      "type": "string",
-      "enum": ["as-provided", "derived"]
-    },
-    "project": {
-      "type": "string",
-      "description": "The name of the project.",
-      "alias": "p",
-      "$default": {
-        "$source": "projectName"
-      },
-      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20."
-    },
     "skipFormat": {
       "type": "boolean",
       "description": "Skip formatting files.",
@@ -71,6 +49,6 @@
       "x-priority": "internal"
     }
   },
-  "required": ["name"],
+  "required": ["path"],
   "additionalProperties": false
 }

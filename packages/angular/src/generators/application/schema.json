@@ -6,25 +6,20 @@
   "type": "object",
   "cli": "nx",
   "properties": {
-    "name": {
-      "description": "The name of the application.",
+    "directory": {
+      "description": "The directory of the new application.",
       "type": "string",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the application?",
-      "pattern": "^[a-zA-Z][^:]*$"
+      "x-prompt": "Which directory do you want to create the application in?"
     },
-    "directory": {
-      "description": "The directory of the new application.",
+    "name": {
+      "description": "The name of the application.",
       "type": "string",
+      "pattern": "^[a-zA-Z][^:]*$",
       "x-priority": "important"
-    },
-    "projectNameAndRootFormat": {
-      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
-      "type": "string",
-      "enum": ["as-provided", "derived"]
     },
     "style": {
       "description": "The file extension to be used for style files.",
@@ -104,8 +99,9 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["jest", "none"],
+      "enum": ["jest", "vitest", "none"],
       "description": "Test runner to use for unit tests.",
+      "x-prompt": "Which unit test runner would you like to use?",
       "default": "jest"
     },
     "e2eTestRunner": {
@@ -133,12 +129,6 @@
       "type": "boolean",
       "description": "Create an application with stricter type checking and build optimization options.",
       "default": true
-    },
-    "standaloneConfig": {
-      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-      "type": "boolean",
-      "default": true,
-      "x-deprecated": "Nx only supports standaloneConfig"
     },
     "port": {
       "type": "number",
@@ -173,9 +163,10 @@
       "default": false
     },
     "bundler": {
-      "description": "Bundler to use to build the application. It defaults to `esbuild` for Angular versions >= 17.0.0. Otherwise, it defaults to `webpack`. _Note: The `esbuild` bundler is only considered stable from Angular v17._",
+      "description": "Bundler to use to build the application.",
       "type": "string",
-      "enum": ["webpack", "esbuild"],
+      "enum": ["esbuild", "rspack", "webpack"],
+      "default": "esbuild",
       "x-prompt": "Which bundler do you want to use to build the application?",
       "x-priority": "important"
     },
@@ -184,9 +175,13 @@
       "type": "boolean",
       "x-prompt": "Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)?",
       "default": false
+    },
+    "serverRouting": {
+      "description": "Creates a server application using the Server Routing and App Engine APIs (Developer Preview). _Note: this is only supported in Angular versions >= 19.0.0_.",
+      "type": "boolean"
     }
   },
   "additionalProperties": false,
-  "required": ["name"],
+  "required": ["directory"],
   "examplesFile": "../../../docs/application-examples.md"
 }

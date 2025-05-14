@@ -22,6 +22,7 @@ export function moveProjectFiles(
     '.babelrc',
     '.eslintrc.json',
     'eslint.config.js',
+    'eslint.config.cjs',
     /^jest\.config\.((app|lib)\.)?[jt]s$/,
     'vite.config.ts',
     /^webpack.*\.js$/,

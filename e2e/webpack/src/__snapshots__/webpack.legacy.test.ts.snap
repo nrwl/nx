@@ -88,19 +88,19 @@ exports[`Webpack Plugin (legacy) ConvertConfigToWebpackPlugin, should convert wi
     "lint": {
       "executor": "@nx/eslint:lint"
     },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../coverage/app3224373"
+      }
+    },
     "serve-static": {
       "executor": "@nx/web:file-server",
       "dependsOn": ["build"],
       "options": {
         "buildTarget": "app3224373:build",
         "spa": true
-      }
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "app3224373/jest.config.ts"
       }
     }
   }

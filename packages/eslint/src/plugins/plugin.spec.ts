@@ -73,13 +73,13 @@ describe('@nx/eslint/plugin', () => {
 
     // TODO(leo): dynamic import of the flat config fails with jest:
     // "TypeError: A dynamic import callback was invoked without --experimental-vm-modules"
-    // mocking the "eslint.config.js" file import is not working, figure out if there's a way
+    // mocking the "eslint.config.cjs" file import is not working, figure out if there's a way
     it.skip('should not create a node for a root level eslint config when accompanied by a project.json, if no src directory is present', async () => {
       createFiles({
-        'eslint.config.js': `module.exports = {};`,
+        'eslint.config.cjs': `module.exports = {};`,
         'project.json': `{}`,
       });
-      // NOTE: It should set ESLINT_USE_FLAT_CONFIG to true because of the use of eslint.config.js
+      // NOTE: It should set ESLINT_USE_FLAT_CONFIG to true because of the use of eslint.config.cjs
       expect(
         await invokeCreateNodesOnMatchingFiles(context, { targetName: 'lint' })
       ).toMatchInlineSnapshot(`

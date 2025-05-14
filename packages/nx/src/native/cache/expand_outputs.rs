@@ -1,9 +1,11 @@
+use hashbrown::HashMap;
 use std::path::{Path, PathBuf};
 use tracing::trace;
 
-use crate::native::glob::{build_glob_set, contains_glob_pattern};
+use crate::native::glob::{build_glob_set, contains_glob_pattern, glob_transform::partition_glob};
+use crate::native::logger::enable_logger;
 use crate::native::utils::Normalize;
-use crate::native::walker::nx_walker_sync;
+use crate::native::walker::{nx_walker, nx_walker_sync};
 
 #[napi]
 pub fn expand_outputs(directory: String, entries: Vec<String>) -> anyhow::Result<Vec<String>> {
@@ -70,6 +72,24 @@ where
     Ok(found_paths)
 }
 
+fn partition_globs_into_map(globs: Vec<String>) -> anyhow::Result<HashMap<String, Vec<String>>> {
+    globs
+        .iter()
+        .map(|glob| partition_glob(glob))
+        // Right now we have an iterator where each item is (root: String, patterns: String[]).
+        // We want a singular root, with the patterns mapped to it.
+        .fold(
+            Ok(HashMap::<String, Vec<String>>::new()),
+            |map_result, parsed_glob| {
+                let mut map = map_result?;
+                let (root, patterns) = parsed_glob?;
+                let entry = map.entry(root).or_insert(vec![]);
+                entry.extend(patterns);
+                Ok(map)
+            },
+        )
+}
+
 #[napi]
 /// Expands the given outputs into a list of existing files.
 /// This is used when hashing outputs
@@ -77,6 +97,8 @@ pub fn get_files_for_outputs(
     directory: String,
     entries: Vec<String>,
 ) -> anyhow::Result<Vec<String>> {
+    enable_logger();
+
     let directory: PathBuf = directory.into();
 
     let mut globs: Vec<String> = vec![];
@@ -86,7 +108,9 @@ pub fn get_files_for_outputs(
         let path = directory.join(&entry);
 
         if !path.exists() {
-            globs.push(entry);
+            if contains_glob_pattern(&entry) {
+                globs.push(entry);
+            }
         } else if path.is_dir() {
             directories.push(entry);
         } else {
@@ -95,28 +119,41 @@ pub fn get_files_for_outputs(
     }
 
     if !globs.is_empty() {
-        // todo(jcammisuli): optimize this as nx_walker_sync is very slow on the root directory. We need to change this to only search smaller directories
-        let glob_set = build_glob_set(&globs)?;
-        let found_paths = nx_walker_sync(&directory, None).filter_map(|path| {
-            if glob_set.is_match(&path) {
-                Some(path.to_normalized_string())
-            } else {
-                None
-            }
-        });
+        let partitioned_globs = partition_globs_into_map(globs)?;
+        for (root, patterns) in partitioned_globs {
+            let root_path = directory.join(&root);
+            let glob_set = build_glob_set(&patterns)?;
+            trace!("walking directory: {:?}", root_path);
 
-        files.extend(found_paths);
+            let found_paths: Vec<String> = nx_walker(&root_path, false)
+                .filter_map(|file| {
+                    if glob_set.is_match(&file.normalized_path) {
+                        Some(
+                            // root_path contains full directory,
+                            // root is only the leading dirs from glob
+                            PathBuf::from(&root)
+                                .join(&file.normalized_path)
+                                .to_normalized_string(),
+                        )
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+
+            files.extend(found_paths);
+        }
     }
 
     if !directories.is_empty() {
         for dir in directories {
             let dir = PathBuf::from(dir);
             let dir_path = directory.join(&dir);
-            let files_in_dir = nx_walker_sync(&dir_path, None).filter_map(|e| {
-                let path = dir_path.join(&e);
+            let files_in_dir = nx_walker(&dir_path, false).filter_map(|e| {
+                let path = dir_path.join(&e.normalized_path);
 
                 if path.is_file() {
-                    Some(dir.join(e).to_normalized_string())
+                    Some(dir.join(e.normalized_path).to_normalized_string())
                 } else {
                     None
                 }
@@ -133,8 +170,8 @@ pub fn get_files_for_outputs(
 #[cfg(test)]
 mod test {
     use super::*;
-    use assert_fs::prelude::*;
     use assert_fs::TempDir;
+    use assert_fs::prelude::*;
     use std::{assert_eq, vec};
 
     fn setup_fs() -> TempDir {
@@ -218,6 +255,26 @@ mod test {
                 "apps/web/.next/content-file",
                 "apps/web/.next/static",
                 "apps/web/.next/static/contents"
+            ]
+        );
+    }
+
+    #[test]
+    fn should_get_files_for_outputs_with_glob() {
+        let temp = setup_fs();
+        let entries = vec![
+            "packages/nx/src/native/*.node".to_string(),
+            "folder/nested-folder".to_string(),
+            "test.txt".to_string(),
+        ];
+        let mut result = get_files_for_outputs(temp.display().to_string(), entries).unwrap();
+        result.sort();
+        assert_eq!(
+            result,
+            vec![
+                "folder/nested-folder",
+                "packages/nx/src/native/nx.darwin-arm64.node",
+                "test.txt"
             ]
         );
     }

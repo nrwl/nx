@@ -1,13 +1,16 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
 import { getProjects, readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { applicationGenerator } from './application';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/versions', () => ({
+  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+  getInstalledCypressMajorVersion: jest.fn(),
+}));
 jest.mock('@nx/devkit', () => {
   return {
     ...jest.requireActual('@nx/devkit'),
@@ -17,8 +20,8 @@ jest.mock('@nx/devkit', () => {
 describe('web app generator (legacy)', () => {
   let tree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
+    ReturnType<typeof getInstalledCypressMajorVersion>
+  > = getInstalledCypressMajorVersion as never;
 
   let originalEnv: string;
 
@@ -38,8 +41,7 @@ describe('web app generator (legacy)', () => {
 
   it('should setup webpack configuration', async () => {
     await applicationGenerator(tree, {
-      name: 'my-app',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-app',
     });
     const project = readProjectConfiguration(tree, 'my-app');
     expect(project).toMatchInlineSnapshot(`
@@ -145,7 +147,7 @@ describe('web app generator (legacy)', () => {
 
   it('should add targets for vite', async () => {
     await applicationGenerator(tree, {
-      name: 'my-vite-app',
+      directory: 'my-vite-app',
       bundler: 'vite',
     });
     const projects = getProjects(tree);

@@ -1,6 +1,7 @@
 import {
   checkFilesExist,
   cleanupProject,
+  createFile,
   fileExists,
   listFiles,
   newProject,
@@ -21,7 +22,9 @@ describe('Webpack Plugin', () => {
 
   it('should be able to setup project to build node programs with webpack and different compilers', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=none`);
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=none`
+    );
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
 
     runCLI(
@@ -100,7 +103,9 @@ describe('Webpack Plugin', () => {
 
   it('should use either BABEL_ENV or NODE_ENV value for Babel environment configuration', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=none`);
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=none`
+    );
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
 
     runCLI(
@@ -132,8 +137,12 @@ describe('Webpack Plugin', () => {
 
   it('should be able to build with NxWebpackPlugin and a standard webpack config file', () => {
     const appName = uniq('app');
-    runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
+    runCLI(
+      `generate @nx/web:app ${appName} --bundler webpack --directory=apps/${appName}`
+    );
     updateFile(`apps/${appName}/src/main.ts`, `console.log('Hello');\n`);
+    updateFile(`apps/${appName}/src/foo.ts`, `console.log('Foo');\n`);
+    updateFile(`apps/${appName}/src/bar.ts`, `console.log('Bar');\n`);
 
     updateFile(
       `apps/${appName}/webpack.config.js`,
@@ -144,13 +153,22 @@ describe('Webpack Plugin', () => {
       module.exports = {
         target: 'node',
         output: {
-          path: path.join(__dirname, '../../dist/${appName}')
+          path: path.join(__dirname, '../../dist/apps/${appName}'),
+          // do not remove dist, so files between builds will remain
+          clean: false,
         },
         plugins: [
           new NxAppWebpackPlugin({
             compiler: 'tsc',
-            main: 'apps/${appName}/src/main.ts',
-            tsConfig: 'apps/${appName}/tsconfig.app.json',
+            main: './src/main.ts',
+            additionalEntryPoints: [
+              './src/foo.ts',
+              {
+                entryName: 'bar',
+                entryPath: './src/bar.ts', 
+              }
+            ],
+            tsConfig: './tsconfig.app.json',
             outputHashing: 'none',
             optimization: false,
           })
@@ -160,13 +178,23 @@ describe('Webpack Plugin', () => {
 
     runCLI(`build ${appName}`);
 
-    let output = runCommand(`node dist/${appName}/main.js`);
-    expect(output).toMatch(/Hello/);
+    expect(runCommand(`node dist/apps/${appName}/main.js`)).toMatch(/Hello/);
+    expect(runCommand(`node dist/apps/${appName}/foo.js`)).toMatch(/Foo/);
+    expect(runCommand(`node dist/apps/${appName}/bar.js`)).toMatch(/Bar/);
+
+    // Ensure dist is not removed between builds since output.clean === false
+    createFile(`dist/apps/${appName}/extra.js`);
+    runCLI(`build ${appName} --skip-nx-cache`);
+    checkFilesExist(`dist/apps/${appName}/extra.js`);
   }, 500_000);
 
   it('should bundle in NX_PUBLIC_ environment variables', () => {
     const appName = uniq('app');
-    runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
+    runCLI(
+      `generate @nx/web:app ${appName} --directory=apps/${appName} --bundler webpack`
+    );
+
+    checkFilesExist(`apps/${appName}/src/main.ts`);
     updateFile(
       `apps/${appName}/src/main.ts`,
       `
@@ -190,9 +218,11 @@ describe('Webpack Plugin', () => {
   it('should support babel + core-js to polyfill JS features', async () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nx/web:app ${appName} --bundler webpack --compiler=babel`
+      `generate @nx/web:app ${appName} --directory=apps/${appName} --bundler webpack --compiler=babel`
     );
     packageInstall('core-js', undefined, '3.26.1', 'prod');
+
+    checkFilesExist(`apps/${appName}/src/main.ts`);
     updateFile(
       `apps/${appName}/src/main.ts`,
       `
@@ -218,7 +248,11 @@ describe('Webpack Plugin', () => {
 
   it('should allow options to be passed from the executor', async () => {
     const appName = uniq('app');
-    runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
+    runCLI(
+      `generate @nx/web:app ${appName} --directory=apps/${appName} --bundler webpack`
+    );
+
+    checkFilesExist(`apps/${appName}/project.json`);
     updateJson(`apps/${appName}/project.json`, (json) => {
       json.targets.build = {
         executor: '@nx/webpack:webpack',
@@ -231,6 +265,8 @@ describe('Webpack Plugin', () => {
       };
       return json;
     });
+
+    checkFilesExist(`apps/${appName}/webpack.config.js`);
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
@@ -261,7 +297,9 @@ describe('Webpack Plugin', () => {
 
   it('should resolve assets from executors as relative to workspace root', () => {
     const appName = uniq('app');
-    runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
+    runCLI(
+      `generate @nx/web:app ${appName} --directory=apps/${appName} --bundler webpack`
+    );
     updateFile('shared/docs/TEST.md', 'TEST');
     updateJson(`apps/${appName}/project.json`, (json) => {
       json.targets.build = {
@@ -291,9 +329,13 @@ describe('Webpack Plugin', () => {
     const appName = uniq('app');
     const myPkg = uniq('my-pkg');
 
-    runCLI(`generate @nx/web:application ${appName}`);
+    runCLI(
+      `generate @nx/web:application ${appName} --directory=apps/${appName}`
+    );
 
-    runCLI(`generate @nx/js:lib ${myPkg} --importPath=@${appName}/${myPkg}`);
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --importPath=@${appName}/${myPkg}`
+    );
 
     updateFile(`libs/${myPkg}/src/index.ts`, `export const foo = 'bar';\n`);
 
@@ -341,7 +383,7 @@ describe('Webpack Plugin', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --compiler=babel`
+      `generate @nx/web:app ${appName} --directory=apps/${appName} --bundler=webpack --compiler=babel`
     );
 
     updateFile(
@@ -371,6 +413,202 @@ describe('Webpack Plugin', () => {
     expect(result).toContain(
       `Successfully ran target build for project ${appName}`
     );
+  });
+
+  describe('config types', () => {
+    it('should support a standard config object', () => {
+      const appName = uniq('app');
+
+      runCLI(
+        `generate @nx/react:application --directory=apps/${appName} --bundler=webpack --e2eTestRunner=none`
+      );
+
+      updateFile(
+        `apps/${appName}/webpack.config.js`,
+        `
+        const path  = require('path');
+        const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+  
+        module.exports = {
+          target: 'node',
+          output: {
+            path: path.join(__dirname, '../../dist/${appName}')
+          },
+          plugins: [
+            new NxAppWebpackPlugin({
+              compiler: 'babel',
+              main: './src/main.tsx',
+              tsConfig: './tsconfig.app.json',
+              outputHashing: 'none',
+              optimization: false,
+            })
+          ]
+        };`
+      );
+
+      const result = runCLI(`build ${appName}`);
+
+      expect(result).toContain(
+        `Successfully ran target build for project ${appName}`
+      );
+    });
+
+    it('should support a standard function that returns a config object', () => {
+      const appName = uniq('app');
+
+      runCLI(
+        `generate @nx/react:application --directory=apps/${appName} --bundler=webpack --e2eTestRunner=none`
+      );
+
+      updateFile(
+        `apps/${appName}/webpack.config.js`,
+        `
+        const path  = require('path');
+        const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+  
+        module.exports = () => {
+          return {
+            target: 'node',
+          output: {
+            path: path.join(__dirname, '../../dist/${appName}')
+          },
+          plugins: [
+            new NxAppWebpackPlugin({
+              compiler: 'tsc',
+              main: './src/main.tsx',
+              tsConfig: './tsconfig.app.json',
+              outputHashing: 'none',
+              optimization: false,
+            })
+          ]
+      };
+      };`
+      );
+
+      const result = runCLI(`build ${appName}`);
+      expect(result).toContain(
+        `Successfully ran target build for project ${appName}`
+      );
+    });
+
+    it('should support an array of standard config objects', () => {
+      const appName = uniq('app');
+      const serverName = uniq('server');
+
+      runCLI(
+        `generate @nx/react:application --directory=apps/${appName} --bundler=webpack --e2eTestRunner=none`
+      );
+
+      // Create server index file
+      createFile(
+        `apps/${serverName}/index.js`,
+        `console.log('Hello from ${serverName}');\n`
+      );
+
+      updateFile(
+        `apps/${appName}/webpack.config.js`,
+        `
+        const path  = require('path');
+        const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+  
+        module.exports = [
+         {
+            name: 'client',
+            target: 'node',
+          output: {
+            path: path.join(__dirname, '../../dist/${appName}')
+          },
+          plugins: [
+            new NxAppWebpackPlugin({
+              compiler: 'tsc',
+              main: './src/main.tsx',
+              tsConfig: './tsconfig.app.json',
+              outputHashing: 'none',
+              optimization: false,
+            })
+          ]
+      }, {
+       name: 'server',
+      target: 'node',
+      entry: '../${serverName}/index.js',
+      output: {
+        path: path.join(__dirname, '../../dist/${serverName}'),
+        filename: 'index.js',
+      },
+      }
+      ];
+      `
+      );
+
+      const result = runCLI(`build ${appName}`);
+
+      checkFilesExist(`dist/${appName}/main.js`);
+      checkFilesExist(`dist/${serverName}/index.js`);
+
+      expect(result).toContain(
+        `Successfully ran target build for project ${appName}`
+      );
+    });
+
+    it('should support a function that returns an array of standard config objects', () => {
+      const appName = uniq('app');
+      const serverName = uniq('server');
+
+      runCLI(
+        `generate @nx/react:application --directory=apps/${appName} --bundler=webpack --e2eTestRunner=none`
+      );
+
+      // Create server index file
+      createFile(
+        `apps/${serverName}/index.js`,
+        `console.log('Hello from ${serverName}');\n`
+      );
+
+      updateFile(
+        `apps/${appName}/webpack.config.js`,
+        `
+        const path  = require('path');
+        const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+  
+        module.exports = () => {
+          return [
+            {
+              name: 'client',
+              target: 'node',
+              output: {
+                path: path.join(__dirname, '../../dist/${appName}')
+              },
+              plugins: [
+                new NxAppWebpackPlugin({
+                  compiler: 'tsc',
+                  main: './src/main.tsx',
+                  tsConfig: './tsconfig.app.json',
+                  outputHashing: 'none',
+                  optimization: false,
+                })
+              ]
+            }, 
+            {
+              name: 'server',
+              target: 'node',
+              entry: '../${serverName}/index.js',
+              output: {
+                path: path.join(__dirname, '../../dist/${serverName}'),
+                filename: 'index.js',
+              }
+            }
+      ];
+      };`
+      );
+      const result = runCLI(`build ${appName}`);
+
+      checkFilesExist(`dist/${serverName}/index.js`);
+      checkFilesExist(`dist/${appName}/main.js`);
+
+      expect(result).toContain(
+        `Successfully ran target build for project ${appName}`
+      );
+    });
   });
 });
 

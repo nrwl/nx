@@ -32,11 +32,30 @@ interface ActiveTask {
   stop: (signal: NodeJS.Signals) => Promise<void>;
 }
 
-function debounce(fn: () => void, wait: number) {
+function debounce<T>(fn: () => Promise<T>, wait: number): () => Promise<T> {
   let timeoutId: NodeJS.Timeout;
+  let pendingPromise: Promise<T> | null = null;
+
   return () => {
     clearTimeout(timeoutId);
-    timeoutId = setTimeout(fn, wait);
+
+    if (!pendingPromise) {
+      pendingPromise = new Promise<T>((resolve, reject) => {
+        timeoutId = setTimeout(() => {
+          fn()
+            .then((result) => {
+              pendingPromise = null;
+              resolve(result);
+            })
+            .catch((error) => {
+              pendingPromise = null;
+              reject(error);
+            });
+        }, wait);
+      });
+    }
+
+    return pendingPromise;
   };
 }
 
@@ -59,10 +78,7 @@ export async function* nodeExecutor(
   const buildTargetExecutor =
     project.data.targets[buildTarget.target]?.executor;
 
-  if (
-    buildTargetExecutor === 'nx:run-commands' ||
-    buildTargetExecutor === '@nrwl/workspace:run-commands'
-  ) {
+  if (buildTargetExecutor === 'nx:run-commands') {
     // Run commands does not emit build event, so we have to switch to run entire build through Nx CLI.
     options.runBuildTargetDependencies = true;
   }
@@ -100,7 +116,7 @@ export async function* nodeExecutor(
   yield* createAsyncIterable<{
     success: boolean;
     options?: Record<string, any>;
-  }>(async ({ done, next, error }) => {
+  }>(async ({ done, next, error, registerCleanup }) => {
     const processQueue = async () => {
       if (tasks.length === 0) return;
 
@@ -129,7 +145,7 @@ export async function* nodeExecutor(
           // Wait for build to finish.
           const result = await buildResult;
 
-          if (!result.success) {
+          if (result && !result.success) {
             // If in watch-mode, don't throw or else the process exits.
             if (options.watch) {
               if (!task.killed) {
@@ -172,18 +188,13 @@ export async function* nodeExecutor(
             task.childProcess.stderr.on('data', handleStdErr);
             task.childProcess.once('exit', (code) => {
               task.childProcess.off('data', handleStdErr);
-              if (
-                options.watch &&
-                !task.killed &&
-                // SIGINT should exist the process rather than watch for changes.
-                code !== 130
-              ) {
+              if (options.watch && !task.killed) {
                 logger.info(
                   `NX Process exited with code ${code}, waiting for changes to restart...`
                 );
               }
-              if (!options.watch || code === 130) {
-                if (code !== 0 && code !== 130) {
+              if (!options.watch) {
+                if (code !== 0) {
                   error(new Error(`Process exited with code ${code}`));
                 } else {
                   done();
@@ -233,6 +244,10 @@ export async function* nodeExecutor(
     process.on('SIGHUP', async () => {
       await stopAllTasks('SIGHUP');
       process.exit(128 + 1);
+    });
+
+    registerCleanup(async () => {
+      await stopAllTasks('SIGTERM');
     });
 
     if (options.runBuildTargetDependencies) {
@@ -389,7 +404,7 @@ function getFileToRun(
       const outputFilePath = interpolate(outputPath, {
         projectName: project.name,
         projectRoot: project.data.root,
-        workspaceRoot: '',
+        workspaceRoot: context.root,
       });
       return path.join(outputFilePath, 'main.js');
     }

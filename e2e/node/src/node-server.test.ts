@@ -58,15 +58,11 @@ describe('Node Applications + webpack', () => {
 
   async function runE2eTests(appName: string, port: number = 5000) {
     process.env.PORT = `${port}`;
-    const childProcess = await runCommandUntil(`serve ${appName}`, (output) => {
-      return output.includes(`http://localhost:${port}`);
-    });
     const result = runCLI(`e2e ${appName}-e2e --verbose`);
     expect(result).toContain('Setting up...');
     expect(result).toContain('Tearing down..');
     expect(result).toContain('Successfully ran target e2e');
 
-    await promisifiedTreeKill(childProcess.pid, 'SIGKILL');
     await killPort(port);
     process.env.PORT = '';
   }
@@ -80,19 +76,23 @@ describe('Node Applications + webpack', () => {
     const nestApp = uniq('nest');
 
     beforeAll(() => {
-      runCLI(`generate @nx/node:lib ${testLib1}`);
-      runCLI(`generate @nx/node:lib ${testLib2} --importPath=@acme/test2`);
       runCLI(
-        `generate @nx/node:app ${expressApp} --framework=express --port=7000 --no-interactive`
+        `generate @nx/node:lib libs/${testLib1} --linter=eslint --unitTestRunner=jest --buildable=false`
       );
       runCLI(
-        `generate @nx/node:app ${fastifyApp} --framework=fastify --port=7001 --no-interactive`
+        `generate @nx/node:lib libs/${testLib2} --importPath=@acme/test2 --linter=eslint --unitTestRunner=jest --buildable=false`
       );
       runCLI(
-        `generate @nx/node:app ${koaApp} --framework=koa --port=7002 --no-interactive`
+        `generate @nx/node:app apps/${expressApp} --framework=express --port=7000 --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
       );
       runCLI(
-        `generate @nx/node:app ${nestApp} --framework=nest --port=7003 --bundler=webpack --no-interactive`
+        `generate @nx/node:app apps/${fastifyApp} --framework=fastify --port=7001 --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
+      );
+      runCLI(
+        `generate @nx/node:app apps/${koaApp} --framework=koa --port=7002 --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
+      );
+      runCLI(
+        `generate @nx/node:app apps/${nestApp} --framework=nest --port=7003 --bundler=webpack --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest --verbose`
       );
 
       addLibImport(expressApp, testLib1);
@@ -165,7 +165,7 @@ describe('Node Applications + webpack', () => {
     const expressApp = 'docker-express-app'; // needs to be consistent for the Dockerfile snapshot
 
     runCLI(
-      `generate @nx/node:app ${expressApp} --framework=express --docker --no-interactive`
+      `generate @nx/node:app apps/${expressApp} --framework=express --docker --no-interactive --linter=eslint --unitTestRunner=jest`
     );
 
     checkFilesExist(`apps/${expressApp}/Dockerfile`);
@@ -179,17 +179,19 @@ describe('Node Applications + webpack', () => {
 
     // Set ports to avoid conflicts with other tests that might run in parallel
     runCLI(
-      `generate @nx/node:app ${nodeApp1} --framework=none --no-interactive --port=4444`
+      `generate @nx/node:app apps/${nodeApp1} --framework=none --no-interactive --port=4444 --linter=eslint --unitTestRunner=jest`
     );
     runCLI(
-      `generate @nx/node:app ${nodeApp2} --framework=none --no-interactive --port=4445`
+      `generate @nx/node:app apps/${nodeApp2} --framework=none --no-interactive --port=4445 --linter=eslint --unitTestRunner=jest`
     );
     updateJson(join('apps', nodeApp1, 'project.json'), (config) => {
       config.targets.serve.options.waitUntilTargets = [`${nodeApp2}:build`];
       return config;
     });
 
-    runCLI(`serve ${nodeApp1} --watch=false`);
+    await runCommandUntil(`serve ${nodeApp1} `, (output) =>
+      output.includes('Hello World')
+    );
 
     checkFilesExist(`dist/apps/${nodeApp1}/main.js`);
     checkFilesExist(`dist/apps/${nodeApp2}/main.js`);

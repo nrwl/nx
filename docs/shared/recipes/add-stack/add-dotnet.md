@@ -1,3 +1,8 @@
+---
+title: Add a New .NET Project
+description: Learn how to integrate .NET projects with Nx using the @nx-dotnet/core plugin, including setup, configuration, and leveraging Nx features.
+---
+
 # Add a New .NET Project
 
 **Supported Features**
@@ -71,12 +76,6 @@ This generates the following files:
 }
 ```
 
-```json {% fileName=".nx-dotnet.rc.json" %}
-{
-  "nugetPackages": {}
-}
-```
-
 ```xml {% fileName="Directory.Build.props" %}
 <!--
   This file is imported early in the build order.
@@ -115,13 +114,17 @@ This generates the following files:
 </Project>
 ```
 
+And on Nx versions earlier than 17:
+
+```json {% fileName=".nx-dotnet.rc.json" %}
+{
+  "nugetPackages": {}
+}
+```
+
 ## Create an Application
 
 Use the `app` generator to create a new .NET app. For this demo, use the `nx` path naming convention and the `web-api` project template.
-
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
 
 ```shell
 nx g @nx-dotnet/core:app my-api --directory=apps/my-api --test-template nunit --language C#
@@ -136,10 +139,6 @@ nx serve my-api
 ## Create a Library
 
 To create a new library, run the library generator. Use the `classlib` template.
-
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
 
 ```shell
 nx g @nx-dotnet/core:lib dotnet-lib --directory=libs/dotnet-lib

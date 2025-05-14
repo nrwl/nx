@@ -1,0 +1,19 @@
+import {ModuleFederationConfig} from '@nx/module-federation';
+
+const config: ModuleFederationConfig = {
+  name: '<%= projectName %>',
+  exposes: {
+      './Module': './src/remote-entry.<%= js ? 'js' : 'ts' %>',
+  },
+  shared: (libraryName, libraryConfig) => {
+      return {
+        ...libraryConfig,
+        eager: true
+      }
+    },
+};
+
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
+export default config;

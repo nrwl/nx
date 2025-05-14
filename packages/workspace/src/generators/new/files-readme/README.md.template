@@ -12,15 +12,15 @@ Run `npx nx graph` to visually explore what got created. Now, let's get you up t
 
 [Click here to finish setting up your workspace!](<%= nxCloudOnboardingUrl %>)
 
-<% } %>
+<% } %><% if (!isEmptyRepo) { %>
 ## Run tasks
-<% if (!isEmptyRepo) { %><% if (isJsStandalone) { %>
+<% if (isJsStandalone) { %>
 To build the library use:
 
 ```sh
 npx nx build
 ```
-        <% } else { %>
+<% } else { %>
 To run the dev server for your app, use:
 
 ```sh
@@ -38,7 +38,29 @@ To see all available targets to run for a project, run:
 ```sh
 npx nx show project <%= appName %>
 ```
-        <% } %><% } else { %>
+<% } %><% } else if (isTsPreset) { %>
+## Generate a library
+
+```sh
+npx nx g @nx/js:lib packages/pkg1 --publishable --importPath=@my-org/pkg1
+```
+
+## Run tasks
+
+To build the library use:
+
+```sh
+npx nx build pkg1
+```
+
+To run any task with Nx use:
+
+```sh
+npx nx <target> <project-name>
+```
+<% } else { %>
+## Run tasks
+
 To run tasks with Nx use:
 
 ```sh
@@ -66,7 +88,25 @@ npx nx release
 Pass `--dry-run` to see what would happen without actually releasing the library.
 
 [Learn more about Nx release &raquo;](hhttps://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-<% } %><% if (!isJsStandalone) { %>
+<% } %><% if (isTsPreset && isUsingNewTsSolutionSetup) { %>
+## Keep TypeScript project references up to date
+
+Nx automatically updates TypeScript [project references](https://www.typescriptlang.org/docs/handbook/project-references.html) in `tsconfig.json` files to ensure they remain accurate based on your project dependencies (`import` or `require` statements). This sync is automatically done when running tasks such as `build` or `typecheck`, which require updated references to function correctly.
+
+To manually trigger the process to sync the project graph dependencies information to the TypeScript project references, run the following command:
+
+```sh
+npx nx sync
+```
+
+You can enforce that the TypeScript project references are always in the correct state when running in CI by adding a step to your CI job configuration that runs the following command:
+
+```sh
+npx nx sync:check
+```
+
+[Learn more about nx sync](https://nx.dev/reference/nx-commands#sync)
+<% } %><% if (!isJsStandalone && !isTsPreset) { %>
 ## Add new projects
 
 While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
@@ -79,7 +119,7 @@ npx nx add @nx/react
 Use the plugin's generator to create new projects. For example, to create a new React app or library:
 
 ```sh
-# Genenerate an app
+# Generate an app
 npx nx g @nx/react:app demo
 
 # Generate a library

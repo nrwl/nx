@@ -8,19 +8,20 @@ import { verifyOrUpdateNxCloudClient } from '../src/nx-cloud/update-manager';
 import { getCloudOptions } from '../src/nx-cloud/utilities/get-cloud-options';
 import { isNxCloudUsed } from '../src/utils/nx-cloud-utils';
 import { readNxJson } from '../src/config/nx-json';
-import { setupWorkspaceContext } from '../src/utils/workspace-context';
 import { logger } from '../src/utils/logger';
+import { setupWorkspaceContext } from '../src/utils/workspace-context';
 
 (async () => {
   const start = new Date();
   try {
-    setupWorkspaceContext(workspaceRoot);
     if (isMainNxPackage() && fileExists(join(workspaceRoot, 'nx.json'))) {
       assertSupportedPlatform();
-
-      try {
-        await daemonClient.stop();
-      } catch (e) {}
+      setupWorkspaceContext(workspaceRoot);
+      if (daemonClient.enabled()) {
+        try {
+          await daemonClient.stop();
+        } catch (e) {}
+      }
       const tasks: Array<Promise<any>> = [
         buildProjectGraphAndSourceMapsWithoutDaemon(),
       ];

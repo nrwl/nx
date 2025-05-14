@@ -4,7 +4,6 @@ import {
   installPackagesTask,
   joinPathFragments,
   readJson,
-  updateJson,
 } from '@nx/devkit';
 import {
   swcCliVersion,
@@ -14,8 +13,13 @@ import {
 } from '@nx/js/src/utils/versions';
 import { addSwcConfig } from '@nx/js/src/utils/swc/add-swc-config';
 
-export function configureForSwc(tree: Tree, projectRoot: string) {
-  const swcConfigPath = joinPathFragments(projectRoot, '.swcrc');
+export function configureForSwc(
+  tree: Tree,
+  projectRoot: string,
+  swcConfigName = '.swcrc',
+  additonalExludes: string[] = []
+) {
+  const swcConfigPath = joinPathFragments(projectRoot, swcConfigName);
   const rootPackageJson = readJson(tree, 'package.json');
 
   const hasSwcDepedency =
@@ -27,22 +31,17 @@ export function configureForSwc(tree: Tree, projectRoot: string) {
     rootPackageJson.devDependencies?.['@swc/cli'];
 
   if (!tree.exists(swcConfigPath)) {
-    addSwcConfig(tree, projectRoot);
-  }
-
-  if (tree.exists(swcConfigPath)) {
-    updateJson(tree, swcConfigPath, (json) => {
-      return {
-        ...json,
-        exclude: [...json.exclude, '.*.d.ts$'],
-      };
-    });
+    // We need to create a swc config file specific for custom server
+    addSwcConfig(tree, projectRoot, 'commonjs', false, swcConfigName, [
+      ...additonalExludes,
+      '.*.d.ts$',
+    ]);
   }
 
   if (!hasSwcDepedency || !hasSwcCliDependency) {
     addSwcDependencies(tree);
-    return () => installPackagesTask(tree);
   }
+  return () => installPackagesTask(tree);
 }
 
 function addSwcDependencies(tree: Tree) {

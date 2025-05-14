@@ -4,22 +4,14 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '@nx/devkit';
 import { type Schema } from './schema';
-import {
-  buildStaticRemotes,
-  normalizeOptions,
-  startRemotes,
-  startStaticRemotesFileServer,
-} from './lib';
+import { normalizeOptions, startRemotes } from './lib';
 import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import {
   combineAsyncIterables,
   createAsyncIterable,
   mapAsyncIterable,
 } from '@nx/devkit/src/utils/async-iterable';
-import {
-  getModuleFederationConfig,
-  getRemotes,
-} from '@nx/webpack/src/utils/module-federation';
+import { startRemoteIterators } from '@nx/module-federation/src/executors/utils';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
@@ -30,15 +22,11 @@ import {
 } from '../../builders/utilities/module-federation';
 import { extname, join } from 'path';
 import { existsSync } from 'fs';
-import { startRemoteProxies } from '@nx/webpack/src/utils/module-federation/start-remote-proxies';
-import { parseStaticRemotesConfig } from '@nx/webpack/src/utils/module-federation/parse-static-remotes-config';
 
 export async function* moduleFederationDevServerExecutor(
   schema: Schema,
   context: ExecutorContext
 ) {
-  // Force Node to resolve to look for the nx binary that is inside node_modules
-  const nxBin = require.resolve('nx/bin/nx');
   const options = normalizeOptions(schema);
 
   const { projects: workspaceProjects } =
@@ -101,74 +89,14 @@ export async function* moduleFederationDevServerExecutor(
 
   validateDevRemotes(options, workspaceProjects);
 
-  const moduleFederationConfig = getModuleFederationConfig(
-    project.targets.build.options.tsConfig,
-    context.root,
-    project.root,
-    'angular'
-  );
-
-  const remoteNames = options.devRemotes.map((r) =>
-    typeof r === 'string' ? r : r.remoteName
-  );
-
-  const remotes = getRemotes(
-    remoteNames,
-    options.skipRemotes,
-    moduleFederationConfig,
-    {
-      projectName: project.name,
-      projectGraph: context.projectGraph,
-      root: context.root,
-    },
-    pathToManifestFile
-  );
-
-  options.staticRemotesPort ??= remotes.staticRemotePort;
-
-  // Set NX_MF_DEV_REMOTES for the Nx Runtime Library Control Plugin
-  process.env.NX_MF_DEV_REMOTES = JSON.stringify([
-    ...(remotes.devRemotes.map((r) =>
-      typeof r === 'string' ? r : r.remoteName
-    ) ?? []),
-    project.name,
-  ]);
-
-  const staticRemotesConfig = parseStaticRemotesConfig(
-    [...remotes.staticRemotes, ...remotes.dynamicRemotes],
-    context
-  );
-  const mappedLocationsOfStaticRemotes = await buildStaticRemotes(
-    staticRemotesConfig,
-    nxBin,
-    context,
-    options
-  );
-
-  const devRemoteIters = await startRemotes(
-    remotes.devRemotes,
-    workspaceProjects,
-    options,
-    context,
-    'serve'
-  );
-
-  const staticRemotesIter = startStaticRemotesFileServer(
-    staticRemotesConfig,
-    context,
-    options
-  );
-
-  startRemoteProxies(
-    staticRemotesConfig,
-    mappedLocationsOfStaticRemotes,
-    options.ssl
-      ? {
-          pathToCert: options.sslCert,
-          pathToKey: options.sslKey,
-        }
-      : undefined
-  );
+  const { remotes, staticRemotesIter, devRemoteIters } =
+    await startRemoteIterators(
+      options,
+      context,
+      startRemotes,
+      pathToManifestFile,
+      'angular'
+    );
 
   const removeBaseUrlEmission = (iter: AsyncIterable<unknown>) =>
     mapAsyncIterable(iter, (v) => ({

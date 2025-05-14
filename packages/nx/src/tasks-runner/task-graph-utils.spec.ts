@@ -1,22 +1,14 @@
 import '../internal-testing-utils/mock-fs';
 
-import { vol } from 'memfs';
-
-import { join } from 'path';
 import {
   findCycle,
+  findCycles,
   makeAcyclic,
   validateNoAtomizedTasks,
 } from './task-graph-utils';
-import { ensureDirSync, removeSync, writeFileSync } from 'fs-extra';
-import { tmpdir } from 'os';
-import { workspaceRoot } from '../utils/workspace-root';
-import { cacheDir } from '../utils/cache-directory';
-import { Task } from '../config/task-graph';
-import { ProjectGraph } from '../config/project-graph';
 
 describe('task graph utils', () => {
-  describe('findCycles', () => {
+  describe('findCycle', () => {
     it('should return a cycle if it is there', () => {
       expect(
         findCycle({
@@ -28,8 +20,68 @@ describe('task graph utils', () => {
             e: ['q', 'a'],
             q: [],
           },
-        } as any)
+        })
       ).toEqual(['a', 'c', 'e', 'a']);
+
+      expect(
+        findCycle({
+          dependencies: {
+            a: ['b', 'c'],
+            b: ['d'],
+            c: ['a'],
+            d: [],
+            e: ['f'],
+            f: ['q'],
+            q: ['e'],
+          },
+        })
+      ).toEqual(['a', 'c', 'a']);
+    });
+
+    it('should return a continuous cycle is there', () => {
+      expect(
+        findCycle({
+          dependencies: {
+            a: [],
+            b: [],
+            c: [],
+            d: [],
+            e: [],
+            q: [],
+          },
+          continuousDependencies: {
+            a: ['b', 'c'],
+            b: ['d'],
+            c: ['e'],
+            d: [],
+            e: ['q', 'a'],
+            q: [],
+          },
+        })
+      ).toEqual(['a', 'c', 'e', 'a']);
+
+      expect(
+        findCycle({
+          dependencies: {
+            a: ['b'],
+            b: [],
+            c: [],
+            d: [],
+            e: [],
+            f: [],
+            q: [],
+          },
+          continuousDependencies: {
+            a: [],
+            b: ['a'],
+            c: [],
+            d: [],
+            e: [],
+            f: [],
+            q: [],
+          },
+        })
+      ).toEqual(['a', 'b', 'a']);
     });
 
     it('should return null when no cycle', () => {
@@ -43,7 +95,66 @@ describe('task graph utils', () => {
             e: ['q'],
             q: [],
           },
-        } as any)
+        })
+      ).toEqual(null);
+    });
+  });
+
+  describe('findCycles', () => {
+    it('should return all cycles', () => {
+      expect(
+        findCycles({
+          dependencies: {
+            a: ['b', 'c'],
+            b: ['d'],
+            c: ['e'],
+            d: [],
+            e: ['q', 'a'],
+            q: [],
+          },
+        })
+      ).toEqual(new Set(['a', 'c', 'e']));
+
+      expect(
+        findCycles({
+          dependencies: {
+            a: ['b', 'c'],
+            b: ['d'],
+            c: ['a'],
+            d: [],
+            e: ['f'],
+            f: ['q'],
+            q: ['e'],
+          },
+        })
+      ).toEqual(new Set(['a', 'c', 'e', 'f', 'q']));
+      expect(
+        findCycles({
+          dependencies: {
+            a: ['b', 'c'],
+            b: ['d'],
+            c: ['f'],
+            d: ['a'],
+            e: [],
+            f: ['q'],
+            q: ['c'],
+          },
+        })
+      ).toEqual(new Set(['a', 'b', 'd', 'c', 'f', 'q']));
+    });
+
+    it('should return null when no cycle', () => {
+      expect(
+        findCycles({
+          dependencies: {
+            a: ['b', 'c'],
+            b: ['d'],
+            c: ['e'],
+            d: [],
+            e: ['q'],
+            q: [],
+          },
+        })
       ).toEqual(null);
     });
   });
@@ -59,7 +170,7 @@ describe('task graph utils', () => {
           d: [],
           e: ['a'],
         },
-      } as any;
+      };
       makeAcyclic(graph);
 
       expect(graph.dependencies).toEqual({
@@ -84,13 +195,12 @@ describe('task graph utils', () => {
       mockProcessExit = jest
         .spyOn(process, 'exit')
         .mockImplementation((code: number) => {
-          return undefined as any as never;
+          return undefined as never;
         });
     });
 
     afterEach(() => {
       process.env = env;
-      vol.reset();
       mockProcessExit.mockRestore();
     });
 

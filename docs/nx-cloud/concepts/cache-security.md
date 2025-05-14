@@ -22,9 +22,15 @@ If a malicious actor were able to modify the cache and those output files were t
 
 In order to keep your cache secure, there are a few steps we recommend you take:
 
-### Specify a Read-Only Token in `nx.json`
+### Use Personal Access Tokens to Provide Fine-Grained Access Control for Local Development
 
-The [token you specify](/ci/recipes/security/access-tokens) for the `nxCloudAccessToken` property in `nx.json` is visible to anyone who can view your codebase. If this token was a read-write token someone who doesn't even have permission to create a PR could still add entries to the remote cache, which would then be used on other developer's machines and in CI.
+When you use a [personal access token](/ci/recipes/security/personal-access-tokens) to connect to Nx Cloud, you can control the level of access that your developers have to the cache after they authenticate by logging in. By default, all personal access tokens have read-write access to the cache. If you need to give a developer write access to the cache, you can do so in the workspace settings of the Nx Cloud UI.
+
+You can strengthen your workspace security further by revoking all access to the cache for unauthenticated users. This is done by changing the ID Access Level in your workspace settings. By default this is set to `read-write`, but you can change it to `read-only` to limit access or `none` to prevent all access.
+
+### Avoid using CI Access Tokens in `nx.json`
+
+While you can [specify a token](/ci/recipes/security/access-tokens) with the `nxCloudAccessToken` property in `nx.json`, this is visible to anyone who can view your codebase. A read-write token would give someone who may not even have permission to create a PR the access to add entries to the remote cache, which would then be used on other developer's machines and in CI. We recommend you restrict CI Access Tokens to CI use only and rely on [personal access tokens](/ci/recipes/security/personal-access-tokens) for local development instead.
 
 ### Use a Read-Write Token in CI
 
@@ -40,7 +46,7 @@ In order to guarantee that cache poisoning will never affect your end users, [sk
 
 ### Do Not Manually Share Your Local Cache
 
-Nx implicitly trusts the local cache which is stored by default in the `.nx/cache` folder. You can change the location of that folder in the `nx.json` file, so it could be tempting to place it on a network drive and easily share your cache with everyone on the company network. However, by doing this you've voided the guarantee of immutability from your cache. If someone has direct access to the cached files, they could directly poison the cache. Nx will automatically detect if a cache entry has been created in your local cache using a different machine and warn you with an [Unknown Local Cache Error](/troubleshooting/unknown-local-cache). Instead, use Nx Cloud [remote caching](/ci/features/remote-cache).
+Nx implicitly trusts the local cache which is stored by default in the `.nx/cache` folder. You can change the location of that folder in the `nx.json` file, so it could be tempting to place it on a network drive and easily share your cache with everyone on the company network. However, by doing this you've voided the guarantee of immutability from your cache. If someone has direct access to the cached files, they could directly poison the cache. Nx will automatically detect if a cache entry has been created in your local cache using a different machine and warn you with an [Unknown Local Cache Error](/troubleshooting/unknown-local-cache). Instead, use Nx Cloud [remote caching](/ci/features/remote-cache). If you want share your local cache anyway, you can [activate Nx Powerpack](/nx-enterprise/activate-powerpack) and use the [`@nx/shared-fs-cache`](/nx-api/shared-fs-cache) plugin.
 
 ### Configure End to End Encryption
 

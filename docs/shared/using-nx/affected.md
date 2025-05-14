@@ -1,4 +1,14 @@
+---
+title: Run Only Tasks Affected by a PR
+description: Learn how to use Nx's affected command to determine and run tasks only on projects affected by your changes, improving CI speed and efficiency.
+---
+
 # Run Only Tasks Affected by a PR
+
+{% youtube
+src="https://youtu.be/q-cu5Lw3DoE"
+title="Only Run Tasks for Projects That Changed"
+ /%}
 
 As your workspace grows, re-testing, re-building, and re-linting **all projects becomes too slow**. To address this, Nx comes with an "affected" command. Using this command, Nx
 

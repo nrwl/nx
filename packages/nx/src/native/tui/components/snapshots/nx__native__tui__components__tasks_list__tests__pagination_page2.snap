@@ -1,0 +1,19 @@
+---
+source: packages/nx/src/native/tui/components/tasks_list.rs
+expression: terminal.backend()
+---
+"                                                                                                                        "
+" NX    Running Many Tasks...                                                                       Cache        Duration"
+"                                                                                                                        "
+"> ·    task5                                                                                         ...             ..."
+"  ·    task6                                                                                         ...             ..."
+"  ·    task7                                                                                         ...             ..."
+"  ·    task8                                                                                         ...             ..."
+"  ·    task9                                                                                         ...             ..."
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"  ← 2/2 →                           quit: q  help: ?  navigate: ↑ ↓  filter: /  pin output: 1 or 2  show output: <enter>"

@@ -12,17 +12,17 @@ import {
 import { logger, NX_PREFIX } from '../../utils/logger';
 import {
   combineOptionsForGenerator,
-  handleErrors,
   Options,
   Schema,
 } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import { getLocalWorkspacePlugins } from '../../utils/plugins/local-plugins';
 import { printHelp } from '../../utils/print-help';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { NxJsonConfiguration } from '../../config/nx-json';
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
 import { getGeneratorInformation } from './generator-utils';
+import { getCwd } from '../../utils/path';
 
 export interface GenerateOptions {
   collectionName: string;
@@ -301,7 +301,7 @@ export function printGenHelp(
   );
 }
 
-export async function generate(cwd: string, args: { [k: string]: any }) {
+export async function generate(args: { [k: string]: any }) {
   return handleErrors(args.verbose, async () => {
     const nxJsonConfiguration = readNxJson();
     const projectGraph = await createProjectGraphAsync();
@@ -348,6 +348,8 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       printGenHelp(opts, schema, normalizedGeneratorName, aliases);
       return 0;
     }
+
+    const cwd = getCwd();
 
     const combinedOpts = await combineOptionsForGenerator(
       opts.generatorOptions,

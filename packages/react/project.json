@@ -54,14 +54,8 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/react"],
-      "options": {
-        "command": "node ./scripts/copy-readme.js react"
-      }
-    },
-    "add-extra-dependencies": {
-      "command": "node ./scripts/add-dependency-to-build.js react @nrwl/react"
+      "outputs": ["{workspaceRoot}/build/packages/react/README.md"],
+      "command": "node ./scripts/copy-readme.js react"
     }
   }
 }

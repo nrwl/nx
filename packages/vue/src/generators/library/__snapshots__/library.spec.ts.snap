@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`lib --publishable should add build targets 1`] = `
+exports[`library --publishable should add build targets 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
@@ -9,10 +9,9 @@ import * as path from 'path';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-lib',
-
   plugins: [
     vue(),
     nxViteTsPaths(),
@@ -22,12 +21,10 @@ export default defineConfig({
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
     }),
   ],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
@@ -44,33 +41,31 @@ export default defineConfig({
       fileName: 'index',
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
-      formats: ['es', 'cjs'],
+      formats: ['es' as const],
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
       external: [],
     },
   },
-
   test: {
     watch: false,
     globals: true,
     environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/my-lib',
-      provider: 'v8',
+      provider: 'v8' as const,
     },
   },
-});
+}));
 "
 `;
 
-exports[`lib --unit-test-runner none should not generate test configuration 1`] = `null`;
+exports[`library --unit-test-runner none should not generate test configuration 1`] = `null`;
 
-exports[`lib nested should create a local tsconfig.json 1`] = `
+exports[`library nested should create a local tsconfig.json 1`] = `
 {
   "compilerOptions": {
     "allowJs": true,
@@ -96,7 +91,7 @@ exports[`lib nested should create a local tsconfig.json 1`] = `
 }
 `;
 
-exports[`lib should add vite types to tsconfigs and generate correct vite.config.ts file 1`] = `
+exports[`library should add vite types to tsconfigs and generate correct vite.config.ts file 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
@@ -105,10 +100,9 @@ import * as path from 'path';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-lib',
-
   plugins: [
     vue(),
     nxViteTsPaths(),
@@ -118,12 +112,10 @@ export default defineConfig({
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
     }),
   ],
-
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
-
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
@@ -140,34 +132,32 @@ export default defineConfig({
       fileName: 'index',
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
-      formats: ['es', 'cjs'],
+      formats: ['es' as const],
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
       external: [],
     },
   },
-
   test: {
     watch: false,
     globals: true,
     environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/my-lib',
-      provider: 'v8',
+      provider: 'v8' as const,
     },
   },
-});
+}));
 "
 `;
 
-exports[`lib should add vue, vite and vitest to package.json 1`] = `
+exports[`library should add vue, vite and vitest to package.json 1`] = `
 {
   "dependencies": {
-    "vue": "^3.3.4",
+    "vue": "^3.5.13",
   },
   "devDependencies": {
     "@nx/cypress": "0.0.1",
@@ -181,29 +171,31 @@ exports[`lib should add vue, vite and vitest to package.json 1`] = `
     "@swc-node/register": "~1.9.1",
     "@swc/core": "~1.5.7",
     "@swc/helpers": "~0.5.11",
+    "@types/node": "18.16.9",
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
-    "@vitejs/plugin-vue": "^4.5.0",
-    "@vitest/coverage-v8": "^1.0.4",
-    "@vitest/ui": "^1.3.1",
+    "@vitejs/plugin-vue": "^5.2.3",
+    "@vitest/coverage-v8": "^3.0.5",
+    "@vitest/ui": "^3.0.0",
     "@vue/eslint-config-prettier": "7.1.0",
     "@vue/eslint-config-typescript": "^11.0.3",
-    "@vue/test-utils": "^2.4.1",
+    "@vue/test-utils": "^2.4.6",
     "eslint": "~8.57.0",
-    "eslint-config-prettier": "^9.0.0",
+    "eslint-config-prettier": "^10.0.0",
     "eslint-plugin-vue": "^9.16.1",
+    "jiti": "2.4.2",
     "jsdom": "~22.1.0",
     "prettier": "^2.6.2",
-    "typescript": "~5.5.2",
-    "vite": "^5.0.0",
-    "vitest": "^1.3.1",
-    "vue-tsc": "^2.0.0",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.0",
+    "vitest": "^3.0.0",
+    "vue-tsc": "^2.2.8",
   },
   "name": "@proj/source",
 }
 `;
 
-exports[`lib should add vue, vite and vitest to package.json 2`] = `
+exports[`library should add vue, vite and vitest to package.json 2`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -212,16 +204,20 @@ exports[`lib should add vue, vite and vitest to package.json 2`] = `
   },
   "exclude": [
     "src/**/__tests__/*",
-    "src/**/*.spec.ts",
-    "src/**/*.test.ts",
-    "src/**/*.spec.tsx",
-    "src/**/*.test.tsx",
-    "src/**/*.spec.js",
-    "src/**/*.test.js",
-    "src/**/*.spec.jsx",
-    "src/**/*.test.jsx",
     "src/**/*.spec.vue",
-    "src/**/*.test.vue"
+    "src/**/*.test.vue",
+    "vite.config.ts",
+    "vite.config.mts",
+    "vitest.config.ts",
+    "vitest.config.mts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.js",
+    "src/**/*.spec.js",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.jsx"
   ],
   "include": [
     "src/**/*.js",
@@ -234,7 +230,7 @@ exports[`lib should add vue, vite and vitest to package.json 2`] = `
 "
 `;
 
-exports[`lib should generate files 1`] = `
+exports[`library should generate files 1`] = `
 {
   "extends": [
     "plugin:vue/vue3-essential",
@@ -245,6 +241,8 @@ exports[`lib should generate files 1`] = `
   ],
   "ignorePatterns": [
     "!**/*",
+    "**/vite.config.*.timestamp*",
+    "**/vitest.config.*.timestamp*",
   ],
   "overrides": [
     {
@@ -263,43 +261,71 @@ exports[`lib should generate files 1`] = `
 }
 `;
 
-exports[`lib should ignore test files in tsconfig.lib.json 1`] = `
+exports[`library should ignore test files in tsconfig.lib.json 1`] = `
 [
   "src/**/__tests__/*",
-  "src/**/*.spec.ts",
-  "src/**/*.test.ts",
-  "src/**/*.spec.tsx",
-  "src/**/*.test.tsx",
-  "src/**/*.spec.js",
-  "src/**/*.test.js",
-  "src/**/*.spec.jsx",
-  "src/**/*.test.jsx",
   "src/**/*.spec.vue",
   "src/**/*.test.vue",
+  "vite.config.ts",
+  "vite.config.mts",
+  "vitest.config.ts",
+  "vitest.config.mts",
+  "src/**/*.test.ts",
+  "src/**/*.spec.ts",
+  "src/**/*.test.tsx",
+  "src/**/*.spec.tsx",
+  "src/**/*.test.js",
+  "src/**/*.spec.js",
+  "src/**/*.test.jsx",
+  "src/**/*.spec.jsx",
 ]
 `;
 
-exports[`lib should support eslint flat config 1`] = `
-"const { FlatCompat } = require('@eslint/eslintrc');
-const js = require('@eslint/js');
-const baseConfig = require('../eslint.config.js');
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-});
+exports[`library should support eslint flat config CJS 1`] = `
+"const vue = require('eslint-plugin-vue');
+const baseConfig = require('../eslint.config.cjs');
 
 module.exports = [
-  ...compat.extends(
-    'plugin:vue/vue3-essential',
-    'eslint:recommended',
-    '@vue/eslint-config-typescript',
-    '@vue/eslint-config-prettier/skip-formatting'
-  ),
   ...baseConfig,
+  ...vue.configs['flat/recommended'],
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parserOptions: {
+        parser: require('@typescript-eslint/parser'),
+      },
+    },
+  },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
-    rules: { 'vue/multi-word-component-names': 'off' },
+    rules: {
+      'vue/multi-word-component-names': 'off',
+    },
+  },
+];
+"
+`;
+
+exports[`library should support eslint flat config ESM 1`] = `
+"import vue from 'eslint-plugin-vue';
+import baseConfig from '../eslint.config.mjs';
+
+export default [
+  ...baseConfig,
+  ...vue.configs['flat/recommended'],
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parserOptions: {
+        parser: await import('@typescript-eslint/parser'),
+      },
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+    rules: {
+      'vue/multi-word-component-names': 'off',
+    },
   },
 ];
 "

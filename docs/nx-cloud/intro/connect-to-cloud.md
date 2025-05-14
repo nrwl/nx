@@ -2,7 +2,7 @@
 
 Nx Cloud directly integrates with your existing CI setup.
 
-![Nx Cloud Overview](/shared/images/nx-cloud/nx-cloud-overview.webp)
+{% youtube src="https://youtu.be/8mqHXYIl_qI?si=fug4PsNGbxTloBpy" title="Connect your workspace to Nx Cloud" /%}
 
 Here's how you get set up.
 

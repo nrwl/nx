@@ -1,17 +1,8 @@
 import { major } from 'semver';
-import { ChangelogChange } from '../../src/command-line/release/changelog';
-import { NxReleaseConfig } from '../../src/command-line/release/config/config';
+import type { ChangelogChange } from '../../src/command-line/release/changelog';
+import type { NxReleaseConfig } from '../../src/command-line/release/config/config';
 import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from '../../src/command-line/release/config/conventional-commits';
-import { GitCommit } from '../../src/command-line/release/utils/git';
-import {
-  RepoSlug,
-  formatReferences,
-} from '../../src/command-line/release/utils/github';
-import type { ProjectGraph } from '../../src/config/project-graph';
-
-// axios types and values don't seem to match
-import _axios = require('axios');
-const axios = _axios as any as (typeof _axios)['default'];
+import type { RemoteReleaseClient } from '../../src/command-line/release/utils/remote-release-clients/remote-release-client';
 
 /**
  * The ChangelogRenderOptions are specific to each ChangelogRenderer implementation, and are taken
@@ -20,7 +11,7 @@ const axios = _axios as any as (typeof _axios)['default'];
 export type ChangelogRenderOptions = Record<string, unknown>;
 
 /**
- * When versioning projects independently and enabling `"updateDependents": "always"`, there could
+ * When versioning projects independently and enabling `"updateDependents": "auto"`, there could
  * be additional dependency bump information that is not captured in the commit data, but that nevertheless
  * should be included in the rendered changelog.
  */
@@ -28,36 +19,6 @@ export type DependencyBump = {
   dependencyName: string;
   newVersion: string;
 };
-
-/**
- * A ChangelogRenderer function takes in the extracted commits and other relevant metadata
- * and returns a string, or a Promise of a string of changelog contents (usually markdown).
- *
- * @param {Object} config The configuration object for the ChangelogRenderer
- * @param {ProjectGraph} config.projectGraph The project graph for the workspace
- * @param {GitCommit[]} config.commits DEPRECATED [Use 'config.changes' instead] - The collection of extracted commits to generate a changelog for
- * @param {ChangelogChange[]} config.changes The collection of changes to show in the changelog
- * @param {string} config.releaseVersion The version that is being released
- * @param {string | null} config.project The name of specific project to generate a changelog for, or `null` if the overall workspace changelog
- * @param {string | false} config.entryWhenNoChanges The (already interpolated) string to use as the changelog entry when there are no changes, or `false` if no entry should be generated
- * @param {ChangelogRenderOptions} config.changelogRenderOptions The options specific to the ChangelogRenderer implementation
- * @param {DependencyBump[]} config.dependencyBumps Optional list of additional dependency bumps that occurred as part of the release, outside of the commit data
- */
-export type ChangelogRenderer = (config: {
-  projectGraph: ProjectGraph;
-  // TODO(v20): remove 'commits' and make 'changes' required
-  commits?: GitCommit[];
-  changes?: ChangelogChange[];
-  releaseVersion: string;
-  project: string | null;
-  entryWhenNoChanges: string | false;
-  changelogRenderOptions: DefaultChangelogRenderOptions;
-  dependencyBumps?: DependencyBump[];
-  repoSlug?: RepoSlug;
-  // TODO(v20): Evaluate if there is a cleaner way to configure this when breaking changes are allowed
-  // null if version plans are being used to generate the changelog
-  conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'] | null;
-}) => Promise<string> | string;
 
 /**
  * The specific options available to the default implementation of the ChangelogRenderer that nx exports
@@ -74,7 +35,7 @@ export interface DefaultChangelogRenderOptions extends ChangelogRenderOptions {
    * using https://ungh.cc (from https://github.com/unjs/ungh) and the email addresses found in the commits.
    * Defaults to true.
    */
-  mapAuthorsToGitHubUsernames?: boolean;
+  applyUsernameToAuthors?: boolean;
   /**
    * Whether or not the commit references (such as commit and/or PR links) should be included in the changelog.
    * Defaults to true.
@@ -87,111 +48,209 @@ export interface DefaultChangelogRenderOptions extends ChangelogRenderOptions {
   versionTitleDate?: boolean;
 }
 
-/**
- * The default ChangelogRenderer implementation that nx exports for the common case of generating markdown
- * from the given commits and other metadata.
- */
-const defaultChangelogRenderer: ChangelogRenderer = async ({
-  projectGraph,
-  changes,
-  releaseVersion,
-  project,
-  entryWhenNoChanges,
-  changelogRenderOptions,
-  dependencyBumps,
-  repoSlug,
-  conventionalCommitsConfig,
-}): Promise<string> => {
-  const markdownLines: string[] = [];
+export default class DefaultChangelogRenderer {
+  protected changes: ChangelogChange[];
+  protected changelogEntryVersion: string;
+  protected project: string | null;
+  protected entryWhenNoChanges: string | false;
+  protected changelogRenderOptions: DefaultChangelogRenderOptions;
+  protected isVersionPlans: boolean;
+  protected dependencyBumps?: DependencyBump[];
+  protected conventionalCommitsConfig:
+    | NxReleaseConfig['conventionalCommits']
+    | null;
+  protected relevantChanges: ChangelogChange[];
+  protected breakingChanges: string[];
+  protected additionalChangesForAuthorsSection: ChangelogChange[];
+  protected remoteReleaseClient: RemoteReleaseClient<unknown>;
 
-  // If the current range of changes contains both a commit and its revert, we strip them both from the final list. Changes from version plans are unaffected, as they have no hashes.
-  for (const change of changes) {
-    if (change.type === 'revert' && change.revertedHashes) {
-      for (const revertedHash of change.revertedHashes) {
-        const revertedCommit = changes.find(
-          (c) => c.shortHash && revertedHash.startsWith(c.shortHash)
-        );
-        if (revertedCommit) {
-          changes.splice(changes.indexOf(revertedCommit), 1);
-          changes.splice(changes.indexOf(change), 1);
+  /**
+   * A ChangelogRenderer class takes in the determined changes and other relevant metadata
+   * and returns a string, or a Promise of a string of changelog contents (usually markdown).
+   *
+   * @param {Object} config The configuration object for the ChangelogRenderer
+   * @param {ChangelogChange[]} config.changes The collection of changes to show in the changelog
+   * @param {string} config.changelogEntryVersion The version for which we are rendering the current changelog entry
+   * @param {string | null} config.project The name of specific project to generate a changelog entry for, or `null` if the overall workspace changelog
+   * @param {string | false} config.entryWhenNoChanges The (already interpolated) string to use as the changelog entry when there are no changes, or `false` if no entry should be generated
+   * @param {boolean} config.isVersionPlans Whether or not Nx release version plans are the source of truth for the changelog entry
+   * @param {ChangelogRenderOptions} config.changelogRenderOptions The options specific to the ChangelogRenderer implementation
+   * @param {DependencyBump[]} config.dependencyBumps Optional list of additional dependency bumps that occurred as part of the release, outside of the change data
+   * @param {NxReleaseConfig['conventionalCommits'] | null} config.conventionalCommitsConfig The configuration for conventional commits, or null if version plans are being used
+   * @param {RemoteReleaseClient} config.remoteReleaseClient The remote release client to use for formatting references
+   */
+  constructor(config: {
+    changes: ChangelogChange[];
+    changelogEntryVersion: string;
+    project: string | null;
+    entryWhenNoChanges: string | false;
+    isVersionPlans: boolean;
+    changelogRenderOptions: DefaultChangelogRenderOptions;
+    dependencyBumps?: DependencyBump[];
+    conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'] | null;
+    remoteReleaseClient: RemoteReleaseClient<unknown>;
+  }) {
+    this.changes = this.filterChanges(config.changes, config.project);
+    this.changelogEntryVersion = config.changelogEntryVersion;
+    this.project = config.project;
+    this.entryWhenNoChanges = config.entryWhenNoChanges;
+    this.isVersionPlans = config.isVersionPlans;
+    this.changelogRenderOptions = config.changelogRenderOptions;
+    this.dependencyBumps = config.dependencyBumps;
+    this.conventionalCommitsConfig = config.conventionalCommitsConfig;
+    this.remoteReleaseClient = config.remoteReleaseClient;
+
+    this.relevantChanges = [];
+    this.breakingChanges = [];
+    this.additionalChangesForAuthorsSection = [];
+  }
+
+  protected filterChanges(
+    changes: ChangelogChange[],
+    project: string | null
+  ): ChangelogChange[] {
+    if (project === null) {
+      return changes;
+    }
+    return changes.filter(
+      (c) =>
+        c.affectedProjects &&
+        (c.affectedProjects === '*' || c.affectedProjects.includes(project))
+    );
+  }
+
+  async render(): Promise<string> {
+    const sections: string[][] = [];
+
+    this.preprocessChanges();
+
+    if (this.shouldRenderEmptyEntry()) {
+      return this.renderEmptyEntry();
+    }
+
+    sections.push([this.renderVersionTitle()]);
+
+    const changesByType = this.renderChangesByType();
+    if (changesByType.length > 0) {
+      sections.push(changesByType);
+    }
+
+    if (this.hasBreakingChanges()) {
+      sections.push(this.renderBreakingChanges());
+    }
+
+    if (this.hasDependencyBumps()) {
+      sections.push(this.renderDependencyBumps());
+    }
+
+    if (this.shouldRenderAuthors()) {
+      sections.push(await this.renderAuthors());
+    }
+
+    // Join sections with double newlines, and trim any extra whitespace
+    return sections
+      .filter((section) => section.length > 0)
+      .map((section) => section.join('\n').trim())
+      .join('\n\n')
+      .trim();
+  }
+
+  protected preprocessChanges(): void {
+    this.relevantChanges = [...this.changes];
+    this.breakingChanges = [];
+    this.additionalChangesForAuthorsSection = [];
+
+    // Filter out reverted changes
+    for (let i = this.relevantChanges.length - 1; i >= 0; i--) {
+      const change = this.relevantChanges[i];
+      if (change.type === 'revert' && change.revertedHashes) {
+        for (const revertedHash of change.revertedHashes) {
+          const revertedCommitIndex = this.relevantChanges.findIndex(
+            (c) => c.shortHash && revertedHash.startsWith(c.shortHash)
+          );
+          if (revertedCommitIndex !== -1) {
+            this.relevantChanges.splice(revertedCommitIndex, 1);
+            this.relevantChanges.splice(i, 1);
+            i--;
+            break;
+          }
+        }
+      }
+    }
+
+    if (this.isVersionPlans) {
+      this.conventionalCommitsConfig = {
+        types: {
+          feat: DEFAULT_CONVENTIONAL_COMMITS_CONFIG.types.feat,
+          fix: DEFAULT_CONVENTIONAL_COMMITS_CONFIG.types.fix,
+        },
+      };
+
+      for (let i = this.relevantChanges.length - 1; i >= 0; i--) {
+        if (this.relevantChanges[i].isBreaking) {
+          const change = this.relevantChanges[i];
+          this.additionalChangesForAuthorsSection.push(change);
+          const line = this.formatChange(change);
+          this.breakingChanges.push(line);
+          this.relevantChanges.splice(i, 1);
+        }
+      }
+    } else {
+      for (const change of this.relevantChanges) {
+        if (change.isBreaking) {
+          const breakingChangeExplanation =
+            this.extractBreakingChangeExplanation(change.body);
+          this.breakingChanges.push(
+            breakingChangeExplanation
+              ? `- ${
+                  change.scope ? `**${change.scope.trim()}:** ` : ''
+                }${breakingChangeExplanation}`
+              : this.formatChange(change)
+          );
         }
       }
     }
   }
 
-  let relevantChanges = changes;
-  const breakingChanges = [];
-
-  // For now to keep the interface of the changelog renderer non-breaking for v19 releases we have a somewhat indirect check for whether or not we are generating a changelog for version plans
-  const isVersionPlans = !conventionalCommitsConfig;
-
-  // Only applicable for version plans
-  const additionalChangesForAuthorsSection = [];
-
-  // Provide a default configuration for version plans to allow most of the subsequent logic to work in the same way it would for conventional commits
-  // NOTE: The one exception is breaking/major changes, where we do not follow the same structure and instead only show the changes once
-  if (isVersionPlans) {
-    conventionalCommitsConfig = {
-      types: {
-        feat: DEFAULT_CONVENTIONAL_COMMITS_CONFIG.types.feat,
-        fix: DEFAULT_CONVENTIONAL_COMMITS_CONFIG.types.fix,
-      },
-    };
-    // Trim down "relevant changes" to only include non-breaking ones so that we can render them differently under version plans,
-    // but keep track of the changes for the purposes of the authors section
-    // TODO(v20): Clean this abstraction up as part of the larger overall refactor of changelog rendering
-    for (let i = 0; i < relevantChanges.length; i++) {
-      if (relevantChanges[i].isBreaking) {
-        const change = relevantChanges[i];
-        additionalChangesForAuthorsSection.push(change);
-        const line = formatChange(
-          change,
-          changelogRenderOptions,
-          isVersionPlans,
-          repoSlug
-        );
-        breakingChanges.push(line);
-        relevantChanges.splice(i, 1);
-      }
-    }
+  protected shouldRenderEmptyEntry(): boolean {
+    return (
+      this.relevantChanges.length === 0 &&
+      this.breakingChanges.length === 0 &&
+      !this.hasDependencyBumps()
+    );
   }
 
-  const changeTypes = conventionalCommitsConfig.types;
-
-  // workspace root level changelog
-  if (project === null) {
-    // No changes for the workspace
-    if (relevantChanges.length === 0 && breakingChanges.length === 0) {
-      if (dependencyBumps?.length) {
-        applyAdditionalDependencyBumps({
-          markdownLines,
-          dependencyBumps,
-          releaseVersion,
-          changelogRenderOptions,
-        });
-      } else if (entryWhenNoChanges) {
-        markdownLines.push(
-          '',
-          `${createVersionTitle(
-            releaseVersion,
-            changelogRenderOptions
-          )}\n\n${entryWhenNoChanges}`,
-          ''
-        );
-      }
-      return markdownLines.join('\n').trim();
+  protected renderEmptyEntry(): string {
+    if (this.hasDependencyBumps()) {
+      return [
+        this.renderVersionTitle(),
+        '',
+        ...this.renderDependencyBumps(),
+      ].join('\n');
+    } else if (this.entryWhenNoChanges) {
+      return `${this.renderVersionTitle()}\n\n${this.entryWhenNoChanges}`;
     }
+    return '';
+  }
 
-    const typeGroups: Record<string, ChangelogChange[]> = groupBy(
-      relevantChanges,
-      'type'
-    );
+  protected renderVersionTitle(): string {
+    const isMajorVersion =
+      `${major(this.changelogEntryVersion)}.0.0` ===
+      this.changelogEntryVersion.replace(/^v/, '');
+    let maybeDateStr = '';
+    if (this.changelogRenderOptions.versionTitleDate) {
+      const dateStr = new Date().toISOString().slice(0, 10);
+      maybeDateStr = ` (${dateStr})`;
+    }
+    return isMajorVersion
+      ? `# ${this.changelogEntryVersion}${maybeDateStr}`
+      : `## ${this.changelogEntryVersion}${maybeDateStr}`;
+  }
 
-    markdownLines.push(
-      '',
-      createVersionTitle(releaseVersion, changelogRenderOptions),
-      ''
-    );
+  protected renderChangesByType(): string[] {
+    const markdownLines: string[] = [];
+    const typeGroups = this.groupChangesByType();
+    const changeTypes = this.conventionalCommitsConfig.types;
 
     for (const type of Object.keys(changeTypes)) {
       const group = typeGroups[type];
@@ -199,37 +258,41 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
         continue;
       }
 
-      markdownLines.push('', '### ' + changeTypes[type].changelog.title, '');
+      markdownLines.push('', `### ${changeTypes[type].changelog.title}`, '');
 
-      /**
-       * In order to make the final changelog most readable, we organize changes as follows:
-       * - By scope, where scopes are in alphabetical order (changes with no scope are listed first)
-       * - Within a particular scope grouping, we list changes in chronological order
-       */
-      const changesInChronologicalOrder = group.reverse();
-      const changesGroupedByScope: Record<string, ChangelogChange[]> = groupBy(
-        changesInChronologicalOrder,
-        'scope'
-      );
-      const scopesSortedAlphabetically = Object.keys(
-        changesGroupedByScope
-      ).sort();
+      if (this.project === null) {
+        const changesGroupedByScope = this.groupChangesByScope(group);
+        const scopesSortedAlphabetically = Object.keys(
+          changesGroupedByScope
+        ).sort();
 
-      for (const scope of scopesSortedAlphabetically) {
-        const changes = changesGroupedByScope[scope];
-        for (const change of changes) {
-          const line = formatChange(
-            change,
-            changelogRenderOptions,
-            isVersionPlans,
-            repoSlug
-          );
+        for (const scope of scopesSortedAlphabetically) {
+          const changes = changesGroupedByScope[scope];
+          for (const change of changes.reverse()) {
+            const line = this.formatChange(change);
+            markdownLines.push(line);
+            if (change.isBreaking && !this.isVersionPlans) {
+              const breakingChangeExplanation =
+                this.extractBreakingChangeExplanation(change.body);
+              this.breakingChanges.push(
+                breakingChangeExplanation
+                  ? `- ${
+                      change.scope ? `**${change.scope.trim()}:** ` : ''
+                    }${breakingChangeExplanation}`
+                  : line
+              );
+            }
+          }
+        }
+      } else {
+        // For project-specific changelogs, maintain the original order
+        for (const change of group) {
+          const line = this.formatChange(change);
           markdownLines.push(line);
-          if (change.isBreaking) {
-            const breakingChangeExplanation = extractBreakingChangeExplanation(
-              change.body
-            );
-            breakingChanges.push(
+          if (change.isBreaking && !this.isVersionPlans) {
+            const breakingChangeExplanation =
+              this.extractBreakingChangeExplanation(change.body);
+            this.breakingChanges.push(
               breakingChangeExplanation
                 ? `- ${
                     change.scope ? `**${change.scope.trim()}:** ` : ''
@@ -240,145 +303,70 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
         }
       }
     }
-  } else {
-    // project level changelog
-    relevantChanges = relevantChanges.filter(
-      (c) =>
-        c.affectedProjects &&
-        (c.affectedProjects === '*' || c.affectedProjects.includes(project))
-    );
 
-    // Generating for a named project, but that project has no relevant changes in the current set of commits, exit early
-    if (relevantChanges.length === 0 && breakingChanges.length === 0) {
-      if (dependencyBumps?.length) {
-        applyAdditionalDependencyBumps({
-          markdownLines,
-          dependencyBumps,
-          releaseVersion,
-          changelogRenderOptions,
-        });
-      } else if (entryWhenNoChanges) {
-        markdownLines.push(
-          '',
-          `${createVersionTitle(
-            releaseVersion,
-            changelogRenderOptions
-          )}\n\n${entryWhenNoChanges}`,
-          ''
-        );
-      }
-      return markdownLines.join('\n').trim();
-    }
+    return markdownLines;
+  }
 
-    markdownLines.push(
-      '',
-      createVersionTitle(releaseVersion, changelogRenderOptions),
-      ''
-    );
+  protected hasBreakingChanges(): boolean {
+    return this.breakingChanges.length > 0;
+  }
 
-    const typeGroups: Record<string, ChangelogChange[]> = groupBy(
-      // Sort the relevant changes to have the unscoped changes first, before grouping by type
-      relevantChanges.sort((a, b) => (b.scope ? 1 : 0) - (a.scope ? 1 : 0)),
-      'type'
-    );
-    for (const type of Object.keys(changeTypes)) {
-      const group = typeGroups[type];
-      if (!group || group.length === 0) {
+  protected renderBreakingChanges(): string[] {
+    const uniqueBreakingChanges = Array.from(new Set(this.breakingChanges));
+    return ['### ⚠️  Breaking Changes', '', ...uniqueBreakingChanges];
+  }
+
+  protected hasDependencyBumps(): boolean {
+    return this.dependencyBumps && this.dependencyBumps.length > 0;
+  }
+
+  protected renderDependencyBumps(): string[] {
+    const markdownLines = ['', '### 🧱 Updated Dependencies', ''];
+    this.dependencyBumps.forEach(({ dependencyName, newVersion }) => {
+      markdownLines.push(`- Updated ${dependencyName} to ${newVersion}`);
+    });
+    return markdownLines;
+  }
+
+  protected shouldRenderAuthors(): boolean {
+    return this.changelogRenderOptions.authors;
+  }
+
+  protected async renderAuthors(): Promise<string[]> {
+    const markdownLines: string[] = [];
+    const _authors = new Map<
+      string,
+      { email: Set<string>; username?: string }
+    >();
+
+    for (const change of [
+      ...this.relevantChanges,
+      ...this.additionalChangesForAuthorsSection,
+    ]) {
+      if (!change.authors) {
         continue;
       }
-
-      markdownLines.push('', `### ${changeTypes[type].changelog.title}`, '');
-
-      const changesInChronologicalOrder = group.reverse();
-      for (const change of changesInChronologicalOrder) {
-        const line = formatChange(
-          change,
-          changelogRenderOptions,
-          isVersionPlans,
-          repoSlug
-        );
-        markdownLines.push(line + '\n');
-        if (change.isBreaking) {
-          const breakingChangeExplanation = extractBreakingChangeExplanation(
-            change.body
-          );
-          breakingChanges.push(
-            breakingChangeExplanation
-              ? `- ${
-                  change.scope ? `**${change.scope.trim()}:** ` : ''
-                }${breakingChangeExplanation}`
-              : line
-          );
+      for (const author of change.authors) {
+        const name = this.formatName(author.name);
+        if (!name || name.includes('[bot]')) {
+          continue;
+        }
+        if (_authors.has(name)) {
+          const entry = _authors.get(name);
+          entry.email.add(author.email);
+        } else {
+          _authors.set(name, { email: new Set([author.email]) });
         }
       }
     }
-  }
 
-  if (breakingChanges.length > 0) {
-    markdownLines.push('', '### ⚠️  Breaking Changes', '', ...breakingChanges);
-  }
-
-  if (dependencyBumps?.length) {
-    applyAdditionalDependencyBumps({
-      markdownLines,
-      dependencyBumps,
-      releaseVersion,
-      changelogRenderOptions,
-    });
-  }
-
-  if (changelogRenderOptions.authors) {
-    const _authors = new Map<string, { email: Set<string>; github?: string }>();
-
-    for (const change of [
-      ...relevantChanges,
-      ...additionalChangesForAuthorsSection,
-    ]) {
-      if (!change.author) {
-        continue;
-      }
-      const name = formatName(change.author.name);
-      if (!name || name.includes('[bot]')) {
-        continue;
-      }
-      if (_authors.has(name)) {
-        const entry = _authors.get(name);
-        entry.email.add(change.author.email);
-      } else {
-        _authors.set(name, { email: new Set([change.author.email]) });
-      }
-    }
-
-    // Try to map authors to github usernames
-    if (repoSlug && changelogRenderOptions.mapAuthorsToGitHubUsernames) {
-      await Promise.all(
-        [..._authors.keys()].map(async (authorName) => {
-          const meta = _authors.get(authorName);
-          for (const email of meta.email) {
-            // For these pseudo-anonymized emails we can just extract the Github username from before the @
-            // It could either be in the format: username@ or github_id+username@
-            if (email.endsWith('@users.noreply.github.com')) {
-              const match = email.match(
-                /^(\d+\+)?([^@]+)@users\.noreply\.github\.com$/
-              );
-              if (match && match[2]) {
-                meta.github = match[2];
-                break;
-              }
-            }
-            // Look up any other emails against the ungh.cc API
-            const { data } = await axios
-              .get<any, { data?: { user?: { username: string } } }>(
-                `https://ungh.cc/users/find/${email}`
-              )
-              .catch(() => ({ data: { user: null } }));
-            if (data?.user) {
-              meta.github = data.user.username;
-              break;
-            }
-          }
-        })
-      );
+    if (
+      this.remoteReleaseClient.getRemoteRepoData() &&
+      this.changelogRenderOptions.applyUsernameToAuthors &&
+      // TODO: Explore if it is possible to support GitLab username resolution
+      this.remoteReleaseClient.remoteReleaseProviderName === 'GitHub'
+    ) {
+      await this.remoteReleaseClient.applyUsernameToAuthors(_authors);
     }
 
     const authors = [..._authors.entries()].map((e) => ({
@@ -389,150 +377,101 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
     if (authors.length > 0) {
       markdownLines.push(
         '',
-        '### ' + '❤️  Thank You',
+        '### ' + '❤️ Thank You',
         '',
         ...authors
-          // Sort the contributors by name
           .sort((a, b) => a.name.localeCompare(b.name))
           .map((i) => {
-            // Tag the author's Github username if we were able to resolve it so that Github adds them as a contributor
-            const github = i.github ? ` @${i.github}` : '';
-            return `- ${i.name}${github}`;
+            const username = i.username ? ` @${i.username}` : '';
+            return `- ${i.name}${username}`;
           })
       );
     }
+
+    return markdownLines;
   }
 
-  return markdownLines.join('\n').trim();
-};
+  protected formatChange(change: ChangelogChange): string {
+    let description = change.description;
+    let extraLines = [];
+    let extraLinesStr = '';
+    if (description.includes('\n')) {
+      [description, ...extraLines] = description.split('\n');
+      const indentation = '  ';
+      extraLinesStr = extraLines
+        .filter((l) => l.trim().length > 0)
+        .map((l) => `${indentation}${l}`)
+        .join('\n');
+    }
 
-export default defaultChangelogRenderer;
-
-function applyAdditionalDependencyBumps({
-  markdownLines,
-  dependencyBumps,
-  releaseVersion,
-  changelogRenderOptions,
-}: {
-  markdownLines: string[];
-  dependencyBumps: DependencyBump[];
-  releaseVersion: string;
-  changelogRenderOptions: DefaultChangelogRenderOptions;
-}) {
-  if (markdownLines.length === 0) {
-    markdownLines.push(
-      '',
-      `${createVersionTitle(releaseVersion, changelogRenderOptions)}\n`,
-      ''
-    );
-  } else {
-    markdownLines.push('');
-  }
-  markdownLines.push('### 🧱 Updated Dependencies\n');
-  dependencyBumps.forEach(({ dependencyName, newVersion }) => {
-    markdownLines.push(`- Updated ${dependencyName} to ${newVersion}`);
-  });
-  markdownLines.push('');
-}
-
-function formatName(name = '') {
-  return name
-    .split(' ')
-    .map((p) => p.trim())
-    .join(' ');
-}
-
-function groupBy(items: any[], key: string) {
-  const groups = {};
-  for (const item of items) {
-    groups[item[key]] = groups[item[key]] || [];
-    groups[item[key]].push(item);
-  }
-  return groups;
-}
-
-function formatChange(
-  change: ChangelogChange,
-  changelogRenderOptions: DefaultChangelogRenderOptions,
-  isVersionPlans: boolean,
-  repoSlug?: RepoSlug
-): string {
-  let description = change.description;
-  let extraLines = [];
-  let extraLinesStr = '';
-  if (description.includes('\n')) {
-    [description, ...extraLines] = description.split('\n');
-    // Align the extra lines with the start of the description for better readability
-    const indentation = '  ';
-    extraLinesStr = extraLines
-      .filter((l) => l.trim().length > 0)
-      .map((l) => `${indentation}${l}`)
-      .join('\n');
+    let changeLine =
+      '- ' +
+      (!this.isVersionPlans && change.isBreaking ? '⚠️  ' : '') +
+      (!this.isVersionPlans && change.scope
+        ? `**${change.scope.trim()}:** `
+        : '') +
+      description;
+    if (
+      this.remoteReleaseClient.getRemoteRepoData() &&
+      this.changelogRenderOptions.commitReferences
+    ) {
+      changeLine += this.remoteReleaseClient.formatReferences(
+        change.githubReferences
+      );
+    }
+    if (extraLinesStr) {
+      changeLine += '\n\n' + extraLinesStr;
+    }
+    return changeLine;
   }
 
-  /**
-   * In version plans changelogs:
-   * - don't repeat the breaking change icon
-   * - don't render the scope
-   */
-  let changeLine =
-    '- ' +
-    (!isVersionPlans && change.isBreaking ? '⚠️  ' : '') +
-    (!isVersionPlans && change.scope ? `**${change.scope.trim()}:** ` : '') +
-    description;
-  if (repoSlug && changelogRenderOptions.commitReferences) {
-    changeLine += formatReferences(change.githubReferences, repoSlug);
-  }
-  if (extraLinesStr) {
-    changeLine += '\n\n' + extraLinesStr;
-  }
-  return changeLine;
-}
-
-/**
- * It is common to add further information about a breaking change in the commit body,
- * and it is naturally that information that should be included in the BREAKING CHANGES
- * section of changelog, rather than repeating the commit title/description.
- */
-function extractBreakingChangeExplanation(message: string): string | null {
-  if (!message) {
-    return null;
+  protected groupChangesByType(): Record<string, ChangelogChange[]> {
+    const typeGroups: Record<string, ChangelogChange[]> = {};
+    for (const change of this.relevantChanges) {
+      typeGroups[change.type] = typeGroups[change.type] || [];
+      typeGroups[change.type].push(change);
+    }
+    return typeGroups;
   }
 
-  const breakingChangeIdentifier = 'BREAKING CHANGE:';
-  const startIndex = message.indexOf(breakingChangeIdentifier);
-
-  if (startIndex === -1) {
-    // "BREAKING CHANGE:" not found in the message
-    return null;
+  protected groupChangesByScope(
+    changes: ChangelogChange[]
+  ): Record<string, ChangelogChange[]> {
+    const scopeGroups: Record<string, ChangelogChange[]> = {};
+    for (const change of changes) {
+      const scope = change.scope || '';
+      scopeGroups[scope] = scopeGroups[scope] || [];
+      scopeGroups[scope].push(change);
+    }
+    return scopeGroups;
   }
 
-  const startOfBreakingChange = startIndex + breakingChangeIdentifier.length;
-  const endOfBreakingChange = message.indexOf('\n', startOfBreakingChange);
+  protected extractBreakingChangeExplanation(message: string): string | null {
+    if (!message) {
+      return null;
+    }
 
-  if (endOfBreakingChange === -1) {
-    // No newline character found, extract till the end of the message
-    return message.substring(startOfBreakingChange).trim();
+    const breakingChangeIdentifier = 'BREAKING CHANGE:';
+    const startIndex = message.indexOf(breakingChangeIdentifier);
+
+    if (startIndex === -1) {
+      return null;
+    }
+
+    const startOfBreakingChange = startIndex + breakingChangeIdentifier.length;
+    const endOfBreakingChange = message.indexOf('\n', startOfBreakingChange);
+
+    if (endOfBreakingChange === -1) {
+      return message.substring(startOfBreakingChange).trim();
+    }
+
+    return message.substring(startOfBreakingChange, endOfBreakingChange).trim();
   }
 
-  // Extract and return the breaking change message
-  return message.substring(startOfBreakingChange, endOfBreakingChange).trim();
-}
-
-function createVersionTitle(
-  version: string,
-  changelogRenderOptions: DefaultChangelogRenderOptions
-) {
-  // Normalize by removing any leading `v` during comparison
-  const isMajorVersion = `${major(version)}.0.0` === version.replace(/^v/, '');
-  let maybeDateStr = '';
-  if (changelogRenderOptions.versionTitleDate) {
-    // YYYY-MM-DD
-    const dateStr = new Date().toISOString().slice(0, 10);
-    maybeDateStr = ` (${dateStr})`;
+  protected formatName(name = ''): string {
+    return name
+      .split(' ')
+      .map((p) => p.trim())
+      .join(' ');
   }
-  if (isMajorVersion) {
-    return `# ${version}${maybeDateStr}`;
-  }
-  return `## ${version}${maybeDateStr}`;
 }

@@ -21,20 +21,11 @@ import { getModuleFilePaths } from '../utils/storybook-ast/module-info';
 import { updateAppEditorTsConfigExcludedFiles } from '../utils/update-app-editor-tsconfig-excluded-files';
 import { CypressComponentConfigSchema } from './schema';
 
-export function cypressComponentConfiguration(
-  tree: Tree,
-  options: CypressComponentConfigSchema
-) {
-  return cypressComponentConfigurationInternal(tree, {
-    ...options,
-  });
-}
-
 /**
  * This is for cypress built in component testing, if you want to test with
  * storybook + cypress then use the componentCypressGenerator instead.
  */
-export async function cypressComponentConfigurationInternal(
+export async function cypressComponentConfiguration(
   tree: Tree,
   options: CypressComponentConfigSchema
 ) {

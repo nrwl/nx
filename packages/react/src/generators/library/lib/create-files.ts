@@ -1,10 +1,10 @@
-import type { Tree } from '@nx/devkit';
 import {
   generateFiles,
   joinPathFragments,
   names,
   offsetFromRoot,
   toJS,
+  Tree,
   writeJson,
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
@@ -68,8 +68,30 @@ export function createFiles(host: Tree, options: NormalizedSchema) {
     });
   }
 
-  if (!options.publishable && !options.buildable) {
-    host.delete(`${options.projectRoot}/package.json`);
+  if (
+    (options.publishable || options.buildable) &&
+    !options.isUsingTsSolutionConfig &&
+    options.useProjectJson
+  ) {
+    if (options.bundler === 'vite') {
+      writeJson(host, `${options.projectRoot}/package.json`, {
+        name: options.importPath,
+        version: '0.0.1',
+        main: './index.js',
+        types: './index.d.ts',
+        exports: {
+          '.': {
+            import: './index.mjs',
+            require: './index.js',
+          },
+        },
+      });
+    } else {
+      writeJson(host, `${options.projectRoot}/package.json`, {
+        name: options.importPath,
+        version: '0.0.1',
+      });
+    }
   }
 
   if (options.js) {

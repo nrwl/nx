@@ -1,3 +1,8 @@
+---
+title: Module Federation and Nx
+description: Learn how Nx provides out-of-the-box support for Module Federation, making it easier to share code between applications in a monorepo environment.
+---
+
 # Module Federation and Nx
 
 Module Federation is a technique that allows developers to share code and resources across multiple applications. It has become more popular in recent years since the addition of the [ModuleFederationPlugin](https://webpack.js.org/plugins/module-federation-plugin/) in [Webpack](https://webpack.js.org).
@@ -108,7 +113,13 @@ The `host` is the entry point and the `remotes` are modules used by the applicat
 
 To support this, as well as to ensure a great local DX, we built our Module Federation support in such a way that when developing locally you should always run `serve` on your `host` application. This will start up your full Module Federation architecture; serving your `host` with `webpack-dev-server` and each `remote` via a single `http-server`. You can learn more about this on our [Nx Module Federation Technical Overview](/concepts/module-federation/nx-module-federation-technical-overview).
 
-When you're working on a specific `remote` application, you should use the `--devRemotes` option to specify the `remote` you are currently developing; e.g. `nx serve host --devRemotes=remote1`. This ensures that the `remote` is served via `webpack-dev-server` allowing for HMR and live reloading.
+With the introduction of Continuous Tasks in Nx 21 when you're working on a specific `remote` application, you now only need to run `nx serve remote` and it will serve the application along with your `host` application.
+
+{% callout type="note" title="Continuous Tasks Support in Module Federation" %}
+This is currently only supported for Rspack Module Federation using the `@nx/rspack/plugin` Inference Plugin.
+{% /callout %}
+
+If you are using Webpack Module Federation, or are not using [Inferred Tasks](/concepts/inferred-tasks), you should use the `--devRemotes` option to specify the `remote` you are currently developing; e.g. `nx serve host --devRemotes=remote1`. This ensures that the `remote` is served via `webpack-dev-server` allowing for HMR and live reloading.
 
 ## Use Cases
 

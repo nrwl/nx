@@ -56,7 +56,9 @@ export default async function* extractI18nExecutor(
 function getDelegateBuilderOptions(
   options: ExtractI18nExecutorOptions
 ): ExtractI18nBuilderOptions {
-  const delegateBuilderOptions: ExtractI18nBuilderOptions = { ...options };
+  const delegateBuilderOptions: ExtractI18nBuilderOptions & {
+    browserTarget?: string;
+  } = { ...options };
 
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo();
   if (angularMajorVersion <= 17) {

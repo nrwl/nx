@@ -7,20 +7,21 @@ import {
   Tree,
 } from '@nx/devkit';
 import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
-import { installedCypressVersion } from './cypress-version';
-import { eslintPluginCypressVersion } from './versions';
-import {
-  addExtendsToLintConfig,
-  addOverrideToLintConfig,
-  addPluginsToLintConfig,
-  findEslintFile,
-  isEslintConfigSupported,
-  replaceOverridesInLintConfig,
-} from '@nx/eslint/src/generators/utils/eslint-file';
 import {
   javaScriptOverride,
   typeScriptOverride,
 } from '@nx/eslint/src/generators/init/global-eslint-config';
+import {
+  addExtendsToLintConfig,
+  addOverrideToLintConfig,
+  addPluginsToLintConfig,
+  addPredefinedConfigToFlatLintConfig,
+  findEslintFile,
+  isEslintConfigSupported,
+  replaceOverridesInLintConfig,
+} from '@nx/eslint/src/generators/utils/eslint-file';
+import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
+import { getInstalledCypressMajorVersion, versions } from './versions';
 
 export interface CyLinterOptions {
   project: string;
@@ -46,7 +47,7 @@ export async function addLinterToCyProject(
   tree: Tree,
   options: CyLinterOptions
 ) {
-  if (options.linter === Linter.None) {
+  if (options.linter === 'none') {
     return () => {};
   }
 
@@ -69,38 +70,57 @@ export async function addLinterToCyProject(
     );
   }
 
-  if (!options.linter || options.linter !== Linter.EsLint) {
+  if (!options.linter || options.linter !== 'eslint') {
     return runTasksInSerial(...tasks);
   }
 
   options.overwriteExisting = options.overwriteExisting || !eslintFile;
 
-  tasks.push(
-    !options.skipPackageJson
-      ? addDependenciesToPackageJson(
-          tree,
-          {},
-          { 'eslint-plugin-cypress': eslintPluginCypressVersion }
-        )
-      : () => {}
-  );
+  if (!options.skipPackageJson) {
+    const pkgVersions = versions(tree);
+
+    tasks.push(
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        { 'eslint-plugin-cypress': pkgVersions.eslintPluginCypressVersion }
+      )
+    );
+  }
 
   if (
     isEslintConfigSupported(tree, projectConfig.root) ||
     isEslintConfigSupported(tree)
   ) {
     const overrides = [];
-    if (options.rootProject) {
-      addPluginsToLintConfig(tree, projectConfig.root, '@nx');
-      overrides.push(typeScriptOverride);
-      overrides.push(javaScriptOverride);
+    if (useFlatConfig(tree)) {
+      addPredefinedConfigToFlatLintConfig(
+        tree,
+        projectConfig.root,
+        'recommended',
+        'cypress',
+        'eslint-plugin-cypress/flat',
+        false,
+        false
+      );
+      addOverrideToLintConfig(tree, projectConfig.root, {
+        files: ['*.ts', '*.js'],
+        rules: {},
+      });
+    } else {
+      if (options.rootProject) {
+        addPluginsToLintConfig(tree, projectConfig.root, '@nx');
+        overrides.push(typeScriptOverride);
+        overrides.push(javaScriptOverride);
+      }
+      const addExtendsTask = addExtendsToLintConfig(
+        tree,
+        projectConfig.root,
+        'plugin:cypress/recommended'
+      );
+      tasks.push(addExtendsTask);
     }
-    addExtendsToLintConfig(
-      tree,
-      projectConfig.root,
-      'plugin:cypress/recommended'
-    );
-    const cyVersion = installedCypressVersion();
+    const cyVersion = getInstalledCypressMajorVersion(tree);
     /**
      * We need this override because we enabled allowJS in the tsconfig to allow for JS based Cypress tests.
      * That however leads to issues with the CommonJS Cypress plugin file.
@@ -116,7 +136,10 @@ export async function addLinterToCyProject(
 
     if (options.overwriteExisting) {
       overrides.unshift({
-        files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+        files: useFlatConfig(tree)
+          ? // For flat configs we don't need to specify the files
+            undefined
+          : ['*.ts', '*.tsx', '*.js', '*.jsx'],
         parserOptions: !options.setParserOptionsProject
           ? undefined
           : {
@@ -130,10 +153,13 @@ export async function addLinterToCyProject(
       replaceOverridesInLintConfig(tree, projectConfig.root, overrides);
     } else {
       overrides.unshift({
-        files: [
-          '*.cy.{ts,js,tsx,jsx}',
-          `${options.cypressDir}/**/*.{ts,js,tsx,jsx}`,
-        ],
+        files: useFlatConfig(tree)
+          ? // For flat configs we don't need to specify the files
+            undefined
+          : [
+              '*.cy.{ts,js,tsx,jsx}',
+              `${options.cypressDir}/**/*.{ts,js,tsx,jsx}`,
+            ],
         parserOptions: !options.setParserOptionsProject
           ? undefined
           : {

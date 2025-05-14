@@ -6,7 +6,6 @@ import {
   BloombergIcon,
   CaisGroupIcon,
   CapitalOneIcon,
-  CasewareIcon,
   CaterpillarIcon,
   CiscoIcon,
   ClickUpIcon,
@@ -16,7 +15,6 @@ import {
   FedExIcon,
   FicoIcon,
   HasuraIcon,
-  HetznerCloudIcon,
   HiltonIcon,
   IkeaIcon,
   IntelIcon,
@@ -26,9 +24,9 @@ import {
   MillienniumIcon,
   ModernaIcon,
   ParamountIcon,
-  PayfitIcon,
   PaylocityIcon,
   PhilipsIcon,
+  PlexIcon,
   RedBullIcon,
   RoyalBankOfCanadaIcon,
   SainsburysIcon,
@@ -38,373 +36,272 @@ import {
   ThreeKitIcon,
   TideIcon,
   TMobileIcon,
-  UkgIcon,
   VarianIcon,
-  VmwareIcon,
   VodafoneIcon,
   ZipariIcon,
 } from '@nx/nx-dev/ui-icons';
+import { DownloadCaseStudy } from '@nx/nx-dev/ui-enterprise';
+import { CustomerTestimonialCarousel } from './customer-testimonial-carousel';
+import { type CustomerIcon, CustomerIconGrid } from './customer-icon-grid';
+import { type ReactElement } from 'react';
 
-export function EnterpriseCustomers(): JSX.Element {
+const firstCustomerIcons: CustomerIcon[] = [
+  { url: 'https://man-es.com', icon: ManIcon, height: 'h-20', width: 'w-20' },
+  {
+    url: 'https://caterpillar.com',
+    icon: CaterpillarIcon,
+    height: 'h-16',
+    width: 'w-16',
+  },
+  {
+    url: 'https://capitalone.com',
+    icon: CapitalOneIcon,
+    height: 'h-32',
+    width: 'w-32',
+  },
+  {
+    url: 'https://hilton.com',
+    icon: HiltonIcon,
+    height: 'h-24',
+    width: 'w-24',
+  },
+  { url: 'https://myfico.com', icon: FicoIcon, height: 'h-28', width: 'w-28' },
+  {
+    url: 'https://7-eleven.com',
+    icon: SevenElevenIcon,
+    height: 'h-16',
+    width: 'w-16',
+  },
+  { url: 'https://cisco.com', icon: CiscoIcon, height: 'h-24', width: 'w-24' },
+  {
+    url: 'https://zipari.com',
+    icon: ZipariIcon,
+    height: 'h-12',
+    width: 'w-12',
+  },
+];
+
+const secondCustomerIcons: CustomerIcon[] = [
+  {
+    url: 'https://www.fedex.com',
+    icon: FedExIcon,
+    height: 'h-28',
+    width: 'w-28',
+  },
+  {
+    url: 'https://www.aa.com',
+    icon: AmericanAirlinesIcon,
+    height: 'h-12',
+    width: 'w-12',
+  },
+  {
+    url: 'https://www.bill.com',
+    icon: BillIcon,
+    height: 'h-16',
+    width: 'w-16',
+  },
+  {
+    url: 'https://www.adobe.com',
+    icon: AdobeIcon,
+    height: 'h-14',
+    width: 'w-14',
+  },
+  {
+    url: 'https://www.intel.com',
+    icon: IntelIcon,
+    height: 'h-16',
+    width: 'w-16',
+  },
+  {
+    url: 'https://www.adidas.com',
+    icon: AdidasIcon,
+    height: 'h-14',
+    width: 'w-14',
+  },
+  {
+    url: 'https://www.ikea.com',
+    icon: IkeaIcon,
+    height: 'h-20',
+    width: 'w-20',
+  },
+  {
+    url: 'https://www.deloitte.com',
+    icon: DeloitteIcon,
+    height: 'h-28',
+    width: 'w-28',
+  },
+  {
+    url: 'https://www.vodafone.com',
+    icon: VodafoneIcon,
+    height: 'h-12',
+    width: 'w-12',
+  },
+  {
+    url: 'https://mailchimp.com',
+    icon: MailChimpIcon,
+    height: 'h-14',
+    width: 'w-14',
+  },
+  {
+    url: 'https://www.modernatx.com',
+    icon: ModernaIcon,
+    height: 'h-32',
+    width: 'w-32',
+  },
+  {
+    url: 'https://www.paramountplus.com',
+    icon: ParamountIcon,
+    height: 'h-14',
+    width: 'w-14',
+  },
+];
+
+const thirdCustomerIcons: CustomerIcon[] = [
+  {
+    url: 'https://clickup.com',
+    icon: ClickUpIcon,
+    height: 'h-12',
+    width: 'w-12',
+  },
+  {
+    url: 'https://global.sharp',
+    icon: SharpIcon,
+    height: 'h-28',
+    width: 'w-28',
+  },
+  {
+    url: 'https://www.redbull.com',
+    icon: RedBullIcon,
+    height: 'h-24',
+    width: 'w-24',
+  },
+  {
+    url: 'https://www.lego.com',
+    icon: LegoIcon,
+    height: 'h-24',
+    width: 'w-24',
+  },
+  {
+    url: 'https://www.philips.ca',
+    icon: PhilipsIcon,
+    height: 'h-24',
+    width: 'w-24',
+  },
+  {
+    url: 'https://www.bloomberg.com',
+    icon: BloombergIcon,
+    height: 'h-10',
+    width: 'w-10',
+  },
+  {
+    url: 'https://www.sainsburys.co.uk',
+    icon: SainsburysIcon,
+    height: 'h-32',
+    width: 'w-36',
+  },
+  {
+    url: 'https://splice.com',
+    icon: SpliceIcon,
+    height: 'h-14',
+    width: 'w-14',
+  },
+  { url: 'https://www.tide.co', icon: TideIcon, height: 'h-20', width: 'w-20' },
+  { url: 'https://hasura.io', icon: HasuraIcon, height: 'h-12', width: 'w-12' },
+  { url: ' https://www.dnb.no', icon: DnbIcon, height: 'h-16', width: 'w-16' },
+  {
+    url: 'https://ghost.org',
+    icon: RoyalBankOfCanadaIcon,
+    height: 'h-14',
+    width: 'w-14',
+  },
+  {
+    url: 'https://www.varian.com',
+    icon: VarianIcon,
+    height: 'h-28',
+    width: 'w-28',
+  },
+  {
+    url: 'https://www.paylocity.com',
+    icon: PaylocityIcon,
+    height: 'h-12',
+    width: 'w-12',
+  },
+  {
+    url: 'https://www.mlp.com',
+    icon: MillienniumIcon,
+    height: 'h-24',
+    width: 'w-40',
+  },
+  {
+    url: 'https://www.threekit.com',
+    icon: ThreeKitIcon,
+    height: 'h-12',
+    width: 'w-12',
+  },
+  {
+    url: 'https://www.caisgroup.com',
+    icon: CaisGroupIcon,
+    height: 'h-28',
+    width: 'w-28',
+  },
+  {
+    url: 'https://www.entaingroup.com',
+    icon: EntainIcon,
+    height: 'h-16',
+    width: 'w-24',
+  },
+  {
+    url: 'https://t-mobile.com',
+    icon: TMobileIcon,
+    height: 'h-10',
+    width: 'w-10',
+  },
+  { url: 'https://plex.tv', icon: PlexIcon, height: 'h-20', width: 'w-20' },
+];
+
+export function EnterpriseCustomers(): ReactElement {
   return (
     <section id="customers">
-      <div className="mx-auto max-w-7xl text-center">
-        <div className="mt-8">
-          <div className="grid grid-cols-2 justify-between md:grid-cols-4">
-            <a
-              href="https://www.man-es.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <ManIcon aria-hidden="true" className="h-20 w-20" />
-            </a>
-            <a
-              href="https://www.caterpillar.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-y border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <CaterpillarIcon aria-hidden="true" className="h-16 w-16" />
-            </a>
-            <a
-              href="https://www.capitalone.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <CapitalOneIcon aria-hidden="true" className="h-32 w-32" />
-            </a>
-            <a
-              href="https://www.vmware.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-y border-r border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <VmwareIcon aria-hidden="true" className="h-28 w-28" />
-            </a>
-            <a
-              href="https://www.hilton.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <HiltonIcon aria-hidden="true" className="h-24 w-24" />
-            </a>
-            <a
-              href="https://www.myfico.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <FicoIcon aria-hidden="true" className="h-28 w-28" />
-            </a>
-            <a
-              href="https://www.7-eleven.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <SevenElevenIcon aria-hidden="true" className="h-16 w-16" />
-            </a>
-            <a
-              href="https://www.cisco.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-b border-r border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <CiscoIcon aria-hidden="true" className="h-24 w-24" />
-            </a>
-            <a
-              href="https://www.paramountplus.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <ParamountIcon aria-hidden="true" className="h-14 w-14" />
-            </a>
-            <a
-              href="https://www.fedex.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <FedExIcon aria-hidden="true" className="h-28 w-28" />
-            </a>
-            <a
-              href="https://www.aa.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <AmericanAirlinesIcon aria-hidden="true" className="h-12 w-12" />
-            </a>
-            <a
-              href="https://zipari.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-b border-r border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <ZipariIcon aria-hidden="true" className="h-12 w-12" />
-            </a>
+      <div className="mt-8">
+        <div className="mx-auto max-w-7xl">
+          <CustomerIconGrid icons={firstCustomerIcons} />
+        </div>
 
-            <a
-              href="https://www.bill.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <BillIcon aria-hidden="true" className="h-16 w-16" />
-            </a>
-            <a
-              href="https://www.adobe.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <AdobeIcon aria-hidden="true" className="h-14 w-14" />
-            </a>
-            <a
-              href="https://www.adidas.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <AdidasIcon aria-hidden="true" className="h-14 w-14" />
-            </a>
-            <a
-              href="https://www.intel.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-b border-r border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white dark:hover:text-white"
-            >
-              <IntelIcon aria-hidden="true" className="h-16 w-16" />
-            </a>
-            <a
-              href="https://www.ikea.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <IkeaIcon aria-hidden="true" className="h-20 w-20" />
-            </a>
-            <a
-              href="https://www.deloitte.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <DeloitteIcon aria-hidden="true" className="h-28 w-28" />
-            </a>
-            <a
-              href="https://www.vodafone.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <VodafoneIcon aria-hidden="true" className="h-12 w-12" />
-            </a>
-            <a
-              href="https://www.t-mobile.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-b border-r border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <TMobileIcon aria-hidden="true" className="h-10 w-10" />
-            </a>
-            <a
-              href="https://mailchimp.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <MailChimpIcon aria-hidden="true" className="h-14 w-14" />
-            </a>
-            <a
-              href="https://www.modernatx.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <ModernaIcon aria-hidden="true" className="h-32 w-32" />
-            </a>
-            <a
-              href="https://clickup.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <ClickUpIcon aria-hidden="true" className="h-12 w-12" />
-            </a>
-            <a
-              href="https://global.sharp"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-b border-r border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <SharpIcon aria-hidden="true" className="h-28 w-28" />
-            </a>
-            <a
-              href="https://www.redbull.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <RedBullIcon aria-hidden="true" className="h-24 w-24" />
-            </a>
-            <a
-              href="https://www.lego.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <LegoIcon aria-hidden="true" className="h-24 w-24" />
-            </a>
-            <a
-              href="https://www.philips.ca"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <PhilipsIcon aria-hidden="true" className="h-24 w-24" />
-            </a>
-            <a
-              href="https://www.bloomberg.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-b border-r border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <BloombergIcon aria-hidden="true" className="h-10 w-10" />
-            </a>
-            <a
-              href="https://www.sainsburys.co.uk"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <SainsburysIcon aria-hidden="true" className="h-32 w-36" />
-            </a>
-            <a
-              href="https://splice.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <SpliceIcon aria-hidden="true" className="h-14 w-14" />
-            </a>
-            <a
-              href="https://www.tide.co"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <TideIcon aria-hidden="true" className="h-20 w-20" />
-            </a>
-            <a
-              href="https://hasura.io"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-b border-r border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <HasuraIcon aria-hidden="true" className="h-12 w-12" />
-            </a>
-            <a
-              href="https://www.hetzner.com/cloud"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <HetznerCloudIcon aria-hidden="true" className="h-10 w-10" />
-            </a>
-            <a
-              href=" https://www.dnb.no"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <DnbIcon aria-hidden="true" className="h-16 w-16" />
-            </a>
-            <a
-              href="https://ghost.org"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <RoyalBankOfCanadaIcon aria-hidden="true" className="h-14 w-14" />
-            </a>
-            <a
-              href="https://www.ukg.ca"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-b border-r border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <UkgIcon aria-hidden="true" className="h-20 w-20" />
-            </a>
-            <a
-              href="https://www.varian.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <VarianIcon aria-hidden="true" className="h-28 w-28" />
-            </a>
-            <a
-              href="https://www.paylocity.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <PaylocityIcon aria-hidden="true" className="h-12 w-12" />
-            </a>
-            <a
-              href="https://www.mlp.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <MillienniumIcon aria-hidden="true" className="h-24 w-40" />
-            </a>
-            <a
-              href="https://payfit.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-b border-r border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <PayfitIcon aria-hidden="true" className="h-14 w-14" />
-            </a>
-            <a
-              href="https://www.threekit.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <ThreeKitIcon aria-hidden="true" className="h-12 w-12" />
-            </a>
-            <a
-              href="https://www.caisgroup.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <CaisGroupIcon aria-hidden="true" className="h-28 w-28" />
-            </a>
-            <a
-              href="https://www.caseware.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <CasewareIcon aria-hidden="true" className="h-12 w-12" />
-            </a>
-            <a
-              href="https://www.entaingroup.com"
-              rel="noreferrer"
-              target="_blank"
-              className="flex items-center justify-center border-b border-r border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
-            >
-              <EntainIcon aria-hidden="true" className="h-16 w-24" />
-            </a>
+        <div className="col-span-2 border-y border-slate-200 bg-slate-50 py-24 sm:py-32 md:col-span-4 dark:border-slate-800 dark:bg-slate-900">
+          <div className="mx-auto">
+            <CustomerTestimonialCarousel />
           </div>
+        </div>
+        <div className="mx-auto max-w-7xl">
+          <CustomerIconGrid icons={secondCustomerIcons} />
+
+          <div className="grid-cols my-8 grid justify-center gap-8 px-2 py-6 md:grid-cols-3">
+            <DownloadCaseStudy
+              title="Financial Institution Case Study"
+              description="$28B Fortune 500 financial institution reduces CI times by 79% with Nx Cloud."
+              buttonHref="https://go.nx.dev/financial-case-study"
+              buttonText="Read more"
+              variant="secondary"
+            />
+            <DownloadCaseStudy
+              title="Banking Case Study"
+              description="$7B European bank cuts CI times by 62% and boosts team productivity."
+              buttonHref="https://go.nx.dev/banking-case-study"
+              buttonText="Read more"
+              variant="secondary"
+            />
+
+            {/* Blog Excerpt */}
+            <DownloadCaseStudy
+              title="Improve your architecture and CI speeds"
+              description="Structure your monorepo the right way to save time, reduce costs, and maximize efficiency."
+              buttonHref="/blog/improve-architecture-and-ci-times-with-projects"
+              buttonText="Read more"
+              buttonCTA="Read more"
+              variant="secondary"
+            />
+          </div>
+          <CustomerIconGrid icons={thirdCustomerIcons} />
         </div>
       </div>
     </section>

@@ -1,0 +1,20 @@
+{
+  "extends": "<%= tsConfigPath %>",
+  "compilerOptions": {
+    "allowJs": true,
+    "outDir": "<%= offsetFromRoot %>dist/out-tsc",
+    "module": "commonjs",
+    "types": ["cypress", "node"],
+    "sourceMap": false
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.js",
+    "<%= offsetFromProjectRoot %>cypress.config.ts",
+    "<%= offsetFromProjectRoot %>**/*.cy.ts",
+    <%_ if (jsx) { _%>"<%= offsetFromProjectRoot %>**/*.cy.tsx",<%_ } _%>
+    "<%= offsetFromProjectRoot %>**/*.cy.js",
+    <%_ if (jsx) { _%>"<%= offsetFromProjectRoot %>**/*.cy.jsx",<%_ } _%>
+    "<%= offsetFromProjectRoot %>**/*.d.ts"
+  ]
+}

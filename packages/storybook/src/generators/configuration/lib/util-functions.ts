@@ -1,11 +1,10 @@
 import {
-  createProjectGraphAsync,
   ensurePackage,
   generateFiles,
   joinPathFragments,
   logger,
   offsetFromRoot,
-  parseTargetString,
+  readCachedProjectGraph,
   readJson,
   readNxJson,
   readProjectConfiguration,
@@ -17,8 +16,7 @@ import {
   workspaceRoot,
   writeJson,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
-import { Linter } from '@nx/eslint';
+import type { LinterType } from '@nx/eslint';
 import { join, relative } from 'path';
 import {
   dedupe,
@@ -30,6 +28,11 @@ import { UiFramework } from '../../../utils/models';
 import { nxVersion } from '../../../utils/versions';
 import { findEslintFile } from '@nx/eslint/src/generators/utils/eslint-file';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
+import {
+  findRuntimeTsConfigName,
+  getProjectType,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 const DEFAULT_PORT = 4400;
 
@@ -167,6 +170,9 @@ export function createStorybookTsconfigFile(
   isRootProject: boolean,
   mainDir: 'components' | 'src'
 ) {
+  const offset = offsetFromRoot(projectRoot);
+  const useTsSolution = isUsingTsSolutionSetup(tree);
+
   // First let's check if old configuration file exists
   // If it exists, let's rename it and move it to the new location
   const oldStorybookTsConfigPath = joinPathFragments(
@@ -186,9 +192,10 @@ export function createStorybookTsconfigFile(
     return;
   }
 
+  const storybookTsConfigName = 'tsconfig.storybook.json';
   const storybookTsConfigPath = joinPathFragments(
     projectRoot,
-    'tsconfig.storybook.json'
+    storybookTsConfigName
   );
 
   if (tree.exists(storybookTsConfigPath)) {
@@ -196,12 +203,52 @@ export function createStorybookTsconfigFile(
     return;
   }
 
-  const exclude = [`${mainDir}/**/*.spec.ts`, `${mainDir}/**/*.test.ts`];
+  const storybookTsConfig: any = {
+    extends: useTsSolution
+      ? joinPathFragments(offset, 'tsconfig.base.json')
+      : './tsconfig.json',
+    compilerOptions: {
+      emitDecoratorMetadata: useTsSolution ? undefined : true,
+      outDir: useTsSolution
+        ? 'out-tsc/storybook'
+        : uiFramework === '@storybook/react-webpack5' ||
+          uiFramework === '@storybook/react-vite'
+        ? ''
+        : undefined,
+      module: useTsSolution ? 'esnext' : undefined,
+      moduleResolution: useTsSolution ? 'bundler' : undefined,
+      jsx:
+        useTsSolution && uiFramework !== '@storybook/angular'
+          ? 'preserve'
+          : undefined,
+    },
+    exclude: [`${mainDir}/**/*.spec.ts`, `${mainDir}/**/*.test.ts`],
+    include: [
+      `${mainDir}/**/*.stories.ts`,
+      `${mainDir}/**/*.stories.js`,
+      `${mainDir}/**/*.stories.jsx`,
+      `${mainDir}/**/*.stories.tsx`,
+      `${mainDir}/**/*.stories.mdx`,
+      '.storybook/*.js',
+      '.storybook/*.ts',
+    ],
+  };
+
+  if (useTsSolution) {
+    const runtimeConfig = findRuntimeTsConfigName(projectRoot, tree);
+    if (runtimeConfig) {
+      storybookTsConfig.references ??= [];
+      storybookTsConfig.references.push({
+        path: `./${runtimeConfig}`,
+      });
+    }
+  }
+
   if (
     uiFramework === '@storybook/react-webpack5' ||
     uiFramework === '@storybook/react-vite'
   ) {
-    exclude.push(
+    storybookTsConfig.exclude.push(
       `${mainDir}/**/*.spec.js`,
       `${mainDir}/**/*.test.js`,
       `${mainDir}/**/*.spec.tsx`,
@@ -209,17 +256,7 @@ export function createStorybookTsconfigFile(
       `${mainDir}/**/*.spec.jsx`,
       `${mainDir}/**/*.test.js`
     );
-  }
-
-  let files: string[];
-
-  if (
-    uiFramework === '@storybook/react-webpack5' ||
-    uiFramework === '@storybook/react-vite'
-  ) {
-    const offset = offsetFromRoot(projectRoot);
-
-    files = [
+    storybookTsConfig.files = [
       `${
         !isRootProject ? offset : ''
       }node_modules/@nx/react/typings/styled-jsx.d.ts`,
@@ -232,30 +269,19 @@ export function createStorybookTsconfigFile(
     ];
   }
 
-  const include: string[] = [
-    `${mainDir}/**/*.stories.ts`,
-    `${mainDir}/**/*.stories.js`,
-    `${mainDir}/**/*.stories.jsx`,
-    `${mainDir}/**/*.stories.tsx`,
-    `${mainDir}/**/*.stories.mdx`,
-    '.storybook/*.js',
-    '.storybook/*.ts',
-  ];
-
-  const storybookTsConfig: TsConfig = {
-    extends: './tsconfig.json',
-    compilerOptions: {
-      emitDecoratorMetadata: true,
-      outDir:
-        uiFramework === '@storybook/react-webpack5' ||
-        uiFramework === '@storybook/react-vite'
-          ? ''
-          : undefined,
-    },
-    files,
-    exclude,
-    include,
-  };
+  if (useTsSolution) {
+    updateJson(
+      tree,
+      joinPathFragments(projectRoot, 'tsconfig.json'),
+      (json) => {
+        json.references ??= [];
+        json.references.push({
+          path: `./${storybookTsConfigName}`,
+        });
+        return json;
+      }
+    );
+  }
 
   writeJson(tree, storybookTsConfigPath, storybookTsConfig);
 }
@@ -441,7 +467,7 @@ export function normalizeSchema(
 ): StorybookConfigureSchema {
   const defaults = {
     configureCypress: true,
-    linter: Linter.EsLint,
+    linter: 'eslint' as LinterType,
     js: false,
   };
   return {
@@ -553,10 +579,11 @@ export function createProjectStorybookDir(
   viteConfigFilePath?: string,
   hasPlugin?: boolean,
   viteConfigFileName?: string,
-  useReactNative?: boolean
+  usesReactNative?: boolean
 ) {
   let projectDirectory =
-    projectType === 'application'
+    getProjectType(tree, root, projectType as 'application' | 'library') ===
+    'application'
       ? isNextJs
         ? 'components'
         : 'src/app'
@@ -591,14 +618,17 @@ export function createProjectStorybookDir(
     projectType,
     interactionTests,
     mainDir,
-    isNextJs: isNextJs && projectType === 'application',
+    isNextJs:
+      isNextJs &&
+      getProjectType(tree, root, projectType as 'application' | 'library') ===
+        'application',
     usesSwc,
     usesVite,
     isRootProject: projectIsRootProjectInStandaloneWorkspace,
     viteConfigFilePath,
     hasPlugin,
     viteConfigFileName,
-    useReactNative,
+    usesReactNative,
   });
 
   if (js) {
@@ -626,7 +656,7 @@ export function getTsConfigPath(
     root,
     path?.length > 0
       ? path
-      : projectType === 'application'
+      : getProjectType(tree, root, projectType) === 'application'
       ? 'tsconfig.app.json'
       : 'tsconfig.lib.json'
   );
@@ -681,36 +711,6 @@ export function rootFileIsTs(
   }
 }
 
-export async function getE2EProjectName(
-  tree: Tree,
-  mainProject: string
-): Promise<string | undefined> {
-  let e2eProject: string;
-  const graph = await createProjectGraphAsync();
-  forEachExecutorOptions(
-    tree,
-    '@nx/cypress:cypress',
-    (options, projectName) => {
-      if (e2eProject) {
-        return;
-      }
-      if (options['devServerTarget']) {
-        const { project, target } = parseTargetString(
-          options['devServerTarget'],
-          graph
-        );
-        if (
-          (project === mainProject && target === 'serve') ||
-          (project === mainProject && target === 'storybook')
-        ) {
-          e2eProject = projectName;
-        }
-      }
-    }
-  );
-  return e2eProject;
-}
-
 export function findViteConfig(
   tree: Tree,
   projectRoot: string
@@ -745,13 +745,14 @@ export function findNextConfig(
   }
 }
 
-export function findMetroConfig(
-  tree: Tree,
-  projectRoot: string
-): string | undefined {
-  const nextConfigPath = joinPathFragments(projectRoot, `metro.config.js`);
-  if (tree.exists(nextConfigPath)) {
-    return nextConfigPath;
+export function isUsingReactNative(projectName: string): boolean {
+  try {
+    const projectGraph = readCachedProjectGraph();
+    return projectGraph?.dependencies?.[projectName]?.some(
+      (dep) => dep.target === 'npm:react-native'
+    );
+  } catch {
+    return false;
   }
 }
 

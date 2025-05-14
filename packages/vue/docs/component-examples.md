@@ -10,7 +10,7 @@ This generator will help you generate components for your Vue or your Nuxt proje
 ### Create a new component for your Vue app
 
 ```shell
-nx g @nx/vue:component --directory=my-app/src/app/my-cmp --name=my-cmp
+nx g @nx/vue:component my-app/src/app/my-cmp
 ```
 
 ### Create a new component for your Nuxt app
@@ -21,7 +21,7 @@ directory.
 Running the following will create a new component in the `my-app/src/components` directory:
 
 ```shell
-nx g @nx/nuxt:component --directory=my-app/src/components/my-cmp --name=my-cmp
+nx g @nx/nuxt:component my-app/src/components/my-cmp
 ```
 
 ### Create a new page for your Nuxt app
@@ -31,5 +31,5 @@ As stated in the [Nuxt documentation](https://nuxt.com/docs/guide/directory-stru
 Running the following will create a new component (page) in the `my-app/src/pages` directory:
 
 ```shell
-nx g @nx/nuxt:component --directory=my-app/src/pages --name=my-page
+nx g @nx/nuxt:component my-app/src/pages/my-page
 ```

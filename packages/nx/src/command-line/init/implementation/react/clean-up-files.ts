@@ -1,4 +1,4 @@
-import { removeSync } from 'fs-extra';
+import { rmSync } from 'node:fs';
 import { readJsonFile, writeJsonFile } from '../../../../utils/fileutils';
 
 export function cleanUpFiles(appName: string, isStandalone: boolean) {
@@ -21,13 +21,13 @@ export function cleanUpFiles(appName: string, isStandalone: boolean) {
   }
   writeJsonFile(projectJsonPath, json);
 
-  removeSync('temp-workspace');
+  rmSync('temp-workspace', { recursive: true, force: true });
 
   if (isStandalone) {
-    removeSync('babel.config.json');
-    removeSync('jest.preset.js');
-    removeSync('jest.config.ts');
-    removeSync('libs');
-    removeSync('tools');
+    rmSync('babel.config.json', { recursive: true, force: true });
+    rmSync('jest.preset.js', { recursive: true, force: true });
+    rmSync('jest.config.ts', { recursive: true, force: true });
+    rmSync('libs', { recursive: true, force: true });
+    rmSync('tools', { recursive: true, force: true });
   }
 }

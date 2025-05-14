@@ -287,15 +287,18 @@ export function removeDependenciesFromPackageJson(
     )
   ) {
     updateJson(tree, packageJsonPath, (json) => {
-      for (const dep of dependencies) {
-        delete json.dependencies[dep];
+      if (json.dependencies) {
+        for (const dep of dependencies) {
+          delete json.dependencies[dep];
+        }
+        json.dependencies = sortObjectByKeys(json.dependencies);
       }
-      for (const devDep of devDependencies) {
-        delete json.devDependencies[devDep];
+      if (json.devDependencies) {
+        for (const devDep of devDependencies) {
+          delete json.devDependencies[devDep];
+        }
+        json.devDependencies = sortObjectByKeys(json.devDependencies);
       }
-      json.dependencies = sortObjectByKeys(json.dependencies);
-      json.devDependencies = sortObjectByKeys(json.devDependencies);
-
       return json;
     });
   }
@@ -497,6 +500,7 @@ export function ensurePackage<T extends any = any>(
     execSync(preInstallCommand, {
       cwd: tempDir,
       stdio: isVerbose ? 'inherit' : 'ignore',
+      windowsHide: false,
     });
   }
   let addCommand = getPackageManagerCommand(packageManager).addDev;
@@ -507,6 +511,7 @@ export function ensurePackage<T extends any = any>(
   execSync(`${addCommand} ${pkg}@${requiredVersion}`, {
     cwd: tempDir,
     stdio: isVerbose ? 'inherit' : 'ignore',
+    windowsHide: false,
   });
 
   addToNodePath(join(workspaceRoot, 'node_modules'));

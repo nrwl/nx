@@ -1,7 +1,7 @@
 import { output } from '../../utils/output';
 import { TaskStatus } from '../tasks-runner';
 import { getPrintableCommandArgsForTask } from '../utils';
-import type { LifeCycle } from '../life-cycle';
+import type { LifeCycle, TaskResult } from '../life-cycle';
 import { Task } from '../../config/task-graph';
 import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 
@@ -29,6 +29,9 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
   ) {}
 
   startCommand(): void {
+    if (this.tasks.length === 0) {
+      return;
+    }
     if (this.projectNames.length <= 0) {
       output.logSingleLine(
         `No projects with ${formatTargetsAndProjects(
@@ -69,6 +72,10 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
   endCommand(): void {
     output.addNewline();
 
+    if (this.tasks.length === 0) {
+      output.logSingleLine(`No tasks were run`);
+      return;
+    }
     if (this.failedTasks.length === 0) {
       output.addVerticalSeparatorWithoutNewLines('green');
 
@@ -126,9 +133,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
     return this.tasks.filter((t) => !this.allCompletedTasks.has(t.id));
   }
 
-  endTasks(
-    taskResults: { task: Task; status: TaskStatus; code: number }[]
-  ): void {
+  endTasks(taskResults: TaskResult[]): void {
     for (let t of taskResults) {
       this.allCompletedTasks.set(t.task.id, t.task);
       if (t.status === 'failure') {

@@ -5,8 +5,8 @@ import {
   writeJsonFile,
 } from '@nx/devkit';
 import { execSync } from 'child_process';
+import { mkdirSync } from 'node:fs';
 import { dirname } from 'path';
-import { ensureDirSync } from 'fs-extra';
 import { tmpProjPath } from './paths';
 import { cleanup } from './utils';
 
@@ -21,6 +21,7 @@ function runNxNewCommand(args?: string, silent?: boolean) {
     {
       cwd: localTmpDir,
       ...(silent && false ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
+      windowsHide: false,
     }
   );
 }
@@ -55,6 +56,7 @@ export function runPackageManagerInstall(silent: boolean = true) {
   const install = execSync(pmc.install, {
     cwd,
     ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
+    windowsHide: false,
   });
   return install ? install.toString() : '';
 }
@@ -83,6 +85,6 @@ export function ensureNxProject(
   npmPackageName?: string,
   pluginDistPath?: string
 ): void {
-  ensureDirSync(tmpProjPath());
+  mkdirSync(tmpProjPath(), { recursive: true });
   newNxProject(npmPackageName, pluginDistPath);
 }

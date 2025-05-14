@@ -1,7 +1,9 @@
 import { FC, SVGProps } from 'react';
 
+/**
+ * Use `#D50C2D` for a colored version.
+ */
 export const HetznerCloudIcon: FC<SVGProps<SVGSVGElement>> = (props) => (
-  //Color: #D50C2D
   <svg
     role="img"
     viewBox="0 0 24 24"

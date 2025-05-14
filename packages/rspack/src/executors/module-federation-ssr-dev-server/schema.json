@@ -1,0 +1,84 @@
+{
+  "version": 2,
+  "continuous": true,
+  "outputCapture": "direct-nodejs",
+  "title": "Module Federation SSR Dev Server",
+  "description": "Serve a SSR Consumer (host) application along with its known Producers (remotes).",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "browserTarget": {
+      "type": "string",
+      "description": "Target which builds the browser application.",
+      "x-priority": "important"
+    },
+    "serverTarget": {
+      "type": "string",
+      "description": "Target which builds the server application.",
+      "x-priority": "important"
+    },
+    "port": {
+      "type": "number",
+      "description": "The port to be set on `process.env.PORT` for use in the server.",
+      "default": 4200,
+      "x-priority": "important"
+    },
+    "devRemotes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of Producers (remote) applications to run in development mode (i.e. using serve target).",
+      "x-priority": "important",
+      "alias": "devProducers"
+    },
+    "skipRemotes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of Producers (remote) applications to not automatically serve, either statically or in development mode.",
+      "x-priority": "important",
+      "alias": "skipProducers"
+    },
+    "host": {
+      "type": "string",
+      "description": "Host to listen on.",
+      "default": "localhost"
+    },
+    "staticRemotesPort": {
+      "type": "number",
+      "description": "The port at which to serve the file-server for the static Producers (remotes).",
+      "alias": "staticProducersPort"
+    },
+    "pathToManifestFile": {
+      "type": "string",
+      "description": "Path to a Module Federation manifest file (e.g. `my/path/to/module-federation.manifest.json`) containing the dynamic Producers (remote) applications relative to the workspace root."
+    },
+    "ssl": {
+      "type": "boolean",
+      "description": "Serve using HTTPS.",
+      "default": false
+    },
+    "sslKey": {
+      "type": "string",
+      "description": "SSL key to use for serving HTTPS."
+    },
+    "sslCert": {
+      "type": "string",
+      "description": "SSL certificate to use for serving HTTPS."
+    },
+    "publicHost": {
+      "type": "string",
+      "description": "Public URL where the application will be served."
+    },
+    "isInitialHost": {
+      "type": "boolean",
+      "description": "Whether the Consumer (host) that is running this executor is the first in the project tree to do so.",
+      "default": true,
+      "x-priority": "internal",
+      "alias": "isInitialConsumer"
+    }
+  },
+  "required": ["browserTarget", "serverTarget"]
+}

@@ -1,3 +1,8 @@
+---
+title: Local Generators
+description: Learn how to create, run, and customize local generators in your Nx workspace to automate common development tasks and standardize workflows.
+---
+
 # Local Generators
 
 Local plugin generators provide a way to automate many tasks you regularly perform as part of your development workflow. Whether it is scaffolding out components, features, or ensuring libraries are generated and structured in a certain way, generators help you standardize these tasks in a consistent, and predictable manner.
@@ -16,7 +21,7 @@ If you don't already have a local plugin, use Nx to generate one:
 
 ```shell {% skipRescope=true %}
 nx add @nx/plugin
-nx g @nx/plugin:plugin my-plugin --directory=tools/my-plugin
+nx g @nx/plugin:plugin tools/my-plugin
 ```
 
 Note that `latest` should match the version of the `nx` plugins installed in your workspace.
@@ -24,7 +29,7 @@ Note that `latest` should match the version of the `nx` plugins installed in you
 Use the Nx CLI to generate the initial files needed for your generator.
 
 ```shell
-nx generate @nx/plugin:generator my-generator --directory=tools/my-plugin/src/generators/my-generator
+nx generate @nx/plugin:generator tools/my-plugin/src/generators/my-generator
 ```
 
 After the command is finished, the generator is created in the plugin `generators` folder.

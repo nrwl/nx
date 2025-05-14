@@ -1,4 +1,4 @@
-import { DocSearchModal, useDocSearchKeyboardEvents } from '@docsearch/react';
+import * as docsearchReact from '@docsearch/react';
 import {
   InternalDocSearchHit,
   StoredDocSearchHit,
@@ -9,6 +9,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+
+const { DocSearchModal, useDocSearchKeyboardEvents } = docsearchReact;
 
 const ACTION_KEY_DEFAULT = ['Ctrl ', 'Control'];
 const ACTION_KEY_APPLE = ['⌘', 'Command'];
@@ -153,6 +155,7 @@ export function AlgoliaSearch({
                 router.push(itemUrl);
               },
             }}
+            insights={true}
             hitComponent={Hit}
             transformItems={(items) => {
               return items.map((item, index) => {

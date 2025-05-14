@@ -2,6 +2,7 @@ node_modules
 /.idea
 /.fleet
 /.vscode
+/.cursor
 dist
 /build
 /coverage
@@ -21,6 +22,7 @@ jest.debug.config.js
 /graph/client/src/assets/generated-task-inputs
 /graph/client/src/assets/generated-source-maps
 /nx-dev/nx-dev/public/documentation
+/nx-dev/nx-dev/public/tutorials
 /nx-dev/nx-dev/public/images/open-graph
 **/tests/temp-db
 
@@ -37,17 +39,19 @@ out
 # Angular Cache
 .angular
 
+# Astro Cache
+.astro
+
 # Local dev files
 .env.local
 .bashrc
-.nx
 
 *.node
 
 # Fix for issue when working on the repo in a dev container
 .pnpm-store
-.nx/cache
-.nx/workspace-data
+.nx
+!.nx/workflows
 
 .cargo/.package-cache
 .cargo/bin/
@@ -60,3 +64,11 @@ out
 target
 *.wasm
 /wasi-sdk*
+
+vite.config.*.timestamp*
+
+storybook-static
+
+# Ignore Gradle project-specific cache directory
+.gradle
+.kotlin

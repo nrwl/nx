@@ -1,5 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs';
-import { ensureDirSync } from 'fs-extra';
+import { readFileSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { performance } from 'perf_hooks';
 import { ProjectGraph } from '../../config/project-graph';
@@ -9,6 +8,8 @@ import {
   CreateDependencies,
   CreateDependenciesContext,
   CreateNodes,
+  createNodesFromFiles,
+  CreateNodesV2,
 } from '../../project-graph/plugins';
 import {
   getLockFileDependencies,
@@ -35,6 +36,13 @@ interface ParsedLockFile {
 
 let parsedLockFile: ParsedLockFile = {};
 
+export const createNodesV2: CreateNodesV2 = [
+  combineGlobPatterns(LOCKFILES),
+  (files, _, context) => {
+    return createNodesFromFiles(createNodes[1], files, _, context);
+  },
+];
+
 export const createNodes: CreateNodes = [
   // Look for all lockfiles
   combineGlobPatterns(LOCKFILES),
@@ -57,7 +65,7 @@ export const createNodes: CreateNodes = [
         ? readFileSync(lockFilePath).toString()
         : execSync(`bun ${lockFilePath}`, {
             maxBuffer: 1024 * 1024 * 10,
-            windowsHide: true,
+            windowsHide: false,
           }).toString();
     const lockFileHash = getLockFileHash(lockFileContents);
 
@@ -103,7 +111,7 @@ export const createDependencies: CreateDependencies = (
         ? readFileSync(lockFilePath).toString()
         : execSync(`bun ${lockFilePath}`, {
             maxBuffer: 1024 * 1024 * 10,
-            windowsHide: true,
+            windowsHide: false,
           }).toString();
     const lockFileHash = getLockFileHash(lockFileContents);
 
@@ -153,7 +161,7 @@ function writeLastProcessedLockfileHash(
   hash: string,
   lockFile: ParsedLockFile
 ) {
-  ensureDirSync(dirname(lockFileHashFile));
+  mkdirSync(dirname(lockFileHashFile), { recursive: true });
   writeFileSync(cachedParsedLockFile, JSON.stringify(lockFile, null, 2));
   writeFileSync(lockFileHashFile, hash);
 }

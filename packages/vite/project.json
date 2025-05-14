@@ -49,14 +49,8 @@
       "outputs": ["{options.outputPath}"]
     },
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/vite"],
-      "options": {
-        "command": "node ./scripts/copy-readme.js vite"
-      }
-    },
-    "add-extra-dependencies": {
-      "command": "node ./scripts/add-dependency-to-build.js vite @nrwl/vite"
+      "outputs": ["{workspaceRoot}/build/packages/vite/README.md"],
+      "command": "node ./scripts/copy-readme.js vite"
     }
   }
 }

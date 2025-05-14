@@ -30,6 +30,12 @@ export default async function (tree: Tree) {
 
   const nxJson = readNxJson(tree);
   const nxMFDevRemotesEnvVar = 'NX_MF_DEV_REMOTES';
+  const inputs = [
+    ...(nxJson.namedInputs && 'production' in nxJson.namedInputs
+      ? ['production', '^production']
+      : ['default', '^default']),
+    { env: nxMFDevRemotesEnvVar },
+  ];
   if (
     !nxJson.targetDefaults ||
     !nxJson.targetDefaults?.['@nx/angular:webpack-browser']
@@ -37,7 +43,7 @@ export default async function (tree: Tree) {
     nxJson.targetDefaults ??= {};
     nxJson.targetDefaults['@nx/angular:webpack-browser'] = {
       cache: true,
-      inputs: ['production', '^production', { env: nxMFDevRemotesEnvVar }],
+      inputs,
       dependsOn: ['^build'],
     };
   } else {

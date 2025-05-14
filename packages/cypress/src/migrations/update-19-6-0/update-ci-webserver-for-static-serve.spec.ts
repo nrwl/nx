@@ -31,7 +31,7 @@ describe('update-ci-webserver-for-static-serve migration', () => {
     };
   });
 
-  afterEach(() => {
+  afterAll(() => {
     tempFs.reset();
   });
 

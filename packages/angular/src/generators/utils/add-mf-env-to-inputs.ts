@@ -5,12 +5,15 @@ export function addMfEnvToTargetDefaultInputs(tree: Tree) {
   const webpackExecutor = '@nx/angular:webpack-browser';
   const mfEnvVar = 'NX_MF_DEV_REMOTES';
 
+  const inputs = [
+    ...(nxJson.namedInputs && 'production' in nxJson.namedInputs
+      ? ['production', '^production']
+      : ['default', '^default']),
+  ];
+
   nxJson.targetDefaults ??= {};
   nxJson.targetDefaults[webpackExecutor] ??= {};
-  nxJson.targetDefaults[webpackExecutor].inputs ??= [
-    'production',
-    '^production',
-  ];
+  nxJson.targetDefaults[webpackExecutor].inputs ??= inputs;
   nxJson.targetDefaults[webpackExecutor].dependsOn ??= ['^build'];
 
   let mfEnvVarExists = false;

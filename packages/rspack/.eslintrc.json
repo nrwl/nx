@@ -1,0 +1,63 @@
+{
+  "extends": ["../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "name": "chalk",
+            "message": "Please use `picocolors` in place of `chalk` for rendering terminal colors"
+          }
+        ]
+      }
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["./package.json", "./generators.json", "./executors.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/nx-plugin-checks": "error"
+      }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "buildTargets": ["build-base"],
+            "ignoredDependencies": [
+              "nx",
+              "typescript",
+              // Used in require.resolve calls
+              "postcss-loader",
+              "@module-federation/node",
+              // @nx/workspace is only required in < 15.8
+              "@nx/workspace",
+              "@nx/react",
+              // Imported types only
+              "@module-federation/sdk",
+              "@module-federation/enhanced",
+              "css-loader",
+              "webpack",
+              "sass-embedded",
+              "sass",
+              "ts-checker-rspack-plugin"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

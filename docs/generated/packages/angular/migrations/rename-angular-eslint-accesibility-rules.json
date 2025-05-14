@@ -1,0 +1,15 @@
+{
+  "name": "rename-angular-eslint-accesibility-rules",
+  "cli": "nx",
+  "version": "16.4.0-beta.6",
+  "requires": { "@angular-eslint/eslint-plugin-template": ">=16.0.0" },
+  "description": "Remove the 'accessibility-' prefix from '@angular-eslint/eslint-plugin-template' rules.",
+  "factory": "./src/migrations/update-16-4-0/rename-angular-eslint-accesibility-rules",
+  "implementation": "/packages/angular/src/migrations/update-16-4-0/rename-angular-eslint-accesibility-rules.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

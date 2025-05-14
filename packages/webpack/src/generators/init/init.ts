@@ -6,8 +6,8 @@ import {
   readNxJson,
   Tree,
 } from '@nx/devkit';
-import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
-import { createNodes } from '../../plugins/plugin';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
+import { createNodesV2 } from '../../plugins/plugin';
 import { nxVersion, webpackCliVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
@@ -23,11 +23,11 @@ export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
   schema.addPlugin ??= addPluginDefault;
 
   if (schema.addPlugin) {
-    await addPluginV1(
+    await addPlugin(
       tree,
       await createProjectGraphAsync(),
       '@nx/webpack/plugin',
-      createNodes,
+      createNodesV2,
       {
         buildTargetName: [
           'build',
@@ -49,6 +49,16 @@ export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
           'preview:webpack',
           'webpack-preview',
           'preview-webpack',
+        ],
+        buildDepsTargetName: [
+          'build-deps',
+          'webpack:build-deps',
+          'webpack-build-deps',
+        ],
+        watchDepsTargetName: [
+          'watch-deps',
+          'webpack:watch-deps',
+          'webpack-watch-deps',
         ],
       },
       schema.updatePackageScripts

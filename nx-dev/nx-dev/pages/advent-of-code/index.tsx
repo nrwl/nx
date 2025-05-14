@@ -38,7 +38,7 @@ export default function AdventOfCode(): JSX.Element {
               type: 'image/jpeg',
             },
           ],
-          siteName: 'NxDev',
+          siteName: 'Nx',
           type: 'website',
         }}
       />

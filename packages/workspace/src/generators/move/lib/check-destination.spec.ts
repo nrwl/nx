@@ -19,8 +19,7 @@ describe('checkDestination', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await libraryGenerator(tree, {
-      name: 'my-lib',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-lib',
     });
     projectConfig = readProjectConfiguration(tree, 'my-lib');
   });
@@ -43,8 +42,7 @@ describe('checkDestination', () => {
 
   it('should throw an error if the path already exists', async () => {
     await libraryGenerator(tree, {
-      name: 'my-other-lib',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-other-lib',
     });
 
     const schema: NormalizedSchema = {

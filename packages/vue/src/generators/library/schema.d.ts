@@ -1,19 +1,15 @@
-import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import type { Linter, LinterType } from '@nx/eslint';
-import type { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {
   appProject?: string;
   bundler?: 'none' | 'vite';
   component?: boolean;
-  directory?: string;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
+  directory: string;
   importPath?: string;
   inSourceTests?: boolean;
   js?: boolean;
   linter: Linter | LinterType;
-  name: string;
-  pascalCaseFiles?: boolean;
+  name?: string;
   publishable?: boolean;
   routing?: boolean;
   setParserOptionsProject?: boolean;
@@ -26,11 +22,13 @@ export interface Schema {
   minimal?: boolean;
   e2eTestRunner?: 'cypress' | 'none';
   addPlugin?: boolean;
+  useProjectJson?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {
   js: boolean;
   name: string;
+  projectName: string;
   linter: Linter | LinterType;
   fileName: string;
   projectRoot: string;
@@ -39,4 +37,5 @@ export interface NormalizedSchema extends Schema {
   appMain?: string;
   appSourceRoot?: string;
   unitTestRunner?: 'vitest' | 'none';
+  isUsingTsSolutionConfig: boolean;
 }

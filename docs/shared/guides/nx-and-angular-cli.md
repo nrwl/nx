@@ -1,3 +1,8 @@
+---
+title: Nx and the Angular CLI
+description: Compare Nx and Angular CLI features, understand similarities and differences, and learn how Nx enhances Angular development with improved caching, monorepo support, and advanced tooling.
+---
+
 # Nx and the Angular CLI
 
 {% youtube
@@ -35,7 +40,7 @@ Here's a quick side-by-side overview comparing the features between the Angular 
 | Executors                                                                                             | ✅ (Builders)   | ✅            |
 | Advanced Generators (e.g. Module Federation, Tailwind,...)                                            | ❌              | ✅            |
 | Integrated Tooling (Jest, Cypress, Playwright etc.)                                                   | ❌              | ✅            |
-| Support for [single-project Workspaces](/getting-started/tutorials/angular-standalone-tutorial)       | ✅              | ✅            |
+| Support for single-project Workspaces                                                                 | ✅              | ✅            |
 | First-Class [Monorepo Support](/getting-started/tutorials/angular-monorepo-tutorial)                  | ❌\*            | ✅            |
 | [Enforced Module Boundaries](/features/enforce-module-boundaries)                                     | ❌              | ✅            |
 | Interactive [Project Graph](/features/explore-graph)                                                  | ❌              | ✅            |
@@ -66,8 +71,6 @@ Nx is not just exclusively for monorepos, but can create
 
 - a single-project workspace (basically what the Angular CLI gives you)
 - a monorepo workspace (multiple projects in a single repo)
-
-You can check out the [Angular single-project workspace tutorial](/getting-started/tutorials/angular-standalone-tutorial) to learn more about it.
 
 ### Generate a new project
 
@@ -137,7 +140,7 @@ Nx comes with slightly different terminology than the Angular CLI for some featu
 **Angular Schematics** are called [Generators](/features/generate-code) in Nx. You can invoke them in the same way as you would with the Angular CLI, but you use the `nx` command instead of `ng`:
 
 ```shell
-npx nx g @nx/angular:component my-component
+npx nx g @nx/angular:component apps/my-app/src/lib/my-component/my-component
 ```
 
 You can also run Angular Schematics through the Nx CLI. So something like this works as well:
@@ -270,8 +273,8 @@ Nx goes beyond being just a CLI and comes with [Nx Console](/getting-started/edi
 Nx is really made to scale with you. You can
 
 - start small with a single-project workspace
-- modularize your application into more fine-grained libraries for better maintainability as your application (and team) grows ([more about that here](/getting-started/tutorials/angular-standalone-tutorial#modularizing-your-angular-app-with-local-libraries)), including mechanisms to make sure [things stay within their boundaries](/features/enforce-module-boundaries)
-- you can then migrate to a monorepo when you are ready and need one ([more here](/recipes/tips-n-tricks/standalone-to-integrated))
+- modularize your application into more fine-grained libraries for better maintainability as your application (and team) grows, including mechanisms to make sure [things stay within their boundaries](/features/enforce-module-boundaries)
+- you can then migrate to a monorepo when you are ready and need one ([more here](/recipes/tips-n-tricks/standalone-to-monorepo))
 - or even [add Webpack Module Federation support](/recipes/angular/module-federation-with-ssr)
 
 ### Visualize your Workspace
@@ -408,5 +411,4 @@ There is also a guide describing how to [consolidate multiple Angular CLI projec
 
 You can learn more about Angular & Nx by following our dedicated tutorials:
 
-- [Tutorial: Building Angular Apps with the Nx Standalone Projects Setup](/getting-started/tutorials/angular-standalone-tutorial)
 - [Tutorial: Building Angular Apps in an Nx Monorepo](/getting-started/tutorials/angular-monorepo-tutorial)

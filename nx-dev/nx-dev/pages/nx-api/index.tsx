@@ -40,23 +40,8 @@ export default function Packages({
       ),
     },
     packages: useMemo(() => {
-      const storybookIdx = packages.findIndex((p) => p.name === 'storybook');
-      const packagesWithRspack = [
-        ...packages.slice(0, storybookIdx),
-        {
-          description:
-            'The Nx Plugin for Rspack contains executors and generators that support building applications using Rspack.',
-          githubRoot: 'https://github.com/nrwl/nx/blob/master',
-          name: 'rspack',
-          packageName: '@nrwl/rspack',
-          path: '/nx-api/rspack',
-          root: '/nx-api/rspack',
-          source: '/nx-api/rspack/src',
-        },
-        ...packages.slice(storybookIdx),
-      ];
       return sortCorePackagesFirst<IntrinsicPackageMetadata>(
-        filterMigrationPackages<IntrinsicPackageMetadata>(packagesWithRspack),
+        filterMigrationPackages<IntrinsicPackageMetadata>(packages),
         'name'
       );
     }, [packages]),
@@ -80,7 +65,7 @@ export default function Packages({
               type: 'image/png',
             },
           ],
-          siteName: 'NxDev',
+          siteName: 'Nx',
           type: 'website',
         }}
       />
@@ -134,7 +119,7 @@ export default function Packages({
                           <img
                             className="h-5 w-5 object-cover opacity-75 dark:invert"
                             loading="lazy"
-                            src={iconsMap[pkg.name]}
+                            src={iconsMap[pkg.name] || iconsMap['nx']}
                             alt={pkg.name + ' illustration'}
                             aria-hidden="true"
                           />

@@ -1,5 +1,4 @@
-import { readdirSync, statSync } from 'fs';
-import { removeSync } from 'fs-extra';
+import { readdirSync, rmSync, statSync } from 'fs';
 import { join } from 'path';
 
 const WEEK_IN_MS = 1000 * 60 * 60 * 24 * 7;
@@ -39,10 +38,10 @@ function removeOld(records: string[]) {
         if (time - s.mtimeMs > WEEK_IN_MS) {
           if (s.isDirectory()) {
             try {
-              removeSync(`${r}.commit`);
+              rmSync(`${r}.commit`, { recursive: true, force: true });
             } catch (e) {}
           }
-          removeSync(r);
+          rmSync(r, { recursive: true, force: true });
         }
       } catch (e) {}
     });

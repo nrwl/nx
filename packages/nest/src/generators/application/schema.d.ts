@@ -1,10 +1,8 @@
-import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import type { Linter, LinterType } from '@nx/eslint';
 
 export interface ApplicationGeneratorOptions {
-  name: string;
-  directory?: string;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
+  directory: string;
+  name?: string;
   frontendProject?: string;
   linter?: Linter | LinterType;
   skipFormat?: boolean;
@@ -17,6 +15,8 @@ export interface ApplicationGeneratorOptions {
   rootProject?: boolean;
   strict?: boolean;
   addPlugin?: boolean;
+  useTsSolution?: boolean;
+  useProjectJson?: boolean;
 }
 
 interface NormalizedOptions extends ApplicationGeneratorOptions {

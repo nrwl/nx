@@ -8,6 +8,7 @@ import {
   readProjectConfiguration,
   TargetConfiguration,
   Tree,
+  updateJson,
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
@@ -113,10 +114,21 @@ export function addMigrationJsonChecks(
       fileSet.add(relativeMigrationsJsonPath);
       return {
         ...o,
-        files: Array.from(fileSet),
+        files: formatFilesEntries(host, Array.from(fileSet)),
       };
     }
   );
+}
+
+function formatFilesEntries(tree: Tree, files: string[]): string[] {
+  if (!useFlatConfig(tree)) {
+    return files;
+  }
+  const filesAfter = files.map((f) => {
+    const after = f.startsWith('./') ? f.replace('./', '**/') : f;
+    return after;
+  });
+  return filesAfter;
 }
 
 function updateProjectTarget(
@@ -199,12 +211,12 @@ function updateProjectEslintConfig(
       // update it
       updateOverrideInLintConfig(host, options.root, lookup, (o) => ({
         ...o,
-        files: [
+        files: formatFilesEntries(host, [
           ...new Set([
             ...(Array.isArray(o.files) ? o.files : [o.files]),
             ...files,
           ]),
-        ],
+        ]),
         ...parser,
         rules: {
           ...o.rules,
@@ -214,7 +226,7 @@ function updateProjectEslintConfig(
     } else {
       // add it
       addOverrideToLintConfig(host, options.root, {
-        files,
+        files: formatFilesEntries(host, files),
         ...parser,
         rules: {
           '@nx/nx-plugin-checks': 'error',

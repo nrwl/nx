@@ -10,6 +10,15 @@ const processExitSpy = jest
     return originalExit(...args);
   });
 
+const mockDetectPackageManager = jest.fn();
+jest.mock('@nx/devkit', () => {
+  const devkit = jest.requireActual('@nx/devkit');
+  return {
+    ...devkit,
+    detectPackageManager: mockDetectPackageManager,
+  };
+});
+
 import { ProjectGraph, Tree, output, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as enquirer from 'enquirer';
@@ -445,7 +454,7 @@ To fix this you will either need to add a package.json file at that location, or
       });
 
       describe('updateDependentsOptions', () => {
-        it(`should not update dependents when filtering to a subset of projects by default`, async () => {
+        it(`should update dependents even when filtering to a subset of projects which do not include those dependents, by default`, async () => {
           expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
             '0.0.1'
           );
@@ -485,6 +494,7 @@ To fix this you will either need to add a package.json file at that location, or
             currentVersionResolver: 'disk',
             specifierSource: 'prompt',
             releaseGroup: createReleaseGroup('independent'),
+            // No value for updateDependents, should default to 'auto'
           });
 
           expect(readJson(tree, 'libs/my-lib/package.json'))
@@ -503,10 +513,10 @@ To fix this you will either need to add a package.json file at that location, or
           ).toMatchInlineSnapshot(`
             {
               "dependencies": {
-                "my-lib": "0.0.1",
+                "my-lib": "9.9.9",
               },
               "name": "project-with-dependency-on-my-pkg",
-              "version": "0.0.1",
+              "version": "0.0.2",
             }
           `);
           expect(
@@ -517,10 +527,10 @@ To fix this you will either need to add a package.json file at that location, or
           ).toMatchInlineSnapshot(`
             {
               "devDependencies": {
-                "my-lib": "0.0.1",
+                "my-lib": "9.9.9",
               },
               "name": "project-with-devDependency-on-my-pkg",
-              "version": "0.0.1",
+              "version": "0.0.2",
             }
           `);
         });
@@ -683,6 +693,70 @@ To fix this you will either need to add a package.json file at that location, or
               },
               "name": "project-with-devDependency-on-my-pkg",
               "version": "0.0.2",
+            }
+          `);
+        });
+
+        it('should update dependents with a prepatch when creating a pre-release version', async () => {
+          expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
+            '0.0.1'
+          );
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-dependency-on-my-pkg/package.json'
+            ).version
+          ).toEqual('0.0.1');
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-devDependency-on-my-pkg/package.json'
+            ).version
+          ).toEqual('0.0.1');
+
+          await releaseVersionGenerator(tree, {
+            projects: Object.values(projectGraph.nodes), // version all projects
+            projectGraph,
+            currentVersionResolver: 'disk',
+            specifier: 'prepatch',
+            preid: 'alpha',
+            releaseGroup: createReleaseGroup('independent'),
+          });
+
+          expect(readJson(tree, 'libs/my-lib/package.json'))
+            .toMatchInlineSnapshot(`
+            {
+              "name": "my-lib",
+              "version": "0.0.2-alpha.0",
+            }
+          `);
+
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-dependency-on-my-pkg/package.json'
+            )
+          ).toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "my-lib": "0.0.2-alpha.0",
+              },
+              "name": "project-with-dependency-on-my-pkg",
+              "version": "0.0.2-alpha.0",
+            }
+          `);
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-devDependency-on-my-pkg/package.json'
+            )
+          ).toMatchInlineSnapshot(`
+            {
+              "devDependencies": {
+                "my-lib": "0.0.2-alpha.0",
+              },
+              "name": "project-with-devDependency-on-my-pkg",
+              "version": "0.0.2-alpha.0",
             }
           `);
         });
@@ -1748,6 +1822,341 @@ Valid values are: "auto", "", "~", "^", "="`,
         `);
       });
     });
+  });
+
+  describe('preserveLocalDependencyProtocols', () => {
+    it('should preserve local `workspace:` references when preserveLocalDependencyProtocols is true', async () => {
+      // Supported package manager for workspace: protocol
+      mockDetectPackageManager.mockReturnValue('pnpm');
+
+      projectGraph = createWorkspaceWithPackageDependencies(tree, {
+        'package-a': {
+          projectRoot: 'packages/package-a',
+          packageName: 'package-a',
+          version: '1.0.0',
+          packageJsonPath: 'packages/package-a/package.json',
+          localDependencies: [
+            {
+              projectName: 'package-b',
+              dependencyCollection: 'dependencies',
+              version: 'workspace:*',
+            },
+          ],
+        },
+        'package-b': {
+          projectRoot: 'packages/package-b',
+          packageName: 'package-b',
+          version: '1.0.0',
+          packageJsonPath: 'packages/package-b/package.json',
+          localDependencies: [],
+        },
+      });
+
+      expect(readJson(tree, 'packages/package-a/package.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "package-b": "workspace:*",
+          },
+          "name": "package-a",
+          "version": "1.0.0",
+        }
+      `);
+      expect(readJson(tree, 'packages/package-b/package.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "name": "package-b",
+          "version": "1.0.0",
+        }
+      `);
+
+      expect(
+        await releaseVersionGenerator(tree, {
+          projects: [projectGraph.nodes['package-b']], // version only package-b
+          projectGraph,
+          specifier: '2.0.0',
+          currentVersionResolver: 'disk',
+          specifierSource: 'prompt',
+          releaseGroup: createReleaseGroup('independent'),
+          updateDependents: 'auto',
+          preserveLocalDependencyProtocols: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "callback": [Function],
+          "data": {
+            "package-a": {
+              "currentVersion": "1.0.0",
+              "dependentProjects": [],
+              "newVersion": "1.0.1",
+            },
+            "package-b": {
+              "currentVersion": "1.0.0",
+              "dependentProjects": [
+                {
+                  "dependencyCollection": "dependencies",
+                  "rawVersionSpec": "workspace:*",
+                  "source": "package-a",
+                  "target": "package-b",
+                  "type": "static",
+                },
+              ],
+              "newVersion": "2.0.0",
+            },
+          },
+        }
+      `);
+
+      expect(readJson(tree, 'packages/package-a/package.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "package-b": "workspace:*",
+          },
+          "name": "package-a",
+          "version": "1.0.1",
+        }
+      `);
+
+      expect(readJson(tree, 'packages/package-b/package.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "name": "package-b",
+          "version": "2.0.0",
+        }
+      `);
+    });
+
+    it('should preserve local `file:` references when preserveLocalDependencyProtocols is true', async () => {
+      projectGraph = createWorkspaceWithPackageDependencies(tree, {
+        'package-a': {
+          projectRoot: 'packages/package-a',
+          packageName: 'package-a',
+          version: '1.0.0',
+          packageJsonPath: 'packages/package-a/package.json',
+          localDependencies: [
+            {
+              projectName: 'package-b',
+              dependencyCollection: 'dependencies',
+              version: 'file:../package-b',
+            },
+          ],
+        },
+        'package-b': {
+          projectRoot: 'packages/package-b',
+          packageName: 'package-b',
+          version: '1.0.0',
+          packageJsonPath: 'packages/package-b/package.json',
+          localDependencies: [],
+        },
+      });
+
+      expect(readJson(tree, 'packages/package-a/package.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "package-b": "file:../package-b",
+          },
+          "name": "package-a",
+          "version": "1.0.0",
+        }
+      `);
+      expect(readJson(tree, 'packages/package-b/package.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "name": "package-b",
+          "version": "1.0.0",
+        }
+      `);
+
+      expect(
+        await releaseVersionGenerator(tree, {
+          projects: [projectGraph.nodes['package-b']], // version only package-b
+          projectGraph,
+          specifier: '2.0.0',
+          currentVersionResolver: 'disk',
+          specifierSource: 'prompt',
+          releaseGroup: createReleaseGroup('independent'),
+          updateDependents: 'auto',
+          preserveLocalDependencyProtocols: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "callback": [Function],
+          "data": {
+            "package-a": {
+              "currentVersion": "1.0.0",
+              "dependentProjects": [],
+              "newVersion": "1.0.1",
+            },
+            "package-b": {
+              "currentVersion": "1.0.0",
+              "dependentProjects": [
+                {
+                  "dependencyCollection": "dependencies",
+                  "rawVersionSpec": "file:../package-b",
+                  "source": "package-a",
+                  "target": "package-b",
+                  "type": "static",
+                },
+              ],
+              "newVersion": "2.0.0",
+            },
+          },
+        }
+      `);
+
+      expect(readJson(tree, 'packages/package-a/package.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "package-b": "file:../package-b",
+          },
+          "name": "package-a",
+          "version": "1.0.1",
+        }
+      `);
+
+      expect(readJson(tree, 'packages/package-b/package.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "name": "package-b",
+          "version": "2.0.0",
+        }
+      `);
+    });
+  });
+
+  it('should not double patch transitive dependents that are already direct dependents', async () => {
+    projectGraph = createWorkspaceWithPackageDependencies(tree, {
+      '@slateui/core': {
+        projectRoot: 'packages/core',
+        packageName: '@slateui/core',
+        version: '1.0.0',
+        packageJsonPath: 'packages/core/package.json',
+        localDependencies: [],
+      },
+      // buttons depends on core
+      '@slateui/buttons': {
+        projectRoot: 'packages/buttons',
+        packageName: '@slateui/buttons',
+        version: '1.0.0',
+        packageJsonPath: 'packages/buttons/package.json',
+        localDependencies: [
+          {
+            projectName: '@slateui/core',
+            dependencyCollection: 'dependencies',
+            version: '1.0.0',
+          },
+        ],
+      },
+      // forms depends on both core and buttons, making it both a direct and transitive dependent of core
+      '@slateui/forms': {
+        projectRoot: 'packages/forms',
+        packageName: '@slateui/forms',
+        version: '1.0.0',
+        packageJsonPath: 'packages/forms/package.json',
+        localDependencies: [
+          {
+            projectName: '@slateui/core',
+            dependencyCollection: 'dependencies',
+            version: '1.0.0',
+          },
+          {
+            projectName: '@slateui/buttons',
+            dependencyCollection: 'dependencies',
+            version: '1.0.0',
+          },
+        ],
+      },
+    });
+
+    expect(
+      await releaseVersionGenerator(tree, {
+        projects: [projectGraph.nodes['@slateui/core']],
+        releaseGroup: createReleaseGroup('independent'),
+        projectGraph,
+        // Bump core to 2.0.0, which will cause buttons and forms to be patched to 1.0.1
+        // This prevents a regression against an issue where forms would end up being patched twice to 1.0.2 in this scenario
+        specifier: '2.0.0',
+        currentVersionResolver: 'disk',
+        specifierSource: 'prompt',
+      })
+    ).toMatchInlineSnapshot(`
+      {
+        "callback": [Function],
+        "data": {
+          "@slateui/buttons": {
+            "currentVersion": "1.0.0",
+            "dependentProjects": [
+              {
+                "dependencyCollection": "dependencies",
+                "rawVersionSpec": "1.0.0",
+                "source": "@slateui/forms",
+                "target": "@slateui/buttons",
+                "type": "static",
+              },
+            ],
+            "newVersion": "1.0.1",
+          },
+          "@slateui/core": {
+            "currentVersion": "1.0.0",
+            "dependentProjects": [
+              {
+                "dependencyCollection": "dependencies",
+                "rawVersionSpec": "1.0.0",
+                "source": "@slateui/buttons",
+                "target": "@slateui/core",
+                "type": "static",
+              },
+              {
+                "dependencyCollection": "dependencies",
+                "rawVersionSpec": "1.0.0",
+                "source": "@slateui/forms",
+                "target": "@slateui/core",
+                "type": "static",
+              },
+            ],
+            "newVersion": "2.0.0",
+          },
+          "@slateui/forms": {
+            "currentVersion": "1.0.0",
+            "dependentProjects": [],
+            "newVersion": "1.0.1",
+          },
+        },
+      }
+    `);
+
+    expect(readJson(tree, 'packages/core/package.json')).toMatchInlineSnapshot(`
+      {
+        "name": "@slateui/core",
+        "version": "2.0.0",
+      }
+    `);
+
+    expect(readJson(tree, 'packages/buttons/package.json'))
+      .toMatchInlineSnapshot(`
+      {
+        "dependencies": {
+          "@slateui/core": "2.0.0",
+        },
+        "name": "@slateui/buttons",
+        "version": "1.0.1",
+      }
+    `);
+
+    expect(readJson(tree, 'packages/forms/package.json'))
+      .toMatchInlineSnapshot(`
+      {
+        "dependencies": {
+          "@slateui/buttons": "1.0.1",
+          "@slateui/core": "2.0.0",
+        },
+        "name": "@slateui/forms",
+        "version": "1.0.1",
+      }
+    `);
   });
 });
 

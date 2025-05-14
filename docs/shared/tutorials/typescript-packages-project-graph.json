@@ -1,0 +1,56 @@
+{
+  "hash": "b403577d293fcd1162049fb6cd70752277d68eecc34268aa57452ce597b7352e",
+  "projects": [
+    {
+      "name": "@tuskdesign/animals",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "@tuskdesign/names",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "@tuskdesign/zoo",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    }
+  ],
+  "dependencies": {
+    "@tuskdesign/animals": [],
+    "@tuskdesign/names": [
+      {
+        "source": "@tuskdesign/names",
+        "target": "@tuskdesign/animals",
+        "type": "static"
+      }
+    ],
+    "@tuskdesign/zoo": [
+      {
+        "source": "@tuskdesign/zoo",
+        "target": "@tuskdesign/animals",
+        "type": "static"
+      },
+      {
+        "source": "@tuskdesign/zoo",
+        "target": "@tuskdesign/names",
+        "type": "static"
+      }
+    ]
+  },
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "packages"
+  },
+  "affectedProjectIds": [],
+  "focus": null,
+  "groupByFolder": false,
+  "exclude": []
+}

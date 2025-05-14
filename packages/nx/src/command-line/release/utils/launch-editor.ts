@@ -14,6 +14,7 @@ export async function launchEditor(filePath: string) {
   return new Promise((resolve, reject) => {
     const editorProcess = spawn(cmd, [...args, filePath], {
       stdio: 'inherit', // This will ensure the editor uses the current terminal
+      windowsHide: false,
     });
 
     editorProcess.on('exit', (code) => {
@@ -28,7 +29,11 @@ export async function launchEditor(filePath: string) {
 
 function getGitConfig(key): string | null {
   try {
-    return execSync(`git config --get ${key}`).toString().trim();
+    return execSync(`git config --get ${key}`, {
+      windowsHide: false,
+    })
+      .toString()
+      .trim();
   } catch {
     return null;
   }

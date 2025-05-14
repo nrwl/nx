@@ -49,14 +49,8 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/web"],
-      "options": {
-        "command": "node ./scripts/copy-readme.js web"
-      }
-    },
-    "add-extra-dependencies": {
-      "command": "node ./scripts/add-dependency-to-build.js web @nrwl/web"
+      "outputs": ["{workspaceRoot}/build/packages/web/README.md"],
+      "command": "node ./scripts/copy-readme.js web"
     }
   }
 }

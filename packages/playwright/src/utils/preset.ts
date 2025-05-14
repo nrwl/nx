@@ -1,7 +1,8 @@
 import { workspaceRoot } from '@nx/devkit';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { defineConfig } from '@playwright/test';
 import { lstatSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
-import { defineConfig } from '@playwright/test';
 
 export interface NxPlaywrightOptions {
   /**
@@ -43,20 +44,14 @@ export function nxE2EPreset(
   const projectPath = relative(workspaceRoot, normalizedPath);
   const offset = relative(normalizedPath, workspaceRoot);
 
-  const testResultOuputDir = join(
-    offset,
-    'dist',
-    '.playwright',
-    projectPath,
-    'test-output'
-  );
-  const reporterOutputDir = join(
-    offset,
-    'dist',
-    '.playwright',
-    projectPath,
-    'playwright-report'
-  );
+  const isTsSolutionSetup = isUsingTsSolutionSetup();
+
+  const testResultOuputDir = isTsSolutionSetup
+    ? 'test-output/playwright/output'
+    : join(offset, 'dist', '.playwright', projectPath, 'test-output');
+  const reporterOutputDir = isTsSolutionSetup
+    ? 'test-output/playwright/report'
+    : join(offset, 'dist', '.playwright', projectPath, 'playwright-report');
 
   return defineConfig({
     testDir: options?.testDir ?? './src',

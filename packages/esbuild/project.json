@@ -44,17 +44,8 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/esbuild"],
-      "options": {
-        "commands": [
-          "node ./scripts/copy-readme.js esbuild",
-          "node ./scripts/add-dependency-to-build.js esbuild @nrwl/esbuild"
-        ]
-      }
-    },
-    "add-extra-dependencies": {
-      "command": "node ./scripts/add-dependency-to-build.js esbuild @nrwl/esbuild"
+      "outputs": ["{workspaceRoot}/build/packages/esbuild/README.md"],
+      "commands": ["node ./scripts/copy-readme.js esbuild"]
     }
   }
 }

@@ -1,0 +1,55 @@
+{
+  "name": "rsbuild",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/rsbuild",
+  "projectType": "library",
+  "targets": {
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "outputPath": "build/packages/rsbuild",
+        "tsConfig": "packages/rsbuild/tsconfig.lib.json",
+        "main": "packages/rsbuild/index.ts",
+        "assets": [
+          {
+            "input": "packages/rsbuild",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/rsbuild",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/rsbuild",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/rsbuild",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/rsbuild",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "command": "node ./scripts/copy-readme.js rsbuild",
+      "outputs": ["{workspaceRoot}/build/packages/rsbuild/README.md"]
+    }
+  }
+}

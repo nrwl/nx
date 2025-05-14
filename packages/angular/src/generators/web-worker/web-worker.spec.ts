@@ -12,7 +12,10 @@ describe('webWorker generator', () => {
 
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await generateTestApplication(tree, { name: appName, skipFormat: true });
+    await generateTestApplication(tree, {
+      directory: appName,
+      skipFormat: true,
+    });
     jest.clearAllMocks();
   });
 

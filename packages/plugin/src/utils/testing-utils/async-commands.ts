@@ -21,6 +21,7 @@ export function runCommandAsync(
       {
         cwd: opts.cwd ?? tmpProjPath(),
         env: { ...process.env, ...opts.env },
+        windowsHide: false,
       },
       (err, stdout, stderr) => {
         if (!opts.silenceError && err) {

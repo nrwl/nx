@@ -6,7 +6,7 @@
   "targets": {
     "build": {
       "command": "node ./scripts/copy-readme.js remix",
-      "outputs": ["{workspaceRoot}/build/packages/remix"]
+      "outputs": ["{workspaceRoot}/build/packages/remix/README.md"]
     },
     "build-base": {
       "executor": "@nx/js:tsc",
@@ -42,9 +42,6 @@
           "LICENSE"
         ]
       }
-    },
-    "add-extra-dependencies": {
-      "command": "node ./scripts/add-dependency-to-build.js remix @nrwl/remix"
     }
   },
   "tags": []

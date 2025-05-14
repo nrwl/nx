@@ -1,11 +1,11 @@
 import {
   addDependenciesToPackageJson,
-  ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
   getPackageManagerCommand,
   joinPathFragments,
+  logger,
   offsetFromRoot,
   output,
   readNxJson,
@@ -19,14 +19,27 @@ import {
   workspaceRoot,
   writeJson,
 } from '@nx/devkit';
+import { resolveImportPath } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { getRelativePathToRootTsConfig } from '@nx/js';
-import { typescriptVersion } from '@nx/js/src/utils/versions';
+import { normalizeLinterOption } from '@nx/js/src/utils/generator-prompts';
+import {
+  getProjectPackageManagerWorkspaceState,
+  getProjectPackageManagerWorkspaceStateWarningTask,
+} from '@nx/js/src/utils/package-manager-workspaces';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { execSync } from 'child_process';
+import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
 import { addLinterToPlaywrightProject } from '../../utils/add-linter';
 import { nxVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
-import { ConfigurationGeneratorSchema } from './schema';
+import type {
+  ConfigurationGeneratorSchema,
+  NormalizedGeneratorOptions,
+} from './schema';
+import { addIgnoresToLintConfig } from '@nx/eslint/src/generators/utils/eslint-file';
 
 export function configurationGenerator(
   tree: Tree,
@@ -37,12 +50,10 @@ export function configurationGenerator(
 
 export async function configurationGeneratorInternal(
   tree: Tree,
-  options: ConfigurationGeneratorSchema
+  rawOptions: ConfigurationGeneratorSchema
 ) {
-  const nxJson = readNxJson(tree);
-  options.addPlugin ??=
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
+  const options = await normalizeOptions(tree, rawOptions);
+
   const tasks: GeneratorCallback[] = [];
   tasks.push(
     await initGenerator(tree, {
@@ -51,12 +62,8 @@ export async function configurationGeneratorInternal(
       addPlugin: options.addPlugin,
     })
   );
+
   const projectConfig = readProjectConfiguration(tree, options.project);
-
-  const hasTsConfig = tree.exists(
-    joinPathFragments(projectConfig.root, 'tsconfig.json')
-  );
-
   const offsetFromProjectRoot = offsetFromRoot(projectConfig.root);
 
   generateFiles(tree, path.join(__dirname, 'files'), projectConfig.root, {
@@ -67,33 +74,120 @@ export async function configurationGeneratorInternal(
     ...options,
   });
 
-  if (!hasTsConfig) {
-    tree.write(
-      `${projectConfig.root}/tsconfig.json`,
-      JSON.stringify(
-        {
-          extends: getRelativePathToRootTsConfig(tree, projectConfig.root),
-          compilerOptions: {
-            allowJs: true,
-            outDir: `${offsetFromProjectRoot}dist/out-tsc`,
-            module: 'commonjs',
-            sourceMap: false,
-          },
-          include: [
-            '**/*.ts',
-            '**/*.js',
-            'playwright.config.ts',
-            'src/**/*.spec.ts',
-            'src/**/*.spec.js',
-            'src/**/*.test.ts',
-            'src/**/*.test.js',
-            'src/**/*.d.ts',
-          ],
+  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
+  const tsconfigPath = joinPathFragments(projectConfig.root, 'tsconfig.json');
+  if (tree.exists(tsconfigPath)) {
+    if (isTsSolutionSetup) {
+      const tsconfig: any = {
+        extends: getRelativePathToRootTsConfig(tree, projectConfig.root),
+        compilerOptions: {
+          allowJs: true,
+          outDir: 'out-tsc/playwright',
+          sourceMap: false,
         },
-        null,
-        2
-      )
+        include: [
+          joinPathFragments(options.directory, '**/*.ts'),
+          joinPathFragments(options.directory, '**/*.js'),
+          'playwright.config.ts',
+        ],
+        exclude: ['out-tsc', 'test-output'],
+      };
+
+      // skip eslint from typechecking since it extends from root file that is outside rootDir
+      if (options.linter === 'eslint') {
+        tsconfig.exclude.push(
+          'eslint.config.js',
+          'eslint.config.mjs',
+          'eslint.config.cjs'
+        );
+      }
+
+      writeJson(
+        tree,
+        joinPathFragments(projectConfig.root, 'tsconfig.e2e.json'),
+        tsconfig
+      );
+
+      updateJson(tree, tsconfigPath, (json) => {
+        // add the project tsconfig to the workspace root tsconfig.json references
+        json.references ??= [];
+        json.references.push({ path: './tsconfig.e2e.json' });
+        return json;
+      });
+    }
+  } else {
+    const tsconfig: any = {
+      extends: getRelativePathToRootTsConfig(tree, projectConfig.root),
+      compilerOptions: {
+        allowJs: true,
+        outDir: `${offsetFromProjectRoot}dist/out-tsc`,
+        sourceMap: false,
+      },
+      include: [
+        '**/*.ts',
+        '**/*.js',
+        'playwright.config.ts',
+        'src/**/*.spec.ts',
+        'src/**/*.spec.js',
+        'src/**/*.test.ts',
+        'src/**/*.test.js',
+        'src/**/*.d.ts',
+      ],
+    };
+
+    if (isTsSolutionSetup) {
+      tsconfig.exclude = ['out-tsc', 'test-output'];
+      // skip eslint from typechecking since it extends from root file that is outside rootDir
+      if (options.linter === 'eslint') {
+        tsconfig.exclude.push(
+          'eslint.config.js',
+          'eslint.config.mjs',
+          'eslint.config.cjs'
+        );
+      }
+
+      tsconfig.compilerOptions.outDir = 'out-tsc/playwright';
+
+      if (!options.rootProject) {
+        updateJson(tree, 'tsconfig.json', (json) => {
+          // add the project tsconfig to the workspace root tsconfig.json references
+          json.references ??= [];
+          json.references.push({ path: './' + projectConfig.root });
+          return json;
+        });
+      }
+    } else {
+      tsconfig.compilerOptions.outDir = `${offsetFromProjectRoot}dist/out-tsc`;
+      tsconfig.compilerOptions.module = 'commonjs';
+    }
+
+    writeJson(tree, tsconfigPath, tsconfig);
+  }
+
+  if (isTsSolutionSetup) {
+    const packageJsonPath = joinPathFragments(
+      projectConfig.root,
+      'package.json'
     );
+    if (!tree.exists(packageJsonPath)) {
+      const importPath = resolveImportPath(
+        tree,
+        projectConfig.name,
+        projectConfig.root
+      );
+
+      const packageJson: PackageJson = {
+        name: importPath,
+        version: '0.0.1',
+        private: true,
+      };
+      if (options.project !== importPath) {
+        packageJson.nx = { name: options.project };
+      }
+      writeJson(tree, packageJsonPath, packageJson);
+    }
+
+    ignoreTestOutput(tree, options);
   }
 
   const hasPlugin = readNxJson(tree).plugins?.some((p) =>
@@ -121,10 +215,7 @@ export async function configurationGeneratorInternal(
   );
 
   if (options.js) {
-    const { ModuleKind } = ensurePackage(
-      'typescript',
-      typescriptVersion
-    ) as typeof import('typescript');
+    const { ModuleKind } = ensureTypescript();
     toJS(tree, { extension: '.cjs', module: ModuleKind.CommonJS });
   }
 
@@ -151,7 +242,79 @@ export async function configurationGeneratorInternal(
     await formatFiles(tree);
   }
 
+  if (isTsSolutionSetup) {
+    const projectPackageManagerWorkspaceState =
+      getProjectPackageManagerWorkspaceState(tree, projectConfig.root);
+
+    if (projectPackageManagerWorkspaceState !== 'included') {
+      tasks.push(
+        getProjectPackageManagerWorkspaceStateWarningTask(
+          projectPackageManagerWorkspaceState,
+          tree.root
+        )
+      );
+    }
+  }
+
   return runTasksInSerial(...tasks);
+}
+
+async function normalizeOptions(
+  tree: Tree,
+  options: ConfigurationGeneratorSchema
+): Promise<NormalizedGeneratorOptions> {
+  const nxJson = readNxJson(tree);
+  const addPlugin =
+    options.addPlugin ??
+    (process.env.NX_ADD_PLUGINS !== 'false' &&
+      nxJson.useInferencePlugins !== false);
+
+  const linter = await normalizeLinterOption(tree, options.linter);
+
+  if (!options.webServerCommand || !options.webServerAddress) {
+    const { webServerCommand, webServerAddress } =
+      await promptForMissingServeData(options.project);
+    options.webServerCommand = webServerCommand;
+    options.webServerAddress = webServerAddress;
+  }
+
+  return {
+    ...options,
+    addPlugin,
+    linter,
+    directory: options.directory ?? 'e2e',
+  };
+}
+
+async function promptForMissingServeData(projectName: string) {
+  const { command, port } = await promptWhenInteractive<{
+    command: string;
+    port: number;
+  }>(
+    [
+      {
+        type: 'input',
+        name: 'command',
+        message: 'What command should be run to serve the application locally?',
+        initial: `npx nx serve ${projectName}`,
+      },
+      {
+        type: 'numeral',
+        name: 'port',
+        message: 'What port will the application be served on?',
+        initial: 3000,
+      },
+    ],
+    {
+      command: `npx nx serve ${projectName}`,
+      port: 3000,
+    }
+  );
+
+  return {
+    webServerCommand: command,
+    webServerAddress: `http://localhost:${port}`,
+  };
 }
 
 function getBrowsersInstallTask() {
@@ -161,7 +324,10 @@ function getBrowsersInstallTask() {
       bodyLines: ['use --skipInstall to skip installation.'],
     });
     const pmc = getPackageManagerCommand();
-    execSync(`${pmc.exec} playwright install`, { cwd: workspaceRoot });
+    execSync(`${pmc.exec} playwright install`, {
+      cwd: workspaceRoot,
+      windowsHide: false,
+    });
   };
 }
 
@@ -221,6 +387,29 @@ Rename or remove the existing e2e target.`);
     },
   };
   updateProjectConfiguration(tree, options.project, projectConfig);
+}
+
+function ignoreTestOutput(
+  tree: Tree,
+  options: ConfigurationGeneratorSchema
+): void {
+  // Make sure playwright outputs are not linted.
+  if (options.linter === 'eslint') {
+    addIgnoresToLintConfig(tree, '', ['**/test-output']);
+  }
+
+  // Handle gitignore
+  if (!tree.exists('.gitignore')) {
+    logger.warn(`Couldn't find a root .gitignore file to update.`);
+  }
+
+  let content = tree.read('.gitignore', 'utf-8');
+  if (/^test-output$/gm.test(content)) {
+    return;
+  }
+
+  content = `${content}\ntest-output\n`;
+  tree.write('.gitignore', content);
 }
 
 export default configurationGenerator;

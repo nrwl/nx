@@ -9,6 +9,7 @@ import {
   runTasksInSerial,
   toJS,
   Tree,
+  writeJson,
 } from '@nx/devkit';
 import { Schema } from './schema';
 import nuxtInitGenerator from '../init/init';
@@ -19,7 +20,6 @@ import {
   initGenerator as jsInitGenerator,
 } from '@nx/js';
 import { updateGitIgnore } from '../../utils/update-gitignore';
-import { Linter } from '@nx/eslint';
 import { addE2e } from './lib/add-e2e';
 import { addLinting } from '../../utils/add-linting';
 import { addVitest } from './lib/add-vitest';
@@ -31,9 +31,31 @@ import {
   getNxCloudAppOnBoardingUrl,
   createNxCloudOnboardingURLForWelcomeApp,
 } from 'nx/src/nx-cloud/utilities/onboarding';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
+  return await applicationGeneratorInternal(tree, {
+    useProjectJson: true,
+    ...schema,
+  });
+}
+
+export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
+
+  const jsInitTask = await jsInitGenerator(tree, {
+    ...schema,
+    tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
+    skipFormat: true,
+    addTsPlugin: schema.useTsSolution,
+    platform: 'web',
+  });
+  tasks.push(jsInitTask);
 
   const options = await normalizeOptions(tree, schema);
 
@@ -48,20 +70,39 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
     onBoardingStatus === 'unclaimed' &&
     (await getNxCloudAppOnBoardingUrl(options.nxCloudToken));
 
-  const jsInitTask = await jsInitGenerator(tree, {
-    ...schema,
-    tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
-    skipFormat: true,
-  });
-  tasks.push(jsInitTask);
   tasks.push(ensureDependencies(tree, options));
 
-  addProjectConfiguration(tree, options.projectName, {
-    root: options.appProjectRoot,
-    projectType: 'application',
-    sourceRoot: `${options.appProjectRoot}/src`,
-    targets: {},
-  });
+  const packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    private: true,
+  };
+
+  if (!options.useProjectJson) {
+    if (options.projectName !== options.importPath) {
+      packageJson.nx = { name: options.projectName };
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
+  } else {
+    addProjectConfiguration(tree, options.projectName, {
+      root: options.appProjectRoot,
+      projectType: 'application',
+      sourceRoot: `${options.appProjectRoot}/src`,
+      tags: options.parsedTags?.length ? options.parsedTags : undefined,
+      targets: {},
+    });
+  }
+
+  if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+    writeJson(
+      tree,
+      joinPathFragments(options.appProjectRoot, 'package.json'),
+      packageJson
+    );
+  }
 
   generateFiles(
     tree,
@@ -108,17 +149,24 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       projectRoot: options.appProjectRoot,
       rootProject: options.rootProject,
       unitTestRunner: options.unitTestRunner,
+      isUsingTsSolutionConfig: options.isUsingTsSolutionConfig,
     },
     getRelativePathToRootTsConfig(tree, options.appProjectRoot)
   );
 
   updateGitIgnore(tree);
 
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    await addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
+  }
+
   tasks.push(
     await addLinting(tree, {
       projectName: options.projectName,
       projectRoot: options.appProjectRoot,
-      linter: options.linter ?? Linter.EsLint,
+      linter: options.linter ?? 'eslint',
       unitTestRunner: options.unitTestRunner,
       rootProject: options.rootProject,
     })
@@ -149,11 +197,35 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 
   if (options.js) toJS(tree);
 
+  if (options.isUsingTsSolutionConfig) {
+    updateTsconfigFiles(
+      tree,
+      options.appProjectRoot,
+      'tsconfig.app.json',
+      {
+        jsx: 'preserve',
+        jsxImportSource: 'vue',
+        module: 'esnext',
+        moduleResolution: 'bundler',
+        resolveJsonModule: true,
+      },
+      options.linter === 'eslint'
+        ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+        : undefined
+    );
+  }
+
+  sortPackageJsonFields(tree, options.appProjectRoot);
+
   if (!options.skipFormat) await formatFiles(tree);
 
   tasks.push(() => {
     try {
-      execSync(`npx -y nuxi prepare`, { cwd: options.appProjectRoot });
+      execSync(`npx -y nuxi prepare`, {
+        cwd: options.appProjectRoot,
+
+        windowsHide: false,
+      });
     } catch (e) {
       console.error(
         `Failed to run \`nuxi prepare\` in "${options.appProjectRoot}". Please run the command manually.`

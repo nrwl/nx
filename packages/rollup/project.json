@@ -44,14 +44,8 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/rollup"],
-      "options": {
-        "command": "node ./scripts/copy-readme.js rollup"
-      }
-    },
-    "add-extra-dependencies": {
-      "command": "node ./scripts/add-dependency-to-build.js rollup @nrwl/rollup"
+      "outputs": ["{workspaceRoot}/build/packages/rollup/README.md"],
+      "command": "node ./scripts/copy-readme.js rollup"
     }
   }
 }

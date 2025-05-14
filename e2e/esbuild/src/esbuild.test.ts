@@ -27,7 +27,9 @@ describe('EsBuild Plugin', () => {
 
   it('should setup and build projects using build', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=esbuild`);
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=esbuild`
+    );
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
     updateJson(join('libs', myPkg, 'project.json'), (json) => {
       json.targets.build.options.assets = [`libs/${myPkg}/assets/*`];
@@ -46,6 +48,7 @@ describe('EsBuild Plugin', () => {
       private: true,
       type: 'commonjs',
       main: './index.cjs',
+      types: './index.d.ts',
       dependencies: {},
     });
 
@@ -125,8 +128,12 @@ describe('EsBuild Plugin', () => {
     packageInstall('lodash', undefined, '~4.14.0', 'prod');
     const parentLib = uniq('parent-lib');
     const childLib = uniq('child-lib');
-    runCLI(`generate @nx/js:lib ${parentLib} --bundler=esbuild`);
-    runCLI(`generate @nx/js:lib ${childLib} --bundler=none`);
+    runCLI(
+      `generate @nx/js:lib ${parentLib} --directory=libs/${parentLib} --bundler=esbuild`
+    );
+    runCLI(
+      `generate @nx/js:lib ${childLib} --directory=libs/${childLib} --bundler=none`
+    );
     updateFile(
       `libs/${parentLib}/src/index.ts`,
       `
@@ -173,7 +180,9 @@ describe('EsBuild Plugin', () => {
 
   it('should support non-bundle builds', () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=esbuild`);
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=esbuild`
+    );
     updateFile(`libs/${myPkg}/src/lib/${myPkg}.ts`, `console.log('Hello');\n`);
     updateFile(`libs/${myPkg}/src/index.ts`, `import './lib/${myPkg}.cjs';\n`);
 
@@ -193,7 +202,9 @@ describe('EsBuild Plugin', () => {
 
   it('should support additional entry points', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=esbuild`);
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=esbuild`
+    );
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('main');\n`);
     updateFile(`libs/${myPkg}/src/extra.ts`, `console.log('extra');\n`);
     updateJson(join('libs', myPkg, 'project.json'), (json) => {
@@ -219,7 +230,9 @@ describe('EsBuild Plugin', () => {
 
   it('should support external esbuild.config.js file', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=esbuild`);
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=esbuild`
+    );
     updateFile(
       `libs/${myPkg}/esbuild.config.js`,
       `console.log('custom config loaded');\nmodule.exports = {};\n`
@@ -236,7 +249,10 @@ describe('EsBuild Plugin', () => {
 
   it('should bundle in non-sensitive NX_ environment variables', () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=esbuild`, {});
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=esbuild`,
+      {}
+    );
 
     updateFile(
       `libs/${myPkg}/src/index.ts`,
@@ -264,7 +280,9 @@ describe('EsBuild Plugin', () => {
 
   it('should support declaration builds', () => {
     const declarationPkg = uniq('declaration-pkg');
-    runCLI(`generate @nx/js:lib ${declarationPkg} --bundler=esbuild`);
+    runCLI(
+      `generate @nx/js:lib ${declarationPkg} --directory=libs/${declarationPkg} --bundler=esbuild`
+    );
     createFile(
       `libs/${declarationPkg}/src/lib/testDir/sub.ts`,
       `

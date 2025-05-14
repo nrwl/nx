@@ -1,5 +1,15 @@
 'use client';
-import { Dialog, Disclosure, Popover, Transition } from '@headlessui/react';
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  Disclosure,
+  DisclosureButton,
+  Popover,
+  PopoverButton,
+  Transition,
+  TransitionChild,
+} from '@headlessui/react';
 import {
   Bars4Icon,
   ChevronDownIcon,
@@ -7,25 +17,34 @@ import {
 } from '@heroicons/react/24/outline';
 import cx from 'classnames';
 import Link from 'next/link';
-import { Fragment, useEffect, useState } from 'react';
-import { ButtonLink } from '../button';
 import {
-  companyItems,
-  eventItems,
-  featuresItems,
-  learnItems,
-  plans,
-  resourceMenuItems,
-  solutionsMenuItems,
-} from './menu-items';
+  Fragment,
+  type MouseEvent,
+  ReactElement,
+  useEffect,
+  useState,
+} from 'react';
+import { ButtonLink, ButtonLinkProps } from '../button';
+import { enterpriseItems, resourceMenuItems } from './menu-items';
 import { MobileMenuItem } from './mobile-menu-item';
 import { SectionsMenu } from './sections-menu';
-import { TwoColumnsMenu } from './two-columns-menu';
 import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
-import { GitHubIcon, NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev/ui-icons';
+import { GitHubIcon, NxIcon } from '@nx/nx-dev/ui-icons';
+import { useRouter } from 'next/navigation';
 
-export function Header(): JSX.Element {
+interface HeaderProps {
+  ctaButtons?: ButtonLinkProps[];
+}
+
+export function Header({ ctaButtons }: HeaderProps): ReactElement {
   let [isOpen, setIsOpen] = useState(false);
+
+  const router = useRouter();
+
+  const handleContextMenu = (e: MouseEvent) => {
+    e.preventDefault();
+    router.push('/brands');
+  };
 
   // We need to close the popover if the route changes or the window is resized to prevent the popover from being stuck open.
   const checkSizeAndClosePopover = () => {
@@ -42,6 +61,19 @@ export function Header(): JSX.Element {
     };
   }, []);
 
+  const defaultCtaButtons: ButtonLinkProps[] = [
+    {
+      href: 'https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=header&utm_campaign=try-nx-cloud',
+      variant: 'primary',
+      size: 'small',
+      target: '_blank',
+      title: 'Try Nx Cloud for free',
+      children: <span>Try Nx Cloud for free</span>,
+    },
+  ];
+
+  const buttonsToRender = ctaButtons || defaultCtaButtons;
+
   return (
     <div className="fixed inset-x-0 top-0 isolate z-[5] flex px-4 print:hidden">
       <div
@@ -52,7 +84,7 @@ export function Header(): JSX.Element {
         }}
       />
       {/*DESKTOP*/}
-      <div className="mx-auto mt-2 hidden w-full max-w-7xl items-center justify-between space-x-10 rounded-xl border border-slate-200/40 bg-white/70 px-4 py-2 shadow-lg backdrop-blur-xl backdrop-saturate-150 lg:flex dark:border-slate-800/60 dark:bg-slate-950/40">
+      <div className="mx-auto mt-2 hidden w-full max-w-7xl items-center justify-between space-x-10 rounded-xl border border-slate-200/40 bg-white/70 px-4 py-2 shadow-sm backdrop-blur-xl backdrop-saturate-150 lg:flex dark:border-slate-800/60 dark:bg-slate-950/40">
         {/*PRIMARY NAVIGATION*/}
         <div className="flex flex-shrink-0 text-sm">
           {/*LOGO*/}
@@ -60,8 +92,11 @@ export function Header(): JSX.Element {
             href="/"
             className="mr-4 flex items-center text-slate-900 dark:text-white"
             prefetch={false}
+            onContextMenu={handleContextMenu}
           >
-            <span className="sr-only">Nx</span>
+            <span className="sr-only">
+              Nx – Left-click: Home. Right-click: Brands.
+            </span>
             <NxIcon aria-hidden="true" className="h-8 w-8" />
           </Link>
           <nav
@@ -69,95 +104,6 @@ export function Header(): JSX.Element {
             className="items-justified flex items-center justify-center space-x-2 py-0.5"
           >
             <h2 className="sr-only">Main navigation</h2>
-            {/*FEATURES*/}
-            <Popover className="relative">
-              {({ open }) => (
-                <>
-                  <Popover.Button
-                    className={cx(
-                      open ? 'text-blue-500 dark:text-sky-500' : '',
-                      'group inline-flex items-center gap-2 px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
-                    )}
-                  >
-                    <span
-                      className={cx(
-                        open ? 'text-blue-500 dark:text-sky-500' : '',
-                        'transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
-                      )}
-                    >
-                      Features
-                    </span>
-                    <ChevronDownIcon
-                      aria-hidden="true"
-                      className={cx(
-                        open
-                          ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
-                          : '',
-                        'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
-                      )}
-                    />
-                  </Popover.Button>
-                  <Transition
-                    as={Fragment}
-                    enter="transition ease-out duration-200"
-                    enterFrom="opacity-0 translate-y-1"
-                    enterTo="opacity-100 translate-y-0"
-                    leave="transition ease-in duration-150"
-                    leaveFrom="opacity-100 translate-y-0"
-                    leaveTo="opacity-0 translate-y-1"
-                  >
-                    <Popover.Panel className="absolute z-10 mt-3 w-max max-w-3xl xl:max-w-3xl">
-                      <TwoColumnsMenu items={featuresItems} />
-                    </Popover.Panel>
-                  </Transition>
-                </>
-              )}
-            </Popover>
-            {/*SOLUTIONS*/}
-            <Popover className="relative">
-              {({ open }) => (
-                <>
-                  <Popover.Button
-                    className={cx(
-                      open ? 'text-blue-500 dark:text-sky-500' : '',
-                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
-                    )}
-                  >
-                    <span
-                      className={cx(
-                        open ? 'text-blue-500 dark:text-sky-500' : '',
-                        'transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
-                      )}
-                    >
-                      Solutions
-                    </span>
-                    <ChevronDownIcon
-                      className={cx(
-                        open
-                          ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
-                          : '',
-                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
-                      )}
-                      aria-hidden="true"
-                    />
-                  </Popover.Button>
-
-                  <Transition
-                    as={Fragment}
-                    enter="transition ease-out duration-200"
-                    enterFrom="opacity-0 translate-y-1"
-                    enterTo="opacity-100 translate-y-0"
-                    leave="transition ease-in duration-150"
-                    leaveFrom="opacity-100 translate-y-0"
-                    leaveTo="opacity-0 translate-y-1"
-                  >
-                    <Popover.Panel className="absolute z-10 mt-3 w-max max-w-2xl">
-                      <SectionsMenu sections={solutionsMenuItems} />
-                    </Popover.Panel>
-                  </Transition>
-                </>
-              )}
-            </Popover>
             <Link
               href="/getting-started/intro"
               title="Documentation"
@@ -174,19 +120,11 @@ export function Header(): JSX.Element {
             >
               Blog
             </Link>
-            <Link
-              href="/pricing"
-              title="Nx Cloud"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
-              prefetch={false}
-            >
-              CI Pricing
-            </Link>
             {/*RESOURCES*/}
             <Popover className="relative">
               {({ open }) => (
                 <>
-                  <Popover.Button
+                  <PopoverButton
                     className={cx(
                       open ? 'text-blue-500 dark:text-sky-500' : '',
                       'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
@@ -204,7 +142,7 @@ export function Header(): JSX.Element {
                       )}
                       aria-hidden="true"
                     />
-                  </Popover.Button>
+                  </PopoverButton>
 
                   <Transition
                     as={Fragment}
@@ -215,14 +153,84 @@ export function Header(): JSX.Element {
                     leaveFrom="opacity-100 translate-y-0"
                     leaveTo="opacity-0 translate-y-1"
                   >
-                    <Popover.Panel className="absolute left-60 z-10 mt-3 w-max max-w-2xl -translate-x-1/2 transform lg:left-20">
+                    <Popover.Panel className="absolute left-60 z-30 mt-3 w-max max-w-2xl -translate-x-1/2 transform lg:left-20">
                       <SectionsMenu sections={resourceMenuItems} />
                     </Popover.Panel>
                   </Transition>
                 </>
               )}
             </Popover>
-            <div className="opacity-50 hover:opacity-100">
+            <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
+            <Link
+              href="/remote-cache"
+              title="Nx Remote Cache"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
+            >
+              Remote Cache
+            </Link>
+            <Link
+              href="/nx-cloud"
+              title="Nx Cloud"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
+            >
+              Nx Cloud
+            </Link>
+            <Link
+              href="/pricing"
+              title="Pricing"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
+            >
+              Pricing
+            </Link>
+            <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
+            <Popover className="relative">
+              {({ open }) => (
+                <>
+                  <PopoverButton
+                    className={cx(
+                      open ? 'text-blue-500 dark:text-sky-500' : '',
+                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
+                    )}
+                  >
+                    <span className="transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500">
+                      Enterprise
+                    </span>
+                    <ChevronDownIcon
+                      className={cx(
+                        open
+                          ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
+                          : '',
+                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                      )}
+                      aria-hidden="true"
+                    />
+                  </PopoverButton>
+
+                  <Transition
+                    as={Fragment}
+                    enter="transition ease-out duration-200"
+                    enterFrom="opacity-0 translate-y-1"
+                    enterTo="opacity-100 translate-y-0"
+                    leave="transition ease-in duration-150"
+                    leaveFrom="opacity-100 translate-y-0"
+                    leaveTo="opacity-0 translate-y-1"
+                  >
+                    <Popover.Panel className="absolute left-60 z-30 mt-3 w-max max-w-2xl -translate-x-1/2 transform lg:left-20">
+                      <SectionsMenu
+                        sections={{
+                          'Nx for Enterprises': enterpriseItems,
+                        }}
+                      />
+                    </Popover.Panel>
+                  </Transition>
+                </>
+              )}
+            </Popover>
+            <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
+            <div className="px-3 opacity-50 hover:opacity-100">
               <AlgoliaSearch tiny={true} />
             </div>
           </nav>
@@ -230,24 +238,9 @@ export function Header(): JSX.Element {
         {/*SECONDARY NAVIGATION*/}
         <div className="flex-shrink-0 text-sm">
           <nav className="flex items-center justify-center space-x-1">
-            <Link
-              className="hidden cursor-pointer px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
-              title="Contact Us"
-              href="/contact"
-              prefetch={false}
-            >
-              Contact
-            </Link>
-            <ButtonLink
-              href="https://cloud.nx.app"
-              variant="secondary"
-              size="small"
-              target="_blank"
-              title="Log in to your Nx Cloud Account"
-            >
-              <NxCloudAnimatedIcon className="h-4 w-4" aria-hidden="true" />
-              <span>Go to app</span>
-            </ButtonLink>
+            {buttonsToRender.map((buttonProps, index) => (
+              <ButtonLink key={index} {...buttonProps} />
+            ))}
             <a
               title="Nx is open source, check the code on GitHub"
               href="https://github.com/nrwl/nx"
@@ -297,7 +290,7 @@ export function Header(): JSX.Element {
           </div>
         </div>
       </div>
-      <Transition.Root show={isOpen} as={Fragment}>
+      <Transition show={isOpen} as={Fragment}>
         <Dialog
           as="div"
           className="relative z-10"
@@ -307,7 +300,7 @@ export function Header(): JSX.Element {
           <div className="fixed inset-0 overflow-hidden">
             <div className="absolute inset-0 overflow-hidden">
               <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full">
-                <Transition.Child
+                <TransitionChild
                   as={Fragment}
                   enter="transform transition ease-in-out duration-250 sm:duration-500"
                   enterFrom="translate-x-full"
@@ -316,11 +309,11 @@ export function Header(): JSX.Element {
                   leaveFrom="translate-x-0"
                   leaveTo="translate-x-full"
                 >
-                  <Dialog.Panel className="pointer-events-auto w-screen">
+                  <DialogPanel className="pointer-events-auto w-screen">
                     <div className="flex h-full flex-col overflow-y-scroll bg-white py-6 shadow-xl dark:bg-slate-900">
                       <div className="px-4 sm:px-6">
                         <div className="flex items-start justify-between">
-                          <Dialog.Title>
+                          <DialogTitle>
                             <Link
                               href="/"
                               className="flex items-center text-slate-900 dark:text-white"
@@ -338,7 +331,7 @@ export function Header(): JSX.Element {
                               </svg>
                               <span className="sr-only">Nx</span>
                             </Link>
-                          </Dialog.Title>
+                          </DialogTitle>
                           <div className="ml-3 flex h-7 items-center">
                             <button
                               type="button"
@@ -359,88 +352,17 @@ export function Header(): JSX.Element {
                       </div>
                       <div className="relative mt-6 flex-1 px-4 sm:px-6">
                         <ButtonLink
-                          href="https://cloud.nx.app"
+                          href="/nx-cloud"
                           variant="primary"
                           size="small"
                           target="_blank"
-                          title="Log in to your Nx Cloud Account"
+                          title="Try Nx Cloud for free"
                           className="w-full"
                         >
-                          Go to app
+                          Try Nx Cloud for free
                         </ButtonLink>
 
                         <div className="mt-4 divide-y divide-slate-200 border-b border-slate-200 dark:divide-slate-800 dark:border-slate-800">
-                          {/*FEATURES*/}
-                          <Disclosure as="div">
-                            {({ open }) => (
-                              <>
-                                <Disclosure.Button
-                                  className={cx(
-                                    open
-                                      ? 'text-blue-500 dark:text-sky-500'
-                                      : 'tex-slate-800 dark:text-slate-200',
-                                    'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none'
-                                  )}
-                                >
-                                  <span>Features</span>
-                                  <ChevronDownIcon
-                                    aria-hidden="true"
-                                    className={cx(
-                                      open
-                                        ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
-                                        : 'tex-slate-800 dark:text-slate-200',
-                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
-                                    )}
-                                  />
-                                </Disclosure.Button>
-                                <Disclosure.Panel
-                                  as="ul"
-                                  className="space-y-1 pb-2"
-                                >
-                                  {featuresItems.map((item) => (
-                                    <MobileMenuItem
-                                      key={item.name}
-                                      item={item}
-                                    />
-                                  ))}
-                                </Disclosure.Panel>
-                              </>
-                            )}
-                          </Disclosure>
-                          {/*SOLUTIONS*/}
-                          <Disclosure as="div">
-                            {({ open }) => (
-                              <>
-                                <Disclosure.Button
-                                  className={cx(
-                                    open
-                                      ? 'text-blue-500 dark:text-sky-500'
-                                      : 'tex-slate-800 dark:text-slate-200',
-                                    'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none'
-                                  )}
-                                >
-                                  <span>Solutions</span>
-                                  <ChevronDownIcon
-                                    aria-hidden="true"
-                                    className={cx(
-                                      open
-                                        ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
-                                        : 'tex-slate-800 dark:text-slate-200',
-                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
-                                    )}
-                                  />
-                                </Disclosure.Button>
-                                <Disclosure.Panel as="ul" className="space-y-1">
-                                  {plans.map((item) => (
-                                    <MobileMenuItem
-                                      key={item.name}
-                                      item={item}
-                                    />
-                                  ))}
-                                </Disclosure.Panel>
-                              </>
-                            )}
-                          </Disclosure>
                           <Link
                             href="/getting-started/intro"
                             title="Documentation"
@@ -457,24 +379,16 @@ export function Header(): JSX.Element {
                           >
                             Blog
                           </Link>
-                          <Link
-                            href="/pricing"
-                            title="Nx Cloud"
-                            className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
-                            prefetch={false}
-                          >
-                            CI Pricing
-                          </Link>
-                          {/*RESOURCES*/}
+                          {/*Resources*/}
                           <Disclosure as="div">
                             {({ open }) => (
                               <>
-                                <Disclosure.Button
+                                <DisclosureButton
                                   className={cx(
-                                    'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none',
                                     open
                                       ? 'text-blue-500 dark:text-sky-500'
-                                      : 'tex-slate-800 dark:text-slate-200'
+                                      : 'tex-slate-800 dark:text-slate-200',
+                                    'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none'
                                   )}
                                 >
                                   <span>Resources</span>
@@ -487,29 +401,81 @@ export function Header(): JSX.Element {
                                       'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
                                     )}
                                   />
-                                </Disclosure.Button>
+                                </DisclosureButton>
                                 <Disclosure.Panel
                                   as="ul"
                                   className="space-y-1 pb-2"
                                 >
-                                  {learnItems.map((item) => (
-                                    <MobileMenuItem
-                                      key={item.name}
-                                      item={item}
-                                    />
-                                  ))}
-                                  {eventItems.map((item) => (
-                                    <MobileMenuItem
-                                      key={item.name}
-                                      item={item}
-                                    />
-                                  ))}
-                                  {companyItems.map((item) => (
-                                    <MobileMenuItem
-                                      key={item.name}
-                                      item={item}
-                                    />
-                                  ))}
+                                  {Object.values(resourceMenuItems)
+                                    .flat()
+                                    .map((item) => (
+                                      <MobileMenuItem
+                                        key={item.name}
+                                        item={item}
+                                      />
+                                    ))}
+                                </Disclosure.Panel>
+                              </>
+                            )}
+                          </Disclosure>
+                          <Link
+                            href="/nx-cloud"
+                            title="Nx Cloud"
+                            className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
+                            prefetch={false}
+                          >
+                            Nx Cloud
+                          </Link>
+                          <Link
+                            href="/pricing"
+                            title="Pricing"
+                            className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
+                            prefetch={false}
+                          >
+                            Pricing
+                          </Link>
+                          <Link
+                            href="/remote-cache"
+                            title="Nx Remote Cache"
+                            className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
+                            prefetch={false}
+                          >
+                            Remote Cache
+                          </Link>
+                          <Disclosure as="div">
+                            {({ open }) => (
+                              <>
+                                <DisclosureButton
+                                  className={cx(
+                                    open
+                                      ? 'text-blue-500 dark:text-sky-500'
+                                      : 'tex-slate-800 dark:text-slate-200',
+                                    'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none'
+                                  )}
+                                >
+                                  <span>Enterprise</span>
+                                  <ChevronDownIcon
+                                    aria-hidden="true"
+                                    className={cx(
+                                      open
+                                        ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
+                                        : 'tex-slate-800 dark:text-slate-200',
+                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                                    )}
+                                  />
+                                </DisclosureButton>
+                                <Disclosure.Panel
+                                  as="ul"
+                                  className="space-y-1 pb-2"
+                                >
+                                  {Object.values(enterpriseItems)
+                                    .flat()
+                                    .map((item) => (
+                                      <MobileMenuItem
+                                        key={item.name}
+                                        item={item}
+                                      />
+                                    ))}
                                 </Disclosure.Panel>
                               </>
                             )}
@@ -525,13 +491,13 @@ export function Header(): JSX.Element {
                         </div>
                       </div>
                     </div>
-                  </Dialog.Panel>
-                </Transition.Child>
+                  </DialogPanel>
+                </TransitionChild>
               </div>
             </div>
           </div>
         </Dialog>
-      </Transition.Root>
+      </Transition>
     </div>
   );
 }

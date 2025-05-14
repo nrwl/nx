@@ -8,6 +8,7 @@ import type {
   NormalizedWebpackExecutorOptions,
   WebpackExecutorOptions,
 } from '../schema';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function normalizeOptions(
   options: WebpackExecutorOptions,
@@ -17,6 +18,7 @@ export function normalizeOptions(
 ): NormalizedWebpackExecutorOptions {
   const normalizedOptions = {
     ...options,
+    useTsconfigPaths: !isUsingTsSolutionSetup(),
     root,
     projectRoot,
     sourceRoot,
@@ -24,6 +26,7 @@ export function normalizeOptions(
     outputFileName: options.outputFileName ?? 'main.js',
     webpackConfig: normalizePluginPath(options.webpackConfig, root),
     fileReplacements: normalizeFileReplacements(root, options.fileReplacements),
+    sassImplementation: options.sassImplementation ?? 'sass',
     optimization:
       typeof options.optimization !== 'object'
         ? {

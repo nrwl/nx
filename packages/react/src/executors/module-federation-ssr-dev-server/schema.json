@@ -1,8 +1,9 @@
 {
   "version": 2,
+  "continuous": true,
   "outputCapture": "direct-nodejs",
   "title": "Module Federation SSR Dev Server",
-  "description": "Serve a SSR host application along with its known remotes.",
+  "description": "Serve a SSR Consumer (host) application along with its known Producers (remotes).",
   "cli": "nx",
   "type": "object",
   "properties": {
@@ -27,16 +28,18 @@
       "items": {
         "type": "string"
       },
-      "description": "List of remote applications to run in development mode (i.e. using serve target).",
-      "x-priority": "important"
+      "description": "List of Producer (remote) applications to run in development mode (i.e. using serve target).",
+      "x-priority": "important",
+      "alias": "devProducers"
     },
     "skipRemotes": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "List of remote applications to not automatically serve, either statically or in development mode.",
-      "x-priority": "important"
+      "description": "List of Producer (remote) applications to not automatically serve, either statically or in development mode.",
+      "x-priority": "important",
+      "alias": "skipProducers"
     },
     "host": {
       "type": "string",
@@ -45,11 +48,12 @@
     },
     "staticRemotesPort": {
       "type": "number",
-      "description": "The port at which to serve the file-server for the static remotes."
+      "description": "The port at which to serve the file-server for the static Producers (remotes).",
+      "alias": "staticProducersPort"
     },
     "pathToManifestFile": {
       "type": "string",
-      "description": "Path to a Module Federation manifest file (e.g. `my/path/to/module-federation.manifest.json`) containing the dynamic remote applications relative to the workspace root."
+      "description": "Path to a Module Federation manifest file (e.g. `my/path/to/module-federation.manifest.json`) containing the dynamic Producer (remote) applications relative to the workspace root."
     },
     "ssl": {
       "type": "boolean",
@@ -66,9 +70,10 @@
     },
     "isInitialHost": {
       "type": "boolean",
-      "description": "Whether the host that is running this executor is the first in the project tree to do so.",
+      "description": "Whether the Consumer (host) that is running this executor is the first in the project tree to do so.",
       "default": true,
-      "x-priority": "internal"
+      "x-priority": "internal",
+      "alias": "isInitialConsumer"
     }
   },
   "required": ["browserTarget", "serverTarget"]

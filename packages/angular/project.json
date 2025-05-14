@@ -58,16 +58,9 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/angular"],
       "dependsOn": ["build-ng", "build-base", "^build"],
-      "options": {
-        "command": "node ./scripts/copy-readme.js angular",
-        "parallel": false
-      }
-    },
-    "add-extra-dependencies": {
-      "command": "node ./scripts/add-dependency-to-build.js angular @nrwl/angular"
+      "outputs": ["{workspaceRoot}/build/packages/angular/README.md"],
+      "command": "node ./scripts/copy-readme.js angular"
     }
   },
   "implicitDependencies": []

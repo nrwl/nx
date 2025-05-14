@@ -23,11 +23,12 @@ export function fixBootstrap(tree: Tree, appRoot: string, options: Schema) {
       manifestPath = '/module-federation.manifest.json';
     }
 
-    const fetchMFManifestCode = `import { setRemoteDefinitions } from '@nx/angular/mf';
+    const fetchMFManifestCode = `import { init } from '@module-federation/enhanced/runtime';
 
 fetch('${manifestPath}')
   .then((res) => res.json())
-  .then(definitions => setRemoteDefinitions(definitions))
+  .then((remotes: Record<string, string>) => Object.entries(remotes).map(([name, entry]) => ({ name,entry})))
+  .then(remotes => init({name: '${options.appName}', remotes}))
   .then(() => ${bootstrapImportCode});`;
 
     tree.write(mainFilePath, fetchMFManifestCode);

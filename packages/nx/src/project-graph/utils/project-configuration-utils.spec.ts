@@ -5,7 +5,7 @@ import {
 import {
   ConfigurationSourceMaps,
   SourceInformation,
-  createProjectConfigurations,
+  createProjectConfigurationsWithPlugins,
   isCompatibleTarget,
   mergeProjectConfigurationIntoRootMap,
   mergeTargetConfigurations,
@@ -14,10 +14,11 @@ import {
   readProjectConfigurationsFromRootMap,
   readTargetDefaultsForTarget,
 } from './project-configuration-utils';
-import { NxPluginV2 } from '../plugins';
-import { LoadedNxPlugin } from '../plugins/internal-api';
+import { createNodesFromFiles, NxPluginV2 } from '../plugins';
+import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import { dirname } from 'path';
 import { isProjectConfigurationsError } from '../error-types';
+import { workspaceRoot } from '../../utils/workspace-root';
 
 describe('project-configuration-utils', () => {
   describe('target merging', () => {
@@ -699,6 +700,99 @@ describe('project-configuration-utils', () => {
       expect(merged.targets['newTarget']).toEqual(newTargetConfiguration);
     });
 
+    it('should merge target configurations with glob pattern matching', () => {
+      const existingTargetConfiguration = {
+        command: 'already present',
+      };
+      const partialA = {
+        executor: 'build',
+        dependsOn: ['^build'],
+      };
+      const partialB = {
+        executor: 'build',
+        dependsOn: ['^build'],
+      };
+      const partialC = {
+        executor: 'build',
+        dependsOn: ['^build'],
+      };
+      const globMatch = {
+        dependsOn: ['^build', { project: 'app', target: 'build' }],
+      };
+      const nonMatchingGlob = {
+        dependsOn: ['^production', 'build'],
+      };
+
+      const rootMap = new RootMapBuilder()
+        .addProject({
+          root: 'libs/lib-a',
+          name: 'lib-a',
+          targets: {
+            existingTarget: existingTargetConfiguration,
+            'partial-path/a': partialA,
+            'partial-path/b': partialB,
+            'partial-path/c': partialC,
+          },
+        })
+        .getRootMap();
+      mergeProjectConfigurationIntoRootMap(rootMap, {
+        root: 'libs/lib-a',
+        name: 'lib-a',
+        targets: {
+          'partial-**/*': globMatch,
+          'ci-*': nonMatchingGlob,
+        },
+      });
+      const merged = rootMap['libs/lib-a'];
+      expect(merged.targets['partial-path/a']).toMatchInlineSnapshot(`
+        {
+          "dependsOn": [
+            "^build",
+            {
+              "project": "app",
+              "target": "build",
+            },
+          ],
+          "executor": "build",
+        }
+      `);
+      expect(merged.targets['partial-path/b']).toMatchInlineSnapshot(`
+        {
+          "dependsOn": [
+            "^build",
+            {
+              "project": "app",
+              "target": "build",
+            },
+          ],
+          "executor": "build",
+        }
+      `);
+      expect(merged.targets['partial-path/c']).toMatchInlineSnapshot(`
+        {
+          "dependsOn": [
+            "^build",
+            {
+              "project": "app",
+              "target": "build",
+            },
+          ],
+          "executor": "build",
+        }
+      `);
+      // if the glob pattern doesn't match, the target is not merged
+      expect(merged.targets['ci-*']).toMatchInlineSnapshot(`
+        {
+          "dependsOn": [
+            "^production",
+            "build",
+          ],
+        }
+      `);
+      // if the glob pattern matches, the target is merged
+      expect(merged.targets['partial-**/*']).toBeUndefined();
+    });
+
     it('should concatenate tags and implicitDependencies', () => {
       const rootMap = new RootMapBuilder()
         .addProject({
@@ -964,6 +1058,47 @@ describe('project-configuration-utils', () => {
         expect(
           sourceMap['libs/lib-a']['metadata.targetGroups.group1.1']
         ).toEqual(['dummy', 'dummy.ts']);
+      });
+
+      it('should not clobber targetGroups', () => {
+        const rootMap = new RootMapBuilder()
+          .addProject({
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            metadata: {
+              targetGroups: {
+                group2: ['target3'],
+              },
+            },
+          })
+          .getRootMap();
+        const sourceMap: ConfigurationSourceMaps = {
+          'libs/lib-a': {},
+        };
+
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            metadata: {
+              technologies: ['technology'],
+              targetGroups: {
+                group1: ['target1', 'target2'],
+              },
+            },
+          },
+          sourceMap,
+          ['dummy', 'dummy.ts']
+        );
+
+        expect(rootMap['libs/lib-a'].metadata).toEqual({
+          technologies: ['technology'],
+          targetGroups: {
+            group1: ['target1', 'target2'],
+            group2: ['target3'],
+          },
+        });
       });
     });
 
@@ -1524,7 +1659,7 @@ describe('project-configuration-utils', () => {
           foo: { command: 'echo {projectRoot}' },
         },
       };
-      expect(normalizeTarget(config.targets.foo, config))
+      expect(normalizeTarget(config.targets.foo, config, workspaceRoot, {}))
         .toMatchInlineSnapshot(`
         {
           "configurations": {},
@@ -1567,8 +1702,8 @@ describe('project-configuration-utils', () => {
       };
       const originalConfig = JSON.stringify(config, null, 2);
 
-      normalizeTarget(config.targets.foo, config);
-      normalizeTarget(config.targets.bar, config);
+      normalizeTarget(config.targets.foo, config, workspaceRoot, {});
+      normalizeTarget(config.targets.bar, config, workspaceRoot, {});
       expect(JSON.stringify(config, null, 2)).toEqual(originalConfig);
     });
   });
@@ -1577,77 +1712,96 @@ describe('project-configuration-utils', () => {
     /* A fake plugin that sets `fake-lib` tag to libs. */
     const fakeTagPlugin: NxPluginV2 = {
       name: 'fake-tag-plugin',
-      createNodes: [
+      createNodesV2: [
         'libs/*/project.json',
-        (vitestConfigPath) => {
-          const [_libs, name, _config] = vitestConfigPath.split('/');
-          return {
-            projects: {
-              [name]: {
-                name: name,
-                root: `libs/${name}`,
-                tags: ['fake-lib'],
-              },
+        (vitestConfigPaths) =>
+          createNodesFromFiles(
+            (vitestConfigPath) => {
+              const [_libs, name, _config] = vitestConfigPath.split('/');
+              return {
+                projects: {
+                  [name]: {
+                    name: name,
+                    root: `libs/${name}`,
+                    tags: ['fake-lib'],
+                  },
+                },
+              };
             },
-          };
-        },
+            vitestConfigPaths,
+            null,
+            null
+          ),
       ],
     };
 
     const fakeTargetsPlugin: NxPluginV2 = {
       name: 'fake-targets-plugin',
-      createNodes: [
+      createNodesV2: [
         'libs/*/project.json',
-        (projectJsonPath) => {
-          const root = dirname(projectJsonPath);
-          return {
-            projects: {
-              [root]: {
-                root,
-                targets: {
-                  build: {
-                    executor: 'nx:run-commands',
-                    options: {
-                      command: 'echo {projectName} @ {projectRoot}',
+        (projectJsonPaths) =>
+          createNodesFromFiles(
+            (projectJsonPath) => {
+              const root = dirname(projectJsonPath);
+              return {
+                projects: {
+                  [root]: {
+                    root,
+                    targets: {
+                      build: {
+                        executor: 'nx:run-commands',
+                        options: {
+                          command: 'echo {projectName} @ {projectRoot}',
+                        },
+                      },
                     },
                   },
                 },
-              },
+              };
             },
-          };
-        },
+            projectJsonPaths,
+            null,
+            null
+          ),
       ],
     };
 
     const sameNamePlugin: NxPluginV2 = {
       name: 'same-name-plugin',
-      createNodes: [
+      createNodesV2: [
         'libs/*/project.json',
-        (projectJsonPath) => {
-          const root = dirname(projectJsonPath);
-          return {
-            projects: {
-              [root]: {
-                root,
-                name: 'same-name',
-              },
+        (projectJsonPaths) =>
+          createNodesFromFiles(
+            (projectJsonPath) => {
+              const root = dirname(projectJsonPath);
+              return {
+                projects: {
+                  [root]: {
+                    root,
+                    name: 'same-name',
+                  },
+                },
+              };
             },
-          };
-        },
+            projectJsonPaths,
+            null,
+            null
+          ),
       ],
     };
 
     it('should create nodes for files matching included patterns only', async () => {
-      const projectConfigurations = await createProjectConfigurations(
-        undefined,
-        {},
-        ['libs/a/project.json', 'libs/b/project.json'],
-        [
-          new LoadedNxPlugin(fakeTagPlugin, {
-            plugin: fakeTagPlugin.name,
-          }),
-        ]
-      );
+      const projectConfigurations =
+        await createProjectConfigurationsWithPlugins(
+          undefined,
+          {},
+          [['libs/a/project.json', 'libs/b/project.json']],
+          [
+            new LoadedNxPlugin(fakeTagPlugin, {
+              plugin: fakeTagPlugin.name,
+            }),
+          ]
+        );
 
       expect(projectConfigurations.projects).toEqual({
         'libs/a': {
@@ -1664,17 +1818,18 @@ describe('project-configuration-utils', () => {
     });
 
     it('should create nodes for files matching included patterns only', async () => {
-      const projectConfigurations = await createProjectConfigurations(
-        undefined,
-        {},
-        ['libs/a/project.json', 'libs/b/project.json'],
-        [
-          new LoadedNxPlugin(fakeTagPlugin, {
-            plugin: fakeTagPlugin.name,
-            include: ['libs/a/**'],
-          }),
-        ]
-      );
+      const projectConfigurations =
+        await createProjectConfigurationsWithPlugins(
+          undefined,
+          {},
+          [['libs/a/project.json', 'libs/b/project.json']],
+          [
+            new LoadedNxPlugin(fakeTagPlugin, {
+              plugin: fakeTagPlugin.name,
+              include: ['libs/a/**'],
+            }),
+          ]
+        );
 
       expect(projectConfigurations.projects).toEqual({
         'libs/a': {
@@ -1686,17 +1841,18 @@ describe('project-configuration-utils', () => {
     });
 
     it('should not create nodes for files matching excluded patterns', async () => {
-      const projectConfigurations = await createProjectConfigurations(
-        undefined,
-        {},
-        ['libs/a/project.json', 'libs/b/project.json'],
-        [
-          new LoadedNxPlugin(fakeTagPlugin, {
-            plugin: fakeTagPlugin.name,
-            exclude: ['libs/b/**'],
-          }),
-        ]
-      );
+      const projectConfigurations =
+        await createProjectConfigurationsWithPlugins(
+          undefined,
+          {},
+          [['libs/a/project.json', 'libs/b/project.json']],
+          [
+            new LoadedNxPlugin(fakeTagPlugin, {
+              plugin: fakeTagPlugin.name,
+              exclude: ['libs/b/**'],
+            }),
+          ]
+        );
 
       expect(projectConfigurations.projects).toEqual({
         'libs/a': {
@@ -1708,10 +1864,10 @@ describe('project-configuration-utils', () => {
     });
 
     it('should normalize targets', async () => {
-      const { projects } = await createProjectConfigurations(
+      const { projects } = await createProjectConfigurationsWithPlugins(
         undefined,
         {},
-        ['libs/a/project.json'],
+        [['libs/a/project.json'], ['libs/a/project.json']],
         [
           new LoadedNxPlugin(fakeTargetsPlugin, 'fake-targets-plugin'),
           new LoadedNxPlugin(fakeTagPlugin, 'fake-tag-plugin'),
@@ -1730,10 +1886,10 @@ describe('project-configuration-utils', () => {
     });
 
     it('should validate that project names are unique', async () => {
-      const error = await createProjectConfigurations(
+      const error = await createProjectConfigurationsWithPlugins(
         undefined,
         {},
-        ['libs/a/project.json', 'libs/b/project.json', 'libs/c/project.json'],
+        [['libs/a/project.json', 'libs/b/project.json', 'libs/c/project.json']],
         [new LoadedNxPlugin(sameNamePlugin, 'same-name-plugin')]
       ).catch((e) => e);
       const isErrorType = isProjectConfigurationsError(error);
@@ -1754,10 +1910,10 @@ describe('project-configuration-utils', () => {
     });
 
     it('should validate that projects have a name', async () => {
-      const error = await createProjectConfigurations(
+      const error = await createProjectConfigurationsWithPlugins(
         undefined,
         {},
-        ['libs/a/project.json', 'libs/b/project.json', 'libs/c/project.json'],
+        [['libs/a/project.json', 'libs/b/project.json', 'libs/c/project.json']],
         [new LoadedNxPlugin(fakeTargetsPlugin, 'fake-targets-plugin')]
       ).catch((e) => e);
       const isErrorType = isProjectConfigurationsError(error);
@@ -1775,10 +1931,10 @@ describe('project-configuration-utils', () => {
     });
 
     it('should correctly set source maps', async () => {
-      const { sourceMaps } = await createProjectConfigurations(
+      const { sourceMaps } = await createProjectConfigurationsWithPlugins(
         undefined,
         {},
-        ['libs/a/project.json'],
+        [['libs/a/project.json'], ['libs/a/project.json']],
         [
           new LoadedNxPlugin(fakeTargetsPlugin, 'fake-targets-plugin'),
           new LoadedNxPlugin(fakeTagPlugin, 'fake-tag-plugin'),

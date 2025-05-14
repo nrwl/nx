@@ -2,26 +2,18 @@ import { <% if(changeDetection !== 'Default') { %>ChangeDetectionStrategy, <% }%
 import { CommonModule } from '@angular/common';<% } %>
 
 @Component({<% if(!skipSelector) {%>
-  selector: '<%= selector %>',<%}%><% if(standalone) {%>
-  standalone: true,
+  selector: '<%= selector %>',<%}%><% if (setStandalone) { %>
+  standalone: <%= standalone %>,<% } %><% if(standalone) { %>
   imports: [CommonModule],<%}%><% if(inlineTemplate) { %>
   template: `<p><%= name %> works!</p>`<% } else { %>
-  templateUrl: './<%= fileName %>.html'<% } if (angularMajorVersion < 17) { if(inlineStyle) { %>,
-  styles: [<% if(displayBlock){ %>
-    `
-      :host {
-        display: block;
-      }
-    `<% } %>
-  ]<% } else if (style !== 'none') { %>,
-  styleUrls: ['./<%= fileName %>.<%= style %>']<% } %><% } else { if(inlineStyle) { %>,
+  templateUrl: './<%= fileName %>.html'<% } if(inlineStyle) { %>,
   styles: `<% if(displayBlock){ %>
     :host {
       display: block;
     }
   <% } %>`<% } else if (style !== 'none') { %>,
-  styleUrl: './<%= fileName %>.<%= style %>'<% } %><% } %><% if(!!viewEncapsulation) { %>,
+  styleUrl: './<%= fileName %>.<%= style %>'<% } %><% if(!!viewEncapsulation) { %>,
   encapsulation: ViewEncapsulation.<%= viewEncapsulation %><% } if (changeDetection !== 'Default') { %>,
   changeDetection: ChangeDetectionStrategy.<%= changeDetection %><% } %>
 })
-export class <%= symbolName %> {}
+export <% if (exportDefault) {%>default <%}%>class <%= symbolName %> {}

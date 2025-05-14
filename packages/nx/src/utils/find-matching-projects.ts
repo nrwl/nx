@@ -49,7 +49,8 @@ export function findMatchingProjects(
   }
 
   for (const stringPattern of patterns) {
-    if (!stringPattern.length) {
+    // Do not waste time attempting to look up cross-workspace references which will never match
+    if (!stringPattern.length || stringPattern.startsWith('nx-cloud:')) {
       continue;
     }
 
@@ -166,6 +167,21 @@ function addMatchingProjectsByName(
   }
 
   if (!isGlobPattern(pattern.value)) {
+    // Custom regex that is basically \b but includes hyphens (-) and excludes underscores (_), so "foo" pattern matches "foo_bar" but not "foo-e2e".
+    const regex = new RegExp(
+      `(?<![@a-zA-Z0-9-])${pattern.value}(?![@a-zA-Z0-9-])`,
+      'i'
+    );
+    const matchingProjects = Object.keys(projects).filter((name) =>
+      regex.test(name)
+    );
+    for (const projectName of matchingProjects) {
+      if (pattern.exclude) {
+        matchedProjects.delete(projectName);
+      } else {
+        matchedProjects.add(projectName);
+      }
+    }
     return;
   }
 

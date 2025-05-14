@@ -32,17 +32,8 @@ Make sure to install the `@nx/vite` version that matches the version of `nx` in 
 
 In any Nx workspace, you can install `@nx/vite` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/vite
-```
-
-You can also pass the `--setupPathsPlugin` flag to add [`nxViteTsPaths` plugin](/recipes/vite/configure-vite#typescript-paths), so your projects can use workspace libraries.
-
-```shell {% skipRescope=true %}
-nx add @nx/vite --setupPathsPlugin
 ```
 
 This will install the correct version of `@nx/vite`.
@@ -91,18 +82,6 @@ The `@nx/vite/plugin` is configured in the `plugins` array in `nx.json`.
 
 The `buildTargetName`, `previewTargetName`, `testTargetName`, `serveTargetName` and `serveStaticTargetName` options control the names of the inferred Vite tasks. The default names are `build`, `preview`, `test`, `serve` and `serve-static`.
 
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/vite` package with your package manager.
-
-```shell
-npm add -D @nx/vite
-```
-
-{% /tab %}
-{% /tabs %}
-
 ## Using @nx/vite
 
 ### Generate a new project using Vite
@@ -112,19 +91,19 @@ You can generate a [React](/nx-api/react) application or library or a [Web](/nx-
 To generate a React application using Vite.js, run the following:
 
 ```bash
-nx g @nx/react:app my-app --bundler=vite
+nx g @nx/react:app apps/my-app --bundler=vite
 ```
 
 To generate a React library using Vite.js, run the following:
 
 ```bash
-nx g @nx/react:lib my-lib --bundler=vite
+nx g @nx/react:lib libs/my-lib --bundler=vite
 ```
 
 To generate a Web application using Vite.js, run the following:
 
 ```bash
-nx g @nx/web:app my-app --bundler=vite
+nx g @nx/web:app apps/my-app --bundler=vite
 ```
 
 ### Modify an existing React or Web project to use Vite.js

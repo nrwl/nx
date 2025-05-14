@@ -11,7 +11,6 @@ import {
 } from '@nx/devkit';
 
 import type { Linter as ESLint } from 'eslint';
-import { Linter } from '@nx/eslint';
 
 import generator from './generator';
 import pluginGenerator from '../plugin/plugin';
@@ -26,10 +25,10 @@ describe('lint-checks generator', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await pluginGenerator(tree, {
-      name: 'plugin',
+      directory: 'plugin',
       importPath: '@acme/plugin',
       compiler: 'tsc',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: false,
       skipTsConfig: false,
       skipLintChecks: true, // we manually call it s.t. we can update config files first
@@ -37,13 +36,13 @@ describe('lint-checks generator', () => {
     });
     await generatorGenerator(tree, {
       name: 'my-generator',
-      project: 'plugin',
+      path: 'plugin/src/generators/my-generator',
       unitTestRunner: 'jest',
       skipLintChecks: true,
     });
     await executorGenerator(tree, {
       name: 'my-executor',
-      project: 'plugin',
+      path: 'plugin/src/executors/my-executor',
       unitTestRunner: 'jest',
       includeHasher: false,
       skipLintChecks: true,
@@ -156,7 +155,14 @@ describe('lint-checks generator', () => {
           ],
           "parser": "jsonc-eslint-parser",
           "rules": {
-            "@nx/dependency-checks": "error",
+            "@nx/dependency-checks": [
+              "error",
+              {
+                "ignoredFiles": [
+                  "{projectRoot}/eslint.config.{js,cjs,mjs}",
+                ],
+              },
+            ],
           },
         },
         {

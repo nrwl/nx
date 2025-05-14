@@ -10,6 +10,7 @@ import {
   getPackageManagerCommand,
   readJson,
   updateFile,
+  renameFile,
 } from '@nx/e2e/utils';
 import { join } from 'path';
 
@@ -29,11 +30,13 @@ describe('packaging libs', () => {
     const rollupLib = uniq('rolluplib');
 
     runCLI(
-      `generate @nx/js:lib ${esbuildLib} --bundler=esbuild --no-interactive`
+      `generate @nx/js:lib libs/${esbuildLib} --bundler=esbuild --no-interactive`
     );
-    runCLI(`generate @nx/js:lib ${viteLib} --bundler=vite --no-interactive`);
     runCLI(
-      `generate @nx/js:lib ${rollupLib} --bundler=rollup --no-interactive`
+      `generate @nx/js:lib libs/${viteLib} --bundler=vite --no-interactive`
+    );
+    runCLI(
+      `generate @nx/js:lib libs/${rollupLib} --bundler=rollup --no-interactive`
     );
     updateFile(`libs/${rollupLib}/src/index.ts`, (content) => {
       // Test that default functions work in ESM (Node).
@@ -136,10 +139,16 @@ describe('packaging libs', () => {
     const tscEsmLib = uniq('tscesmlib');
     const swcEsmLib = uniq('swcesmlib');
 
-    runCLI(`generate @nx/js:lib ${tscLib} --bundler=tsc --no-interactive`);
-    runCLI(`generate @nx/js:lib ${swcLib} --bundler=swc --no-interactive`);
-    runCLI(`generate @nx/js:lib ${tscEsmLib} --bundler=tsc --no-interactive`);
-    runCLI(`generate @nx/js:lib ${swcEsmLib} --bundler=swc --no-interactive`);
+    runCLI(`generate @nx/js:lib libs/${tscLib} --bundler=tsc --no-interactive`);
+    runCLI(
+      `generate @nx/js:lib libs/${swcLib}  --bundler=swc --no-interactive`
+    );
+    runCLI(
+      `generate @nx/js:lib libs/${tscEsmLib} --bundler=tsc --no-interactive`
+    );
+    runCLI(
+      `generate @nx/js:lib libs/${swcEsmLib} --bundler=swc --no-interactive`
+    );
 
     // Change module format to ESM
     updateJson(`libs/${tscEsmLib}/tsconfig.json`, (json) => {
@@ -195,14 +204,20 @@ describe('packaging libs', () => {
 
     expect(readJson(`dist/libs/${tscLib}/package.json`).exports).toEqual({
       './package.json': './package.json',
-      '.': './src/index.js',
+      '.': {
+        default: './src/index.js',
+        types: './src/index.d.ts',
+      },
       './foo/bar': './src/foo/bar.js',
       './foo/faz': './src/foo/faz.js',
     });
 
     expect(readJson(`dist/libs/${swcLib}/package.json`).exports).toEqual({
       './package.json': './package.json',
-      '.': './src/index.js',
+      '.': {
+        default: './src/index.js',
+        types: './src/index.d.ts',
+      },
       './foo/bar': './src/foo/bar.js',
       './foo/faz': './src/foo/faz.js',
     });

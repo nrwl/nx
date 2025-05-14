@@ -1,11 +1,18 @@
 'use client';
-import { Disclosure, Transition } from '@headlessui/react';
+import {
+  Disclosure,
+  DisclosureButton,
+  DisclosurePanel,
+  Transition,
+} from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import { SectionHeading } from '@nx/nx-dev/ui-common';
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { FAQPageJsonLd } from 'next-seo';
+import Link from 'next/link';
+import { ReactElement } from 'react';
 
-export function Faq(): JSX.Element {
+export function Faq(): ReactElement {
   const faqs = [
     {
       question: 'What are credits?',
@@ -13,7 +20,12 @@ export function Faq(): JSX.Element {
         'Credits are the currency of Nx Cloud. A determined number of credits are included in each plan. These credits are used to pay for Nx Cloud platform usage in real time.',
     },
     {
-      question: 'Do credits expire?',
+      question: 'How much does it cost per individual credit?',
+      answer:
+        "On the Team Plan, each credit costs $0.00055, which is $5.50 for 10,000 credits to help you visualize the pricing. However, you don't need to purchase credits in fixed amounts—we only charge you for the exact number of additional credits you use beyond your included credits. Overages are prorated, so you'll only pay for what you actually consume.",
+    },
+    {
+      question: 'Do included credits expire?',
       answer:
         'Credits expire at the end of the billing cycle and do not roll over.',
     },
@@ -23,35 +35,63 @@ export function Faq(): JSX.Element {
         'A new billing cycle starts on the first day of every month. If you go over the Hobby plan limit during a cycle your organization will be disabled. You will have to upgrade to our Pro plan or wait for the next billing cycle.',
     },
     {
-      question: 'What is a CI Pipeline Execution (CIPE)?',
+      question: 'What is an active contributor?',
       answer:
-        'By default, a CI pipeline execution is a 1:1 match to your CI provider of choice\'s concept of a "workflow".',
+        'Active contributors are calculated based on any person or actor that has triggered a CI Pipeline Execution within the current billing cycle.',
     },
     {
-      question: 'What is the concurrency connections limit?',
+      question: 'What is a concurrent connection?',
       answer:
-        'As you scale your usage of Nx Cloud, you may run into concurrency limits. Nx Cloud puts a limit on the number of CI machines in your workspace that are simultaneously connecting to Nx Cloud. This includes any machine running in CI - both the main CI pipeline machine and any agent machines.',
+        'Concurrent connections are unique machines that connect to Nx Cloud from a CI environment. If you are using Distributed Task Execution, you should expect to have one concurrent connection from your orchestrator job, and one additional concurrent connection for each live agent that is helping perform work.',
     },
     {
-      question: 'What is a contributor?',
+      question:
+        "I thought I was on the Pro plan, but I don't see it listed anymore. Does it still exist?",
       answer:
-        "A contributor is a person who has committed to your repository. Your organization's contributor count is calculated from anonymized, monthly git histories across all the workspaces in your Nx Cloud organization.",
+        "Yes, the Pro plan still exists for users who were grandfathered in. If you're already on the Pro plan, you will continue to receive support without any changes. However, this plan is no longer available to new users.",
     },
     {
-      question: "What if I exceed my plan's contributor limit?",
+      question:
+        'Is there a limit to the number of active contributors I can have on the Hobby plan?',
       answer:
-        'If you exceed the contributor limit, your organization will be disabled until you upgrade to a plan that supports the number of contributors you have.',
+        'Our free Hobby Plan is only limited by the number of credits you can use per month. This means you can use it free, forever, no matter your team size, as long as your use falls below 50,000 credits/month. This makes it ideal for small-scale projects or for larger teams looking to test out a proof of concept. For those larger teams, we offer the Team Plan which includes 5 active contributors at no cost and offers the flexibility to add even more contributors, concurrencies, and credits to fit the unique needs of each team. ',
+    },
+    {
+      question: 'Do I need a credit card to create an account?',
+      answer:
+        'No, you can set up a workspace with Nx Cloud completely for free, without entering any billing information.',
     },
     {
       question:
         'What happens if I consume all my credits while on the Hobby plan?',
       answer:
-        'The Hobby plan allows you to configure and run a small project at no cost. If you consume all the credits, your organization will be disabled until you upgrade to Pro or wait for the next billing cycle.',
+        'The Hobby plan allows you to configure and run a small project at no cost. If you consume all the credits, your organization will be disabled until you upgrade to Team or wait for the next billing cycle.',
     },
     {
-      question: 'Can I upgrade my Hobby plan to the Pro plan?',
+      question: 'What is a CI Pipeline Execution?',
       answer:
-        'Yes, you can upgrade your Hobby plan to the Pro plan at any time.',
+        'A CI Pipeline Execution is a CI run or a Workflow run (depending on your CI provider). For instance, running a PR or running CI on the main branch are CI Pipeline Executions.',
+    },
+    {
+      question: 'What is the Team Plan?',
+      answer:
+        'The Team Plan is our new offering that provides flexible pricing, designed to better meet the needs of teams of all sizes. The Team Plan replaced the Pro Plan in 2024. ',
+    },
+    {
+      question: 'How does the Team Plan differ from the previous Pro Plan?',
+      answer:
+        'The Team Plan offers a lower base price with the ability to add contributors and credits as needed, whereas the Pro Plan had a higher base price with fixed allowances.',
+    },
+    {
+      question:
+        'I think I am on the Pro Plan but don’t see it offered, does it still exist?',
+      answer:
+        'Existing Pro Plan users have been grandfathered into their existing plan and can expect no changes. This plan is no longer available to new users. ',
+    },
+    {
+      question: 'Can existing Pro organizations switch to the new Team Plan?',
+      answer:
+        'Yes! If the new Team Plan better fits your needs, you can reach out to cloud-support@nrwl.io. If you upgrade to a new plan, please note that you will not be able to switch back to a legacy plan. ',
     },
     {
       question: 'Is there a plan for open source projects?',
@@ -59,39 +99,41 @@ export function Faq(): JSX.Element {
         'Yes, we are happy to collaborate with open source projects. Please complete this form, and we will review your request and get back to you: https://nx.dev/pricing/special-offer',
     },
     {
+      question: 'What if I need help picking the right plan?',
+      answer:
+        'We have a helpful comparison above. If you have additional questions, or these plans don’t fit your needs please reach out to https://nx.dev/contact/sales and we will do our best to help.',
+    },
+    {
+      question: 'What if I need more than 30 active contributors?',
+      answer: 'Please reach out to https://nx.dev/contact/sales',
+    },
+    {
       question: 'What payment methods do you accept?',
       answer:
         'We accept Visa, Mastercard, American Express, and Discover from customers worldwide.',
     },
-    {
-      question: 'Do I need a credit card to create an account?',
-      answer:
-        'No, you can set up a workspace with Nx Cloud completely for free, without entering any billing information.',
-    },
   ];
 
   return (
-    <section id="faq">
+    <section id="faq" className="scroll-mt-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           <header>
             <SectionHeading as="h2" variant="title">
-              Not sure yet? <br /> Have questions?
+              Have questions?
             </SectionHeading>
             <SectionHeading as="p" variant="subtitle" className="mt-6">
-              Here are the most asked question we condensed for your to get you
-              setup quickly.
+              Check out our most commonly asked questions.
             </SectionHeading>
 
             <p className="text-md mt-4 text-slate-400 dark:text-slate-600">
-              Can’t find the answer you’re looking for? Reach out to our{' '}
-              <a
-                href="mailto:cloud-support@nrwl.io"
-                className="font-medium underline"
+              <Link
+                href="/contact"
+                title="Reach out to the team"
+                className="font-semibold"
               >
-                customer support
-              </a>{' '}
-              team.
+                Can’t find the answer you’re looking for?
+              </Link>
             </p>
           </header>
           <FAQPageJsonLd
@@ -108,7 +150,7 @@ export function Faq(): JSX.Element {
                   {({ open }) => (
                     <>
                       <dt className="text-lg">
-                        <Disclosure.Button className="flex w-full items-start justify-between text-left text-slate-400">
+                        <DisclosureButton className="flex w-full items-start justify-between text-left text-slate-400">
                           <span className="font-medium text-slate-800 dark:text-slate-300">
                             {faq.question}
                           </span>
@@ -121,7 +163,7 @@ export function Faq(): JSX.Element {
                               aria-hidden="true"
                             />
                           </span>
-                        </Disclosure.Button>
+                        </DisclosureButton>
                       </dt>
                       <Transition
                         enter="transition duration-100 ease-out"
@@ -131,11 +173,11 @@ export function Faq(): JSX.Element {
                         leaveFrom="transform translate-y-0 opacity-100"
                         leaveTo="transform -translate-y-6 opacity-0"
                       >
-                        <Disclosure.Panel as="dd" className="mt-2 pr-12">
+                        <DisclosurePanel as="dd" className="mt-2 pr-12">
                           <p className="text-base text-slate-500 dark:text-slate-400">
                             {faq.answer}
                           </p>
-                        </Disclosure.Panel>
+                        </DisclosurePanel>
                       </Transition>
                     </>
                   )}

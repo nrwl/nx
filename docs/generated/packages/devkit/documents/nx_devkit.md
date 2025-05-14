@@ -20,7 +20,7 @@ It only uses language primitives and immutable objects
 ### Classes
 
 - [AggregateCreateNodesError](../../devkit/documents/AggregateCreateNodesError)
-- [ProjectGraphBuilder](../../devkit/documents/ProjectGraphBuilder)
+- [StaleProjectGraphCacheError](../../devkit/documents/StaleProjectGraphCacheError)
 
 ### Interfaces
 
@@ -49,7 +49,6 @@ It only uses language primitives and immutable objects
 - [ProjectGraph](../../devkit/documents/ProjectGraph)
 - [ProjectGraphDependency](../../devkit/documents/ProjectGraphDependency)
 - [ProjectGraphExternalNode](../../devkit/documents/ProjectGraphExternalNode)
-- [ProjectGraphProcessorContext](../../devkit/documents/ProjectGraphProcessorContext)
 - [ProjectGraphProjectNode](../../devkit/documents/ProjectGraphProjectNode)
 - [ProjectsConfigurations](../../devkit/documents/ProjectsConfigurations)
 - [RemoteCache](../../devkit/documents/RemoteCache)
@@ -61,6 +60,7 @@ It only uses language primitives and immutable objects
 - [Task](../../devkit/documents/Task)
 - [TaskGraph](../../devkit/documents/TaskGraph)
 - [TaskHasher](../../devkit/documents/TaskHasher)
+- [TaskResult](../../devkit/documents/TaskResult)
 - [Tree](../../devkit/documents/Tree)
 - [Workspace](../../devkit/documents/Workspace)
 
@@ -84,13 +84,15 @@ It only uses language primitives and immutable objects
 - [Hasher](../../devkit/documents/Hasher)
 - [ImplicitDependency](../../devkit/documents/ImplicitDependency)
 - [ImplicitDependencyEntry](../../devkit/documents/ImplicitDependencyEntry)
+- [Migration](../../devkit/documents/Migration)
 - [NxPlugin](../../devkit/documents/NxPlugin)
-- [NxPluginV1](../../devkit/documents/NxPluginV1)
 - [NxPluginV2](../../devkit/documents/NxPluginV2)
 - [PackageManager](../../devkit/documents/PackageManager)
 - [PluginConfiguration](../../devkit/documents/PluginConfiguration)
-- [ProjectGraphNode](../../devkit/documents/ProjectGraphNode)
-- [ProjectTargetConfigurator](../../devkit/documents/ProjectTargetConfigurator)
+- [PostTasksExecution](../../devkit/documents/PostTasksExecution)
+- [PostTasksExecutionContext](../../devkit/documents/PostTasksExecutionContext)
+- [PreTasksExecution](../../devkit/documents/PreTasksExecution)
+- [PreTasksExecutionContext](../../devkit/documents/PreTasksExecutionContext)
 - [ProjectType](../../devkit/documents/ProjectType)
 - [ProjectsMetadata](../../devkit/documents/ProjectsMetadata)
 - [PromiseExecutor](../../devkit/documents/PromiseExecutor)
@@ -99,13 +101,13 @@ It only uses language primitives and immutable objects
 - [StringChange](../../devkit/documents/StringChange)
 - [TargetDefaults](../../devkit/documents/TargetDefaults)
 - [TaskGraphExecutor](../../devkit/documents/TaskGraphExecutor)
+- [TaskResults](../../devkit/documents/TaskResults)
 - [ToJSOptions](../../devkit/documents/ToJSOptions)
 - [WorkspaceJsonConfiguration](../../devkit/documents/WorkspaceJsonConfiguration)
 
 ### Variables
 
 - [NX_VERSION](../../devkit/documents/NX_VERSION): string
-- [appRootPath](../../devkit/documents/appRootPath): string
 - [cacheDir](../../devkit/documents/cacheDir): string
 - [logger](../../devkit/documents/logger): Object
 - [output](../../devkit/documents/output): CLIOutput

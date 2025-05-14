@@ -1,6 +1,12 @@
+<%_ if (isTs) { _%>
 <script setup lang="ts">
 // defineProps<{}>()
 </script>
+<%_ } else { _%>
+<script setup>
+// defineProps({})
+</script>
+<%_ } _%>
 
 <template>
   <p>Welcome to <%= className %>!</p>

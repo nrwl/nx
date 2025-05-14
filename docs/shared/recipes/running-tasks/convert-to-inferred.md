@@ -1,3 +1,8 @@
+---
+title: Migrate to Inferred Tasks (Project Crystal)
+description: Learn how to convert your Nx workspace from explicit executor configuration to using inferred tasks for reduced configuration and improved caching.
+---
+
 # Migrate to Inferred Tasks (Project Crystal)
 
 In this recipe, you'll learn how to migrate an existing Nx workspace from using executors in `project.json` to using [inferred tasks](/concepts/inferred-tasks).
@@ -19,7 +24,17 @@ For the best experience, we recommend that you [migrate](/features/automate-upda
 npx nx migrate latest
 ```
 
-## Migrate a Plugin
+## Migrate All Plugins
+
+You can use the `infer-targets` generator to quickly migrate all available plugins to use inferred tasks. See the sections below for more details on the individual plugins' migration processes.
+
+```shell
+npx nx g infer-targets
+```
+
+The generator will automatically detect all available `convert-to-inferred` generators and run the ones you choose. If you only want to try it on a single project, pass the `--project` option.
+
+## Migrate a Single Plugin
 
 Most of the official plugins come with a `convert-to-inferred` generator. This generator will
 
@@ -42,7 +57,7 @@ None of the above
 For third-party plugins that provide `convert-to-inferred` generators, you should pick the `None of the above` option and type in the name of the package manually. Alternatively, you can also provide the package explicitly with `nx g <plugin>:convert-to-inferred`.
 {% /callout %}
 
-We recommend that you migrate the plugins one at a time, and check that the configurations are correct before continuing to the next plugin. If you only want to try it on a single project, pass the `--project` option.
+We recommend that you check that the configurations are correct before continuing to the next plugin. If you only want to try it on a single project, pass the `--project` option.
 
 ## Understand the Migration Process
 
@@ -69,7 +84,8 @@ For example, if we migrated the `@nx/vite` plugin for a single app (i.e. `nx g @
         "serve": {
           "executor": "nx:run-commands",
           "options": {
-            "command": "vite dev"
+            "command": "vite dev",
+            "continuous": true
           }
         },
         "build": {
@@ -96,7 +112,7 @@ For example, if we migrated the `@nx/vite` plugin for a single app (i.e. `nx g @
 You'll notice that the `serve` and `build` tasks are running the [Vite CLI](https://vitejs.dev/guide/cli.html) and there are no references to Nx executors. Since the targets directly invoke the Vite CLI, any options that may be passed to it can be passed via Nx commands. e.g. `nx serve demo --cors --port 8888` enables CORs and uses port `8888` using [Vite CLI options](https://vitejs.dev/guide/cli.html#options)
 The same CLI setup applies to other plugins as well.
 
-- `@nx/cypess` calls the [Cypress CLI](https://docs.cypress.io/guides/guides/command-line)
+- `@nx/cypress` calls the [Cypress CLI](https://docs.cypress.io/guides/guides/command-line)
 - `@nx/playwright` calls the [Playwright CLI](https://playwright.dev/docs/test-cli)
 - `@nx/webpack` calls the [Webpack CLI](https://webpack.js.org/api/cli/)
 - etc.

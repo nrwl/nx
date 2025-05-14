@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { toProjectName } from '../../config/to-project-name';
 import { readJsonFile, readYamlFile } from '../../utils/fileutils';
 import { combineGlobPatterns } from '../../utils/globs';
@@ -21,6 +21,11 @@ import {
   CreateNodesV2,
 } from '../../project-graph/plugins';
 import { basename } from 'path';
+import { hashObject } from '../../hasher/file-hasher';
+import {
+  PackageJsonConfigurationCache,
+  readPackageJsonConfigurationCache,
+} from '../../../plugins/package-json';
 
 export const createNodesV2: CreateNodesV2 = [
   combineGlobPatterns(
@@ -41,10 +46,14 @@ export const createNodesV2: CreateNodesV2 = [
       return projectJsonRoots.has(dirname(packageJsonPath));
     };
 
+    const cache = readPackageJsonConfigurationCache();
+
     return createNodesFromFiles(
       (packageJsonPath, options, context) => {
+        const isInPackageManagerWorkspaces =
+          isInPackageJsonWorkspaces(packageJsonPath);
         if (
-          !isInPackageJsonWorkspaces(packageJsonPath) &&
+          !isInPackageManagerWorkspaces &&
           !isNextToProjectJson(packageJsonPath)
         ) {
           // Skip if package.json is not part of the package.json workspaces and not next to a project.json.
@@ -53,7 +62,9 @@ export const createNodesV2: CreateNodesV2 = [
 
         return createNodeFromPackageJson(
           packageJsonPath,
-          context.workspaceRoot
+          context.workspaceRoot,
+          cache,
+          isInPackageManagerWorkspaces
         );
       },
       packageJsons,
@@ -83,7 +94,7 @@ function splitConfigFiles(configFiles: readonly string[]): {
 
 export function buildPackageJsonWorkspacesMatcher(
   workspaceRoot: string,
-  readJson: (string) => any
+  readJson: (path: string) => any
 ) {
   const patterns = getGlobPatternsFromPackageManagerWorkspaces(
     workspaceRoot,
@@ -120,15 +131,41 @@ export function buildPackageJsonWorkspacesMatcher(
 
 export function createNodeFromPackageJson(
   pkgJsonPath: string,
-  workspaceRoot: string
+  workspaceRoot: string,
+  cache: PackageJsonConfigurationCache,
+  isInPackageManagerWorkspaces: boolean
 ) {
   const json: PackageJson = readJsonFile(join(workspaceRoot, pkgJsonPath));
+
+  const projectRoot = dirname(pkgJsonPath);
+
+  const hash = hashObject({
+    ...json,
+    root: projectRoot,
+    isInPackageManagerWorkspaces,
+    // change this to bust the cache when making changes that result in different
+    // results for the same hash
+    bust: 1,
+  });
+
+  const cached = cache[hash];
+  if (cached) {
+    return {
+      projects: {
+        [cached.root]: cached,
+      },
+    };
+  }
+
   const project = buildProjectConfigurationFromPackageJson(
     json,
     workspaceRoot,
     pkgJsonPath,
-    readNxJson(workspaceRoot)
+    readNxJson(workspaceRoot),
+    isInPackageManagerWorkspaces
   );
+
+  cache[hash] = project;
   return {
     projects: {
       [project.root]: project,
@@ -140,7 +177,8 @@ export function buildProjectConfigurationFromPackageJson(
   packageJson: PackageJson,
   workspaceRoot: string,
   packageJsonPath: string,
-  nxJson: NxJsonConfiguration
+  nxJson: NxJsonConfiguration,
+  isInPackageManagerWorkspaces: boolean
 ): ProjectConfiguration & { name: string } {
   const normalizedPath = packageJsonPath.split('\\').join('/');
   const projectRoot = dirname(normalizedPath);
@@ -174,12 +212,19 @@ export function buildProjectConfigurationFromPackageJson(
 
   const projectConfiguration: ProjectConfiguration & { name: string } = {
     root: projectRoot,
-    sourceRoot: projectRoot,
     name,
     ...packageJson.nx,
-    targets: readTargetsFromPackageJson(packageJson),
+    targets: readTargetsFromPackageJson(
+      packageJson,
+      nxJson,
+      projectRoot,
+      workspaceRoot
+    ),
     tags: getTagsFromPackageJson(packageJson),
-    metadata: getMetadataFromPackageJson(packageJson),
+    metadata: getMetadataFromPackageJson(
+      packageJson,
+      isInPackageManagerWorkspaces
+    ),
   };
 
   if (
@@ -203,8 +248,14 @@ export function buildProjectConfigurationFromPackageJson(
  */
 export function getGlobPatternsFromPackageManagerWorkspaces(
   root: string,
-  readJson: <T extends Object>(path: string) => T = <T extends Object>(path) =>
-    readJsonFile<T>(join(root, path)) // making this an arg allows us to reuse in devkit
+  // allow overwriting these args so we can use them in devkit
+  readJson: <T extends Object>(path: string) => T = <T extends Object>(
+    path: string
+  ) => readJsonFile<T>(join(root, path)),
+  readYaml: <T extends Object>(path: string) => T = <T extends Object>(
+    path: string
+  ) => readYamlFile<T>(join(root, path)),
+  exists: (path: string) => boolean = (p) => existsSync(join(root, p))
 ): string[] {
   try {
     const patterns: string[] = [];
@@ -218,11 +269,10 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
       )
     );
 
-    if (existsSync(join(root, 'pnpm-workspace.yaml'))) {
+    if (exists('pnpm-workspace.yaml')) {
       try {
-        const { packages } = readYamlFile<{ packages: string[] }>(
-          join(root, 'pnpm-workspace.yaml')
-        );
+        const { packages } =
+          readYaml<{ packages: string[] }>('pnpm-workspace.yaml') ?? {};
         patterns.push(...normalizePatterns(packages || []));
       } catch (e: unknown) {
         output.warn({
@@ -234,7 +284,7 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
 
     if (existsSync(join(root, 'lerna.json'))) {
       try {
-        const { packages } = readJson<any>('lerna.json');
+        const { packages } = readJson<any>('lerna.json') ?? {};
         patterns.push(
           ...normalizePatterns(packages?.length > 0 ? packages : ['packages/*'])
         );

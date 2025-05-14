@@ -4,30 +4,19 @@ import type { NxJsonConfiguration } from '../../config/nx-json';
 import type { Tree } from '../tree';
 
 import { readJson, updateJson } from './json';
-import { readNxJson as readNxJsonFromDisk } from '../../config/nx-json';
-
-/**
- * @deprecated You must pass a {@link Tree}
- */
-export function readNxJson(): NxJsonConfiguration | null;
-export function readNxJson(tree: Tree): NxJsonConfiguration | null;
 
 /**
  * Reads nx.json
  */
-export function readNxJson(tree?: Tree): NxJsonConfiguration | null {
-  if (tree) {
-    if (!tree.exists('nx.json')) {
-      return null;
-    }
-    let nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-    if (nxJson.extends) {
-      nxJson = { ...readNxJsonExtends(tree, nxJson.extends), ...nxJson };
-    }
-    return nxJson;
-  } else {
-    return readNxJsonFromDisk();
+export function readNxJson(tree: Tree): NxJsonConfiguration | null {
+  if (!tree.exists('nx.json')) {
+    return null;
   }
+  let nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+  if (nxJson.extends) {
+    nxJson = { ...readNxJsonExtends(tree, nxJson.extends), ...nxJson };
+  }
+  return nxJson;
 }
 
 /**

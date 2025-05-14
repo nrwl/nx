@@ -1,8 +1,13 @@
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ChildProcess, spawn } from 'child_process';
-import { readFileSync, statSync } from 'fs';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { FileHandle, open } from 'fs/promises';
-import { ensureDirSync, ensureFileSync } from 'fs-extra';
 import { connect } from 'net';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
@@ -28,8 +33,11 @@ import {
   DaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types';
-import { IS_WASM, NxWorkspaceFiles, TaskRun } from '../../native';
-import { HandleGlobMessage } from '../message-types/glob';
+import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
+import {
+  HandleGlobMessage,
+  HandleMultiGlobMessage,
+} from '../message-types/glob';
 import {
   GET_NX_WORKSPACE_FILES,
   HandleNxWorkspaceFilesMessage,
@@ -42,9 +50,16 @@ import {
   GET_FILES_IN_DIRECTORY,
   HandleGetFilesInDirectoryMessage,
 } from '../message-types/get-files-in-directory';
-import { HASH_GLOB, HandleHashGlobMessage } from '../message-types/hash-glob';
 import {
+  HASH_GLOB,
+  HASH_MULTI_GLOB,
+  HandleHashGlobMessage,
+  HandleHashMultiGlobMessage,
+} from '../message-types/hash-glob';
+import {
+  GET_ESTIMATED_TASK_TIMINGS,
   GET_FLAKY_TASKS,
+  HandleGetEstimatedTaskTimings,
   HandleGetFlakyTasks,
   HandleRecordTaskRunsMessage,
   RECORD_TASK_RUNS,
@@ -54,7 +69,10 @@ import {
   GET_SYNC_GENERATOR_CHANGES,
   type HandleGetSyncGeneratorChangesMessage,
 } from '../message-types/get-sync-generator-changes';
-import type { SyncGeneratorChangesResult } from '../../utils/sync-generators';
+import type {
+  FlushSyncGeneratorChangesResult,
+  SyncGeneratorRunResult,
+} from '../../utils/sync-generators';
 import {
   GET_REGISTERED_SYNC_GENERATORS,
   type HandleGetRegisteredSyncGeneratorsMessage,
@@ -67,6 +85,17 @@ import {
   FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
   type HandleFlushSyncGeneratorChangesToDiskMessage,
 } from '../message-types/flush-sync-generator-changes-to-disk';
+import { DelayedSpinner } from '../../utils/delayed-spinner';
+import {
+  PostTasksExecutionContext,
+  PreTasksExecutionContext,
+} from '../../project-graph/plugins/public-api';
+import {
+  HandlePostTasksExecutionMessage,
+  HandlePreTasksExecutionMessage,
+  POST_TASKS_EXECUTION,
+  PRE_TASKS_EXECUTION,
+} from '../message-types/run-tasks-execution-hooks';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -113,10 +142,7 @@ export class DaemonClient {
 
   enabled() {
     if (this._enabled === undefined) {
-      // TODO(v19): Add migration to move it out of existing configs and remove the ?? here.
-      const useDaemonProcessOption =
-        this.nxJson?.useDaemonProcess ??
-        this.nxJson?.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;
+      const useDaemonProcessOption = this.nxJson?.useDaemonProcess;
       const env = process.env.NX_DAEMON;
 
       // env takes precedence
@@ -187,6 +213,14 @@ export class DaemonClient {
     projectGraph: ProjectGraph;
     sourceMaps: ConfigurationSourceMaps;
   }> {
+    let spinner: DelayedSpinner;
+    // If the graph takes a while to load, we want to show a spinner.
+    spinner = new DelayedSpinner(
+      'Calculating the project graph on the Nx Daemon'
+    ).scheduleMessageUpdate(
+      'Calculating the project graph on the Nx Daemon is taking longer than expected. Re-run with NX_DAEMON=false to see more details.',
+      { ciDelay: 60_000, delay: 30_000 }
+    );
     try {
       const response = await this.sendToDaemonViaQueue({
         type: 'REQUEST_PROJECT_GRAPH',
@@ -201,6 +235,8 @@ export class DaemonClient {
       } else {
         throw e;
       }
+    } finally {
+      spinner?.cleanup();
     }
   }
 
@@ -311,6 +347,15 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
+  multiGlob(globs: string[], exclude?: string[]): Promise<string[][]> {
+    const message: HandleMultiGlobMessage = {
+      type: 'MULTI_GLOB',
+      globs,
+      exclude,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
   getWorkspaceContextFileData(): Promise<FileData[]> {
     const message: HandleContextFileDataMessage = {
       type: GET_CONTEXT_FILE_DATA,
@@ -345,10 +390,29 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
+  hashMultiGlob(globGroups: string[][]): Promise<string[]> {
+    const message: HandleHashMultiGlobMessage = {
+      type: HASH_MULTI_GLOB,
+      globGroups: globGroups,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
   getFlakyTasks(hashes: string[]): Promise<string[]> {
     const message: HandleGetFlakyTasks = {
       type: GET_FLAKY_TASKS,
       hashes,
+    };
+
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  async getEstimatedTaskTimings(
+    targets: TaskTarget[]
+  ): Promise<Record<string, number>> {
+    const message: HandleGetEstimatedTaskTimings = {
+      type: GET_ESTIMATED_TASK_TIMINGS,
+      targets,
     };
 
     return this.sendToDaemonViaQueue(message);
@@ -364,7 +428,7 @@ export class DaemonClient {
 
   getSyncGeneratorChanges(
     generators: string[]
-  ): Promise<SyncGeneratorChangesResult[]> {
+  ): Promise<SyncGeneratorRunResult[]> {
     const message: HandleGetSyncGeneratorChangesMessage = {
       type: GET_SYNC_GENERATOR_CHANGES,
       generators,
@@ -372,7 +436,9 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
-  flushSyncGeneratorChangesToDisk(generators: string[]): Promise<void> {
+  flushSyncGeneratorChangesToDisk(
+    generators: string[]
+  ): Promise<FlushSyncGeneratorChangesResult> {
     const message: HandleFlushSyncGeneratorChangesToDiskMessage = {
       type: FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
       generators,
@@ -380,7 +446,10 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
-  getRegisteredSyncGenerators(): Promise<string[]> {
+  getRegisteredSyncGenerators(): Promise<{
+    globalGenerators: string[];
+    taskGenerators: string[];
+  }> {
     const message: HandleGetRegisteredSyncGeneratorsMessage = {
       type: GET_REGISTERED_SYNC_GENERATORS,
     };
@@ -397,6 +466,26 @@ export class DaemonClient {
       createdFiles,
       updatedFiles,
       deletedFiles,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  async runPreTasksExecution(
+    context: PreTasksExecutionContext
+  ): Promise<NodeJS.ProcessEnv[]> {
+    const message: HandlePreTasksExecutionMessage = {
+      type: PRE_TASKS_EXECUTION,
+      context,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  async runPostTasksExecution(
+    context: PostTasksExecutionContext
+  ): Promise<void> {
+    const message: HandlePostTasksExecutionMessage = {
+      type: POST_TASKS_EXECUTION,
+      context,
     };
     return this.sendToDaemonViaQueue(message);
   }
@@ -556,8 +645,16 @@ export class DaemonClient {
   }
 
   async startInBackground(): Promise<ChildProcess['pid']> {
-    ensureDirSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
-    ensureFileSync(DAEMON_OUTPUT_LOG_FILE);
+    if (global.NX_PLUGIN_WORKER) {
+      throw new Error(
+        'Fatal Error: Something unexpected has occurred. Plugin Workers should not start a new daemon process. Please report this issue.'
+      );
+    }
+
+    mkdirSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE, { recursive: true });
+    if (!existsSync(DAEMON_OUTPUT_LOG_FILE)) {
+      writeFileSync(DAEMON_OUTPUT_LOG_FILE, '');
+    }
 
     this._out = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
     this._err = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
@@ -569,7 +666,7 @@ export class DaemonClient {
         cwd: workspaceRoot,
         stdio: ['ignore', this._out.fd, this._err.fd],
         detached: true,
-        windowsHide: true,
+        windowsHide: false,
         shell: false,
         env: {
           ...process.env,
@@ -611,7 +708,7 @@ export class DaemonClient {
       output.error({
         title:
           err?.message ||
-          'Something unexpected went wrong when stopping the server',
+          'Something unexpected went wrong when stopping the daemon server',
       });
     }
 

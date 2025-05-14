@@ -1,4 +1,11 @@
+---
+title: 'Cache Task Results'
+description: 'Learn how to use Nx computation caching to speed up task execution and reduce CI/CD costs by never rebuilding the same code twice.'
+---
+
 # Cache Task Results
+
+{% youtube src="https://youtu.be/o-6jb78uuP0" title="Remote Caching with Nx Replay" /%}
 
 Rebuilding and retesting the same code repeatedly is costly. Nx offers a sophisticated and battle-tested computation caching system that ensures **code is never rebuilt twice**. This:
 
@@ -56,13 +63,17 @@ the result of the test run.
 
 ## Enable Remote Caching
 
-By default, Nx caches task results locally. The biggest benefit of caching comes from using remote caching in CI, where you can **share the cache between different runs**. To enable remote caching, connect your workspace to [Nx Cloud](/nx-cloud) by running the following command:
+By default, Nx caches task results locally. The biggest benefit of caching comes from using remote caching in CI, where you can **share the cache between different runs**. Nx comes with a managed remote caching solution built on top of Nx Cloud.
+
+To enable remote caching, connect your workspace to [Nx Cloud](/nx-cloud) by running the following command:
 
 ```shell
 npx nx connect
 ```
 
-Learn more about [remote caching](/ci/features/remote-cache).
+Learn more about [remote caching with Nx Cloud](/ci/features/remote-cache).
+
+You can also **self-host your remote cache** with one of the official Nx packages or build your own remote caching server implementation. [Learn more here.](/recipes/running-tasks/self-hosted-caching)
 
 ## Fine-tune Caching with Inputs and Outputs
 

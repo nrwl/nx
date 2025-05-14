@@ -9,36 +9,30 @@
     "type": "object",
     "examples": [
       {
-        "command": "nx g @nx/angular:scam my-sample --directory=my-lib/src/lib/my-sample",
-        "description": "Generate a `MySampleComponent` component in the `my-lib` library."
+        "description": "Generate a component with the exported symbol matching the file name. It results in the component `FooComponent` at `mylib/src/lib/foo.component.ts`",
+        "command": "nx g @nx/angular:scam mylib/src/lib/foo.component.ts"
+      },
+      {
+        "description": "Generate a component without providing the file extension. It results in the component `FooComponent` at `mylib/src/lib/foo.component.ts`",
+        "command": "nx g @nx/angular:scam mylib/src/lib/foo"
+      },
+      {
+        "description": "Generate a component with the exported symbol different from the file name. It results in the component `CustomComponent` at `mylib/src/lib/foo.component.ts`",
+        "command": "nx g @nx/angular:scam mylib/src/lib/foo --name=custom"
       }
     ],
     "description": "Creates a new Angular SCAM.",
     "additionalProperties": false,
     "properties": {
+      "path": {
+        "type": "string",
+        "description": "The file path to the SCAM. Relative to the current working directory.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What is the SCAM file path?"
+      },
       "name": {
         "type": "string",
-        "description": "The name of the component.",
-        "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the component?"
-      },
-      "directory": {
-        "type": "string",
-        "description": "The directory at which to create the SCAM files. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
-        "aliases": ["dir", "path"],
-        "x-priority": "important"
-      },
-      "nameAndDirectoryFormat": {
-        "description": "Whether to generate the SCAM in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-        "type": "string",
-        "enum": ["as-provided", "derived"]
-      },
-      "project": {
-        "type": "string",
-        "description": "The name of the project.",
-        "$default": { "$source": "projectName" },
-        "x-dropdown": "projects",
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20."
+        "description": "The component symbol name. Defaults to the last segment of the file path."
       },
       "displayBlock": {
         "description": "Specifies if the style will contain `:host { display: block; }`.",
@@ -88,12 +82,6 @@
         "default": true,
         "x-priority": "important"
       },
-      "flat": {
-        "type": "boolean",
-        "description": "Create the new files at the top level of the current project.",
-        "default": false,
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v20."
-      },
       "selector": {
         "type": "string",
         "format": "html-selector",
@@ -131,7 +119,7 @@
         "x-priority": "internal"
       }
     },
-    "required": ["name"],
+    "required": ["path"],
     "presets": []
   },
   "description": "Generate a component with an accompanying Single Component Angular Module (SCAM).",

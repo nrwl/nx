@@ -1,0 +1,17 @@
+{
+  "name": "19.6.0-package-updates",
+  "version": "19.6.0-beta.1",
+  "packages": {
+    "webpack-dev-server": {
+      "version": "^5.0.4",
+      "alwaysAddToPackageJson": false
+    }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/webpack",
+  "schema": null,
+  "type": "migration"
+}

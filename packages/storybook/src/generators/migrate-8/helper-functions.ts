@@ -2,14 +2,13 @@ import {
   generateFiles,
   getPackageManagerCommand,
   output,
-  readProjectConfiguration,
   Tree,
   workspaceRoot,
   visitNotIgnoredFiles,
   joinPathFragments,
   readJson,
+  detectPackageManager,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { fileExists } from 'nx/src/utils/fileutils';
 import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
@@ -19,7 +18,8 @@ export function onlyShowGuide(storybookProjects: {
     configDir: string;
   };
 }) {
-  const pm = getPackageManagerCommand();
+  const packageManager = detectPackageManager();
+  const pm = getPackageManagerCommand(packageManager);
 
   output.log({
     title: 'Storybook 8 Migration Guide',
@@ -27,13 +27,17 @@ export function onlyShowGuide(storybookProjects: {
       `You can run the following commands manually to upgrade your Storybook projects to Storybook 8:`,
       ``,
       `1. Call the Storybook upgrade script:`,
-      `${pm.exec} storybook@latest upgrade`,
+      `${pm.exec} ${
+        packageManager === 'yarn' ? 'storybook' : 'storybook@latest'
+      } upgrade`,
       ``,
       `2. Call the Storybook automigrate scripts:`,
       `Run the following commands for each Storybook project:`,
       ...Object.entries(storybookProjects).map(
         ([_projectName, storybookProjectInfo]) => {
-          return `${pm.exec} storybook@latest automigrate --config-dir ${storybookProjectInfo.configDir}`;
+          return `${pm.exec} ${
+            packageManager === 'yarn' ? 'storybook' : 'storybook@latest'
+          } automigrate --config-dir ${storybookProjectInfo.configDir}`;
         }
       ),
       ``,
@@ -174,9 +178,7 @@ export function checkStorybookInstalled(packageJson): boolean {
     (packageJson.dependencies['@storybook/core-server'] ||
       packageJson.devDependencies['@storybook/core-server']) &&
     (packageJson.dependencies['@nx/storybook'] ||
-      packageJson.devDependencies['@nx/storybook'] ||
-      packageJson.dependencies['@nrwl/storybook'] ||
-      packageJson.devDependencies['@nrwl/storybook'])
+      packageJson.devDependencies['@nx/storybook'])
   );
 }
 

@@ -16,8 +16,6 @@
     "rootDir": ".",
     "allowJs": true,
     "paths": {
-      "@nrwl/tao": ["packages/tao"],
-      "@nrwl/tao/*": ["packages/tao/*"],
       "@nx/angular": ["packages/angular"],
       "@nx/angular/*": ["packages/angular/*"],
       "@nx/cypress": ["packages/cypress"],
@@ -45,10 +43,14 @@
         "graph/ui-project-details/src/index.ts"
       ],
       "@nx/graph-internal/ui-theme": ["graph/ui-theme/src/index.ts"],
+      "@nx/graph-migrate": ["graph/migrate/src/index.ts"],
+      "@nx/graph/ui-common": ["graph/ui-common/src/index.ts"],
       "@nx/jest": ["packages/jest"],
       "@nx/jest/*": ["packages/jest/*"],
       "@nx/js": ["packages/js/src/index.ts"],
       "@nx/js/*": ["packages/js/*"],
+      "@nx/module-federation": ["packages/module-federation"],
+      "@nx/module-federation/*": ["packages/module-federation/*"],
       "@nx/nest": ["packages/nest"],
       "@nx/next": ["packages/next"],
       "@nx/next/*": ["packages/next/*"],
@@ -58,6 +60,9 @@
       "@nx/nuxt/*": ["packages/nuxt/*"],
       "@nx/nx-dev/data-access-careers/node-only": [
         "nx-dev/data-access-careers/src/node.index.ts"
+      ],
+      "@nx/nx-dev/data-access-courses": [
+        "nx-dev/data-access-courses/src/index.ts"
       ],
       "@nx/nx-dev/data-access-documents": [
         "nx-dev/data-access-documents/src/index.ts"
@@ -100,19 +105,27 @@
       "@nx/nx-dev/ui-company": ["nx-dev/ui-company/src/index.ts"],
       "@nx/nx-dev/ui-conference": ["nx-dev/ui-conference/src/index.ts"],
       "@nx/nx-dev/ui-contact": ["nx-dev/ui-contact/src/index.ts"],
+      "@nx/nx-dev/ui-courses": ["nx-dev/ui-courses/src/index.ts"],
       "@nx/nx-dev/ui-customers": ["nx-dev/ui-customers/src/index.ts"],
       "@nx/nx-dev/ui-enterprise": ["nx-dev/ui-enterprise/src/index.ts"],
       "@nx/nx-dev/ui-fence": ["nx-dev/ui-fence/src/index.ts"],
+      "@nx/nx-dev/ui-gradle": ["nx-dev/ui-gradle/src/lib/index.ts"],
       "@nx/nx-dev/ui-home": ["nx-dev/ui-home/src/index.ts"],
       "@nx/nx-dev/ui-icons": ["nx-dev/ui-icons/src/index.ts"],
       "@nx/nx-dev/ui-markdoc": ["nx-dev/ui-markdoc/src/index.ts"],
       "@nx/nx-dev/ui-member-card": ["nx-dev/ui-member-card/src/index.ts"],
+      "@nx/nx-dev/ui-partners": ["nx-dev/ui-partners/src/index.ts"],
       "@nx/nx-dev/ui-podcast": ["nx-dev/ui-podcast/src/index.ts"],
+      "@nx/nx-dev/ui-powerpack": ["nx-dev/ui-powerpack/src/index.ts"],
       "@nx/nx-dev/ui-pricing": ["nx-dev/ui-pricing/src/index.ts"],
       "@nx/nx-dev/ui-primitives": ["nx-dev/ui-primitives/src/index.ts"],
+      "@nx/nx-dev/ui-react": ["nx-dev/ui-react/src/index.ts"],
       "@nx/nx-dev/ui-references": ["nx-dev/ui-references/src/index.ts"],
+      "@nx/nx-dev/ui-remote-cache": ["nx-dev/ui-remote-cache/src/index.ts"],
       "@nx/nx-dev/ui-sponsor-card": ["nx-dev/ui-sponsor-card/src/index.ts"],
       "@nx/nx-dev/ui-theme": ["nx-dev/ui-theme/src/index.ts"],
+      "@nx/nx-dev/ui-video-courses": ["nx-dev/ui-video-courses/src/index.ts"],
+      "@nx/nx-dev/ui-webinar": ["nx-dev/ui-webinar/src/index.ts"],
       "@nx/nx-dev/util-ai": ["nx-dev/util-ai/src/index.ts"],
       "@nx/playwright": ["packages/playwright/index.ts"],
       "@nx/playwright/*": ["packages/playwright/*"],
@@ -126,8 +139,13 @@
       "@nx/remix/*": ["packages/remix/*"],
       "@nx/rollup": ["packages/rollup"],
       "@nx/rollup/*": ["packages/rollup/*"],
+      "@nx/rsbuild": ["packages/rsbuild/"],
+      "@nx/rsbuild/*": ["packages/rsbuild/*"],
+      "@nx/rspack": ["packages/rspack/src"],
+      "@nx/rspack/*": ["packages/rspack/src/*"],
       "@nx/storybook": ["packages/storybook"],
       "@nx/storybook/*": ["packages/storybook/*"],
+      "@nx/tutorialkit": ["nx-dev/tutorialkit/src/index.ts"],
       "@nx/typedoc-theme": ["typedoc-theme/src/index.ts"],
       "@nx/ui-scrollable-content": [
         "nx-dev/ui-scrollable-content/src/index.ts"
@@ -142,6 +160,9 @@
       "@nx/webpack/*": ["packages/webpack/*"],
       "@nx/workspace": ["packages/workspace"],
       "@nx/workspace-plugin": ["tools/workspace-plugin/src/index.ts"],
+      "@nx/workspace-plugin/conformance-rules/*": [
+        "tools/workspace-plugin/src/conformance-rules/*"
+      ],
       "@nx/workspace/*": ["packages/workspace/*"],
       "create-nx-workspace": ["packages/create-nx-workspace/index.ts"],
       "create-nx-workspace/*": ["packages/create-nx-workspace/*"],

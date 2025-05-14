@@ -1,6 +1,6 @@
 {
   "name": "application",
-  "factory": "./src/generators/application/application#applicationGeneratorInternal",
+  "factory": "./src/generators/application/application",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "GeneratorNxApp",
@@ -9,22 +9,17 @@
     "type": "object",
     "cli": "nx",
     "properties": {
-      "name": {
-        "description": "The name of the application.",
-        "type": "string",
-        "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the application?",
-        "pattern": "^[a-zA-Z][^:]*$"
-      },
       "directory": {
         "description": "The directory of the new application.",
         "type": "string",
-        "x-priority": "important"
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "Which directory do you want to create the application in?"
       },
-      "projectNameAndRootFormat": {
-        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "name": {
+        "description": "The name of the application.",
         "type": "string",
-        "enum": ["as-provided", "derived"]
+        "pattern": "^[a-zA-Z][^:]*$",
+        "x-priority": "important"
       },
       "style": {
         "description": "The file extension to be used for style files.",
@@ -101,8 +96,9 @@
       },
       "unitTestRunner": {
         "type": "string",
-        "enum": ["jest", "none"],
+        "enum": ["jest", "vitest", "none"],
         "description": "Test runner to use for unit tests.",
+        "x-prompt": "Which unit test runner would you like to use?",
         "default": "jest"
       },
       "e2eTestRunner": {
@@ -130,12 +126,6 @@
         "type": "boolean",
         "description": "Create an application with stricter type checking and build optimization options.",
         "default": true
-      },
-      "standaloneConfig": {
-        "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-        "type": "boolean",
-        "default": true,
-        "x-deprecated": "Nx only supports standaloneConfig"
       },
       "port": {
         "type": "number",
@@ -170,9 +160,10 @@
         "default": false
       },
       "bundler": {
-        "description": "Bundler to use to build the application. It defaults to `esbuild` for Angular versions >= 17.0.0. Otherwise, it defaults to `webpack`. _Note: The `esbuild` bundler is only considered stable from Angular v17._",
+        "description": "Bundler to use to build the application.",
         "type": "string",
-        "enum": ["webpack", "esbuild"],
+        "enum": ["esbuild", "rspack", "webpack"],
+        "default": "esbuild",
         "x-prompt": "Which bundler do you want to use to build the application?",
         "x-priority": "important"
       },
@@ -181,17 +172,21 @@
         "type": "boolean",
         "x-prompt": "Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)?",
         "default": false
+      },
+      "serverRouting": {
+        "description": "Creates a server application using the Server Routing and App Engine APIs (Developer Preview). _Note: this is only supported in Angular versions >= 19.0.0_.",
+        "type": "boolean"
       }
     },
     "additionalProperties": false,
-    "required": ["name"],
-    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Application\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nx/angular:application my-app\n```\n\n{% /tab %}\n\n{% tab label=\"Specify directory and style extension\" %}\n\nCreate an application named `my-app` in the `my-dir` directory and use `scss` for styles:\n\n{% callout type=\"note\" title=\"Directory Flag Behavior Changes\" %}\nThe command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, use `--directory=my-dir`. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.\n{% /callout %}\n\n```bash\nnx g @nx/angular:app my-app --directory=my-dir/my-app --style=scss\n```\n\n{% /tab %}\n\n{% tab label=\"Single File Components application\" %}\n\nCreate an application with Single File Components (inline styles and inline templates):\n\n```bash\nnx g @nx/angular:app my-app --inlineStyle --inlineTemplate\n```\n\n{% /tab %}\n\n{% tab label=\"Set custom prefix and tags\" %}\n\nSet the prefix to apply to generated selectors and add tags to the application (used for linting).\n\n```bash\nnx g @nx/angular:app my-app --prefix=admin --tags=scope:admin,type:ui\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "required": ["directory"],
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Application\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nx/angular:application apps/my-app\n```\n\n{% /tab %}\n\n{% tab label=\"Specify style extension\" %}\n\nCreate an application named `my-app` in the `my-dir` directory and use `scss` for styles:\n\n```bash\nnx g @nx/angular:app my-dir/my-app --style=scss\n```\n\n{% /tab %}\n\n{% tab label=\"Single File Components application\" %}\n\nCreate an application with Single File Components (inline styles and inline templates):\n\n```bash\nnx g @nx/angular:app apps/my-app --inlineStyle --inlineTemplate\n```\n\n{% /tab %}\n\n{% tab label=\"Set custom prefix and tags\" %}\n\nSet the prefix to apply to generated selectors and add tags to the application (used for linting).\n\n```bash\nnx g @nx/angular:app apps/my-app --prefix=admin --tags=scope:admin,type:ui\n```\n\n{% /tab %}\n{% /tabs %}\n",
     "presets": []
   },
   "aliases": ["app"],
   "x-type": "application",
   "description": "Creates an Angular application.",
-  "implementation": "/packages/angular/src/generators/application/application#applicationGeneratorInternal.ts",
+  "implementation": "/packages/angular/src/generators/application/application.ts",
   "hidden": false,
   "path": "/packages/angular/src/generators/application/schema.json",
   "type": "generator"

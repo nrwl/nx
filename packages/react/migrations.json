@@ -1,47 +1,5 @@
 {
   "generators": {
-    "update-16-0-0-add-nx-packages": {
-      "cli": "nx",
-      "version": "16.0.0-beta.1",
-      "description": "Replace @nrwl/react with @nx/react",
-      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
-    },
-    "update-16-2-0-remove-package": {
-      "cli": "nx",
-      "version": "16.2.0-beta.0",
-      "description": "Remove react-test-renderer from package.json",
-      "implementation": "./src/migrations/update-16-2-0-remove-package/update-16-2-0-remove-package"
-    },
-    "remove-types-react-router-dom": {
-      "cli": "nx",
-      "version": "16.3.0-beta.2",
-      "description": "Remove @types/react-router-dom from package.json",
-      "implementation": "./src/migrations/update-16-3-0/remove-types-react-router-dom-package"
-    },
-    "add-babel-core": {
-      "cli": "nx",
-      "version": "16.7.0-beta.2",
-      "description": "Add @babel/core to package.json if @babel/preset-react is present",
-      "implementation": "./src/migrations/update-16-7-0/add-babel-core"
-    },
-    "update-16-7-0-add-typings": {
-      "cli": "nx",
-      "version": "16.7.0-beta.2",
-      "description": "Add @nx/react types to tsconfig types array",
-      "implementation": "./src/migrations/update-16-7-0-add-typings/update-16-7-0-add-typings"
-    },
-    "add-module-federation-env-var-to-target-defaults": {
-      "cli": "nx",
-      "version": "18.0.0-beta.0",
-      "description": "Add NX_MF_DEV_SERVER_STATIC_REMOTES to inputs for task hashing when '@nx/webpack:webpack' is used for Module Federation.",
-      "factory": "./src/migrations/update-18-0-0/add-mf-env-var-to-target-defaults"
-    },
-    "fix-target-defaults-for-webpack": {
-      "cli": "nx",
-      "version": "18.1.1-beta.0",
-      "description": "Ensure targetDefaults inputs for task hashing when '@nx/webpack:webpack' is used are correct for Module Federation.",
-      "factory": "./src/migrations/update-18-1-1/fix-target-defaults-inputs"
-    },
     "update-19-6-0-turn-module-federation-dts-off": {
       "cli": "nx",
       "version": "19.6.0-beta.4",
@@ -59,117 +17,39 @@
       "version": "19.6.1-beta.0",
       "description": "Ensure Target Defaults are set correctly for Module Federation.",
       "factory": "./src/migrations/update-19-6-1/ensure-depends-on-for-mf"
+    },
+    "update-20-2-0-update-module-federation-config-import": {
+      "cli": "nx",
+      "version": "20.2.0-beta.2",
+      "description": "Update the ModuleFederationConfig import use @nx/module-federation.",
+      "factory": "./src/migrations/update-20-2-0/migrate-mf-imports-to-new-package"
+    },
+    "update-20-2-0-update-with-module-federation-import": {
+      "cli": "nx",
+      "version": "20.2.0-beta.2",
+      "description": "Update the withModuleFederation import use @nx/module-federation/webpack.",
+      "factory": "./src/migrations/update-20-2-0/migrate-with-mf-import-to-new-package"
+    },
+    "ensure-nx-module-federation-package": {
+      "cli": "nx",
+      "version": "20.3.0-beta.2",
+      "description": "If workspace includes Module Federation projects, ensure the new @nx/module-federation package is installed.",
+      "factory": "./src/migrations/update-20-3-0/ensure-nx-module-federation-package"
+    },
+    "add-mf-env-var-to-target-defaults": {
+      "cli": "nx",
+      "version": "20.4.0-beta.0",
+      "description": "Add NX_MF_DEV_REMOTES to inputs for task hashing when '@nx/webpack:webpack' or '@nx/rspack:rspack' is used for Module Federation.",
+      "factory": "./src/migrations/update-18-0-0/add-mf-env-var-to-target-defaults"
+    },
+    "update-21-0-0-update-babel-loose": {
+      "cli": "nx",
+      "version": "21.0.0-beta.11",
+      "description": "Replaces `classProperties.loose` option with `loose`.",
+      "factory": "./src/migrations/update-21-0-0/update-babel-loose"
     }
   },
   "packageJsonUpdates": {
-    "16.3.0": {
-      "version": "16.3.0-beta.2",
-      "packages": {
-        "react-router-dom": {
-          "version": "6.11.2",
-          "alwaysAddToPackageJson": false
-        },
-        "@svgr/rollup": {
-          "version": "^8.0.1",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "16.4.0-beta.4": {
-      "version": "16.4.0-beta.4",
-      "packages": {
-        "stylus": {
-          "version": "^0.59.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "16.4.0-beta.7": {
-      "version": "16.4.0-beta.7",
-      "packages": {
-        "@types/react": {
-          "version": "18.2.12",
-          "alwaysAddToPackageJson": false
-        },
-        "@types/react-dom": {
-          "version": "18.2.5",
-          "alwaysAddToPackageJson": false
-        },
-        "@types/react-is": {
-          "version": "18.2.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "16.4.0-beta.8": {
-      "version": "16.4.0-beta.8",
-      "packages": {
-        "@emotion/styled": {
-          "version": "11.11.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@emotion/react": {
-          "version": "11.11.1",
-          "alwaysAddToPackageJson": false
-        },
-        "@emotion/babel-plugin": {
-          "version": "11.11.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "16.4.0-beta.11": {
-      "version": "16.4.0-beta.11",
-      "packages": {
-        "@types/react": {
-          "version": "18.2.13",
-          "alwaysAddToPackageJson": false
-        },
-        "@types/react-dom": {
-          "version": "18.2.6",
-          "alwaysAddToPackageJson": false
-        },
-        "@types/react-is": {
-          "version": "18.2.1",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "16.5.0-beta.4": {
-      "version": "16.5.0-beta.4",
-      "packages": {
-        "@types/react": {
-          "version": "18.2.14",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "17.0.0-beta.0": {
-      "version": "17.0.0-beta.0",
-      "packages": {
-        "@types/react": {
-          "version": "18.2.24",
-          "alwaysAddToPackageJson": false
-        },
-        "@types/react-dom": {
-          "version": "18.2.9",
-          "alwaysAddToPackageJson": false
-        },
-        "@types/react-is": {
-          "version": "18.2.2",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "17.3.0": {
-      "version": "17.3.0-beta.3",
-      "packages": {
-        "@types/node": {
-          "version": "18.16.9",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "19.0.0": {
       "version": "19.0.0-beta.12",
       "packages": {
@@ -239,6 +119,58 @@
         },
         "@module-federation/node": {
           "version": "~2.5.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.0.0": {
+      "version": "20.0.0-beta.8",
+      "packages": {
+        "eslint-plugin-import": {
+          "version": "2.31.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.1.0": {
+      "version": "20.1.0-beta.0",
+      "packages": {
+        "eslint-plugin-react-hooks": {
+          "version": "5.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-jsx-a11y": {
+          "version": "6.10.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.2.0": {
+      "version": "20.2.0-beta.3",
+      "packages": {
+        "@module-federation/enhanced": {
+          "version": "0.7.6",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/runtime": {
+          "version": "0.7.6",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/sdk": {
+          "version": "0.7.6",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/node": {
+          "version": "2.6.11",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.3.0": {
+      "version": "20.3.0-beta.0",
+      "packages": {
+        "@testing-library/react": {
+          "version": "16.1.0",
           "alwaysAddToPackageJson": false
         }
       }

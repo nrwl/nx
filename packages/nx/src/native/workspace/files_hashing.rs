@@ -6,11 +6,11 @@ use rayon::prelude::*;
 use tracing::trace;
 
 use crate::native::hasher::hash_file_path;
-use crate::native::walker::{nx_walker, NxFile};
+use crate::native::walker::{NxFile, nx_walker};
 use crate::native::workspace::files_archive::{NxFileHashed, NxFileHashes};
 
 pub fn full_files_hash(workspace_root: &Path) -> NxFileHashes {
-    let files = nx_walker(workspace_root).collect::<Vec<_>>();
+    let files = nx_walker(workspace_root, true).collect::<Vec<_>>();
     trace!("Found {} files", files.len());
     hash_files(files).into_iter().collect()
 }
@@ -19,7 +19,7 @@ pub fn selective_files_hash(
     workspace_root: &Path,
     mut archived_files: NxFileHashes,
 ) -> NxFileHashes {
-    let files = nx_walker(workspace_root).collect::<Vec<_>>();
+    let files = nx_walker(workspace_root, true).collect::<Vec<_>>();
     let mut archived = vec![];
     let mut not_archived = vec![];
     let now = std::time::Instant::now();
@@ -61,7 +61,10 @@ fn hash_files(files: Vec<NxFile>) -> Vec<(String, NxFileHashed)> {
             })
             .collect::<Vec<_>>()
     } else {
-        trace!("hashing workspace files in {} chunks of {}", num_parallelism, chunks);
+        trace!(
+            "hashing workspace files in {} chunks of {}",
+            num_parallelism, chunks
+        );
         files
             .par_chunks(chunks)
             .flat_map_iter(|chunks| {
@@ -83,8 +86,8 @@ fn hash_files(files: Vec<NxFile>) -> Vec<(String, NxFileHashed)> {
 
 #[cfg(test)]
 mod tests {
-    use assert_fs::prelude::*;
     use assert_fs::TempDir;
+    use assert_fs::prelude::*;
 
     use crate::native::utils::get_mod_time;
     use crate::native::workspace::files_archive::{NxFileHashed, NxFileHashes};

@@ -23,7 +23,7 @@
       "description": "Create a Vue library."
     },
     "component": {
-      "factory": "./src/generators/component/component#componentGeneratorInternal",
+      "factory": "./src/generators/component/component",
       "schema": "./src/generators/component/schema.json",
       "aliases": ["c"],
       "x-type": "component",

@@ -9,7 +9,7 @@ export const schema = {
     type: 'object',
     examples: [
       {
-        command: 'nx g app myapp --directory=myorg',
+        command: 'nx g app apps/myorg/myapp',
         description: 'Generate `apps/myorg/myapp` and `apps/myorg/myapp-e2e`',
       },
     ],

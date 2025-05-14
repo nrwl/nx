@@ -2,31 +2,25 @@
   "$schema": "https://json-schema.org/schema",
   "$id": "GeneratorReactHost",
   "cli": "nx",
-  "title": "Generate Module Federation Setup for React Host App",
-  "description": "Create Module Federation configuration files for given React Host Application.",
+  "title": "Generate Module Federation Setup for React Consumer (Host) App",
+  "description": "Create Module Federation configuration files for given React Consumer (Host) Application.",
   "type": "object",
   "properties": {
-    "name": {
-      "type": "string",
-      "description": "The name of the host application to generate the Module Federation configuration",
-      "$default": {
-        "$source": "argv",
-        "index": 0
-      },
-      "x-prompt": "What name would you like to use as the host application?",
-      "pattern": "^[a-zA-Z][^:]*$",
-      "x-priority": "important"
-    },
     "directory": {
       "description": "The directory of the new application.",
       "type": "string",
       "alias": "dir",
-      "x-priority": "important"
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "Which directory do you want to create the application in?"
     },
-    "projectNameAndRootFormat": {
-      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+    "name": {
       "type": "string",
-      "enum": ["as-provided", "derived"]
+      "description": "The name of the Consumer (host) application to generate the Module Federation configuration",
+      "pattern": "^[a-zA-Z][^:]*$",
+      "x-priority": "important"
     },
     "style": {
       "description": "The file extension to be used for style files.",
@@ -80,7 +74,7 @@
     },
     "dynamic": {
       "type": "boolean",
-      "description": "Should the host application use dynamic federation?",
+      "description": "Should the Consumer (host) application use dynamic federation?",
       "default": false
     },
     "skipFormat": {
@@ -112,12 +106,6 @@
       "type": "string",
       "description": "Add tags to the application (used for linting).",
       "alias": "t"
-    },
-    "pascalCaseFiles": {
-      "type": "boolean",
-      "description": "Use pascal case component file name (e.g. App.tsx).",
-      "alias": "P",
-      "default": false
     },
     "classComponent": {
       "type": "boolean",
@@ -153,18 +141,19 @@
     },
     "remotes": {
       "type": "array",
-      "description": "A list of remote application names that the host application should consume.",
+      "description": "A list of Producer (remote) application names that the Consumer (host) application should consume.",
       "default": [],
-      "x-priority": "important"
+      "x-priority": "important",
+      "alias": "producers"
     },
     "devServerPort": {
       "type": "number",
-      "description": "The port for the dev server of the remote app.",
+      "description": "The port for the dev server of the Producer (remote) app.",
       "default": 4200,
       "x-priority": "important"
     },
     "ssr": {
-      "description": "Whether to configure SSR for the host application",
+      "description": "Whether to configure SSR for the Consumer (host) application",
       "type": "boolean",
       "default": false
     },
@@ -183,8 +172,16 @@
       "type": "boolean",
       "default": false,
       "x-priority": "internal"
+    },
+    "bundler": {
+      "description": "The bundler to use.",
+      "type": "string",
+      "enum": ["rspack", "webpack"],
+      "x-prompt": "Which bundler do you want to use to build the application?",
+      "default": "rspack",
+      "x-priority": "important"
     }
   },
-  "required": ["name"],
+  "required": ["directory"],
   "additionalProperties": false
 }

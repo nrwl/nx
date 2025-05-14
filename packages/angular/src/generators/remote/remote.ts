@@ -3,25 +3,25 @@ import {
   formatFiles,
   getProjects,
   runTasksInSerial,
+  stripIndents,
   Tree,
 } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  ensureRootProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { swcHelpersVersion } from '@nx/js/src/utils/versions';
 import { E2eTestRunner } from '../../utils/test-runners';
 import { applicationGenerator } from '../application/application';
 import { setupMf } from '../setup-mf/setup-mf';
+import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs';
 import { findNextAvailablePort, updateSsrSetup } from './lib';
 import type { Schema } from './schema';
-import { swcHelpersVersion } from '@nx/js/src/utils/versions';
-import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs';
 
-export async function remote(tree: Tree, options: Schema) {
-  return await remoteInternal(tree, {
-    projectNameAndRootFormat: 'derived',
-    ...options,
-  });
-}
+export async function remote(tree: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(tree, 'angular', 'remote');
 
-export async function remoteInternal(tree: Tree, schema: Schema) {
   const { typescriptConfiguration = true, ...options }: Schema = schema;
   options.standalone = options.standalone ?? true;
 
@@ -32,16 +32,24 @@ export async function remoteInternal(tree: Tree, schema: Schema) {
     );
   }
 
-  const { projectName: remoteProjectName, projectNameAndRootFormat } =
+  await ensureRootProjectName(options, 'application');
+  const { projectName: remoteProjectName } =
     await determineProjectNameAndRootOptions(tree, {
       name: options.name,
       projectType: 'application',
       directory: options.directory,
-      projectNameAndRootFormat: options.projectNameAndRootFormat,
-      callingGenerator: '@nx/angular:remote',
     });
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
+  const REMOTE_NAME_REGEX = '^[a-zA-Z_$][a-zA-Z_$0-9]*$';
+  const remoteNameRegex = new RegExp(REMOTE_NAME_REGEX);
+  if (!remoteNameRegex.test(remoteProjectName)) {
+    throw new Error(
+      stripIndents`Invalid remote name: ${remoteProjectName}. Remote project names must:
+       - Start with a letter, dollar sign ($) or underscore (_)
+       - Followed by any valid character (letters, digits, underscores, or dollar signs)
+      The regular expression used is ${REMOTE_NAME_REGEX}.`
+    );
+  }
   const port = options.port ?? findNextAvailablePort(tree);
 
   const appInstallTask = await applicationGenerator(tree, {

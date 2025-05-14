@@ -1,12 +1,10 @@
 import * as chalk from 'chalk';
 import { diff } from 'jest-diff';
 import { readFileSync } from 'node:fs';
-import {
-  joinPathFragments,
-  logger,
-  workspaceRoot,
-} from '../../../devkit-exports';
 import { Tree, flushChanges } from '../../../generators/tree';
+import { workspaceRoot } from '../../../utils/workspace-root';
+import { joinPathFragments } from '../../../utils/path';
+import { logger } from '../../../utils/logger';
 
 // jest-diff does not export this constant
 const NO_DIFF_MESSAGE = 'Compared values have no visual difference.';

@@ -18,17 +18,6 @@
         "type": "string",
         "description": "The path to route file relative to the project root."
       },
-      "nameAndDirectoryFormat": {
-        "description": "Whether to generate the error boundary in the path as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-        "type": "string",
-        "enum": ["as-provided", "derived"]
-      },
-      "project": {
-        "type": "string",
-        "description": "The name of the project.",
-        "pattern": "^[a-zA-Z].*$",
-        "x-deprecated": "Provide the `path` option instead and use the `as-provided` format. The project will be determined from the path provided. It will be removed in Nx v20."
-      },
       "skipFormat": {
         "type": "boolean",
         "description": "Skip formatting files after generation.",

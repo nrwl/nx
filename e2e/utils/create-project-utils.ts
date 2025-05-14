@@ -1,4 +1,5 @@
 import { copySync, ensureDirSync, moveSync, removeSync } from 'fs-extra';
+import * as isCI from 'is-ci';
 import {
   createFile,
   directoryExists,
@@ -15,24 +16,22 @@ import {
   isVerbose,
   isVerboseE2ERun,
 } from './get-env-info';
-import * as isCI from 'is-ci';
 
+import { output, readJsonFile } from '@nx/devkit';
 import { angularCliVersion as defaultAngularCliVersion } from '@nx/workspace/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
-import { execSync, ExecSyncOptions } from 'child_process';
-
-import { performance, PerformanceMeasure } from 'perf_hooks';
-import { logError, logInfo } from './log-utils';
+import { execSync, ExecSyncOptions } from 'node:child_process';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { performance, PerformanceMeasure } from 'node:perf_hooks';
+import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 import {
   getPackageManagerCommand,
   runCLI,
   RunCmdOpts,
   runCommand,
 } from './command-utils';
-import { output, readJsonFile } from '@nx/devkit';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { logError, logInfo } from './log-utils';
 
 let projName: string;
 
@@ -56,6 +55,7 @@ const nxPackages = [
   `@nx/rollup`,
   `@nx/react`,
   `@nx/remix`,
+  `@nx/rspack`,
   `@nx/storybook`,
   `@nx/vue`,
   `@nx/vite`,
@@ -74,13 +74,13 @@ type NxPackage = (typeof nxPackages)[number];
 export function newProject({
   name = uniq('proj'),
   packageManager = getSelectedPackageManager(),
-  unsetProjectNameAndRootFormat = true,
   packages,
+  preset = 'apps',
 }: {
   name?: string;
   packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
-  unsetProjectNameAndRootFormat?: boolean;
   readonly packages?: Array<NxPackage>;
+  preset?: string;
 } = {}): string {
   const newProjectStart = performance.mark('new-project:start');
   try {
@@ -89,12 +89,15 @@ export function newProject({
     let createNxWorkspaceMeasure: PerformanceMeasure;
     let packageInstallMeasure: PerformanceMeasure;
 
-    if (!directoryExists(tmpBackupProjPath())) {
+    // Namespace by package manager to avoid conflicts in test suites which include multiple package managers
+    const backupPath = tmpBackupProjPath(packageManager);
+
+    if (!directoryExists(backupPath)) {
       const createNxWorkspaceStart = performance.mark(
         'create-nx-workspace:start'
       );
       runCreateWorkspace(projScope, {
-        preset: 'apps',
+        preset,
         packageManager,
       });
       const createNxWorkspaceEnd = performance.mark('create-nx-workspace:end');
@@ -103,14 +106,6 @@ export function newProject({
         createNxWorkspaceStart.name,
         createNxWorkspaceEnd.name
       );
-
-      if (unsetProjectNameAndRootFormat) {
-        console.warn(
-          'ATTENTION: The workspace generated for this e2e test does not use the new as-provided project name/root format. Please update this test'
-        );
-        createFile('apps/.gitkeep');
-        createFile('libs/.gitkeep');
-      }
 
       // Temporary hack to prevent installing with `--frozen-lockfile`
       if (isCI && packageManager === 'pnpm') {
@@ -139,12 +134,12 @@ export function newProject({
         stdio: isVerbose() ? 'inherit' : 'pipe',
       });
 
-      moveSync(`${e2eCwd}/proj`, `${tmpBackupProjPath()}`);
+      moveSync(`${e2eCwd}/proj`, backupPath);
     }
     projName = name;
 
     const projectDirectory = tmpProjPath();
-    copySync(`${tmpBackupProjPath()}`, `${projectDirectory}`);
+    copySync(backupPath, projectDirectory);
 
     const dependencies = readJsonFile(
       `${projectDirectory}/package.json`
@@ -227,10 +222,13 @@ export function runCreateWorkspace(
     cwd = e2eCwd,
     bundler,
     routing,
+    useReactRouter,
     standaloneApi,
     docker,
     nextAppDir,
     nextSrcDir,
+    linter = 'eslint',
+    formatter = 'prettier',
     e2eTestRunner,
     ssr,
     framework,
@@ -247,10 +245,13 @@ export function runCreateWorkspace(
     bundler?: 'webpack' | 'vite';
     standaloneApi?: boolean;
     routing?: boolean;
+    useReactRouter?: boolean;
     docker?: boolean;
     nextAppDir?: boolean;
     nextSrcDir?: boolean;
+    linter?: 'none' | 'eslint';
     e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
+    formatter?: 'prettier' | 'none';
     ssr?: boolean;
     framework?: string;
     prefix?: string;
@@ -260,7 +261,11 @@ export function runCreateWorkspace(
 
   const pm = getPackageManagerCommand({ packageManager });
 
+  // Needed for bun workarounds, see below
+  const registry = execSync('npm config get registry').toString().trim();
+
   let command = `${pm.createWorkspace} ${name} --preset=${preset} --nxCloud=skip --no-interactive`;
+
   if (appName) {
     command += ` --appName=${appName}`;
   }
@@ -292,12 +297,24 @@ export function runCreateWorkspace(
     command += ` --routing=${routing}`;
   }
 
+  if (useReactRouter !== undefined) {
+    command += ` --useReactRouter=${useReactRouter}`;
+  }
+
   if (base) {
     command += ` --defaultBase="${base}"`;
   }
 
   if (packageManager && !useDetectedPm) {
     command += ` --package-manager=${packageManager}`;
+  }
+
+  if (linter) {
+    command += ` --linter=${linter}`;
+  }
+
+  if (formatter) {
+    command += ` --formatter=${formatter}`;
   }
 
   if (e2eTestRunner) {
@@ -369,7 +386,7 @@ export function runCreatePlugin(
 
   let command = `${
     pm.runUninstalledPackage
-  } create-nx-plugin@${getPublishedVersion()} ${name} --nxCloud=skip`;
+  } create-nx-plugin@${getPublishedVersion()} ${name} --nxCloud=skip --no-interactive`;
 
   if (packageManager && !useDetectedPm) {
     command += ` --package-manager=${packageManager}`;
@@ -480,6 +497,29 @@ export function runNgNew(
     env: process.env,
     encoding: 'utf-8',
   });
+
+  // ensure angular packages are installed with ~ instead of ^ to prevent
+  // potential failures when new minor versions are released
+  function updateAngularDependencies(dependencies: any): void {
+    Object.keys(dependencies).forEach((key) => {
+      if (key.startsWith('@angular/') || key.startsWith('@angular-devkit/')) {
+        dependencies[key] = dependencies[key].replace(/^\^/, '~');
+      }
+    });
+  }
+  updateJson('package.json', (json) => {
+    updateAngularDependencies(json.dependencies ?? {});
+    updateAngularDependencies(json.devDependencies ?? {});
+    return json;
+  });
+
+  execSync(pmc.install, {
+    cwd: join(e2eCwd, projName),
+    stdio: isVerbose() ? 'inherit' : 'pipe',
+    env: process.env,
+    encoding: 'utf-8',
+  });
+
   copySync(tmpProjPath(), tmpBackupNgCliProjPath());
 
   if (isVerboseE2ERun()) {
@@ -527,7 +567,6 @@ export function newLernaWorkspace({
       const overrides = {
         ...json.overrides,
         nx: nxVersion,
-        '@nrwl/devkit': nxVersion,
         '@nx/devkit': nxVersion,
       };
       if (packageManager === 'pnpm') {

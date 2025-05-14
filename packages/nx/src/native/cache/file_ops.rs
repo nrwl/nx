@@ -2,6 +2,7 @@ use std::path::{Path, PathBuf};
 use std::{fs, io};
 
 use fs_extra::error::ErrorKind;
+use tracing::trace;
 
 #[napi]
 pub fn remove(src: String) -> anyhow::Result<()> {
@@ -12,12 +13,16 @@ pub fn remove(src: String) -> anyhow::Result<()> {
 }
 
 #[napi]
-pub fn copy(src: String, dest: String) -> anyhow::Result<()> {
+pub fn copy(src: String, dest: String) -> anyhow::Result<i64> {
     _copy(src, dest)
 }
 
-pub fn _copy<P>(src: P, dest: P) -> anyhow::Result<()> where P: AsRef<Path> {
-    let dest: PathBuf = dest.as_ref().into();
+pub fn _copy<P>(src: P, dest: P) -> anyhow::Result<i64>
+where
+    P: AsRef<Path>,
+{
+    let dest: PathBuf = remove_trailing_single_dot(dest);
+
     let dest_parent = dest.parent().unwrap_or(&dest);
 
     let src: PathBuf = src.as_ref().into();
@@ -26,15 +31,28 @@ pub fn _copy<P>(src: P, dest: P) -> anyhow::Result<()> where P: AsRef<Path> {
         fs::create_dir_all(dest_parent)?;
     }
 
-    if src.is_dir() {
-        copy_dir_all(&src, dest).map_err(anyhow::Error::new)?;
+    let size = if src.is_dir() {
+        copy_dir_all(&src, dest).map_err(anyhow::Error::new)?
     } else if src.is_symlink() {
         symlink(fs::read_link(src)?, dest)?;
+        0
     } else {
-        fs::copy(src, dest)?;
+        fs::copy(src, dest)?
+    };
+
+    Ok(size as i64)
+}
+
+fn remove_trailing_single_dot(path: impl AsRef<Path>) -> PathBuf {
+    let mut components = path.as_ref().components().collect::<Vec<_>>();
+
+    if let Some(last_component) = components.last() {
+        if last_component.as_os_str() == "." {
+            components.pop();
+        }
     }
 
-    Ok(())
+    components.iter().collect()
 }
 
 #[cfg(windows)]
@@ -52,30 +70,36 @@ fn symlink<P: AsRef<Path>, Q: AsRef<Path>>(original: P, link: Q) -> io::Result<(
     std::os::wasi::fs::symlink_path(original, link)
 }
 
-fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> {
+fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<u64> {
+    trace!("creating directory: {:?}", dst.as_ref());
     fs::create_dir_all(&dst)?;
+    trace!("reading source directory: {:?}", src.as_ref());
+    let mut total_size = 0;
     for entry in fs::read_dir(src)? {
         let entry = entry?;
         let ty = entry.file_type()?;
-        if ty.is_dir() {
-            copy_dir_all(entry.path(), dst.as_ref().join(entry.file_name()))?;
+        let size: u64 = if ty.is_dir() {
+            copy_dir_all(entry.path(), dst.as_ref().join(entry.file_name()))?
         } else if ty.is_symlink() {
             symlink(
                 fs::read_link(entry.path())?,
                 dst.as_ref().join(entry.file_name()),
             )?;
+            // Handle this
+            0
         } else {
-            fs::copy(entry.path(), dst.as_ref().join(entry.file_name()))?;
-        }
+            fs::copy(entry.path(), dst.as_ref().join(entry.file_name()))?
+        };
+        total_size += size;
     }
-    Ok(())
+    Ok(total_size)
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use assert_fs::prelude::*;
     use assert_fs::TempDir;
+    use assert_fs::prelude::*;
 
     #[test]
     fn should_copy_directories() {
@@ -91,9 +115,10 @@ mod test {
         let dest = temp.join("new-parent/child/grand-child/.config");
         copy(src.to_string_lossy().into(), dest.to_string_lossy().into()).unwrap();
 
-        assert!(temp
-            .child("new-parent/child/grand-child/.config/file.txt")
-            .exists());
+        assert!(
+            temp.child("new-parent/child/grand-child/.config/file.txt")
+                .exists()
+        );
     }
 
     #[test]

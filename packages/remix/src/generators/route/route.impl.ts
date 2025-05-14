@@ -1,17 +1,7 @@
-import {
-  formatFiles,
-  joinPathFragments,
-  names,
-  readProjectConfiguration,
-  stripIndents,
-  Tree,
-} from '@nx/devkit';
+import { formatFiles, names, stripIndents, Tree } from '@nx/devkit';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { basename, dirname } from 'path';
-import {
-  checkRoutePathForErrors,
-  resolveRemixRouteFile,
-} from '../../utils/remix-route-utils';
+import { checkRoutePathForErrors } from '../../utils/remix-route-utils';
 import ActionGenerator from '../action/action.impl';
 import LoaderGenerator from '../loader/loader.impl';
 import MetaGenerator from '../meta/meta.impl';
@@ -19,20 +9,12 @@ import StyleGenerator from '../style/style.impl';
 import { RemixRouteSchema } from './schema';
 
 export default async function (tree: Tree, options: RemixRouteSchema) {
-  const {
-    artifactName: name,
-    directory,
-    project: projectName,
-  } = await determineArtifactNameAndDirectoryOptions(tree, {
-    artifactType: 'route',
-    callingGenerator: '@nx/remix:route',
-    name: options.path.replace(/^\//, '').replace(/\/$/, ''),
-    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-    project: options.project,
-  });
-
-  const project = readProjectConfiguration(tree, projectName);
-  if (!project) throw new Error(`Project does not exist: ${projectName}`);
+  const { artifactName: name, filePath: routeFilePath } =
+    await determineArtifactNameAndDirectoryOptions(tree, {
+      path: options.path.replace(/^\//, '').replace(/\/$/, ''),
+      allowedFileExtensions: ['ts', 'tsx'],
+      fileExtension: 'tsx',
+    });
 
   if (!options.skipChecks && checkRoutePathForErrors(options.path)) {
     throw new Error(
@@ -40,24 +22,8 @@ export default async function (tree: Tree, options: RemixRouteSchema) {
     );
   }
 
-  const routeFilePath = await resolveRemixRouteFile(
-    tree,
-    options.nameAndDirectoryFormat === 'as-provided'
-      ? joinPathFragments(directory, name)
-      : options.path,
-    options.nameAndDirectoryFormat === 'as-provided' ? undefined : projectName,
-    '.tsx'
-  );
-
-  const nameToUseForComponent =
-    options.nameAndDirectoryFormat === 'as-provided'
-      ? name.replace('.tsx', '')
-      : options.path.replace(/^\//, '').replace(/\/$/, '').replace('.tsx', '');
-
   const { className: componentName } = names(
-    nameToUseForComponent === '.' || nameToUseForComponent === ''
-      ? basename(dirname(routeFilePath))
-      : nameToUseForComponent
+    name === '.' || name === '' ? basename(dirname(routeFilePath)) : name
   );
 
   if (tree.exists(routeFilePath))
@@ -87,29 +53,24 @@ export default async function (tree: Tree, options: RemixRouteSchema) {
   if (options.loader) {
     await LoaderGenerator(tree, {
       path: routeFilePath,
-      nameAndDirectoryFormat: 'as-provided',
     });
   }
 
   if (options.meta) {
     await MetaGenerator(tree, {
       path: routeFilePath,
-      nameAndDirectoryFormat: 'as-provided',
     });
   }
 
   if (options.action) {
     await ActionGenerator(tree, {
       path: routeFilePath,
-      nameAndDirectoryFormat: 'as-provided',
     });
   }
 
   if (options.style === 'css') {
     await StyleGenerator(tree, {
-      project: projectName,
       path: routeFilePath,
-      nameAndDirectoryFormat: 'as-provided',
     });
   }
 

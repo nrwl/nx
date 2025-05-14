@@ -12,6 +12,7 @@ import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generat
 
 import { NormalizedSchema, ComponentGeneratorSchema } from '../schema';
 import { addImport } from '../../../utils/ast-utils';
+import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 let tsModule: typeof import('typescript');
 
@@ -20,31 +21,25 @@ export async function normalizeOptions(
   options: ComponentGeneratorSchema
 ): Promise<NormalizedSchema> {
   const {
-    artifactName: name,
-    directory,
     fileName,
     filePath,
+    directory,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
-    artifactType: 'component',
-    callingGenerator: '@nx/vue:component',
-    name: options.name,
-    directory: options.directory,
-    derivedDirectory: options.directory,
-    flat: options.flat,
-    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-    project: options.project,
+    path: options.path,
+    allowedFileExtensions: ['vue'],
     fileExtension: 'vue',
-    pascalCaseFile: options.pascalCaseFiles,
-    pascalCaseDirectory: options.pascalCaseDirectory,
   });
 
   let { className } = names(fileName);
   const componentFileName = fileName;
   const project = getProjects(host).get(projectName);
-  const { sourceRoot: projectSourceRoot, projectType } = project;
+  const { root, sourceRoot: projectSourceRoot, projectType } = project;
 
-  if (options.export && projectType === 'application') {
+  if (
+    options.export &&
+    getProjectType(host, root, projectType) === 'application'
+  ) {
     logger.warn(
       `The "--export" option should not be used with applications and will do nothing.`
     );
@@ -55,8 +50,8 @@ export async function normalizeOptions(
 
   return {
     ...options,
-    filePath,
     directory,
+    filePath,
     className,
     fileName: componentFileName,
     projectSourceRoot,
@@ -69,12 +64,13 @@ export function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
     tsModule = ensureTypescript();
   }
   const workspace = getProjects(host);
+  const proj = workspace.get(options.projectName);
   const isApp =
-    workspace.get(options.projectName).projectType === 'application';
+    getProjectType(host, proj.root, proj.projectType) === 'application';
 
   if (options.export && !isApp) {
     const indexFilePath = joinPathFragments(
-      options.projectSourceRoot,
+      options.projectSourceRoot ?? 'src',
       options.js ? 'index.js' : 'index.ts'
     );
     const indexSource = host.read(indexFilePath, 'utf-8');

@@ -31,9 +31,9 @@ describe('Nx Watch', () => {
   let proj3 = uniq('proj3');
   beforeAll(() => {
     newProject({ packages: ['@nx/js'] });
-    runCLI(`generate @nx/js:lib ${proj1}`);
-    runCLI(`generate @nx/js:lib ${proj2}`);
-    runCLI(`generate @nx/js:lib ${proj3}`);
+    runCLI(`generate @nx/js:lib libs/${proj1}`);
+    runCLI(`generate @nx/js:lib libs/${proj2}`);
+    runCLI(`generate @nx/js:lib libs/${proj3}`);
     runCLI('daemon --start', {
       env: {
         NX_DAEMON: 'true',

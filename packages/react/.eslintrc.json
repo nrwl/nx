@@ -4,7 +4,15 @@
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {}
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "name": "chalk",
+            "message": "Please use `picocolors` in place of `chalk` for rendering terminal colors"
+          }
+        ]
+      }
     },
     {
       "files": ["**/*.ts"],
@@ -50,6 +58,8 @@
               "@nx/playwright",
               "@nx/jest",
               "@nx/rollup",
+              "@nx/rsbuild",
+              "@nx/rspack",
               "@nx/storybook",
               "@nx/vite",
               "@nx/webpack",
@@ -77,7 +87,6 @@
               "stylus-loader",
               "swc-loader",
               "tsconfig-paths-webpack-plugin",
-              "url-loader",
               "webpack",
               "webpack-merge",
               // used via the CT react plugin installed via vite plugin

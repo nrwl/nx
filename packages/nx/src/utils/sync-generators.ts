@@ -31,18 +31,55 @@ export type SyncGenerator = (
   tree: Tree
 ) => SyncGeneratorResult | Promise<SyncGeneratorResult>;
 
-export type SyncGeneratorChangesResult = {
-  changes: FileChange[];
+export type SyncGeneratorRunSuccessResult = {
   generatorName: string;
+  changes: FileChange[];
   callback?: GeneratorCallback;
   outOfSyncMessage?: string;
 };
 
+// Error is not serializable, so we use a simple object instead
+type SerializableSimpleError = {
+  message: string;
+  stack: string | undefined;
+  title?: string;
+  bodyLines?: string[];
+};
+
+export type SyncGeneratorRunErrorResult = {
+  generatorName: string;
+  error: SerializableSimpleError;
+};
+
+export type SyncGeneratorRunResult =
+  | SyncGeneratorRunSuccessResult
+  | SyncGeneratorRunErrorResult;
+
+type FlushSyncGeneratorChangesSuccess = { success: true };
+type FlushSyncGeneratorFailure = {
+  generator: string;
+  error: SerializableSimpleError;
+};
+type FlushSyncGeneratorChangesFailure = {
+  generatorFailures: FlushSyncGeneratorFailure[];
+  generalFailure?: SerializableSimpleError;
+};
+export type FlushSyncGeneratorChangesResult =
+  | FlushSyncGeneratorChangesSuccess
+  | FlushSyncGeneratorChangesFailure;
+
+export class SyncError extends Error {
+  constructor(public title: string, public bodyLines?: string[]) {
+    super(title);
+    this.name = this.constructor.name;
+  }
+}
+
 export async function getSyncGeneratorChanges(
   generators: string[]
-): Promise<SyncGeneratorChangesResult[]> {
+): Promise<SyncGeneratorRunResult[]> {
   performance.mark('get-sync-generators-changes:start');
-  let results: SyncGeneratorChangesResult[];
+  let results: SyncGeneratorRunResult[];
 
   if (!daemonClient.enabled()) {
     results = await runSyncGenerators(generators);
@@ -57,30 +94,38 @@ export async function getSyncGeneratorChanges(
     'get-sync-generators-changes:end'
   );
 
-  return results.filter((r) => r.changes.length > 0);
+  return results.filter((r) => ('error' in r ? true : r.changes.length > 0));
 }
 
 export async function flushSyncGeneratorChanges(
-  results: SyncGeneratorChangesResult[]
-): Promise<void> {
+  results: SyncGeneratorRunResult[]
+): Promise<FlushSyncGeneratorChangesResult> {
   if (isOnDaemon() || !daemonClient.enabled()) {
-    await flushSyncGeneratorChangesToDisk(results);
-  } else {
-    await daemonClient.flushSyncGeneratorChangesToDisk(
-      results.map((r) => r.generatorName)
-    );
+    return await flushSyncGeneratorChangesToDisk(results);
   }
+
+  return await daemonClient.flushSyncGeneratorChangesToDisk(
+    results.map((r) => r.generatorName)
+  );
 }
 
 export async function collectAllRegisteredSyncGenerators(
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration
-): Promise<string[]> {
+): Promise<{
+  globalGenerators: string[];
+  taskGenerators: string[];
+}> {
   if (!daemonClient.enabled()) {
-    return [
-      ...collectEnabledTaskSyncGeneratorsFromProjectGraph(projectGraph, nxJson),
-      ...collectRegisteredGlobalSyncGenerators(),
-    ];
+    return {
+      globalGenerators: [...collectRegisteredGlobalSyncGenerators()],
+      taskGenerators: [
+        ...collectEnabledTaskSyncGeneratorsFromProjectGraph(
+          projectGraph,
+          nxJson
+        ),
+      ],
+    };
   }
 
   return await daemonClient.getRegisteredSyncGenerators();
@@ -90,38 +135,45 @@ export async function runSyncGenerator(
   tree: Tree,
   generatorSpecifier: string,
   projects: Record<string, ProjectConfiguration>
-): Promise<SyncGeneratorChangesResult> {
-  performance.mark(`run-sync-generator:${generatorSpecifier}:start`);
-  const { collection, generator } = parseGeneratorString(generatorSpecifier);
-  const { implementationFactory } = getGeneratorInformation(
-    collection,
-    generator,
-    workspaceRoot,
-    projects
-  );
-  const implementation = implementationFactory() as SyncGenerator;
-  const result = await implementation(tree);
+): Promise<SyncGeneratorRunResult> {
+  try {
+    performance.mark(`run-sync-generator:${generatorSpecifier}:start`);
+    const { collection, generator } = parseGeneratorString(generatorSpecifier);
+    const { implementationFactory } = getGeneratorInformation(
+      collection,
+      generator,
+      workspaceRoot,
+      projects
+    );
+    const implementation = implementationFactory() as SyncGenerator;
+    const result = await implementation(tree);
 
-  let callback: GeneratorCallback | undefined;
-  let outOfSyncMessage: string | undefined;
-  if (result && typeof result === 'object') {
-    callback = result.callback;
-    outOfSyncMessage = result.outOfSyncMessage;
+    let callback: GeneratorCallback | undefined;
+    let outOfSyncMessage: string | undefined;
+    if (result && typeof result === 'object') {
+      callback = result.callback;
+      outOfSyncMessage = result.outOfSyncMessage;
+    }
+
+    performance.mark(`run-sync-generator:${generatorSpecifier}:end`);
+    performance.measure(
+      `run-sync-generator:${generatorSpecifier}`,
+      `run-sync-generator:${generatorSpecifier}:start`,
+      `run-sync-generator:${generatorSpecifier}:end`
+    );
+
+    return {
+      changes: tree.listChanges(),
+      generatorName: generatorSpecifier,
+      callback,
+      outOfSyncMessage,
+    };
+  } catch (e) {
+    return {
+      generatorName: generatorSpecifier,
+      error: toSerializableError(e),
+    };
   }
-
-  performance.mark(`run-sync-generator:${generatorSpecifier}:end`);
-  performance.measure(
-    `run-sync-generator:${generatorSpecifier}`,
-    `run-sync-generator:${generatorSpecifier}:start`,
-    `run-sync-generator:${generatorSpecifier}:end`
-  );
-
-  return {
-    changes: tree.listChanges(),
-    generatorName: generatorSpecifier,
-    callback,
-    outOfSyncMessage,
-  };
 }
 
 export function collectEnabledTaskSyncGeneratorsFromProjectGraph(
@@ -205,37 +257,154 @@ export function collectRegisteredGlobalSyncGenerators(
   return globalSyncGenerators;
 }
 
-export function syncGeneratorResultsToMessageLines(
-  results: SyncGeneratorChangesResult[]
+export function getSyncGeneratorSuccessResultsMessageLines(
+  results: SyncGeneratorRunResult[]
 ): string[] {
   const messageLines: string[] = [];
 
   for (const result of results) {
-    messageLines.push(
-      `The ${chalk.bold(
-        result.generatorName
-      )} sync generator identified ${chalk.bold(result.changes.length)} file${
-        result.changes.length === 1 ? '' : 's'
-      } in the workspace that ${
-        result.changes.length === 1 ? 'is' : 'are'
-      } out of sync${result.outOfSyncMessage ? ':' : '.'}`
-    );
-    if (result.outOfSyncMessage) {
-      messageLines.push(result.outOfSyncMessage);
+    if ('error' in result) {
+      continue;
     }
+
+    messageLines.push(
+      `[${chalk.bold(result.generatorName)}]: ${
+        result.outOfSyncMessage ?? `Some files are out of sync.`
+      }`
+    );
   }
 
   return messageLines;
 }
 
+export function getFailedSyncGeneratorsFixMessageLines(
+  results: SyncGeneratorRunResult[],
+  verbose: boolean,
+  globalGeneratorSet: Set<string> = new Set()
+): string[] {
+  const messageLines: string[] = [];
+  const globalGenerators: string[] = [];
+  const taskGenerators: string[] = [];
+  let isFirst = true;
+  for (const result of results) {
+    if ('error' in result) {
+      if (!isFirst && verbose) {
+        messageLines.push('');
+      }
+      isFirst = false;
+      messageLines.push(
+        `[${chalk.bold(result.generatorName)}]: ${errorToString(
+          result.error,
+          verbose
+        )}`
+      );
+
+      if (globalGeneratorSet.has(result.generatorName)) {
+        globalGenerators.push(result.generatorName);
+      } else {
+        taskGenerators.push(result.generatorName);
+      }
+    }
+  }
+
+  messageLines.push(
+    ...getFailedSyncGeneratorsMessageLines(
+      taskGenerators,
+      globalGenerators,
+      verbose
+    )
+  );
+
+  return messageLines;
+}
+
+export function getFlushFailureMessageLines(
+  result: FlushSyncGeneratorChangesFailure,
+  verbose: boolean,
+  globalGeneratorSet: Set<string> = new Set()
+): string[] {
+  const messageLines: string[] = [];
+  const globalGenerators: string[] = [];
+  const taskGenerators: string[] = [];
+  let isFirst = true;
+  for (const failure of result.generatorFailures) {
+    if (!isFirst && verbose) {
+      messageLines.push('');
+    }
+    isFirst = false;
+    messageLines.push(
+      `[${chalk.bold(failure.generator)}]: ${errorToString(
+        failure.error,
+        verbose
+      )}`
+    );
+
+    if (globalGeneratorSet.has(failure.generator)) {
+      globalGenerators.push(failure.generator);
+    } else {
+      taskGenerators.push(failure.generator);
+    }
+  }
+
+  messageLines.push(
+    ...getFailedSyncGeneratorsMessageLines(
+      taskGenerators,
+      globalGenerators,
+      verbose
+    )
+  );
+
+  if (result.generalFailure) {
+    if (messageLines.length > 0) {
+      messageLines.push('');
+      messageLines.push('Additionally, an unexpected error occurred:');
+    } else {
+      messageLines.push('An unexpected error occurred:');
+    }
+
+    messageLines.push(
+      ...[
+        '',
+        result.generalFailure.message,
+        ...(!!result.generalFailure.stack
+          ? [`\n${result.generalFailure.stack}`]
+          : []),
+        '',
+        'Please report the error at: https://github.com/nrwl/nx/issues/new/choose',
+      ]
+    );
+  }
+
+  return messageLines;
+}
+
+export function processSyncGeneratorResultErrors(
+  results: SyncGeneratorRunResult[]
+) {
+  let failedGeneratorsCount = 0;
+  for (const result of results) {
+    if ('error' in result) {
+      failedGeneratorsCount++;
+    }
+  }
+  const areAllResultsFailures = failedGeneratorsCount === results.length;
+  const anySyncGeneratorsFailed = failedGeneratorsCount > 0;
+
+  return {
+    failedGeneratorsCount,
+    areAllResultsFailures,
+    anySyncGeneratorsFailed,
+  };
+}
+
 async function runSyncGenerators(
   generators: string[]
-): Promise<SyncGeneratorChangesResult[]> {
+): Promise<SyncGeneratorRunResult[]> {
   const tree = new FsTree(workspaceRoot, false, 'running sync generators');
   const projectGraph = await createProjectGraphAsync();
   const { projects } = readProjectsConfigurationFromProjectGraph(projectGraph);
 
-  const results: SyncGeneratorChangesResult[] = [];
+  const results: SyncGeneratorRunResult[] = [];
   for (const generator of generators) {
     const result = await runSyncGenerator(tree, generator, projects);
     results.push(result);
@@ -245,50 +414,21 @@ async function runSyncGenerators(
 }
 
 async function flushSyncGeneratorChangesToDisk(
-  results: SyncGeneratorChangesResult[]
-): Promise<void> {
+  results: SyncGeneratorRunResult[]
+): Promise<FlushSyncGeneratorChangesResult> {
   performance.mark('flush-sync-generator-changes-to-disk:start');
-  const { changes, createdFiles, updatedFiles, deletedFiles, callbacks } =
-    processSyncGeneratorResults(results);
-  // Write changes to disk
-  flushChanges(workspaceRoot, changes);
 
-  // Run the callbacks
-  if (callbacks.length) {
-    for (const callback of callbacks) {
-      await callback();
-    }
-  }
-
-  // Update the context files
-  await updateContextWithChangedFiles(
-    workspaceRoot,
-    createdFiles,
-    updatedFiles,
-    deletedFiles
-  );
-  performance.mark('flush-sync-generator-changes-to-disk:end');
-  performance.measure(
-    'flush sync generator changes to disk',
-    'flush-sync-generator-changes-to-disk:start',
-    'flush-sync-generator-changes-to-disk:end'
-  );
-}
-
-function processSyncGeneratorResults(results: SyncGeneratorChangesResult[]) {
-  const changes: FileChange[] = [];
   const createdFiles: string[] = [];
   const updatedFiles: string[] = [];
   const deletedFiles: string[] = [];
-  const callbacks: GeneratorCallback[] = [];
+  const generatorFailures: FlushSyncGeneratorFailure[] = [];
 
   for (const result of results) {
-    if (result.callback) {
-      callbacks.push(result.callback);
+    if ('error' in result) {
+      continue;
     }
 
     for (const change of result.changes) {
-      changes.push(change);
       if (change.type === 'CREATE') {
         createdFiles.push(change.path);
       } else if (change.type === 'UPDATE') {
@@ -297,7 +437,127 @@ function processSyncGeneratorResults(results: SyncGeneratorChangesResult[]) {
         deletedFiles.push(change.path);
       }
     }
+
+    try {
+      // Write changes to disk
+      flushChanges(workspaceRoot, result.changes);
+      // Run the callback
+      if (result.callback) {
+        await result.callback();
+      }
+    } catch (e) {
+      generatorFailures.push({
+        generator: result.generatorName,
+        error: toSerializableError(e),
+      });
+    }
   }
 
-  return { changes, createdFiles, updatedFiles, deletedFiles, callbacks };
+  try {
+    // Update the context files
+    await updateContextWithChangedFiles(
+      workspaceRoot,
+      createdFiles,
+      updatedFiles,
+      deletedFiles
+    );
+    performance.mark('flush-sync-generator-changes-to-disk:end');
+    performance.measure(
+      'flush sync generator changes to disk',
+      'flush-sync-generator-changes-to-disk:start',
+      'flush-sync-generator-changes-to-disk:end'
+    );
+  } catch (e) {
+    return {
+      generatorFailures,
+      generalFailure: toSerializableError(e),
+    };
+  }
+
+  return generatorFailures.length > 0
+    ? { generatorFailures }
+    : { success: true };
+}
+
+function getFailedSyncGeneratorsMessageLines(
+  taskGenerators: string[],
+  globalGenerators: string[],
+  verbose: boolean
+): string[] {
+  const messageLines: string[] = [];
+
+  if (taskGenerators.length + globalGenerators.length === 1) {
+    messageLines.push(
+      '',
+      verbose
+        ? 'Please check the error above and address the issue.'
+        : 'Please check the error above and address the issue. You can provide the `--verbose` flag to get more details.'
+    );
+    if (taskGenerators.length === 1) {
+      messageLines.push(
+        `If needed, you can disable the failing sync generator by setting \`sync.disabledTaskSyncGenerators: ["${taskGenerators[0]}"]\` in your \`nx.json\`.`
+      );
+    } else {
+      messageLines.push(
+        `If needed, you can remove the failing global sync generator "${globalGenerators[0]}" from the \`sync.globalGenerators\` array in your \`nx.json\`.`
+      );
+    }
+  } else if (taskGenerators.length + globalGenerators.length > 1) {
+    messageLines.push(
+      '',
+      verbose
+        ? 'Please check the errors above and address the issues.'
+        : 'Please check the errors above and address the issues. You can provide the `--verbose` flag to get more details.'
+    );
+    if (taskGenerators.length > 0) {
+      const generatorsString = taskGenerators.map((g) => `"${g}"`).join(', ');
+      messageLines.push(
+        `If needed, you can disable the failing task sync generators by setting \`sync.disabledTaskSyncGenerators: [${generatorsString}]\` in your \`nx.json\`.`
+      );
+    }
+    if (globalGenerators.length > 0) {
+      const lastGenerator = globalGenerators.pop();
+      const generatorsString =
+        globalGenerators.length > 0
+          ? `${globalGenerators
+              .map((g) => `"${g}"`)
+              .join(', ')} and "${lastGenerator}"`
+          : `"${lastGenerator}"`;
+      messageLines.push(
+        `If needed, you can remove the failing global sync generators ${generatorsString} from the \`sync.globalGenerators\` array in your \`nx.json\`.`
+      );
+    }
+  }
+
+  return messageLines;
+}
+
+function errorToString(error: SerializableSimpleError, verbose: boolean) {
+  if (error.title) {
+    let message = `${chalk.red(error.title)}`;
+    if (error.bodyLines?.length) {
+      message += `
+
+  ${error.bodyLines
+    .map((bodyLine) => `${bodyLine.split('\n').join('\n  ')}`)
+    .join('\n  ')}`;
+
+      return message;
+    }
+  }
+
+  return `${chalk.red(error.message)}${
+    verbose && error.stack ? '\n  ' + error.stack : ''
+  }`;
+}
+
+function toSerializableError(error: Error): SerializableSimpleError {
+  return error instanceof SyncError
+    ? {
+        title: error.title,
+        bodyLines: error.bodyLines,
+        message: error.message,
+        stack: error.stack,
+      }
+    : { message: error.message, stack: error.stack };
 }

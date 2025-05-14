@@ -5,48 +5,41 @@
   "description": "Generate a new Remix application.",
   "type": "object",
   "properties": {
-    "name": {
-      "type": "string",
-      "description": "",
-      "$default": {
-        "$source": "argv",
-        "index": 0
-      },
-      "x-prompt": "What is the name of the application?"
-    },
-    "js": {
-      "type": "boolean",
-      "description": "Generate JavaScript files rather than TypeScript files.",
-      "default": false
-    },
     "directory": {
       "type": "string",
       "description": "A directory where the app is placed.",
       "alias": "dir",
-      "x-priority": "important"
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "Which directory do you want to create the application in?"
     },
-    "projectNameAndRootFormat": {
-      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+    "name": {
       "type": "string",
-      "enum": ["as-provided", "derived"]
+      "description": "The name of the application.",
+      "x-priority": "important"
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
       "enum": ["eslint", "none"],
-      "default": "eslint"
+      "default": "none",
+      "x-prompt": "Which linter would you like to use?",
+      "x-priority": "important"
     },
     "unitTestRunner": {
       "type": "string",
       "enum": ["vitest", "jest", "none"],
-      "default": "vitest",
+      "default": "none",
       "description": "Test runner to use for unit tests.",
-      "x-prompt": "What unit test runner should be used?"
+      "x-prompt": "What unit test runner should be used?",
+      "x-priority": "important"
     },
     "e2eTestRunner": {
       "type": "string",
       "enum": ["playwright", "cypress", "none"],
-      "default": "playwright",
+      "default": "none",
       "description": "Test runner to use for e2e tests",
       "x-prompt": "Which E2E test runner would you like to use?"
     },
@@ -64,6 +57,11 @@
       "type": "boolean",
       "x-priority": "internal",
       "default": false
+    },
+    "useProjectJson": {
+      "type": "boolean",
+      "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
     }
-  }
+  },
+  "required": ["directory"]
 }

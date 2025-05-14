@@ -28,6 +28,7 @@ import type { RunCommandsOptions } from 'nx/src/executors/run-commands/run-comma
 import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { forEachExecutorOptions } from '../executor-options-utils';
 import { deleteMatchingProperties } from './plugin-migration-utils';
+import { logger as devkitLogger } from 'nx/src/devkit-exports';
 
 export type InferredTargetConfiguration = TargetConfiguration & {
   name: string;
@@ -57,6 +58,7 @@ class ExecutorToPluginMigrator<T> {
   readonly #skipTargetFilter: SkipTargetFilter;
   readonly #skipProjectFilter: SkipProjectFilter;
   readonly #specificProjectToMigrate: string;
+  readonly #logger: typeof devkitLogger;
   #nxJson: NxJsonConfiguration;
   #targetDefaultsForExecutor: Partial<TargetConfiguration>;
   #targetAndProjectsToMigrate: Map<string, Set<string>>;
@@ -78,7 +80,8 @@ class ExecutorToPluginMigrator<T> {
     filters?: {
       skipProjectFilter?: SkipProjectFilter;
       skipTargetFilter?: SkipTargetFilter;
-    }
+    },
+    logger?: typeof devkitLogger
   ) {
     this.tree = tree;
     this.#projectGraph = projectGraph;
@@ -92,6 +95,7 @@ class ExecutorToPluginMigrator<T> {
     this.#skipProjectFilter =
       filters?.skipProjectFilter ?? ((...args) => false);
     this.#skipTargetFilter = filters?.skipTargetFilter ?? ((...args) => false);
+    this.#logger = logger ?? devkitLogger;
   }
 
   async run(): Promise<Map<string, Set<string>>> {
@@ -255,7 +259,7 @@ class ExecutorToPluginMigrator<T> {
             throw new Error(errorMsg);
           }
 
-          console.warn(errorMsg);
+          this.#logger.warn(errorMsg);
           return;
         }
 
@@ -268,7 +272,7 @@ class ExecutorToPluginMigrator<T> {
           if (this.#specificProjectToMigrate) {
             throw new Error(errorMsg);
           } else {
-            console.warn(errorMsg);
+            this.#logger.warn(errorMsg);
           }
           return;
         }
@@ -336,6 +340,12 @@ class ExecutorToPluginMigrator<T> {
   }
 }
 
+export class NoTargetsToMigrateError extends Error {
+  constructor() {
+    super('Could not find any targets to migrate.');
+  }
+}
+
 export async function migrateProjectExecutorsToPlugin<T>(
   tree: Tree,
   projectGraph: ProjectGraph,
@@ -349,7 +359,8 @@ export async function migrateProjectExecutorsToPlugin<T>(
     skipProjectFilter?: SkipProjectFilter;
     skipTargetFilter?: SkipTargetFilter;
   }>,
-  specificProjectToMigrate?: string
+  specificProjectToMigrate?: string,
+  logger?: typeof devkitLogger
 ): Promise<Map<string, Record<string, string>>> {
   const projects = await migrateProjects(
     tree,
@@ -359,7 +370,8 @@ export async function migrateProjectExecutorsToPlugin<T>(
     createNodesV2,
     defaultPluginOptions,
     migrations,
-    specificProjectToMigrate
+    specificProjectToMigrate,
+    logger
   );
 
   return projects;
@@ -408,7 +420,8 @@ async function migrateProjects<T>(
     skipProjectFilter?: SkipProjectFilter;
     skipTargetFilter?: SkipTargetFilter;
   }>,
-  specificProjectToMigrate?: string
+  specificProjectToMigrate?: string,
+  logger?: typeof devkitLogger
 ): Promise<Map<string, Record<string, string>>> {
   const projects = new Map<string, Record<string, string>>();
 
@@ -427,7 +440,8 @@ async function migrateProjects<T>(
         {
           skipProjectFilter: migration.skipProjectFilter,
           skipTargetFilter: migration.skipTargetFilter,
-        }
+        },
+        logger
       );
 
       const result = await migrator.run();

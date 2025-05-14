@@ -18,7 +18,9 @@ export function nxViteBuildCoordinationPlugin(
 
   async function buildChangedProjects() {
     await new Promise<void>((res) => {
-      activeBuildProcess = exec(options.buildCommand);
+      activeBuildProcess = exec(options.buildCommand, {
+        windowsHide: false,
+      });
       activeBuildProcess.stdout.pipe(process.stdout);
       activeBuildProcess.stderr.pipe(process.stderr);
       activeBuildProcess.on('exit', () => {

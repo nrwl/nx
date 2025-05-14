@@ -1,6 +1,6 @@
 import { parse, join } from 'path';
 import { writeFileSync } from 'fs';
-import { LifeCycle } from '../../tasks-runner/life-cycle';
+import { LifeCycle, TaskResult } from '../../tasks-runner/life-cycle';
 import { Task } from '../../config/task-graph';
 import { TaskStatus } from '../../tasks-runner/tasks-runner';
 import { cacheDir } from '../../utils/cache-directory';
@@ -36,9 +36,7 @@ export class StoreRunInformationLifeCycle implements LifeCycle {
     }
   }
 
-  endTasks(
-    taskResults: Array<{ task: Task; status: TaskStatus; code: number }>
-  ): void {
+  endTasks(taskResults: TaskResult[]): void {
     for (let tr of taskResults) {
       if (tr.task.startTime) {
         this.timings[tr.task.id].start = new Date(

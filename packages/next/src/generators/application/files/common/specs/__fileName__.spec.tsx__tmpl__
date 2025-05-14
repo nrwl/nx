@@ -1,14 +1,14 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-<% if (src && !appDir) { %>
+<%_ if (src && !appDir) { _%>
 import Index from '../src/pages/index';
-<% } else if (!appDir) { %>
+<%_ } else if (!appDir) { _%>
 import Index from '../pages/index';
-<% } else if (appDir && src) {%>
+<%_ } else if (appDir && src) { _%>
 import Page from '../src/app/page';
-<% } else { %>
+<%_ } else { _%>
 import Page from '../app/page';
-<% } %>
+<%_ } _%>
 
 describe(<%- appDir ? `'Page'` : `'Index'` %>, () => {
   it('should render successfully', () => {

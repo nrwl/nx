@@ -42,11 +42,20 @@ async function run() {
   updateVersionUtils(packageVersionMap);
 
   console.log('⏳ - Installing packages...');
-  execSync('pnpm install', { stdio: 'inherit', encoding: 'utf8' });
+  execSync('pnpm install', {
+    stdio: 'inherit',
+    encoding: 'utf8',
+
+    windowsHide: false,
+  });
   console.log('✅ - Finished installing packages!');
 
   console.log('⏳ - Formatting files...');
-  execSync('pnpm nx format', { stdio: 'inherit', encoding: 'utf8' });
+  execSync('pnpm nx format', {
+    stdio: 'inherit',
+    encoding: 'utf8',
+    windowsHide: false,
+  });
   console.log('✅ - Finished creating migrations!');
 }
 

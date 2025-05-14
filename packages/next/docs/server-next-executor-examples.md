@@ -64,7 +64,7 @@ This is the default configuration for Next.js standalone projects. Our `@nx/next
 {% /tab %}
 {% tab label="Enable turbo" %}
 
-Turbopack (beta) is a cutting-edge bundler designed for JavaScript and TypeScript. To read more about support features see [Next.js Turbopack Doucmentation](https://turbo.build/pack/docs/features)
+Turbopack (beta) is a cutting-edge bundler designed for JavaScript and TypeScript. To read more about support features see [Next.js Turbopack Documentation](https://turbo.build/pack/docs/features)
 
 In the context of Nx, you can utilize Turbopack within both the `pages` and `app` directories of Next.js to enhance local development speed. To activate Turbopack, simply:
 

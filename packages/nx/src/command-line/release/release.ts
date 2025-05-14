@@ -1,30 +1,30 @@
 import { prompt } from 'enquirer';
-import { removeSync } from 'fs-extra';
+import { rmSync } from 'node:fs';
 import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
+import { handleErrors } from '../../utils/handle-errors';
 import { output } from '../../utils/output';
-import { handleErrors } from '../../utils/params';
-import {
-  createAPI as createReleaseChangelogAPI,
-  shouldCreateGitHubRelease,
-} from './changelog';
+import { createAPI as createReleaseChangelogAPI } from './changelog';
 import { ReleaseOptions, VersionOptions } from './command-object';
 import {
   IMPLICIT_DEFAULT_RELEASE_GROUP,
+  NxReleaseConfig,
+  ResolvedCreateRemoteReleaseProvider,
   createNxReleaseConfig,
   handleNxReleaseConfigError,
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
 import { filterReleaseGroups } from './config/filter-release-groups';
+import { shouldUseLegacyVersioning } from './config/use-legacy-versioning';
 import {
   readRawVersionPlans,
   setResolvedVersionPlansOnGroups,
 } from './config/version-plans';
 import { createAPI as createReleasePublishAPI } from './publish';
 import { getCommitHash, gitAdd, gitCommit, gitPush, gitTag } from './utils/git';
-import { createOrUpdateGithubRelease } from './utils/github';
 import { printConfigAndExit } from './utils/print-config';
+import { createRemoteReleaseClient } from './utils/remote-release-clients/remote-release-client';
 import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
 import {
   createCommitMessageValues,
@@ -79,7 +79,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       userProvidedReleaseConfig
     );
     if (configError) {
-      return await handleNxReleaseConfigError(configError);
+      const USE_LEGACY_VERSIONING = shouldUseLegacyVersioning(
+        userProvidedReleaseConfig
+      );
+      return await handleNxReleaseConfigError(
+        configError,
+        USE_LEGACY_VERSIONING
+      );
     }
     // --print-config exits directly as it is not designed to be combined with any other programmatic operations
     if (args.printConfig) {
@@ -89,6 +95,27 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         isDebug: args.printConfig === 'debug',
       });
     }
+
+    const {
+      error: filterError,
+      filterLog,
+      releaseGroups,
+      releaseGroupToFilteredProjects,
+    } = filterReleaseGroups(
+      projectGraph,
+      nxReleaseConfig,
+      args.projects,
+      args.groups
+    );
+    if (filterError) {
+      output.error(filterError);
+      process.exit(1);
+    }
+    if (filterLog) {
+      output.note(filterLog);
+    }
+    // Do not repeat the filter log in the release subcommands
+    process.env.NX_RELEASE_INTERNAL_SUPPRESS_FILTER_LOG = 'true';
 
     const rawVersionPlans = await readRawVersionPlans();
 
@@ -109,6 +136,17 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       (shouldCommit || userProvidedReleaseConfig.git?.stageChanges) ?? false;
     const shouldTag = userProvidedReleaseConfig.git?.tag ?? true;
 
+    const shouldCreateWorkspaceRemoteRelease = shouldCreateRemoteRelease(
+      nxReleaseConfig.changelog.workspaceChangelog
+    );
+    // If the workspace or any of the release groups specify that a remote release should be created, we need to push the changes to the remote
+    const shouldPush =
+      (shouldCreateWorkspaceRemoteRelease ||
+        releaseGroups.some((group) =>
+          shouldCreateRemoteRelease(group.changelog)
+        )) ??
+      false;
+
     const versionResult: NxReleaseVersionResult = await releaseVersion({
       ...args,
       stageChanges: shouldStage,
@@ -124,24 +162,10 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       stageChanges: shouldStage,
       gitCommit: false,
       gitTag: false,
+      gitPush: false,
       createRelease: false,
       deleteVersionPlans: false,
     });
-
-    const {
-      error: filterError,
-      releaseGroups,
-      releaseGroupToFilteredProjects,
-    } = filterReleaseGroups(
-      projectGraph,
-      nxReleaseConfig,
-      args.projects,
-      args.groups
-    );
-    if (filterError) {
-      output.error(filterError);
-      process.exit(1);
-    }
 
     await setResolvedVersionPlansOnGroups(
       rawVersionPlans,
@@ -162,7 +186,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         }
         group.resolvedVersionPlans.forEach((plan) => {
           if (!args.dryRun) {
-            removeSync(plan.absolutePath);
+            rmSync(plan.absolutePath, { recursive: true, force: true });
             if (args.verbose) {
               console.log(`Removing ${plan.relativePath}`);
             }
@@ -230,28 +254,41 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       }
     }
 
-    const shouldCreateWorkspaceRelease = shouldCreateGitHubRelease(
-      nxReleaseConfig.changelog.workspaceChangelog
-    );
-
     let hasPushedChanges = false;
-    let latestCommit: string | undefined;
-
-    if (shouldCreateWorkspaceRelease && changelogResult.workspaceChangelog) {
-      output.logSingleLine(`Pushing to git remote`);
-
-      // Before we can create/update the release we need to ensure the commit exists on the remote
+    if (shouldPush) {
+      output.logSingleLine(`Pushing to git remote "origin"`);
       await gitPush({
         dryRun: args.dryRun,
         verbose: args.verbose,
+        additionalArgs: nxReleaseConfig.git.pushArgs,
       });
-
       hasPushedChanges = true;
+    }
 
-      output.logSingleLine(`Creating GitHub Release`);
+    let latestCommit: string | undefined;
+
+    if (
+      shouldCreateWorkspaceRemoteRelease &&
+      changelogResult.workspaceChangelog
+    ) {
+      const remoteReleaseClient = await createRemoteReleaseClient(
+        // shouldCreateWorkspaceRemoteRelease() ensures that the createRelease property exists and is not false
+        (nxReleaseConfig.changelog.workspaceChangelog as any)
+          .createRelease as ResolvedCreateRemoteReleaseProvider
+      );
+      if (!hasPushedChanges) {
+        throw new Error(
+          `It is not possible to create a ${remoteReleaseClient.remoteReleaseProviderName} release for the workspace without pushing the changes to the remote, please ensure that you have not disabled git push in your nx release config`
+        );
+      }
+
+      output.logSingleLine(
+        `Creating ${remoteReleaseClient.remoteReleaseProviderName} Release`
+      );
 
       latestCommit = await getCommitHash('HEAD');
-      await createOrUpdateGithubRelease(
+
+      await remoteReleaseClient.createOrUpdateRelease(
         changelogResult.workspaceChangelog.releaseVersion,
         changelogResult.workspaceChangelog.contents,
         latestCommit,
@@ -260,11 +297,19 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     }
 
     for (const releaseGroup of releaseGroups) {
-      const shouldCreateProjectReleases = shouldCreateGitHubRelease(
+      const shouldCreateProjectRemoteReleases = shouldCreateRemoteRelease(
         releaseGroup.changelog
       );
+      if (
+        shouldCreateProjectRemoteReleases &&
+        changelogResult.projectChangelogs
+      ) {
+        const remoteReleaseClient = await createRemoteReleaseClient(
+          // shouldCreateProjectRemoteReleases() ensures that the createRelease property exists and is not false
+          (releaseGroup.changelog as any)
+            .createRelease as ResolvedCreateRemoteReleaseProvider
+        );
 
-      if (shouldCreateProjectReleases && changelogResult.projectChangelogs) {
         const projects = args.projects?.length
           ? // If the user has passed a list of projects, we need to use the filtered list of projects within the release group
             Array.from(releaseGroupToFilteredProjects.get(releaseGroup))
@@ -279,24 +324,20 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           }
 
           if (!hasPushedChanges) {
-            output.logSingleLine(`Pushing to git remote`);
-
-            // Before we can create/update the release we need to ensure the commit exists on the remote
-            await gitPush({
-              dryRun: args.dryRun,
-              verbose: args.verbose,
-            });
-
-            hasPushedChanges = true;
+            throw new Error(
+              `It is not possible to create a ${remoteReleaseClient.remoteReleaseProviderName} release for the project without pushing the changes to the remote, please ensure that you have not disabled git push in your nx release config`
+            );
           }
 
-          output.logSingleLine(`Creating GitHub Release`);
+          output.logSingleLine(
+            `Creating ${remoteReleaseClient.remoteReleaseProviderName} Release`
+          );
 
           if (!latestCommit) {
             latestCommit = await getCommitHash('HEAD');
           }
 
-          await createOrUpdateGithubRelease(
+          await remoteReleaseClient.createOrUpdateRelease(
             changelog.releaseVersion,
             changelog.contents,
             latestCommit,
@@ -323,7 +364,14 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     }
 
     if (shouldPublish) {
-      await releasePublish(args);
+      const publishResults = await releasePublish(args);
+      const allExitOk = Object.values(publishResults).every(
+        (result) => result.code === 0
+      );
+      if (!allExitOk) {
+        // When a publish target fails, we want to fail the nx release CLI
+        process.exit(1);
+      }
     } else {
       output.logSingleLine('Skipped publishing packages.');
     }
@@ -342,8 +390,22 @@ async function promptForPublish(): Promise<boolean> {
       },
     ]);
     return reply.confirmation;
-  } catch (e) {
+  } catch {
+    // Ensure the cursor is always restored before exiting
+    process.stdout.write('\u001b[?25h');
     // Handle the case where the user exits the prompt with ctrl+c
     return false;
   }
+}
+
+function shouldCreateRemoteRelease(
+  changelogConfig:
+    | NxReleaseConfig['changelog']['workspaceChangelog']
+    | NxReleaseConfig['changelog']['projectChangelogs']
+    | NxReleaseConfig['groups'][number]['changelog']
+): boolean {
+  if (changelogConfig === false) {
+    return false;
+  }
+  return changelogConfig.createRelease !== false;
 }

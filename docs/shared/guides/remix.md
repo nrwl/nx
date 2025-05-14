@@ -1,3 +1,14 @@
+---
+title: Remix with Nx
+description: Learn how to create, build, serve, and test Remix applications within an Nx workspace, leveraging Nx's powerful tooling for modern web development.
+---
+
+{% callout type="warning" title="The future of Remix is React Router" %}
+Remix has announced its transition to React Router. The `@nx/remix` plugin is based on Remix v2 and is incompatible with the latest version of React Router unless you [upgrade](https://reactrouter.com/upgrading/remix) your Remix application. In the future, the `@nx/remix` plugin will be deprecated in favor of the `@nx/react/router` plugin. If you are starting a new project, we recommend using the `@nx/react/router` plugin instead.
+
+For an example of how to use React Router with Nx, see the [React Router with Nx](/recipes/react/react-router) recipe.
+{% /callout %}
+
 # Remix with Nx
 
 In this recipe, we'll show you how to create a [Remix](https://remix.run) application with Nx.
@@ -8,7 +19,8 @@ In this recipe, we'll show you how to create a [Remix](https://remix.run) applic
 
 NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
-✔ Do you want Nx Cloud to make your CI fast? · Yes
+✔ Which CI provider would you like to use? · skip
+✔ Would you like remote caching to make your build faster? · skip
 ```
 
 ## Install Nx Remix Plugin
@@ -23,11 +35,7 @@ nx add @nx/remix
 
 ## Generate a Remix Application
 
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
-
-```{% command="nx g @nx/remix:app myapp --directory=apps/myapp" path="~/acme" %}
+```{% command="nx g @nx/remix:app apps/myapp"  path="~/acme" %}
 NX  Generating @nx/remix:application
 
 ✔ What unit test runner should be used? · vitest
@@ -111,7 +119,7 @@ When developing your application, it often makes sense to split your codebase in
 
 To generate a library to use in your Remix application run:
 
-```{% command="nx g @nx/remix:lib login --directory=libs/login" path="~/acme" %}
+```{% command="nx g @nx/remix:lib libs/login" path="~/acme" %}
 NX  Generating @nx/remix:library
 
 ✔ What test runner should be used? · vitest
@@ -158,7 +166,7 @@ You can also run test on your library:
 
 To generate a route for your application:
 
-```{% command="nx g @nx/remix:route admin --path=apps/myapp/app/routes" path="~/acme" %}
+```{% command="nx g @nx/remix:route apps/myapp/app/routes/admin" path="~/acme" %}
 NX  Generating @nx/remix:route
 
 CREATE apps/myapp/app/routes/admin.tsx
@@ -171,7 +179,7 @@ To use a Route Loader where the logic lives in your library, follow the steps be
 
 1. Generate a loader for your route:
 
-```{% command="nx g @nx/remix:loader admin --path=apps/myapp/app/routes" path="~/acme" %}
+```{% command="nx g @nx/remix:loader apps/myapp/app/routes/admin.tsx" path="~/acme" %}
 NX  Generating @nx/remix:loader
 
 UPDATE apps/myapp/app/routes/admin.tsx

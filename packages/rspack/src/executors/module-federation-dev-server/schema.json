@@ -1,0 +1,103 @@
+{
+  "version": 2,
+  "continuous": true,
+  "outputCapture": "direct-nodejs",
+  "title": "Rspack Module Federation Dev Server",
+  "description": "Serve a module federation application.",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "devRemotes": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "remoteName": {
+                "type": "string"
+              },
+              "configuration": {
+                "type": "string"
+              }
+            },
+            "required": ["remoteName"],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "description": "List of Producer (remote) applications to run in development mode (i.e. using serve target).",
+      "x-priority": "important",
+      "alias": "devProducers"
+    },
+    "skipRemotes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of Producer (remote) applications to not automatically serve, either statically or in development mode. This will not remove the Producers (remotes) from the `module-federation.config` file, and therefore the application may still try to fetch these Producers (remotes).\nThis option is useful if you have other means for serving the Producer (remote) application(s).\n**NOTE:** Producers (remotes) that are not in the workspace will be skipped automatically.",
+      "x-priority": "important",
+      "alias": "skipProducers"
+    },
+    "buildTarget": {
+      "type": "string",
+      "description": "Target which builds the application.",
+      "x-priority": "important"
+    },
+    "port": {
+      "type": "number",
+      "description": "Port to listen on.",
+      "default": 4200,
+      "x-priority": "important"
+    },
+    "host": {
+      "type": "string",
+      "description": "Host to listen on.",
+      "default": "localhost"
+    },
+    "ssl": {
+      "type": "boolean",
+      "description": "Serve using `HTTPS`.",
+      "default": false
+    },
+    "sslKey": {
+      "type": "string",
+      "description": "SSL key to use for serving `HTTPS`."
+    },
+    "sslCert": {
+      "type": "string",
+      "description": "SSL certificate to use for serving `HTTPS`."
+    },
+    "publicHost": {
+      "type": "string",
+      "description": "Public URL where the application will be served."
+    },
+    "static": {
+      "type": "boolean",
+      "description": "Whether to use a static file server instead of the rspack-dev-server. This should be used for Producer (remote) applications that are also Consumer (host) applications."
+    },
+    "isInitialHost": {
+      "type": "boolean",
+      "description": "Whether the Consumer (host) that is running this executor is the first in the project tree to do so.",
+      "default": true,
+      "x-priority": "internal",
+      "alias": "isInitialConsumer"
+    },
+    "parallel": {
+      "type": "number",
+      "description": "Max number of parallel processes for building static Producers (remotes)."
+    },
+    "staticRemotesPort": {
+      "type": "number",
+      "description": "The port at which to serve the file-server for the static Producers (remotes).",
+      "alias": "staticProducersPort"
+    },
+    "pathToManifestFile": {
+      "type": "string",
+      "description": "Path to a Module Federation manifest file (e.g. `my/path/to/module-federation.manifest.json`) containing the dynamic Producer (remote) applications relative to the workspace root."
+    }
+  }
+}

@@ -1,44 +1,46 @@
 {
   "name": "remote",
-  "factory": "./src/generators/remote/remote#remoteInternal",
+  "factory": "./src/generators/remote/remote",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxMFRemote",
     "cli": "nx",
-    "title": "Nx Module Federation Remote App",
-    "description": "Create an Angular Remote Module Federation Application.",
+    "title": "Nx Module Federation Producer (Remote) App",
+    "description": "Create an Angular Producer (Remote) Module Federation Application.",
     "type": "object",
     "examples": [
       {
         "command": "nx g @nx/angular:remote appName --host=host --port=4201",
-        "description": "Create an Angular app with configuration in place for Module Federation. If host is provided, attach this remote app to host app's configuration."
+        "description": "Create an Angular app with configuration in place for Module Federation. If Consumer (host) is provided, attach this Producer (remote) app to Consumer (host) app's configuration."
+      },
+      {
+        "command": "nx g @nx/angular:producer appName --consumer=host --port=4201",
+        "description": "Create an Angular app with configuration in place for Module Federation. If Consumer (host) is provided, attach this Producer (remote) app to Consumer (host) app's configuration."
       }
     ],
     "properties": {
+      "directory": {
+        "description": "The directory of the new application.",
+        "type": "string",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "Which directory do you want to create the application in?"
+      },
       "name": {
         "type": "string",
-        "description": "The name to give to the remote Angular app.",
-        "$default": { "$source": "argv", "index": 0 },
-        "pattern": "^[a-zA-Z][^:]*$"
+        "description": "The name to give to the Producer (remote) Angular app.",
+        "pattern": "^[a-zA-Z_$][a-zA-Z_$0-9]*$",
+        "x-priority": "important"
       },
       "host": {
         "type": "string",
-        "description": "The name of the host app to attach this remote app to.",
+        "description": "The name of the Consumer (host) app to attach this Producer (remote) app to.",
         "x-dropdown": "projects",
-        "x-priority": "important"
+        "x-priority": "important",
+        "alias": "consumer"
       },
       "port": {
         "type": "number",
         "description": "The port on which this app should be served."
-      },
-      "directory": {
-        "description": "The directory of the new application.",
-        "type": "string"
-      },
-      "projectNameAndRootFormat": {
-        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
-        "type": "string",
-        "enum": ["as-provided", "derived"]
       },
       "style": {
         "description": "The file extension to be used for style files.",
@@ -102,8 +104,9 @@
       },
       "unitTestRunner": {
         "type": "string",
-        "enum": ["jest", "none"],
+        "enum": ["jest", "vitest", "none"],
         "description": "Test runner to use for unit tests.",
+        "x-prompt": "Which unit test runner would you like to use?",
         "default": "jest"
       },
       "e2eTestRunner": {
@@ -132,12 +135,6 @@
         "description": "Create an application with stricter type checking and build optimization options.",
         "default": true
       },
-      "standaloneConfig": {
-        "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-        "type": "boolean",
-        "default": true,
-        "x-deprecated": "Nx only supports standaloneConfig"
-      },
       "setParserOptionsProject": {
         "type": "boolean",
         "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
@@ -155,14 +152,18 @@
         "x-priority": "internal"
       },
       "standalone": {
-        "description": "Whether to generate a remote application with standalone components.",
+        "description": "Whether to generate a Producer (remote) application with standalone components.",
         "type": "boolean",
         "default": true
       },
       "ssr": {
-        "description": "Whether to configure SSR for the remote application to be consumed by a host application using SSR.",
+        "description": "Whether to configure SSR for the Producer (remote) application to be consumed by a Consumer (host) application using SSR.",
         "type": "boolean",
         "default": false
+      },
+      "serverRouting": {
+        "description": "Creates a server application using the Server Routing and App Engine APIs (Developer Preview). _Note: this is only supported in Angular versions >= 19.0.0_.",
+        "type": "boolean"
       },
       "typescriptConfiguration": {
         "type": "boolean",
@@ -171,13 +172,13 @@
       }
     },
     "additionalProperties": false,
-    "required": ["name"],
+    "required": ["directory"],
     "presets": []
   },
   "x-type": "application",
   "description": "Generate a Remote Angular Module Federation Application.",
-  "implementation": "/packages/angular/src/generators/remote/remote#remoteInternal.ts",
-  "aliases": [],
+  "aliases": ["producer"],
+  "implementation": "/packages/angular/src/generators/remote/remote.ts",
   "hidden": false,
   "path": "/packages/angular/src/generators/remote/schema.json",
   "type": "generator"

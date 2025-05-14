@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "name": "rspack",
+  "version": "0.0.1",
+  "generators": {
+    "configuration": {
+      "factory": "./src/generators/configuration/configuration",
+      "schema": "./src/generators/configuration/schema.json",
+      "description": "Rspack configuration generator."
+    },
+    "init": {
+      "factory": "./src/generators/init/init",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Rspack init generator.",
+      "hidden": true
+    },
+    "preset": {
+      "factory": "./src/generators/preset/preset",
+      "schema": "./src/generators/preset/schema.json",
+      "description": "React preset generator.",
+      "hidden": true
+    },
+    "application": {
+      "factory": "./src/generators/application/application",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "x-type": "application",
+      "description": "React application generator."
+    },
+    "convert-webpack": {
+      "alias": "convert-to-rspack",
+      "factory": "./src/generators/convert-webpack/convert-webpack",
+      "schema": "./src/generators/convert-webpack/schema.json",
+      "description": "Convert a webpack application to use rspack."
+    },
+    "convert-config-to-rspack-plugin": {
+      "factory": "./src/generators/convert-config-to-rspack-plugin/convert-config-to-rspack-plugin",
+      "schema": "./src/generators/convert-config-to-rspack-plugin/schema.json",
+      "description": "Convert the project to use the `NxAppRspackPlugin` and `NxReactRspackPlugin`."
+    },
+    "convert-to-inferred": {
+      "factory": "./src/generators/convert-to-inferred/convert-to-inferred#convertToInferred",
+      "schema": "./src/generators/convert-to-inferred/schema.json",
+      "description": "Convert existing Rspack project(s) using `@nx/rspack:rspack` executor to use `@nx/rspack/plugin`."
+    }
+  }
+}

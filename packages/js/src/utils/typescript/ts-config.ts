@@ -1,24 +1,43 @@
 import { offsetFromRoot, Tree, updateJson, workspaceRoot } from '@nx/devkit';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import { ensureTypescript } from './ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
-export function readTsConfig(tsConfigPath: string): ts.ParsedCommandLine {
+export function readTsConfig(
+  tsConfigPath: string,
+  sys?: ts.System
+): ts.ParsedCommandLine {
   if (!tsModule) {
     tsModule = require('typescript');
   }
-  const readResult = tsModule.readConfigFile(
-    tsConfigPath,
-    tsModule.sys.readFile
-  );
+
+  sys ??= tsModule.sys;
+
+  const readResult = tsModule.readConfigFile(tsConfigPath, sys.readFile);
   return tsModule.parseJsonConfigFileContent(
     readResult.config,
-    tsModule.sys,
+    sys,
     dirname(tsConfigPath)
   );
+}
+
+export function readTsConfigFromTree(
+  tree: Tree,
+  tsConfigPath: string
+): ts.ParsedCommandLine {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+
+  const tsSysFromTree: ts.System = {
+    ...tsModule.sys,
+    readFile: (path) => tree.read(path, 'utf-8'),
+  };
+
+  return readTsConfig(tsConfigPath, tsSysFromTree);
 }
 
 export function getRootTsConfigPathInTree(tree: Tree): string | null {

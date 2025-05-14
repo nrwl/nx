@@ -5,6 +5,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import {
+  analogVitestAngular,
   edgeRuntimeVmVersion,
   happyDomVersion,
   jsdomVersion,
@@ -14,7 +15,7 @@ import {
 } from './versions';
 
 export type EnsureDependenciesOptions = {
-  uiFramework: 'react' | 'none';
+  uiFramework: 'angular' | 'react' | 'none';
   compiler?: 'babel' | 'swc';
   includeLib?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
@@ -36,6 +37,11 @@ export function ensureDependencies(
     logger.info(
       `A custom environment was provided: ${schema.testEnvironment}. You need to install it manually.`
     );
+  }
+
+  if (schema.uiFramework === 'angular') {
+    devDependencies['@analogjs/vitest-angular'] = analogVitestAngular;
+    devDependencies['@analogjs/vite-plugin-angular'] = analogVitestAngular;
   }
 
   if (schema.uiFramework === 'react') {

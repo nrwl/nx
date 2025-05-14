@@ -35,7 +35,7 @@ export function applyWebConfig(
     useNormalizedEntry?: boolean;
   } = {}
 ): void {
-  if (!process.env['NX_TASK_TARGET_PROJECT']) return;
+  if (global.NX_GRAPH_CREATION) return;
 
   // Defaults that was applied from executor schema previously.
   options.runtimeChunk ??= true; // need this for HMR and other things to work
@@ -61,7 +61,7 @@ export function applyWebConfig(
         sri: options.subresourceIntegrity,
         outputPath: path.basename(options.index),
         indexPath: path.join(options.root, options.index),
-        baseHref: options.baseHref,
+        baseHref: options.baseHref !== false ? options.baseHref : undefined,
         deployUrl: options.deployUrl,
         scripts: options.scripts,
         styles: options.styles,
@@ -93,6 +93,8 @@ export function applyWebConfig(
   // Determine hashing format.
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
 
+  const sassOptions = options.stylePreprocessorOptions?.sassOptions;
+  const lessOptions = options.stylePreprocessorOptions?.lessOptions;
   const includePaths: string[] = [];
   if (options?.stylePreprocessorOptions?.includePaths?.length > 0) {
     options.stylePreprocessorOptions.includePaths.forEach(
@@ -141,11 +143,16 @@ export function applyWebConfig(
         {
           loader: require.resolve('sass-loader'),
           options: {
-            implementation: require('sass'),
+            api: 'modern-compiler',
+            implementation:
+              options.sassImplementation === 'sass'
+                ? require.resolve('sass')
+                : require.resolve('sass-embedded'),
             sassOptions: {
               fiber: false,
               precision: 8,
               includePaths,
+              ...(sassOptions ?? {}),
             },
           },
         },
@@ -161,6 +168,7 @@ export function applyWebConfig(
           options: {
             lessOptions: {
               paths: includePaths,
+              ...(lessOptions ?? {}),
             },
           },
         },
@@ -200,13 +208,18 @@ export function applyWebConfig(
         {
           loader: require.resolve('sass-loader'),
           options: {
-            implementation: require('sass'),
+            api: 'modern-compiler',
+            implementation:
+              options.sassImplementation === 'sass'
+                ? require.resolve('sass')
+                : require.resolve('sass-embedded'),
             sourceMap: !!options.sourceMap,
             sassOptions: {
               fiber: false,
               // bootstrap-sass requires a minimum precision of 8
               precision: 8,
               includePaths,
+              ...(sassOptions ?? {}),
             },
           },
         },
@@ -224,6 +237,7 @@ export function applyWebConfig(
             lessOptions: {
               javascriptEnabled: true,
               ...lessPathOptions,
+              ...(lessOptions ?? {}),
             },
           },
         },
@@ -264,13 +278,18 @@ export function applyWebConfig(
         {
           loader: require.resolve('sass-loader'),
           options: {
-            implementation: require('sass'),
+            api: 'modern-compiler',
+            implementation:
+              options.sassImplementation === 'sass'
+                ? require.resolve('sass')
+                : require.resolve('sass-embedded'),
             sourceMap: !!options.sourceMap,
             sassOptions: {
               fiber: false,
               // bootstrap-sass requires a minimum precision of 8
               precision: 8,
               includePaths,
+              ...(sassOptions ?? {}),
             },
           },
         },
@@ -288,6 +307,7 @@ export function applyWebConfig(
             lessOptions: {
               javascriptEnabled: true,
               ...lessPathOptions,
+              ...(lessOptions ?? {}),
             },
           },
         },
@@ -406,6 +426,7 @@ export function applyWebConfig(
           },
         },
       },
+      // TODO(v22): Remove this but provide a migration in `@nx/react` to add @svgr/webpack in userland webpack config
       // SVG: same as image but we need to separate it so it can be swapped for SVGR in the React plugin.
       {
         test: /\.svg$/,

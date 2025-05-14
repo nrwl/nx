@@ -1,3 +1,8 @@
+---
+title: React Native with Nx
+description: Learn how to develop React Native applications with Nx, including workspace setup, running on simulators, testing, and leveraging Nx's powerful tooling.
+---
+
 # React Native with Nx
 
 Nx provides a holistic dev experience powered by an advanced CLI and editor plugins. It provides rich support for common tools like [Detox](/nx-api/detox), Storybook, Jest, and more.
@@ -171,7 +176,7 @@ nx add @nx/react-native
 To create additional React Native apps run:
 
 ```shell
-npx nx g @nx/react-native:app mobile --directory=apps/mobile
+npx nx g @nx/react-native:app apps/mobile
 ```
 
 ## Generating a Library
@@ -185,7 +190,7 @@ Nx allows you to create libraries with just one command. Some reasons you might 
 To generate a new library run:
 
 ```shell
-npx nx g @nx/react-native:lib shared-ui-layout --directory=libs/shared-ui-layout
+npx nx g @nx/react-native:lib libs/shared-ui-layout
 ```
 
 And you will see the following:
@@ -225,7 +230,7 @@ Run:
 To generate a new component inside `shared-ui-layout` run:
 
 ```shell
-npx nx g @nx/react-native:component layout --directory=libs/shared-ui-layout/src/lib/layout --export
+npx nx g @nx/react-native:component libs/shared-ui-layout/src/lib/layout/layout --export
 ```
 
 And you will see the following updated for `shared-ui-layout`:
@@ -270,8 +275,8 @@ That's it! There is no need to build the library prior to using it. When you upd
 For libraries intended to be built and published to a registry (e.g. npm) you can use the `--publishable` and `--importPath` options.
 
 ```shell
-npx nx g @nx/react-native:lib shared-ui-layout --directory=libs/shared-ui-layout --publishable --importPath=@happynrwl/ui-components
-npx nx g @nx/react-native:component layout --directory=libs/shared-ui-layout/src/lib/layout --export
+npx nx g @nx/react-native:lib libs/shared-ui-layout --publishable --importPath=@happynrwl/ui-components
+npx nx g @nx/react-native:component libs/shared-ui-layout/src/lib/layout/layout --export
 ```
 
 Run `npx nx build shared-ui-layout` to build the library. It will generate the following:

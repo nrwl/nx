@@ -1,11 +1,20 @@
 import {
   formatFiles,
+  installPackagesTask,
   readProjectConfiguration,
   removeProjectConfiguration,
-  Tree,
+  type GeneratorCallback,
+  type Tree,
 } from '@nx/devkit';
+import { isProjectIncludedInPackageManagerWorkspaces } from '../../utilities/package-manager-workspaces';
+import { addProjectToTsSolutionWorkspace } from '../../utilities/typescript/ts-solution-setup';
 import { checkDestination } from './lib/check-destination';
 import { createProjectConfigurationInNewDestination } from './lib/create-project-configuration-in-new-destination';
+import {
+  maybeExtractJestConfigBase,
+  maybeExtractTsConfigBase,
+  maybeMigrateEslintConfigIfRootProject,
+} from './lib/extract-base-configs';
 import { moveProjectFiles } from './lib/move-project-files';
 import { normalizeSchema } from './lib/normalize-schema';
 import { runAngularPlugin } from './lib/run-angular-plugin';
@@ -20,22 +29,14 @@ import { updatePackageJson } from './lib/update-package-json';
 import { updateProjectRootFiles } from './lib/update-project-root-files';
 import { updateReadme } from './lib/update-readme';
 import { updateStorybookConfig } from './lib/update-storybook-config';
-import {
-  maybeMigrateEslintConfigIfRootProject,
-  maybeExtractJestConfigBase,
-  maybeExtractTsConfigBase,
-} from './lib/extract-base-configs';
 import { Schema } from './schema';
 
 export async function moveGenerator(tree: Tree, rawSchema: Schema) {
-  await moveGeneratorInternal(tree, {
-    projectNameAndRootFormat: 'derived',
-    ...rawSchema,
-  });
-}
-
-export async function moveGeneratorInternal(tree: Tree, rawSchema: Schema) {
   let projectConfig = readProjectConfiguration(tree, rawSchema.projectName);
+  const wasIncludedInWorkspaces = isProjectIncludedInPackageManagerWorkspaces(
+    tree,
+    projectConfig.root
+  );
   const schema = await normalizeSchema(tree, rawSchema, projectConfig);
   checkDestination(tree, schema, rawSchema.destination);
 
@@ -68,8 +69,28 @@ export async function moveGeneratorInternal(tree: Tree, rawSchema: Schema) {
 
   await runAngularPlugin(tree, schema);
 
+  let task: GeneratorCallback;
+  if (wasIncludedInWorkspaces) {
+    // check if the new destination is included in the package manager workspaces
+    const isIncludedInWorkspaces = isProjectIncludedInPackageManagerWorkspaces(
+      tree,
+      schema.destination
+    );
+    if (!isIncludedInWorkspaces) {
+      // the new destination is not included in the package manager workspaces
+      // so we need to add it and run a package install to ensure the symlink
+      // is created
+      await addProjectToTsSolutionWorkspace(tree, schema.destination);
+      task = () => installPackagesTask(tree, true);
+    }
+  }
+
   if (!schema.skipFormat) {
     await formatFiles(tree);
+  }
+
+  if (task) {
+    return task;
   }
 }
 

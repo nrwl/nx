@@ -29,7 +29,7 @@ import {
 import { readProjectGraph } from '../utils/project-graph-utils';
 import {
   appIsMFERemote,
-  belongsToDifferentNgEntryPoint,
+  belongsToDifferentEntryPoint,
   DepConstraint,
   findConstraintsFor,
   findDependenciesWithTags,
@@ -50,8 +50,9 @@ import {
   matchImportWithWildcard,
   stringifyTags,
 } from '../utils/runtime-lint-utils';
+import { isProjectGraphProjectNode } from 'nx/src/config/project-graph';
 
-type Options = [
+export type Options = [
   {
     allow: string[];
     buildTargets: string[];
@@ -91,7 +92,6 @@ export default ESLintUtils.RuleCreator(
     type: 'suggestion',
     docs: {
       description: `Ensure that module boundaries are respected within the monorepo`,
-      recommended: 'recommended',
     },
     fixable: 'code',
     schema: [
@@ -338,8 +338,7 @@ export default ESLintUtils.RuleCreator(
                   for (const importMember of imports) {
                     const importPath = getRelativeImportPath(
                       importMember,
-                      join(workspaceRoot, entryPointPath.path),
-                      sourceProject.data.sourceRoot
+                      join(workspaceRoot, entryPointPath.path)
                     );
                     // we cannot remap, so leave it as is
                     if (importPath) {
@@ -413,7 +412,7 @@ export default ESLintUtils.RuleCreator(
         if (
           !allowCircularSelfDependency &&
           !isRelativePath(imp) &&
-          !belongsToDifferentNgEntryPoint(
+          !belongsToDifferentEntryPoint(
             imp,
             sourceFilePath,
             sourceProject.data.root
@@ -445,8 +444,7 @@ export default ESLintUtils.RuleCreator(
                   for (const importMember of imports) {
                     const importPath = getRelativeImportPath(
                       importMember,
-                      join(workspaceRoot, entryPointPath),
-                      sourceProject.data.sourceRoot
+                      join(workspaceRoot, entryPointPath)
                     );
                     if (importPath) {
                       // resolve the import path
@@ -527,6 +525,11 @@ export default ESLintUtils.RuleCreator(
         }
         return;
       }
+
+      if (!isProjectGraphProjectNode(targetProject)) {
+        return;
+      }
+      targetProject = targetProject as ProjectGraphProjectNode;
 
       // check constraints between libs and apps
       // check for circular dependency
@@ -620,7 +623,9 @@ export default ESLintUtils.RuleCreator(
           node,
           projectGraph,
           sourceProject.name,
-          targetProject.name
+          targetProject.name,
+          imp,
+          sourceFilePath
         )
       ) {
         const filesWithLazyImports = findFilesWithDynamicImports(

@@ -5,23 +5,23 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import libraryGenerator from './library';
-import { Linter } from '@nx/eslint';
+import { hasPlugin as hasRollupPlugin } from '@nx/rollup/src/utils/has-plugin';
 import { Schema } from './schema';
 
 describe('lib', () => {
   let appTree: Tree;
 
   const defaultSchema: Schema = {
-    name: 'my-lib',
-    linter: Linter.EsLint,
+    directory: 'my-lib',
+    linter: 'eslint',
     skipFormat: false,
     skipTsConfig: false,
     unitTestRunner: 'jest',
     strict: true,
-    projectNameAndRootFormat: 'as-provided',
     addPlugin: true,
   };
 
@@ -112,6 +112,7 @@ describe('lib', () => {
     it('should update nx.json', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
+        name: 'my-lib',
         directory: 'my-dir',
         tags: 'one',
       });
@@ -140,6 +141,7 @@ describe('lib', () => {
     it('should update root tsconfig.base.json', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
+        name: 'my-lib',
         directory: 'my-dir',
       });
       const tsconfigJson = readJson(appTree, '/tsconfig.base.json');
@@ -156,6 +158,7 @@ describe('lib', () => {
 
       await libraryGenerator(appTree, {
         ...defaultSchema,
+        name: 'my-lib',
         directory: 'my-dir',
       });
 
@@ -171,6 +174,7 @@ describe('lib', () => {
     it('should create a local tsconfig.json', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
+        name: 'my-lib',
         directory: 'my-dir',
       });
 
@@ -184,6 +188,37 @@ describe('lib', () => {
           path: './tsconfig.spec.json',
         },
       ]);
+
+      expect(readJson(appTree, 'my-dir/tsconfig.lib.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "outDir": "../dist/out-tsc",
+            "types": [
+              "node",
+            ],
+          },
+          "exclude": [
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/test-setup.ts",
+            "jest.config.ts",
+          ],
+          "extends": "./tsconfig.json",
+          "include": [
+            "src/**/*.js",
+            "src/**/*.jsx",
+            "src/**/*.ts",
+            "src/**/*.tsx",
+          ],
+        }
+      `);
     });
 
     it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
@@ -191,6 +226,7 @@ describe('lib', () => {
 
       await libraryGenerator(appTree, {
         ...defaultSchema,
+        name: 'my-lib',
         directory: 'my-dir',
       });
 
@@ -223,6 +259,8 @@ describe('lib', () => {
           "compilerOptions": {
             "outDir": "../dist/out-tsc",
             "module": "commonjs",
+            "moduleResolution": "node10",
+            "jsx": "react-jsx",
             "types": ["jest", "node"]
           },
           "files": ["src/test-setup.ts"],
@@ -271,40 +309,27 @@ describe('lib', () => {
   });
 
   describe('--buildable', () => {
-    it('should have a builder defined', async () => {
+    it('should add a rollup.config.cjs', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
         buildable: true,
       });
 
-      const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
-
-      expect(projectConfiguration.targets.build).toBeDefined();
+      expect(appTree.exists('my-lib/rollup.config.cjs')).toBeTruthy();
+      expect(hasRollupPlugin(appTree)).toBeTruthy();
     });
   });
 
   describe('--publishable', () => {
-    it('should add build architect', async () => {
+    it('should add a rollup.config.cjs', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
         publishable: true,
         importPath: '@proj/my-lib',
       });
 
-      const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
-
-      expect(projectConfiguration.targets.build).toMatchObject({
-        executor: '@nx/rollup:rollup',
-        outputs: ['{options.outputPath}'],
-        options: {
-          external: ['react/jsx-runtime', 'react-native', 'react', 'react-dom'],
-          entryFile: 'my-lib/src/index.ts',
-          outputPath: 'dist/my-lib',
-          project: 'my-lib/package.json',
-          tsConfig: 'my-lib/tsconfig.lib.json',
-          rollupConfig: '@nx/react/plugins/bundle-rollup',
-        },
-      });
+      expect(appTree.exists('my-lib/rollup.config.cjs')).toBeTruthy();
+      expect(hasRollupPlugin(appTree)).toBeTruthy();
     });
 
     it('should fail if no importPath is provided with publishable', async () => {
@@ -313,6 +338,7 @@ describe('lib', () => {
       try {
         await libraryGenerator(appTree, {
           ...defaultSchema,
+          name: 'my-lib',
           directory: 'my-dir',
           publishable: true,
         });
@@ -352,6 +378,7 @@ describe('lib', () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
         publishable: true,
+        name: 'my-lib',
         directory: 'my-dir',
         importPath: '@myorg/lib',
       });
@@ -367,7 +394,7 @@ describe('lib', () => {
     it('should fail if the same importPath has already been used', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
-        name: 'my-lib1',
+        directory: 'my-lib1',
         publishable: true,
         importPath: '@myorg/lib',
       });
@@ -375,7 +402,7 @@ describe('lib', () => {
       try {
         await libraryGenerator(appTree, {
           ...defaultSchema,
-          name: 'my-lib2',
+          directory: 'my-lib2',
           publishable: true,
           importPath: '@myorg/lib',
         });
@@ -418,6 +445,270 @@ describe('lib', () => {
       });
 
       expect(readJson(appTree, 'package.json')).toEqual(packageJsonBefore);
+    });
+  });
+
+  describe('TS solution setup', () => {
+    beforeEach(() => {
+      updateJson(appTree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(appTree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+          customConditions: ['development'],
+        },
+      });
+      writeJson(appTree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should add project references when using TS solution', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        useProjectJson: false,
+      });
+
+      expect(readJson(appTree, 'tsconfig.json').references)
+        .toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./my-lib",
+          },
+        ]
+      `);
+      const packageJson = readJson(appTree, 'my-lib/package.json');
+      expect(packageJson.name).toBe('@proj/my-lib');
+      expect(packageJson.nx).toBeUndefined();
+      // Make sure keys are in idiomatic order
+      expect(packageJson).toMatchInlineSnapshot(`
+        {
+          "exports": {
+            ".": {
+              "default": "./src/index.ts",
+              "import": "./src/index.ts",
+              "types": "./src/index.ts",
+            },
+            "./package.json": "./package.json",
+          },
+          "main": "./src/index.ts",
+          "name": "@proj/my-lib",
+          "peerDependencies": {
+            "react": "~18.3.1",
+            "react-native": "~0.76.3",
+          },
+          "types": "./src/index.ts",
+          "version": "0.0.1",
+        }
+      `);
+      expect(readJson(appTree, 'my-lib/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "../tsconfig.base.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+            {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
+        }
+      `);
+      expect(readJson(appTree, 'my-lib/tsconfig.lib.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "react-jsx",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "dist",
+            "rootDir": "src",
+            "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
+            "types": [
+              "node",
+            ],
+          },
+          "exclude": [
+            "out-tsc",
+            "dist",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/test-setup.ts",
+            "jest.config.ts",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "src/**/*.js",
+            "src/**/*.jsx",
+            "src/**/*.ts",
+            "src/**/*.tsx",
+          ],
+        }
+      `);
+      expect(readJson(appTree, 'my-lib/tsconfig.spec.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "react-jsx",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "./out-tsc/jest",
+            "types": [
+              "jest",
+              "node",
+            ],
+          },
+          "extends": "../tsconfig.base.json",
+          "files": [
+            "src/test-setup.ts",
+          ],
+          "include": [
+            "jest.config.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+          ],
+        }
+      `);
+    });
+
+    it('should create a correct package.json for buildable libraries', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        useProjectJson: false,
+        buildable: true,
+        skipFormat: true,
+      });
+
+      expect(appTree.read('my-lib/package.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "name": "@proj/my-lib",
+          "version": "0.0.1",
+          "main": "./dist/index.cjs.js",
+          "module": "./dist/index.esm.js",
+          "types": "./dist/index.esm.d.ts",
+          "exports": {
+            "./package.json": "./package.json",
+            ".": {
+              "development": "./src/index.ts",
+              "types": "./dist/index.esm.d.ts",
+              "import": "./dist/index.esm.js",
+              "default": "./dist/index.cjs.js"
+            }
+          },
+          "peerDependencies": {
+            "react": "~18.3.1",
+            "react-native": "~0.76.3"
+          }
+        }
+        "
+      `);
+    });
+
+    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+      updateJson(appTree, 'tsconfig.base.json', (json) => {
+        delete json.compilerOptions.customConditions;
+        return json;
+      });
+
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        useProjectJson: false,
+        buildable: true,
+        skipFormat: true,
+      });
+
+      expect(
+        readJson(appTree, 'my-lib/package.json').exports['.']
+      ).not.toHaveProperty('development');
+    });
+
+    it('should set "nx.name" in package.json when the user provides a name that is different than the package name', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        directory: 'my-lib',
+        name: 'my-lib', // import path contains the npm scope, so it would be different
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(readJson(appTree, 'my-lib/package.json').nx).toStrictEqual({
+        name: 'my-lib',
+      });
+    });
+
+    it('should not set "nx.name" in package.json when the provided name matches the package name', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        directory: 'my-lib',
+        name: '@proj/my-lib',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(readJson(appTree, 'my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should not set "nx.name" in package.json when the user does not provide a name', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        directory: 'my-lib',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(readJson(appTree, 'my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        useProjectJson: true,
+        skipFormat: true,
+      });
+
+      expect(appTree.exists('my-lib/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(appTree, '@proj/my-lib'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/my-lib",
+          "projectType": "library",
+          "root": "my-lib",
+          "sourceRoot": "my-lib/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(appTree, 'my-lib/package.json').nx).toBeUndefined();
     });
   });
 });

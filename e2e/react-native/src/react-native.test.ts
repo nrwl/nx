@@ -9,30 +9,49 @@ import {
   fileExists,
   checkFilesExist,
   runE2ETests,
+  updateFile,
 } from 'e2e/utils';
 
 describe('@nx/react-native', () => {
+  let proj: string;
   let appName: string;
+  let libName: string;
+  let componentName: string;
 
   beforeAll(() => {
-    newProject();
+    proj = newProject();
     appName = uniq('app');
     runCLI(
-      `generate @nx/react-native:app ${appName} --project-name-and-root-format=as-provided --install=false --no-interactive`
+      `generate @nx/react-native:app ${appName} --install=false --no-interactive --unitTestRunner=jest --linter=eslint`
     );
+    libName = uniq('lib');
+    runCLI(
+      `generate @nx/react-native:lib ${libName} --buildable --no-interactive --unitTestRunner=jest --linter=eslint`
+    );
+    componentName = uniq('Component');
+    runCLI(
+      `generate @nx/react-native:component ${libName}/src/lib/${componentName}/${componentName} --export --no-interactive`
+    );
+    updateFile(`${appName}/src/app/App.tsx`, (content) => {
+      let updated = `// eslint-disable-next-line @typescript-eslint/no-unused-vars\nimport {${componentName}} from '${proj}/${libName}';\n${content}`;
+      return updated;
+    });
   });
 
   afterAll(() => cleanupProject());
 
-  it('should bundle the app', async () => {
-    const result = runCLI(
-      `bundle ${appName} --platform=ios --bundle-output=dist.js --entry-file=src/main.tsx`
-    );
-    fileExists(` ${appName}/dist.js`);
+  it('should test and lint', async () => {
+    expect(() => runCLI(`test ${appName}`)).not.toThrow();
+    expect(() => runCLI(`lint ${appName}`)).not.toThrow();
+  });
 
-    expect(result).toContain(
-      `Successfully ran target bundle for project ${appName}`
-    );
+  it('should bundle the app', async () => {
+    expect(() =>
+      runCLI(
+        `bundle ${appName} --platform=ios --bundle-output=dist.js --entry-file=src/main.tsx`
+      )
+    ).not.toThrow();
+    fileExists(` ${appName}/dist.js`);
   }, 200_000);
 
   it('should start the app', async () => {
@@ -87,11 +106,11 @@ describe('@nx/react-native', () => {
 
   it('should run e2e for cypress', async () => {
     if (runE2ETests()) {
-      let results = runCLI(`e2e ${appName}-e2e`);
-      expect(results).toContain('Successfully ran target e2e');
+      expect(() => runCLI(`e2e ${appName}-e2e`)).not.toThrow();
 
-      results = runCLI(`e2e ${appName}-e2e --configuration=ci`);
-      expect(results).toContain('Successfully ran target e2e');
+      expect(() =>
+        runCLI(`e2e ${appName}-e2e --configuration=ci`)
+      ).not.toThrow();
 
       // port and process cleanup
       try {
@@ -106,24 +125,48 @@ describe('@nx/react-native', () => {
 
   it('should create storybook with application', async () => {
     runCLI(
-      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`
+      `generate @nx/react-native:storybook-configuration ${appName} --generateStories --no-interactive`
     );
     checkFilesExist(
       `${appName}/.storybook/main.ts`,
       `${appName}/src/app/App.stories.tsx`
     );
+
+    runCLI(`build-storybook ${appName}`);
+    checkFilesExist(`${appName}/storybook-static/index.html`);
+  });
+
+  it('should build publishable library', async () => {
+    expect(() => {
+      runCLI(`build ${libName}`);
+      checkFilesExist(
+        `dist/${libName}/index.esm.js`,
+        `dist/${libName}/src/index.d.ts`
+      );
+    }).not.toThrow();
+  });
+
+  it('should create storybook with library', async () => {
+    runCLI(
+      `generate @nx/react-native:storybook-configuration ${libName} --generateStories --no-interactive`
+    );
+    checkFilesExist(
+      `${libName}/.storybook/main.ts`,
+      `${libName}/src/lib/${componentName}/${componentName}.stories.tsx`
+    );
+
+    runCLI(`build-storybook ${libName}`);
+    checkFilesExist(`${libName}/storybook-static/index.html`);
   });
 
   it('should run build with vite bundler and e2e with playwright', async () => {
     const appName2 = uniq('my-app');
     runCLI(
-      `generate @nx/react-native:application ${appName2} --bundler=vite --e2eTestRunner=playwright --install=false --no-interactive`
+      `generate @nx/react-native:application ${appName2} --directory=apps/${appName2} --bundler=vite --e2eTestRunner=playwright --install=false --no-interactive --unitTestRunner=jest --linter=eslint`
     );
-    const buildResults = runCLI(`build ${appName2}`);
-    expect(buildResults).toContain('Successfully ran target build');
+    expect(() => runCLI(`build ${appName2}`)).not.toThrow();
     if (runE2ETests()) {
-      const e2eResults = runCLI(`e2e ${appName2}-e2e`);
-      expect(e2eResults).toContain('Successfully ran target e2e');
+      expect(() => runCLI(`e2e ${appName2}-e2e`)).not.toThrow();
       // port and process cleanup
       try {
         if (process && process.pid) {
@@ -141,5 +184,7 @@ describe('@nx/react-native', () => {
       `apps/${appName2}/.storybook/main.ts`,
       `apps/${appName2}/src/app/App.stories.tsx`
     );
+    runCLI(`build-storybook ${appName2}`);
+    checkFilesExist(`apps/${appName2}/storybook-static/index.html`);
   });
 });

@@ -36,8 +36,14 @@
               "typescript",
               // Installed to workspace by plugins
               "@typescript-eslint/parser",
-              "eslint-config-prettier",
-              "@angular-eslint/eslint-plugin"
+              "@angular-eslint/eslint-plugin",
+              "angular-eslint",
+              "typescript-eslint",
+              "@eslint/js",
+              "eslint-plugin-import",
+              "eslint-plugin-jsx-a11y",
+              "eslint-plugin-react",
+              "eslint-plugin-react-hooks"
             ]
           }
         ]

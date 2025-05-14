@@ -2,145 +2,80 @@ import {
   CreateDependencies,
   CreateDependenciesContext,
   DependencyType,
-  FileMap,
-  RawProjectGraphDependency,
+  logger,
+  normalizePath,
+  StaticDependency,
   validateDependency,
+  workspaceRoot,
 } from '@nx/devkit';
-import { readFileSync } from 'node:fs';
-import { basename, dirname } from 'node:path';
+import { join, relative } from 'node:path';
 
 import {
-  GRADLE_BUILD_FILES,
-  getCurrentGradleReport,
-  newLineSeparator,
-} from '../utils/get-gradle-report';
+  getCurrentProjectGraphReport,
+  populateProjectGraph,
+} from './utils/get-project-graph-from-gradle-plugin';
+import { GradlePluginOptions } from './utils/gradle-plugin-options';
+import { GRALDEW_FILES, splitConfigFiles } from '../utils/split-config-files';
+import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { existsSync } from 'node:fs';
 
-export const createDependencies: CreateDependencies = async (
-  _,
+export const createDependencies: CreateDependencies<
+  GradlePluginOptions
+> = async (
+  options: GradlePluginOptions,
   context: CreateDependenciesContext
 ) => {
-  const gradleFiles: string[] = findGradleFiles(context.filesToProcess);
-  if (gradleFiles.length === 0) {
-    return [];
-  }
+  const files = await globWithWorkspaceContext(
+    workspaceRoot,
+    Array.from(GRALDEW_FILES)
+  );
+  const { gradlewFiles } = splitConfigFiles(files);
+  await populateProjectGraph(
+    context.workspaceRoot,
+    gradlewFiles.map((file) => join(workspaceRoot, file)),
+    options
+  );
+  const { dependencies: dependenciesFromReport } =
+    getCurrentProjectGraphReport();
 
-  const gradleDependenciesStart = performance.mark('gradleDependencies:start');
-  const {
-    gradleFileToGradleProjectMap,
-    gradleProjectNameToProjectRootMap,
-    buildFileToDepsMap,
-    gradleProjectToChildProjects,
-  } = getCurrentGradleReport();
-  const dependencies: Set<RawProjectGraphDependency> = new Set();
-
-  for (const gradleFile of gradleFiles) {
-    const gradleProject = gradleFileToGradleProjectMap.get(gradleFile);
-    const projectName = Object.values(context.projects).find(
-      (project) => project.root === dirname(gradleFile)
-    )?.name;
-    const depsFile = buildFileToDepsMap.get(gradleFile);
-
-    if (projectName && depsFile) {
-      processGradleDependencies(
-        depsFile,
-        gradleProjectNameToProjectRootMap,
-        projectName,
-        gradleFile,
-        context,
-        dependencies
+  const dependencies: Array<StaticDependency> = [];
+  dependenciesFromReport.forEach((dependencyFromPlugin: StaticDependency) => {
+    try {
+      const source =
+        relative(workspaceRoot, dependencyFromPlugin.source) || '.';
+      const sourceProjectName =
+        Object.values(context.projects).find(
+          (project) => source === project.root
+        )?.name ?? dependencyFromPlugin.source;
+      const target =
+        relative(workspaceRoot, dependencyFromPlugin.target) || '.';
+      const targetProjectName =
+        Object.values(context.projects).find(
+          (project) => target === project.root
+        )?.name ?? dependencyFromPlugin.target;
+      if (
+        !sourceProjectName ||
+        !targetProjectName ||
+        !existsSync(dependencyFromPlugin.sourceFile)
+      ) {
+        return;
+      }
+      const dependency: StaticDependency = {
+        source: sourceProjectName,
+        target: targetProjectName,
+        type: DependencyType.static,
+        sourceFile: normalizePath(
+          relative(workspaceRoot, dependencyFromPlugin.sourceFile)
+        ),
+      };
+      validateDependency(dependency, context);
+      dependencies.push(dependency);
+    } catch {
+      logger.warn(
+        `Unable to parse dependency from gradle plugin: ${dependencyFromPlugin.source} -> ${dependencyFromPlugin.target}`
       );
     }
-    gradleProjectToChildProjects.get(gradleProject)?.forEach((childProject) => {
-      if (childProject) {
-        const dependency: RawProjectGraphDependency = {
-          source: projectName as string,
-          target: childProject,
-          type: DependencyType.static,
-          sourceFile: gradleFile,
-        };
-        validateDependency(dependency, context);
-        dependencies.add(dependency);
-      }
-    });
-  }
+  });
 
-  const gradleDependenciesEnd = performance.mark('gradleDependencies:end');
-  performance.measure(
-    'gradleDependencies',
-    gradleDependenciesStart.name,
-    gradleDependenciesEnd.name
-  );
-
-  return Array.from(dependencies);
+  return dependencies;
 };
-
-function findGradleFiles(fileMap: FileMap): string[] {
-  const gradleFiles: string[] = [];
-
-  for (const [_, files] of Object.entries(fileMap.projectFileMap)) {
-    for (const file of files) {
-      if (GRADLE_BUILD_FILES.has(basename(file.file))) {
-        gradleFiles.push(file.file);
-      }
-    }
-  }
-
-  return gradleFiles;
-}
-
-export function processGradleDependencies(
-  depsFile: string,
-  gradleProjectNameToProjectRoot: Map<string, string>,
-  sourceProjectName: string,
-  gradleFile: string,
-  context: CreateDependenciesContext,
-  dependencies: Set<RawProjectGraphDependency>
-): void {
-  const lines = readFileSync(depsFile).toString().split(newLineSeparator);
-  let inDeps = false;
-  for (const line of lines) {
-    if (
-      line.startsWith('implementationDependenciesMetadata') ||
-      line.startsWith('compileClasspath')
-    ) {
-      inDeps = true;
-      continue;
-    }
-
-    if (inDeps) {
-      if (line === '') {
-        inDeps = false;
-        continue;
-      }
-      const [indents, dep] = line.split('--- ');
-      if (indents === '\\' || indents === '+') {
-        let gradleProjectName: string | undefined;
-        if (dep.startsWith('project ')) {
-          gradleProjectName = dep
-            .substring('project '.length)
-            .replace(/ \(n\)$/, '')
-            .trim();
-        } else if (dep.includes('-> project')) {
-          const [_, projectName] = dep.split('-> project');
-          gradleProjectName = projectName.trim();
-        }
-        const targetProjectRoot = gradleProjectNameToProjectRoot.get(
-          gradleProjectName
-        ) as string;
-        const targetProjectName = Object.values(context.projects).find(
-          (project) => project.root === targetProjectRoot
-        )?.name;
-        if (targetProjectName) {
-          const dependency: RawProjectGraphDependency = {
-            source: sourceProjectName,
-            target: targetProjectName,
-            type: DependencyType.static,
-            sourceFile: gradleFile,
-          };
-          validateDependency(dependency, context);
-          dependencies.add(dependency);
-        }
-      }
-    }
-  }
-}

@@ -1,15 +1,15 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { assertMinimumCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import { assertMinimumCypressVersion } from '@nx/cypress/src/utils/versions';
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { componentGenerator } from '../component/component';
 import { generateTestLibrary } from '../utils/testing';
 import { componentTestGenerator } from './component-test';
+import { EOL } from 'node:os';
 
-jest.mock('@nx/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/versions');
 
 describe('Angular Cypress Component Test Generator', () => {
   let tree: Tree;
@@ -25,13 +25,13 @@ describe('Angular Cypress Component Test Generator', () => {
 
   it('should handle component w/o inputs', async () => {
     await generateTestLibrary(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
-      linter: Linter.None,
+      linter: 'none',
       skipFormat: true,
     });
     await componentGenerator(tree, {
-      project: 'my-lib',
+      path: 'my-lib/src/lib/my-lib/my-lib',
       name: 'my-lib',
       skipFormat: true,
     });
@@ -49,13 +49,13 @@ describe('Angular Cypress Component Test Generator', () => {
 
   it('should generate a component test', async () => {
     await generateTestLibrary(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
-      linter: Linter.None,
+      linter: 'none',
       skipFormat: true,
     });
     await componentGenerator(tree, {
-      project: 'my-lib',
+      path: 'my-lib/src/lib/my-lib/',
       name: 'my-lib',
       skipFormat: true,
     });
@@ -103,13 +103,13 @@ export class MyLibComponent implements OnInit {
 
   it('should work with standalone components', async () => {
     await generateTestLibrary(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
-      linter: Linter.None,
+      linter: 'none',
       skipFormat: true,
     });
     await componentGenerator(tree, {
-      project: 'my-lib',
+      path: 'my-lib/src/lib/my-lib',
       name: 'my-lib',
       standalone: true,
       skipFormat: true,
@@ -156,15 +156,15 @@ export class MyLibComponent implements OnInit {
 
   it('should not overwrite an existing component test', async () => {
     await generateTestLibrary(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
-      linter: Linter.None,
+      linter: 'none',
       skipFormat: true,
     });
 
     await componentGenerator(tree, {
       name: 'my-lib',
-      project: 'my-lib',
+      path: 'my-lib/src/lib/my-lib',
       skipFormat: true,
     });
     tree.write(
@@ -187,15 +187,15 @@ export class MyLibComponent implements OnInit {
 
   it('should be idempotent', async () => {
     await generateTestLibrary(tree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
-      linter: Linter.None,
+      linter: 'none',
       skipFormat: true,
     });
 
     await componentGenerator(tree, {
       name: 'my-lib',
-      project: 'my-lib',
+      path: 'my-lib/src/lib/my-lib/my-lib',
       skipFormat: true,
     });
 
@@ -226,7 +226,9 @@ describe(MyLibComponent.name, () => {
       skipFormat: true,
     });
     expect(
-      tree.read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
+      tree
+        .read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
+        .replaceAll(EOL, '\n')
     ).toEqual(expected);
 
     await componentTestGenerator(tree, {
@@ -237,7 +239,9 @@ describe(MyLibComponent.name, () => {
       skipFormat: true,
     });
     expect(
-      tree.read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
+      tree
+        .read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
+        .replaceAll(EOL, '\n')
     ).toEqual(expected);
   });
 });

@@ -1,70 +1,267 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`@nx/rollup/plugin non-root project should create nodes 1`] = `
-{
-  "projects": {
-    "mylib": {
-      "root": "mylib",
-      "targets": {
-        "build": {
-          "cache": true,
-          "command": "rollup -c rollup.config.js",
-          "dependsOn": [
-            "^build",
-          ],
-          "inputs": [
-            "production",
-            "^production",
-            {
-              "externalDependencies": [
-                "rollup",
+[
+  [
+    "mylib/rollup.config.cjs",
+    {
+      "projects": {
+        "mylib": {
+          "root": "mylib",
+          "targets": {
+            "build": {
+              "cache": true,
+              "command": "rollup -c rollup.config.cjs",
+              "dependsOn": [
+                "^build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "rollup",
+                  ],
+                },
+              ],
+              "metadata": {
+                "description": "Run Rollup",
+                "help": {
+                  "command": "npx rollup --help",
+                  "example": {
+                    "options": {
+                      "sourcemap": true,
+                      "watch": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "rollup",
+                ],
+              },
+              "options": {
+                "cwd": "mylib",
+              },
+              "outputs": [
+                "{workspaceRoot}/mylib/build",
+                "{workspaceRoot}/mylib/dist",
               ],
             },
-          ],
-          "options": {
-            "cwd": "mylib",
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
+            "watch-deps": {
+              "command": "npx nx watch --projects mylib --includeDependentProjects -- npx nx build-deps mylib",
+              "continuous": true,
+              "dependsOn": [
+                "build-deps",
+              ],
+            },
           },
-          "outputs": [
-            "{workspaceRoot}/mylib/build",
-            "{workspaceRoot}/mylib/dist",
-          ],
         },
       },
     },
-  },
-}
+  ],
+]
+`;
+
+exports[`@nx/rollup/plugin non-root project should create nodes 2`] = `
+[
+  [
+    "mylib/rollup.config.cts",
+    {
+      "projects": {
+        "mylib": {
+          "root": "mylib",
+          "targets": {
+            "build": {
+              "cache": true,
+              "command": "rollup -c rollup.config.cts --configPlugin @rollup/plugin-typescript",
+              "dependsOn": [
+                "^build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "rollup",
+                  ],
+                },
+              ],
+              "metadata": {
+                "description": "Run Rollup",
+                "help": {
+                  "command": "npx rollup --help",
+                  "example": {
+                    "options": {
+                      "sourcemap": true,
+                      "watch": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "rollup",
+                ],
+              },
+              "options": {
+                "cwd": "mylib",
+              },
+              "outputs": [
+                "{workspaceRoot}/mylib/build",
+                "{workspaceRoot}/mylib/dist",
+              ],
+            },
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
+            "watch-deps": {
+              "command": "npx nx watch --projects mylib --includeDependentProjects -- npx nx build-deps mylib",
+              "continuous": true,
+              "dependsOn": [
+                "build-deps",
+              ],
+            },
+          },
+        },
+      },
+    },
+  ],
+]
 `;
 
 exports[`@nx/rollup/plugin root project should create nodes 1`] = `
-{
-  "projects": {
-    ".": {
-      "root": ".",
-      "targets": {
-        "build": {
-          "cache": true,
-          "command": "rollup -c rollup.config.js",
-          "dependsOn": [
-            "^build",
-          ],
-          "inputs": [
-            "production",
-            "^production",
-            {
-              "externalDependencies": [
-                "rollup",
+[
+  [
+    "rollup.config.cjs",
+    {
+      "projects": {
+        ".": {
+          "root": ".",
+          "targets": {
+            "build": {
+              "cache": true,
+              "command": "rollup -c rollup.config.cjs",
+              "dependsOn": [
+                "^build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "rollup",
+                  ],
+                },
+              ],
+              "metadata": {
+                "description": "Run Rollup",
+                "help": {
+                  "command": "npx rollup --help",
+                  "example": {
+                    "options": {
+                      "sourcemap": true,
+                      "watch": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "rollup",
+                ],
+              },
+              "options": {
+                "cwd": ".",
+              },
+              "outputs": [
+                "{workspaceRoot}/dist",
               ],
             },
-          ],
-          "options": {
-            "cwd": ".",
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
+            "watch-deps": {
+              "command": "npx nx watch --projects mylib --includeDependentProjects -- npx nx build-deps mylib",
+              "continuous": true,
+              "dependsOn": [
+                "build-deps",
+              ],
+            },
           },
-          "outputs": [
-            "{workspaceRoot}/dist",
-          ],
         },
       },
     },
-  },
-}
+  ],
+]
+`;
+
+exports[`@nx/rollup/plugin root project should create nodes 2`] = `
+[
+  [
+    "rollup.config.cts",
+    {
+      "projects": {
+        ".": {
+          "root": ".",
+          "targets": {
+            "build": {
+              "cache": true,
+              "command": "rollup -c rollup.config.cts --configPlugin @rollup/plugin-typescript",
+              "dependsOn": [
+                "^build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "rollup",
+                  ],
+                },
+              ],
+              "metadata": {
+                "description": "Run Rollup",
+                "help": {
+                  "command": "npx rollup --help",
+                  "example": {
+                    "options": {
+                      "sourcemap": true,
+                      "watch": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "rollup",
+                ],
+              },
+              "options": {
+                "cwd": ".",
+              },
+              "outputs": [
+                "{workspaceRoot}/dist",
+              ],
+            },
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
+            "watch-deps": {
+              "command": "npx nx watch --projects mylib --includeDependentProjects -- npx nx build-deps mylib",
+              "continuous": true,
+              "dependsOn": [
+                "build-deps",
+              ],
+            },
+          },
+        },
+      },
+    },
+  ],
+]
 `;

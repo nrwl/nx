@@ -1,10 +1,11 @@
+use ignore::WalkBuilder;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
-use ignore::{WalkBuilder};
 
 use crate::native::glob::build_glob_set;
 
-use crate::native::utils::{get_mod_time, Normalize};
+use crate::native::logger::enable_logger;
+use crate::native::utils::{Normalize, get_mod_time};
 use walkdir::WalkDir;
 
 #[derive(PartialEq, Debug, Ord, PartialOrd, Eq, Clone)]
@@ -49,20 +50,24 @@ where
             !ignore_glob_set.is_match(path.as_ref())
         })
         .filter_map(move |entry| {
-            entry
-                .ok()
-                .and_then(|e| e.path().strip_prefix(&base_dir).ok().map(|p| p.to_owned()))
+            entry.ok().and_then(|e| {
+                e.path()
+                    .strip_prefix(&base_dir)
+                    .ok()
+                    .filter(|p| !p.to_string_lossy().is_empty())
+                    .map(|p| p.to_owned())
+            })
         })
 }
 
 /// Walk the directory and ignore files from .gitignore and .nxignore
 #[cfg(target_arch = "wasm32")]
-pub fn nx_walker<P>(directory: P) -> impl Iterator<Item = NxFile>
+pub fn nx_walker<P>(directory: P, use_ignores: bool) -> impl Iterator<Item = NxFile>
 where
     P: AsRef<Path>,
 {
     let directory: PathBuf = directory.as_ref().into();
-    let walker = create_walker(&directory);
+    let walker = create_walker(&directory, use_ignores);
 
     let entries = walker.build();
 
@@ -93,7 +98,7 @@ where
 
 /// Walk the directory and ignore files from .gitignore and .nxignore
 #[cfg(not(target_arch = "wasm32"))]
-pub fn nx_walker<P>(directory: P) -> impl Iterator<Item = NxFile>
+pub fn nx_walker<P>(directory: P, use_ignores: bool) -> impl Iterator<Item = NxFile>
 where
     P: AsRef<Path>,
 {
@@ -102,9 +107,10 @@ where
 
     use crossbeam_channel::unbounded;
     use tracing::trace;
+    enable_logger();
 
     let directory = directory.as_ref();
-    let mut walker = create_walker(directory);
+    let mut walker = create_walker(directory, use_ignores);
 
     let cpus = available_parallelism().map_or(2, |n| n.get()) - 1;
 
@@ -139,7 +145,7 @@ where
                 normalized_path: file_path.to_normalized_string(),
                 mod_time: get_mod_time(&metadata),
             })
-                .ok();
+            .ok();
 
             Continue
         })
@@ -151,9 +157,9 @@ where
     receiver_thread.join().unwrap()
 }
 
-fn create_walker<P>(directory: P) -> WalkBuilder
+fn create_walker<P>(directory: P, use_ignores: bool) -> WalkBuilder
 where
-    P: AsRef<Path>
+    P: AsRef<Path>,
 {
     let directory: PathBuf = directory.as_ref().into();
 
@@ -164,12 +170,15 @@ where
         "**/.nx/workspace-data",
         "**/.yarn/cache",
     ])
-        .expect("These static ignores always build");
+    .expect("These static ignores always build");
 
     let mut walker = WalkBuilder::new(&directory);
     walker.require_git(false);
     walker.hidden(false);
-    walker.add_custom_ignore_filename(".nxignore");
+    walker.git_ignore(use_ignores);
+    if use_ignores {
+        walker.add_custom_ignore_filename(".nxignore");
+    }
 
     // We should make sure to always ignore node_modules and the .git folder
     walker.filter_entry(move |entry| {
@@ -183,8 +192,8 @@ where
 mod test {
     use std::{assert_eq, vec};
 
-    use assert_fs::prelude::*;
     use assert_fs::TempDir;
+    use assert_fs::prelude::*;
 
     use super::*;
 
@@ -210,12 +219,12 @@ mod test {
     #[test]
     fn it_walks_a_directory() {
         // handle empty workspaces
-        let content = nx_walker("/does/not/exist").collect::<Vec<_>>();
+        let content = nx_walker("/does/not/exist", true).collect::<Vec<_>>();
         assert!(content.is_empty());
 
         let temp_dir = setup_fs();
 
-        let mut content = nx_walker(&temp_dir).collect::<Vec<_>>();
+        let mut content = nx_walker(&temp_dir, true).collect::<Vec<_>>();
         content.sort();
         let content = content
             .into_iter()
@@ -282,7 +291,7 @@ nested/child-two/
             )
             .unwrap();
 
-        let mut file_names = nx_walker(temp_dir)
+        let mut file_names = nx_walker(temp_dir, true)
             .map(
                 |NxFile {
                      normalized_path: relative_path,

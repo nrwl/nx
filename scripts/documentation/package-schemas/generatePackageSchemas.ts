@@ -4,6 +4,7 @@
 import { createDocumentMetadata } from '@nx/nx-dev/models-document';
 import * as chalk from 'chalk';
 import { join, resolve } from 'path';
+import { compare } from 'semver';
 import {
   getSchemaFromReference,
   InternalLookup,
@@ -11,7 +12,7 @@ import {
 import { NxSchema, PackageMetadata } from '@nx/nx-dev/models-package';
 import { generateJsonFile, generateMarkdownFile } from '../utils';
 import { findPackageMetadataList } from './package-metadata';
-import { schemaResolver } from './schema.resolver';
+import { schemaResolver, getExamplesFileFromPath } from './schema.resolver';
 
 function processSchemaData(data: NxSchema, path: string): NxSchema {
   const lookup = new InternalLookup(data);
@@ -29,45 +30,110 @@ function processSchemaData(data: NxSchema, path: string): NxSchema {
   return resolver.getSchema();
 }
 
+function updateMigration(migration: any, absoluteRoot: string): any {
+  if (!migration.implementation) {
+    if (migration.packages) {
+      migration.name = migration.name + '-package-updates';
+    }
+    return migration;
+  }
+  migration.examplesFile = getExamplesFileFromPath(
+    absoluteRoot,
+    migration.implementation.replace('.ts', '.md')
+  );
+  return migration;
+}
+
 function pathResolver(root: string): (path: string) => string {
   return (path) => join(root, path.replace('schema.json', ''));
 }
 
-export function generatePackageSchemas(): Promise<void[]> {
+export function generateLocalPackageSchemas(): Promise<void[]> {
+  return generatePackageSchemas();
+}
+
+export function generateExternalPackageSchemas(): Promise<any> {
+  const sourceRepositoryRelativePath = process.env.NX_OCEAN_RELATIVE_PATH;
+  if (!sourceRepositoryRelativePath) {
+    return Promise.all([]);
+  }
+  const sourcePackagesDirectory = 'libs/nx-packages';
+  const specificPackages = [
+    'azure-cache',
+    'conformance',
+    'owners',
+    'gcs-cache',
+    's3-cache',
+    'shared-fs-cache',
+  ];
+
+  return generatePackageSchemas(
+    sourceRepositoryRelativePath,
+    sourcePackagesDirectory,
+    specificPackages
+  );
+}
+
+export function generatePackageSchemas(
+  sourceRepositoryRelativePath = '',
+  sourcePackagesDirectory = 'packages',
+  specificPackages?: string[] | undefined
+): Promise<void[]> {
   console.log(`${chalk.blue('i')} Generating Package Schemas`);
   const absoluteRoot = resolve(join(__dirname, '../../../'));
-
-  const packages = findPackageMetadataList(absoluteRoot, 'packages').map(
-    (packageMetadata) => {
-      const getCurrentSchemaPath = pathResolver(absoluteRoot);
-      if (!!packageMetadata.executors.length) {
-        packageMetadata.executors = packageMetadata.executors.map((item) => ({
-          ...item,
-          schema: processSchemaData(
-            item.schema as NxSchema,
-            getCurrentSchemaPath(item['path'].replace('schema.json', ''))
-          ),
-        }));
-      }
-      if (!!packageMetadata.generators.length) {
-        packageMetadata.generators = packageMetadata.generators.map((item) => ({
-          ...item,
-          schema: processSchemaData(
-            item.schema as NxSchema,
-            getCurrentSchemaPath(item['path'].replace('schema.json', ''))
-          ),
-        }));
-      }
-      return packageMetadata;
-    }
+  const sourceRepositoryRoot = resolve(
+    join(__dirname, '../../../', sourceRepositoryRelativePath)
   );
+  const generatedFolderName = sourceRepositoryRelativePath
+    ? 'external-generated'
+    : 'generated';
+
+  const packages = findPackageMetadataList(
+    sourceRepositoryRoot,
+    sourcePackagesDirectory,
+    specificPackages
+  ).map((packageMetadata) => {
+    const getCurrentSchemaPath = pathResolver(absoluteRoot);
+    if (!!packageMetadata.executors.length) {
+      packageMetadata.executors = packageMetadata.executors.map((item) => ({
+        ...item,
+        schema: processSchemaData(
+          item.schema as NxSchema,
+          getCurrentSchemaPath(item['path'].replace('schema.json', ''))
+        ),
+      }));
+    }
+    if (!!packageMetadata.generators.length) {
+      packageMetadata.generators = packageMetadata.generators.map((item) => ({
+        ...item,
+        schema: processSchemaData(
+          item.schema as NxSchema,
+          getCurrentSchemaPath(item['path'].replace('schema.json', ''))
+        ),
+      }));
+    }
+    if (!!packageMetadata.migrations.length) {
+      packageMetadata.migrations = packageMetadata.migrations
+        .map((item) => ({
+          ...updateMigration(item, absoluteRoot),
+        }))
+        .sort((m1, m2) => compare(m1.version, m2.version) * -1);
+    }
+    return packageMetadata;
+  });
   const packagesMetadata = packages.map(
     (p): PackageMetadata => ({
       description: p.description,
       documents: p.documents.map((d) => ({
         ...createDocumentMetadata({
           description: d.description || p.description,
-          file: ['generated', 'packages', p.name, 'documents', d.id].join('/'),
+          file: [
+            generatedFolderName,
+            'packages',
+            p.name,
+            'documents',
+            d.id,
+          ].join('/'),
           id: d.id,
           itemList: d.itemList,
           name: d.name,
@@ -79,7 +145,7 @@ export function generatePackageSchemas(): Promise<void[]> {
       executors: p.executors.map((e) => ({
         description: e.description,
         file: [
-          'generated',
+          generatedFolderName,
           'packages',
           p.name,
           'executors',
@@ -94,7 +160,7 @@ export function generatePackageSchemas(): Promise<void[]> {
       generators: p.generators.map((g) => ({
         description: g.description,
         file: [
-          'generated',
+          generatedFolderName,
           'packages',
           p.name,
           'generators',
@@ -106,6 +172,22 @@ export function generatePackageSchemas(): Promise<void[]> {
         path: [p.name, 'generators', g.name].join('/'),
         type: 'generator',
       })),
+      migrations: p.migrations.map((m) => ({
+        description: m.description,
+        file: [
+          generatedFolderName,
+          'packages',
+          p.name,
+          'migrations',
+          m.name + '.json',
+        ].join('/'),
+        hidden: m.hidden,
+        name: m.name,
+        version: (m as any).version,
+        originalFilePath: m.path,
+        path: [p.name, 'migrations', m.name].join('/'),
+        type: 'migration',
+      })),
       githubRoot: p.githubRoot,
       name: p.name,
       packageName: p.packageName,
@@ -114,7 +196,7 @@ export function generatePackageSchemas(): Promise<void[]> {
     })
   );
 
-  const outputPath: string = join(absoluteRoot, 'docs', 'generated');
+  const outputPath: string = join(absoluteRoot, 'docs', generatedFolderName);
   const outputPackagesPath: string = join(outputPath, 'packages');
   const fileGenerationPromises: Promise<void>[] = [];
 
@@ -140,6 +222,14 @@ export function generatePackageSchemas(): Promise<void[]> {
       fileGenerationPromises.push(
         generateJsonFile(
           join(outputPackagesPath, p.name, 'generators', g.name + '.json'),
+          g
+        )
+      )
+    );
+    p.migrations.forEach((g) =>
+      fileGenerationPromises.push(
+        generateJsonFile(
+          join(outputPackagesPath, p.name, 'migrations', g.name + '.json'),
           g
         )
       )

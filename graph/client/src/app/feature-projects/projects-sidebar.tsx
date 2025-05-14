@@ -7,6 +7,8 @@ import { useProjectGraphSelector } from './hooks/use-project-graph-selector';
 import { TracingAlgorithmType } from './machines/interfaces';
 import {
   collapseEdgesSelector,
+  compositeContextSelector,
+  compositeGraphEnabledSelector,
   focusedProjectNameSelector,
   getTracingInfo,
   groupByFolderSelector,
@@ -31,7 +33,7 @@ import {
   useEnvironmentConfig,
   usePoll,
   useRouteConstructor,
-} from '@nx/graph/shared';
+} from '@nx/graph/legacy/shared';
 import {
   useNavigate,
   useParams,
@@ -40,9 +42,13 @@ import {
 } from 'react-router-dom';
 import { useCurrentPath } from '../hooks/use-current-path';
 import { ProjectDetailsModal } from '../ui-components/project-details-modal';
+import { CompositeGraphPanel } from './panels/composite-graph-panel';
+import { CompositeContextPanel } from '../ui-components/composite-context-panel';
+import { getGraphService } from '../machines/graph.service';
 
 export function ProjectsSidebar(): JSX.Element {
   const environmentConfig = useEnvironmentConfig();
+  const graphService = getGraphService();
   const projectGraphService = getProjectGraphService();
   const focusedProject = useProjectGraphSelector(focusedProjectNameSelector);
   const searchDepthInfo = useProjectGraphSelector(searchDepthSelector);
@@ -53,6 +59,11 @@ export function ProjectsSidebar(): JSX.Element {
   );
   const groupByFolder = useProjectGraphSelector(groupByFolderSelector);
   const collapseEdges = useProjectGraphSelector(collapseEdgesSelector);
+  const compositeEnabled = useProjectGraphSelector(
+    compositeGraphEnabledSelector
+  );
+
+  const compositeContext = useProjectGraphSelector(compositeContextSelector);
 
   const isTracing = projectGraphService.getSnapshot().matches('tracing');
   const tracingInfo = useProjectGraphSelector(getTracingInfo);
@@ -75,17 +86,48 @@ export function ProjectsSidebar(): JSX.Element {
     navigate(routeConstructor('/projects', true));
   }
 
+  function resetCompositeContext() {
+    projectGraphService.send({ type: 'enableCompositeGraph', context: null });
+    navigate(
+      routeConstructor(
+        { pathname: '/projects', search: '?composite=true' },
+        true
+      )
+    );
+  }
+
   function showAllProjects() {
-    navigate(routeConstructor('/projects/all', true));
+    navigate(
+      routeConstructor('/projects/all', (searchParams) => {
+        if (searchParams.has('composite')) {
+          searchParams.set('composite', 'true');
+        }
+        return searchParams;
+      })
+    );
   }
 
   function hideAllProjects() {
     projectGraphService.send({ type: 'deselectAll' });
-    navigate(routeConstructor('/projects', true));
+    navigate(
+      routeConstructor('/projects', (searchParams) => {
+        if (searchParams.has('composite')) {
+          searchParams.set('composite', 'true');
+        }
+        return searchParams;
+      })
+    );
   }
 
   function showAffectedProjects() {
-    navigate(routeConstructor('/projects/affected', true));
+    navigate(
+      routeConstructor('/projects/affected', (searchParams) => {
+        if (searchParams.has('composite')) {
+          searchParams.set('composite', 'true');
+        }
+        return searchParams;
+      })
+    );
   }
 
   function searchDepthFilterEnabledChange(checked: boolean) {
@@ -124,6 +166,19 @@ export function ProjectsSidebar(): JSX.Element {
       }
       return currentSearchParams;
     });
+  }
+
+  function compositeEnabledChanged(checked: boolean) {
+    navigate(
+      routeConstructor('/projects', (searchParams) => {
+        if (checked) {
+          searchParams.set('composite', 'true');
+        } else {
+          searchParams.delete('composite');
+        }
+        return searchParams;
+      })
+    );
   }
 
   function incrementDepthFilter() {
@@ -183,6 +238,19 @@ export function ProjectsSidebar(): JSX.Element {
   }
 
   useEffect(() => {
+    return graphService.listen((event) => {
+      if (event.type === 'CompositeNodeDblClick') {
+        projectGraphService.send({
+          type: event.data.expanded
+            ? 'collapseCompositeNode'
+            : 'expandCompositeNode',
+          id: event.id,
+        });
+      }
+    });
+  }, []);
+
+  useEffect(() => {
     projectGraphService.send({
       type: 'setProjects',
       projects: selectedProjectRouteData.projects,
@@ -224,7 +292,7 @@ export function ProjectsSidebar(): JSX.Element {
         projectName: routeParams.endTrace,
       });
     }
-  }, [routeParams]);
+  }, [routeParams, compositeEnabled]);
 
   useEffect(() => {
     if (searchParams.has('groupByFolder') && groupByFolder === false) {
@@ -249,6 +317,17 @@ export function ProjectsSidebar(): JSX.Element {
         type: 'setCollapseEdges',
         collapseEdges: false,
       });
+    }
+
+    if (searchParams.has('composite')) {
+      const compositeParam = searchParams.get('composite');
+      projectGraphService.send({
+        type: 'enableCompositeGraph',
+        context: compositeParam === 'true' ? null : compositeParam,
+      });
+    } else if (!searchParams.has('composite') && compositeEnabled) {
+      projectGraphService.send({ type: 'disableCompositeGraph' });
+      navigate(routeConstructor('/projects', true));
     }
 
     if (searchParams.has('searchDepth')) {
@@ -329,6 +408,13 @@ export function ProjectsSidebar(): JSX.Element {
     <>
       <ProjectDetailsModal />
 
+      {compositeEnabled && compositeContext ? (
+        <CompositeContextPanel
+          compositeContext={compositeContext}
+          reset={resetCompositeContext}
+        />
+      ) : null}
+
       {focusedProject ? (
         <FocusedPanel
           focusedLabel={focusedProject}
@@ -367,6 +453,8 @@ export function ProjectsSidebar(): JSX.Element {
         <GroupByFolderPanel
           groupByFolder={groupByFolder}
           groupByFolderChanged={groupByFolderChanged}
+          disabled={compositeEnabled}
+          disabledDescription="Group by folder is not available when composite graph is enabled"
         ></GroupByFolderPanel>
 
         <SearchDepth
@@ -377,8 +465,13 @@ export function ProjectsSidebar(): JSX.Element {
           decrementDepthFilter={decrementDepthFilter}
         ></SearchDepth>
 
+        <CompositeGraphPanel
+          compositeEnabled={compositeEnabled}
+          compositeEnabledChanged={compositeEnabledChanged}
+        ></CompositeGraphPanel>
+
         <ExperimentalFeature>
-          <div className="mx-4 mt-8 rounded-lg border-2 border-dashed border-purple-500 p-4 shadow-lg dark:border-purple-600 dark:bg-[#0B1221]">
+          <div className="mx-4 mt-8 flex flex-col gap-4 rounded-lg border-2 border-dashed border-purple-500 p-4 shadow-lg dark:border-purple-600 dark:bg-[#0B1221]">
             <h3 className="cursor-text px-4 py-2 text-sm font-semibold uppercase tracking-wide text-slate-800 lg:text-xs dark:text-slate-200">
               Experimental Features
             </h3>

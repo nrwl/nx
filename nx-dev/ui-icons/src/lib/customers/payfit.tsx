@@ -1,7 +1,9 @@
 import { FC, SVGProps } from 'react';
 
+/**
+ * Use `#0F6FDE` for a colored version.
+ */
 export const PayfitIcon: FC<SVGProps<SVGSVGElement>> = (props) => (
-  // Color: #0F6FDE
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="currentColor"

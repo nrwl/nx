@@ -1,22 +1,6 @@
 import { Champion } from '@nx/nx-dev/ui-common';
 
-export const champions1: Champion[] = [
-  {
-    name: 'William Ghelfi',
-    expertise: 'React, Repository Structure, Patting New Devs On Their Backs',
-    imageUrl: '/images/champions/william-ghelfi.webp',
-    contact: [
-      {
-        label: '@trumbitta',
-        link: 'https://twitter.com/trumbitta',
-      },
-      {
-        label: '@williamghelfi.com',
-        link: 'https://bsky.app/profile/williamghelfi.com',
-      },
-    ],
-    location: 'Italy',
-  },
+export const champions: Champion[] = [
   {
     name: 'Santosh Yadav',
     expertise:
@@ -112,8 +96,71 @@ export const champions1: Champion[] = [
     ],
     location: 'France',
   },
-];
-export const champions2: Champion[] = [
+  {
+    name: 'Jonathan Gelin',
+    expertise:
+      'Empowering organizations with Nx for streamlined development, robust monorepos, efficient CI/CD, micro-frontend architecture, and strong testing strategies',
+    imageUrl: '/images/champions/jonathan-gelin.webp',
+    contact: [
+      {
+        label: 'gelin.jonathan@gmail.com',
+        link: 'mailto:gelin.jonathan@gmail.com',
+      },
+    ],
+    location: 'Belgium',
+  },
+  {
+    name: 'Bob Strecansky',
+    expertise:
+      'Community Evangelist, Enterprise Ideology, Performance Optimization',
+    imageUrl: '/images/champions/bob-strecansky.webp',
+    contact: [
+      {
+        label: '@bobstrecansky',
+        link: 'https://twitter.com/bobstrecansky',
+      },
+    ],
+    location: 'Atlanta, GA, USA',
+  },
+  {
+    name: 'Thomas Laforge',
+    expertise:
+      'Teach users how to create a better developer experience (DX) with Nx and Angular through github challenges, blog posts, and conference talks',
+    imageUrl: '/images/champions/thomas-laforge.webp',
+    contact: [
+      {
+        label: '@laforge_toma',
+        link: 'https://twitter.com/laforge_toma',
+      },
+    ],
+    location: 'France',
+  },
+  {
+    name: 'Fabian Gosebrink',
+    expertise:
+      'Angular, Blogs, Conferences & Talks, Enterprise Architecture with Nx, Onboarding new Devs, Repository Structure, State Management',
+    imageUrl: '/images/champions/fabian-gosebrink.webp',
+    contact: [
+      {
+        label: 'fabian.gosebrink@offering.solutions',
+        link: 'mailto:fabian.gosebrink@offering.solutions',
+      },
+    ],
+    location: 'Switzerland',
+  },
+  {
+    name: 'Brecht Billiet',
+    expertise:
+      "Large-scale architecture, GenAI automation, Angular, Scaling monorepo's",
+    imageUrl: '/images/champions/brecht-billiet.webp',
+    contact: [
+      {
+        label: 'brecht@simplified.courses',
+        link: 'mailto:brecht@simplified.courses',
+      },
+    ],
+    location: 'Belgium',
+  },
   {
     name: 'Dominik Pieper',
     expertise:
@@ -230,8 +277,18 @@ export const champions2: Champion[] = [
     ],
     location: 'USA',
   },
-];
-export const champions3: Champion[] = [
+  {
+    name: 'Martin Hochel',
+    expertise: 'Architecture, Scalability, Plugins, Releases, OpenSource',
+    imageUrl: '/images/champions/martin-hochel.webp',
+    contact: [
+      {
+        label: 'LinkedIn: hochelmartin',
+        link: 'https://linkedin.com/in/hochelmartin',
+      },
+    ],
+    location: 'Czechia',
+  },
   {
     name: 'Lara Newsom',
     expertise:
@@ -259,16 +316,17 @@ export const champions3: Champion[] = [
     location: 'USA',
   },
   {
-    name: 'Shai Reznik',
-    expertise: 'Writing plugins, Qwik, testing',
-    imageUrl: '/images/champions/shai-reznik.webp',
+    name: 'Edouard Maleix',
+    expertise:
+      'Setting up workspace for startups and enterprises. Improving workspace and CI pipeline performance. Creating plugins for Node.js applications and deployments. Sharing knowledge. Caching nerd.',
+    imageUrl: '/images/champions/edouard-maleix.webp',
     contact: [
       {
-        label: '@shai_reznik',
-        link: 'https://twitter.com/shai_reznik',
+        label: 'LinkedIn: edouard-maleix',
+        link: 'https://www.linkedin.com/in/edouard-maleix',
       },
     ],
-    location: 'Israel',
+    location: 'Austria',
   },
   {
     name: 'Issam GUISSOUMA',
@@ -281,18 +339,6 @@ export const champions3: Champion[] = [
       },
     ],
     location: 'France',
-  },
-  {
-    name: 'Devin Shoemaker',
-    expertise: 'Writing plugins and being the resident Nx enthusiast at Ionic',
-    imageUrl: '/images/champions/devin-shoemaker.webp',
-    contact: [
-      {
-        label: '@ParanoidCoder',
-        link: 'https://twitter.com/ParanoidCoder',
-      },
-    ],
-    location: 'Missouri, USA',
   },
   {
     name: 'Preston Lamb',
@@ -356,16 +402,40 @@ export const champions3: Champion[] = [
     location: 'USA',
   },
   {
-    name: 'Jonathan Gelin',
-    expertise:
-      'Empowering organizations with Nx for streamlined development, robust monorepos, efficient CI/CD, micro-frontend architecture, and strong testing strategies',
-    imageUrl: '/images/champions/jonathan-gelin.webp',
+    name: 'Ahmed Elsakaan',
+    expertise: 'Passionate about Monorepos, Web tooling, React and Typescript.',
+    imageUrl: '/images/champions/ahmed-elsakaan.webp',
     contact: [
       {
-        label: 'gelin.jonathan@gmail.com',
-        link: 'mailto:gelin.jonathan@gmail.com',
+        label: '@ixahmedxii',
+        link: 'https://twitter.com/ixahmedxii',
       },
     ],
-    location: 'Belgium',
+    location: 'London, United Kingdom',
+  },
+  {
+    name: 'Kevin Oliveira',
+    expertise: 'Frontend Architect. Nx Plugins, DDD, Angular, NestJS, DevOps',
+    imageUrl: '/images/champions/kevin-oliveira.webp',
+    contact: [
+      {
+        label: '@koliveira15',
+        link: 'https://twitter.com/koliveira15',
+      },
+    ],
+    location: 'Rhode Island, USA',
+  },
+  {
+    name: 'Guilherme Siquinelli',
+    expertise:
+      'Talks, Conferences, Community, Monorepos with NX / Angular / NestJS Architecture, Repository Structure, Writing Plugins, Dev Tools, Releases, Blog Posts, Youtube Videos, Open Source',
+    imageUrl: '/images/champions/guilherme-siquinelli.webp',
+    contact: [
+      {
+        label: 'email@guiseek.dev',
+        link: 'mailto:email@guiseek.dev',
+      },
+    ],
+    location: 'Paraná, Brazil',
   },
 ];

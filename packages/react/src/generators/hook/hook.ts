@@ -7,32 +7,30 @@ import {
   joinPathFragments,
   logger,
   names,
-  toJS,
   Tree,
 } from '@nx/devkit';
-
-import { Schema } from './schema';
-import { addImport } from '../../utils/ast-utils';
+import {
+  determineArtifactNameAndDirectoryOptions,
+  type FileExtensionType,
+} from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { join } from 'path';
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { addImport } from '../../utils/ast-utils';
+import { Schema } from './schema';
+import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
-interface NormalizedSchema extends Schema {
+interface NormalizedSchema extends Omit<Schema, 'js'> {
   projectSourceRoot: string;
   hookName: string;
   hookTypeName: string;
   fileName: string;
+  fileExtension: string;
+  fileExtensionType: FileExtensionType;
   projectName: string;
+  directory: string;
 }
 
 export async function hookGenerator(host: Tree, schema: Schema) {
-  return hookGeneratorInternal(host, {
-    nameAndDirectoryFormat: 'derived',
-    ...schema,
-  });
-}
-
-export async function hookGeneratorInternal(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
 
   createFiles(host, options);
@@ -42,25 +40,22 @@ export async function hookGeneratorInternal(host: Tree, schema: Schema) {
 }
 
 function createFiles(host: Tree, options: NormalizedSchema) {
+  const specExt = options.fileExtensionType === 'ts' ? 'tsx' : 'js';
+
   generateFiles(host, join(__dirname, './files'), options.directory, {
     ...options,
-    tmpl: '',
+    ext: options.fileExtension,
+    specExt,
+    isTs: options.fileExtensionType === 'ts',
   });
 
-  for (const c of host.listChanges()) {
-    let deleteFile = false;
-
-    if (options.skipTests && /.*spec.ts/.test(c.path)) {
-      deleteFile = true;
-    }
-
-    if (deleteFile) {
-      host.delete(c.path);
-    }
-  }
-
-  if (options.js) {
-    toJS(host);
+  if (options.skipTests) {
+    host.delete(
+      joinPathFragments(
+        options.directory,
+        `${options.fileName}.spec.${specExt}`
+      )
+    );
   }
 }
 
@@ -77,25 +72,28 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
   if (options.export && !isApp) {
     const indexFilePath = joinPathFragments(
       options.projectSourceRoot,
-      options.js ? 'index.js' : 'index.ts'
+      options.fileExtensionType === 'js' ? 'index.js' : 'index.ts'
     );
-    const indexSource = host.read(indexFilePath, 'utf-8');
-    if (indexSource !== null) {
-      const indexSourceFile = tsModule.createSourceFile(
-        indexFilePath,
-        indexSource,
-        tsModule.ScriptTarget.Latest,
-        true
-      );
-      const changes = applyChangesToString(
-        indexSource,
-        addImport(
-          indexSourceFile,
-          `export * from './${options.directory}/${options.fileName}';`
-        )
-      );
-      host.write(indexFilePath, changes);
+
+    if (!host.exists(indexFilePath)) {
+      return;
     }
+
+    const indexSource = host.read(indexFilePath, 'utf-8');
+    const indexSourceFile = tsModule.createSourceFile(
+      indexFilePath,
+      indexSource,
+      tsModule.ScriptTarget.Latest,
+      true
+    );
+    const changes = applyChangesToString(
+      indexSource,
+      addImport(
+        indexSourceFile,
+        `export * from './${options.directory}/${options.fileName}';`
+      )
+    );
+    host.write(indexFilePath, changes);
   }
 }
 
@@ -103,69 +101,42 @@ async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  assertValidOptions(options);
-
   const {
-    artifactName: name,
-    directory: _directory,
-    fileName: _fileName,
-    nameAndDirectoryFormat,
+    artifactName,
+    directory,
+    fileName: hookFilename,
+    fileExtension,
+    fileExtensionType,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
-    artifactType: 'hook',
-    callingGenerator: '@nx/react:hook',
+    path: options.path,
     name: options.name,
-    directory: options.directory,
-    derivedDirectory: options.directory,
-    flat: options.flat,
-    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-    project: options.project,
-    fileExtension: 'tsx',
-    pascalCaseFile: options.pascalCaseFiles,
-    pascalCaseDirectory: options.pascalCaseDirectory,
+    allowedFileExtensions: ['js', 'ts'],
+    fileExtension: options.js ? 'js' : 'ts',
+    js: options.js,
   });
 
-  let base = _fileName;
-  if (base.startsWith('use-')) {
-    base = base.substring(4);
-  } else if (base.startsWith('use')) {
-    base = base.substring(3);
-  }
+  const { className } = names(hookFilename);
 
-  const { className, fileName } = names(base);
-  // If using `as-provided` file and directory, then don't normalize.
-  // Otherwise, support legacy behavior of prefixing filename with `use-`.
-  const hookFilename =
-    nameAndDirectoryFormat === 'as-provided'
-      ? fileName
-      : options.pascalCaseFiles
-      ? 'use'.concat(className)
-      : 'use-'.concat(fileName);
-  const hookName = 'use'.concat(className);
-  const hookTypeName = 'Use'.concat(className);
+  // if name is provided, use it as is for the hook name, otherwise prepend
+  // `use` to the pascal-cased file name if it doesn't already start with `use`
+  const hookName = options.name
+    ? artifactName
+    : className.toLocaleLowerCase().startsWith('use')
+    ? className
+    : `use${className}`;
+  const hookTypeName = names(hookName).className;
   const project = getProjects(host).get(projectName);
 
-  const { sourceRoot: projectSourceRoot, projectType } = project;
+  const { root, sourceRoot: projectSourceRoot, projectType } = project;
 
-  if (options.export && projectType === 'application') {
+  if (
+    options.export &&
+    getProjectType(host, root, projectType) === 'application'
+  ) {
     logger.warn(
       `The "--export" option should not be used with applications and will do nothing.`
     );
-  }
-
-  // Support legacy behavior of derived directory to prefix with `use-`.
-  let directory = _directory;
-  if (nameAndDirectoryFormat === 'derived') {
-    const parts = directory.split('/');
-    parts.pop();
-    if (!options.flat) {
-      parts.push(
-        options.pascalCaseDirectory
-          ? 'use'.concat(className)
-          : 'use-'.concat(fileName)
-      );
-    }
-    directory = parts.join('/');
   }
 
   return {
@@ -174,25 +145,11 @@ async function normalizeOptions(
     hookName,
     hookTypeName,
     fileName: hookFilename,
+    fileExtension,
+    fileExtensionType,
     projectSourceRoot,
     projectName,
   };
-}
-
-function assertValidOptions(options: Schema) {
-  const slashes = ['/', '\\'];
-  slashes.forEach((s) => {
-    if (options.name.indexOf(s) !== -1) {
-      const [name, ...rest] = options.name.split(s).reverse();
-      let suggestion = rest.map((x) => x.toLowerCase()).join(s);
-      if (options.directory) {
-        suggestion = `${options.directory}${s}${suggestion}`;
-      }
-      throw new Error(
-        `Found "${s}" in the hook name. Did you mean to use the --directory option (e.g. \`nx g c ${name} --directory ${suggestion}\`)?`
-      );
-    }
-  });
 }
 
 export default hookGenerator;

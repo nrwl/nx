@@ -1,23 +1,17 @@
 import type { Tree } from '@nx/devkit';
 import { createTreeWithNestApplication } from '../utils/testing';
-import type { FilterGeneratorOptions } from './filter';
 import { filterGenerator } from './filter';
 
 describe('filter generator', () => {
   let tree: Tree;
-  const project = 'api';
-  const options: FilterGeneratorOptions = {
-    name: 'test',
-    project,
-    unitTestRunner: 'jest',
-  };
 
   beforeEach(() => {
-    tree = createTreeWithNestApplication(project);
-    jest.clearAllMocks();
+    tree = createTreeWithNestApplication('api');
   });
 
   it('should run successfully', async () => {
-    await expect(filterGenerator(tree, options)).resolves.not.toThrowError();
+    await expect(
+      filterGenerator(tree, { path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

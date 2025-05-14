@@ -24,6 +24,10 @@
     "createPackageName": {
       "type": "string",
       "description": "Name of package which creates a workspace"
+    },
+    "useProjectJson": {
+      "type": "boolean",
+      "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
     }
   },
   "required": ["pluginName"]

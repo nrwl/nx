@@ -1,0 +1,268 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`convert-to-inferred all projects should migrate all projects using the rspack executors 1`] = `
+"const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+const { useLegacyNxPlugin } = require('@nx/rspack');
+
+// These options were migrated by @nx/rspack:convert-to-inferred from
+// the project.json file and merged with the options in this file
+const configValues = {
+  build: {
+    default: {
+      outputPath: '../../dist/apps/app1',
+      index: './src/index.html',
+      main: './src/main.tsx',
+      tsConfig: './tsconfig.app.json',
+      assets: ['./src/favicon.ico', './src/assets'],
+      styles: ['./src/styles.scss'],
+    },
+    development: {
+      extractLicenses: false,
+      optimization: false,
+      sourceMap: true,
+      vendorChunk: true,
+    },
+    production: {
+      fileReplacements: [
+        {
+          replace: './src/environments/environment.ts',
+          with: './src/environments/environment.prod.ts',
+        },
+      ],
+      optimization: true,
+      outputHashing: 'all',
+      sourceMap: false,
+      namedChunks: false,
+      extractLicenses: true,
+      vendorChunk: false,
+    },
+  },
+  serve: {
+    default: {
+      hmr: true,
+      server: {
+        type: 'https',
+        options: { cert: './server.crt', key: './server.key' },
+      },
+      port: 4200,
+      headers: { 'Access-Control-Allow-Origin': '*' },
+      historyApiFallback: {
+        index: '/index.html',
+        disableDotRule: true,
+        htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+      },
+    },
+    development: { open: true },
+    production: { hmr: false },
+  },
+};
+
+// Determine the correct configValue to use based on the configuration
+const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
+
+const buildOptions = {
+  ...configValues.build.default,
+  ...configValues.build[configuration],
+};
+const devServerOptions = {
+  ...configValues.serve.default,
+  ...configValues.serve[configuration],
+};
+
+/**
+ * @type{import('@rspack/core').RspackOptionsNormalized}
+ */
+module.exports = async () => ({
+  devServer: devServerOptions,
+  plugins: [
+    new NxAppRspackPlugin(buildOptions),
+    new NxReactRspackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+    }),
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    await useLegacyNxPlugin(require('./rspack.config.old'), buildOptions),
+  ],
+});
+"
+`;
+
+exports[`convert-to-inferred all projects should migrate all projects using the rspack executors 2`] = `
+"const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+const { useLegacyNxPlugin } = require('@nx/rspack');
+
+// These options were migrated by @nx/rspack:convert-to-inferred from
+// the project.json file and merged with the options in this file
+const configValues = {
+  build: {
+    default: {
+      outputPath: '../../dist/apps/app2',
+      index: './src/index.html',
+      main: './src/main.tsx',
+      tsConfig: './tsconfig.app.json',
+      assets: ['./src/favicon.ico', './src/assets'],
+      styles: ['./src/styles.scss'],
+    },
+    development: {
+      extractLicenses: false,
+      optimization: false,
+      sourceMap: true,
+      vendorChunk: true,
+    },
+    production: {
+      fileReplacements: [
+        {
+          replace: './src/environments/environment.ts',
+          with: './src/environments/environment.prod.ts',
+        },
+      ],
+      optimization: true,
+      outputHashing: 'all',
+      sourceMap: false,
+      namedChunks: false,
+      extractLicenses: true,
+      vendorChunk: false,
+    },
+  },
+  serve: {
+    default: {
+      hmr: true,
+      server: {
+        type: 'https',
+        options: { cert: './server.crt', key: './server.key' },
+      },
+      port: 4200,
+      headers: { 'Access-Control-Allow-Origin': '*' },
+      historyApiFallback: {
+        index: '/index.html',
+        disableDotRule: true,
+        htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+      },
+    },
+    development: { open: true },
+    production: { hmr: false },
+  },
+};
+
+// Determine the correct configValue to use based on the configuration
+const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
+
+const buildOptions = {
+  ...configValues.build.default,
+  ...configValues.build[configuration],
+};
+const devServerOptions = {
+  ...configValues.serve.default,
+  ...configValues.serve[configuration],
+};
+
+/**
+ * @type{import('@rspack/core').RspackOptionsNormalized}
+ */
+module.exports = async () => ({
+  devServer: devServerOptions,
+  plugins: [
+    new NxAppRspackPlugin(buildOptions),
+    new NxReactRspackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+    }),
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    await useLegacyNxPlugin(require('./rspack.config.old'), buildOptions),
+  ],
+});
+"
+`;
+
+exports[`convert-to-inferred all projects should migrate all projects using the rspack executors 3`] = `
+"const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+const { useLegacyNxPlugin } = require('@nx/rspack');
+
+// These options were migrated by @nx/rspack:convert-to-inferred from
+// the project.json file and merged with the options in this file
+const configValues = {
+  build: {
+    default: {
+      outputPath: '../../dist/apps/app3',
+      index: './src/index.html',
+      main: './src/main.tsx',
+      tsConfig: './tsconfig.app.json',
+      assets: ['./src/favicon.ico', './src/assets'],
+      styles: ['./src/styles.scss'],
+    },
+    development: {
+      extractLicenses: false,
+      optimization: false,
+      sourceMap: true,
+      vendorChunk: true,
+    },
+    production: {
+      fileReplacements: [
+        {
+          replace: './src/environments/environment.ts',
+          with: './src/environments/environment.prod.ts',
+        },
+      ],
+      optimization: true,
+      outputHashing: 'all',
+      sourceMap: false,
+      namedChunks: false,
+      extractLicenses: true,
+      vendorChunk: false,
+    },
+  },
+  serve: {
+    default: {
+      hmr: true,
+      server: {
+        type: 'https',
+        options: { cert: './server.crt', key: './server.key' },
+      },
+      port: 4200,
+      headers: { 'Access-Control-Allow-Origin': '*' },
+      historyApiFallback: {
+        index: '/index.html',
+        disableDotRule: true,
+        htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+      },
+    },
+    development: { open: true },
+    production: { hmr: false },
+  },
+};
+
+// Determine the correct configValue to use based on the configuration
+const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
+
+const buildOptions = {
+  ...configValues.build.default,
+  ...configValues.build[configuration],
+};
+const devServerOptions = {
+  ...configValues.serve.default,
+  ...configValues.serve[configuration],
+};
+
+/**
+ * @type{import('@rspack/core').RspackOptionsNormalized}
+ */
+module.exports = async () => ({
+  devServer: devServerOptions,
+  plugins: [
+    new NxAppRspackPlugin(buildOptions),
+    new NxReactRspackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+    }),
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    await useLegacyNxPlugin(require('./rspack.config.old'), buildOptions),
+  ],
+});
+"
+`;

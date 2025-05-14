@@ -15,8 +15,7 @@
     },
     "uiFramework": {
       "type": "string",
-      "enum": ["react", "none"],
-      "default": "none",
+      "enum": ["angular", "react", "none"],
       "description": "UI framework to use with vitest."
     },
     "inSourceTests": {
@@ -50,6 +49,16 @@
       "description": "The vitest environment to use. See https://vitest.dev/config/#environment.",
       "type": "string",
       "enum": ["node", "jsdom", "happy-dom", "edge-runtime"]
+    },
+    "runtimeTsconfigFileName": {
+      "type": "string",
+      "description": "The name of the project's tsconfig file that includes the runtime source files. If not provided, it will default to `tsconfig.lib.json` for libraries and `tsconfig.app.json` for applications."
+    },
+    "compiler": {
+      "type": "string",
+      "enum": ["babel", "swc"],
+      "default": "babel",
+      "description": "The compiler to use"
     }
   },
   "required": ["project"]

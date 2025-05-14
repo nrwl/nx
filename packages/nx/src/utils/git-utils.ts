@@ -1,6 +1,6 @@
 import { exec, ExecOptions, execSync } from 'child_process';
-import { dirname, posix, sep } from 'path';
-import { logger } from '../devkit-exports';
+import { dirname, join, posix, sep } from 'path';
+import { logger } from './logger';
 
 function execAsync(command: string, execOptions: ExecOptions) {
   return new Promise<string>((res, rej) => {
@@ -40,9 +40,15 @@ export class GitRepository {
   getGitRootPath(cwd: string) {
     return execSync('git rev-parse --show-toplevel', {
       cwd,
+      windowsHide: false,
     })
       .toString()
       .trim();
+  }
+
+  async hasUncommittedChanges() {
+    const data = await this.execAsync(`git status --porcelain`);
+    return data.trim() !== '';
   }
 
   async addFetchRemote(remoteName: string, branch: string) {
@@ -140,41 +146,88 @@ export class GitRepository {
 
   // git-filter-repo is much faster than filter-branch, but needs to be installed by user
   // Use `hasFilterRepoInstalled` to check if it's installed
-  async filterRepo(subdirectory: string) {
-    // filter-repo requires POSIX path to work
-    const posixPath = subdirectory.split(sep).join(posix.sep);
-    return await this.execAsync(
-      `git filter-repo -f --subdirectory-filter ${this.quotePath(posixPath)}`
+  async filterRepo(source: string, destination: string) {
+    // NOTE: filter-repo requires POSIX path to work
+    const sourcePosixPath = source.split(sep).join(posix.sep);
+    const destinationPosixPath = destination.split(sep).join(posix.sep);
+    await this.execAsync(
+      `git filter-repo -f ${
+        source !== '' ? `--path ${this.quotePath(sourcePosixPath)}` : ''
+      } ${
+        source !== destination
+          ? `--path-rename ${this.quotePath(
+              sourcePosixPath,
+              true
+            )}:${this.quotePath(destinationPosixPath, true)}`
+          : ''
+      }`
     );
   }
 
-  async filterBranch(subdirectory: string, branchName: string) {
-    // filter-repo requires POSIX path to work
-    const posixPath = subdirectory.split(sep).join(posix.sep);
+  async filterBranch(source: string, destination: string, branchName: string) {
     // We need non-ASCII file names to not be quoted, or else filter-branch will exclude them.
     await this.execAsync(`git config core.quotepath false`);
-    return await this.execAsync(
-      `git filter-branch --subdirectory-filter ${this.quotePath(
-        posixPath
-      )} -- ${branchName}`
-    );
+    // NOTE: filter-repo requires POSIX path to work
+    const sourcePosixPath = source.split(sep).join(posix.sep);
+    const destinationPosixPath = destination.split(sep).join(posix.sep);
+    // First, if the source is not a root project, then only include commits relevant to the subdirectory.
+    if (source !== '') {
+      const indexFilterCommand = this.quoteArg(
+        `node ${join(__dirname, 'git-utils.index-filter.js')}`
+      );
+      await this.execAsync(
+        `git filter-branch -f --index-filter ${indexFilterCommand} --prune-empty -- ${branchName}`,
+        {
+          NX_IMPORT_SOURCE: sourcePosixPath,
+          NX_IMPORT_DESTINATION: destinationPosixPath,
+        }
+      );
+    }
+    // Then, move files to their new location if necessary.
+    if (source === '' || source !== destination) {
+      const treeFilterCommand = this.quoteArg(
+        `node ${join(__dirname, 'git-utils.tree-filter.js')}`
+      );
+      await this.execAsync(
+        `git filter-branch -f --tree-filter ${treeFilterCommand} -- ${branchName}`,
+        {
+          NX_IMPORT_SOURCE: sourcePosixPath,
+          NX_IMPORT_DESTINATION: destinationPosixPath,
+        }
+      );
+    }
   }
 
-  private execAsync(command: string) {
+  private execAsync(command: string, env?: Record<string, string>) {
     return execAsync(command, {
       cwd: this.root,
       maxBuffer: 10 * 1024 * 1024,
+      env: {
+        ...process.env,
+        ...env,
+      },
     });
   }
 
-  private quotePath(path: string) {
+  private quotePath(path: string, ensureTrailingSlash?: true) {
+    return this.quoteArg(
+      ensureTrailingSlash && path !== '' && !path.endsWith('/')
+        ? `${path}/`
+        : path
+    );
+  }
+
+  private quoteArg(arg: string) {
     return process.platform === 'win32'
       ? // Windows/CMD only understands double-quotes, single-quotes are treated as part of the file name
         // Bash and other shells will substitute `$` in file names with a variable value.
-        `"${path}"`
+        `"${arg
+          // Need to keep two slashes for Windows or else the path will be invalid.
+          // e.g. 'C:\Users\bob\projects\repo' is invalid, but 'C:\\Users\\bob\\projects\\repo' is valid
+          .replaceAll('\\', '\\\\')}"`
       : // e.g. `git mv "$$file.txt" "libs/a/$$file.txt"` will not work since `$$` is swapped with the PID of the last process.
         // Using single-quotes prevents this substitution.
-        `'${path}'`;
+        `'${arg}'`;
   }
 }
 
@@ -185,6 +238,7 @@ export function getGithubSlugOrNull(): string | null {
   try {
     const gitRemote = execSync('git remote -v', {
       stdio: 'pipe',
+      windowsHide: false,
     }).toString();
     // If there are no remotes, we default to github
     if (!gitRemote || gitRemote.length === 0) {
@@ -244,12 +298,17 @@ export function commitChanges(
   directory?: string
 ): string | null {
   try {
-    execSync('git add -A', { encoding: 'utf8', stdio: 'pipe' });
+    execSync('git add -A', {
+      encoding: 'utf8',
+      stdio: 'pipe',
+      cwd: directory,
+    });
     execSync('git commit --no-verify -F -', {
       encoding: 'utf8',
       stdio: 'pipe',
       input: commitMessage,
       cwd: directory,
+      windowsHide: false,
     });
   } catch (err) {
     if (directory) {
@@ -263,14 +322,16 @@ export function commitChanges(
     }
   }
 
-  return getLatestCommitSha();
+  return getLatestCommitSha(directory);
 }
 
-export function getLatestCommitSha(): string | null {
+export function getLatestCommitSha(directory?: string): string | null {
   try {
     return execSync('git rev-parse HEAD', {
       encoding: 'utf8',
       stdio: 'pipe',
+      windowsHide: false,
+      cwd: directory,
     }).trim();
   } catch {
     return null;

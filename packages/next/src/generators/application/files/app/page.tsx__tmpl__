@@ -1,19 +1,16 @@
-<% if (style !== 'none') { %>
-  <% if (styledModule && (styledModule === 'styled-jsx' || styledModule === 'styled-components'))  {%>
-  'use client';
-  <% }%> 
-  <% if (styledModule && styledModule !== 'styled-jsx') {
-    var wrapper = 'StyledPage';
-  %>import styled from '<%= styledModule %>';<% } else {
-    var wrapper = 'div';
-  %>
-    <%- (style !== 'styled-jsx' && style !== 'tailwind') ? `import styles from './page.module.${style}';` : '' %>
-  <% }
-  %>
+<%_ if (style !== 'none') { _%>
+  <%_ if (styledModule && (styledModule === 'styled-jsx' || styledModule === 'styled-components'))  { _%>
+'use client';
+  <%_ } _%> 
+  <%_ if (styledModule && styledModule !== 'styled-jsx') { var wrapper = 'StyledPage'; _%>
+import styled from '<%= styledModule %>';
+<%_ } else { var wrapper = 'div'; _%>
+<%- (style !== 'styled-jsx' && style !== 'tailwind') ? `import styles from './page.module.${style}';` : '' %>
+  <%_ } _%>
 
-  <% if (styledModule && styledModule !== 'styled-jsx') { %>
-  const StyledPage = styled.div`<%- pageStyleContent %>`;
-  <% }%>
+  <%_ if (styledModule && styledModule !== 'styled-jsx') { _%>
+const StyledPage = styled.div`<%- pageStyleContent %>`;
+  <%_ } _%>
 <% } %>
 export default function Index() {
   /*

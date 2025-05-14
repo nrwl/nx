@@ -2,12 +2,13 @@
 title: What if Nx Plugins Were More Like VSCode Extensions
 slug: 'what-if-nx-plugins-were-more-like-vscode-extensions'
 authors: [Juri Strumpflohner]
-cover_image: '/blog/images/2024-02-05/featured_img.png'
+cover_image: '/blog/images/2024-02-05/featured_img.avif'
 tags: [nx, releases]
 reposts: []
+description: Introducing Project Crystal in Nx 18, a transformative approach to Nx plugins that makes them more transparent and lightweight, featuring inferred targets, reduced configuration overhead, and improved monorepo adoption.
 ---
 
-Enhance, but don’t interfere! That’s the ideal! And this is how extensions work in VSCode (or Webstorm). You can use VSCode without any extension and get some basic functionality, or you can add an extension on top to enhance your experience and, ideally, increase your productivity.
+Enhance, but don't interfere! That's the ideal! And this is how extensions work in VSCode (or Webstorm). You can use VSCode without any extension and get some basic functionality, or you can add an extension on top to enhance your experience and, ideally, increase your productivity.
 
 Table of Contents
 
@@ -23,14 +24,14 @@ Table of Contents
 
 ---
 
-**Prefer a video? We’ve got you covered!**
+**Prefer a video? We've got you covered!**
 {% youtube src="https://www.youtube.com/embed/wADNsVItnsM?si=sQ3-Dlx6KBRBUMkE" title="What if Nx Plugins Were More Like VSCode Extensions" /%}
 
-Also, make sure to check out [Launch Nx Conf](/launch-nx) on Thursday, Feb 8th, where we’ll have more in-depth talks about Project Crystal as well as other exciting features around Nx and Nx Cloud.
+Also, make sure to check out [Launch Nx Conf](/launch-nx) on Thursday, Feb 8th, where we'll have more in-depth talks about Project Crystal as well as other exciting features around Nx and Nx Cloud.
 
 ---
 
-Take, for instance, the Playwright plugin. You install it, and it’ll automatically detect the Playwright config file and enhance your workspace by providing quick run buttons alongside your tests or even a dedicated Test Explorer window.
+Take, for instance, the Playwright plugin. You install it, and it'll automatically detect the Playwright config file and enhance your workspace by providing quick run buttons alongside your tests or even a dedicated Test Explorer window.
 
 ![](/blog/images/2024-02-05/bodyimg1.webp)
 _The Playwright VSCode extension enhancing the developer experience_
@@ -43,13 +44,13 @@ You can add Nx to an existing npm/yarn/pnpm monorepo quite straightforwardly. Yo
 npx nx@latest init
 ```
 
-You’ll get an `nx` package installed and an `nx.json` allowing you to define [task dependencies](/recipes/running-tasks/defining-task-pipeline) and caching. With that, you're now able to run commands like `nx build <your project>` or nx `run-many -t build test` to run all `build` and `test` targets in your workspace in parallel. Nx will read and use your existing `package.json` scripts. I've written an in-depth [blog post about adopting Nx in such a scenario](https://dev.to/nx/setup-a-monorepo-with-pnpm-workspaces-and-speed-it-up-with-nx-1eem).
+You'll get an `nx` package installed and an `nx.json` allowing you to define [task dependencies](/recipes/running-tasks/defining-task-pipeline) and caching. With that, you're now able to run commands like `nx build <your project>` or nx `run-many -t build test` to run all `build` and `test` targets in your workspace in parallel. Nx will read and use your existing `package.json` scripts. I've written an in-depth [blog post about adopting Nx in such a scenario](/blog/setup-a-monorepo-with-pnpm-workspaces-and-speed-it-up-with-nx).
 
 This is the most lightweight setup you can get while still getting some improvements via Nx regarding faster task running and more intelligent parallelization. But, you need to deal with the remaining of the monorepo setup.
 
 ## Project Crystal
 
-Nx always had more to offer, though, which it mainly did through its plugins. They’re optional but usually something you’d get set up when creating a new workspace with `create-nx-workspace`. Nx Plugins are extremely powerful, helping you not only create and configure new monorepos, but also taking away the burden of integrating various tooling as well as providing features for enforcing consistency and helping with maintainability. These aspects are fundamental in enterprise settings, where Nx Plugins have proven to help teams successfully manage their monorepos.
+Nx always had more to offer, though, which it mainly did through its plugins. They're optional but usually something you'd get set up when creating a new workspace with `create-nx-workspace`. Nx Plugins are extremely powerful, helping you not only create and configure new monorepos, but also taking away the burden of integrating various tooling as well as providing features for enforcing consistency and helping with maintainability. These aspects are fundamental in enterprise settings, where Nx Plugins have proven to help teams successfully manage their monorepos.
 
 However, this is a balancing act. More abstraction and automation means more support but also potentially a learning curve and giving up some low-level control. It also requires a slightly more significant upfront investment when migrating to an Nx plugin-powered monorepo.
 
@@ -74,7 +75,7 @@ When you create a new Nx workspace using
 npx create-nx-workspace myorg
 ```
 
-... and you choose an “integrated monorepo” you’ll get the usual setup powered by Nx Plugins and all the features and benefits that come with them. Where you’ll see Project Crystal in action is when you open a `project.json` file, which will most likely look like the following:
+... and you choose an "integrated monorepo" you'll get the usual setup powered by Nx Plugins and all the features and benefits that come with them. Where you'll see Project Crystal in action is when you open a `project.json` file, which will most likely look like the following:
 
 ```json {% fileName="project.json" }
 {
@@ -89,7 +90,7 @@ npx create-nx-workspace myorg
 
 ### Inferred Targets
 
-Starting with Nx 18 and Project Crystal, we don’t generate any targets anymore, but the corresponding Nx plugin instead [infers them](/concepts/inferred-tasks). If we open the `nx.json`, you'll see a new property, `plugins`:
+Starting with Nx 18 and Project Crystal, we don't generate any targets anymore, but the corresponding Nx plugin instead [infers them](/concepts/inferred-tasks). If we open the `nx.json`, you'll see a new property, `plugins`:
 
 ```json {% fileName="nx.json" %}
 {
@@ -185,4 +186,4 @@ We just released Project Crystal, so this is just the beginning of it. While we�
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app/)
+- [Speed up your CI](/nx-cloud)

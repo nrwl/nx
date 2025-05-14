@@ -9,7 +9,4 @@ export interface StorybookConfigurationOptions {
   skipFormat?: boolean;
   ignorePaths?: string[];
   interactionTests?: boolean;
-  configureCypress?: boolean;
-  generateCypressSpecs?: boolean;
-  cypressDirectory?: string;
 }

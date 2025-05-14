@@ -1,34 +1,6 @@
 {
-  "generators": {
-    "update-16-0-0-add-nx-packages": {
-      "cli": "nx",
-      "version": "16.0.0-beta.1",
-      "description": "Replace @nrwl/rollup with @nx/rollup",
-      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
-    },
-    "update-16-3-3-add-babel-upward-root-mode-flag": {
-      "cli": "nx",
-      "version": "16.3.3-beta.0",
-      "description": "Add babelUpwardRootMode if not already defined",
-      "implementation": "./src/migrations/update-16-3-3-add-babel-upward-root-mode-flag/update-16-3-3-add-babel-upward-root-mode-flag"
-    },
-    "explicitly-set-projects-to-update-buildable-deps": {
-      "cli": "nx",
-      "version": "16.6.0-beta.0",
-      "description": "Explicitly set 'updateBuildableProjectDepsInPackageJson' to 'true' in targets that rely on that value as the default.",
-      "factory": "./src/migrations/update-16-6-0/explicitly-set-projects-to-update-buildable-deps"
-    }
-  },
+  "generators": {},
   "packageJsonUpdates": {
-    "18.2.0": {
-      "version": "18.2.0-beta.1",
-      "packages": {
-        "core-js": {
-          "version": "3.36.1",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "19.0.0": {
       "version": "19.0.0-beta.0",
       "packages": {

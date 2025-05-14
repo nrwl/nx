@@ -4,9 +4,12 @@ import {
   getSelectedPackageManager,
   newProject,
   runCLI,
-  updateJson,
-  updateFile,
+  runCommand,
   e2eCwd,
+  readJson,
+  readFile,
+  updateFile,
+  updateJson,
 } from '@nx/e2e/utils';
 import { writeFileSync, mkdirSync, rmdirSync } from 'fs';
 import { execSync } from 'node:child_process';
@@ -18,7 +21,6 @@ describe('Nx Import', () => {
   beforeAll(() => {
     proj = newProject({
       packages: ['@nx/js'],
-      unsetProjectNameAndRootFormat: false,
     });
 
     if (getSelectedPackageManager() === 'pnpm') {
@@ -39,6 +41,13 @@ describe('Nx Import', () => {
       rmdirSync(join(tempImportE2ERoot));
     } catch {}
   });
+
+  beforeEach(() => {
+    // Clean up the temp import directory before each test to not have any uncommited changes
+    runCommand(`git add .`);
+    runCommand(`git commit -am "Update" --allow-empty`);
+  });
+
   afterAll(() => cleanupProject());
 
   it('should be able to import a vite app', () => {
@@ -60,9 +69,14 @@ describe('Nx Import', () => {
     execSync(`git commit -am "initial commit"`, {
       cwd: tempViteProjectPath,
     });
-    execSync(`git checkout -b main`, {
-      cwd: tempViteProjectPath,
-    });
+
+    try {
+      execSync(`git checkout -b main`, {
+        cwd: tempViteProjectPath,
+      });
+    } catch {
+      // This fails if git is already configured to have `main` branch, but that's OK
+    }
 
     const remote = tempViteProjectPath;
     const ref = 'main';
@@ -101,12 +115,16 @@ describe('Nx Import', () => {
     execSync(`git commit -am "initial commit"`, {
       cwd: repoPath,
     });
-    execSync(`git checkout -b main`, {
-      cwd: repoPath,
-    });
+    try {
+      execSync(`git checkout -b main`, {
+        cwd: repoPath,
+      });
+    } catch {
+      // This fails if git is already configured to have `main` branch, but that's OK
+    }
     mkdirSync(join(repoPath, 'packages/a'), { recursive: true });
     writeFileSync(join(repoPath, 'packages/a/README.md'), `# A`);
-    execSync(`git add packages/a`, {
+    execSync(`git add .`, {
       cwd: repoPath,
     });
     execSync(`git commit -m "add package a"`, {
@@ -114,7 +132,7 @@ describe('Nx Import', () => {
     });
     mkdirSync(join(repoPath, 'packages/b'), { recursive: true });
     writeFileSync(join(repoPath, 'packages/b/README.md'), `# B`);
-    execSync(`git add packages/b`, {
+    execSync(`git add .`, {
       cwd: repoPath,
     });
     execSync(`git commit -m "add package b"`, {
@@ -133,6 +151,16 @@ describe('Nx Import', () => {
         verbose: true,
       }
     );
+
+    if (getSelectedPackageManager() === 'pnpm') {
+      const workspaceYaml = readFile('pnpm-workspace.yaml');
+      expect(workspaceYaml).toMatch(/(packages\/a)/);
+      expect(workspaceYaml).toMatch(/(packages\/b)/);
+    } else {
+      const packageJson = readJson('package.json');
+      expect(packageJson.workspaces).toContain('packages/a');
+      expect(packageJson.workspaces).toContain('packages/b');
+    }
 
     checkFilesExist('packages/a/README.md', 'packages/b/README.md');
   });

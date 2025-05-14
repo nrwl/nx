@@ -1,5 +1,5 @@
 export {
   createNodes,
-  createDependencies,
+  createNodesV2,
   DetoxPluginOptions,
 } from './src/plugins/plugin';

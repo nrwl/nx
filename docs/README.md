@@ -32,7 +32,6 @@ We also have different audiences in mind when writing docs:
 👦 Intermediate User
 
 - They know how to create an Nx repo or add Nx to an existing repo
-- They have heard the terms integrated and package-based
 - They know what a project is and how to make one
 - They understand how to run a task and the basics of caching
 - They can launch the graph
@@ -209,12 +208,12 @@ You can optionally also pass a `path` like
 ‎```
 ````
 
-#### Terminal Video Output
+#### Table of Contents
 
-You can have a more dynamic visualization of a terminal output by using the following component:
+You can add a table of contents to your document by using the following component. This is mostly useful for blog posts.
 
-```
-{% terminal-video src="/documentation/shared/images/caching/cache-terminal-animation.mp4" /%}
+```markdown
+{% toc /%}
 ```
 
 #### Custom iframes
@@ -298,6 +297,14 @@ Have a more decent button-like widget that you can place below sections of a tut
 
 ```markdown
 {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=64" /%}
+```
+
+#### Course video embed
+
+This is for embedding a video just like with the Youtube component, but in addition to have a link to a Nx Course (nx.dev/courses) video to improve the discoverability of these courses.
+
+```markdown
+{% course-video src="https://youtu.be/3hW53b1IJ84" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="/courses/pnpm-nx-next/lessons-01-nx-init" title="Initialize Nx in Your Project with nx init" /%}
 ```
 
 #### Project Details View
@@ -416,6 +423,28 @@ Embed an Nx Graph visualization that can be panned by the user.
 
 {% /graph %}
 ````
+
+## Generating API Documentation
+
+To generate API documentation for the codebase and update the menu for the docs on nx.dev, you can run:
+
+```
+nx documentation
+```
+
+This will happen automatically in a `git push` hook, so you'll be reminded if you forget.
+
+### Generate API Documentation for Ocean Plugins
+
+To generate API documentation for plugins in the ocean repository, run the `nx documentation` command with the `NX_OCEAN_RELATIVE_PATH` environment variable set to the relative path to your checked out copy of the ocean repo.
+
+```
+NX_OCEAN_RELATIVE_PATH=../ocean nx documentation
+```
+
+This will create generated API documentation in the `docs/external-generated` folder. This API will be merged into the normal `docs/generated` documentation when the docs site is built.
+
+Because there are two separate output folders, if someone runs `nx documentation` without the `NX_OCEAN_RELATIVE_PATH` environment variable, the ocean documentation will not be overwritten. The ocean documentation will only be updated or deleted when someone explicitly chooses to do so.
 
 ## Publishing Process
 

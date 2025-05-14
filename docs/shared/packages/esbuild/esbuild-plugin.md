@@ -22,39 +22,20 @@ Make sure to install the `@nx/esbuild` version that matches the version of `nx` 
 
 In any Nx workspace, you can install `@nx/esbuild` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/esbuild
 ```
 
 This will install the correct version of `@nx/esbuild`.
 
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/esbuild` package with your package manager.
-
-```shell
-npm add -D @nx/esbuild
-```
-
-{% /tab %}
-{% /tabs %}
-
 ## Using the @nx/esbuild Plugin
 
 ### Creating a new JS library
 
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
-
 You can add a new library that builds using esbuild with:
 
 ```shell
-nx g @nx/js:lib mylib --directory=libs/mylib --bundler=esbuild
+nx g @nx/js:lib libs/mylib --bundler=esbuild
 ```
 
 This command will install the esbuild plugin if needed, and set `@nx/esbuild:esbuild` executor for the `build` target.

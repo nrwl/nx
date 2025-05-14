@@ -16,13 +16,13 @@
     "generateExportsField": {
       "type": "boolean",
       "alias": "exports",
-      "description": "Update the output package.json file's 'exports' field. This field is used by Node and bundles.",
+      "description": "Update the output package.json file's 'exports' field. This field is used by Node and bundlers. Ignored when `generatePackageJson` is set to `false`.",
       "default": false,
       "x-priority": "important"
     },
     "additionalEntryPoints": {
       "type": "array",
-      "description": "Additional entry-points to add to exports field in the package.json file.",
+      "description": "Additional entry-points to add to exports field in the package.json file. Ignored when `generatePackageJson` is set to `false`.",
       "items": {
         "type": "string"
       },
@@ -103,9 +103,14 @@
     },
     "generateLockfile": {
       "type": "boolean",
-      "description": "Generate a lockfile (e.g. package-lock.json) that matches the workspace lockfile to ensure package versions match.",
+      "description": "Generate a lockfile (e.g. package-lock.json) that matches the workspace lockfile to ensure package versions match. Ignored when `generatePackageJson` is set to `false`.",
       "default": false,
       "x-priority": "internal"
+    },
+    "generatePackageJson": {
+      "type": "boolean",
+      "description": "Generate package.json file in the output folder.",
+      "default": true
     }
   },
   "required": ["main", "outputPath", "tsConfig"],

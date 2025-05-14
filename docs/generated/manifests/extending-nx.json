@@ -152,6 +152,17 @@
         "tags": ["generate-code"]
       },
       {
+        "id": "create-sync-generator",
+        "name": "Create a Sync Generator",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/generators/create-sync-generator",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/extending-nx/recipes/create-sync-generator",
+        "tags": ["generate-code", "sync"]
+      },
+      {
         "id": "migration-generators",
         "name": "Write a Migration",
         "description": "",
@@ -227,6 +238,17 @@
         "isExternal": false,
         "path": "/extending-nx/recipes/publish-plugin",
         "tags": ["create-your-own-plugin"]
+      },
+      {
+        "id": "task-running-lifecycle",
+        "name": "Hook into the Task Running Lifecycle",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/plugins/task-running-lifecycle",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/extending-nx/recipes/task-running-lifecycle",
+        "tags": ["running-tasks"]
       }
     ],
     "isExternal": false,
@@ -287,6 +309,17 @@
     "isExternal": false,
     "path": "/extending-nx/recipes/modifying-files",
     "tags": ["generate-code"]
+  },
+  "/extending-nx/recipes/create-sync-generator": {
+    "id": "create-sync-generator",
+    "name": "Create a Sync Generator",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/generators/create-sync-generator",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/extending-nx/recipes/create-sync-generator",
+    "tags": ["generate-code", "sync"]
   },
   "/extending-nx/recipes/migration-generators": {
     "id": "migration-generators",
@@ -364,5 +397,16 @@
     "isExternal": false,
     "path": "/extending-nx/recipes/publish-plugin",
     "tags": ["create-your-own-plugin"]
+  },
+  "/extending-nx/recipes/task-running-lifecycle": {
+    "id": "task-running-lifecycle",
+    "name": "Hook into the Task Running Lifecycle",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/plugins/task-running-lifecycle",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/extending-nx/recipes/task-running-lifecycle",
+    "tags": ["running-tasks"]
   }
 }

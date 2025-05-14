@@ -1,5 +1,233 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`app --minimal should generate a correct setup when --bundler=rspack and ssr 1`] = `
+"
+  import { createConfig }from '@nx/angular-rspack';
+  
+  
+  export default createConfig({ 
+    options: {
+      root: __dirname,
+      
+  "outputPath": {
+    "base": "../dist/app2"
+  },
+  "index": "./src/index.html",
+  "browser": "./src/main.ts",
+  "polyfills": [
+    "zone.js"
+  ],
+  "tsConfig": "./tsconfig.app.json",
+  "assets": [
+    {
+      "glob": "**/*",
+      "input": "./public"
+    }
+  ],
+  "styles": [
+    "./src/styles.css"
+  ],
+  "scripts": [],
+  "devServer": {},
+  "ssr": {
+    "entry": "./src/server.ts"
+  },
+  "server": "./src/main.server.ts",
+  "prerender": {
+    "discoverRoutes": true,
+    "routes": [
+      "/"
+    ]
+  }
+
+    }
+  }, {
+      "production": {
+        options: {
+          
+  "budgets": [
+    {
+      "type": "initial",
+      "maximumWarning": "500kb",
+      "maximumError": "1mb"
+    },
+    {
+      "type": "anyComponentStyle",
+      "maximumWarning": "4kb",
+      "maximumError": "8kb"
+    }
+  ],
+  "outputHashing": "all",
+  "devServer": {},
+  "prerender": {
+    "discoverRoutes": true,
+    "routes": []
+  }
+
+        }
+      },
+
+      "development": {
+        options: {
+          
+  "optimization": false,
+  "vendorChunk": true,
+  "extractLicenses": false,
+  "sourceMap": true,
+  "namedChunks": true,
+  "devServer": {},
+  "prerender": {
+    "discoverRoutes": true,
+    "routes": []
+  }
+
+        }
+      }});"
+`;
+
+exports[`app --minimal should generate a correct setup when --bundler=rspack and ssr 2`] = `
+"import 'zone.js/node';
+
+import { APP_BASE_HREF } from '@angular/common';
+import { CommonEngine } from '@angular/ssr/node';
+import * as express from 'express';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import bootstrap from './main.server';
+
+// The Express app is exported so that it can be used by serverless Functions.
+export function app(): express.Express {
+  const server = express();
+  const distFolder = join(process.cwd(), "../dist/app2/browser");
+  const indexHtml = existsSync(join(distFolder, 'index.original.html'))
+    ? join(distFolder, 'index.original.html')
+    : join(distFolder, 'index.html');
+
+  const commonEngine = new CommonEngine();
+
+  server.set('view engine', 'html');
+  server.set('views', distFolder);
+
+  // Example Express Rest API endpoints
+  // server.get('/api/**', (req, res) => { });
+  // Serve static files from /browser
+  server.get(
+    '*.*',
+    express.static(distFolder, {
+      maxAge: '1y',
+    })
+  );
+
+  // All regular routes use the Angular engine
+  server.get('*', (req, res, next) => {
+    const { protocol, originalUrl, baseUrl, headers } = req;
+
+    commonEngine
+      .render({
+        bootstrap,
+        documentFilePath: indexHtml,
+        url: \`\${protocol}://\${headers.host}\${originalUrl}\`,
+        publicPath: distFolder,
+        providers: [{ provide: APP_BASE_HREF, useValue: baseUrl }],
+      })
+      .then((html) => res.send(html))
+      .catch((err) => next(err));
+  });
+
+  return server;
+}
+
+function run(): void {
+  const port = process.env['PORT'] || 4000;
+
+  // Start up the Node server
+  const server = app();
+  server.listen(port, () => {
+    console.log(\`Node Express server listening on http://localhost:\${port}\`);
+  });
+}
+
+// Webpack will replace 'require' with '__webpack_require__'
+// '__non_webpack_require__' is a proxy to Node 'require'
+// The below code is to ensure that the server is run only when not requiring the bundle.
+declare const __non_webpack_require__: NodeRequire;
+const mainModule = __non_webpack_require__.main;
+const moduleFilename = (mainModule && mainModule.filename) || '';
+if (moduleFilename === __filename || moduleFilename.includes('iisnode')) {
+  run();
+}
+
+export default bootstrap;
+"
+`;
+
+exports[`app --minimal should generate a correct setup when --bundler=rspack including a correct config file and no build target 1`] = `
+"
+  import { createConfig }from '@nx/angular-rspack';
+  
+  
+  export default createConfig({ 
+    options: {
+      root: __dirname,
+      
+  "outputPath": {
+    "base": "../dist/app1"
+  },
+  "index": "./src/index.html",
+  "browser": "./src/main.ts",
+  "polyfills": [
+    "zone.js"
+  ],
+  "tsConfig": "./tsconfig.app.json",
+  "assets": [
+    {
+      "glob": "**/*",
+      "input": "./public"
+    }
+  ],
+  "styles": [
+    "./src/styles.css"
+  ],
+  "scripts": [],
+  "devServer": {}
+
+    }
+  }, {
+      "production": {
+        options: {
+          
+  "budgets": [
+    {
+      "type": "initial",
+      "maximumWarning": "500kb",
+      "maximumError": "1mb"
+    },
+    {
+      "type": "anyComponentStyle",
+      "maximumWarning": "4kb",
+      "maximumError": "8kb"
+    }
+  ],
+  "outputHashing": "all",
+  "devServer": {}
+
+        }
+      },
+
+      "development": {
+        options: {
+          
+  "optimization": false,
+  "vendorChunk": true,
+  "extractLicenses": false,
+  "sourceMap": true,
+  "namedChunks": true,
+  "devServer": {}
+
+        }
+      }});"
+`;
+
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps with routing 1`] = `
 "import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
@@ -25,6 +253,7 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 
 @Component({
   selector: 'app-root',
+  standalone: false,
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -58,7 +287,8 @@ describe('AppComponent', () => {
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps with routing 4`] = `
-"<h1>Welcome plain</h1> <router-outlet></router-outlet>
+"<h1>Welcome plain</h1>
+<router-outlet></router-outlet>
 "
 `;
 
@@ -84,6 +314,7 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 
 @Component({
   selector: 'app-root',
+  standalone: false,
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -116,7 +347,7 @@ describe('AppComponent', () => {
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps without routing 4`] = `
-"<h1>Welcome plain</h1> 
+"<h1>Welcome plain</h1>
 "
 `;
 
@@ -125,7 +356,6 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 import { RouterModule } from '@angular/router';
 
 @Component({
-  standalone: true,
   imports: [RouterModule],
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -160,7 +390,8 @@ describe('AppComponent', () => {
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for standalone apps with routing 3`] = `
-"<h1>Welcome plain</h1> <router-outlet></router-outlet>
+"<h1>Welcome plain</h1>
+<router-outlet></router-outlet>
 "
 `;
 
@@ -168,7 +399,6 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 "import { Component } from '@angular/core';
 
 @Component({
-  standalone: true,
   imports: [],
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -202,412 +432,8 @@ describe('AppComponent', () => {
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for standalone apps without routing 3`] = `
-"<h1>Welcome plain</h1> 
+"<h1>Welcome plain</h1>
 "
-`;
-
-exports[`app --project-name-and-root-format=derived should generate correctly when directory is provided 1`] = `
-{
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "my-dir-my-app",
-  "prefix": "app",
-  "projectType": "application",
-  "root": "apps/my-dir/my-app",
-  "sourceRoot": "apps/my-dir/my-app/src",
-  "tags": [],
-  "targets": {
-    "build": {
-      "configurations": {
-        "development": {
-          "extractLicenses": false,
-          "optimization": false,
-          "sourceMap": true,
-        },
-        "production": {
-          "budgets": [
-            {
-              "maximumError": "1mb",
-              "maximumWarning": "500kb",
-              "type": "initial",
-            },
-            {
-              "maximumError": "4kb",
-              "maximumWarning": "2kb",
-              "type": "anyComponentStyle",
-            },
-          ],
-          "outputHashing": "all",
-        },
-      },
-      "defaultConfiguration": "production",
-      "executor": "@angular-devkit/build-angular:application",
-      "options": {
-        "assets": [
-          {
-            "glob": "**/*",
-            "input": "apps/my-dir/my-app/public",
-          },
-        ],
-        "browser": "apps/my-dir/my-app/src/main.ts",
-        "index": "apps/my-dir/my-app/src/index.html",
-        "outputPath": "dist/apps/my-dir/my-app",
-        "polyfills": [
-          "zone.js",
-        ],
-        "scripts": [],
-        "styles": [
-          "apps/my-dir/my-app/src/styles.css",
-        ],
-        "tsConfig": "apps/my-dir/my-app/tsconfig.app.json",
-      },
-      "outputs": [
-        "{options.outputPath}",
-      ],
-    },
-    "extract-i18n": {
-      "executor": "@angular-devkit/build-angular:extract-i18n",
-      "options": {
-        "buildTarget": "my-dir-my-app:build",
-      },
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-    },
-    "serve": {
-      "configurations": {
-        "development": {
-          "buildTarget": "my-dir-my-app:build:development",
-        },
-        "production": {
-          "buildTarget": "my-dir-my-app:build:production",
-        },
-      },
-      "defaultConfiguration": "development",
-      "executor": "@angular-devkit/build-angular:dev-server",
-    },
-    "serve-static": {
-      "executor": "@nx/web:file-server",
-      "options": {
-        "buildTarget": "my-dir-my-app:build",
-        "port": 4200,
-        "spa": true,
-        "staticFilePath": "dist/apps/my-dir/my-app/browser",
-      },
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "apps/my-dir/my-app/jest.config.ts",
-      },
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}",
-      ],
-    },
-  },
-}
-`;
-
-exports[`app --project-name-and-root-format=derived should generate correctly when directory is provided 2`] = `
-{
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "my-dir-my-app",
-  ],
-  "name": "my-dir-my-app-e2e",
-  "projectType": "application",
-  "root": "apps/my-dir/my-app-e2e",
-  "sourceRoot": "apps/my-dir/my-app-e2e/src",
-  "tags": [],
-  "targets": {},
-}
-`;
-
-exports[`app --project-name-and-root-format=derived should generate correctly when directory is provided: e2e tsconfig.json 1`] = `
-{
-  "compilerOptions": {
-    "allowJs": true,
-    "forceConsistentCasingInFileNames": true,
-    "module": "commonjs",
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "outDir": "../../../dist/out-tsc",
-    "sourceMap": false,
-    "strict": true,
-    "types": [
-      "cypress",
-      "node",
-    ],
-  },
-  "extends": "../../../tsconfig.base.json",
-  "include": [
-    "**/*.ts",
-    "**/*.js",
-    "cypress.config.ts",
-    "**/*.cy.ts",
-    "**/*.cy.js",
-    "**/*.d.ts",
-  ],
-}
-`;
-
-exports[`app --project-name-and-root-format=derived should generate correctly when directory is provided: tsconfig.app.json 1`] = `
-{
-  "compilerOptions": {
-    "outDir": "../../../dist/out-tsc",
-    "types": [],
-  },
-  "exclude": [
-    "jest.config.ts",
-    "src/**/*.test.ts",
-    "src/**/*.spec.ts",
-  ],
-  "extends": "./tsconfig.json",
-  "files": [
-    "src/main.ts",
-  ],
-  "include": [
-    "src/**/*.d.ts",
-  ],
-}
-`;
-
-exports[`app --project-name-and-root-format=derived should generate correctly when directory is provided: tsconfig.json 1`] = `
-{
-  "angularCompilerOptions": {
-    "enableI18nLegacyMessageIdFormat": false,
-    "strictInjectionParameters": true,
-    "strictInputAccessModifiers": true,
-    "strictTemplates": true,
-  },
-  "compilerOptions": {
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "strict": true,
-    "target": "es2022",
-  },
-  "extends": "../../../tsconfig.base.json",
-  "files": [],
-  "include": [],
-  "references": [
-    {
-      "path": "./tsconfig.editor.json",
-    },
-    {
-      "path": "./tsconfig.app.json",
-    },
-    {
-      "path": "./tsconfig.spec.json",
-    },
-  ],
-}
-`;
-
-exports[`app --project-name-and-root-format=derived should generate correctly when no directory is provided 1`] = `
-{
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "name": "my-app",
-  "prefix": "app",
-  "projectType": "application",
-  "root": "apps/my-app",
-  "sourceRoot": "apps/my-app/src",
-  "tags": [],
-  "targets": {
-    "build": {
-      "configurations": {
-        "development": {
-          "extractLicenses": false,
-          "optimization": false,
-          "sourceMap": true,
-        },
-        "production": {
-          "budgets": [
-            {
-              "maximumError": "1mb",
-              "maximumWarning": "500kb",
-              "type": "initial",
-            },
-            {
-              "maximumError": "4kb",
-              "maximumWarning": "2kb",
-              "type": "anyComponentStyle",
-            },
-          ],
-          "outputHashing": "all",
-        },
-      },
-      "defaultConfiguration": "production",
-      "executor": "@angular-devkit/build-angular:application",
-      "options": {
-        "assets": [
-          {
-            "glob": "**/*",
-            "input": "apps/my-app/public",
-          },
-        ],
-        "browser": "apps/my-app/src/main.ts",
-        "index": "apps/my-app/src/index.html",
-        "outputPath": "dist/apps/my-app",
-        "polyfills": [
-          "zone.js",
-        ],
-        "scripts": [],
-        "styles": [
-          "apps/my-app/src/styles.css",
-        ],
-        "tsConfig": "apps/my-app/tsconfig.app.json",
-      },
-      "outputs": [
-        "{options.outputPath}",
-      ],
-    },
-    "extract-i18n": {
-      "executor": "@angular-devkit/build-angular:extract-i18n",
-      "options": {
-        "buildTarget": "my-app:build",
-      },
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-    },
-    "serve": {
-      "configurations": {
-        "development": {
-          "buildTarget": "my-app:build:development",
-        },
-        "production": {
-          "buildTarget": "my-app:build:production",
-        },
-      },
-      "defaultConfiguration": "development",
-      "executor": "@angular-devkit/build-angular:dev-server",
-    },
-    "serve-static": {
-      "executor": "@nx/web:file-server",
-      "options": {
-        "buildTarget": "my-app:build",
-        "port": 4200,
-        "spa": true,
-        "staticFilePath": "dist/apps/my-app/browser",
-      },
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "apps/my-app/jest.config.ts",
-      },
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}",
-      ],
-    },
-  },
-}
-`;
-
-exports[`app --project-name-and-root-format=derived should generate correctly when no directory is provided 2`] = `
-{
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "my-app",
-  ],
-  "name": "my-app-e2e",
-  "projectType": "application",
-  "root": "apps/my-app-e2e",
-  "sourceRoot": "apps/my-app-e2e/src",
-  "tags": [],
-  "targets": {},
-}
-`;
-
-exports[`app --project-name-and-root-format=derived should generate correctly when no directory is provided: e2e tsconfig.json 1`] = `
-{
-  "compilerOptions": {
-    "allowJs": true,
-    "forceConsistentCasingInFileNames": true,
-    "module": "commonjs",
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "outDir": "../../dist/out-tsc",
-    "sourceMap": false,
-    "strict": true,
-    "types": [
-      "cypress",
-      "node",
-    ],
-  },
-  "extends": "../../tsconfig.base.json",
-  "include": [
-    "**/*.ts",
-    "**/*.js",
-    "cypress.config.ts",
-    "**/*.cy.ts",
-    "**/*.cy.js",
-    "**/*.d.ts",
-  ],
-}
-`;
-
-exports[`app --project-name-and-root-format=derived should generate correctly when no directory is provided: tsconfig.app.json 1`] = `
-{
-  "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
-    "types": [],
-  },
-  "exclude": [
-    "jest.config.ts",
-    "src/**/*.test.ts",
-    "src/**/*.spec.ts",
-  ],
-  "extends": "./tsconfig.json",
-  "files": [
-    "src/main.ts",
-  ],
-  "include": [
-    "src/**/*.d.ts",
-  ],
-}
-`;
-
-exports[`app --project-name-and-root-format=derived should generate correctly when no directory is provided: tsconfig.json 1`] = `
-{
-  "angularCompilerOptions": {
-    "enableI18nLegacyMessageIdFormat": false,
-    "strictInjectionParameters": true,
-    "strictInputAccessModifiers": true,
-    "strictTemplates": true,
-  },
-  "compilerOptions": {
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "strict": true,
-    "target": "es2022",
-  },
-  "extends": "../../tsconfig.base.json",
-  "files": [],
-  "include": [],
-  "references": [
-    {
-      "path": "./tsconfig.editor.json",
-    },
-    {
-      "path": "./tsconfig.app.json",
-    },
-    {
-      "path": "./tsconfig.spec.json",
-    },
-  ],
-}
 `;
 
 exports[`app --standalone should generate a standalone app correctly with routing 1`] = `
@@ -645,7 +471,6 @@ import { RouterModule } from '@angular/router';
 import { NxWelcomeComponent } from './nx-welcome.component';
 
 @Component({
-  standalone: true,
   imports: [NxWelcomeComponent, RouterModule],
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -713,7 +538,6 @@ exports[`app --standalone should generate a standalone app correctly without rou
 import { NxWelcomeComponent } from './nx-welcome.component';
 
 @Component({
-  standalone: true,
   imports: [NxWelcomeComponent, ],
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -831,6 +655,86 @@ exports[`app --strict should enable strict type checking: e2e tsconfig.json 1`] 
 }
 `;
 
+exports[`app --unit-test-runner vitest should add tsconfig.spec.json 1`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "types": [
+      "vitest/globals",
+      "vitest/importMeta",
+      "vite/client",
+      "node",
+      "vitest"
+    ]
+  },
+  "include": [
+    "vite.config.ts",
+    "vite.config.mts",
+    "vitest.config.ts",
+    "vitest.config.mts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.js",
+    "src/**/*.spec.js",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.jsx",
+    "src/**/*.d.ts"
+  ],
+  "files": ["src/test-setup.ts"]
+}
+"
+`;
+
+exports[`app --unit-test-runner vitest should generate src/test-setup.ts 1`] = `
+"import '@analogjs/vitest-angular/setup-zone';
+
+import {
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting,
+} from '@angular/platform-browser-dynamic/testing';
+import { getTestBed } from '@angular/core/testing';
+
+getTestBed().initTestEnvironment(
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting()
+);
+"
+`;
+
+exports[`app --unit-test-runner vitest should generate vite.config.mts 1`] = `
+"/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import angular from '@analogjs/vite-plugin-angular';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../node_modules/.vite/my-app',
+  plugins: [angular(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+  test: {
+    watch: false,
+    globals: true,
+    environment: 'jsdom',
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    setupFiles: ['src/test-setup.ts'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../coverage/my-app',
+      provider: 'v8' as const,
+    },
+  },
+}));
+"
+`;
+
 exports[`app angular compat support should import "ApplicationConfig" from "@angular/platform-browser" 1`] = `
 "import { ApplicationConfig } from '@angular/core';
 import { provideRouter } from '@angular/router';
@@ -867,6 +771,7 @@ exports[`app format files should format files 2`] = `
 
 @Component({
   selector: 'app-root',
+  standalone: false,
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -940,8 +845,8 @@ exports[`app nested should create project configs 1`] = `
               "type": "initial",
             },
             {
-              "maximumError": "4kb",
-              "maximumWarning": "2kb",
+              "maximumError": "8kb",
+              "maximumWarning": "4kb",
               "type": "anyComponentStyle",
             },
           ],
@@ -991,10 +896,12 @@ exports[`app nested should create project configs 1`] = `
           "buildTarget": "my-app:build:production",
         },
       },
+      "continuous": true,
       "defaultConfiguration": "development",
       "executor": "@angular-devkit/build-angular:dev-server",
     },
     "serve-static": {
+      "continuous": true,
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-app:build",
@@ -1056,8 +963,8 @@ exports[`app not nested should create project configs 1`] = `
               "type": "initial",
             },
             {
-              "maximumError": "4kb",
-              "maximumWarning": "2kb",
+              "maximumError": "8kb",
+              "maximumWarning": "4kb",
               "type": "anyComponentStyle",
             },
           ],
@@ -1107,10 +1014,12 @@ exports[`app not nested should create project configs 1`] = `
           "buildTarget": "my-app:build:production",
         },
       },
+      "continuous": true,
       "defaultConfiguration": "development",
       "executor": "@angular-devkit/build-angular:dev-server",
     },
     "serve-static": {
+      "continuous": true,
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-app:build",

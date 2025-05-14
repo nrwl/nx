@@ -1,6 +1,7 @@
 name: 🐞 Bug Report
 description: This form is to report unexpected behavior in Nx.
 labels: ["type: bug"]
+type: Bug
 body:
   - type: markdown
     attributes:
@@ -59,7 +60,7 @@ body:
       label: Package Manager Version
       description: |
         If `nx report` doesn't work, please provide the name and the version of your package manager.
-        You can get version information by running `yarn --version`, `pnpm --version` or `npm --version`, depending on the package manager used.
+        You can get version information by running `PACKAGE_MANAGER --version`, where PACKAGE_MANAGER is any of `yarn`, `pnpm`, `bun` or `npm`, depending on the package manager used.
   - type: checkboxes
     id: os
     attributes:

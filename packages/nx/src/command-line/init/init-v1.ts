@@ -30,7 +30,7 @@ export async function initHandler(options: InitArgs) {
   const args = process.argv.slice(3).join(' ');
 
   const version =
-    process.env.NX_VERSION ?? (prerelease(nxVersion) ? 'next' : 'latest');
+    process.env.NX_VERSION ?? (prerelease(nxVersion) ? nxVersion : 'latest');
   if (process.env.NX_VERSION) {
     console.log(`Using version ${process.env.NX_VERSION}`);
   }
@@ -95,6 +95,7 @@ export async function initHandler(options: InitArgs) {
     } else {
       execSync(`npx --yes create-nx-workspace@${version} ${args}`, {
         stdio: [0, 1, 2],
+        windowsHide: false,
       });
     }
   }

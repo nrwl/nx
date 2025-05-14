@@ -16,6 +16,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 
 ### Properties
 
+- [$schema](../../devkit/documents/Workspace#$schema): string
 - [affected](../../devkit/documents/Workspace#affected): NxAffectedConfig
 - [cacheDirectory](../../devkit/documents/Workspace#cachedirectory): string
 - [cli](../../devkit/documents/Workspace#cli): Object
@@ -25,6 +26,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [generators](../../devkit/documents/Workspace#generators): Object
 - [implicitDependencies](../../devkit/documents/Workspace#implicitdependencies): ImplicitDependencyEntry<string[] | "\*">
 - [installation](../../devkit/documents/Workspace#installation): NxInstallationConfiguration
+- [maxCacheSize](../../devkit/documents/Workspace#maxcachesize): string
 - [namedInputs](../../devkit/documents/Workspace#namedinputs): Object
 - [neverConnectToCloud](../../devkit/documents/Workspace#neverconnecttocloud): boolean
 - [nxCloudAccessToken](../../devkit/documents/Workspace#nxcloudaccesstoken): string
@@ -39,12 +41,23 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [sync](../../devkit/documents/Workspace#sync): NxSyncConfiguration
 - [targetDefaults](../../devkit/documents/Workspace#targetdefaults): TargetDefaults
 - [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions): Object
+- [tui](../../devkit/documents/Workspace#tui): Object
 - [useDaemonProcess](../../devkit/documents/Workspace#usedaemonprocess): boolean
 - [useInferencePlugins](../../devkit/documents/Workspace#useinferenceplugins): boolean
 - [version](../../devkit/documents/Workspace#version): number
 - [workspaceLayout](../../devkit/documents/Workspace#workspacelayout): Object
 
 ## Properties
+
+### $schema
+
+• `Optional` **$schema**: `string`
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[$schema](../../devkit/documents/NxJsonConfiguration#$schema)
+
+---
 
 ### affected
 
@@ -190,6 +203,18 @@ useful for workspaces that don't have a root package.json + node_modules.
 
 ---
 
+### maxCacheSize
+
+• `Optional` **maxCacheSize**: `string`
+
+Sets the maximum size of the local cache. Accepts a number followed by a unit (e.g. 100MB). Accepted units are B, KB, MB, and GB.
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[maxCacheSize](../../devkit/documents/NxJsonConfiguration#maxcachesize)
+
+---
+
 ### namedInputs
 
 • `Optional` **namedInputs**: `Object`
@@ -210,7 +235,7 @@ Named inputs targets can refer to reduce duplication
 
 • `Optional` **neverConnectToCloud**: `boolean`
 
-Set this to false to disable connection to Nx Cloud
+Set this to true to disable connection to Nx Cloud
 
 #### Inherited from
 
@@ -357,7 +382,10 @@ Dependencies between different target names across all projects
 
 • `Optional` **tasksRunnerOptions**: `Object`
 
-Available Task Runners
+**`Deprecated`**
+
+Custom task runners will be replaced by a new API starting with Nx 21. More info: https://nx.dev/deprecated/custom-tasks-runner
+Available Task Runners for Nx to use
 
 #### Index signature
 
@@ -366,6 +394,25 @@ Available Task Runners
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions)
+
+---
+
+### tui
+
+• `Optional` **tui**: `Object`
+
+Settings for the Nx Terminal User Interface (TUI)
+
+#### Type declaration
+
+| Name        | Type                  | Description                                                                                                                                                                                                                                                                                |
+| :---------- | :-------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `autoExit?` | `number` \| `boolean` | Whether to exit the TUI automatically after all tasks finish. - If set to `true`, the TUI will exit immediately. - If set to `false` the TUI will not automatically exit. - If set to a number, an interruptible countdown popup will be shown for that many seconds before the TUI exits. |
+| `enabled?`  | `boolean`             | Whether to enable the TUI whenever possible (based on the current environment and terminal).                                                                                                                                                                                               |
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[tui](../../devkit/documents/NxJsonConfiguration#tui)
 
 ---
 

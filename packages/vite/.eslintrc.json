@@ -4,7 +4,15 @@
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {}
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "name": "minimatch",
+            "message": "Please use `picomatch` instead."
+          }
+        ]
+      }
     },
     {
       "files": ["*.ts", "*.tsx"],
@@ -29,7 +37,15 @@
           "error",
           {
             "buildTargets": ["build-base"],
-            "ignoredDependencies": ["nx", "typescript", "vite"]
+            "ignoredDependencies": [
+              "nx",
+              "typescript",
+              "vite",
+              // we only check if the package is installed
+              "eslint",
+              // we ensure it is installed and only use it when eslint is installed
+              "@nx/eslint"
+            ]
           }
         ]
       }

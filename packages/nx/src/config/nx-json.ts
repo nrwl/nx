@@ -2,10 +2,11 @@ import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 
 import type { ChangelogRenderOptions } from '../../release/changelog-renderer';
+import type { validReleaseVersionPrefixes } from '../command-line/release/version';
 import { readJsonFile } from '../utils/fileutils';
-import { PackageManager } from '../utils/package-manager';
+import type { PackageManager } from '../utils/package-manager';
 import { workspaceRoot } from '../utils/workspace-root';
-import {
+import type {
   InputDefinition,
   TargetConfiguration,
   TargetDependencyConfig,
@@ -55,7 +56,13 @@ interface NxInstallationConfiguration {
   plugins?: Record<string, string>;
 }
 
-export interface NxReleaseVersionConfiguration {
+/**
+ * This named configuration interface represents the options prior to Nx v21. This interface will be made available
+ * under LegacyNxReleaseVersionConfiguration throughout the lifetime of Nx v21.
+ *
+ * In Nx v22, this configuration interface will no longer be valid.
+ */
+export interface LegacyNxReleaseVersionConfiguration {
   generator?: string;
   generatorOptions?: Record<string, unknown>;
   /**
@@ -71,6 +78,108 @@ export interface NxReleaseVersionConfiguration {
   conventionalCommits?: boolean;
 }
 
+export type ManifestRootToUpdate =
+  | string
+  | { path: string; preserveLocalDependencyProtocols: boolean };
+
+// NOTE: It's important to keep the nx-schema.json in sync with this interface. If you make changes here, make sure they are reflected in the schema.
+export interface NxReleaseVersionConfiguration {
+  /**
+   * Whether to use the legacy versioning strategy. This value was true in Nx v20 and became false in Nx v21.
+   * The legacy versioning implementation will be removed in Nx v22, as will this flag.
+   */
+  useLegacyVersioning?: boolean;
+  /**
+   * Shorthand for enabling the current version of projects to be resolved from git tags,
+   * and the next version to be determined by analyzing commit messages according to the
+   * Conventional Commits specification.
+   */
+  conventionalCommits?: boolean;
+  /**
+   * A command to run after validation of nx release configuration, but before versioning begins.
+   * Useful for preparing build artifacts. If --dry-run is passed, the command is still executed,
+   * but with the NX_DRY_RUN environment variable set to 'true'.
+   */
+  preVersionCommand?: string;
+  /**
+   * The source to use for determining the specifier to use when versioning.
+   * 'prompt' is the default and will interactively prompt the user for an explicit/imperative specifier.
+   * 'conventional-commits' will attempt determine a specifier from commit messages conforming to the Conventional Commits specification.
+   * 'version-plans' will determine the specifier from the version plan files available on disk.
+   */
+  specifierSource?: 'prompt' | 'conventional-commits' | 'version-plans';
+  /**
+   * A list of directories containing manifest files (such as package.json) to apply updates to when versioning.
+   *
+   * By default, only the project root will be used, but you could customize this to only version a manifest in a
+   * dist directory, or even version multiple manifests in different directories, such as both source and dist.
+   *
+   * For more advanced scenarios, the preserveLocalDependencyProtocols can be overridden per manifest by providing
+   * and object instead of a string.
+   */
+  manifestRootsToUpdate?: ManifestRootToUpdate[];
+  /**
+   * The resolver to use for determining the current version of a project during versioning.
+   * This is needed for versioning approaches which involve relatively modifying a current version
+   * to arrive at a new version, such as semver bumps like 'patch', 'minor' etc.
+   *
+   * Using 'none' explicitly declares that the current version is not needed to compute the new version, and
+   * should only be used with appropriate version actions implementations that support it.
+   */
+  currentVersionResolver?: 'registry' | 'disk' | 'git-tag' | 'none';
+  /**
+   * Metadata to provide to the configured currentVersionResolver to help it in determining the current version.
+   * What to pass here is specific to each resolver.
+   */
+  currentVersionResolverMetadata?: Record<string, unknown>;
+  /**
+   * The fallback version resolver to use when the configured currentVersionResolver fails to resolve the current version.
+   */
+  fallbackCurrentVersionResolver?: 'disk';
+  /**
+   * Whether or not this is the first release of one of more projects.
+   * This removes certain validation checks that are not possible to enforce if the project has never been released before.
+   */
+  firstRelease?: boolean;
+  /**
+   * The prefix to use when versioning dependencies.
+   * This can be one of the following: auto, '', '~', '^', '=', where auto means the existing prefix will be preserved.
+   */
+  versionPrefix?: (typeof validReleaseVersionPrefixes)[number];
+  /**
+   * Whether to delete the processed version plans file after versioning is complete. This is false by default because the
+   * version plans are also needed for changelog generation.
+   */
+  deleteVersionPlans?: boolean;
+  /**
+   * When versioning independent projects, this controls whether to update their dependents (i.e. the things that depend on them).
+   * 'never' means no dependents will be updated (unless they happen to be versioned directly as well).
+   * 'auto' is the default and will cause dependents to be updated (a patch version bump) when a dependency is versioned.
+   */
+  updateDependents?: 'auto' | 'never';
+  /**
+   * Whether to log projects that have not changed during versioning.
+   */
+  logUnchangedProjects?: boolean;
+  /**
+   * The path to the version actions implementation to use for releasing all projects by default.
+   * This can also be overridden on the release group and project levels.
+   */
+  versionActions?: string;
+  /**
+   * The specific options that are defined by each version actions implementation.
+   * They will be passed to the version actions implementation when running a release.
+   */
+  versionActionsOptions?: Record<string, unknown>;
+  /**
+   * Whether to preserve local dependency protocols (e.g. file references, or the `workspace:` protocol in package.json files)
+   * of local dependencies when updating them during versioning.
+   *
+   * This was false by default in legacy versioning, but is true by default now.
+   */
+  preserveLocalDependencyProtocols?: boolean;
+}
+
 export interface NxReleaseChangelogConfiguration {
   /**
    * Optionally create a release containing all relevant changes on a supported version control system, it
@@ -79,7 +188,26 @@ export interface NxReleaseChangelogConfiguration {
    * NOTE: if createRelease is set on a group of projects, it will cause the default releaseTagPattern of
    * "{projectName}@{version}" to be used for those projects, even when versioning everything together.
    */
-  createRelease?: 'github' | false;
+  createRelease?:
+    | false
+    | 'github'
+    | 'gitlab'
+    | {
+        provider: 'github-enterprise-server';
+        hostname: string;
+        /**
+         * If not set, this will default to `https://${hostname}/api/v3`
+         */
+        apiBaseUrl?: string;
+      }
+    | {
+        provider: 'gitlab';
+        hostname: string;
+        /**
+         * If not set, this will default to `https://${hostname}/api/v4`
+         */
+        apiBaseUrl?: string;
+      };
   /**
    * This can either be set to a string value that will be written to the changelog file(s)
    * at the workspace root and/or within project directories, or set to `false` to specify
@@ -123,9 +251,9 @@ export interface NxReleaseGitConfiguration {
    */
   commitMessage?: string;
   /**
-   * Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes
+   * Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes. May be a string or array of strings.
    */
-  commitArgs?: string;
+  commitArgs?: string | string[];
   /**
    * Whether or not to stage the changes made by this command. Always treated as true if commit is true.
    */
@@ -139,9 +267,17 @@ export interface NxReleaseGitConfiguration {
    */
   tagMessage?: string;
   /**
-   * Additional arguments to pass to the `git tag` command invoked behind the scenes
+   * Additional arguments to pass to the `git tag` command invoked behind the scenes. May be a string or array of strings.
    */
-  tagArgs?: string;
+  tagArgs?: string | string[];
+  /**
+   * Whether or not to automatically push the changes made by this command to the remote git repository.
+   */
+  push?: boolean;
+  /**
+   * Additional arguments to pass to the `git push` command invoked behind the scenes. May be a string or array of strings.
+   */
+  pushArgs?: string | string[];
 }
 
 export interface NxReleaseConventionalCommitsConfiguration {
@@ -210,7 +346,18 @@ export interface NxReleaseConfiguration {
        *
        * NOTE: git configuration is not supported at the group level, only the root/command level
        */
-      version?: NxReleaseVersionConfiguration;
+      version?: (
+        | LegacyNxReleaseVersionConfiguration
+        | NxReleaseVersionConfiguration
+      ) & {
+        /**
+         * A command to run after validation of nx release configuration, but before versioning begins.
+         * Used for preparing build artifacts. If --dry-run is passed, the command is still executed, but
+         * with the NX_DRY_RUN environment variable set to 'true'.
+         * It will run in addition to the global `preVersionCommand`
+         */
+        groupPreVersionCommand?: string;
+      };
       /**
        * Project changelogs are disabled by default.
        *
@@ -227,6 +374,15 @@ export interface NxReleaseConfiguration {
        * Optionally override the git/release tag pattern to use for this group.
        */
       releaseTagPattern?: string;
+      /**
+       * By default, we will try and resolve the latest match for the releaseTagPattern from the current branch,
+       * falling back to all branches if no match is found on the current branch.
+       *
+       * - Setting this to true will cause us to ALWAYS check all branches for the latest match.
+       * - Setting it to false will cause us to ONLY check the current branch for the latest match.
+       * - Setting it to an array of strings will cause us to check all branches WHEN the current branch matches one of the strings in the array. Glob patterns are supported.
+       */
+      releaseTagPatternCheckAllBranchesWhen?: boolean | string[];
       /**
        * Enables using version plans as a specifier source for versioning and
        * to determine changes for changelog generation.
@@ -268,19 +424,15 @@ export interface NxReleaseConfiguration {
     automaticFromRef?: boolean;
   };
   /**
-   * If no version config is provided, we will assume that @nx/js:release-version
-   * is the desired generator implementation, allowing for terser config for the common case.
+   * If no version configuration is provided, we will assume that TypeScript/JavaScript experience is what is desired,
+   * allowing for terser release configuration for the common case.
    */
-  version?: NxReleaseVersionConfiguration & {
-    /**
-     * Enable or override configuration for git operations as part of the version subcommand
-     */
+  version?: (
+    | LegacyNxReleaseVersionConfiguration
+    | NxReleaseVersionConfiguration
+  ) & {
+    useLegacyVersioning?: boolean;
     git?: NxReleaseGitConfiguration;
-    /**
-     * A command to run after validation of nx release configuration, but before versioning begins.
-     * Used for preparing build artifacts. If --dry-run is passed, the command is still executed, but
-     * with the NX_DRY_RUN environment variable set to 'true'.
-     */
     preVersionCommand?: string;
   };
   /**
@@ -294,6 +446,15 @@ export interface NxReleaseConfiguration {
    * The default releaseTagPattern for independent releases at the project level is: "{projectName}@{version}"
    */
   releaseTagPattern?: string;
+  /**
+   * By default, we will try and resolve the latest match for the releaseTagPattern from the current branch,
+   * falling back to all branches if no match is found on the current branch.
+   *
+   * - Setting this to true will cause us to ALWAYS check all branches for the latest match.
+   * - Setting it to false will cause us to ONLY check the current branch for the latest match.
+   * - Setting it to an array of strings will cause us to check all branches WHEN the current branch matches one of the strings in the array. Glob patterns are supported.
+   */
+  releaseTagPatternCheckAllBranchesWhen?: boolean | string[];
   /**
    * Enable and configure automatic git operations as part of the release
    */
@@ -339,6 +500,7 @@ export interface NxSyncConfiguration {
  * @note: when adding properties here add them to `allowedWorkspaceExtensions` in adapter/compat.ts
  */
 export interface NxJsonConfiguration<T = '*' | string[]> {
+  $schema?: string;
   /**
    * Optional (additional) Nx.json configuration file which becomes a base for this one
    */
@@ -375,7 +537,8 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
     appsDir?: string;
   };
   /**
-   * Available Task Runners
+   * @deprecated Custom task runners will be replaced by a new API starting with Nx 21. More info: https://nx.dev/deprecated/custom-tasks-runner
+   * Available Task Runners for Nx to use
    */
   tasksRunnerOptions?: {
     [tasksRunnerName: string]: {
@@ -488,7 +651,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   useInferencePlugins?: boolean;
 
   /**
-   * Set this to false to disable connection to Nx Cloud
+   * Set this to true to disable connection to Nx Cloud
    */
   neverConnectToCloud?: boolean;
 
@@ -496,6 +659,29 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Configuration for the `nx sync` command.
    */
   sync?: NxSyncConfiguration;
+
+  /**
+   * Sets the maximum size of the local cache. Accepts a number followed by a unit (e.g. 100MB). Accepted units are B, KB, MB, and GB.
+   */
+  maxCacheSize?: string;
+
+  /**
+   * Settings for the Nx Terminal User Interface (TUI)
+   */
+  tui?: {
+    /**
+     * Whether to enable the TUI whenever possible (based on the current environment and terminal).
+     */
+    enabled?: boolean;
+    /**
+     * Whether to exit the TUI automatically after all tasks finish.
+     *
+     * - If set to `true`, the TUI will exit immediately.
+     * - If set to `false` the TUI will not automatically exit.
+     * - If set to a number, an interruptible countdown popup will be shown for that many seconds before the TUI exits.
+     */
+    autoExit?: boolean | number;
+  };
 }
 
 export type PluginConfiguration = string | ExpandedPluginConfiguration;

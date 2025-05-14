@@ -3,11 +3,15 @@
   "cli": "nx",
   "$id": "NxReactFederateModule",
   "title": "Federate Module",
-  "description": "Create a federated module, which is exposed by a remote and can be subsequently loaded by a host.",
+  "description": "Create a federated module, which is exposed by a Producer (remote) and can be subsequently loaded by a Consumer (host).",
   "examples": [
     {
-      "command": "nx g federate-module MyModule --path=./src/component/my-cmp.ts --remote=my-remote-app --remoteDirectory=apps/my-remote-app",
+      "command": "nx g federate-module MyModule --path=./src/component/my-cmp.ts --remote=myRemoteApp --remoteDirectory=apps/myRemoteApp",
       "description": "Create a federated module from my-remote-app, that exposes my-cmp from ./src/component/my-cmp.ts as MyModule."
+    },
+    {
+      "command": "nx g federate-module MyModule --path=./src/component/my-cmp.ts --producer=myProducer --producerDirectory=apps/myProducer",
+      "description": "Create a federated module from myProducer, that exposes my-cmp from ./src/component/my-cmp.ts as MyModule."
     }
   ],
   "type": "object",
@@ -30,20 +34,17 @@
     },
     "remote": {
       "type": "string",
-      "description": "The name of the remote.",
-      "x-prompt": "What is/should the remote be named?"
+      "description": "The name of the Producer (remote).",
+      "x-prompt": "What is/should the Producer (remote) be named?",
+      "alias": "producer"
     },
     "remoteDirectory": {
-      "description": "The directory of the new remote application if one needs to be created.",
-      "type": "string"
-    },
-    "projectNameAndRootFormat": {
-      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "description": "The directory of the new Producer (remote) application if one needs to be created.",
       "type": "string",
-      "enum": ["as-provided", "derived"]
+      "alias": "producerDirectory"
     },
     "style": {
-      "description": "The file extension to be used for style files for the remote if one needs to be created.",
+      "description": "The file extension to be used for style files for the Producer (remote) if one needs to be created.",
       "type": "string",
       "default": "css",
       "enum": ["css", "scss", "sass", "less"]
@@ -56,24 +57,26 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["jest", "none"],
-      "description": "Test runner to use for unit tests of the remote if it needs to be created.",
+      "enum": ["jest", "vitest", "none"],
+      "description": "Test runner to use for unit tests of the Producer (remote) if it needs to be created.",
+      "x-prompt": "Which unit test runner would you like to use?",
       "default": "jest"
     },
     "e2eTestRunner": {
       "type": "string",
       "enum": ["cypress", "none"],
-      "description": "Test runner to use for end to end (e2e) tests of the remote if it needs to be created.",
+      "description": "Test runner to use for end to end (e2e) tests of the Producer (remote) if it needs to be created.",
       "default": "cypress"
     },
     "standalone": {
-      "description": "Whether to generate the remote application with standalone components if it needs to be created.",
+      "description": "Whether to generate the Producer (remote) application with standalone components if it needs to be created.",
       "type": "boolean",
       "default": true
     },
     "host": {
       "type": "string",
-      "description": "The host / shell application for this remote."
+      "description": "The Consumer (host) application for this Producer (remote).",
+      "alias": "consumer"
     }
   },
   "required": ["name", "path", "remote"],

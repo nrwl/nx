@@ -1,19 +1,25 @@
-import { joinPathFragments, names, readNxJson, Tree } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { Linter } from '@nx/eslint';
+import { joinPathFragments, readNxJson, Tree } from '@nx/devkit';
+import {
+  determineProjectNameAndRootOptions,
+  ensureRootProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { assertValidStyle } from '@nx/react/src/utils/assertion';
 import { Schema } from '../schema';
-import { NextPluginOptions } from '../../../plugins/plugin';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
-export interface NormalizedSchema extends Schema {
+export interface NormalizedSchema
+  extends Omit<Schema, 'name' | 'useTsSolution'> {
   projectName: string;
+  projectSimpleName: string;
   appProjectRoot: string;
+  importPath: string;
   outputPath: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
   parsedTags: string[];
   fileName: string;
   styledModule: null | string;
+  isTsSolutionSetup: boolean;
   js?: boolean;
 }
 
@@ -21,20 +27,19 @@ export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
+  await ensureRootProjectName(options, 'application');
   const {
-    projectName: appProjectName,
+    projectName,
+    names: projectNames,
     projectRoot: appProjectRoot,
-    projectNameAndRootFormat,
+    importPath,
   } = await determineProjectNameAndRootOptions(host, {
     name: options.name,
     projectType: 'application',
     directory: options.directory,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
     rootProject: options.rootProject,
-    callingGenerator: '@nx/next:application',
   });
   options.rootProject = appProjectRoot === '.';
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   const nxJson = readNxJson(host);
   const addPlugin =
@@ -43,15 +48,18 @@ export async function normalizeOptions(
 
   options.addPlugin ??= addPlugin;
 
+  const isTsSolutionSetup =
+    options.useTsSolution || isUsingTsSolutionSetup(host);
+  const appProjectName =
+    !isTsSolutionSetup || options.name ? projectName : importPath;
+
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
-
-  const name = names(options.name).fileName;
 
   const outputPath = joinPathFragments(
     'dist',
     appProjectRoot,
-    ...(options.rootProject ? [name] : [])
+    ...(options.rootProject ? [projectNames.projectFileName] : [])
   );
 
   const parsedTags = options.tags
@@ -78,13 +86,17 @@ export async function normalizeOptions(
     e2eProjectRoot,
     e2eTestRunner: options.e2eTestRunner || 'playwright',
     fileName,
-    linter: options.linter || Linter.EsLint,
-    name,
+    linter: options.linter || 'eslint',
     outputPath,
     parsedTags,
     projectName: appProjectName,
+    projectSimpleName: projectNames.projectSimpleName,
     style: options.style || 'css',
+    swc: options.swc ?? true,
     styledModule,
     unitTestRunner: options.unitTestRunner || 'jest',
+    importPath,
+    isTsSolutionSetup,
+    useProjectJson: options.useProjectJson ?? !isTsSolutionSetup,
   };
 }

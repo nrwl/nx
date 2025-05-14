@@ -5,17 +5,18 @@ import { Schema } from './schema';
 import { Schema as remoteSchma } from '../remote/schema';
 import { federateModuleGenerator } from './federate-module';
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
-import { Linter } from '@nx/eslint';
-import { remoteGeneratorInternal } from '../remote/remote';
+import remoteGeneratorInternal from '../remote/remote';
 
 describe('federate-module', () => {
   let tree: Tree;
   let schema: Schema = {
     name: 'my-federated-module',
-    remote: 'my-remote',
-    path: 'my-remote/src/my-federated-module.ts',
+    remote: 'myremote',
+    remoteDirectory: 'myremote',
+    path: 'myremote/src/my-federated-module.ts',
     style: 'css',
     skipFormat: true,
+    bundler: 'webpack',
   };
   // TODO(@jaysoo): Turn this back to adding the plugin
   let originalEnv: string;
@@ -31,7 +32,7 @@ describe('federate-module', () => {
 
   beforeAll(() => {
     tree = createTreeWithEmptyWorkspace();
-    tree.write('my-remote/src/my-federated-module.ts', ''); // Ensure that the file exists
+    tree.write('myremote/src/my-federated-module.ts', ''); // Ensure that the file exists
   });
   describe('no remote', () => {
     it('should generate a remote and e2e', async () => {
@@ -39,27 +40,27 @@ describe('federate-module', () => {
 
       const projects = getProjects(tree);
 
-      expect(projects.get('my-remote').root).toEqual('my-remote');
-      expect(projects.get('my-remote-e2e').root).toEqual('my-remote-e2e');
+      expect(projects.get('myremote').root).toEqual('myremote');
+      expect(projects.get('myremote-e2e').root).toEqual('myremote-e2e');
     });
 
     it('should contain an entry for the new path for module federation', async () => {
       await federateModuleGenerator(tree, schema);
 
-      expect(tree.exists('my-remote/module-federation.config.ts')).toBe(true);
+      expect(tree.exists('myremote/module-federation.config.ts')).toBe(true);
 
       const content = tree.read(
-        'my-remote/module-federation.config.ts',
+        'myremote/module-federation.config.ts',
         'utf-8'
       );
       expect(content).toContain(
-        `'./my-federated-module': 'my-remote/src/my-federated-module.ts'`
+        `'./my-federated-module': 'myremote/src/my-federated-module.ts'`
       );
 
       const tsconfig = JSON.parse(tree.read('tsconfig.base.json', 'utf-8'));
       expect(
-        tsconfig.compilerOptions.paths['my-remote/my-federated-module']
-      ).toEqual(['my-remote/src/my-federated-module.ts']);
+        tsconfig.compilerOptions.paths['myremote/my-federated-module']
+      ).toEqual(['myremote/src/my-federated-module.ts']);
     });
 
     it('should error when invalid path is provided', async () => {
@@ -76,12 +77,13 @@ describe('federate-module', () => {
 
   describe('with remote', () => {
     let remoteSchema: remoteSchma = {
-      name: 'my-remote',
+      directory: 'my-existing-remote',
       e2eTestRunner: 'none',
       skipFormat: false,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       style: 'css',
       unitTestRunner: 'none',
+      bundler: 'webpack',
     };
 
     beforeEach(async () => {
@@ -91,33 +93,31 @@ describe('federate-module', () => {
 
     it('should append the new path to the module federation config', async () => {
       let content = tree.read(
-        `${remoteSchema.name}/module-federation.config.ts`,
+        `${remoteSchema.directory}/module-federation.config.ts`,
         'utf-8'
       );
 
       expect(content).not.toContain(
-        `'./my-federated-module': 'my-remote/src/my-federated-module.ts'`
+        `'./my-federated-module': 'myremote/src/my-federated-module.ts'`
       );
 
       await federateModuleGenerator(tree, {
         ...schema,
-        remote: remoteSchema.name,
+        remoteDirectory: remoteSchema.directory,
       });
 
       content = tree.read(
-        `${remoteSchema.name}/module-federation.config.ts`,
+        `${remoteSchema.directory}/module-federation.config.ts`,
         'utf-8'
       );
       expect(content).toContain(
-        `'./my-federated-module': 'my-remote/src/my-federated-module.ts'`
+        `'./my-federated-module': 'myremote/src/my-federated-module.ts'`
       );
 
       const tsconfig = JSON.parse(tree.read('tsconfig.base.json', 'utf-8'));
       expect(
-        tsconfig.compilerOptions.paths[
-          `${remoteSchema.name}/my-federated-module`
-        ]
-      ).toEqual(['my-remote/src/my-federated-module.ts']);
+        tsconfig.compilerOptions.paths[`${schema.remote}/my-federated-module`]
+      ).toEqual(['myremote/src/my-federated-module.ts']);
     });
   });
 });

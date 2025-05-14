@@ -4,7 +4,19 @@
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {}
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "name": "chalk",
+            "message": "Please use `picocolors` in place of `chalk` for rendering terminal colors"
+          },
+          {
+            "name": "fs-extra",
+            "message": "Please use native functionality in place of `fs-extra` for file-system interaction"
+          }
+        ]
+      }
     },
     {
       "files": ["**/*.ts"],
@@ -88,8 +100,8 @@
               "webpack",
               // require.resovle is used for these
               "@babel/plugin-proposal-decorators",
+              "tailwindcss",
               "file-loader",
-              "url-loader",
               "@svgr/webpack"
             ]
           }

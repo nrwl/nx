@@ -1,0 +1,13 @@
+{
+  "name": "19-6-0-use-serve-static-preview-for-command",
+  "cli": "nx",
+  "version": "19.6.0-beta.0",
+  "description": "Use serve-static or preview for webServerCommand.",
+  "implementation": "/packages/playwright/src/migrations/update-19-6-0/use-serve-static-preview-for-command.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/playwright",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

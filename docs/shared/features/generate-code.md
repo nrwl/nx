@@ -1,4 +1,11 @@
+---
+title: 'Generate Code'
+description: 'Learn how to use Nx code generators to automate repetitive tasks, scaffold new projects, and maintain consistency in your codebase.'
+---
+
 # Generate Code
+
+{% youtube src="https://youtu.be/hSM6MgWOYr8" title="Generate Code" /%}
 
 Code generators are like automation scripts designed to streamline your workflow. Essentially, they are TypeScript functions that accept parameters and help boost your productivity by:
 
@@ -13,13 +20,13 @@ Generators come as part of [Nx plugins](/concepts/nx-plugins) and can be invoked
 Here's an example of generating a React library:
 
 ```shell
-nx g @nx/react:lib mylib --directory=packages/mylib
+nx g @nx/react:lib packages/mylib
 ```
 
 You can also specify just the generator name and Nx will prompt you to pick between the installed plugins that provide a generator with that name.
 
 ```shell
-nx g lib mylib --directory=packages/mylib
+nx g lib packages/mylib
 ```
 
 When running this command, you could be prompted to choose between the `@nx/react` and `@nx/js` plugins that each provide a library generator.

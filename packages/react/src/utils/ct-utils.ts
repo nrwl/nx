@@ -107,10 +107,7 @@ export async function getBundlerFromTarget(
   tree: Tree
 ): Promise<'vite' | 'webpack'> {
   if (found.target && found.config?.executor) {
-    return found.config.executor === '@nrwl/vite:build' ||
-      found.config.executor === '@nx/vite:build'
-      ? 'vite'
-      : 'webpack';
+    return found.config.executor === '@nx/vite:build' ? 'vite' : 'webpack';
   }
 
   const { target, project } = parseTargetString(
@@ -119,9 +116,7 @@ export async function getBundlerFromTarget(
   );
   const projectConfig = readProjectConfiguration(tree, project);
   const executor = projectConfig?.targets?.[target]?.executor;
-  return executor === '@nrwl/vite:build' || executor === '@nx/vite:build'
-    ? 'vite'
-    : 'webpack';
+  return executor === '@nx/vite:build' ? 'vite' : 'webpack';
 }
 
 export async function getActualBundler(

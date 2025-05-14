@@ -1,42 +1,24 @@
 {
   "generators": {
-    "update-16-0-0-add-nx-packages": {
+    "replace-getJestProjects-with-getJestProjectsAsync": {
       "cli": "nx",
-      "version": "16.0.0-beta.1",
-      "description": "Replace @nrwl/jest with @nx/jest",
-      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+      "version": "20.0.0-beta.5",
+      "description": "Replace usage of `getJestProjects` with `getJestProjectsAsync`.",
+      "implementation": "./src/migrations/update-20-0-0/replace-getJestProjects-with-getJestProjectsAsync"
     },
-    "add-test-setup-to-inputs-ignore": {
+    "replace-getJestProjects-with-getJestProjectsAsync-v21": {
       "cli": "nx",
-      "version": "16.5.0-beta.2",
-      "description": "Add test-setup.ts to ignored files in production input",
-      "implementation": "./src/migrations/update-16-5-0/add-test-setup-to-inputs-ignore"
+      "version": "21.0.0-beta.9",
+      "description": "Replace usage of `getJestProjects` with `getJestProjectsAsync`.",
+      "implementation": "./src/migrations/update-21-0-0/replace-getJestProjects-with-getJestProjectsAsync"
     },
-    "move-options-to-target-defaults": {
-      "version": "17.1.0-beta.2",
-      "description": "Move jest executor options to nx.json targetDefaults",
-      "implementation": "./src/migrations/update-17-1-0/move-options-to-target-defaults"
+    "remove-tsconfig-option-from-jest-executor": {
+      "version": "21.0.0-beta.10",
+      "description": "Remove the previously deprecated and unused `tsConfig` option from the `@nx/jest:jest` executor.",
+      "implementation": "./src/migrations/update-21-0-0/remove-tsconfig-option-from-jest-executor"
     }
   },
   "packageJsonUpdates": {
-    "16.0.0": {
-      "version": "16.0.0-beta.4",
-      "packages": {
-        "ts-jest": {
-          "version": "~29.1.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "17.2.0": {
-      "version": "17.2.0-beta.2",
-      "packages": {
-        "@types/node": {
-          "version": "18.16.9",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "19.2.0": {
       "version": "19.2.0-beta.0",
       "packages": {

@@ -1,6 +1,6 @@
 mod glob_group;
 mod glob_parser;
-mod glob_transform;
+pub mod glob_transform;
 
 use crate::native::glob::glob_transform::convert_glob;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
@@ -59,6 +59,7 @@ impl NxGlobSetBuilder {
     }
 }
 
+#[derive(Debug)]
 pub struct NxGlobSet {
     included_globs: GlobSet,
     excluded_globs: GlobSet,

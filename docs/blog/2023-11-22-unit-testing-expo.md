@@ -2,11 +2,12 @@
 title: Unit Testing Expo Apps With Jest
 slug: 'unit-testing-expo-apps-with-jest'
 authors: [Emily Xiong]
-cover_image: '/blog/images/2023-11-22/featured_img.webp'
-tags: [nx, unit testing]
+cover_image: '/blog/images/2023-11-22/featured_img.avif'
+tags: [nx, tutorial]
+description: Learn how to unit test Expo apps using Jest and React Native Testing Library, with solutions for mocking AsyncStorage, Redux, and React Navigation.
 ---
 
-In my latest [blog](https://dev.to/nx/step-by-step-guide-to-creating-an-expo-monorepo-with-nx-3b17), I successfully navigated through the steps of setting up an Expo Monorepo with [Nx](). The next challenge? Testing! This blog dives into:
+In my latest [blog](/blog/step-by-step-guide-to-creating-an-expo-monorepo-with-nx), I successfully navigated through the steps of setting up an Expo Monorepo with [Nx](). The next challenge? Testing! This blog dives into:
 
 - Crafting effective unit tests for Expo components utilizing Jest
 - Addressing common issues encountered during unit testing
@@ -16,7 +17,7 @@ Repo:
 
 ## Stacks
 
-Here’s my setup
+Here's my setup
 
 - Testing framework: [jest](https://jestjs.io/)
 - Testing library: [@testing-library/react-native](https://callstack.github.io/react-native-testing-library/)
@@ -24,7 +25,7 @@ Here’s my setup
 
 ## Writing and Running Unit Tests
 
-When you use Nx, it not only configures and sets up Jest, but also creates a default unit test for every expo component that is being generated. Here’s what that looks like:
+When you use Nx, it not only configures and sets up Jest, but also creates a default unit test for every expo component that is being generated. Here's what that looks like:
 
 ```typescript
 import { render } from '@testing-library/react-native';
@@ -46,7 +47,7 @@ To run all unit tests for a given project, use:
 npx nx test <project-name>
 ```
 
-Here’s the output of running this for my example app:
+Here's the output of running this for my example app:
 
 ![terminal output](/blog/images/2023-11-22/bodyimg1.webp)
 
@@ -69,20 +70,20 @@ You can find more options for querying elements on the official React Native Tes
 
 However, unit tests do not always pass. Here are some common errors I ran into and how to resolve them.
 
-### **Error: AsyncStorage is null.**
+### Error: AsyncStorage is null.
 
 I am using the library `@react-native-async-storage/async-storage`, and I got the below error when running unit testing:
 
 ```shell
- \[@RNC/AsyncStorage\]: NativeModule: AsyncStorage is null.
+ [@RNC/AsyncStorage]: NativeModule: AsyncStorage is null.
 
     To fix this issue try these steps:
 
       • Rebuild and restart the app.
 
-      • Run the packager with \`--reset-cache\` flag.
+      • Run the packager with `--reset-cache` flag.
 
-      • If you are using CocoaPods on iOS, run \`pod install\` in the \`ios\` directory and then rebuild and re-run the app.
+      • If you are using CocoaPods on iOS, run `pod install` in the `ios` directory and then rebuild and re-run the app.
 
       • If this happens while testing with Jest, check out docs how to integrate AsyncStorage with it: https://react-native-async-storage.github.io/async-storage/docs/advanced/jest
 
@@ -95,7 +96,7 @@ I am using the library `@react-native-async-storage/async-storage`, and I got th
 
 The issue is that `@react-native-async-storage/async-storage` library can only be used in `NativeModule`. Since unit testing with Jest only tests JS/TS file logic, I need to mock this library.
 
-In the app’s test-setup.ts file, add the below lines:
+In the app's test-setup.ts file, add the below lines:
 
 ```typescript
 jest.mock('@react-native-async-storage/async-storage', () =>
@@ -103,7 +104,7 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 );
 ```
 
-## Error: Could not find “store”
+## Error: Could not find "store"
 
 I am using Redux for state management, and I got this error for my stateful components:
 
@@ -136,17 +137,17 @@ Then I can create a mock store using this library like the below code:
 ```typescript
 import configureStore, { MockStoreEnhanced } from 'redux-mock-store';
 
-  const mockStore = configureStore<any>(\[\]);
+const mockStore = configureStore<any>([]);
 
-  let store: MockStoreEnhanced<any>;
+let store: MockStoreEnhanced<any>;
 
-  beforeEach(() => {
-    store = mockStore({});
-    store.dispatch = jest.fn();
-  });
+beforeEach(() => {
+  store = mockStore({});
+  store.dispatch = jest.fn();
+});
 ```
 
-For example, one of my stateful components’ unit test will become:
+For example, one of my stateful components' unit test will become:
 
 ```typescript
 import React from 'react';
@@ -158,7 +159,7 @@ import { RootState, initialRootState } from '@nx-expo-monorepo/states/cat';
 import Bookmarks from './bookmarks';
 
 describe('Bookmarks', () => {
-  const mockStore = configureStore<RootState>(\[\]);
+  const mockStore = configureStore<RootState>([]);
 
   let store: MockStoreEnhanced<RootState>;
 
@@ -207,7 +208,7 @@ jest.spyOn(ReactQuery, 'useQuery').mockImplementation(
 );
 ```
 
-### Error: Couldn’t find a navigation object
+### Error: Couldn't find a navigation object
 
 If you use `@react-navigation` library for navigation, and inside your component, there are hooks from this library like `useNavigation` and `useRoute`, you are likely to get this error:
 
@@ -215,7 +216,7 @@ If you use `@react-navigation` library for navigation, and inside your component
 Couldn't find a navigation object. Is your component inside NavigationContainer?
 ```
 
-The fix this, I need to mock the `@react-nativgation/native` library. In the app’s test-setup.ts file, I need to add:
+The fix this, I need to mock the `@react-nativgation/native` library. In the app's test-setup.ts file, I need to add:
 
 ```typescript
 jest.mock('@react-navigation/native', () => {
@@ -234,13 +235,13 @@ jest.mock('@react-navigation/native', () => {
 });
 ```
 
-### SyntaxError: Unexpected token ‘export’
+### SyntaxError: Unexpected token 'export'
 
-I got this error when using a library with ECMAScript Module (ESM), such as `[udid](https://github.com/uuidjs/uuid)`:
+I got this error when using a library with ECMAScript Module (ESM), such as [`udid`](https://github.com/uuidjs/uuid):
 
 ```
- /Users/emilyxiong/Code/nx-expo-monorepo/node\_modules/uuid/dist/esm-browser/index.js:1
-    ({"Object.<anonymous>":function(module,exports,require,\_\_dirname,\_\_filename,jest){export { default as v1 } from './v1.js';
+ /Users/emilyxiong/Code/nx-expo-monorepo/node_modules/uuid/dist/esm-browser/index.js:1
+    ({"Object.<anonymous>":function(module,exports,require,__dirname,__filename,jest){export { default as v1 } from './v1.js';
                                                                                       ^^^^^^
 
     SyntaxError: Unexpected token 'export'
@@ -252,7 +253,7 @@ I got this error when using a library with ECMAScript Module (ESM), such as `[ud
 
 Jest does not work with ESM out of the box. The simple solution is to map this library to the CommonJS version of this library.
 
-In the app’s `jest.config.ts`, there should be an option called `moduleNameMapper`. The library I used is called `uuid`, so I need to add the map `uuid: require.resolve(‘uuid’)` under `moduleNameMapper`. So when the code encounters imports from `uuid` library, it will resolve the CommonJS version of it:
+In the app's `jest.config.ts`, there should be an option called `moduleNameMapper`. The library I used is called `uuid`, so I need to add the map `uuid: require.resolve('uuid')` under `moduleNameMapper`. So when the code encounters imports from `uuid` library, it will resolve the CommonJS version of it:
 
 ```typescript
 module.exports = {
@@ -286,14 +287,14 @@ I got this error when I was importing from a library such as [react-native-vecto
 
       Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
 
-      By default "node\_modules" folder is ignored by transformers.
+      By default "node_modules" folder is ignored by transformers.
 
       Here's what you can do:
        • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
        • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
-       • To have some of your "node\_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
-       • If you need a custom transformation specify a "transform" option in your config.
-       • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+       • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+       • If I need a custom transformation specify a "transform" option in my config.
+       • If I simply want to mock my non-JS modules (e.g. binary assets) I can stub them out with the "moduleNameMapper" config option.
 
       You'll find more details and examples of these config options in the docs:
       https://jestjs.io/docs/configuration
@@ -305,14 +306,14 @@ To fix this, add this library name to `transformIgnorePatterns` in the app's jes
 
 What is `transformIgnorePatterns`? The `transformIgnorePatterns` allows developers to specify which files shall be transformed by Babel. `transformIgnorePatterns` is an array of regexp pattern strings that should be matched against all source file paths before the transformation. If the file path matches any patterns, it will not be transformed by Babel.
 
-By default, Jest will ignore all the files under node_modules and only transform the files under the project’s src.
+By default, Jest will ignore all the files under node_modules and only transform the files under the project's src.
 
 However, some libraries such as `react-native-paper` or `react-native-svg`, the library files are in `.ts` or `.tsx`. These files are not compiled to `js`. So I need to add these libraries' names to `transformIgnorePatterns`, so these libraries will be transformed by Babel along with my project. source file. The default generated `jest.config.js` already has:
 
 ```
-transformIgnorePatterns: \[
-    'node\_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.\*|@expo-google-fonts/.\*|react-navigation|@react-navigation/.\*|@unimodules/.\*|unimodules|sentry-expo|native-base|react-native-svg)',
-\]
+transformIgnorePatterns: [
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)',
+]
 ```
 
 If I have an error related to a library with an unexpected token, I need to check whether they are compiled or not.
@@ -324,13 +325,12 @@ If I have an error related to a library with an unexpected token, I need to chec
 
 Here are some common errors that I will probably run into while doing unit testing. The solution to most problems is to find a way to mock a library that is not relevant to my component logic.
 
-With Nx, you do not need to explicitly install any testing library, so you can dive right in and focus on writing the tests rather than spending time on setup.
+With Nx, I do not need to explicitly install any testing library, so I can dive right in and focus on writing the tests rather than spending time on setup.
 
 ## Learn more
 
-- [Add Cypress, Playwright, and Storybook to Nx Expo Apps](https://medium.com/@emilyxiong/add-cypress-playwright-and-storybook-to-nx-expo-apps-1d3e409ce834)
 - 🧠 [Nx Docs](/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Community Discord](https://go.nx.dev/community)
 - 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- 🚀 [Speed up your CI](https://nx.app/)
+- 🚀 [Speed up your CI](/nx-cloud)

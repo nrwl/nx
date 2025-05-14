@@ -31,16 +31,15 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "chalk": "^4.1.0",
-    "fast-glob": "3.2.7",
-    "fs-extra": "^11.1.0",
-    "tslib": "^2.3.0",
-    "tsconfig-paths": "^4.1.2",
     "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js"
+    "@nx/js": "file:../js",
+    "tinyglobby": "^0.2.12",
+    "picocolors": "^1.1.0",
+    "tsconfig-paths": "^4.1.2",
+    "tslib": "^2.3.0"
   },
   "peerDependencies": {
-    "esbuild": "~0.19.2"
+    "esbuild": ">=0.19.2 <1.0.0"
   },
   "peerDependenciesMeta": {
     "esbuild": {

@@ -1,0 +1,15 @@
+{
+  "name": "19.4.0-ngrx-package-updates",
+  "version": "19.4.0-beta.1",
+  "requires": { "@angular/core": "^18.0.0" },
+  "packages": {
+    "@ngrx/store": { "version": "^18.0.0", "alwaysAddToPackageJson": false }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration"
+}

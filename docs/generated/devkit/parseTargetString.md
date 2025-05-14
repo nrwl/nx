@@ -1,19 +1,5 @@
 # Function: parseTargetString
 
-▸ **parseTargetString**(`targetString`): [`Target`](../../devkit/documents/Target)
-
-@deprecated(v17) A project graph should be passed to parseTargetString for best accuracy.
-
-#### Parameters
-
-| Name           | Type     |
-| :------------- | :------- |
-| `targetString` | `string` |
-
-#### Returns
-
-[`Target`](../../devkit/documents/Target)
-
 ▸ **parseTargetString**(`targetString`, `projectGraph`): [`Target`](../../devkit/documents/Target)
 
 Parses a target string into {project, target, configuration}

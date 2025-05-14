@@ -6,7 +6,7 @@ import {
   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { basename, dirname, join } from 'path';
-import { lte, major } from 'semver';
+import { major } from 'semver';
 
 export interface RemoveMigrationsGeneratorSchema {
   v: number;
@@ -40,16 +40,14 @@ export async function removeMigrationsGenerator(
 
       updateJson(tree, migrationsPath, (migrationsJson) => {
         const { generators, packageJsonUpdates } = migrationsJson;
-        for (const [migrationName, m] of Object.entries(generators)) {
-          if (major(m.version) < v) {
+        for (const [migrationName, m] of Object.entries(generators ?? {})) {
+          if (major(m['version']) < v) {
             const implFile = getImplFile(tree, migrationsPath, m);
+            const dir = dirname(implFile);
 
-            const specFile = implFile.replace('.ts', '.spec.ts');
-            const snapshotsPath = join(dirname(specFile), '__snapshots__');
             try {
               tree.delete(implFile);
-              tree.delete(specFile);
-              tree.delete(snapshotsPath);
+              visitNotIgnoredFiles(tree, dir, (f) => tree.delete(f));
             } catch (e) {
               console.log(e);
             }
@@ -61,7 +59,7 @@ export async function removeMigrationsGenerator(
         for (const [updateName, packageJsonUpdate] of Object.entries(
           packageJsonUpdates ?? {}
         )) {
-          if (major(packageJsonUpdate.version) < v) {
+          if (major(packageJsonUpdate['version']) < v) {
             delete packageJsonUpdates[updateName];
           }
         }

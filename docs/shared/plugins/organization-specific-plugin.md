@@ -1,3 +1,8 @@
+---
+title: Enforce Organizational Best Practices with a Local Plugin
+description: Learn how to create a custom Nx plugin that encodes your organization's best practices into code generators for consistent project creation.
+---
+
 # Enforce Organizational Best Practices with a Local Plugin
 
 Every repository has a unique set of conventions and best practices that developers need to learn in order to write code that integrates well with the rest of the code base. It is important to document those best practices, but developers don't always read the documentation and even if they have read the documentation, they don't consistently follow the documentation every time they perform a task. Nx allows you to encode these best practices in code generators that have been tailored to your specific repository.
@@ -14,14 +19,14 @@ In this tutorial, we will create a generator that helps enforce the follow best 
 Let's first create a new workspace with the `create-nx-workspace` command:
 
 ```shell
-npx create-nx-workspace myorg --preset=react-integrated --ci=github
+npx create-nx-workspace myorg --preset=react-monorepo --ci=github
 ```
 
 Then we , install the `@nx/plugin` package and generate a plugin:
 
 ```shell
 npx nx add @nx/plugin
-npx nx g @nx/plugin:plugin recommended --directory=tools/recommended
+npx nx g @nx/plugin:plugin tools/recommended
 ```
 
 This will create a `recommended` project that contains all your plugin code.
@@ -31,7 +36,7 @@ This will create a `recommended` project that contains all your plugin code.
 To create a new generator run:
 
 ```shell
-npx nx generate @nx/plugin:generator library --directory="tools/recommended/src/generators/library"
+npx nx generate @nx/plugin:generator tools/recommended/src/generators/library
 ```
 
 The new generator is located in `tools/recommended/src/generators/library`. The `generator.ts` file contains the code that runs the generator. We can delete the `files` directory since we won't be using it and update the `generator.ts` file with the following code:
@@ -48,8 +53,7 @@ export async function libraryGenerator(
 ) {
   const callbackAfterFilesUpdated = await reactLibraryGenerator(tree, {
     ...options,
-    projectNameAndRootFormat: 'as-provided',
-    linter: Linter.EsLint,
+    linter: 'eslint',
     style: 'css',
     unitTestRunner: 'vitest',
   });
@@ -214,8 +218,7 @@ export async function libraryGenerator(
     ...options,
     tags: `scope:${options.scope}`,
     directory: options.directory || `${options.scope}/${options.name}`,
-    projectNameAndRootFormat: 'as-provided',
-    linter: Linter.EsLint,
+    linter: 'eslint',
     style: 'css',
     unitTestRunner: 'vitest',
   });
@@ -261,8 +264,7 @@ export async function libraryGenerator(
       ...options,
       tags: `scope:${options.scope}`,
       directory,
-      projectNameAndRootFormat: 'as-provided',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       style: 'css',
       unitTestRunner: 'vitest',
     })

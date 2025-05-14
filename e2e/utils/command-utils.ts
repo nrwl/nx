@@ -5,6 +5,7 @@ import {
   ensureCypressInstallation,
   ensurePlaywrightBrowsersInstallation,
   getNpmMajorVersion,
+  getPnpmVersion,
   getPublishedVersion,
   getStrippedEnvironmentVariables,
   getYarnMajorVersion,
@@ -17,6 +18,7 @@ import * as isCI from 'is-ci';
 import { fileExists, readJson, updateJson } from './file-utils';
 import { logError, stripConsoleColors } from './log-utils';
 import { existsSync } from 'fs-extra';
+import { gte } from 'semver';
 
 export interface RunCmdOpts {
   silenceError?: boolean;
@@ -68,6 +70,8 @@ export function runCommand(
       cwd: tmpProjPath(),
       stdio: 'pipe',
       env: {
+        // Use new versioning by default in e2e tests
+        NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
         ...getStrippedEnvironmentVariables(),
         ...childProcessOptions?.env,
         FORCE_COLOR: 'false',
@@ -111,9 +115,11 @@ export function getPackageManagerCommand({
   addDev: string;
   list: string;
   runLerna: string;
+  exec: string;
 } {
   const npmMajorVersion = getNpmMajorVersion();
   const yarnMajorVersion = getYarnMajorVersion(path);
+  const pnpmVersion = getPnpmVersion();
   const publishedVersion = getPublishedVersion();
   const isYarnWorkspace = fileExists(join(path, 'package.json'))
     ? readJson('package.json').workspaces
@@ -135,6 +141,7 @@ export function getPackageManagerCommand({
       addDev: `npm install --legacy-peer-deps -D`,
       list: 'npm ls --depth 10',
       runLerna: `npx lerna`,
+      exec: 'npx',
     },
     yarn: {
       createWorkspace: `npx ${
@@ -156,6 +163,7 @@ export function getPackageManagerCommand({
         yarnMajorVersion && +yarnMajorVersion >= 2
           ? 'yarn lerna'
           : `yarn --silent lerna`,
+      exec: 'yarn',
     },
     // Pnpm 3.5+ adds nx to
     pnpm: {
@@ -164,15 +172,18 @@ export function getPackageManagerCommand({
       runNx: `pnpm exec nx`,
       runNxSilent: `pnpm exec nx`,
       runUninstalledPackage: 'pnpm dlx',
-      install: 'pnpm i',
+      // We need to install with --no-frozen-lockfile when running e2e tests because pnpm will pick up the fact we are in CI and default to --frozen-lockfile
+      install: 'pnpm install --no-frozen-lockfile',
       ciInstall: 'pnpm install --frozen-lockfile',
       addProd: isPnpmWorkspace ? 'pnpm add -w' : 'pnpm add',
       addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
       list: 'pnpm ls --depth 10',
       runLerna: `pnpm exec lerna`,
+      exec: pnpmVersion && gte(pnpmVersion, '6.13.0') ? 'pnpm exec' : 'pnpx',
     },
     bun: {
-      createWorkspace: `bunx create-nx-workspace@${publishedVersion}`,
+      // See note in runCreateWorkspace in create-project-utils.ts for why we don't set @{version} for `bunx create-nx-workspace` right now
+      createWorkspace: `bunx create-nx-workspace`,
       run: (script: string, args: string) => `bun run ${script} -- ${args}`,
       runNx: `bunx nx`,
       runNxSilent: `bunx nx`,
@@ -183,6 +194,7 @@ export function getPackageManagerCommand({
       addDev: 'bun install -D',
       list: 'bun pm ls',
       runLerna: `bunx lerna`,
+      exec: 'bun',
     },
   }[packageManager.trim() as PackageManager];
 }
@@ -225,6 +237,8 @@ export function runCommandAsync(
         cwd: opts.cwd || tmpProjPath(),
         env: {
           CI: 'true',
+          // Use new versioning by default in e2e tests
+          NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
           ...(opts.env || getStrippedEnvironmentVariables()),
           FORCE_COLOR: 'false',
         },
@@ -232,13 +246,25 @@ export function runCommandAsync(
       },
       (err, stdout, stderr) => {
         if (!opts.silenceError && err) {
+          logError(`Original command: ${command}`, `${stdout}\n\n${stderr}`);
           reject(err);
         }
-        resolve({
+
+        const outputs = {
           stdout: stripConsoleColors(stdout),
           stderr: stripConsoleColors(stderr),
           combinedOutput: stripConsoleColors(`${stdout}${stderr}`),
-        });
+        };
+
+        if (opts.verbose ?? isVerboseE2ERun()) {
+          output.log({
+            title: `Original command: ${command}`,
+            bodyLines: [outputs.combinedOutput],
+            color: 'green',
+          });
+        }
+
+        resolve(outputs);
       }
     );
   });
@@ -257,10 +283,13 @@ export function runCommandUntil(
     encoding: 'utf-8',
     env: {
       CI: 'true',
+      // Use new versioning by default in e2e tests
+      NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
       ...getStrippedEnvironmentVariables(),
       ...opts.env,
       FORCE_COLOR: 'false',
     },
+    windowsHide: false,
   });
   return new Promise((res, rej) => {
     let output = '';
@@ -302,10 +331,11 @@ export function runCLIAsync(
   }
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
   const pm = getPackageManagerCommand();
-  return runCommandAsync(
-    `${opts.silent ? pm.runNxSilent : pm.runNx} ${command}`,
-    opts
-  );
+  const commandToRun = `${opts.silent ? pm.runNxSilent : pm.runNx} ${command} ${
+    opts.verbose ?? isVerboseE2ERun() ? ' --verbose' : ''
+  }${opts.redirectStderr ? ' 2>&1' : ''}`;
+
+  return runCommandAsync(commandToRun, opts);
 }
 
 export function runNgAdd(
@@ -368,6 +398,8 @@ export function runCLI(
       cwd: opts.cwd || tmpProjPath(),
       env: {
         CI: 'true',
+        // Use new versioning by default in e2e tests
+        NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
         ...getStrippedEnvironmentVariables(),
         ...opts.env,
       },

@@ -25,9 +25,6 @@ Make sure to install the `@nx/remix` version that matches the version of `nx` in
 
 In any Nx workspace, you can install `@nx/remix` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/remix
 ```
@@ -68,27 +65,11 @@ The `@nx/remix/plugin` is configured in the `plugins` array in `nx.json`.
 
 The `buildTargetName`, `devTargetName`, `startTargetName` and `typecheckTargetName` options control the names of the inferred Remix tasks. The default names are `build`, `dev`, `start` and `typecheck`.
 
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/remix` package with your package manager.
-
-```shell
-npm add -D @nx/remix
-```
-
-{% /tab %}
-{% /tabs %}
-
 ## Using the Remix Plugin
 
 ## Generate a Remix Application
 
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
-
-```{% command="nx g @nx/remix:app myapp --directory=apps/myapp" path="~/acme" %}
+```{% command="nx g @nx/remix:app apps/myapp" path="~/acme" %}
 NX  Generating @nx/remix:application
 
 ✔ What unit test runner should be used? · vitest
@@ -181,7 +162,7 @@ When developing your application, it often makes sense to split your codebase in
 
 To generate a library to use in your Remix application run:
 
-```{% command="nx g @nx/remix:lib login --directory=libs/login" path="~/acme" %}
+```{% command="nx g @nx/remix:lib libs/login" path="~/acme" %}
 NX  Generating @nx/remix:library
 
 ✔ What test runner should be used? · vitest
@@ -228,7 +209,7 @@ You can also run test on your library:
 
 To generate a route for your application:
 
-```{% command="nx g @nx/remix:route admin --path=apps/myapp/app/routes" path="~/acme" %}
+```{% command="nx g @nx/remix:route apps/myapp/app/routes/admin" path="~/acme" %}
 NX  Generating @nx/remix:route
 
 CREATE apps/myapp/app/routes/admin.tsx
@@ -241,7 +222,7 @@ To use a Route Loader where the logic lives in your library, follow the steps be
 
 1. Generate a loader for your route:
 
-```{% command="nx g @nx/remix:loader admin --path=apps/myapp/app/routes" path="~/acme" %}
+```{% command="nx g @nx/remix:loader apps/myapp/app/routes/admin.tsx" path="~/acme" %}
 NX  Generating @nx/remix:loader
 
 UPDATE apps/myapp/app/routes/admin.tsx

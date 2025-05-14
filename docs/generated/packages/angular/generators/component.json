@@ -1,6 +1,6 @@
 {
   "name": "component",
-  "factory": "./src/generators/component/component#componentGeneratorInternal",
+  "factory": "./src/generators/component/component",
   "schema": {
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "SchematicsAngularComponent",
@@ -10,29 +10,15 @@
     "description": "Creates a new Angular component.",
     "additionalProperties": false,
     "properties": {
+      "path": {
+        "type": "string",
+        "description": "The file path to the component. Relative to the current working directory.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What is the component file path?"
+      },
       "name": {
         "type": "string",
-        "description": "The name of the component.",
-        "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the component?"
-      },
-      "directory": {
-        "type": "string",
-        "description": "The directory at which to create the component file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
-        "aliases": ["dir", "path"],
-        "x-priority": "important"
-      },
-      "nameAndDirectoryFormat": {
-        "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-        "type": "string",
-        "enum": ["as-provided", "derived"]
-      },
-      "project": {
-        "type": "string",
-        "description": "The name of the project.",
-        "$default": { "$source": "projectName" },
-        "x-dropdown": "projects",
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20."
+        "description": "The component symbol name. Defaults to the last segment of the file path."
       },
       "prefix": {
         "type": "string",
@@ -92,12 +78,6 @@
         "description": "Do not create `spec.ts` test files for the new component.",
         "default": false
       },
-      "flat": {
-        "type": "boolean",
-        "description": "Create the new files at the top level of the current project.",
-        "default": false,
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v20."
-      },
       "skipImport": {
         "type": "boolean",
         "description": "Do not import this component into the owning NgModule.",
@@ -124,6 +104,11 @@
         "default": false,
         "x-priority": "important"
       },
+      "exportDefault": {
+        "type": "boolean",
+        "default": false,
+        "description": "Use default export for the component instead of a named export."
+      },
       "skipFormat": {
         "description": "Skip formatting files.",
         "type": "boolean",
@@ -131,13 +116,13 @@
         "x-priority": "internal"
       }
     },
-    "required": ["name"],
-    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Component\" %}\n\nCreate a component named `my-component`:\n\n```bash\nnx g @nx/angular:component my-component\n```\n\n{% /tab %}\n\n{% tab label=\"Single File Component\" %}\n\nCreate a component named `my-component` with inline styles and inline template:\n\n```bash\nnx g @nx/angular:component my-component --inlineStyle --inlineTemplate\n```\n\n{% /tab %}\n\n{% tab label=\"Component with OnPush Change Detection Strategy\" %}\n\nCreate a component named `my-component` with OnPush Change Detection Strategy:\n\n```bash\nnx g @nx/angular:component my-component --changeDetection=OnPush\n```\n\n{% /tab %}\n",
+    "required": ["path"],
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Component\" %}\n\nGenerate a component named `MyComponent` at `apps/my-app/src/lib/my-component/my-component.component.ts`:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/my-component/my-component.ts\n```\n\n{% /tab %}\n\n{% tab label=\"Without Providing the File Extension\" %}\n\nGenerate a component named `MyComponent` at `apps/my-app/src/lib/my-component/my-component.component.ts`:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/my-component/my-component\n```\n\n{% /tab %}\n\n{% tab label=\"With Different Symbol Name\" %}\n\nGenerate a component named `CustomComponent` at `apps/my-app/src/lib/my-component/my-component.component.ts`:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/my-component/my-component --name=custom\n```\n\n{% /tab %}\n\n{% tab label=\"Single File Component\" %}\n\nCreate a component named `my-component` with inline styles and inline template:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/my-component/my-component --inlineStyle --inlineTemplate\n```\n\n{% /tab %}\n\n{% tab label=\"Component with OnPush Change Detection Strategy\" %}\n\nCreate a component named `my-component` with OnPush Change Detection Strategy:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/my-component/my-component --changeDetection=OnPush\n```\n\n{% /tab %}\n",
     "presets": []
   },
   "aliases": ["c"],
   "description": "Generate an Angular Component.",
-  "implementation": "/packages/angular/src/generators/component/component#componentGeneratorInternal.ts",
+  "implementation": "/packages/angular/src/generators/component/component.ts",
   "hidden": false,
   "path": "/packages/angular/src/generators/component/schema.json",
   "type": "generator"

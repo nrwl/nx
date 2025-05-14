@@ -43,6 +43,10 @@ export function generateManifests(workspace: string): Promise<void[]> {
   console.log(`${chalk.blue('i')} Generating Manifests`);
   const documentationPath = resolve(workspace, 'docs');
   const generatedDocumentationPath = resolve(documentationPath, 'generated');
+  const generatedExternalDocumentationPath = resolve(
+    documentationPath,
+    'external-generated'
+  );
   const targetFolder: string = resolve(generatedDocumentationPath, 'manifests');
   const documents: Partial<DocumentMetadata>[] = readJsonSync(
     `${documentationPath}/map.json`,
@@ -50,12 +54,17 @@ export function generateManifests(workspace: string): Promise<void[]> {
       encoding: 'utf8',
     }
   ).content;
-  const packages: PackageMetadata[] = readJsonSync(
-    `${generatedDocumentationPath}/packages-metadata.json`,
-    {
+  const packages: PackageMetadata[] = [
+    ...readJsonSync(`${generatedDocumentationPath}/packages-metadata.json`, {
       encoding: 'utf8',
-    }
-  );
+    }),
+    ...readJsonSync(
+      `${generatedExternalDocumentationPath}/packages-metadata.json`,
+      {
+        encoding: 'utf8',
+      }
+    ),
+  ];
 
   /**
    * We are starting by selecting what section of the map.json we want to work with.
@@ -269,6 +278,17 @@ function createPackagesMenu(packages: PackageManifest): {
         disableCollapsible: false,
       });
     }
+
+    if (!!Object.values(p.migrations).length) {
+      item.children.push({
+        id: 'migrations',
+        path: '/' + ['nx-api', p.name, 'migrations'].join('/'),
+        name: 'migrations',
+        children: [],
+        isExternal: false,
+        disableCollapsible: false,
+      });
+    }
     return item;
   });
   return { id: 'nx-api', menu: packagesMenu };
@@ -321,6 +341,13 @@ function createPackagesManifest(packages: PackageMetadata[]): {
       ),
       generators: convertToDictionary(
         p.generators.map((g) => ({
+          ...g,
+          path: generatePath({ id: g.name, path: g.path }, 'nx-api'),
+        })),
+        'path'
+      ),
+      migrations: convertToDictionary(
+        p.migrations.map((g) => ({
           ...g,
           path: generatePath({ id: g.name, path: g.path }, 'nx-api'),
         })),

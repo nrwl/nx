@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { relative } from 'node:path';
-import { joinPathFragments, workspaceRoot } from '../../../devkit-exports';
+import { joinPathFragments } from '../../../utils/path';
+import { workspaceRoot } from '../../../utils/workspace-root';
 
 export async function resolveNxJsonConfigErrorMessage(
   propPath: string[]

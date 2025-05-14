@@ -25,6 +25,11 @@ import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { syncDeps } from '../../executors/sync-deps/sync-deps.impl';
 import { PackageJson } from 'nx/src/utils/package-json';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export async function reactNativeApplicationGenerator(
   host: Tree,
@@ -32,7 +37,7 @@ export async function reactNativeApplicationGenerator(
 ): Promise<GeneratorCallback> {
   return await reactNativeApplicationGeneratorInternal(host, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
+    useProjectJson: true,
     ...schema,
   });
 }
@@ -41,14 +46,17 @@ export async function reactNativeApplicationGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  const options = await normalizeOptions(host, schema);
-
   const tasks: GeneratorCallback[] = [];
   const jsInitTask = await jsInitGenerator(host, {
     ...schema,
     skipFormat: true,
+    addTsPlugin: schema.useTsSolution,
+    formatter: schema.formatter,
+    platform: 'web',
   });
   tasks.push(jsInitTask);
+
+  const options = await normalizeOptions(host, schema);
   const initTask = await initGenerator(host, { ...options, skipFormat: true });
   tasks.push(initTask);
 
@@ -58,6 +66,12 @@ export async function reactNativeApplicationGeneratorInternal(
 
   await createApplicationFiles(host, options);
   addProject(host, options);
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isTsSolutionSetup) {
+    await addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
+  }
 
   const lintTask = await addLinting(host, {
     ...options,
@@ -75,13 +89,14 @@ export async function reactNativeApplicationGeneratorInternal(
     options.appProjectRoot,
     options.js,
     options.skipPackageJson,
-    options.addPlugin
+    options.addPlugin,
+    'tsconfig.app.json'
   );
   tasks.push(jestTask);
 
   const webTask = await webConfigurationGenerator(host, {
     ...options,
-    project: options.name,
+    project: options.projectName,
     skipFormat: true,
   });
   tasks.push(webTask);
@@ -124,6 +139,24 @@ export async function reactNativeApplicationGeneratorInternal(
       ],
     });
   }
+
+  updateTsconfigFiles(
+    host,
+    options.appProjectRoot,
+    'tsconfig.app.json',
+    {
+      jsx: 'react-jsx',
+      module: 'esnext',
+      moduleResolution: 'bundler',
+      noUnusedLocals: false,
+      lib: ['dom'],
+    },
+    options.linter === 'eslint'
+      ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+      : undefined
+  );
+
+  sortPackageJsonFields(host, options.appProjectRoot);
 
   if (!options.skipFormat) {
     await formatFiles(host);

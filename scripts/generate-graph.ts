@@ -13,7 +13,7 @@ async function generateGraph(directory: string, name: string) {
   try {
     execSync(
       'npx nx graph --file ./node_modules/.cache/nx-graph-gen/graph.html',
-      { cwd: directory, stdio: 'ignore' }
+      { cwd: directory, stdio: 'ignore', windowsHide: false }
     );
   } catch {
     console.error(`Could not run graph command in directory ${directory}`);

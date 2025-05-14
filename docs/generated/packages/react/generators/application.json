@@ -9,37 +9,32 @@
     "description": "Create a React application for Nx.",
     "examples": [
       {
-        "command": "nx g app myapp --directory=myorg",
+        "command": "nx g app apps/myorg/myapp",
         "description": "Generate `apps/myorg/myapp` and `apps/myorg/myapp-e2e`"
       },
       {
-        "command": "nx g app myapp --classComponent",
+        "command": "nx g app apps/myapp --classComponent",
         "description": "Use class components instead of functional components"
       },
       {
-        "command": "nx g app myapp --routing",
+        "command": "nx g app apps/myapp --routing",
         "description": "Set up React Router"
       }
     ],
     "type": "object",
     "properties": {
-      "name": {
-        "description": "The name of the application.",
-        "type": "string",
-        "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the application?",
-        "pattern": "^[a-zA-Z][^:]*$"
-      },
       "directory": {
         "description": "The directory of the new application.",
         "type": "string",
         "alias": "dir",
-        "x-priority": "important"
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "Which directory do you want to create the application in?"
       },
-      "projectNameAndRootFormat": {
-        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "name": {
+        "description": "The name of the application.",
         "type": "string",
-        "enum": ["as-provided", "derived"]
+        "pattern": "^[a-zA-Z][^:]*$",
+        "x-priority": "important"
       },
       "style": {
         "description": "The file extension to be used for style files.",
@@ -53,15 +48,15 @@
             { "value": "css", "label": "CSS" },
             {
               "value": "scss",
-              "label": "SASS(.scss)       [ https://sass-lang.com                     ]"
+              "label": "SASS(.scss)       [ https://sass-lang.com                    ]"
             },
             {
               "value": "less",
-              "label": "LESS              [ https://lesscss.org                       ]"
+              "label": "LESS              [ https://lesscss.org                      ]"
             },
             {
               "value": "tailwind",
-              "label": "tailwind [ https://tailwindcss.com/            ]"
+              "label": "tailwind          [ https://tailwindcss.com/                 ]"
             },
             {
               "value": "styled-components",
@@ -79,16 +74,15 @@
           ]
         }
       },
-      "linter": {
-        "description": "The tool to use for running lint checks.",
-        "type": "string",
-        "enum": ["eslint", "none"],
-        "default": "eslint"
-      },
       "routing": {
         "type": "boolean",
         "description": "Generate application with routes.",
-        "x-prompt": "Would you like to add React Router to this application?",
+        "x-prompt": "Would you like to add routing to this application?",
+        "default": false
+      },
+      "useReactRouter": {
+        "description": "Use React Router for routing.",
+        "type": "boolean",
         "default": false
       },
       "skipFormat": {
@@ -103,11 +97,29 @@
         "default": false,
         "x-priority": "internal"
       },
+      "bundler": {
+        "description": "The bundler to use.",
+        "type": "string",
+        "enum": ["vite", "rsbuild", "rspack", "webpack"],
+        "x-prompt": "Which bundler do you want to use to build the application?",
+        "default": "vite",
+        "x-priority": "important"
+      },
+      "linter": {
+        "description": "The tool to use for running lint checks.",
+        "type": "string",
+        "enum": ["eslint", "none"],
+        "default": "none",
+        "x-prompt": "Which linter would you like to use?",
+        "x-priority": "important"
+      },
       "unitTestRunner": {
         "type": "string",
-        "enum": ["jest", "vitest", "none"],
+        "enum": ["vitest", "jest", "none"],
         "description": "Test runner to use for unit tests.",
-        "default": "jest"
+        "default": "none",
+        "x-prompt": "What unit test runner should be used?",
+        "x-priority": "important"
       },
       "inSourceTests": {
         "type": "boolean",
@@ -125,12 +137,6 @@
         "type": "string",
         "description": "Add tags to the application (used for linting).",
         "alias": "t"
-      },
-      "pascalCaseFiles": {
-        "type": "boolean",
-        "description": "Use pascal case component file name (e.g. `App.tsx`).",
-        "alias": "P",
-        "default": false
       },
       "classComponent": {
         "type": "boolean",
@@ -176,22 +182,18 @@
         "default": false,
         "hidden": true
       },
-      "bundler": {
-        "description": "The bundler to use.",
-        "type": "string",
-        "enum": ["vite", "webpack", "rspack"],
-        "x-prompt": "Which bundler do you want to use to build the application?",
-        "default": "webpack",
-        "x-priority": "important"
-      },
       "minimal": {
         "description": "Generate a React app with a minimal setup, no separate test files.",
         "type": "boolean",
         "default": false
+      },
+      "useProjectJson": {
+        "type": "boolean",
+        "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
       }
     },
-    "required": ["name"],
-    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Application\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nx/react:application my-app\n```\n\n{% /tab %}\n\n{% tab label=\"Application using Vite as bundler\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nx/react:app my-app --bundler=vite\n```\n\nWhen choosing `vite` as the bundler, your unit tests will be set up with `vitest`, unless you choose `none` for `unitTestRunner`.\n\n{% /tab %}\n\n{% tab label=\"Specify directory and style extension\" %}\n\nCreate an application named `my-app` in the `my-dir` directory and use `scss` for styles:\n\n{% callout type=\"note\" title=\"Directory Flag Behavior Changes\" %}\nThe command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, use `--directory=my-dir`. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.\n{% /callout %}\n\n```bash\nnx g @nx/react:app my-app --directory=apps/my-dir/my-app --style=scss\n```\n\n{% /tab %}\n\n{% tab label=\"Add tags\" %}\n\nAdd tags to the application (used for linting).\n\n```bash\nnx g @nx/react:app my-app --tags=scope:admin,type:ui\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "required": ["directory"],
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Application\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nx/react:application apps/my-app\n```\n\n{% /tab %}\n\n{% tab label=\"Application using Vite as bundler\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nx/react:app apps/my-app --bundler=vite\n```\n\nWhen choosing `vite` as the bundler, your unit tests will be set up with `vitest`, unless you choose `none` for `unitTestRunner`.\n\n{% /tab %}\n\n{% tab label=\"Specify style extension\" %}\n\nCreate an application named `my-app` in the `my-dir` directory and use `scss` for styles:\n\n```bash\nnx g @nx/react:app apps/my-dir/my-app --style=scss\n```\n\n{% /tab %}\n\n{% tab label=\"Add tags\" %}\n\nAdd tags to the application (used for linting).\n\n```bash\nnx g @nx/react:app apps/my-app --tags=scope:admin,type:ui\n```\n\n{% /tab %}\n{% /tabs %}\n",
     "presets": []
   },
   "aliases": ["app"],

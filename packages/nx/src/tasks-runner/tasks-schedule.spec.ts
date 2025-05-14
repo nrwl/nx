@@ -4,6 +4,8 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { DependencyType, ProjectGraph } from '../config/project-graph';
 import * as nxJsonUtils from '../config/nx-json';
 import * as executorUtils from '../command-line/run/executor-utils';
+import * as taskHistoryUtils from '../utils/task-history';
+import type { LifeCycle } from './life-cycle';
 
 function createMockTask(id: string, parallelism: boolean = true): Task {
   const [project, target] = id.split(':');
@@ -16,18 +18,39 @@ function createMockTask(id: string, parallelism: boolean = true): Task {
     outputs: [],
     overrides: {},
     parallelism,
+    continuous: false,
   };
 }
 
 describe('TasksSchedule', () => {
+  let taskHistory: any;
+  let lifeCycle: LifeCycle;
+
+  beforeEach(() => {
+    lifeCycle = {
+      startTask: jest.fn(),
+      endTask: jest.fn(),
+      scheduleTask: jest.fn(),
+    };
+    taskHistory = {
+      getEstimatedTaskTimings: jest.fn(),
+      getFlakyTasks: jest.fn(),
+      recordTaskRuns: jest.fn(),
+    };
+    jest.spyOn(taskHistoryUtils, 'getTaskHistory').mockReturnValue(taskHistory);
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
   describe('dependent tasks', () => {
     let taskSchedule: TasksSchedule;
     let taskGraph: TaskGraph;
     let app1Build: Task;
     let app2Build: Task;
     let lib1Build: Task;
-    let lifeCycle: any;
-    beforeEach(() => {
+    beforeEach(async () => {
       app1Build = createMockTask('app1:build');
       app2Build = createMockTask('app2:build');
       lib1Build = createMockTask('lib1:build');
@@ -40,6 +63,11 @@ describe('TasksSchedule', () => {
         },
         dependencies: {
           'app1:build': ['lib1:build'],
+          'app2:build': [],
+          'lib1:build': [],
+        },
+        continuousDependencies: {
+          'app1:build': [],
           'app2:build': [],
           'lib1:build': [],
         },
@@ -115,15 +143,11 @@ describe('TasksSchedule', () => {
         externalNodes: {},
         version: '5',
       };
-
-      lifeCycle = {
-        startTask: jest.fn(),
-        endTask: jest.fn(),
-        scheduleTask: jest.fn(),
-      };
+      taskHistory.getEstimatedTaskTimings.mockReturnValue({});
       taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
         lifeCycle,
       });
+      await taskSchedule.init();
     });
 
     describe('Without Batch Mode', () => {
@@ -231,25 +255,45 @@ describe('TasksSchedule', () => {
     let taskGraph: TaskGraph;
     let app1Test: Task;
     let app2Test: Task;
+    let app3Test: Task;
+    let app4Test: Task;
     let lib1Test: Task;
-    let lifeCycle: any;
-    beforeEach(() => {
+    beforeEach(async () => {
       app1Test = createMockTask('app1:test');
       app2Test = createMockTask('app2:test');
+      app3Test = createMockTask('app3:test');
+      app4Test = createMockTask('app4:test');
       lib1Test = createMockTask('lib1:test');
 
       taskGraph = {
         tasks: {
           'app1:test': app1Test,
           'app2:test': app2Test,
+          'app3:test': app3Test,
+          'app4:test': app4Test,
           'lib1:test': lib1Test,
         },
         dependencies: {
           'app1:test': [],
           'app2:test': [],
+          'app3:test': [],
+          'app4:test': [],
           'lib1:test': [],
         },
-        roots: ['app1:test', 'app2:test', 'lib1:test'],
+        continuousDependencies: {
+          'app1:test': [],
+          'app2:test': [],
+          'app3:test': [],
+          'app4:test': [],
+          'lib1:test': [],
+        },
+        roots: [
+          'app1:test',
+          'app2:test',
+          'lib1:test',
+          'app3:test',
+          'app4:test',
+        ],
       };
       jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
       jest.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
@@ -289,6 +333,30 @@ describe('TasksSchedule', () => {
               },
             },
           },
+          app3: {
+            name: 'app3',
+            type: 'app',
+            data: {
+              root: 'app3',
+              targets: {
+                test: {
+                  executor: 'awesome-executors:app2-test',
+                },
+              },
+            },
+          },
+          app4: {
+            name: 'app4',
+            type: 'app',
+            data: {
+              root: 'app4',
+              targets: {
+                test: {
+                  executor: 'awesome-executors:app2-test',
+                },
+              },
+            },
+          },
           lib1: {
             name: 'lib1',
             type: 'lib',
@@ -321,12 +389,6 @@ describe('TasksSchedule', () => {
         externalNodes: {},
         version: '5',
       };
-
-      lifeCycle = {
-        startTask: jest.fn(),
-        endTask: jest.fn(),
-        scheduleTask: jest.fn(),
-      };
       taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
         lifeCycle,
       });
@@ -343,34 +405,93 @@ describe('TasksSchedule', () => {
         process.env['NX_BATCH_MODE'] = original;
       });
 
-      it('should begin with no scheduled tasks', () => {
-        expect(taskSchedule.nextBatch()).toBeNull();
-        expect(taskSchedule.nextTask()).toBeNull();
+      describe('when all tasks have same historical runtime', () => {
+        beforeEach(async () => {
+          taskHistory.getEstimatedTaskTimings.mockReturnValue({
+            'app1:test': 100,
+            'app2:test': 100,
+            'app3:test': 100,
+            'app4:test': 100,
+            'lib1:test': 100,
+          });
+          await taskSchedule.init();
+        });
+
+        it('should begin with no scheduled tasks', () => {
+          expect(taskSchedule.nextBatch()).toBeNull();
+          expect(taskSchedule.nextTask()).toBeNull();
+        });
+
+        it('should schedule root tasks in topological order', async () => {
+          await taskSchedule.scheduleNextTasks();
+          expect(taskSchedule.nextTask()).toEqual(lib1Test);
+          expect(taskSchedule.nextTask()).toEqual(app1Test);
+          expect(taskSchedule.nextTask()).toEqual(app2Test);
+          expect(taskSchedule.nextTask()).toEqual(app3Test);
+          expect(taskSchedule.nextTask()).toEqual(app4Test);
+        });
+
+        it('should run out of tasks when they are all complete', async () => {
+          await taskSchedule.scheduleNextTasks();
+          taskSchedule.nextTask();
+          taskSchedule.nextTask();
+          taskSchedule.nextTask();
+          taskSchedule.nextTask();
+          taskSchedule.nextTask();
+          taskSchedule.complete([
+            lib1Test.id,
+            app1Test.id,
+            app2Test.id,
+            app3Test.id,
+            app4Test.id,
+          ]);
+
+          expect(taskSchedule.hasTasks()).toEqual(false);
+        });
+
+        it('should not schedule batches', async () => {
+          await taskSchedule.scheduleNextTasks();
+
+          expect(taskSchedule.nextTask()).not.toBeNull();
+
+          expect(taskSchedule.nextBatch()).toBeNull();
+        });
       });
 
-      it('should schedule root tasks in topological order', async () => {
-        await taskSchedule.scheduleNextTasks();
-        expect(taskSchedule.nextTask()).toEqual(lib1Test);
-        expect(taskSchedule.nextTask()).toEqual(app1Test);
-        expect(taskSchedule.nextTask()).toEqual(app2Test);
-      });
+      describe('when all tasks have different historical runtime', () => {
+        it('should schedule task with longer runtime first', async () => {
+          taskHistory.getEstimatedTaskTimings.mockReturnValue({
+            'app1:test': 200,
+            'app2:test': 300,
+            'app3:test': 400,
+            'app4:test': 500,
+            'lib1:test': 100,
+          });
+          await taskSchedule.init();
 
-      it('should run out of tasks when they are all complete', async () => {
-        await taskSchedule.scheduleNextTasks();
-        taskSchedule.nextTask();
-        taskSchedule.nextTask();
-        taskSchedule.nextTask();
-        taskSchedule.complete([lib1Test.id, app1Test.id, app2Test.id]);
+          await taskSchedule.scheduleNextTasks();
+          expect(taskSchedule.nextTask()).toEqual(lib1Test); // lib1 should run first because app1 and app2 depend on it
+          expect(taskSchedule.nextTask()).toEqual(app4Test); // app4 should run first because it has the longest runtime
+          expect(taskSchedule.nextTask()).toEqual(app3Test);
+          expect(taskSchedule.nextTask()).toEqual(app2Test);
+          expect(taskSchedule.nextTask()).toEqual(app1Test);
+        });
 
-        expect(taskSchedule.hasTasks()).toEqual(false);
-      });
+        it('should schedule task with no historial runtime first', async () => {
+          taskHistory.getEstimatedTaskTimings.mockReturnValue({
+            'app1:test': 200,
+            'app4:test': 500,
+            'lib1:test': 100,
+          });
+          await taskSchedule.init();
 
-      it('should not schedule batches', async () => {
-        await taskSchedule.scheduleNextTasks();
-
-        expect(taskSchedule.nextTask()).not.toBeNull();
-
-        expect(taskSchedule.nextBatch()).toBeNull();
+          await taskSchedule.scheduleNextTasks();
+          expect(taskSchedule.nextTask()).toEqual(lib1Test); // lib1 should run first because app1 and app2 depend on it
+          expect(taskSchedule.nextTask()).toEqual(app2Test); // app2 should run because it has no historical runtime
+          expect(taskSchedule.nextTask()).toEqual(app3Test); // app3 should run because it has no historical runtime
+          expect(taskSchedule.nextTask()).toEqual(app4Test); // app4 should run because it has the longest runtime
+          expect(taskSchedule.nextTask()).toEqual(app1Test); // app1 should run last because it has the shortest runtime
+        });
       });
     });
 
@@ -392,7 +513,11 @@ describe('TasksSchedule', () => {
 
         expect(taskSchedule.nextBatch()).toEqual({
           executorName: 'awesome-executors:test',
-          taskGraph: removeTasksFromTaskGraph(taskGraph, ['app2:test']),
+          taskGraph: removeTasksFromTaskGraph(taskGraph, [
+            'app2:test',
+            'app3:test',
+            'app4:test',
+          ]),
         });
         expect(taskSchedule.nextBatch()).toEqual({
           executorName: 'awesome-executors:app2-test',
@@ -420,8 +545,7 @@ describe('TasksSchedule', () => {
       let app1Build: Task;
       let app2Build: Task;
       let lib1Build: Task;
-      let lifeCycle: any;
-      beforeEach(() => {
+      beforeEach(async () => {
         // app1 depends on lib1
         // app2 does not depend on anything
         // lib1 does not depend on anything
@@ -438,6 +562,11 @@ describe('TasksSchedule', () => {
           },
           dependencies: {
             'app1:build': ['lib1:build'],
+            'app2:build': [],
+            'lib1:build': [],
+          },
+          continuousDependencies: {
+            'app1:build': [],
             'app2:build': [],
             'lib1:build': [],
           },
@@ -513,15 +642,11 @@ describe('TasksSchedule', () => {
           externalNodes: {},
           version: '5',
         };
-
-        lifeCycle = {
-          startTask: jest.fn(),
-          endTask: jest.fn(),
-          scheduleTask: jest.fn(),
-        };
+        taskHistory.getEstimatedTaskTimings.mockReturnValue({});
         taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
           lifeCycle,
         });
+        await taskSchedule.init();
       });
 
       describe('Without Batch Mode', () => {
@@ -594,8 +719,7 @@ describe('TasksSchedule', () => {
       let app1Test: Task;
       let app2Test: Task;
       let lib1Test: Task;
-      let lifeCycle: any;
-      beforeEach(() => {
+      beforeEach(async () => {
         // app1, app2, and lib1 do not depend on each other
         // all tasks have parallelism set to false
         app1Test = createMockTask('app1:test', false);
@@ -609,6 +733,11 @@ describe('TasksSchedule', () => {
             'lib1:test': lib1Test,
           },
           dependencies: {
+            'app1:test': [],
+            'app2:test': [],
+            'lib1:test': [],
+          },
+          continuousDependencies: {
             'app1:test': [],
             'app2:test': [],
             'lib1:test': [],
@@ -687,15 +816,11 @@ describe('TasksSchedule', () => {
           externalNodes: {},
           version: '5',
         };
-
-        lifeCycle = {
-          startTask: jest.fn(),
-          endTask: jest.fn(),
-          scheduleTask: jest.fn(),
-        };
+        taskHistory.getEstimatedTaskTimings.mockReturnValue({});
         taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
           lifeCycle,
         });
+        await taskSchedule.init();
       });
 
       describe('Without Batch Mode', () => {

@@ -1,4 +1,4 @@
-import type { ChangelogRenderer } from '../../../../release/changelog-renderer';
+import type ChangelogRenderer from '../../../../release/changelog-renderer';
 import { registerTsProject } from '../../../plugins/js/utils/register';
 import { getRootTsConfigPath } from '../../../plugins/js/utils/typescript';
 import { interpolate } from '../../../tasks-runner/utils';
@@ -6,13 +6,13 @@ import { workspaceRoot } from '../../../utils/workspace-root';
 
 export function resolveChangelogRenderer(
   changelogRendererPath: string
-): ChangelogRenderer {
+): typeof ChangelogRenderer {
   const interpolatedChangelogRendererPath = interpolate(changelogRendererPath, {
     workspaceRoot,
   });
 
   // Try and load the provided (or default) changelog renderer
-  let changelogRenderer: ChangelogRenderer;
+  let ChangelogRendererClass: typeof ChangelogRenderer;
   let cleanupTranspiler = () => {};
   try {
     const rootTsconfigPath = getRootTsConfigPath();
@@ -20,11 +20,11 @@ export function resolveChangelogRenderer(
       cleanupTranspiler = registerTsProject(rootTsconfigPath);
     }
     const r = require(interpolatedChangelogRendererPath);
-    changelogRenderer = r.default || r;
+    ChangelogRendererClass = r.default || r;
   } catch (err) {
     throw err;
   } finally {
     cleanupTranspiler();
   }
-  return changelogRenderer;
+  return ChangelogRendererClass;
 }

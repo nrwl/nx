@@ -56,7 +56,7 @@ export function updateHostWithRemote(
   } else {
     // TODO(jack): Point to the nx.dev guide when ready.
     logger.warn(
-      `Could not find configuration at ${moduleFederationConfigPath}. Did you generate this project with "@nx/react:host"?`
+      `Could not find configuration at ${moduleFederationConfigPath}. Did you generate this project with "@nx/react:host" or "@nx/react:consumer"?`
     );
   }
 
@@ -78,7 +78,7 @@ export function updateHostWithRemote(
     );
   } else {
     logger.warn(
-      `Could not find app component at ${appComponentPath}. Did you generate this project with "@nx/react:host"?`
+      `Could not find app component at ${appComponentPath}. Did you generate this project with "@nx/react:host" or "@nx/react:consumer"?`
     );
   }
 }
@@ -88,11 +88,15 @@ function findAppComponentPath(host: Tree, sourceRoot: string) {
     'app/app.tsx',
     'app/App.tsx',
     'app/app.js',
+    'app/app.jsx',
     'app/App.js',
+    'app/App.jsx',
     'app.tsx',
     'App.tsx',
     'app.js',
     'App.js',
+    'app.jsx',
+    'App.jsx',
   ];
   for (const loc of locations) {
     if (host.exists(joinPathFragments(sourceRoot, loc))) {

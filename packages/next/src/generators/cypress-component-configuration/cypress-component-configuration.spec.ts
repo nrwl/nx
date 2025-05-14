@@ -1,24 +1,32 @@
-import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
 import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
-import { cypressComponentConfiguration } from './cypress-component-configuration';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { setupTailwindGenerator } from '@nx/react';
 import { applicationGenerator } from '../application/application';
 import { libraryGenerator } from '../library/library';
-import { setupTailwindGenerator } from '@nx/react';
-import { Linter } from '@nx/eslint';
+import { cypressComponentConfiguration } from './cypress-component-configuration';
+
+jest.mock('@nx/cypress/src/utils/versions', () => ({
+  ...jest.requireActual<any>('@nx/cypress/src/utils/versions'),
+  getInstalledCypressMajorVersion: jest.fn(),
+}));
 
 describe('cypress-component-configuration generator', () => {
   let tree: Tree;
+  let mockedInstalledCypressMajorVersion: jest.Mock<
+    ReturnType<typeof getInstalledCypressMajorVersion>
+  > = getInstalledCypressMajorVersion as never;
   // TODO(@leosvelperez): Turn this back to adding the plugin
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    mockedInstalledCypressMajorVersion.mockReturnValue(14);
   });
 
   it('should setup nextjs app', async () => {
     await applicationGenerator(tree, {
-      name: 'demo',
+      directory: 'demo',
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
     await cypressComponentConfiguration(tree, {
       generateTests: true,
@@ -58,7 +66,7 @@ describe('cypress-component-configuration generator', () => {
     `);
     expect(tree.read('demo/cypress/support/component.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { mount } from 'cypress/react18';
+      "import { mount } from 'cypress/react';
       import './styles.ct.css';
       // ***********************************************************
       // This example support/component.ts is processed and
@@ -105,11 +113,60 @@ describe('cypress-component-configuration generator', () => {
     });
   });
 
+  it('should import "mount" from "cypress/react18" when cypress version is lower than v14', async () => {
+    mockedInstalledCypressMajorVersion.mockReturnValue(13);
+    await applicationGenerator(tree, {
+      directory: 'demo',
+      style: 'css',
+    });
+
+    await cypressComponentConfiguration(tree, {
+      generateTests: true,
+      project: 'demo',
+    });
+
+    expect(tree.read('demo/cypress/support/component.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { mount } from 'cypress/react18';
+      import './styles.ct.css';
+      // ***********************************************************
+      // This example support/component.ts is processed and
+      // loaded automatically before your test files.
+      //
+      // This is a great place to put global configuration and
+      // behavior that modifies Cypress.
+      //
+      // You can change the location of this file or turn off
+      // automatically serving support files with the
+      // 'supportFile' configuration option.
+      //
+      // You can read more here:
+      // https://on.cypress.io/configuration
+      // ***********************************************************
+
+      // Import commands.ts using ES2015 syntax:
+      import './commands';
+
+      // add component testing only related command here, such as mount
+      declare global {
+        // eslint-disable-next-line @typescript-eslint/no-namespace
+        namespace Cypress {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          interface Chainable<Subject> {
+            mount: typeof mount;
+          }
+        }
+      }
+
+      Cypress.Commands.add('mount', mount);
+      "
+    `);
+  });
+
   it('should add styles setup in app', async () => {
     await applicationGenerator(tree, {
-      name: 'demo',
+      directory: 'demo',
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
     await setupTailwindGenerator(tree, { project: 'demo' });
     await cypressComponentConfiguration(tree, {
@@ -132,12 +189,11 @@ describe('cypress-component-configuration generator', () => {
 
   it('should setup nextjs lib', async () => {
     await libraryGenerator(tree, {
-      name: 'demo',
-      linter: Linter.EsLint,
+      directory: 'demo',
+      linter: 'eslint',
       style: 'css',
       unitTestRunner: 'jest',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
     await cypressComponentConfiguration(tree, {
       generateTests: true,

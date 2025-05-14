@@ -1,8 +1,8 @@
 import { readProjectConfiguration, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import hostGenerator from '../../generators/host/host';
-import { Linter } from '@nx/eslint';
 import updateSsrServerPort from './update-ssr-server-port';
+
 describe('update-19-6-0 update-ssr-server-port migration', () => {
   let tree: Tree;
 
@@ -12,14 +12,14 @@ describe('update-19-6-0 update-ssr-server-port migration', () => {
 
   it('should update host and remote port server files', async () => {
     await hostGenerator(tree, {
-      name: 'shell',
+      directory: 'shell',
       e2eTestRunner: 'none',
       unitTestRunner: 'none',
       ssr: true,
-      linter: Linter.EsLint,
-      projectNameAndRootFormat: 'as-provided',
+      linter: 'eslint',
       style: 'css',
       remotes: ['product'],
+      bundler: 'webpack',
     });
     const remotePort = readProjectConfiguration(tree, 'product').targets.serve
       .options.port;
@@ -32,10 +32,7 @@ describe('update-19-6-0 update-ssr-server-port migration', () => {
       'product/server.ts',
       tree
         .read('product/server.ts', 'utf-8')
-        .replace(
-          'const port = 4201;',
-          `const port = process.env['PORT'] || 4200;`
-        )
+        .replace('const port = 4201;', `const port = process.env.PORT || 4200;`)
     );
 
     updateSsrServerPort(tree);
@@ -107,36 +104,36 @@ describe('update-19-6-0 update-ssr-server-port migration', () => {
       `port = process.env.PORT || ${shellPort}`
     );
     expect(tree.read('shell/server.ts', 'utf-8')).toMatchInlineSnapshot(`
-        "import * as path from 'path';
-        import express from 'express';
-        import cors from 'cors';
-        import { handleRequest } from './src/main.server';
-        const port = process.env.PORT || 4200;
-        const app = express();
-        const browserDist = path.join(process.cwd(), 'dist/shell/browser');
-        const indexPath = path.join(browserDist, 'index.html');
-        app.use(cors());
-        app.get('*.*', express.static(browserDist, {
-            maxAge: '1y',
-        }));
-        app.use('*', handleRequest(indexPath));
-        const server = app.listen(port, () => {
-            console.log(\`Express server listening on http://localhost:\${port}\`);
-        });
-        server.on('error', console.error);
-        "
-      `);
+      "import * as path from 'path';
+      import express from 'express';
+      import cors from 'cors';
+      import { handleRequest } from './src/main.server';
+      const port = process.env.PORT || 4200;
+      const app = express();
+      const browserDist = path.join(process.cwd(), 'dist/shell/browser');
+      const indexPath = path.join(browserDist, 'index.html');
+      app.use(cors());
+      app.get('*.*', express.static(browserDist, {
+          maxAge: '1y',
+      }));
+      app.use('*', handleRequest(indexPath));
+      const server = app.listen(port, () => {
+          console.log(\`Express server listening on http://localhost:\${port}\`);
+      });
+      server.on('error', console.error);
+      "
+    `);
   });
 
   it('should update a host project server file', async () => {
     await hostGenerator(tree, {
-      name: 'host',
+      directory: 'host',
       e2eTestRunner: 'none',
       unitTestRunner: 'none',
       ssr: true,
-      linter: Linter.EsLint,
-      projectNameAndRootFormat: 'as-provided',
+      linter: 'eslint',
       style: 'css',
+      bundler: 'webpack',
     });
 
     const hostPort = readProjectConfiguration(tree, 'host').targets.serve
@@ -158,36 +155,36 @@ describe('update-19-6-0 update-ssr-server-port migration', () => {
       `port = process.env.PORT || ${hostPort}`
     );
     expect(tree.read('host/server.ts', 'utf-8')).toMatchInlineSnapshot(`
-        "import * as path from 'path';
-        import express from 'express';
-        import cors from 'cors';
-        import { handleRequest } from './src/main.server';
-        const port = process.env.PORT || 4200;
-        const app = express();
-        const browserDist = path.join(process.cwd(), 'dist/host/browser');
-        const indexPath = path.join(browserDist, 'index.html');
-        app.use(cors());
-        app.get('*.*', express.static(browserDist, {
-            maxAge: '1y',
-        }));
-        app.use('*', handleRequest(indexPath));
-        const server = app.listen(port, () => {
-            console.log(\`Express server listening on http://localhost:\${port}\`);
-        });
-        server.on('error', console.error);
-        "
-      `);
+      "import * as path from 'path';
+      import express from 'express';
+      import cors from 'cors';
+      import { handleRequest } from './src/main.server';
+      const port = process.env.PORT || 4200;
+      const app = express();
+      const browserDist = path.join(process.cwd(), 'dist/host/browser');
+      const indexPath = path.join(browserDist, 'index.html');
+      app.use(cors());
+      app.get('*.*', express.static(browserDist, {
+          maxAge: '1y',
+      }));
+      app.use('*', handleRequest(indexPath));
+      const server = app.listen(port, () => {
+          console.log(\`Express server listening on http://localhost:\${port}\`);
+      });
+      server.on('error', console.error);
+      "
+    `);
   });
 
   it('should not update a mfe project that is not ssr', async () => {
     await hostGenerator(tree, {
-      name: 'shell-not-ssr',
+      directory: 'shell-not-ssr',
       e2eTestRunner: 'none',
       unitTestRunner: 'none',
       ssr: false,
-      linter: Linter.EsLint,
-      projectNameAndRootFormat: 'as-provided',
+      linter: 'eslint',
       style: 'css',
+      bundler: 'webpack',
     });
 
     tree.write('shell-not-ssr/server.ts', 'const port = 9999;');

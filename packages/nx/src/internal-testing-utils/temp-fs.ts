@@ -1,17 +1,19 @@
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  renameSync,
+  rmSync,
+  symlinkSync,
+  unlinkSync,
+  writeFileSync,
+} from 'node:fs';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'path';
 import { tmpdir } from 'os';
-import {
-  emptyDirSync,
-  mkdirpSync,
-  mkdtempSync,
-  outputFile,
-  readFile,
-  realpathSync,
-  rmSync,
-  unlinkSync,
-} from 'fs-extra';
 import { joinPathFragments } from '../utils/path';
-import { appendFileSync, existsSync, renameSync, writeFileSync } from 'fs';
 import { setWorkspaceRoot, workspaceRoot } from '../utils/workspace-root';
 
 type NestedFiles = {
@@ -47,15 +49,37 @@ export class TempFs {
   }
 
   async createFile(filePath: string, content: string) {
-    await outputFile(joinPathFragments(this.tempDir, filePath), content);
+    const dir = joinPathFragments(this.tempDir, dirname(filePath));
+    if (!existsSync(dir)) {
+      await mkdir(dir, { recursive: true });
+    }
+    await writeFile(joinPathFragments(this.tempDir, filePath), content);
   }
 
   createFileSync(filePath: string, content: string) {
     let dir = joinPathFragments(this.tempDir, dirname(filePath));
     if (!existsSync(dir)) {
-      mkdirpSync(dir);
+      mkdirSync(dir, { recursive: true });
     }
     writeFileSync(joinPathFragments(this.tempDir, filePath), content);
+  }
+
+  createSymlinkSync(
+    fileOrDirPath: string,
+    symlinkPath: string,
+    type: 'dir' | 'file'
+  ) {
+    const absoluteFileOrDirPath = joinPathFragments(
+      this.tempDir,
+      fileOrDirPath
+    );
+    const absoluteSymlinkPath = joinPathFragments(this.tempDir, symlinkPath);
+    const symlinkDir = dirname(absoluteSymlinkPath);
+    if (!existsSync(symlinkDir)) {
+      mkdirSync(symlinkDir, { recursive: true });
+    }
+
+    symlinkSync(absoluteFileOrDirPath, absoluteSymlinkPath, type);
   }
 
   async readFile(filePath: string): Promise<string> {
@@ -81,11 +105,30 @@ export class TempFs {
   }
 
   cleanup() {
-    rmSync(this.tempDir, { recursive: true });
-    setWorkspaceRoot(this.previousWorkspaceRoot);
+    try {
+      rmSync(this.tempDir, { recursive: true, force: true, maxRetries: 5 });
+      setWorkspaceRoot(this.previousWorkspaceRoot);
+    } catch (e) {
+      // We are experiencing flakiness in CI related to this cleanup, so log only for now
+      if (process.env.CI) {
+        console.error(`Failed to cleanup temp dir: ${e}`);
+      } else {
+        throw e;
+      }
+    }
   }
 
   reset() {
-    emptyDirSync(this.tempDir);
+    try {
+      rmSync(this.tempDir, { recursive: true, force: true, maxRetries: 5 });
+      mkdirSync(this.tempDir, { recursive: true });
+    } catch (e) {
+      // We are experiencing flakiness in CI related to this cleanup, so log only for now
+      if (process.env.CI) {
+        console.error(`Failed to cleanup temp dir: ${e}`);
+      } else {
+        throw e;
+      }
+    }
   }
 }

@@ -98,9 +98,9 @@ Project specific configuration for `nx release`
 
 #### Type declaration
 
-| Name       | Type                                                                             |
-| :--------- | :------------------------------------------------------------------------------- |
-| `version?` | `Pick`\<`NxReleaseVersionConfiguration`, `"generator"` \| `"generatorOptions"`\> |
+| Name       | Type                                                                                                                                                                                                                                                                                                                                                                                     |
+| :--------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version?` | `Pick`\<`LegacyNxReleaseVersionConfiguration`, `"generator"` \| `"generatorOptions"`\> \| `Pick`\<`NxReleaseVersionConfiguration`, `"versionActions"` \| `"versionActionsOptions"` \| `"manifestRootsToUpdate"` \| `"currentVersionResolver"` \| `"currentVersionResolverMetadata"` \| `"fallbackCurrentVersionResolver"` \| `"versionPrefix"` \| `"preserveLocalDependencyProtocols"`\> |
 
 ---
 

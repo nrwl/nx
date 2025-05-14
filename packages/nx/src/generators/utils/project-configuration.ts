@@ -115,7 +115,8 @@ function updateProjectConfigurationInPackageJson(
 
   const packageJson = readJson<PackageJson>(tree, packageJsonFile);
 
-  if (packageJson.name === projectConfiguration.name ?? projectName) {
+  projectConfiguration.name = projectName;
+  if (packageJson.name === projectConfiguration.name) {
     delete projectConfiguration.name;
   }
 
@@ -129,10 +130,19 @@ function updateProjectConfigurationInPackageJson(
   packageJson.nx = {
     ...packageJson.nx,
     ...projectConfiguration,
-    root: undefined,
   };
 
-  writeJson(tree, packageJsonFile, packageJson);
+  // We don't want to ever this since it is inferred
+  delete packageJson.nx.root;
+
+  // Only set `nx` property in `package.json` if it is a root project (necessary to mark it as Nx project),
+  // or if there are properties to be set. If it is empty, then avoid it so we don't add unnecessary boilerplate.
+  if (
+    projectConfiguration.root === '.' ||
+    Object.keys(packageJson.nx).length > 0
+  ) {
+    writeJson(tree, packageJsonFile, packageJson);
+  }
 }
 
 function updateProjectConfigurationInProjectJson(
@@ -244,8 +254,15 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
   const patterns = [
     '**/project.json',
     'project.json',
-    ...getGlobPatternsFromPackageManagerWorkspaces(tree.root, (p) =>
-      readJson(tree, p, { expectComments: true })
+    ...getGlobPatternsFromPackageManagerWorkspaces(
+      tree.root,
+      (p) => readJson(tree, p, { expectComments: true }),
+      <T extends Object>(p) => {
+        const content = tree.read(p, 'utf-8');
+        const { load } = require('@zkochan/js-yaml');
+        return load(content, { filename: p }) as T;
+      },
+      (p) => tree.exists(p)
     ),
   ];
   const globbedFiles = globWithWorkspaceContextSync(tree.root, patterns);

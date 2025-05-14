@@ -1,5 +1,6 @@
 import { prompt } from 'enquirer';
-import { ensureDir, readFileSync, writeFile, writeFileSync } from 'fs-extra';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { RELEASE_TYPES } from 'semver';
 import { dirSync } from 'tmp';
@@ -11,8 +12,8 @@ import {
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
+import { handleErrors } from '../../utils/handle-errors';
 import { output } from '../../utils/output';
-import { handleErrors } from '../../utils/params';
 import { PlanOptions } from './command-object';
 import {
   createNxReleaseConfig,
@@ -21,6 +22,7 @@ import {
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
 import { filterReleaseGroups } from './config/filter-release-groups';
+import { shouldUseLegacyVersioning } from './config/use-legacy-versioning';
 import { getVersionPlansAbsolutePath } from './config/version-plans';
 import { generateVersionPlanContent } from './utils/generate-version-plan-content';
 import { createGetTouchedProjectsForGroup } from './utils/get-touched-projects-for-group';
@@ -49,7 +51,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       userProvidedReleaseConfig
     );
     if (configError) {
-      return await handleNxReleaseConfigError(configError);
+      const USE_LEGACY_VERSIONING = shouldUseLegacyVersioning(
+        userProvidedReleaseConfig
+      );
+      return await handleNxReleaseConfigError(
+        configError,
+        USE_LEGACY_VERSIONING
+      );
     }
     // --print-config exits directly as it is not designed to be combined with any other programmatic operations
     if (args.printConfig) {
@@ -76,7 +84,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     }
 
     // If no release groups have version plans enabled, it doesn't make sense to use the plan command only to set yourself up for an error at release time
-    if (!releaseGroups.some((group) => group.versionPlans === true)) {
+    if (!releaseGroups.some((group) => !!group.versionPlans)) {
       if (releaseGroups.length === 1) {
         output.warn({
           title: `Version plans are not enabled in your release configuration`,
@@ -299,7 +307,7 @@ async function createVersionPlanFileForBumps(
     printDiff('', versionPlanFileContent, 1);
 
     const versionPlansAbsolutePath = getVersionPlansAbsolutePath();
-    await ensureDir(versionPlansAbsolutePath);
+    await mkdir(versionPlansAbsolutePath, { recursive: true });
     await writeFile(
       join(versionPlansAbsolutePath, versionPlanFileName),
       versionPlanFileContent
@@ -318,10 +326,12 @@ async function promptForVersion(message: string): Promise<string> {
       },
     ]);
     return reply.version;
-  } catch (e) {
+  } catch {
     output.log({
       title: 'Cancelled version plan creation.',
     });
+    // Ensure the cursor is always restored before exiting
+    process.stdout.write('\u001b[?25h');
     process.exit(0);
   }
 }

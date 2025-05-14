@@ -1,7 +1,6 @@
 import {
   checkFilesExist,
   cleanupProject,
-  expectTestsPass,
   getPackageManagerCommand,
   isOSX,
   killProcessAndPorts,
@@ -40,10 +39,10 @@ describe('@nx/react-native (legacy)', () => {
       return nxJson;
     });
     runCLI(
-      `generate @nx/react-native:application ${appName} --bunlder=webpack --e2eTestRunner=cypress --install=false --no-interactive`
+      `generate @nx/react-native:application ${appName} --directory=apps/${appName} --bundler=webpack --e2eTestRunner=cypress --install=false --no-interactive --unitTestRunner=jest --linter=eslint`
     );
     runCLI(
-      `generate @nx/react-native:library ${libName} --buildable --publishable --importPath=${proj}/${libName} --no-interactive`
+      `generate @nx/react-native:library ${libName} --directory=libs/${libName} --buildable --publishable --importPath=${proj}/${libName} --no-interactive --unitTestRunner=jest --linter=eslint`
     );
   });
   afterAll(() => {
@@ -52,14 +51,13 @@ describe('@nx/react-native (legacy)', () => {
   });
 
   it('should build for web', async () => {
-    const results = runCLI(`build ${appName}`);
-    expect(results).toContain('Successfully ran target build');
+    expect(() => runCLI(`build ${appName}`)).not.toThrow();
   });
 
   it('should test and lint', async () => {
     const componentName = uniq('Component');
     runCLI(
-      `generate @nx/react-native:component ${componentName} --project=${libName} --export --no-interactive`
+      `generate @nx/react-native:component libs/${libName}/src/lib/${componentName}/${componentName} --export --no-interactive`
     );
 
     updateFile(`apps/${appName}/src/app/App.tsx`, (content) => {
@@ -67,37 +65,28 @@ describe('@nx/react-native (legacy)', () => {
       return updated;
     });
 
-    expectTestsPass(await runCLIAsync(`test ${appName}`));
-    expectTestsPass(await runCLIAsync(`test ${libName}`));
-
-    const appLintResults = await runCLIAsync(`lint ${appName}`);
-    expect(appLintResults.combinedOutput).toContain(
-      'Successfully ran target lint'
-    );
-
-    const libLintResults = await runCLIAsync(`lint ${libName}`);
-    expect(libLintResults.combinedOutput).toContain(
-      'Successfully ran target lint'
-    );
+    expect(() => runCLI(`test ${appName}`)).not.toThrow();
+    expect(() => runCLI(`test ${libName}`)).not.toThrow();
+    expect(() => runCLI(`lint ${appName}`)).not.toThrow();
+    expect(() => runCLI(`lint ${libName}`)).not.toThrow();
   });
 
   it('should run e2e for cypress', async () => {
     if (runE2ETests()) {
-      let results = runCLI(`e2e ${appName}-e2e`);
-      expect(results).toContain('Successfully ran target e2e');
+      expect(() => runCLI(`e2e ${appName}-e2e`)).not.toThrow();
 
-      results = runCLI(`e2e ${appName}-e2e --configuration=ci`);
-      expect(results).toContain('Successfully ran target e2e');
+      expect(() =>
+        runCLI(`e2e ${appName}-e2e --configuration=ci`)
+      ).not.toThrow();
     }
   });
 
   it('should bundle-ios', async () => {
-    const iosBundleResult = await runCLIAsync(
-      `bundle-ios ${appName} --sourcemapOutput=../../dist/apps/${appName}/ios/main.map`
-    );
-    expect(iosBundleResult.combinedOutput).toContain(
-      'Done writing bundle output'
-    );
+    expect(() =>
+      runCLI(
+        `bundle-ios ${appName} --sourcemapOutput=../../dist/apps/${appName}/ios/main.map`
+      )
+    ).not.toThrow();
     expect(() => {
       checkFilesExist(`dist/apps/${appName}/ios/main.jsbundle`);
       checkFilesExist(`dist/apps/${appName}/ios/main.map`);
@@ -105,12 +94,12 @@ describe('@nx/react-native (legacy)', () => {
   });
 
   it('should bundle-android', async () => {
-    const androidBundleResult = await runCLIAsync(
-      `bundle-android ${appName} --sourcemapOutput=../../dist/apps/${appName}/android/main.map`
-    );
-    expect(androidBundleResult.combinedOutput).toContain(
-      'Done writing bundle output'
-    );
+    expect(() =>
+      runCLI(
+        `bundle-android ${appName} --sourcemapOutput=../../dist/apps/${appName}/android/main.map`
+      )
+    ).not.toThrow();
+
     expect(() => {
       checkFilesExist(`dist/apps/${appName}/android/main.jsbundle`);
       checkFilesExist(`dist/apps/${appName}/android/main.map`);
@@ -200,7 +189,7 @@ describe('@nx/react-native (legacy)', () => {
     const componentName = uniq('Component');
 
     runCLI(
-      `generate @nx/react-native:component ${componentName} --project=${libName} --export`
+      `generate @nx/react-native:component libs/${libName}/src/lib/${componentName}/${componentName} --export`
     );
     expect(() => {
       runCLI(`build ${libName}`);
@@ -276,49 +265,34 @@ describe('@nx/react-native (legacy)', () => {
     const libName = uniq('@my-org/lib1');
 
     runCLI(
-      `generate @nx/react-native:application ${appName} --project-name-and-root-format=as-provided --install=false --no-interactive`
+      `generate @nx/react-native:application ${appName} --install=false --no-interactive --unitTestRunner=jest --linter=eslint`
     );
 
     // check files are generated without the layout directory ("apps/") and
     // using the project name as the directory when no directory is provided
     checkFilesExist(`${appName}/src/app/App.tsx`);
     // check tests pass
-    const appTestResult = runCLI(`test ${appName}`);
-    expect(appTestResult).toContain(
-      `Successfully ran target test for project ${appName}`
-    );
-
-    // assert scoped project names are not supported when --project-name-and-root-format=derived
-    expect(() =>
-      runCLI(
-        `generate @nx/react-native:library ${libName} --buildable --project-name-and-root-format=derived`
-      )
-    ).toThrow();
+    expect(() => runCLI(`test ${appName}`)).not.toThrow();
 
     runCLI(
-      `generate @nx/react-native:library ${libName} --buildable --project-name-and-root-format=as-provided`
+      `generate @nx/react-native:library ${libName} --buildable --unitTestRunner=jest --linter=eslint`
     );
 
     // check files are generated without the layout directory ("libs/") and
     // using the project name as the directory when no directory is provided
     checkFilesExist(`${libName}/src/index.ts`);
     // check tests pass
-    const libTestResult = runCLI(`test ${libName}`);
-    expect(libTestResult).toContain(
-      `Successfully ran target test for project ${libName}`
-    );
+    expect(() => runCLI(`test ${libName}`)).not.toThrow();
   });
 
   it('should run build with vite bundler and e2e with playwright', async () => {
     const appName2 = uniq('my-app');
     runCLI(
-      `generate @nx/react-native:application ${appName2} --bundler=vite --e2eTestRunner=playwright --install=false --no-interactive`
+      `generate @nx/react-native:application ${appName2} --directory=apps/${appName2} --bundler=vite --e2eTestRunner=playwright --install=false --no-interactive --unitTestRunner=jest --linter=eslint`
     );
-    const buildResults = runCLI(`build ${appName2}`);
-    expect(buildResults).toContain('Successfully ran target build');
+    expect(() => runCLI(`build ${appName2}`)).not.toThrow();
     if (runE2ETests()) {
-      const e2eResults = runCLI(`e2e ${appName2}-e2e`);
-      expect(e2eResults).toContain('Successfully ran target e2e');
+      expect(() => runCLI(`e2e ${appName2}-e2e`)).not.toThrow();
     }
 
     runCLI(

@@ -7,47 +7,48 @@ import {
 } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  type ProjectNameAndRootFormat,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { join } from 'path';
-import { getImportPath } from '../../utilities/get-import-path';
 
 export interface ProjectOptions {
-  name: string;
-  directory?: string;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
+  directory: string;
+  name?: string;
 }
 
 interface NormalizedProjectOptions extends ProjectOptions {
   projectRoot: string;
+  importPath: string;
 }
 
 async function normalizeOptions(
   tree: Tree,
   options: ProjectOptions
 ): Promise<NormalizedProjectOptions> {
-  const { projectName, projectRoot } = await determineProjectNameAndRootOptions(
-    tree,
-    {
+  await ensureRootProjectName(options, 'library');
+  const { projectName, projectRoot, importPath } =
+    await determineProjectNameAndRootOptions(tree, {
       name: options.name,
       projectType: 'library',
       directory: options.directory,
-      projectNameAndRootFormat: options.projectNameAndRootFormat,
-      callingGenerator: '@nx/workspace:npm-package',
-    }
-  );
+    });
 
   return {
     ...options,
     name: projectName,
     projectRoot,
+    importPath,
   };
 }
 
-function addFiles(projectRoot: string, tree: Tree, options: ProjectOptions) {
+function addFiles(
+  projectRoot: string,
+  tree: Tree,
+  options: NormalizedProjectOptions
+) {
   const packageJsonPath = join(projectRoot, 'package.json');
   writeJson(tree, packageJsonPath, {
-    name: getImportPath(tree, options.name),
+    name: options.importPath,
     version: '0.0.0',
     scripts: {
       test: 'node index.js',
@@ -57,14 +58,7 @@ function addFiles(projectRoot: string, tree: Tree, options: ProjectOptions) {
   generateFiles(tree, join(__dirname, './files'), projectRoot, {});
 }
 
-export async function npmPackageGenerator(tree: Tree, options: ProjectOptions) {
-  return await npmPackageGeneratorInternal(tree, {
-    projectNameAndRootFormat: 'derived',
-    ...options,
-  });
-}
-
-export async function npmPackageGeneratorInternal(
+export async function npmPackageGenerator(
   tree: Tree,
   _options: ProjectOptions
 ) {

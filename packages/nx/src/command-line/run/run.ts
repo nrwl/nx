@@ -1,9 +1,6 @@
 import { env as appendLocalEnv } from 'npm-run-path';
-import {
-  combineOptionsForExecutor,
-  handleErrors,
-  Schema,
-} from '../../utils/params';
+import { combineOptionsForExecutor, Schema } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import { printHelp } from '../../utils/print-help';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { relative } from 'path';
@@ -21,9 +18,9 @@ import {
   getLastValueFromAsyncIterableIterator,
   isAsyncIterator,
 } from '../../utils/async-iterator';
-import { getExecutorInformation } from './executor-utils';
+import { getExecutorInformation, parseExecutor } from './executor-utils';
 import {
-  getPseudoTerminal,
+  createPseudoTerminal,
   PseudoTerminal,
 } from '../../tasks-runner/pseudo-terminal';
 import { exec } from 'child_process';
@@ -86,7 +83,7 @@ async function parseExecutorAndTarget(
     throw new Error(`Cannot find target '${target}' for project '${project}'`);
   }
 
-  const [nodeModule, executor] = targetConfig.executor.split(':');
+  const [nodeModule, executor] = parseExecutor(targetConfig.executor);
   const { schema, implementationFactory } = getExecutorInformation(
     nodeModule,
     executor,
@@ -127,7 +124,7 @@ async function printTargetRunHelpInternal(
       ...localEnv,
     };
     if (PseudoTerminal.isSupported()) {
-      const terminal = getPseudoTerminal();
+      const terminal = createPseudoTerminal();
       await new Promise(() => {
         const cp = terminal.runCommand(helpCommand, { jsEnv: env });
         cp.onExit((code) => {
@@ -137,6 +134,7 @@ async function printTargetRunHelpInternal(
     } else {
       const cp = exec(helpCommand, {
         env,
+        windowsHide: false,
       });
       cp.on('exit', (code) => {
         process.exit(code);
@@ -192,7 +190,6 @@ async function runExecutorInternal<T extends { success: boolean }>(
       target: targetConfig,
       projectsConfigurations,
       nxJsonConfiguration,
-      workspace: { ...projectsConfigurations, ...nxJsonConfiguration },
       projectName: project,
       targetName: target,
       configurationName: configuration,

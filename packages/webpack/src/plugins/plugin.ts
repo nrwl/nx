@@ -17,12 +17,14 @@ import {
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { existsSync, readdirSync } from 'fs';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import { readWebpackOptions } from '../utils/webpack/read-webpack-options';
 import { resolveUserDefinedWebpackConfig } from '../utils/webpack/resolve-user-defined-webpack-config';
+import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 const pmc = getPackageManagerCommand();
 
@@ -31,6 +33,8 @@ export interface WebpackPluginOptions {
   serveTargetName?: string;
   serveStaticTargetName?: string;
   previewTargetName?: string;
+  buildDepsTargetName?: string;
+  watchDepsTargetName?: string;
 }
 
 type WebpackTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
@@ -65,10 +69,17 @@ export const createNodesV2: CreateNodesV2<WebpackPluginOptions> = [
     );
     const targetsCache = readTargetsCache(cachePath);
     const normalizedOptions = normalizeOptions(options);
+    const isTsSolutionSetup = isUsingTsSolutionSetup();
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache),
+          createNodesInternal(
+            configFile,
+            options,
+            context,
+            targetsCache,
+            isTsSolutionSetup
+          ),
         configFilePaths,
         normalizedOptions,
         context
@@ -86,7 +97,13 @@ export const createNodes: CreateNodes<WebpackPluginOptions> = [
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
     const normalizedOptions = normalizeOptions(options);
-    return createNodesInternal(configFilePath, normalizedOptions, context, {});
+    return createNodesInternal(
+      configFilePath,
+      normalizedOptions,
+      context,
+      {},
+      isUsingTsSolutionSetup()
+    );
   },
 ];
 
@@ -94,7 +111,8 @@ async function createNodesInternal(
   configFilePath: string,
   options: Required<WebpackPluginOptions>,
   context: CreateNodesContext,
-  targetsCache: Record<string, WebpackTargets>
+  targetsCache: Record<string, WebpackTargets>,
+  isTsSolutionSetup: boolean
 ): Promise<CreateNodesResult> {
   const projectRoot = dirname(configFilePath);
 
@@ -118,7 +136,8 @@ async function createNodesInternal(
     configFilePath,
     projectRoot,
     options,
-    context
+    context,
+    isTsSolutionSetup
   );
 
   const { targets, metadata } = targetsCache[hash];
@@ -138,7 +157,8 @@ async function createWebpackTargets(
   configFilePath: string,
   projectRoot: string,
   options: Required<WebpackPluginOptions>,
-  context: CreateNodesContext
+  context: CreateNodesContext,
+  isTsSolutionSetup: boolean
 ): Promise<WebpackTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -150,10 +170,12 @@ async function createWebpackTargets(
 
   const webpackOptions = await readWebpackOptions(webpackConfig);
 
-  const outputPath = normalizeOutputPath(
-    webpackOptions.output?.path,
-    projectRoot
-  );
+  const outputs = [];
+  for (const config of webpackOptions) {
+    if (config.output?.path) {
+      outputs.push(normalizeOutputPath(config.output.path, projectRoot));
+    }
+  }
 
   const targets: Record<string, TargetConfiguration> = {};
 
@@ -178,7 +200,7 @@ async function createWebpackTargets(
               externalDependencies: ['webpack-cli'],
             },
           ],
-    outputs: [outputPath],
+    outputs,
     metadata: {
       technologies: ['webpack'],
       description: 'Runs Webpack build',
@@ -195,6 +217,7 @@ async function createWebpackTargets(
   };
 
   targets[options.serveTargetName] = {
+    continuous: true,
     command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
@@ -215,6 +238,7 @@ async function createWebpackTargets(
   };
 
   targets[options.previewTargetName] = {
+    continuous: true,
     command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
@@ -235,6 +259,7 @@ async function createWebpackTargets(
   };
 
   targets[options.serveStaticTargetName] = {
+    continuous: true,
     dependsOn: [options.buildTargetName],
     executor: '@nx/web:file-server',
     options: {
@@ -242,6 +267,29 @@ async function createWebpackTargets(
       spa: true,
     },
   };
+
+  if (isTsSolutionSetup) {
+    targets[options.buildTargetName].syncGenerators = [
+      '@nx/js:typescript-sync',
+    ];
+    targets[options.serveTargetName].syncGenerators = [
+      '@nx/js:typescript-sync',
+    ];
+    targets[options.previewTargetName].syncGenerators = [
+      '@nx/js:typescript-sync',
+    ];
+    targets[options.serveStaticTargetName].syncGenerators = [
+      '@nx/js:typescript-sync',
+    ];
+  }
+
+  addBuildAndWatchDepsTargets(
+    context.workspaceRoot,
+    projectRoot,
+    targets,
+    options,
+    pmc
+  );
 
   return { targets, metadata: {} };
 }
@@ -285,5 +333,7 @@ function normalizeOptions(
     serveTargetName: options?.serveTargetName ?? 'serve',
     serveStaticTargetName: options?.serveStaticTargetName ?? 'serve-static',
     previewTargetName: options?.previewTargetName ?? 'preview',
+    buildDepsTargetName: 'build-deps',
+    watchDepsTargetName: 'watch-deps',
   };
 }

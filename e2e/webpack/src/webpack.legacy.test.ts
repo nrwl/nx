@@ -22,13 +22,12 @@ describe('Webpack Plugin (legacy)', () => {
     process.env.NX_ADD_PLUGINS = 'false';
     newProject({
       packages: ['@nx/react'],
-      unsetProjectNameAndRootFormat: false,
     });
     runCLI(
-      `generate @nx/react:app ${appName} --bundler webpack --e2eTestRunner=cypress --rootProject --no-interactive`
+      `generate @nx/react:app ${appName} --bundler webpack --e2eTestRunner=cypress --rootProject --no-interactive --unitTestRunner=jest --linter=eslint`
     );
     runCLI(
-      `generate @nx/react:lib ${libName} --unitTestRunner jest --no-interactive`
+      `generate @nx/react:lib ${libName} --unitTestRunner jest --no-interactive --linter=eslint`
     );
   });
 
@@ -73,11 +72,15 @@ describe('Webpack Plugin (legacy)', () => {
   // Issue: https://github.com/nrwl/nx/issues/20179
   it('should allow main/styles entries to be spread within composePlugins() function (#20179)', () => {
     const appName = uniq('app');
-    runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
-    updateFile(`apps/${appName}/src/main.ts`, `console.log('Hello');\n`);
+    runCLI(
+      `generate @nx/web:app ${appName} --bundler webpack --unitTestRunner=jest --linter=eslint`
+    );
+
+    checkFilesExist(`${appName}/src/main.ts`);
+    updateFile(`${appName}/src/main.ts`, `console.log('Hello');\n`);
 
     updateFile(
-      `apps/${appName}/webpack.config.js`,
+      `${appName}/webpack.config.js`,
       `
         const { composePlugins, withNx, withWeb } = require('@nx/webpack');
         module.exports = composePlugins(withNx(), withWeb(), (config) => {
@@ -108,7 +111,7 @@ describe('Webpack Plugin (legacy)', () => {
   it('should support standard webpack config with executors', () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nx/web:app ${appName} --bundler webpack --e2eTestRunner=playwright`
+      `generate @nx/web:app ${appName} --bundler webpack --e2eTestRunner=playwright --unitTestRunner=jest --linter=eslint`
     );
     updateFile(
       `${appName}/src/main.ts`,
@@ -152,7 +155,7 @@ describe('Webpack Plugin (legacy)', () => {
     it('should convert withNx webpack config to a standard config using NxWebpackPlugin', () => {
       const appName = 'app3224373'; // Needs to be reserved so that the snapshot projectName matches
       runCLI(
-        `generate @nx/web:app ${appName} --bundler webpack --e2eTestRunner=playwright --projectNameAndRootFormat=as-provided`
+        `generate @nx/web:app ${appName} --bundler webpack --e2eTestRunner=playwright --unitTestRunner=vitest --linter=eslint`
       );
       updateFile(
         `${appName}/src/main.ts`,

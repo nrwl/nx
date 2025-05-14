@@ -1,5 +1,5 @@
 import { CommandModule } from 'yargs';
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import {
   withAffectedOptions,
   withTargetAndConfigurationOption,

@@ -26,7 +26,16 @@ describe('component', () => {
   it('should generate component files', async () => {
     await reactNativeComponentGenerator(appTree, {
       name: 'hello',
-      project: projectName,
+      path: `${projectName}/src/lib/hello/hello`,
+    });
+
+    expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
+    expect(appTree.exists('my-lib/src/lib/hello/hello.spec.tsx')).toBeTruthy();
+  });
+
+  it('should handle path with file extension', async () => {
+    await reactNativeComponentGenerator(appTree, {
+      path: `${projectName}/src/lib/hello/hello.tsx`,
     });
 
     expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
@@ -36,7 +45,7 @@ describe('component', () => {
   it('should generate files for an app', async () => {
     await reactNativeComponentGenerator(appTree, {
       name: 'hello',
-      project: 'my-app',
+      path: 'my-app/src/app/hello/hello',
     });
 
     expect(appTree.exists('my-app/src/app/hello/hello.tsx')).toBeTruthy();
@@ -47,7 +56,7 @@ describe('component', () => {
     it('should add to index.ts barrel', async () => {
       await reactNativeComponentGenerator(appTree, {
         name: 'hello',
-        project: projectName,
+        path: `${projectName}/src/lib/hello/hello`,
         export: true,
       });
 
@@ -59,7 +68,7 @@ describe('component', () => {
     it('should not export from an app', async () => {
       await reactNativeComponentGenerator(appTree, {
         name: 'hello',
-        project: 'my-app',
+        path: 'my-app/src/app/hello/hello',
         export: true,
       });
 
@@ -69,26 +78,11 @@ describe('component', () => {
     });
   });
 
-  describe('--pascalCaseFiles', () => {
-    it('should generate component files with upper case names', async () => {
-      await reactNativeComponentGenerator(appTree, {
-        name: 'hello',
-        project: projectName,
-        pascalCaseFiles: true,
-      });
-      expect(appTree.exists('my-lib/src/lib/hello/Hello.tsx')).toBeTruthy();
-      expect(
-        appTree.exists('my-lib/src/lib/hello/Hello.spec.tsx')
-      ).toBeTruthy();
-    });
-  });
-
   describe('--directory', () => {
     it('should create component under the directory', async () => {
       await reactNativeComponentGenerator(appTree, {
         name: 'hello',
-        project: projectName,
-        directory: 'components',
+        path: 'my-lib/src/components/hello/hello',
       });
 
       expect(appTree.exists('my-lib/src/components/hello/hello.tsx'));
@@ -97,33 +91,10 @@ describe('component', () => {
     it('should create with nested directories', async () => {
       await reactNativeComponentGenerator(appTree, {
         name: 'helloWorld',
-        project: projectName,
-        directory: 'lib/foo',
+        path: 'my-lib/src/lib/foo/hello-world/hello-world',
       });
 
       expect(appTree.exists('my-lib/src/lib/foo/hello-world/hello-world.tsx'));
-    });
-  });
-
-  describe('--flat', () => {
-    it('should create in project directory rather than in its own folder', async () => {
-      await reactNativeComponentGenerator(appTree, {
-        name: 'hello',
-        project: projectName,
-        flat: true,
-      });
-
-      expect(appTree.exists('my-lib/src/lib/hello.tsx'));
-    });
-    it('should work with custom directory path', async () => {
-      await reactNativeComponentGenerator(appTree, {
-        name: 'hello',
-        project: projectName,
-        flat: true,
-        directory: 'components',
-      });
-
-      expect(appTree.exists('my-lib/src/components/hello.tsx'));
     });
   });
 });

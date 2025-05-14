@@ -1,12 +1,7 @@
-import {
-  existsSync,
-  readJson,
-  readJsonSync,
-  unlinkSync,
-  writeJson,
-} from 'fs-extra';
+import { existsSync, unlinkSync } from 'node:fs';
 import { join } from 'path';
 import { DAEMON_DIR_FOR_CURRENT_WORKSPACE } from './tmp-dir';
+import { readJsonFile, writeJsonFileAsync } from '../utils/fileutils';
 
 export interface DaemonProcessJson {
   processId: number;
@@ -17,11 +12,11 @@ export const serverProcessJsonPath = join(
   'server-process.json'
 );
 
-export async function readDaemonProcessJsonCache(): Promise<DaemonProcessJson | null> {
+export function readDaemonProcessJsonCache(): DaemonProcessJson | null {
   if (!existsSync(serverProcessJsonPath)) {
     return null;
   }
-  return await readJson(serverProcessJsonPath);
+  return readJsonFile(serverProcessJsonPath);
 }
 
 export function deleteDaemonJsonProcessCache(): void {
@@ -35,11 +30,13 @@ export function deleteDaemonJsonProcessCache(): void {
 export async function writeDaemonJsonProcessCache(
   daemonJson: DaemonProcessJson
 ): Promise<void> {
-  await writeJson(serverProcessJsonPath, daemonJson);
+  await writeJsonFileAsync(serverProcessJsonPath, daemonJson, {
+    appendNewLine: true,
+  });
 }
 
 export async function waitForDaemonToExitAndCleanupProcessJson(): Promise<void> {
-  const daemonProcessJson = await readDaemonProcessJsonCache();
+  const daemonProcessJson = readDaemonProcessJsonCache();
   if (daemonProcessJson && daemonProcessJson.processId) {
     await new Promise<void>((resolve, reject) => {
       let count = 0;
@@ -63,24 +60,13 @@ export async function waitForDaemonToExitAndCleanupProcessJson(): Promise<void> 
   }
 }
 
-export async function safelyCleanUpExistingProcess(): Promise<void> {
-  const daemonProcessJson = await readDaemonProcessJsonCache();
-  if (daemonProcessJson && daemonProcessJson.processId) {
-    try {
-      process.kill(daemonProcessJson.processId);
-      // we wait for the process to actually shut down before returning
-      await waitForDaemonToExitAndCleanupProcessJson();
-    } catch {}
-  }
-}
-
 // Must be sync for the help output use case
 export function getDaemonProcessIdSync(): number | null {
   if (!existsSync(serverProcessJsonPath)) {
     return null;
   }
   try {
-    const daemonProcessJson = readJsonSync(serverProcessJsonPath);
+    const daemonProcessJson = readJsonFile(serverProcessJsonPath);
     return daemonProcessJson.processId;
   } catch {
     return null;

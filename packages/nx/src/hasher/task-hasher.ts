@@ -1,6 +1,5 @@
 import {
   FileData,
-  ProjectFileMap,
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../config/project-graph';
@@ -8,7 +7,6 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
 import { hashArray } from './file-hasher';
-import { NodeTaskHasherImpl } from './node-task-hasher-impl';
 import { InputDefinition } from '../config/workspace-json-project-json';
 import { minimatch } from 'minimatch';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
@@ -127,60 +125,23 @@ export class DaemonBasedTaskHasher implements TaskHasher {
 }
 
 export class InProcessTaskHasher implements TaskHasher {
-  static version = '3.0';
   private taskHasher: TaskHasherImpl;
 
-  private useNativeTaskHasher = process.env.NX_NATIVE_TASK_HASHER !== 'false';
-
   constructor(
-    private readonly projectFileMap: ProjectFileMap,
-    private readonly allWorkspaceFiles: FileData[],
     private readonly projectGraph: ProjectGraph,
     private readonly nxJson: NxJsonConfiguration,
     private readonly externalRustReferences: NxWorkspaceFilesExternals | null,
     private readonly options: any
   ) {
-    const legacyRuntimeInputs = (
-      this.options && this.options.runtimeCacheInputs
-        ? this.options.runtimeCacheInputs
-        : []
-    ).map((r) => ({ runtime: r }));
-
-    if (process.env.NX_CLOUD_ENCRYPTION_KEY) {
-      legacyRuntimeInputs.push({ env: 'NX_CLOUD_ENCRYPTION_KEY' });
-    }
-
-    const legacyFilesetInputs = [
-      'nx.json',
-
-      // ignore files will change the set of inputs to the hasher
-      '.gitignore',
-      '.nxignore',
-    ].map((d) => ({ fileset: `{workspaceRoot}/${d}` }));
-
-    this.taskHasher = !this.useNativeTaskHasher
-      ? new NodeTaskHasherImpl(
-          nxJson,
-          legacyRuntimeInputs,
-          legacyFilesetInputs,
-          this.projectFileMap,
-          this.allWorkspaceFiles,
-          this.projectGraph,
-          {
-            selectivelyHashTsConfig:
-              this.options?.selectivelyHashTsConfig ?? false,
-          }
-        )
-      : new NativeTaskHasherImpl(
-          workspaceRoot,
-          nxJson,
-          this.projectGraph,
-          this.externalRustReferences,
-          {
-            selectivelyHashTsConfig:
-              this.options?.selectivelyHashTsConfig ?? false,
-          }
-        );
+    this.taskHasher = new NativeTaskHasherImpl(
+      workspaceRoot,
+      this.nxJson,
+      this.projectGraph,
+      this.externalRustReferences,
+      {
+        selectivelyHashTsConfig: this.options?.selectivelyHashTsConfig ?? false,
+      }
+    );
   }
 
   async hashTasks(
@@ -188,20 +149,14 @@ export class InProcessTaskHasher implements TaskHasher {
     taskGraph?: TaskGraph,
     env?: NodeJS.ProcessEnv
   ): Promise<Hash[]> {
-    if (this.useNativeTaskHasher) {
-      const hashes = await this.taskHasher.hashTasks(
-        tasks,
-        taskGraph,
-        env ?? process.env
-      );
-      return tasks.map((task, index) =>
-        this.createHashDetails(task, hashes[index])
-      );
-    } else {
-      return await Promise.all(
-        tasks.map((t) => this.hashTask(t, taskGraph, env))
-      );
-    }
+    const hashes = await this.taskHasher.hashTasks(
+      tasks,
+      taskGraph,
+      env ?? process.env
+    );
+    return tasks.map((task, index) =>
+      this.createHashDetails(task, hashes[index])
+    );
   }
 
   async hashTask(

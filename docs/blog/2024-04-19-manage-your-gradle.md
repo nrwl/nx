@@ -2,17 +2,18 @@
 title: Manage Your Gradle Project using Nx
 slug: 'manage-your-gradle-project-using-nx'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2024-04-19/featured_img.png'
+cover_image: '/blog/images/2024-04-19/featured_img.avif'
 tags: [nx, gradle, how-to]
+description: 'Learn how to manage Gradle projects in Nx workspaces using the new @nx/gradle plugin for better library visualization and multi-tech stack support.'
 ---
 
-Here’s my situation: I have a Gradle workspace with multiple Gradle libraries. How do I easily view the relationships between different libraries? I have a monorepo workspace with both Gradle and Javascript libraries, how do I manage these libraries of different tech stacks?
+Here's my situation: I have a Gradle workspace with multiple Gradle libraries. How do I easily view the relationships between different libraries? I have a monorepo workspace with both Gradle and Javascript libraries, how do I manage these libraries of different tech stacks?
 
 We are very excited to announce our support for Gradle with our new plugin: `@nx/gradle`.
 
 The Nx Gradle plugin registers Gradle projects in your Nx workspace. It allows Gradle tasks to be run through Nx. Nx effortlessly makes your [CI faster](/ci/intro/ci-with-nx).
 
-> **Note:** this plugin is currently experimental.
+> **Update:** Learn how to import your existing Gradle projects into Nx in [our recent blog post](/blog/nx-import).
 
 This blog will show you:
 
@@ -24,9 +25,9 @@ This blog will show you:
 
 ## What is Nx?
 
-Before we start, let’s answer this question: what is Nx and why should we use it?
+Before we start, let's answer this question: what is Nx and why should we use it?
 
-From [nx.dev](): “Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.” It sounds good, what benefits does it bring?
+From [nx.dev](): "Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI." It sounds good, what benefits does it bring?
 
 Nx adds the following features to your workspace:
 
@@ -41,7 +42,7 @@ Nx adds the following features to your workspace:
 
 ## How to add Nx to a Gradle Workspace?
 
-Now we understand the benefits of Nx, now let’s set it up. The setup is pretty easy, just need to run one command.
+Now we understand the benefits of Nx, now let's set it up. The setup is pretty easy, just need to run one command.
 
 In the workspace, run the below command:
 
@@ -77,7 +78,7 @@ found 0 vulnerabilities
 ✔ Initializing @nx/gradle...
 ```
 
-That’s it! Now we have Nx in our Gradle project.
+That's it! Now we have Nx in our Gradle project.
 
 ### Example: Gradle Init
 
@@ -215,4 +216,4 @@ Here is how to set up Nx with the Gradle workspace. Hopefully, this gives you a 
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app/)
+- [Speed up your CI](/nx-cloud)

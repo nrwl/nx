@@ -1,100 +1,37 @@
 {
-  "generators": {
-    "update-16-0-0-add-nx-packages": {
-      "cli": "nx",
-      "version": "16.0.0-beta.1",
-      "description": "Replace @nrwl/detox with @nx/detox",
-      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
-    },
-    "update-16-0-0-update-detoxrc": {
-      "cli": "nx",
-      "version": "16.0.0-beta.3",
-      "description": "Update .detoxrc.json and jest.config.json for detox 20",
-      "implementation": "./src/migrations/update-16-0-0/update-detoxrc-json"
-    },
-    "update-detoxrc-json-expo-16-1-4": {
-      "cli": "nx",
-      "version": "16.1.4-beta.0",
-      "description": "Update .detoxrc.json for expo",
-      "implementation": "./src/migrations/update-16-1-4/update-detoxrc-json-expo"
-    }
-  },
+  "generators": {},
   "packageJsonUpdates": {
-    "16.0.0": {
-      "version": "16.0.0-beta.3",
-      "packages": {
-        "detox": {
-          "version": "~20.7.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "16.1.1": {
-      "version": "16.1.1-beta.0",
-      "packages": {
-        "detox": {
-          "version": "~20.8.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@config-plugins/detox": {
-          "version": "~5.0.1",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "16.1.5": {
-      "version": "16.1.5-beta.0",
-      "packages": {
-        "detox": {
-          "version": "^20.9.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "16.6.0": {
-      "version": "16.6.0-beta.6",
-      "packages": {
-        "detox": {
-          "version": "^20.11.1",
-          "alwaysAddToPackageJson": false
-        },
-        "@config-plugins/detox": {
-          "version": "~6.0.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "18.0.0": {
-      "version": "18.0.0-beta.0",
-      "packages": {
-        "detox": {
-          "version": "^20.16.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "18.1.0": {
-      "version": "18.1.0-beta.0",
-      "packages": {
-        "detox": {
-          "version": "~20.18.1",
-          "alwaysAddToPackageJson": false
-        },
-        "@config-plugins/detox": {
-          "version": "~7.0.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@testing-library/jest-dom": {
-          "version": "~6.4.2",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "19.2.0": {
       "version": "19.2.0-beta.2",
       "packages": {
         "@config-plugins/detox": {
           "version": "~8.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.3.0": {
+      "version": "20.3.0-beta.0",
+      "packages": {
+        "detox": {
+          "version": "~20.28.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/jest-dom": {
+          "version": "~6.6.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.4.0": {
+      "version": "20.4.0-beta.2",
+      "packages": {
+        "detox": {
+          "version": "~20.31.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@config-plugins/detox": {
+          "version": "~9.0.0",
           "alwaysAddToPackageJson": false
         }
       }

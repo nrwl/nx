@@ -1,5 +1,10 @@
 # Explain with AI (beta)
 
+{% youtube
+src="https://youtu.be/g2m9cHp-O-Q"
+title="Explain with AI"
+ /%}
+
 "Explain with AI" helps you understand complex errors more quickly by providing AI-powered error resolution steps. This is made possible by using additional context from Nx targets and metadata, allowing for more accurate and relevant responses.
 
 ![explain with ai](/nx-cloud/features/explain-with-ai.avif)
@@ -10,7 +15,7 @@ To use the "Explain with AI" feature, you need to [enable AI features for your o
 
 ![enable ai features](/nx-cloud/features/ai-features.png)
 
-AI features are available only for the [Nx Cloud Pro plan](/pricing). If you are on the Hobby plan, you can start a free trial to test AI features in your workspace.
+AI features are available only for the [Nx Cloud Team plan](/pricing).
 
 ## Using Explain with AI
 

@@ -1,6 +1,7 @@
 ---
 title: Overview of the Nx Angular Plugin
 description: The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace.
+keywords: [angular]
 ---
 
 The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries
@@ -38,29 +39,14 @@ Make sure to install the `@nx/angular` version that matches the version of `nx` 
 
 In any Nx workspace, you can install `@nx/angular` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/angular
 ```
 
 This will install the correct version of `@nx/angular`.
 
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/angular` package with your package manager.
-
-```shell
-npm add -D @nx/angular
-```
-
-{% /tab %}
-{% /tabs %}
-
-{% callout type="note" title="Angular Tutorials" %}
-For a full tutorial experience, follow the [Angular Standalone Tutorial](/getting-started/tutorials/angular-standalone-tutorial) or the [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
+{% callout type="note" title="Angular Tutorial" %}
+For a full tutorial experience, follow the [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
 {% /callout %}
 
 ## Using the Angular Plugin
@@ -70,7 +56,7 @@ For a full tutorial experience, follow the [Angular Standalone Tutorial](/gettin
 It's straightforward to generate an Angular application:
 
 ```shell
-nx g @nx/angular:app appName
+nx g @nx/angular:app apps/appName
 ```
 
 By default, the application will be generated with:
@@ -94,7 +80,7 @@ nx e2e appName
 Generating an Angular library is very similar to generating an application:
 
 ```shell
-nx g @nx/angular:lib libName
+nx g @nx/angular:lib libs/libName
 ```
 
 By default, the library will be generated with:
@@ -122,12 +108,11 @@ to `@schematics/angular`. So, even though there is no `@nx/angular:service` gene
 successfully create a service:
 
 ```shell
-nx g @nx/angular:service my-service
+nx g @nx/angular:service apps/appName/src/lib/my-service/my-service
 ```
 
 ## More Documentation
 
-- [Angular Standalone Tutorial](/getting-started/tutorials/angular-standalone-tutorial)
 - [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
 - [Migrating from the Angular CLI](/recipes/angular/migration/angular)
 - [Setup Module Federation with Angular and Nx](/concepts/module-federation/faster-builds-with-module-federation)

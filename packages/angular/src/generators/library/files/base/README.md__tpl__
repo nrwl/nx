@@ -1,9 +1,9 @@
 # <%= libName %>
 
 This library was generated with [Nx](https://nx.dev).
-<% if (unitTesting) { %>
+<%_ if (unitTesting) { _%>
 
 ## Running unit tests
 
 Run `nx test <%= libName %>` to execute the unit tests.
-<% } %>
+<%_ } _%>

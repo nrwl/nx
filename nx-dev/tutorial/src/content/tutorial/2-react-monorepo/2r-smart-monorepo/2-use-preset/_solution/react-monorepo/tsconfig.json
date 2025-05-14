@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/react-store-e2e"
+    },
+    {
+      "path": "./apps/react-store"
+    }
+  ]
+}

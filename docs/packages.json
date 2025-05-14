@@ -19,7 +19,6 @@
         "add-linting",
         "application",
         "component",
-        "component-cypress-spec",
         "component-story",
         "component-test",
         "downgrade-module",
@@ -51,18 +50,34 @@
     }
   },
   {
+    "name": "angular-rspack",
+    "packageName": "@nx/angular-rspack",
+    "description": "Rspack Plugin for building Angular applications with Rspack."
+  },
+  {
+    "name": "angular-rsbuild",
+    "packageName": "@nx/angular-rsbuild",
+    "description": "Rsbuild Plugin for building Angular applications with Rsbuild."
+  },
+  {
     "name": "create-nx-plugin",
     "packageName": "create-nx-plugin",
     "description": "This package is used to scaffold a brand-new workspace used to develop an Nx plugin, and sets up a pre-configured plugin with the specified name. The new plugin is created with a default generator, executor, and e2e app.",
     "path": "generated/packages/create-nx-plugin.json",
-    "schemas": { "executors": [], "generators": [] }
+    "schemas": {
+      "executors": [],
+      "generators": []
+    }
   },
   {
     "name": "create-nx-workspace",
     "packageName": "create-nx-workspace",
     "description": "Smart Monorepos · Fast CI",
     "path": "generated/packages/create-nx-workspace.json",
-    "schemas": { "executors": [], "generators": [] }
+    "schemas": {
+      "executors": [],
+      "generators": []
+    }
   },
   {
     "name": "cypress",
@@ -94,7 +109,10 @@
     "packageName": "devkit",
     "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more. Learn more about [extending Nx by leveraging the Nx Devkit](https://nx.dev/extending-nx/intro/getting-started) on our docs.",
     "path": "generated/packages/devkit.json",
-    "schemas": { "executors": [], "generators": [] }
+    "schemas": {
+      "executors": [],
+      "generators": []
+    }
   },
   {
     "name": "esbuild",
@@ -111,7 +129,10 @@
     "packageName": "eslint-plugin",
     "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
     "path": "generated/packages/eslint-plugin.json",
-    "schemas": { "executors": [], "generators": [] }
+    "schemas": {
+      "executors": [],
+      "generators": []
+    }
   },
   {
     "name": "expo",
@@ -147,14 +168,20 @@
     "packageName": "express",
     "description": "The Nx Plugin for Express contains executors and generators for allowing your workspace to create powerful Express Node applications and APIs.",
     "path": "generated/packages/express.json",
-    "schemas": { "executors": [], "generators": ["init", "application"] }
+    "schemas": {
+      "executors": [],
+      "generators": ["init", "application"]
+    }
   },
   {
     "name": "jest",
     "packageName": "jest",
     "description": "The Nx Plugin for Jest contains executors and generators allowing your workspace to use the powerful Jest testing capabilities.",
     "path": "generated/packages/jest.json",
-    "schemas": { "executors": ["jest"], "generators": ["init", "jest-project"] }
+    "schemas": {
+      "executors": ["jest"],
+      "generators": ["init", "jest-project"]
+    }
   },
   {
     "name": "js",
@@ -278,7 +305,6 @@
         "storybook-configuration",
         "component-story",
         "stories",
-        "component-cypress-spec",
         "hook",
         "host",
         "remote",
@@ -347,7 +373,10 @@
     "packageName": "tao",
     "description": "CLI for generating code and running commands",
     "path": "generated/packages/tao.json",
-    "schemas": { "executors": [], "generators": [] }
+    "schemas": {
+      "executors": [],
+      "generators": []
+    }
   },
   {
     "name": "vite",

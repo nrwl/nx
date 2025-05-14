@@ -572,6 +572,7 @@ describe('Run Commands', () => {
           ...process.env,
           ...env(),
         },
+        windowsHide: false,
       });
       expect(exec).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, {
         maxBuffer: LARGE_BUFFER,
@@ -579,6 +580,7 @@ describe('Run Commands', () => {
           ...process.env,
           ...env(),
         },
+        windowsHide: false,
       });
     });
 
@@ -601,6 +603,7 @@ describe('Run Commands', () => {
           ...process.env,
           ...env(),
         },
+        windowsHide: false,
       });
       expect(exec).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, {
         maxBuffer: LARGE_BUFFER,
@@ -608,6 +611,7 @@ describe('Run Commands', () => {
           ...process.env,
           ...env(),
         },
+        windowsHide: false,
       });
     });
 
@@ -627,10 +631,12 @@ describe('Run Commands', () => {
       expect(exec).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, {
         maxBuffer: LARGE_BUFFER,
         env: { ...process.env, FORCE_COLOR: `true`, ...env() },
+        windowsHide: false,
       });
       expect(exec).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, {
         maxBuffer: LARGE_BUFFER,
         env: { ...process.env, FORCE_COLOR: `true`, ...env() },
+        windowsHide: false,
       });
     });
   });
@@ -777,11 +783,30 @@ describe('Run Commands', () => {
   describe('env', () => {
     afterAll(() => {
       delete process.env.MY_ENV_VAR;
-      unlinkSync('.env');
+    });
+
+    it('should use value from process.env', async () => {
+      const f = fileSync().name;
+      process.env.MY_ENV_VAR = 'from-env';
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `echo "$MY_ENV_VAR" >> ${f}`,
+            },
+          ],
+          parallel: true,
+          __unparsed__: [],
+        },
+        context
+      );
+
+      expect(result.success).toEqual(true);
+      expect(readFile(f)).toContain('from-env');
     });
 
     it('should add the env to the command', async () => {
-      const root = dirSync().name;
+      process.env.MY_ENV_VAR = 'from-env';
       const f = fileSync().name;
       const result = await runCommands(
         {
@@ -796,16 +821,15 @@ describe('Run Commands', () => {
           parallel: true,
           __unparsed__: [],
         },
-        { root } as any
+        context
       );
 
-      expect(result).toEqual(expect.objectContaining({ success: true }));
-      expect(readFile(f)).toEqual('my-value');
+      expect(result.success).toEqual(true);
+      expect(readFile(f)).toContain('my-value');
     });
 
-    it('should prioritize env setting over local dotenv files', async () => {
-      writeFileSync('.env', 'MY_ENV_VAR=from-dotenv');
-      const root = dirSync().name;
+    it('should prioritize env setting over local process.env', async () => {
+      process.env.MY_ENV_VAR = 'from-env';
       const f = fileSync().name;
       const result = await runCommands(
         {
@@ -820,17 +844,42 @@ describe('Run Commands', () => {
           parallel: true,
           __unparsed__: [],
         },
-        { root } as any
+        context
       );
 
-      expect(result).toEqual(expect.objectContaining({ success: true }));
-      expect(readFile(f)).toEqual('from-options');
+      expect(result.success).toEqual(true);
+      expect(readFile(f)).toContain('from-options');
+    });
+
+    it('should prioritize process.env over envFile option', async () => {
+      process.env.MY_ENV_VAR = 'from-env';
+      const devEnv = fileSync().name;
+      writeFileSync(devEnv, 'MY_ENV_VAR=from-dotenv');
+      const f = fileSync().name;
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `echo "$MY_ENV_VAR" >> ${f}`,
+            },
+          ],
+          env: {
+            envFile: devEnv,
+          },
+          parallel: true,
+          __unparsed__: [],
+        },
+        context
+      );
+
+      expect(result.success).toEqual(true);
+      expect(readFile(f)).toContain('from-env');
     });
 
     it('should prioritize env setting over dotenv file from envFile option', async () => {
+      process.env.MY_ENV_VAR = 'from-env';
       const devEnv = fileSync().name;
       writeFileSync(devEnv, 'MY_ENV_VAR=from-dotenv');
-      const root = dirSync().name;
       const f = fileSync().name;
       const result = await runCommands(
         {
@@ -846,112 +895,20 @@ describe('Run Commands', () => {
           parallel: true,
           __unparsed__: [],
         },
-        { root } as any
-      );
-
-      expect(result).toEqual(expect.objectContaining({ success: true }));
-      expect(readFile(f)).toEqual('from-options');
-    });
-  });
-
-  describe('dotenv', () => {
-    beforeAll(() => {
-      writeFileSync('.env', 'NRWL_SITE=https://nrwl.io/');
-    });
-
-    beforeEach(() => {
-      delete process.env.NRWL_SITE;
-      delete process.env.NX_SITE;
-    });
-
-    afterAll(() => {
-      unlinkSync('.env');
-    });
-
-    it('should load the root .env file by default if there is one', async () => {
-      const f = fileSync().name;
-      const result = await runCommands(
-        {
-          commands: [
-            {
-              command: `echo $NRWL_SITE >> ${f}`,
-            },
-          ],
-          __unparsed__: [],
-        },
         context
       );
 
-      expect(result).toEqual(expect.objectContaining({ success: true }));
-      expect(readFile(f)).toEqual('https://nrwl.io/');
-    });
-
-    it('should load the specified .env file instead of the root one', async () => {
-      const devEnv = fileSync().name;
-      writeFileSync(devEnv, 'NX_SITE=https://nx.dev/');
-      const f = fileSync().name;
-      let result = await runCommands(
-        {
-          commands: [
-            {
-              command: `echo $NX_SITE >> ${f} && echo $NRWL_SITE >> ${f}`,
-            },
-          ],
-          envFile: devEnv,
-          __unparsed__: [],
-        },
-        context
-      );
-
-      expect(result).toEqual(expect.objectContaining({ success: true }));
-      expect(readFile(f)).toContain('https://nx.dev/');
-
-      appendFileSync(devEnv, 'NX_TEST=$NX_SITE');
-      await runCommands(
-        {
-          commands: [
-            {
-              command: `echo $NX_TEST >> ${f}`,
-            },
-          ],
-          envFile: devEnv,
-          __unparsed__: [],
-        },
-        context
-      );
-      expect(result).toEqual(expect.objectContaining({ success: true }));
-      expect(readFile(f)).toContain('https://nx.dev/');
-    });
-
-    it('should override environment variables that are present in both the specified .env file and other loaded ones', async () => {
-      const devEnv = fileSync().name;
-      writeFileSync(devEnv, 'NRWL_SITE=https://nrwl.io/override');
-      const f = fileSync().name;
-      let result = await runCommands(
-        {
-          commands: [
-            {
-              command: `echo $NRWL_SITE >> ${f}`,
-            },
-          ],
-          envFile: devEnv,
-          __unparsed__: [],
-        },
-        context
-      );
-
-      expect(result).toEqual(expect.objectContaining({ success: true }));
-      expect(readFile(f)).toContain('https://nrwl.io/override');
+      expect(result.success).toEqual(true);
+      expect(readFile(f)).toContain('from-options');
     });
 
     it('should error if the specified .env file does not exist', async () => {
-      const f = fileSync().name;
       try {
         await runCommands(
           {
             commands: [
               {
-                command: `echo $NX_SITE >> ${f} && echo $NRWL_SITE >> ${f}`,
+                command: `echo $MY_ENV_VAR`,
               },
             ],
             envFile: '/somePath/.fakeEnv',

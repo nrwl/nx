@@ -1,5 +1,9 @@
 import { join } from 'path';
-import { ProjectFileMap, ProjectGraph } from '../../../config/project-graph';
+import type { LegacyNxReleaseVersionConfiguration } from '../../../config/nx-json';
+import type {
+  ProjectFileMap,
+  ProjectGraph,
+} from '../../../config/project-graph';
 import { TempFs } from '../../../internal-testing-utils/temp-fs';
 import { createNxReleaseConfig } from './config';
 
@@ -137,6 +141,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -148,9 +154,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -158,6 +164,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -255,6 +268,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -270,30 +285,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -312,6 +342,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -323,9 +355,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -333,6 +365,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -430,6 +469,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -445,30 +486,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -490,6 +546,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -501,9 +559,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -511,6 +569,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -608,6 +673,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -623,30 +690,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -699,6 +781,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -710,9 +794,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -720,6 +804,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -817,6 +908,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -832,30 +925,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -892,6 +1000,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -903,9 +1013,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -913,6 +1023,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -1010,6 +1127,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -1025,30 +1144,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -1094,6 +1228,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -1105,9 +1241,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -1115,6 +1251,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -1212,6 +1355,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -1226,30 +1371,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -1294,6 +1454,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -1305,9 +1467,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -1315,6 +1477,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -1412,6 +1581,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -1428,30 +1599,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -1479,6 +1665,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -1490,9 +1678,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -1500,6 +1688,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -1597,6 +1792,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -1610,30 +1807,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -1659,6 +1871,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -1670,9 +1884,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -1680,6 +1894,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -1777,6 +1998,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -1791,30 +2014,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -1852,6 +2090,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -1862,6 +2102,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -1959,6 +2206,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -1972,12 +2221,20 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@custom/generator",
                   "generatorOptions": {
                     "optionsOverride": "something",
                   },
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
@@ -1988,30 +2245,46 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@custom/generator-alternative",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -2038,6 +2311,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -2049,9 +2324,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -2059,6 +2334,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -2156,6 +2438,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -2168,9 +2452,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": true,
                     "authors": true,
                     "commitReferences": true,
-                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -2180,30 +2464,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -2235,6 +2534,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -2245,6 +2546,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -2342,6 +2650,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -2354,9 +2664,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": true,
                     "authors": true,
                     "commitReferences": true,
-                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -2366,10 +2676,16 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
@@ -2379,9 +2695,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": true,
                     "authors": true,
                     "commitReferences": true,
-                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -2391,30 +2707,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -2443,6 +2774,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -2453,6 +2786,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -2550,6 +2890,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -2562,9 +2904,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": true,
                     "authors": true,
                     "commitReferences": true,
-                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -2575,30 +2917,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "independent",
                 "releaseTagPattern": "{projectName}@{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -2627,6 +2984,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -2638,9 +2997,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -2648,6 +3007,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -2745,6 +3111,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -2760,21 +3128,29 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
                   "generatorOptions": {
                     "foo": "bar",
                   },
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
+              "currentVersionResolver": undefined,
               "generatorOptions": {
                 "foo": "bar",
               },
@@ -2782,12 +3158,21 @@ describe('createNxReleaseConfig()', () => {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -2812,6 +3197,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "--no-verify",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -2823,9 +3210,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -2833,6 +3220,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -2930,6 +3324,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": true,
               "commitArgs": "--no-verify",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -2945,30 +3341,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": true,
                 "commitArgs": "--no-verify",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -2996,6 +3407,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -3007,9 +3420,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -3017,6 +3430,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -3114,6 +3534,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -3129,30 +3551,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": true,
                 "commitArgs": "--no-verify",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -3176,6 +3613,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -3187,9 +3626,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -3197,6 +3636,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -3294,6 +3740,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -3309,30 +3757,254 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "nx run-many -t build",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should allow configuration of preVersionCommand for a group', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          'group-1': {
+            projects: ['lib-a'],
+            version: {
+              groupPreVersionCommand: 'nx run-many -t build -p lib-a',
+            },
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "applyUsernameToAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "group-1": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "nx run-many -t build -p lib-a",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "version": {
+              "conventionalCommits": false,
+              "currentVersionResolver": undefined,
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "logUnchangedProjects": true,
+              "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -3376,6 +4048,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -3387,9 +4061,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -3397,6 +4071,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -3494,6 +4175,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -3507,30 +4190,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -3554,6 +4252,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -3565,9 +4265,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -3575,6 +4275,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -3672,6 +4379,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -3687,30 +4396,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{projectName}__{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "{projectName}__{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -3744,6 +4468,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -3755,9 +4481,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -3765,6 +4491,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -3862,6 +4595,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -3874,9 +4609,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": true,
                     "authors": true,
                     "commitReferences": true,
-                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -3886,33 +4621,49 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
                   "generatorOptions": {
                     "currentVersionResolver": "git-tag",
                     "specifierSource": "conventional-commits",
                   },
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -3939,6 +4690,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -3949,6 +4702,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -4046,6 +4806,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -4061,30 +4823,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -4119,6 +4896,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -4129,9 +4908,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                 "file": "./{projectRoot}/custom-path.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": false,
                   "commitReferences": false,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -4141,9 +4920,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "Custom no changes!",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -4151,6 +4930,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -4248,6 +5034,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -4260,9 +5048,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "./{projectRoot}/custom-path.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": true,
                     "authors": false,
                     "commitReferences": false,
-                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -4274,30 +5062,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -4322,6 +5125,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -4332,9 +5137,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                 "file": "{projectRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -4344,9 +5149,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -4354,6 +5159,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -4451,6 +5263,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -4463,9 +5277,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": true,
                     "authors": true,
                     "commitReferences": true,
-                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -4477,30 +5291,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -4525,6 +5354,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": false,
                 "tagArgs": "",
@@ -4536,9 +5367,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -4546,6 +5377,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -4643,6 +5481,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -4658,33 +5498,1623 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
+        }
+      `);
+    });
+
+    it('should allow configuring gitlab as a shorthand for createRelease for the workspace changelog', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          workspaceChangelog: {
+            createRelease: 'gitlab',
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": true,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": {
+                  "apiBaseUrl": "https://gitlab.com/api/v4",
+                  "hostname": "gitlab.com",
+                  "provider": "gitlab",
+                },
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "applyUsernameToAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "version": {
+              "conventionalCommits": false,
+              "currentVersionResolver": undefined,
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "logUnchangedProjects": true,
+              "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should allow configuring a gitlab hostname and set a default apiBaseUrl for the workspace changelog', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          workspaceChangelog: {
+            createRelease: {
+              provider: 'gitlab',
+              hostname: 'gitlab.example.com',
+            },
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": true,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": {
+                  "apiBaseUrl": "https://gitlab.example.com/api/v4",
+                  "hostname": "gitlab.example.com",
+                  "provider": "gitlab",
+                },
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "applyUsernameToAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "version": {
+              "conventionalCommits": false,
+              "currentVersionResolver": undefined,
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "logUnchangedProjects": true,
+              "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should allow configuring a github-enterprise-server hostname and set a default apiBaseUrl for the workspace changelog', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          workspaceChangelog: {
+            createRelease: {
+              provider: 'github-enterprise-server',
+              hostname: 'github.example.com',
+            },
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": true,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": {
+                  "apiBaseUrl": "https://github.example.com/api/v3",
+                  "hostname": "github.example.com",
+                  "provider": "github-enterprise-server",
+                },
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "applyUsernameToAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "version": {
+              "conventionalCommits": false,
+              "currentVersionResolver": undefined,
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "logUnchangedProjects": true,
+              "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should allow configuring a github-enterprise-server hostname AND a custom apiBaseUrl for the workspace changelog', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          workspaceChangelog: {
+            createRelease: {
+              provider: 'github-enterprise-server',
+              hostname: 'github.example.com',
+              apiBaseUrl: 'http://something-custom.com',
+            },
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": true,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": {
+                  "apiBaseUrl": "http://something-custom.com",
+                  "hostname": "github.example.com",
+                  "provider": "github-enterprise-server",
+                },
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "applyUsernameToAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "version": {
+              "conventionalCommits": false,
+              "currentVersionResolver": undefined,
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "logUnchangedProjects": true,
+              "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should return an error if an invalid provider, hostname or apiBaseUrl is specified for createRelease for the workspace changelog', async () => {
+      const res1 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          workspaceChangelog: {
+            createRelease: {
+              provider: 'something-invalid',
+            } as any,
+          },
+        },
+      });
+      expect(res1.error).toMatchInlineSnapshot(`
+        {
+          "code": "INVALID_CHANGELOG_CREATE_RELEASE_PROVIDER",
+          "data": {
+            "provider": "something-invalid",
+            "supportedProviders": [
+              "github-enterprise-server",
+              "gitlab",
+            ],
+          },
+        }
+      `);
+
+      const res2 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          workspaceChangelog: {
+            createRelease: {
+              provider: 'github-enterprise-server',
+              hostname: 'not_a_hostname',
+            },
+          },
+        },
+      });
+      expect(res2.error).toMatchInlineSnapshot(`
+        {
+          "code": "INVALID_CHANGELOG_CREATE_RELEASE_HOSTNAME",
+          "data": {
+            "hostname": "not_a_hostname",
+          },
+        }
+      `);
+
+      const res3 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          workspaceChangelog: {
+            createRelease: {
+              provider: 'github-enterprise-server',
+              hostname: 'example.com',
+              apiBaseUrl: 'not_a_url',
+            },
+          },
+        },
+      });
+      expect(res3.error).toMatchInlineSnapshot(`
+        {
+          "code": "INVALID_CHANGELOG_CREATE_RELEASE_API_BASE_URL",
+          "data": {
+            "apiBaseUrl": "not_a_url",
+          },
+        }
+      `);
+    });
+
+    it('should allow configuring a github-enterprise-server hostname and set a default apiBaseUrl for project changelogs', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          workspaceChangelog: false,
+          projectChangelogs: {
+            createRelease: {
+              provider: 'github-enterprise-server',
+              hostname: 'github.example.com',
+            },
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": true,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": {
+                "createRelease": {
+                  "apiBaseUrl": "https://github.example.com/api/v3",
+                  "hostname": "github.example.com",
+                  "provider": "github-enterprise-server",
+                },
+                "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
+                "file": "{projectRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "applyUsernameToAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
+              "workspaceChangelog": false,
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": {
+                  "createRelease": {
+                    "apiBaseUrl": "https://github.example.com/api/v3",
+                    "hostname": "github.example.com",
+                    "provider": "github-enterprise-server",
+                  },
+                  "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
+                  "file": "{projectRoot}/CHANGELOG.md",
+                  "renderOptions": {
+                    "applyUsernameToAuthors": true,
+                    "authors": true,
+                    "commitReferences": true,
+                    "versionTitleDate": true,
+                  },
+                  "renderer": "<dirname>/release/changelog-renderer",
+                },
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "version": {
+              "conventionalCommits": false,
+              "currentVersionResolver": undefined,
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "logUnchangedProjects": true,
+              "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should allow configuring a github-enterprise-server hostname AND a custom apiBaseUrl for project changelogs', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          workspaceChangelog: false,
+          projectChangelogs: {
+            createRelease: {
+              provider: 'github-enterprise-server',
+              hostname: 'github.example.com',
+              apiBaseUrl: 'http://something-custom.com',
+            },
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": true,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": {
+                "createRelease": {
+                  "apiBaseUrl": "http://something-custom.com",
+                  "hostname": "github.example.com",
+                  "provider": "github-enterprise-server",
+                },
+                "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
+                "file": "{projectRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "applyUsernameToAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
+              "workspaceChangelog": false,
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": {
+                  "createRelease": {
+                    "apiBaseUrl": "http://something-custom.com",
+                    "hostname": "github.example.com",
+                    "provider": "github-enterprise-server",
+                  },
+                  "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
+                  "file": "{projectRoot}/CHANGELOG.md",
+                  "renderOptions": {
+                    "applyUsernameToAuthors": true,
+                    "authors": true,
+                    "commitReferences": true,
+                    "versionTitleDate": true,
+                  },
+                  "renderer": "<dirname>/release/changelog-renderer",
+                },
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "version": {
+              "conventionalCommits": false,
+              "currentVersionResolver": undefined,
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "logUnchangedProjects": true,
+              "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should return an error if an invalid provider, hostname or apiBaseUrl is specified for createRelease for project changelogs', async () => {
+      const res1 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          projectChangelogs: {
+            createRelease: {
+              provider: 'something-invalid',
+            } as any,
+          },
+        },
+      });
+      expect(res1.error).toMatchInlineSnapshot(`
+        {
+          "code": "INVALID_CHANGELOG_CREATE_RELEASE_PROVIDER",
+          "data": {
+            "provider": "something-invalid",
+            "supportedProviders": [
+              "github-enterprise-server",
+              "gitlab",
+            ],
+          },
+        }
+      `);
+
+      const res2 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          projectChangelogs: {
+            createRelease: {
+              provider: 'github-enterprise-server',
+              hostname: 'not_a_hostname',
+            },
+          },
+        },
+      });
+      expect(res2.error).toMatchInlineSnapshot(`
+        {
+          "code": "INVALID_CHANGELOG_CREATE_RELEASE_HOSTNAME",
+          "data": {
+            "hostname": "not_a_hostname",
+          },
+        }
+      `);
+
+      const res3 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          projectChangelogs: {
+            createRelease: {
+              provider: 'github-enterprise-server',
+              hostname: 'example.com',
+              apiBaseUrl: 'not_a_url',
+            },
+          },
+        },
+      });
+      expect(res3.error).toMatchInlineSnapshot(`
+        {
+          "code": "INVALID_CHANGELOG_CREATE_RELEASE_API_BASE_URL",
+          "data": {
+            "apiBaseUrl": "not_a_url",
+          },
+        }
+      `);
+    });
+
+    it('should return an error if createRelease is enabled but git push is explicitly disabled', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          workspaceChangelog: {
+            createRelease: 'github',
+          },
+        },
+        git: {
+          push: false,
+        },
+      });
+      expect(res.error).toMatchInlineSnapshot(`
+        {
+          "code": "GIT_PUSH_FALSE_WITH_CREATE_RELEASE",
+          "data": {},
+        }
+      `);
+
+      const res2 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          git: {
+            push: false,
+          },
+          workspaceChangelog: {
+            createRelease: 'github',
+          },
+        },
+      });
+      expect(res2.error).toMatchInlineSnapshot(`
+        {
+          "code": "GIT_PUSH_FALSE_WITH_CREATE_RELEASE",
+          "data": {},
+        }
+      `);
+
+      const res3 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          projectChangelogs: {
+            createRelease: 'github',
+          },
+        },
+        git: {
+          push: false,
+        },
+      });
+      expect(res3.error).toMatchInlineSnapshot(`
+        {
+          "code": "GIT_PUSH_FALSE_WITH_CREATE_RELEASE",
+          "data": {},
+        }
+      `);
+
+      const res4 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          git: {
+            push: false,
+          },
+          projectChangelogs: {
+            createRelease: 'github',
+          },
+        },
+      });
+      expect(res4.error).toMatchInlineSnapshot(`
+        {
+          "code": "GIT_PUSH_FALSE_WITH_CREATE_RELEASE",
+          "data": {},
+        }
+      `);
+
+      const res5 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          workspaceChangelog: {
+            createRelease: 'github',
+          },
+        },
+        version: {
+          git: {
+            push: false,
+          },
+        },
+      });
+      expect(res5.error).toMatchInlineSnapshot(`
+        {
+          "code": "GIT_PUSH_FALSE_WITH_CREATE_RELEASE",
+          "data": {},
+        }
+      `);
+
+      const res6 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          projectChangelogs: {
+            createRelease: 'github',
+          },
+        },
+        version: {
+          git: {
+            push: false,
+          },
+        },
+      });
+      expect(res6.error).toMatchInlineSnapshot(`
+        {
+          "code": "GIT_PUSH_FALSE_WITH_CREATE_RELEASE",
+          "data": {},
+        }
+      `);
+
+      const res7 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          'group-1': {
+            projects: ['lib-a'],
+            changelog: {
+              createRelease: 'github',
+            },
+          },
+        },
+        git: {
+          push: false,
+        },
+      });
+      expect(res7.error).toMatchInlineSnapshot(`
+        {
+          "code": "GIT_PUSH_FALSE_WITH_CREATE_RELEASE",
+          "data": {},
         }
       `);
     });
@@ -4706,6 +7136,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -4717,9 +7149,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -4727,6 +7159,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -4824,6 +7263,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -4839,30 +7280,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -4885,6 +7341,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -4896,9 +7354,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -4906,6 +7364,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -5003,6 +7468,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -5018,30 +7485,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -5086,6 +7568,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -5097,9 +7581,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -5107,6 +7591,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -5218,6 +7709,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -5233,30 +7726,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -5284,6 +7792,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -5295,9 +7805,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -5305,6 +7815,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -5409,6 +7926,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -5424,30 +7943,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -5478,6 +8012,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -5489,9 +8025,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -5499,6 +8035,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -5603,6 +8146,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -5618,30 +8163,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -5673,6 +8233,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -5684,9 +8246,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -5694,6 +8256,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -5798,6 +8367,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -5813,30 +8384,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -5871,6 +8457,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -5882,9 +8470,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -5892,6 +8480,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -5996,6 +8591,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -6011,30 +8608,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -6062,7 +8674,7 @@ describe('createNxReleaseConfig()', () => {
               createRelease: 'github', // set field in group config
               renderOptions: {
                 authors: false, // override deeply nested field in group config
-                mapAuthorsToGitHubUsernames: false, // override deeply nested field in group config
+                applyUsernameToAuthors: false, // override deeply nested field in group config
               },
             },
           },
@@ -6088,6 +8700,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": true,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -6098,9 +8712,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                 "file": "./{projectRoot}/custom-path.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -6109,6 +8723,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -6206,6 +8827,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -6214,13 +8837,17 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "group-1": {
                 "changelog": {
-                  "createRelease": "github",
+                  "createRelease": {
+                    "apiBaseUrl": "https://api.github.com",
+                    "hostname": "github.com",
+                    "provider": "github",
+                  },
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "./{projectRoot}/custom-path.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": false,
                     "authors": false,
                     "commitReferences": true,
-                    "mapAuthorsToGitHubUsernames": false,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -6230,10 +8857,16 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
@@ -6244,10 +8877,16 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
@@ -6257,9 +8896,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "./{projectRoot}/a-different-custom-path-at-the-group.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": true,
                     "authors": true,
                     "commitReferences": true,
-                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -6269,30 +8908,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -6329,31 +8983,41 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": true,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
               "projectChangelogs": {
-                "createRelease": "github",
+                "createRelease": {
+                  "apiBaseUrl": "https://api.github.com",
+                  "hostname": "github.com",
+                  "provider": "github",
+                },
                 "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                 "file": "{projectRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
               },
               "workspaceChangelog": {
-                "createRelease": "github",
+                "createRelease": {
+                  "apiBaseUrl": "https://api.github.com",
+                  "hostname": "github.com",
+                  "provider": "github",
+                },
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -6361,6 +9025,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -6458,6 +9129,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -6466,13 +9139,17 @@ describe('createNxReleaseConfig()', () => {
             "groups": {
               "foo": {
                 "changelog": {
-                  "createRelease": "github",
+                  "createRelease": {
+                    "apiBaseUrl": "https://api.github.com",
+                    "hostname": "github.com",
+                    "provider": "github",
+                  },
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": true,
                     "authors": true,
                     "commitReferences": true,
-                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -6482,30 +9159,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{projectName}-{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -6530,6 +9222,534 @@ describe('createNxReleaseConfig()', () => {
             },
           },
           "nxReleaseConfig": null,
+        }
+      `);
+    });
+
+    it('should allow configuring a github-enterprise-server hostname and set a default apiBaseUrl for project changelogs', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          foo: {
+            projects: 'lib-a',
+            changelog: {
+              createRelease: {
+                provider: 'github-enterprise-server',
+                hostname: 'custom-github-enterprise-server.com',
+              },
+            },
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": true,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "applyUsernameToAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "foo": {
+                "changelog": {
+                  "createRelease": {
+                    "apiBaseUrl": "https://custom-github-enterprise-server.com/api/v3",
+                    "hostname": "custom-github-enterprise-server.com",
+                    "provider": "github-enterprise-server",
+                  },
+                  "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
+                  "file": "{projectRoot}/CHANGELOG.md",
+                  "renderOptions": {
+                    "applyUsernameToAuthors": true,
+                    "authors": true,
+                    "commitReferences": true,
+                    "versionTitleDate": true,
+                  },
+                  "renderer": "<dirname>/release/changelog-renderer",
+                },
+                "projects": [
+                  "lib-a",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "version": {
+              "conventionalCommits": false,
+              "currentVersionResolver": undefined,
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "logUnchangedProjects": true,
+              "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should allow configuring a github-enterprise-server hostname AND a custom apiBaseUrl for project changelogs', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          foo: {
+            projects: 'lib-a',
+            changelog: {
+              createRelease: {
+                provider: 'github-enterprise-server',
+                hostname: 'custom-github-enterprise-server.com',
+                apiBaseUrl:
+                  'https://custom-github-enterprise-server.com/api/v99',
+              },
+            },
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": true,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "applyUsernameToAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "foo": {
+                "changelog": {
+                  "createRelease": {
+                    "apiBaseUrl": "https://custom-github-enterprise-server.com/api/v99",
+                    "hostname": "custom-github-enterprise-server.com",
+                    "provider": "github-enterprise-server",
+                  },
+                  "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
+                  "file": "{projectRoot}/CHANGELOG.md",
+                  "renderOptions": {
+                    "applyUsernameToAuthors": true,
+                    "authors": true,
+                    "commitReferences": true,
+                    "versionTitleDate": true,
+                  },
+                  "renderer": "<dirname>/release/changelog-renderer",
+                },
+                "projects": [
+                  "lib-a",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "version": {
+              "conventionalCommits": false,
+              "currentVersionResolver": undefined,
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "logUnchangedProjects": true,
+              "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should return an error if an invalid provider, hostname or apiBaseUrl is specified for createRelease for project changelogs', async () => {
+      const res1 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          foo: {
+            projects: 'lib-a',
+            changelog: {
+              createRelease: {
+                provider: 'something-invalid',
+              } as any,
+            },
+          },
+        },
+      });
+      expect(res1.error).toMatchInlineSnapshot(`
+        {
+          "code": "INVALID_CHANGELOG_CREATE_RELEASE_PROVIDER",
+          "data": {
+            "provider": "something-invalid",
+            "supportedProviders": [
+              "github-enterprise-server",
+              "gitlab",
+            ],
+          },
+        }
+      `);
+
+      const res2 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          foo: {
+            projects: 'lib-a',
+            changelog: {
+              createRelease: {
+                provider: 'github-enterprise-server',
+                hostname: 'not_a_hostname',
+              },
+            },
+          },
+        },
+      });
+      expect(res2.error).toMatchInlineSnapshot(`
+        {
+          "code": "INVALID_CHANGELOG_CREATE_RELEASE_HOSTNAME",
+          "data": {
+            "hostname": "not_a_hostname",
+          },
+        }
+      `);
+
+      const res3 = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          foo: {
+            projects: 'lib-a',
+            changelog: {
+              createRelease: {
+                provider: 'github-enterprise-server',
+                hostname: 'example.com',
+                apiBaseUrl: 'not_a_url',
+              },
+            },
+          },
+        },
+      });
+      expect(res3.error).toMatchInlineSnapshot(`
+        {
+          "code": "INVALID_CHANGELOG_CREATE_RELEASE_API_BASE_URL",
+          "data": {
+            "apiBaseUrl": "not_a_url",
+          },
         }
       `);
     });
@@ -6722,6 +9942,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -6733,9 +9955,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -6743,6 +9965,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -6840,6 +10069,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -6855,30 +10086,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -6920,7 +10166,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
+                  "applyUsernameToAuthors": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -7095,6 +10341,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -7105,6 +10353,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -7202,6 +10457,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -7215,10 +10472,16 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "independent",
                 "releaseTagPattern": "{projectName}@{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
@@ -7230,30 +10493,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "independent",
             "releaseTagPattern": "{projectName}@{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -7277,6 +10555,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -7287,6 +10567,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -7384,6 +10671,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -7398,30 +10687,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "independent",
                 "releaseTagPattern": "{projectName}@{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "independent",
             "releaseTagPattern": "{projectName}@{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -7450,6 +10754,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -7461,9 +10767,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -7471,6 +10777,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -7568,6 +10881,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -7583,22 +10898,30 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
                   "generatorOptions": {
                     "currentVersionResolver": "git-tag",
                     "specifierSource": "conventional-commits",
                   },
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
+              "currentVersionResolver": undefined,
               "generatorOptions": {
                 "currentVersionResolver": "git-tag",
                 "specifierSource": "conventional-commits",
@@ -7607,12 +10930,21 @@ describe('createNxReleaseConfig()', () => {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -7637,6 +10969,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -7648,9 +10982,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -7658,6 +10992,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -7755,6 +11096,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -7770,22 +11113,30 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
                   "generatorOptions": {
                     "currentVersionResolver": "registry",
                     "specifierSource": "prompt",
                   },
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
+              "currentVersionResolver": undefined,
               "generatorOptions": {
                 "currentVersionResolver": "registry",
                 "specifierSource": "prompt",
@@ -7794,12 +11145,21 @@ describe('createNxReleaseConfig()', () => {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -7823,6 +11183,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -7834,9 +11196,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -7844,6 +11206,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -7941,6 +11310,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -7956,36 +11327,47 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": true,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {
-                    "currentVersionResolver": "git-tag",
-                    "specifierSource": "conventional-commits",
-                  },
+                  "currentVersionResolver": "git-tag",
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "specifierSource": "conventional-commits",
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": true,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {
-                "currentVersionResolver": "git-tag",
-                "specifierSource": "conventional-commits",
-              },
+              "currentVersionResolver": "git-tag",
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": "conventional-commits",
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -7997,6 +11379,7 @@ describe('createNxReleaseConfig()', () => {
       const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         version: {
           conventionalCommits: true,
+          fallbackCurrentVersionResolver: 'disk',
         },
         groups: {
           'group-1': {
@@ -8017,6 +11400,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -8028,9 +11413,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -8038,6 +11423,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -8135,6 +11527,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -8148,33 +11542,47 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "fallbackCurrentVersionResolver": "disk",
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": true,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {
-                "currentVersionResolver": "git-tag",
-                "specifierSource": "conventional-commits",
-              },
+              "currentVersionResolver": "git-tag",
+              "fallbackCurrentVersionResolver": "disk",
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": "conventional-commits",
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -8201,6 +11609,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -8212,9 +11622,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -8222,6 +11632,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -8319,6 +11736,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -8334,38 +11753,53 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": true,
-                  "generator": "@nx/js:release-version",
+                  "currentVersionResolver": "git-tag",
                   "generatorOptions": {
-                    "currentVersionResolver": "git-tag",
                     "someUnrelatedOption": "foobar",
-                    "specifierSource": "conventional-commits",
                   },
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "specifierSource": "conventional-commits",
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": true,
-              "generator": "@nx/js:release-version",
+              "currentVersionResolver": "git-tag",
               "generatorOptions": {
-                "currentVersionResolver": "git-tag",
                 "someUnrelatedOption": "foobar",
-                "specifierSource": "conventional-commits",
               },
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": "conventional-commits",
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -8385,7 +11819,7 @@ describe('createNxReleaseConfig()', () => {
       expect(res1).toMatchInlineSnapshot(`
         {
           "error": {
-            "code": "CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_GENERATOR_OPTIONS",
+            "code": "CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_OPTIONS",
             "data": {},
           },
           "nxReleaseConfig": null,
@@ -8403,7 +11837,7 @@ describe('createNxReleaseConfig()', () => {
       expect(res2).toMatchInlineSnapshot(`
         {
           "error": {
-            "code": "CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_GENERATOR_OPTIONS",
+            "code": "CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_OPTIONS",
             "data": {},
           },
           "nxReleaseConfig": null,
@@ -8432,6 +11866,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -8443,9 +11879,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -8453,6 +11889,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -8550,6 +11993,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -8565,34 +12010,46 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {
-                    "specifierSource": "version-plans",
-                  },
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "specifierSource": "version-plans",
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": true,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {
-                "specifierSource": "version-plans",
-              },
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": "version-plans",
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": true,
           },
@@ -8619,6 +12076,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -8630,9 +12089,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -8640,6 +12099,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -8737,6 +12203,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -8752,12 +12220,17 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {
-                    "specifierSource": "version-plans",
-                  },
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "specifierSource": "version-plans",
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": {
                   "ignorePatternsForPlanCheck": [
@@ -8768,22 +12241,29 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {
-                "specifierSource": "version-plans",
-              },
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": "version-plans",
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": {
               "ignorePatternsForPlanCheck": [
@@ -8823,6 +12303,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -8833,6 +12315,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -8930,6 +12419,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -8943,12 +12434,17 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {
-                    "specifierSource": "version-plans",
-                  },
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "specifierSource": "version-plans",
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": true,
               },
@@ -8959,30 +12455,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -8997,7 +12508,7 @@ describe('createNxReleaseConfig()', () => {
             'group-1': {
               projects: 'nx',
               versionPlans: {
-                ignorePatternsForPlanCheck: ['**/eslint.config.js'],
+                ignorePatternsForPlanCheck: ['**/eslint.config.cjs'],
               },
             },
             'group-2': {
@@ -9018,6 +12529,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -9028,6 +12541,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -9125,6 +12645,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -9138,16 +12660,21 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {
-                    "specifierSource": "version-plans",
-                  },
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "specifierSource": "version-plans",
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": {
                   "ignorePatternsForPlanCheck": [
-                    "**/eslint.config.js",
+                    "**/eslint.config.cjs",
                   ],
                 },
               },
@@ -9158,30 +12685,45 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": false,
           },
@@ -9217,6 +12759,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -9227,6 +12771,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -9324,6 +12875,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -9337,10 +12890,16 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
@@ -9351,34 +12910,46 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {
-                    "specifierSource": "version-plans",
-                  },
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "specifierSource": "version-plans",
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": true,
               },
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {
-                "specifierSource": "version-plans",
-              },
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": "version-plans",
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": true,
           },
@@ -9416,6 +12987,8 @@ describe('createNxReleaseConfig()', () => {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
@@ -9426,6 +12999,13 @@ describe('createNxReleaseConfig()', () => {
             },
             "conventionalCommits": {
               "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
                 "build": {
                   "changelog": {
                     "hidden": true,
@@ -9523,6 +13103,8 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
               "stageChanges": false,
               "tag": false,
               "tagArgs": "",
@@ -9536,10 +13118,16 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": false,
               },
@@ -9550,12 +13138,17 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {
-                    "specifierSource": "version-plans",
-                  },
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "specifierSource": "version-plans",
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
                 },
                 "versionPlans": {
                   "ignorePatternsForPlanCheck": [
@@ -9566,28 +13159,275 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {
-                "specifierSource": "version-plans",
-              },
+              "currentVersionResolver": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
                 "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": "version-plans",
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
             },
             "versionPlans": {
               "ignorePatternsForPlanCheck": [
                 "**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
               ],
             },
+          },
+        }
+      `);
+    });
+  });
+
+  describe('useLegacyVersioning', () => {
+    it('should be false by default', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap);
+      expect(res.nxReleaseConfig.version.useLegacyVersioning).toBe(false);
+    });
+
+    it('should be respected if set to true by the user', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        version: { useLegacyVersioning: true },
+      });
+      expect(res.nxReleaseConfig.version.useLegacyVersioning).toBe(true);
+    });
+
+    it('should set the generator and generatorOptions, and not set versionActions and versionActionsOptions, if set to true by the user', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        version: { useLegacyVersioning: true },
+      });
+      const version = res.nxReleaseConfig
+        .version as LegacyNxReleaseVersionConfiguration;
+      expect(version.generator).toBe('@nx/js:release-version');
+      expect(version.generatorOptions).toEqual({});
+
+      expect((version as any).versionActions).toBeUndefined();
+      expect((version as any).versionActionsOptions).toBeUndefined();
+    });
+
+    it('should respect custom generator and generatorOptions if set by the user', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        version: {
+          useLegacyVersioning: true,
+          generator: '/path/to/custom-generator',
+          generatorOptions: {
+            foo: true,
+            baz: ['bar'],
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "applyUsernameToAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "/path/to/custom-generator",
+                  "generatorOptions": {
+                    "baz": [
+                      "bar",
+                    ],
+                    "foo": true,
+                  },
+                  "groupPreVersionCommand": "",
+                  "useLegacyVersioning": true,
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "version": {
+              "conventionalCommits": false,
+              "generator": "/path/to/custom-generator",
+              "generatorOptions": {
+                "baz": [
+                  "bar",
+                ],
+                "foo": true,
+              },
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "preVersionCommand": "",
+              "useLegacyVersioning": true,
+            },
+            "versionPlans": false,
           },
         }
       `);

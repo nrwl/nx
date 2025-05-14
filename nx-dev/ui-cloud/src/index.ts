@@ -4,6 +4,7 @@ export * from './lib/trusted-by';
 export * from './lib/faster-and-cheaper';
 export * from './lib/understand-workspace';
 export * from './lib/enhance-with-ai';
+export * from './lib/enhanced-security';
 export * from './lib/automated-agents-management';
 export * from './lib/agent-number-over-time';
 export * from './lib/statistics';

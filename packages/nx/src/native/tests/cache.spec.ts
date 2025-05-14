@@ -3,21 +3,21 @@ import { join } from 'path';
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 import { rmSync } from 'fs';
 import { getDbConnection } from '../../utils/db-connection';
+import { randomBytes } from 'crypto';
 
 describe('Cache', () => {
   let cache: NxCache;
   let tempFs: TempFs;
   let taskDetails: TaskDetails;
 
+  const dbOutputFolder = 'temp-db-cache';
   beforeEach(() => {
     tempFs = new TempFs('cache');
-    rmSync(join(__dirname, 'temp-db'), {
-      recursive: true,
-      force: true,
+
+    const dbConnection = getDbConnection({
+      directory: join(__dirname, dbOutputFolder),
+      dbName: `temp-db-${randomBytes(4).toString('hex')}`,
     });
-
-    const dbConnection = getDbConnection(join(__dirname, 'temp-db'));
-
     taskDetails = new TaskDetails(dbConnection);
 
     cache = new NxCache(
@@ -34,6 +34,13 @@ describe('Cache', () => {
         configuration: 'production',
       },
     ]);
+  });
+
+  afterAll(() => {
+    rmSync(join(__dirname, dbOutputFolder), {
+      recursive: true,
+      force: true,
+    });
   });
 
   it('should store results into cache', async () => {
@@ -56,5 +63,10 @@ describe('Cache', () => {
     expect(await tempFs.readFile('dist/output.txt')).toEqual(
       'output contents 123'
     );
+  });
+
+  it('should handle storing hashes that already exist in the cache', async () => {
+    cache.put('123', 'output 123', ['dist'], 0);
+    expect(() => cache.put('123', 'output 123', ['dist'], 0)).not.toThrow();
   });
 });

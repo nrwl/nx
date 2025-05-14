@@ -26,11 +26,6 @@
       "x-priority": "important",
       "default": true
     },
-    "configureCypress": {
-      "type": "boolean",
-      "description": "Specifies whether to configure Cypress or not.",
-      "x-deprecated": "Use interactionTests instead. This option will be removed in v20."
-    },
     "generateStories": {
       "type": "boolean",
       "description": "Specifies whether to automatically generate `*.stories.ts` files for components declared in this project or not.",
@@ -38,22 +33,12 @@
       "default": true,
       "x-priority": "important"
     },
-    "generateCypressSpecs": {
-      "type": "boolean",
-      "description": "Specifies whether to automatically generate test files in the generated Cypress e2e app.",
-      "x-deprecated": "Use interactionTests instead. This option will be removed in v20."
-    },
     "configureStaticServe": {
       "type": "boolean",
       "description": "Specifies whether to configure a static file server target for serving storybook. Helpful for speeding up CI build/test times.",
       "x-prompt": "Configure a static file server for the storybook instance?",
       "default": true,
       "x-priority": "important"
-    },
-    "cypressDirectory": {
-      "type": "string",
-      "description": "A directory where the Cypress project will be placed. Placed at the root by default.",
-      "x-deprecated": "Use interactionTests instead. This option will be removed in v20."
     },
     "linter": {
       "description": "The tool to use for running lint checks.",

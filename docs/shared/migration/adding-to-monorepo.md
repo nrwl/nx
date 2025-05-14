@@ -1,3 +1,8 @@
+---
+title: Adding Nx to NPM/Yarn/PNPM Workspace
+description: Learn how to integrate Nx into an existing NPM, Yarn, or PNPM workspace monorepo to gain task scheduling, caching, and improved CI performance.
+---
+
 # Adding Nx to NPM/Yarn/PNPM Workspace
 
 {% callout type="note" title="Migrating from Lerna?" %}
@@ -6,7 +11,7 @@ powering Nx underneath. As a result, Lerna gets all the modern features such as 
 on [https://lerna.js.org/upgrade](https://lerna.js.org/upgrade).
 {% /callout %}
 
-Nx has first-class support for [monorepos](/getting-started/tutorials/npm-workspaces-tutorial). If you have
+Nx has first-class support for [monorepos](/getting-started/tutorials/typescript-packages-tutorial). If you have
 an existing NPM/Yarn or PNPM-based monorepo setup, you can easily add Nx to get
 
 - fast [task scheduling](/features/run-tasks)
@@ -16,10 +21,7 @@ an existing NPM/Yarn or PNPM-based monorepo setup, you can easily add Nx to get
 This is a low-impact operation because all that needs to be done is to install the `nx` package at the root level and
 add an `nx.json` for configuring caching and task pipelines.
 
-{% youtube
-src="https://www.youtube.com/embed/ngdoUQBvAjo"
-title="Add Nx to a PNPM workspaces monorepo"
-width="100%" /%}
+{% course-video src="https://youtu.be/3hW53b1IJ84" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="/courses/pnpm-nx-next/lessons-01-nx-init" title="Initialize Nx in Your Project with nx init" /%}
 
 ## Installing Nx
 
@@ -163,7 +165,8 @@ nx show project my-workspace --web
         "dev": {
           "options": {
             "cwd": ".",
-            "command": "next dev"
+            "command": "next dev",
+            "continuous": true
           },
           "executor": "nx:run-commands",
           "configurations": {},
@@ -174,7 +177,8 @@ nx show project my-workspace --web
         "start": {
           "options": {
             "cwd": ".",
-            "command": "next start"
+            "command": "next start",
+            "continuous": true
           },
           "dependsOn": ["build"],
           "executor": "nx:run-commands",
@@ -344,7 +348,7 @@ And make sure you pull the latest changes locally:
 git pull
 ```
 
-You should now have an `nxCloudAccessToken` property specified in the `nx.json` file.
+You should now have an `nxCloudId` property specified in the `nx.json` file.
 
 ### Create a CI Workflow {% highlightColor="green" %}
 
@@ -368,6 +372,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
+
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
@@ -419,10 +425,7 @@ documentation" url="/concepts/task-pipeline-configuration" /%}
 {% card title="Nx Ignore" description="Learn about how to ignore certain projects using .nxignore" type="documentation"
 url="/reference/nxignore" /%}
 
-{% card title="Nx and Turbo" description="Read about how Nx compares to Turborepo" url="
-/concepts/turbo-and-nx" /%}
-
-{% card title="Integrated Repos vs Package-Based Repos" description="Learn about two styles of monorepos." url="
-/concepts/integrated-vs-package-based" /%}
+{% card title="Migrating from Turborepo to Nx" description="Read about Migrating from Turborepo to Nx" url="
+/recipes/adopting-nx/from-turborepo" /%}
 
 {% /cards %}

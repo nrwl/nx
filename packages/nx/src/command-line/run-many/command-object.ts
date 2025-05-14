@@ -1,22 +1,25 @@
 import { CommandModule } from 'yargs';
+import { handleErrors } from '../../utils/handle-errors';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import {
-  withRunManyOptions,
-  withOutputStyleOption,
-  withTargetAndConfigurationOption,
-  withOverrides,
   withBatch,
+  withOutputStyleOption,
+  withOverrides,
+  withRunManyOptions,
+  withTargetAndConfigurationOption,
+  withTuiOptions,
 } from '../yargs-utils/shared-options';
-import { handleErrors } from '../../utils/params';
 
 export const yargsRunManyCommand: CommandModule = {
   command: 'run-many',
   describe: 'Run target for multiple listed projects.',
   builder: (yargs) =>
     linkToNxDevAndExamples(
-      withRunManyOptions(
-        withOutputStyleOption(
-          withTargetAndConfigurationOption(withBatch(yargs))
+      withTuiOptions(
+        withRunManyOptions(
+          withOutputStyleOption(
+            withTargetAndConfigurationOption(withBatch(yargs))
+          )
         )
       ),
       'run-many'

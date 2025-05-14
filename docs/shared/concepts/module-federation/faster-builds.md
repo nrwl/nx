@@ -1,3 +1,8 @@
+---
+title: Faster Builds with Module Federation
+description: Learn how Module Federation in Nx enables faster builds by splitting large SPAs into smaller remote applications while minimizing common downsides.
+---
+
 # Faster Builds with Module Federation
 
 As applications grow, builds can become unacceptably slow, which leads to slow CI/CD pipelines and long dev-server
@@ -103,22 +108,22 @@ Next, generate the host and remote applications.
 {% tab label="React" %}
 
 ```shell
-nx g @nx/react:host host --remotes=shop,cart,about
+nx g @nx/react:host apps/host --remotes=shop,cart,about
 ```
 
 {% /tab %}
 {% tab label="Angular" %}
 
 ```shell
-nx g @nx/angular:host host --remotes=shop,cart,about
+nx g @nx/angular:host apps/host --remotes=shop,cart,about
 ```
 
 {% /tab %}
 {% /tabs %}
 
 {% callout type="note" title="More details" %}
-You can leave off the `--remotes` option and add them later with `nx g @nx/react:remote shop --host=host`
-or `nx g @nx/angular:remote shop --host=host`.
+You can leave off the `--remotes` option and add them later with `nx g @nx/react:remote apps/shop --host=host`
+or `nx g @nx/angular:remote apps/shop --host=host`.
 {% /callout %}
 
 Now, serve `host` to view it in your browser.

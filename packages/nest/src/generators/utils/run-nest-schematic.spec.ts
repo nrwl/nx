@@ -6,16 +6,15 @@ import type { NestSchematic, NormalizedOptions } from './types';
 
 describe('runNestSchematic utility', () => {
   let tree: Tree;
-  const project = 'api';
+  const directory = 'api';
   const options: NormalizedOptions = {
     name: 'test',
-    sourceRoot: `apps/${project}/src`,
-    flat: true,
+    sourceRoot: `apps/${directory}/src`,
     spec: true,
   };
 
   beforeEach(() => {
-    tree = createTreeWithNestApplication(project);
+    tree = createTreeWithNestApplication(directory);
     jest.clearAllMocks();
   });
 

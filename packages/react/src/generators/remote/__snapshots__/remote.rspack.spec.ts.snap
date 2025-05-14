@@ -1,0 +1,239 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`remote generator bundler=rspack should create the remote with the correct config files 1`] = `
+"const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+const { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } = require('@nx/module-federation/rspack');
+const { join } = require('path');
+
+const config = require('./module-federation.config');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '../dist/test'),
+    publicPath: 'auto'
+  },
+  devServer: {
+    port: 4201,
+    headers: {
+      "Access-Control-Allow-Origin": "*"
+    },
+    historyApiFallback: {
+      index: '/index.html',
+      disableDotRule: true,
+      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+    },
+  },
+  plugins: [
+    new NxAppRspackPlugin({
+      tsConfig: './tsconfig.app.json',
+      main: './src/main.ts',
+      index: './src/index.html',
+      baseHref: '/',
+      assets: ["./src/favicon.ico","./src/assets"],
+      styles: ["./src/styles.css"],
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    }),
+    new NxReactRspackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+    }),
+    new NxModuleFederationPlugin({ config }, { dts: false }),
+    new NxModuleFederationDevServerPlugin({ config }),
+  ],
+};
+"
+`;
+
+exports[`remote generator bundler=rspack should create the remote with the correct config files 2`] = `"module.exports = require('./rspack.config');"`;
+
+exports[`remote generator bundler=rspack should create the remote with the correct config files 3`] = `
+"/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
+module.exports = {
+  name: 'test',
+  exposes: {
+    './Module': './src/remote-entry.ts',
+  },
+};
+"
+`;
+
+exports[`remote generator bundler=rspack should create the remote with the correct config files when --js=true 1`] = `
+"const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+const { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } = require('@nx/module-federation/rspack');
+const { join } = require('path');
+
+const config = require('./module-federation.config');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '../dist/test'),
+    publicPath: 'auto'
+  },
+  devServer: {
+    port: 4201,
+    headers: {
+      "Access-Control-Allow-Origin": "*"
+    },
+    historyApiFallback: {
+      index: '/index.html',
+      disableDotRule: true,
+      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+    },
+  },
+  plugins: [
+    new NxAppRspackPlugin({
+      tsConfig: './tsconfig.app.json',
+      main: './src/main.jsx',
+      index: './src/index.html',
+      baseHref: '/',
+      assets: ["./src/favicon.ico","./src/assets"],
+      styles: ["./src/styles.css"],
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    }),
+    new NxReactRspackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+    }),
+    new NxModuleFederationPlugin({ config }, { dts: false }),
+    new NxModuleFederationDevServerPlugin({ config }),
+  ],
+};
+"
+`;
+
+exports[`remote generator bundler=rspack should create the remote with the correct config files when --js=true 2`] = `"module.exports = require('./rspack.config');"`;
+
+exports[`remote generator bundler=rspack should create the remote with the correct config files when --js=true 3`] = `
+"/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
+module.exports = {
+  name: 'test',
+  exposes: {
+    './Module': './src/remote-entry.js',
+  },
+};
+"
+`;
+
+exports[`remote generator bundler=rspack should create the remote with the correct config files when --typescriptConfiguration=true 1`] = `
+"import { NxAppRspackPlugin } from '@nx/rspack/app-plugin';
+import { NxReactRspackPlugin } from '@nx/rspack/react-plugin';
+import {
+  NxModuleFederationPlugin,
+  NxModuleFederationDevServerPlugin,
+} from '@nx/module-federation/rspack';
+import { join } from 'path';
+
+import config from './module-federation.config';
+
+export default {
+  output: {
+    path: join(__dirname, '../dist/test'),
+    publicPath: 'auto',
+  },
+  devServer: {
+    port: 4201,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
+    historyApiFallback: {
+      index: '/index.html',
+      disableDotRule: true,
+      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+    },
+  },
+  plugins: [
+    new NxAppRspackPlugin({
+      tsConfig: './tsconfig.app.json',
+      main: './src/main.ts',
+      index: './src/index.html',
+      baseHref: '/',
+      assets: ['./src/favicon.ico', './src/assets'],
+      styles: ['./src/styles.css'],
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    }),
+    new NxReactRspackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+    }),
+    new NxModuleFederationPlugin({ config }, { dts: false }),
+    new NxModuleFederationDevServerPlugin({ config }),
+  ],
+};
+"
+`;
+
+exports[`remote generator bundler=rspack should create the remote with the correct config files when --typescriptConfiguration=true 2`] = `
+"export default require('./rspack.config');
+"
+`;
+
+exports[`remote generator bundler=rspack should create the remote with the correct config files when --typescriptConfiguration=true 3`] = `
+"import { ModuleFederationConfig } from '@nx/module-federation';
+
+const config: ModuleFederationConfig = {
+  name: 'test',
+  exposes: {
+    './Module': './src/remote-entry.ts',
+  },
+};
+
+/**
+ * Nx requires a default export of the config to allow correct resolution of the module federation graph.
+ **/
+export default config;
+"
+`;
+
+exports[`remote generator bundler=rspack should generate correct remote with config files when using --ssr 1`] = `
+"/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
+module.exports = {
+  name: 'test',
+  exposes: {
+    './Module': './src/remote-entry.ts',
+  },
+  shared: (libraryName, libraryConfig) => {
+      return {
+        ...libraryConfig,
+        eager: true
+      }
+    },
+};
+"
+`;
+
+exports[`remote generator bundler=rspack should generate correct remote with config files when using --ssr and --typescriptConfiguration=true 1`] = `
+"import { ModuleFederationConfig } from '@nx/module-federation';
+
+const config: ModuleFederationConfig = {
+  name: 'test',
+  exposes: {
+    './Module': './src/remote-entry.ts',
+  },
+  shared: (libraryName, libraryConfig) => {
+    return {
+      ...libraryConfig,
+      eager: true,
+    };
+  },
+};
+
+/**
+ * Nx requires a default export of the config to allow correct resolution of the module federation graph.
+ **/
+export default config;
+"
+`;

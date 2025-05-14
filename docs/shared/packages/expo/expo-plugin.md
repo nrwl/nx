@@ -1,3 +1,8 @@
+---
+title: Expo Plugin for Nx
+description: Learn how to use the @nx/expo plugin to manage Expo applications and libraries within an Nx workspace, including setup, configuration, and task inference.
+---
+
 Expo is an open-source framework for apps that run natively on Android, iOS, and the web. Expo brings together the best of mobile and the web and enables many important features for building and scaling an app.
 
 Expo is a set of tools built on top of React Native. The Nx Plugin for Expo contains generators for managing Expo applications and libraries within an Nx workspace.
@@ -18,26 +23,11 @@ Make sure to install the `@nx/expo` version that matches the version of `nx` in 
 
 In any Nx workspace, you can install `@nx/expo` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/expo
 ```
 
 This will install the correct version of `@nx/expo`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/expo` package with your package manager.
-
-```shell
-npm add -D @nx/expo
-```
-
-{% /tab %}
-{% /tabs %}
 
 ### How @nx/expo Infers Tasks
 
@@ -93,7 +83,7 @@ Once a Expo configuration file has been identified, the targets are created with
 Add a new application to your workspace with the following command:
 
 ```shell
-nx g @nx/expo:app my-app
+nx g @nx/expo:app apps/my-app
 ```
 
 Start the application by running:
@@ -107,7 +97,7 @@ nx start my-app
 To generate a new library run:
 
 ```shell
-npx nx g @nx/expo:lib your-lib-name
+npx nx g @nx/expo:lib libs/your-lib-name
 ```
 
 ### Generating Components
@@ -115,7 +105,7 @@ npx nx g @nx/expo:lib your-lib-name
 To generate a new component inside library run:
 
 ```shell
-npx nx g @nx/expo:component your-component-name --project=your-lib-name --export
+npx nx g @nx/expo:component libs/your-lib-name/src/your-component-name --export
 ```
 
 Replace `your-lib-name` with the app's name as defined in your `tsconfig.base.json` file or the `name` property of your `package.json`

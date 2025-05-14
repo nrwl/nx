@@ -9,7 +9,10 @@ import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
-import { ProjectGraph } from '../../config/project-graph';
+import {
+  ProjectGraph,
+  ProjectGraphProjectNode,
+} from '../../config/project-graph';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { splitTarget } from '../../utils/split-target';
@@ -17,8 +20,8 @@ import { output } from '../../utils/output';
 import { TargetDependencyConfig } from '../../config/workspace-json-project-json';
 import { readNxJson } from '../../config/configuration';
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
-import { workspaceConfigurationCheck } from '../../utils/workspace-configuration-check';
 import { generateGraph } from '../graph/graph';
+import { findMatchingProjects } from '../../utils/find-matching-projects';
 
 export async function runOne(
   cwd: string,
@@ -37,7 +40,6 @@ export async function runOne(
 ): Promise<void> {
   performance.mark('code-loading:end');
   performance.measure('code-loading', 'init-local', 'code-loading:end');
-  workspaceConfigurationCheck();
 
   const nxJson = readNxJson();
   const projectGraph = await createProjectGraphAsync();
@@ -62,7 +64,7 @@ export async function runOne(
 
   await connectToNxCloudIfExplicitlyAsked(nxArgs);
 
-  const { projects } = getProjects(projectGraph, opts.project);
+  const { projects, projectName } = getProjects(projectGraph, opts.project);
 
   if (nxArgs.graph) {
     const projectNames = projects.map((t) => t.name);
@@ -86,7 +88,7 @@ export async function runOne(
       { nxJson },
       nxArgs,
       overrides,
-      opts.project,
+      projectName,
       extraTargetDependencies,
       extraOptions
     );
@@ -94,19 +96,48 @@ export async function runOne(
   }
 }
 
-function getProjects(projectGraph: ProjectGraph, project: string): any {
-  if (!projectGraph.nodes[project]) {
-    output.error({
-      title: `Cannot find project '${project}'`,
-    });
-    process.exit(1);
+function getProjects(
+  projectGraph: ProjectGraph,
+  projectName: string
+): {
+  projectName: string;
+  projects: ProjectGraphProjectNode[];
+  projectsMap: Record<string, ProjectGraphProjectNode>;
+} {
+  if (projectGraph.nodes[projectName]) {
+    return {
+      projectName: projectName,
+      projects: [projectGraph.nodes[projectName]],
+      projectsMap: {
+        [projectName]: projectGraph.nodes[projectName],
+      },
+    };
+  } else {
+    const projects = findMatchingProjects([projectName], projectGraph.nodes);
+    if (projects.length === 1) {
+      const projectName = projects[0];
+      const project = projectGraph.nodes[projectName];
+      return {
+        projectName,
+        projects: [project],
+        projectsMap: {
+          [project.data.name]: project,
+        },
+      };
+    } else if (projects.length > 1) {
+      output.error({
+        title: `Multiple projects matched:`,
+        bodyLines:
+          projects.length > 100 ? [...projects.slice(0, 100), '...'] : projects,
+      });
+      process.exit(1);
+    }
   }
-  let projects = [projectGraph.nodes[project]];
-  let projectsMap = {
-    [project]: projectGraph.nodes[project],
-  };
 
-  return { projects, projectsMap };
+  output.error({
+    title: `Cannot find project '${projectName}'`,
+  });
+  process.exit(1);
 }
 
 const targetAliases = {

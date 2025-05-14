@@ -1,5 +1,6 @@
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
+import { NxJsonConfiguration } from '../config/nx-json';
 import {
   ProjectConfiguration,
   ProjectMetadata,
@@ -9,8 +10,8 @@ import { mergeTargetConfigurations } from '../project-graph/utils/project-config
 import { readJsonFile } from './fileutils';
 import { getNxRequirePaths } from './installation-directory';
 import {
-  PackageManagerCommands,
   getPackageManagerCommand,
+  PackageManagerCommands,
 } from './package-manager';
 
 export interface NxProjectPackageJsonConfiguration
@@ -41,12 +42,21 @@ export interface PackageJson {
   type?: 'module' | 'commonjs';
   main?: string;
   types?: string;
+  // interchangeable with `types`: https://www.typescriptlang.org/docs/handbook/declaration-files/publishing.html#including-declarations-in-your-npm-package
+  typings?: string;
   module?: string;
   exports?:
     | string
     | Record<
         string,
-        string | { types?: string; require?: string; import?: string }
+        | string
+        | {
+            types?: string;
+            require?: string;
+            import?: string;
+            development?: string;
+            default?: string;
+          }
       >;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
@@ -65,6 +75,7 @@ export interface PackageJson {
         packages: string[];
       };
   publishConfig?: Record<string, string>;
+  files?: string[];
 
   // Nx Project Configuration
   nx?: NxProjectPackageJsonConfiguration;
@@ -143,15 +154,22 @@ export function buildTargetFromScript(
 let packageManagerCommand: PackageManagerCommands | undefined;
 
 export function getMetadataFromPackageJson(
-  packageJson: PackageJson
+  packageJson: PackageJson,
+  isInPackageManagerWorkspaces: boolean
 ): ProjectMetadata {
-  const { scripts, nx, description } = packageJson ?? {};
+  const { scripts, nx, description, name, exports, main } = packageJson;
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
   return {
     targetGroups: {
       ...(includedScripts.length ? { 'NPM Scripts': includedScripts } : {}),
     },
     description,
+    js: {
+      packageName: name,
+      packageExports: exports,
+      packageMain: main,
+      isInPackageManagerWorkspaces,
+    },
   };
 }
 
@@ -166,12 +184,17 @@ export function getTagsFromPackageJson(packageJson: PackageJson): string[] {
   return tags;
 }
 
-export function readTargetsFromPackageJson(packageJson: PackageJson) {
+export function readTargetsFromPackageJson(
+  packageJson: PackageJson,
+  nxJson: NxJsonConfiguration,
+  projectRoot: string,
+  workspaceRoot: string
+) {
   const { scripts, nx, private: isPrivate } = packageJson ?? {};
   const res: Record<string, TargetConfiguration> = {};
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
-  packageManagerCommand ??= getPackageManagerCommand();
   for (const script of includedScripts) {
+    packageManagerCommand ??= getPackageManagerCommand();
     res[script] = buildTargetFromScript(script, scripts, packageManagerCommand);
   }
   for (const targetName in nx?.targets) {
@@ -185,16 +208,44 @@ export function readTargetsFromPackageJson(packageJson: PackageJson) {
    * Add implicit nx-release-publish target for all package.json files that are
    * not marked as `"private": true` to allow for lightweight configuration for
    * package based repos.
+   *
+   * Any targetDefaults for the nx-release-publish target set by the user should
+   * be merged with the implicit target.
    */
-  if (!isPrivate && !res['nx-release-publish']) {
+  if (
+    !isPrivate &&
+    !res['nx-release-publish'] &&
+    hasNxJsPlugin(projectRoot, workspaceRoot)
+  ) {
+    const nxReleasePublishTargetDefaults =
+      nxJson?.targetDefaults?.['nx-release-publish'] ?? {};
     res['nx-release-publish'] = {
-      dependsOn: ['^nx-release-publish'],
       executor: '@nx/js:release-publish',
-      options: {},
+      ...nxReleasePublishTargetDefaults,
+      dependsOn: [
+        // For maximum correctness, projects should only ever be published once their dependencies are successfully published
+        '^nx-release-publish',
+        ...(nxReleasePublishTargetDefaults.dependsOn ?? []),
+      ],
+      options: {
+        ...(nxReleasePublishTargetDefaults.options ?? {}),
+      },
     };
   }
 
   return res;
+}
+
+function hasNxJsPlugin(projectRoot: string, workspaceRoot: string) {
+  try {
+    // nx-ignore-next-line
+    require.resolve('@nx/js', {
+      paths: [projectRoot, ...getNxRequirePaths(workspaceRoot), __dirname],
+    });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**

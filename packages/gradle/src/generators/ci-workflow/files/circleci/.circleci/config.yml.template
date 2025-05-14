@@ -3,6 +3,9 @@ version: 2.1
 orbs:
   nx: nrwl/nx@1.6.2
 
+env:
+  NX_BATCH_MODE: true
+
 jobs:
   main:
     environment:
@@ -10,22 +13,21 @@ jobs:
       _JAVA_OPTIONS: "-Xmx3g"
       GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
     docker:
-      - image: cimg/openjdk:17.0-node
+      - image: cimg/openjdk:21.0-node
     steps:
       - checkout
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      <% if (connectedToCloud) { %>- run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="3 linux-medium-jvm" --stop-agents-after="build"
-      <% } else { %># Connect your workspace by running "nx connect" and uncomment this
-      # - run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="3 linux-medium-jvm" --stop-agents-after="build"
-      <% } %>
+      <% if (connectedToCloud) { %># Uncomment this line to enable task distribution<% } else { %># Connect your workspace by running "nx connect" and uncomment this line to enable task distribution<% } %>
+      # - run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="3 linux-medium-jvm" --stop-agents-after="check"
+
       - nx/set-shas:
           main-branch-name: '<%= mainBranch %>'
-
 <% for (const command of commands) { %>
-      <% if (command.command) { %>- run: <%= command.command %><% } else if (command.comment) { %><%= command.comment %><% } else {%>- run: <%= command %><% } %><% } %>
+      <% if (command.command) { %>- run: <%= command.command %><% } else if (command.comments) { %><% for (const comment of command.comments) { %>
+      <%= comment %><% } %><% } else {%>- run: <%= command %><% } %><% } %>
 
 workflows:
   version: 2

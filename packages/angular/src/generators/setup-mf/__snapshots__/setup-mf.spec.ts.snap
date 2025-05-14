@@ -1,32 +1,34 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Init MF --federationType=dynamic should create a host with the correct configurations 1`] = `
-"import { setRemoteDefinitions } from '@nx/angular/mf';
+"import { init } from '@module-federation/enhanced/runtime';
 
 fetch('/module-federation.manifest.json')
   .then((res) => res.json())
-  .then(definitions => setRemoteDefinitions(definitions))
+  .then((remotes: Record<string, string>) => Object.entries(remotes).map(([name, entry]) => ({ name,entry})))
+  .then(remotes => init({name: 'app1', remotes}))
   .then(() => import('./bootstrap').catch(err => console.error(err)));"
 `;
 
 exports[`Init MF --federationType=dynamic should create a host with the correct configurations when --typescriptConfiguration=true 1`] = `
-"import { setRemoteDefinitions } from '@nx/angular/mf';
+"import { init } from '@module-federation/enhanced/runtime';
 
 fetch('/module-federation.manifest.json')
   .then((res) => res.json())
-  .then(definitions => setRemoteDefinitions(definitions))
+  .then((remotes: Record<string, string>) => Object.entries(remotes).map(([name, entry]) => ({ name,entry})))
+  .then(remotes => init({name: 'app1', remotes}))
   .then(() => import('./bootstrap').catch(err => console.error(err)));"
 `;
 
 exports[`Init MF --federationType=dynamic should wire up existing remote to dynamic host correctly 1`] = `
 "import { NxWelcomeComponent } from './nx-welcome.component';
 import { Route } from '@angular/router';
-import { loadRemoteModule } from '@nx/angular/mf';
+import { loadRemote } from '@module-federation/enhanced/runtime';
 
 export const appRoutes: Route[] = [
     {
     path: 'remote1',
-    loadChildren: () => loadRemoteModule('remote1', './Module').then(m => m.RemoteEntryModule)
+    loadChildren: () => loadRemote<typeof import('remote1/Module')>('remote1/Module').then(m => m!.RemoteEntryModule)
     },
     {
       path: '',
@@ -38,12 +40,12 @@ export const appRoutes: Route[] = [
 exports[`Init MF --federationType=dynamic should wire up existing remote to dynamic host correctly when --typescriptConfiguration=true 1`] = `
 "import { NxWelcomeComponent } from './nx-welcome.component';
 import { Route } from '@angular/router';
-import { loadRemoteModule } from '@nx/angular/mf';
+import { loadRemote } from '@module-federation/enhanced/runtime';
 
 export const appRoutes: Route[] = [
     {
     path: 'remote1',
-    loadChildren: () => loadRemoteModule('remote1', './Module').then(m => m.RemoteEntryModule)
+    loadChildren: () => loadRemote<typeof import('remote1/Module')>('remote1/Module').then(m => m!.RemoteEntryModule)
     },
     {
       path: '',
@@ -59,11 +61,11 @@ import { Route } from '@angular/router';
 export const appRoutes: Route[] = [
     {
     path: 'remote2',
-    loadChildren: () => import('remote2/Module').then(m => m.RemoteEntryModule)
+    loadChildren: () => import('remote2/Module').then(m => m!.RemoteEntryModule)
     },
     {
     path: 'remote1',
-    loadChildren: () => import('remote1/Module').then(m => m.RemoteEntryModule)
+    loadChildren: () => import('remote1/Module').then(m => m!.RemoteEntryModule)
     },
     {
       path: '',
@@ -73,7 +75,10 @@ export const appRoutes: Route[] = [
 `;
 
 exports[`Init MF should add a remote application and add it to a specified host applications webpack config that contains a remote application already 1`] = `
-"module.exports = {
+"/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
+module.exports = {
   name: 'app1',
   /**
    * To use a remote that does not exist in your current Nx Workspace
@@ -93,7 +98,7 @@ exports[`Init MF should add a remote application and add it to a specified host 
 `;
 
 exports[`Init MF should add a remote application and add it to a specified host applications webpack config that contains a remote application already when --typescriptConfiguration=true 1`] = `
-"import { ModuleFederationConfig } from '@nx/webpack';
+"import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'app1',
@@ -112,12 +117,18 @@ const config: ModuleFederationConfig = {
   remotes: ['remote1','remote2',]
 };
 
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
 export default config;
 "
 `;
 
 exports[`Init MF should add a remote application and add it to a specified host applications webpack config when no other remote has been added to it 1`] = `
-"module.exports = {
+"/**
+ * Nx requires a default export of the config to allow correct resolution of the module federation graph.
+ **/
+module.exports = {
   name: 'app1',
   /**
    * To use a remote that does not exist in your current Nx Workspace
@@ -137,7 +148,7 @@ exports[`Init MF should add a remote application and add it to a specified host 
 `;
 
 exports[`Init MF should add a remote application and add it to a specified host applications webpack config when no other remote has been added to it when --typescriptConfiguration=true 1`] = `
-"import { ModuleFederationConfig } from '@nx/webpack';
+"import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'app1',
@@ -156,6 +167,9 @@ const config: ModuleFederationConfig = {
   remotes: ['remote1',]
 };
 
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
 export default config;
 "
 `;
@@ -163,12 +177,12 @@ export default config;
 exports[`Init MF should add a remote to dynamic host correctly 1`] = `
 "import { NxWelcomeComponent } from './nx-welcome.component';
 import { Route } from '@angular/router';
-import { loadRemoteModule } from '@nx/angular/mf';
+import { loadRemote } from '@module-federation/enhanced/runtime';
 
 export const appRoutes: Route[] = [
     {
     path: 'remote1',
-    loadChildren: () => loadRemoteModule('remote1', './Module').then(m => m.RemoteEntryModule)
+    loadChildren: () => loadRemote<typeof import('remote1/Module')>('remote1/Module').then(m => m!.RemoteEntryModule)
     },
     {
       path: '',
@@ -180,12 +194,12 @@ export const appRoutes: Route[] = [
 exports[`Init MF should add a remote to dynamic host correctly when --typescriptConfiguration=true 1`] = `
 "import { NxWelcomeComponent } from './nx-welcome.component';
 import { Route } from '@angular/router';
-import { loadRemoteModule } from '@nx/angular/mf';
+import { loadRemote } from '@module-federation/enhanced/runtime';
 
 export const appRoutes: Route[] = [
     {
     path: 'remote1',
-    loadChildren: () => loadRemoteModule('remote1', './Module').then(m => m.RemoteEntryModule)
+    loadChildren: () => loadRemote<typeof import('remote1/Module')>('remote1/Module').then(m => m!.RemoteEntryModule)
     },
     {
       path: '',
@@ -195,7 +209,7 @@ export const appRoutes: Route[] = [
 `;
 
 exports[`Init MF should create webpack and mf configs correctly 1`] = `
-"const { withModuleFederation } = require('@nx/angular/module-federation');
+"const { withModuleFederation } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 
 /**
@@ -208,7 +222,10 @@ module.exports = withModuleFederation(config, { dts: false });
 `;
 
 exports[`Init MF should create webpack and mf configs correctly 2`] = `
-"module.exports = {
+"/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
+module.exports = {
   name: 'app1',
   /**
    * To use a remote that does not exist in your current Nx Workspace
@@ -228,7 +245,7 @@ exports[`Init MF should create webpack and mf configs correctly 2`] = `
 `;
 
 exports[`Init MF should create webpack and mf configs correctly 3`] = `
-"const { withModuleFederation } = require('@nx/angular/module-federation');
+"const { withModuleFederation } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 
 /**
@@ -241,7 +258,10 @@ module.exports = withModuleFederation(config, { dts: false });
 `;
 
 exports[`Init MF should create webpack and mf configs correctly 4`] = `
-"module.exports = {
+"/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
+module.exports = {
   name: 'remote1',
   exposes: {
     './Module': 'remote1/src/app/remote-entry/entry.module.ts',
@@ -251,7 +271,7 @@ exports[`Init MF should create webpack and mf configs correctly 4`] = `
 `;
 
 exports[`Init MF should create webpack and mf configs correctly when --typescriptConfiguration=true 1`] = `
-"import { withModuleFederation } from '@nx/angular/module-federation';
+"import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 /**
@@ -264,7 +284,7 @@ export default withModuleFederation(config, { dts: false });
 `;
 
 exports[`Init MF should create webpack and mf configs correctly when --typescriptConfiguration=true 2`] = `
-"import { ModuleFederationConfig } from '@nx/webpack';
+"import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'app1',
@@ -283,12 +303,15 @@ const config: ModuleFederationConfig = {
   remotes: []
 };
 
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
 export default config;
 "
 `;
 
 exports[`Init MF should create webpack and mf configs correctly when --typescriptConfiguration=true 3`] = `
-"import { withModuleFederation } from '@nx/angular/module-federation';
+"import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 /**
@@ -301,7 +324,7 @@ export default withModuleFederation(config, { dts: false });
 `;
 
 exports[`Init MF should create webpack and mf configs correctly when --typescriptConfiguration=true 4`] = `
-"import { ModuleFederationConfig } from '@nx/webpack';
+"import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'remote1',
@@ -310,6 +333,9 @@ const config: ModuleFederationConfig = {
   },
 };
 
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
 export default config;
 "
 `;
@@ -319,6 +345,7 @@ exports[`Init MF should generate the remote entry component correctly when prefi
 
 @Component({
   selector: 'app-remote1-entry',
+  standalone: false,
   template: \`<app-nx-welcome></app-nx-welcome>\`
 })
 export class RemoteEntryComponent {}
@@ -330,6 +357,7 @@ exports[`Init MF should generate the remote entry module and component correctly
 
 @Component({
   selector: 'my-org-remote1-entry',
+  standalone: false,
   template: \`<my-org-nx-welcome></my-org-nx-welcome>\`,
 })
 export class RemoteEntryComponent {}

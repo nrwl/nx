@@ -6,11 +6,13 @@ describe('<%= cliName %>', () => {
   let projectDirectory: string;
 
   afterAll(() => {
-    // Cleanup the test project
-    rmSync(projectDirectory, {
-      recursive: true,
-      force: true,
-    });
+    if (projectDirectory) {
+      // Cleanup the test project
+      rmSync(projectDirectory, {
+        recursive: true,
+        force: true,
+      });
+    }
   });
 
 
@@ -43,7 +45,7 @@ function createTestProject(extraArgs = '') {
   });
 
   execSync(
-    `<%= packageManagerCommands.exec %> --yes <%= cliName %>@e2e ${projectName} ${extraArgs}`,
+    `<%= packageManagerCommands.dlx %> <%= cliName %>@e2e ${projectName} ${extraArgs}`,
     {
       cwd: dirname(projectDirectory),
       stdio: 'inherit',

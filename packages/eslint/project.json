@@ -44,14 +44,8 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/eslint"],
-      "options": {
-        "command": "node ./scripts/copy-readme.js eslint"
-      }
-    },
-    "add-extra-dependencies": {
-      "command": "node ./scripts/add-dependency-to-build.js eslint @nx/linter @nrwl/linter"
+      "outputs": ["{workspaceRoot}/build/packages/eslint/README.md"],
+      "command": "node ./scripts/copy-readme.js eslint"
     }
   },
   "implicitDependencies": ["eslint-plugin"]

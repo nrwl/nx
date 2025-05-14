@@ -5,7 +5,25 @@
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {}
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "fs-extra",
+                "message": "Please use equivalent utilities from `node:fs` instead."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["**/devkit-exports"],
+                "message": "Do not import from devkit-exports from the nx package"
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "files": ["*.ts"],
@@ -111,7 +129,14 @@
               "@nx/nx-linux-arm64-musl",
               "@nx/nx-linux-arm-gnueabihf",
               "@nx/nx-win32-arm64-msvc",
-              "@nx/nx-freebsd-x64"
+              "@nx/nx-freebsd-x64",
+              "@nx/powerpack-license",
+              "@nx/key",
+              // Powerpack plugin conditionally available dynamically at runtime
+              "@nx/powerpack-conformance",
+              "@nx/conformance",
+              // Only used in test-utils at the time of writing
+              "@ltd/j-toml"
             ]
           }
         ]
