@@ -25,7 +25,11 @@ import {
   useState,
 } from 'react';
 import { ButtonLink, ButtonLinkProps } from '../button';
-import { enterpriseItems, resourceMenuItems } from './menu-items';
+import {
+  enterpriseItems,
+  resourceMenuItems,
+  solutionsItems,
+} from './menu-items';
 import { MobileMenuItem } from './mobile-menu-item';
 import { SectionsMenu } from './sections-menu';
 import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
@@ -120,6 +124,50 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
             >
               Blog
             </Link>
+            {/*SOLUTIONS*/}
+            <Popover className="relative">
+              {({ open }) => (
+                <>
+                  <PopoverButton
+                    className={cx(
+                      open ? 'text-blue-500 dark:text-sky-500' : '',
+                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
+                    )}
+                  >
+                    <span className="transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500">
+                      Solutions
+                    </span>
+                    <ChevronDownIcon
+                      className={cx(
+                        open
+                          ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
+                          : '',
+                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                      )}
+                      aria-hidden="true"
+                    />
+                  </PopoverButton>
+
+                  <Transition
+                    as={Fragment}
+                    enter="transition ease-out duration-200"
+                    enterFrom="opacity-0 translate-y-1"
+                    enterTo="opacity-100 translate-y-0"
+                    leave="transition ease-in duration-150"
+                    leaveFrom="opacity-100 translate-y-0"
+                    leaveTo="opacity-0 translate-y-1"
+                  >
+                    <Popover.Panel className="absolute left-60 z-30 mt-3 w-max max-w-2xl -translate-x-1/2 transform lg:left-20">
+                      <SectionsMenu
+                        sections={{
+                          'Speed, Reliability and AI': solutionsItems,
+                        }}
+                      />
+                    </Popover.Panel>
+                  </Transition>
+                </>
+              )}
+            </Popover>
             {/*RESOURCES*/}
             <Popover className="relative">
               {({ open }) => (
@@ -186,6 +234,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
               Pricing
             </Link>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
+            {/*ENTERPRISE*/}
             <Popover className="relative">
               {({ open }) => (
                 <>
@@ -379,7 +428,46 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                           >
                             Blog
                           </Link>
-                          {/*Resources*/}
+                          {/*SOLUTIONS*/}
+                          <Disclosure as="div">
+                            {({ open }) => (
+                              <>
+                                <DisclosureButton
+                                  className={cx(
+                                    open
+                                      ? 'text-blue-500 dark:text-sky-500'
+                                      : 'tex-slate-800 dark:text-slate-200',
+                                    'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none'
+                                  )}
+                                >
+                                  <span>Solutions</span>
+                                  <ChevronDownIcon
+                                    aria-hidden="true"
+                                    className={cx(
+                                      open
+                                        ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
+                                        : 'tex-slate-800 dark:text-slate-200',
+                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                                    )}
+                                  />
+                                </DisclosureButton>
+                                <Disclosure.Panel
+                                  as="ul"
+                                  className="space-y-1 pb-2"
+                                >
+                                  {Object.values(solutionsItems)
+                                    .flat()
+                                    .map((item) => (
+                                      <MobileMenuItem
+                                        key={item.name}
+                                        item={item}
+                                      />
+                                    ))}
+                                </Disclosure.Panel>
+                              </>
+                            )}
+                          </Disclosure>
+                          {/*RESOURCES*/}
                           <Disclosure as="div">
                             {({ open }) => (
                               <>
