@@ -11,7 +11,7 @@ import {
 export function WebinarNotifier(): ReactElement | null {
   const [isMounted, setIsMounted] = useState(false);
   const [isVisible, setIsVisible] = useState<boolean>(true);
-  const localStorageKey = 'webinar-april-30-2025--notifier-closed';
+  const localStorageKey = 'webinar-may-28-2025--notifier-closed';
 
   useEffect(() => {
     setIsMounted(true);
@@ -61,19 +61,18 @@ export function WebinarNotifier(): ReactElement | null {
               aria-hidden="true"
               className="size-8 flex-shrink-0"
             />
-            <span>Join our webinar + live Q&A on April 30th</span>
+            <span>Join our webinar + live Q&A on May 28th</span>
           </motion.h3>
           <motion.div key="live-event" className="mt-4 space-y-4">
             <p className="mb-2 text-sm">
-              Join Victor Savkin and Max Kless discuss why LLMs struggle with
-              fragmented codebases, how monorepos + Nx create AI-powered
-              architectural decisions, and the before-and-after experience of
-              AI-powered coding in Nx.
+              We’ve teamed up with Bitovi to bring you an all new webinar. Join
+              us May 28th for "Build Better,Ship Faster: Monorepos, Apps, &
+              Component Libraries with Nx Cloud".
             </p>
             <div className="flex flex-wrap items-center justify-end gap-1 sm:gap-4">
               <a
                 title="Signup"
-                href="https://bit.ly/42dwGwm"
+                href="https://bit.ly/4jQLCqp"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-pink-600 px-2 py-2 text-sm font-semibold text-white transition hover:bg-pink-700 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 active:text-black/70 md:px-4"
