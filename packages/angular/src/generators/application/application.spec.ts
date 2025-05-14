@@ -1412,6 +1412,28 @@ describe('app', () => {
         appTree.read('my-app/src/app/app.config.ts', 'utf-8')
       ).not.toContain('provideBrowserGlobalErrorListeners');
     });
+
+    it('should not set "typeCheckHostBindings" when strict is true if Angular version is lower than v20', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.0.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', { strict: true });
+
+      const appTsConfig = readJson(appTree, 'my-app/tsconfig.json');
+      expect(appTsConfig.angularCompilerOptions).toMatchInlineSnapshot(`
+        {
+          "enableI18nLegacyMessageIdFormat": false,
+          "strictInjectionParameters": true,
+          "strictInputAccessModifiers": true,
+          "strictTemplates": true,
+        }
+      `);
+    });
   });
 });
 
