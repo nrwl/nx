@@ -109,6 +109,11 @@
       "default": false,
       "description": "Use default export for the component instead of a named export."
     },
+    "ngHtml": {
+      "type": "boolean",
+      "default": false,
+      "description": "Generate component template files with an '.ng.html' file extension instead of '.html'."
+    },
     "skipFormat": {
       "description": "Skip formatting files.",
       "type": "boolean",

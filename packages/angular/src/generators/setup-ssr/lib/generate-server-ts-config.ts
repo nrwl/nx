@@ -54,8 +54,10 @@ export function generateTsConfigServerJsonForBrowserBuilder(
 
   const baseFilesPath = join(__dirname, '..', 'files');
   let pathToFiles: string;
-  if (angularMajorVersion >= 19) {
-    pathToFiles = join(baseFilesPath, 'v19+', 'server-builder', 'root');
+  if (angularMajorVersion >= 20) {
+    pathToFiles = join(baseFilesPath, 'v20+', 'server-builder', 'root');
+  } else if (angularMajorVersion === 19) {
+    pathToFiles = join(baseFilesPath, 'v19', 'server-builder', 'root');
   } else {
     pathToFiles = join(baseFilesPath, 'pre-v19', 'root');
   }

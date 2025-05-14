@@ -17,7 +17,7 @@ export async function normalizeOptions(
   if (options.serverRouting === undefined && isUsingApplicationBuilder) {
     const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
 
-    if (angularMajorVersion >= 19) {
+    if (angularMajorVersion === 19) {
       options.serverRouting = await promptWhenInteractive<{
         serverRouting: boolean;
       }>(
@@ -31,7 +31,7 @@ export async function normalizeOptions(
         { serverRouting: false }
       ).then(({ serverRouting }) => serverRouting);
     } else {
-      options.serverRouting = false;
+      options.serverRouting = angularMajorVersion >= 20;
     }
   } else if (
     options.serverRouting !== undefined &&

@@ -1,0 +1,14 @@
+{
+  "name": "migrate-provide-server-rendering-import",
+  "version": "21.2.0-beta.0",
+  "requires": { "@angular/core": ">=20.0.0-rc.0" },
+  "description": "Migrate imports of `provideServerRendering` from `@angular/platform-server` to `@angular/ssr`.",
+  "factory": "./src/migrations/update-21-2-0/migrate-provide-server-rendering-import",
+  "implementation": "/packages/angular/src/migrations/update-21-2-0/migrate-provide-server-rendering-import.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": "#### Migrate Imports of `provideServerRendering` from `@angular/platform-server` to `@angular/ssr`\n\nMigrate the imports of `provideServerRendering` from `@angular/platform-server` to `@angular/ssr`. This migration will also add the `@angular/ssr` package to your dependencies if needed.\n\n#### Examples\n\nChange the import of `provideServerRendering` from `@angular/platform-server` to `@angular/ssr`:\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```ts {% fileName=\"app/app.config.server.ts\" highlightLines=[2] %}\nimport { ApplicationConfig } from '@angular/core';\nimport { provideServerRendering } from '@angular/platform-server';\n\nconst serverConfig: ApplicationConfig = {\n  providers: [provideServerRendering()],\n};\n```\n\n{% /tab %}\n\n{% tab label=\"After\" %}\n\n```ts {% fileName=\"app/app.config.server.ts\" highlightLines=[2] %}\nimport { ApplicationConfig } from '@angular/core';\nimport { provideServerRendering } from '@angular/ssr';\n\nconst serverConfig: ApplicationConfig = {\n  providers: [provideServerRendering()],\n};\n```\n\n{% /tab %}\n{% /tabs %}\n\nIf you already have imports from `@angular/ssr`, the migration will add `provideServerRendering` to the existing import:\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```ts {% fileName=\"app/app.config.server.ts\" highlightLines=[2,3] %}\nimport { ApplicationConfig } from '@angular/core';\nimport { provideServerRendering } from '@angular/platform-server';\nimport { provideServerRouting } from '@angular/ssr';\nimport { serverRoutes } from './app.routes.server';\n\nconst serverConfig: ApplicationConfig = {\n  providers: [provideServerRendering(), provideServerRouting(serverRoutes)],\n};\n```\n\n{% /tab %}\n\n{% tab label=\"After\" %}\n\n```ts {% fileName=\"app/app.config.server.ts\" highlightLines=[2] %}\nimport { ApplicationConfig } from '@angular/core';\nimport { provideServerRouting, provideServerRendering } from '@angular/ssr';\nimport { serverRoutes } from './app.routes.server';\n\nconst serverConfig: ApplicationConfig = {\n  providers: [provideServerRendering(), provideServerRouting(serverRoutes)],\n};\n```\n\n{% /tab %}\n{% /tabs %}\n"
+}

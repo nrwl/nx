@@ -1,6 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import { readNxJson, updateJson, updateNxJson } from '@nx/devkit';
-import { NormalizedSchema } from './normalized-schema';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import type { NormalizedSchema } from './normalized-schema';
 
 /**
  * Enable Strict Mode in the library and spec TS Config
@@ -31,6 +32,8 @@ function updateTsConfig(
   host: Tree,
   options: NormalizedSchema['libraryOptions']
 ) {
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(host);
+
   // Update the settings in the tsconfig.app.json to enable strict type checking.
   // This matches the settings defined by the Angular CL https://angular.io/guide/strict-mode
   updateJson(host, `${options.projectRoot}/tsconfig.json`, (json) => {
@@ -51,6 +54,7 @@ function updateTsConfig(
       enableI18nLegacyMessageIdFormat: false,
       strictInjectionParameters: true,
       strictInputAccessModifiers: true,
+      typeCheckHostBindings: angularMajorVersion >= 20 ? true : undefined,
       strictTemplates: true,
     };
 

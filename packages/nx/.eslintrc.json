@@ -105,6 +105,7 @@
               "typescript",
               "@nrwl/angular",
               "@angular-devkit/build-angular",
+              "@angular/build",
               "@angular-devkit/core",
               "@angular-devkit/architect",
               "@swc/core", //Optional, used in JS analysis if available

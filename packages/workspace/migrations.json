@@ -39,6 +39,19 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "21.2.0": {
+      "version": "21.2.0-beta.0",
+      "x-prompt": "Do you want to update to TypeScript v5.8?",
+      "requires": {
+        "typescript": ">=5.7.0 <5.8.0"
+      },
+      "packages": {
+        "typescript": {
+          "version": "~5.8.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

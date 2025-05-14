@@ -7,7 +7,7 @@
 
 import { workspaceRoot } from '@nx/devkit';
 import browserslist from 'browserslist';
-import type { NgPackageEntryConfig } from 'ng-packagr/ng-entrypoint.schema';
+import type { NgPackageEntryConfig } from 'ng-packagr/src/ng-entrypoint.schema';
 import { getNgPackagrVersionInfo } from '../ng-packagr-version';
 import { importNgPackagrPath } from '../package-imports';
 
@@ -30,15 +30,15 @@ export function getStylesheetProcessor(): new (
   const { major: ngPackagrMajorVersion } = getNgPackagrVersionInfo();
 
   const { ComponentStylesheetBundler } = importNgPackagrPath<
-    typeof import('ng-packagr/lib/styles/component-stylesheets')
-  >('ng-packagr/lib/styles/component-stylesheets', ngPackagrMajorVersion);
+    typeof import('ng-packagr/src/lib/styles/component-stylesheets')
+  >('ng-packagr/src/lib/styles/component-stylesheets', ngPackagrMajorVersion);
   const {
     generateSearchDirectories,
     getTailwindConfig,
     loadPostcssConfiguration,
   } = importNgPackagrPath<
-    typeof import('ng-packagr/lib/styles/postcss-configuration')
-  >('ng-packagr/lib/styles/postcss-configuration', ngPackagrMajorVersion);
+    typeof import('ng-packagr/src/lib/styles/postcss-configuration')
+  >('ng-packagr/src/lib/styles/postcss-configuration', ngPackagrMajorVersion);
 
   class StylesheetProcessor extends ComponentStylesheetBundler {
     constructor(
@@ -53,15 +53,21 @@ export function getStylesheetProcessor(): new (
       // By default, browserslist defaults are too inclusive
       // https://github.com/browserslist/browserslist/blob/83764ea81ffaa39111c204b02c371afa44a4ff07/index.js#L516-L522
       // We change the default query to browsers that Angular support.
-      // https://angular.io/guide/browser-support
-      (browserslist.defaults as string[]) = [
-        'last 2 Chrome versions',
-        'last 1 Firefox version',
-        'last 2 Edge major versions',
-        'last 2 Safari major versions',
-        'last 2 iOS major versions',
-        'Firefox ESR',
-      ];
+      // https://angular.dev/reference/versions#browser-support
+      if (ngPackagrMajorVersion >= 20) {
+        (browserslist.defaults as string[]) = browserslist(undefined, {
+          path: require.resolve('ng-packagr/.browserslistrc'),
+        });
+      } else {
+        (browserslist.defaults as string[]) = [
+          'last 2 Chrome versions',
+          'last 1 Firefox version',
+          'last 2 Edge major versions',
+          'last 2 Safari major versions',
+          'last 2 iOS major versions',
+          'Firefox ESR',
+        ];
+      }
 
       const browserslistData = browserslist(undefined, { path: basePath });
       let searchDirs = generateSearchDirectories([projectBasePath]);

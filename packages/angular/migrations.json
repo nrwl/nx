@@ -302,6 +302,31 @@
       },
       "description": "Change the data persistence operator imports to '@ngrx/router-store/data-persistence'.",
       "factory": "./src/migrations/update-21-0-0/change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence"
+    },
+    "update-angular-cli-version-20-0-0-rc-0": {
+      "cli": "nx",
+      "version": "21.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=20.0.0-rc.0"
+      },
+      "description": "Update the @angular/cli package version to 20.0.0-rc.0.",
+      "factory": "./src/migrations/update-21-2-0/update-angular-cli"
+    },
+    "migrate-provide-server-rendering-import": {
+      "version": "21.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=20.0.0-rc.0"
+      },
+      "description": "Migrate imports of `provideServerRendering` from `@angular/platform-server` to `@angular/ssr`.",
+      "factory": "./src/migrations/update-21-2-0/migrate-provide-server-rendering-import"
+    },
+    "replace-provide-server-routing": {
+      "version": "21.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=20.0.0-rc.0"
+      },
+      "description": "Replace `provideServerRouting` with `provideServerRendering` using `withRoutes`.",
+      "factory": "./src/migrations/update-21-2-0/replace-provide-server-routing"
     }
   },
   "packageJsonUpdates": {
@@ -1612,6 +1637,71 @@
       "packages": {
         "@nx/angular-rspack": {
           "version": "^20.7.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "21.2.0": {
+      "version": "21.2.0-beta.0",
+      "x-prompt": "Do you want to update the Angular version to v20?",
+      "requires": {
+        "@angular/core": ">=19.2.0 <20.0.0-rc.0"
+      },
+      "packages": {
+        "@angular-devkit/build-angular": {
+          "version": "20.0.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "20.0.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "20.0.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/build": {
+          "version": "20.0.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "20.0.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/ssr": {
+          "version": "20.0.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "20.0.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "0.2000.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "0.2000.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "20.0.0-rc.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "20.0.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "20.0.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/google-maps": {
+          "version": "20.0.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "20.0.0-rc.0",
           "alwaysAddToPackageJson": false
         }
       }

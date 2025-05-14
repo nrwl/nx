@@ -9,7 +9,6 @@ import type { NgPackagr } from 'ng-packagr';
 import { join, resolve } from 'path';
 import { from } from 'rxjs';
 import { mapTo, switchMap } from 'rxjs/operators';
-import { getInstalledAngularVersionInfo } from '../utilities/angular-version-utils';
 import { parseRemappedTsConfigAndMergeDefaults } from '../utilities/typescript';
 import { getNgPackagrInstance } from './ng-packagr-adjustments/ng-packagr';
 import type { BuildAngularLibraryExecutorOptions } from './schema';
@@ -56,13 +55,10 @@ export function createLibraryExecutor(
     options: BuildAngularLibraryExecutorOptions,
     context: ExecutorContext
   ) {
-    const { major: angularMajorVersion, version: angularVersion } =
-      getInstalledAngularVersionInfo();
-    if (angularMajorVersion < 18 && options.poll !== undefined) {
-      throw new Error(
-        `The "poll" option requires Angular version 18.0.0 or greater. You are currently using version ${angularVersion}.`
-      );
-    }
+    options.project ??= join(
+      context.projectsConfigurations.projects[context.projectName].root,
+      'ng-package.json'
+    );
 
     const { dependencies } = calculateProjectBuildableDependencies(
       context.taskGraph,

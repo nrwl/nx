@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule<% if (provideGlobalErrorListener) { %>, provideBrowserGlobalErrorListeners<% } %> } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';<% if(routing) { %>
 import { RouterModule } from '@angular/router';<% } %>
 import { AppComponent } from './app.component';<% if(routing) { %>
@@ -11,7 +11,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';<% } %>
     BrowserModule,<% if(routing) { %>
     RouterModule.forRoot(appRoutes),<% } %>
   ],
-  providers: [],
+  providers: [<% if (provideGlobalErrorListener) { %>provideBrowserGlobalErrorListeners()<% } %>],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

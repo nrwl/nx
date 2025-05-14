@@ -10,9 +10,9 @@ export function validateOptions(tree: Tree, options: Schema): void {
 
   const { major: angularMajorVersion, version: angularVersion } =
     getInstalledAngularVersionInfo(tree);
-  if (angularMajorVersion < 19 && options.serverRouting) {
+  if (angularMajorVersion !== 19 && options.serverRouting !== undefined) {
     throw new Error(
-      `The "serverRouting" option is only supported in Angular versions >= 19.0.0. You are using Angular ${angularVersion}.`
+      `The "serverRouting" option is only supported in Angular versions 19.x.x. You are using Angular ${angularVersion}.`
     );
   }
 }

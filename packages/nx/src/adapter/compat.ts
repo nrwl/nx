@@ -112,6 +112,10 @@ if (!patched) {
       () => {};
   } catch (e) {}
 
+  try {
+    require('@angular/build/private').assertCompatibleAngularVersion = () => {};
+  } catch (e) {}
+
   patched = true;
 }
 

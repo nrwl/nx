@@ -2,6 +2,7 @@ import { readJson, updateJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { angularDevkitVersion, angularVersion } from '../../utils/versions';
 import { ensureAngularDependencies } from './ensure-angular-dependencies';
+import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 
 describe('ensureAngularDependencies', () => {
   let tree: Tree;
@@ -21,9 +22,6 @@ describe('ensureAngularDependencies', () => {
     expect(dependencies['@angular/compiler']).toBe(angularVersion);
     expect(dependencies['@angular/core']).toBe(angularVersion);
     expect(dependencies['@angular/platform-browser']).toBe(angularVersion);
-    expect(dependencies['@angular/platform-browser-dynamic']).toBe(
-      angularVersion
-    );
     expect(dependencies['@angular/router']).toBe(angularVersion);
     expect(dependencies['rxjs']).toBeDefined();
     expect(dependencies['tslib']).toBeDefined();
@@ -31,13 +29,28 @@ describe('ensureAngularDependencies', () => {
     expect(devDependencies['@angular/cli']).toBe(angularDevkitVersion);
     expect(devDependencies['@angular/compiler-cli']).toBe(angularVersion);
     expect(devDependencies['@angular/language-service']).toBe(angularVersion);
-    expect(devDependencies['@angular-devkit/build-angular']).toBe(
-      angularDevkitVersion
-    );
     expect(devDependencies['@angular-devkit/schematics']).toBe(
       angularDevkitVersion
     );
     expect(devDependencies['@schematics/angular']).toBe(angularDevkitVersion);
+  });
+
+  it('should add both packages for builders when angular version is less than 20', () => {
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { ...json.dependencies, '@angular/core': '~18.0.0' },
+    }));
+
+    ensureAngularDependencies(tree);
+
+    const { devDependencies } = readJson(tree, 'package.json');
+
+    expect(devDependencies['@angular/build']).toBe(
+      backwardCompatibleVersions.angularV18.angularDevkitVersion
+    );
+    expect(devDependencies['@angular-devkit/build-angular']).toBe(
+      backwardCompatibleVersions.angularV18.angularDevkitVersion
+    );
   });
 
   it('should add peer dependencies respecting the @angular/devkit installed version', () => {

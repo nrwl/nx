@@ -27,7 +27,6 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack and
   "styles": [
     "./src/styles.css"
   ],
-  "scripts": [],
   "devServer": {},
   "ssr": {
     "entry": "./src/server.ts"
@@ -174,7 +173,6 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack inc
   "styles": [
     "./src/styles.css"
   ],
-  "scripts": [],
   "devServer": {}
 
     }
@@ -215,7 +213,7 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack inc
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps with routing 1`] = `
-"import { NgModule } from '@angular/core';
+"import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import { AppComponent } from './app.component';
@@ -227,7 +225,7 @@ import { appRoutes } from './app.routes';
     BrowserModule,
     RouterModule.forRoot(appRoutes),
   ],
-  providers: [],
+  providers: [provideBrowserGlobalErrorListeners()],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
@@ -279,7 +277,7 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps without routing 1`] = `
-"import { NgModule } from '@angular/core';
+"import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { AppComponent } from './app.component';
 
@@ -288,7 +286,7 @@ import { AppComponent } from './app.component';
   imports: [
     BrowserModule,
   ],
-  providers: [],
+  providers: [provideBrowserGlobalErrorListeners()],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
@@ -434,12 +432,16 @@ bootstrapApplication(AppComponent, appConfig).catch((err) =>
 `;
 
 exports[`app --standalone should generate a standalone app correctly with routing 2`] = `
-"import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideRouter(appRoutes)
+  ]
 };
 "
 `;
@@ -511,10 +513,13 @@ bootstrapApplication(AppComponent, appConfig).catch((err) =>
 `;
 
 exports[`app --standalone should generate a standalone app correctly without routing 2`] = `
-"import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideZoneChangeDetection({ eventCoalescing: true }), ]
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideZoneChangeDetection({ eventCoalescing: true })
+  ]
 };
 "
 `;
@@ -565,17 +570,6 @@ describe('AppComponent', () => {
 "
 `;
 
-exports[`app --standalone should should not use event coalescing in versions lower than v18 1`] = `
-"import { ApplicationConfig } from '@angular/core';
-import { provideRouter } from '@angular/router';
-import { appRoutes } from './app.routes';
-
-export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(appRoutes) ]
-};
-"
-`;
-
 exports[`app --strict should enable strict type checking: app tsconfig.json 1`] = `
 {
   "angularCompilerOptions": {
@@ -583,6 +577,7 @@ exports[`app --strict should enable strict type checking: app tsconfig.json 1`] 
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
     "strictTemplates": true,
+    "typeCheckHostBindings": true,
   },
   "compilerOptions": {
     "esModuleInterop": true,
@@ -678,14 +673,14 @@ exports[`app --unit-test-runner vitest should generate src/test-setup.ts 1`] = `
 "import '@analogjs/vitest-angular/setup-zone';
 
 import {
-  BrowserDynamicTestingModule,
-  platformBrowserDynamicTesting,
-} from '@angular/platform-browser-dynamic/testing';
+  BrowserTestingModule,
+  platformBrowserTesting,
+} from '@angular/platform-browser/testing';
 import { getTestBed } from '@angular/core/testing';
 
 getTestBed().initTestEnvironment(
-  BrowserDynamicTestingModule,
-  platformBrowserDynamicTesting()
+  BrowserTestingModule,
+  platformBrowserTesting()
 );
 "
 `;
@@ -721,21 +716,10 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`app angular compat support should import "ApplicationConfig" from "@angular/platform-browser" 1`] = `
-"import { ApplicationConfig } from '@angular/core';
-import { provideRouter } from '@angular/router';
-import { appRoutes } from './app.routes';
-
-export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(appRoutes) ]
-};
-"
-`;
-
 exports[`app at the root should accept numbers in the path 1`] = `"src/9-websites/my-app"`;
 
 exports[`app format files should format files 1`] = `
-"import { NgModule } from '@angular/core';
+"import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import { AppComponent } from './app.component';
@@ -745,7 +729,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
 @NgModule({
   declarations: [AppComponent, NxWelcomeComponent],
   imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
-  providers: [],
+  providers: [provideBrowserGlobalErrorListeners()],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
@@ -840,7 +824,7 @@ exports[`app nested should create project configs 1`] = `
         },
       },
       "defaultConfiguration": "production",
-      "executor": "@angular-devkit/build-angular:application",
+      "executor": "@angular/build:application",
       "options": {
         "assets": [
           {
@@ -849,12 +833,10 @@ exports[`app nested should create project configs 1`] = `
           },
         ],
         "browser": "my-dir/my-app/src/main.ts",
-        "index": "my-dir/my-app/src/index.html",
         "outputPath": "dist/my-dir/my-app",
         "polyfills": [
           "zone.js",
         ],
-        "scripts": [],
         "styles": [
           "my-dir/my-app/src/styles.css",
         ],
@@ -865,7 +847,7 @@ exports[`app nested should create project configs 1`] = `
       ],
     },
     "extract-i18n": {
-      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "executor": "@angular/build:extract-i18n",
       "options": {
         "buildTarget": "my-app:build",
       },
@@ -884,7 +866,7 @@ exports[`app nested should create project configs 1`] = `
       },
       "continuous": true,
       "defaultConfiguration": "development",
-      "executor": "@angular-devkit/build-angular:dev-server",
+      "executor": "@angular/build:dev-server",
     },
     "serve-static": {
       "continuous": true,
@@ -958,7 +940,7 @@ exports[`app not nested should create project configs 1`] = `
         },
       },
       "defaultConfiguration": "production",
-      "executor": "@angular-devkit/build-angular:application",
+      "executor": "@angular/build:application",
       "options": {
         "assets": [
           {
@@ -967,12 +949,10 @@ exports[`app not nested should create project configs 1`] = `
           },
         ],
         "browser": "my-app/src/main.ts",
-        "index": "my-app/src/index.html",
         "outputPath": "dist/my-app",
         "polyfills": [
           "zone.js",
         ],
-        "scripts": [],
         "styles": [
           "my-app/src/styles.css",
         ],
@@ -983,7 +963,7 @@ exports[`app not nested should create project configs 1`] = `
       ],
     },
     "extract-i18n": {
-      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "executor": "@angular/build:extract-i18n",
       "options": {
         "buildTarget": "my-app:build",
       },
@@ -1002,7 +982,7 @@ exports[`app not nested should create project configs 1`] = `
       },
       "continuous": true,
       "defaultConfiguration": "development",
-      "executor": "@angular-devkit/build-angular:dev-server",
+      "executor": "@angular/build:dev-server",
     },
     "serve-static": {
       "continuous": true,
@@ -1100,6 +1080,7 @@ exports[`app not nested should generate files: tsconfig.json 1`] = `
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
     "strictTemplates": true,
+    "typeCheckHostBindings": true,
   },
   "compilerOptions": {
     "esModuleInterop": true,

@@ -31,7 +31,7 @@ import initGenerator from '../init/init';
 import { VitestGeneratorSchema } from './schema';
 import { detectUiFramework } from '../../utils/detect-ui-framework';
 import { getVitestDependenciesVersionsToInstall } from '../../utils/version-utils';
-import { coerce, major } from 'semver';
+import { clean, coerce, major } from 'semver';
 
 /**
  * @param hasPlugin some frameworks (e.g. Nuxt) provide their own plugin. Their generators handle the plugin detection.
@@ -90,9 +90,27 @@ export async function vitestGeneratorInternal(
 
       const setupFile = joinPathFragments(root, relativeTestSetupPath);
       if (!tree.exists(setupFile)) {
-        tree.write(
-          setupFile,
-          `import '@analogjs/vitest-angular/setup-zone';
+        if (isAngularV20(tree)) {
+          tree.write(
+            setupFile,
+            `import '@analogjs/vitest-angular/setup-zone';
+
+import {
+  BrowserTestingModule,
+  platformBrowserTesting,
+} from '@angular/platform-browser/testing';
+import { getTestBed } from '@angular/core/testing';
+
+getTestBed().initTestEnvironment(
+  BrowserTestingModule,
+  platformBrowserTesting()
+);
+`
+          );
+        } else {
+          tree.write(
+            setupFile,
+            `import '@analogjs/vitest-angular/setup-zone';
 
 import {
   BrowserDynamicTestingModule,
@@ -105,7 +123,8 @@ getTestBed().initTestEnvironment(
   platformBrowserDynamicTesting()
 );
 `
-        );
+          );
+        }
       }
 
       createOrEditViteConfig(
@@ -379,6 +398,22 @@ function tryFindSetupFile(tree: Tree, projectRoot: string) {
   if (tree.exists(joinPathFragments(projectRoot, setupFile))) {
     return setupFile;
   }
+}
+
+function isAngularV20(tree: Tree) {
+  const { dependencies, devDependencies } = readJson(tree, 'package.json');
+  const angularVersion =
+    dependencies?.['@angular/core'] ?? devDependencies?.['@angular/core'];
+
+  if (!angularVersion) {
+    // assume the latest version will be installed, which will be 20 or later
+    return true;
+  }
+
+  const cleanedAngularVersion =
+    clean(angularVersion) ?? coerce(angularVersion).version;
+
+  return major(cleanedAngularVersion) >= 20;
 }
 
 export default vitestGenerator;

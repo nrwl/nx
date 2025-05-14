@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -12,11 +13,16 @@ import {
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { angularInitGenerator } from '../init/init';
 import { convertToRspack } from '../convert-to-rspack/convert-to-rspack';
+import { angularInitGenerator } from '../init/init';
 import { setupSsr } from '../setup-ssr/setup-ssr';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
+import {
+  getInstalledAngularDevkitVersion,
+  getInstalledAngularVersionInfo,
+  versions,
+} from '../utils/version-utils';
 import {
   addE2e,
   addLinting,
@@ -131,6 +137,27 @@ export async function applicationGenerator(
           tmpl: '',
         }
       );
+    }
+  }
+
+  if (!options.skipPackageJson) {
+    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+    if (angularMajorVersion >= 20) {
+      const angularDevkitVersion =
+        getInstalledAngularDevkitVersion(tree) ??
+        versions(tree).angularDevkitVersion;
+
+      const devDependencies: Record<string, string> = {};
+      if (options.bundler === 'esbuild') {
+        devDependencies['@angular/build'] = angularDevkitVersion;
+      } else if (isRspack) {
+        devDependencies['@angular/build'] = angularDevkitVersion;
+        devDependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
+      } else {
+        devDependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
+      }
+
+      addDependenciesToPackageJson(tree, {}, devDependencies, undefined, true);
     }
   }
 

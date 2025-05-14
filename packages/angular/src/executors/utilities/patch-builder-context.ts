@@ -1,9 +1,7 @@
 import type { BuilderContext } from '@angular-devkit/architect';
-import type {
-  ApplicationBuilderOptions,
-  BrowserBuilderOptions,
-} from '@angular-devkit/build-angular';
+import type { BrowserBuilderOptions } from '@angular-devkit/build-angular';
 import type { Schema as BrowserEsbuildBuilderOptions } from '@angular-devkit/build-angular/src/builders/browser-esbuild/schema';
+import type { ApplicationBuilderOptions } from '@angular/build';
 import type { Target } from '@nx/devkit';
 
 const executorToBuilderMap = new Map<string, string>([

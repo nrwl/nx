@@ -1,6 +1,7 @@
 import type { DevRemoteDefinition } from '../../builders/utilities/module-federation';
 
-interface BaseSchema {
+interface Schema {
+  buildTarget: string;
   port?: number;
   host?: string;
   proxyConfig?: string;
@@ -28,20 +29,7 @@ interface BaseSchema {
   buildLibsFromSource?: boolean;
 }
 
-export type SchemaWithBrowserTarget = BaseSchema & {
-  /**
-   * @deprecated Use `buildTarget` instead. It will be removed when Angular v20 is released.
-   */
-  browserTarget: string;
-};
-
-export type SchemaWithBuildTarget = BaseSchema & {
-  buildTarget: string;
-};
-
-export type Schema = SchemaWithBrowserTarget | SchemaWithBuildTarget;
-
-export type NormalizedSchema = SchemaWithBuildTarget & {
+export type NormalizedSchema = Schema & {
   devRemotes: DevRemoteDefinition[];
   liveReload: boolean;
   open: boolean;

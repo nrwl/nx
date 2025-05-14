@@ -19,10 +19,19 @@ export function addServerFile(tree: Tree, options: NormalizedGeneratorOptions) {
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   const baseFilesPath = join(__dirname, '..', 'files');
   let pathToFiles: string;
-  if (angularMajorVersion >= 19) {
+  if (angularMajorVersion >= 20) {
     pathToFiles = join(
       baseFilesPath,
-      'v19+',
+      'v20+',
+      options.isUsingApplicationBuilder
+        ? 'application-builder'
+        : 'server-builder',
+      'server'
+    );
+  } else if (angularMajorVersion === 19) {
+    pathToFiles = join(
+      baseFilesPath,
+      'v19',
       options.isUsingApplicationBuilder
         ? 'application-builder' +
             (options.serverRouting ? '' : '-common-engine')

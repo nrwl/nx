@@ -79,9 +79,6 @@ describe('lib', () => {
     expect(dependencies['@angular/compiler']).toBe(angularVersion);
     expect(dependencies['@angular/core']).toBe(angularVersion);
     expect(dependencies['@angular/platform-browser']).toBe(angularVersion);
-    expect(dependencies['@angular/platform-browser-dynamic']).toBe(
-      angularVersion
-    );
     expect(dependencies['@angular/router']).toBe(angularVersion);
     expect(dependencies['rxjs']).toBeDefined();
     expect(dependencies['tslib']).toBeDefined();
@@ -89,12 +86,21 @@ describe('lib', () => {
     expect(devDependencies['@angular/cli']).toBe(angularDevkitVersion);
     expect(devDependencies['@angular/compiler-cli']).toBe(angularVersion);
     expect(devDependencies['@angular/language-service']).toBe(angularVersion);
-    expect(devDependencies['@angular-devkit/build-angular']).toBe(
-      angularDevkitVersion
-    );
 
+    // @angular/build should no be installed unless using vitest, as no other
+    // task requires it
+    expect(devDependencies['@angular/build']).toBeUndefined();
     // codelyzer should no longer be there by default
     expect(devDependencies['codelyzer']).toBeUndefined();
+  });
+
+  it('should add @angular/build when using vitest', async () => {
+    await runLibraryGeneratorWithOpts({
+      unitTestRunner: UnitTestRunner.Vitest,
+    });
+
+    const { devDependencies } = readJson(tree, 'package.json');
+    expect(devDependencies['@angular/build']).toBe(angularDevkitVersion);
   });
 
   it('should not touch the package.json when run with `--skipPackageJson`', async () => {
@@ -302,6 +308,7 @@ describe('lib', () => {
           strictInjectionParameters: true,
           strictInputAccessModifiers: true,
           strictTemplates: true,
+          typeCheckHostBindings: true,
         },
         compilerOptions: {
           forceConsistentCasingInFileNames: true,
@@ -1574,7 +1581,7 @@ describe('lib', () => {
       expect(
         tree.read('my-lib/src/lib/lib.routes.ts', 'utf-8')
       ).toMatchSnapshot();
-      expect(tree.children('my-lib/src/lib')).toMatchInlineSnapshot(`
+      expect(tree.children('my-lib/src/lib').sort()).toMatchInlineSnapshot(`
         [
           "lib.routes.ts",
           "my-lib.component.css",
@@ -1583,7 +1590,7 @@ describe('lib', () => {
           "my-lib.component.ts",
         ]
       `);
-      expect(tree.children('my-lib/src')).toMatchInlineSnapshot(`
+      expect(tree.children('my-lib/src').sort()).toMatchInlineSnapshot(`
         [
           "index.ts",
           "lib",
@@ -1807,23 +1814,43 @@ describe('lib', () => {
   });
 
   describe('angular compat support', () => {
-    beforeEach(() => {
+    it('should disable modern class fields behavior in versions lower than v18.1', async () => {
       updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/core': '~17.2.0',
+          '@angular/core': '~18.0.0',
         },
       }));
-    });
 
-    it('should disable modern class fields behavior', async () => {
       await runLibraryGeneratorWithOpts();
 
       expect(
         readJson(tree, 'my-lib/tsconfig.json').compilerOptions
           .useDefineForClassFields
       ).toBe(false);
+    });
+
+    it('should not set "typeCheckHostBindings" when strict is true if Angular version is lower than v20', async () => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.0.0',
+        },
+      }));
+
+      await runLibraryGeneratorWithOpts();
+
+      expect(readJson(tree, 'my-lib/tsconfig.json').angularCompilerOptions)
+        .toMatchInlineSnapshot(`
+        {
+          "enableI18nLegacyMessageIdFormat": false,
+          "strictInjectionParameters": true,
+          "strictInputAccessModifiers": true,
+          "strictTemplates": true,
+        }
+      `);
     });
   });
 });

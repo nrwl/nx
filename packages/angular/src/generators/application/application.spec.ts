@@ -68,9 +68,6 @@ describe('app', () => {
     expect(dependencies['@angular/compiler']).toBe(angularVersion);
     expect(dependencies['@angular/core']).toBe(angularVersion);
     expect(dependencies['@angular/platform-browser']).toBe(angularVersion);
-    expect(dependencies['@angular/platform-browser-dynamic']).toBe(
-      angularVersion
-    );
     expect(dependencies['@angular/router']).toBe(angularVersion);
     expect(dependencies['rxjs']).toBeDefined();
     expect(dependencies['tslib']).toBeDefined();
@@ -78,12 +75,20 @@ describe('app', () => {
     expect(devDependencies['@angular/cli']).toBe(angularDevkitVersion);
     expect(devDependencies['@angular/compiler-cli']).toBe(angularVersion);
     expect(devDependencies['@angular/language-service']).toBe(angularVersion);
-    expect(devDependencies['@angular-devkit/build-angular']).toBe(
-      angularDevkitVersion
-    );
+    expect(devDependencies['@angular/build']).toBe(angularDevkitVersion);
 
     // codelyzer should no longer be there by default
     expect(devDependencies['codelyzer']).toBeUndefined();
+  });
+
+  it('should add both packages for builders when using rspack bundler', async () => {
+    await generateApp(appTree, 'my-app', { bundler: 'rspack' });
+
+    const { devDependencies } = readJson(appTree, 'package.json');
+    expect(devDependencies['@angular/build']).toBe(angularDevkitVersion);
+    expect(devDependencies['@angular-devkit/build-angular']).toBe(
+      angularDevkitVersion
+    );
   });
 
   it('should generate correct tsconfig.editor.json', async () => {
@@ -787,9 +792,7 @@ describe('app', () => {
           unitTestRunner: UnitTestRunner.Vitest,
         });
         const { targets } = readProjectConfiguration(appTree, 'my-app');
-        expect(targets.build.executor).toBe(
-          '@angular-devkit/build-angular:application'
-        );
+        expect(targets.build.executor).toBe('@angular/build:application');
       });
 
       it('should not override serve configuration when using vitest as a test runner', async () => {
@@ -797,9 +800,7 @@ describe('app', () => {
           unitTestRunner: UnitTestRunner.Vitest,
         });
         const { targets } = readProjectConfiguration(appTree, 'my-app');
-        expect(targets.serve.executor).toBe(
-          '@angular-devkit/build-angular:dev-server'
-        );
+        expect(targets.serve.executor).toBe('@angular/build:dev-server');
       });
     });
 
@@ -1010,19 +1011,6 @@ describe('app', () => {
       expect(nxWelcomeComponentText).not.toContain('standalone: true');
       expect(nxWelcomeComponentText).not.toContain('standalone: false');
     });
-
-    it('should should not use event coalescing in versions lower than v18', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: { ...json.dependencies, '@angular/core': '~17.0.0' },
-      }));
-
-      await generateApp(appTree, 'standalone', { standalone: true });
-
-      expect(
-        appTree.read('standalone/src/app/app.config.ts', 'utf-8')
-      ).toMatchSnapshot();
-    });
   });
 
   it('should generate correct main.ts', async () => {
@@ -1031,32 +1019,13 @@ describe('app', () => {
 
     // ASSERT
     expect(appTree.read('myapp/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+      "import { platformBrowser } from '@angular/platform-browser';
       import { AppModule } from './app/app.module';
 
-      platformBrowserDynamic()
+      platformBrowser()
         .bootstrapModule(AppModule, {
           ngZoneEventCoalescing: true
         })
-        .catch((err) => console.error(err));
-      "
-    `);
-  });
-
-  it('should should not use event coalescing in versions lower than v18', async () => {
-    updateJson(appTree, 'package.json', (json) => ({
-      ...json,
-      dependencies: { ...json.dependencies, '@angular/core': '~17.0.0' },
-    }));
-
-    await generateApp(appTree, 'myapp');
-
-    expect(appTree.read('myapp/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-      import { AppModule } from './app/app.module';
-
-      platformBrowserDynamic()
-        .bootstrapModule(AppModule)
         .catch((err) => console.error(err));
       "
     `);
@@ -1176,7 +1145,7 @@ describe('app', () => {
 
       const project = readProjectConfiguration(appTree, 'ngesbuild');
       expect(project.targets.build.executor).toEqual(
-        '@angular-devkit/build-angular:application'
+        '@angular/build:application'
       );
       expect(
         project.targets.build.configurations.development.buildOptimizer
@@ -1325,7 +1294,7 @@ describe('app', () => {
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/core': '~17.2.0',
+          '@angular/core': '~18.2.0',
         },
       }));
     });
@@ -1335,61 +1304,25 @@ describe('app', () => {
 
       const { devDependencies } = readJson(appTree, 'package.json');
       expect(devDependencies['@angular-devkit/build-angular']).toEqual(
-        backwardCompatibleVersions.angularV17.angularDevkitVersion
+        backwardCompatibleVersions.angularV18.angularDevkitVersion
       );
       expect(devDependencies['@angular-devkit/schematics']).toEqual(
-        backwardCompatibleVersions.angularV17.angularDevkitVersion
+        backwardCompatibleVersions.angularV18.angularDevkitVersion
       );
       expect(devDependencies['@schematics/angular']).toEqual(
-        backwardCompatibleVersions.angularV17.angularDevkitVersion
+        backwardCompatibleVersions.angularV18.angularDevkitVersion
       );
     });
 
-    it('should import "ApplicationConfig" from "@angular/platform-browser"', async () => {
-      await generateApp(appTree, 'my-app', { standalone: true });
+    it('should disable modern class fields behavior for versions lower than v18.1', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~18.0.0',
+        },
+      }));
 
-      expect(
-        appTree.read('my-app/src/app/app.config.ts', 'utf-8')
-      ).toMatchSnapshot();
-    });
-
-    it('should import "RouterTestingModule" in test files', async () => {
-      await generateApp(appTree, 'my-app', { standalone: true });
-
-      expect(appTree.read('my-app/src/app/app.component.spec.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { TestBed } from '@angular/core/testing';
-        import { AppComponent } from './app.component';
-        import { NxWelcomeComponent } from './nx-welcome.component';
-        import { RouterTestingModule } from '@angular/router/testing';
-
-        describe('AppComponent', () => {
-          beforeEach(async () => {
-            await TestBed.configureTestingModule({
-              imports: [AppComponent, NxWelcomeComponent, RouterTestingModule],
-            }).compileComponents();
-          });
-
-          it('should render title', () => {
-            const fixture = TestBed.createComponent(AppComponent);
-            fixture.detectChanges();
-            const compiled = fixture.nativeElement as HTMLElement;
-            expect(compiled.querySelector('h1')?.textContent).toContain(
-              'Welcome my-app'
-            );
-          });
-
-          it(\`should have as title 'my-app'\`, () => {
-            const fixture = TestBed.createComponent(AppComponent);
-            const app = fixture.componentInstance;
-            expect(app.title).toEqual('my-app');
-          });
-        });
-        "
-      `);
-    });
-
-    it('should disable modern class fields behavior', async () => {
       await generateApp(appTree, 'my-app');
 
       expect(
@@ -1398,19 +1331,128 @@ describe('app', () => {
       ).toBe(false);
     });
 
-    it('should configure the correct assets for versions lower than v18', async () => {
+    it('should set the "index" option of the application builder for versions lower than v20', async () => {
       updateJson(appTree, 'package.json', (json) => ({
         ...json,
-        dependencies: { ...json.dependencies, '@angular/core': '~17.0.0' },
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.0.0',
+        },
       }));
 
-      await generateApp(appTree, '.', { name: 'my-app' });
+      await generateApp(appTree, 'my-app', { bundler: 'esbuild' });
 
       const project = readProjectConfiguration(appTree, 'my-app');
-      expect(project.targets.build.options.assets).toStrictEqual([
-        './src/favicon.ico',
-        './src/assets',
-      ]);
+      expect(project.targets.build.options.index).toBe('my-app/src/index.html');
+    });
+
+    it('should use builders from "@angular-devkit/build-angular" for versions lower than v20', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.0.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', { bundler: 'esbuild' });
+
+      const project = readProjectConfiguration(appTree, 'my-app');
+      expect(project.targets.build.executor).toBe(
+        '@angular-devkit/build-angular:application'
+      );
+      expect(project.targets.serve.executor).toBe(
+        '@angular-devkit/build-angular:dev-server'
+      );
+      expect(project.targets['extract-i18n'].executor).toBe(
+        '@angular-devkit/build-angular:extract-i18n'
+      );
+      expect(
+        readJson(appTree, 'package.json').devDependencies[
+          '@angular-devkit/build-angular'
+        ]
+      ).toBeDefined();
+    });
+
+    it('should not set provideBrowserGlobalErrorListeners in app.module.ts for versions lower than v20', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.0.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', { bundler: 'esbuild' });
+
+      expect(
+        appTree.read('my-app/src/app/app.module.ts', 'utf-8')
+      ).not.toContain('provideBrowserGlobalErrorListeners');
+    });
+
+    it('should not set provideBrowserGlobalErrorListeners in standalone app.config.ts for versions lower than v20', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.0.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', {
+        bundler: 'esbuild',
+        standalone: true,
+      });
+
+      expect(
+        appTree.read('my-app/src/app/app.config.ts', 'utf-8')
+      ).not.toContain('provideBrowserGlobalErrorListeners');
+    });
+
+    it('should not set "typeCheckHostBindings" when strict is true if Angular version is lower than v20', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.0.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', { strict: true });
+
+      const appTsConfig = readJson(appTree, 'my-app/tsconfig.json');
+      expect(appTsConfig.angularCompilerOptions).toMatchInlineSnapshot(`
+        {
+          "enableI18nLegacyMessageIdFormat": false,
+          "strictInjectionParameters": true,
+          "strictInputAccessModifiers": true,
+          "strictTemplates": true,
+        }
+      `);
+    });
+
+    it('should use platformBrowserDynamic for versions lower than v20', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.0.0',
+        },
+      }));
+
+      await generateApp(appTree, 'myapp');
+
+      expect(appTree.read('myapp/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
+        "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+        import { AppModule } from './app/app.module';
+
+        platformBrowserDynamic()
+          .bootstrapModule(AppModule, {
+            ngZoneEventCoalescing: true
+          })
+          .catch((err) => console.error(err));
+        "
+      `);
     });
   });
 });
