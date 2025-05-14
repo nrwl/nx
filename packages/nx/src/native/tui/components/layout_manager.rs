@@ -108,7 +108,11 @@ impl LayoutManager {
             min_horizontal_width: 120, // Minimum width for horizontal layout to be viable
             min_vertical_height: 30,   // Minimum height for vertical layout to be viable
             pane_arrangement: PaneArrangement::None,
-            task_list_visibility: TaskListVisibility::Visible,
+            task_list_visibility: if task_count > 1 {
+                TaskListVisibility::Visible
+            } else {
+                TaskListVisibility::Hidden
+            },
             task_count,
             horizontal_padding: 2, // Default horizontal padding of 2 characters
             vertical_padding: 1,   // Default vertical padding of 1 character
@@ -134,7 +138,7 @@ impl LayoutManager {
         self.mode = match self.mode {
             LayoutMode::Auto => {
                 // If we are in auto mode, we need to figure out our current orientation and set the mode to the opposite.
-                if self.is_vertical_layout_preferred(area.width, area.height, self.task_count) {
+                if self.is_vertical_layout_preferred(area.width, area.height) {
                     LayoutMode::Horizontal
                 } else {
                     LayoutMode::Vertical
@@ -163,6 +167,13 @@ impl LayoutManager {
     /// Gets the current task list visibility.
     pub fn get_task_list_visibility(&self) -> TaskListVisibility {
         self.task_list_visibility
+    }
+
+    pub fn toggle_task_list_visibility(&mut self) {
+        self.task_list_visibility = match self.task_list_visibility {
+            TaskListVisibility::Visible => TaskListVisibility::Hidden,
+            TaskListVisibility::Hidden => TaskListVisibility::Visible,
+        };
     }
 
     /// Sets the task count.
@@ -238,9 +249,7 @@ impl LayoutManager {
     fn calculate_layout_visible_task_list(&self, area: Rect) -> LayoutAreas {
         // Determine whether to use vertical or horizontal layout
         let use_vertical = match self.mode {
-            LayoutMode::Auto => {
-                self.is_vertical_layout_preferred(area.width, area.height, self.task_count)
-            }
+            LayoutMode::Auto => self.is_vertical_layout_preferred(area.width, area.height),
             LayoutMode::Vertical => true,
             LayoutMode::Horizontal => false,
         };
@@ -390,17 +399,7 @@ impl LayoutManager {
     /// - Terminal aspect ratio
     /// - Number of tasks (single task prefers vertical layout)
     /// - Minimum dimensions requirements
-    fn is_vertical_layout_preferred(
-        &self,
-        terminal_width: u16,
-        terminal_height: u16,
-        task_count: usize,
-    ) -> bool {
-        // If there's only a single task, prefer vertical layout
-        if task_count <= 1 {
-            return true;
-        }
-
+    fn is_vertical_layout_preferred(&self, terminal_width: u16, terminal_height: u16) -> bool {
         // Calculate aspect ratio (width/height)
         let aspect_ratio = terminal_width as f32 / terminal_height as f32;
 
@@ -544,27 +543,6 @@ mod tests {
         assert_eq!(task_list.y, 0);
         assert_eq!(task_list.width, 80);
         assert_eq!(task_list.height, 100 / 3);
-    }
-
-    #[test]
-    fn test_auto_mode_prefers_vertical_for_single_task() {
-        let mut layout_manager = LayoutManager::new(5);
-        let area = create_test_area(200, 60); // Wide terminal that would normally use horizontal
-
-        layout_manager.set_mode(LayoutMode::Auto);
-        layout_manager.set_task_list_visibility(TaskListVisibility::Visible);
-        layout_manager.set_pane_arrangement(PaneArrangement::Single);
-        layout_manager.set_task_count(1); // Single task
-
-        let layout = layout_manager.calculate_layout(area);
-        assert!(layout.task_list.is_some());
-
-        // Even though terminal is wide, layout should be vertical for a single task
-        let task_list = layout.task_list.unwrap();
-        assert_eq!(task_list.x, 0);
-        assert_eq!(task_list.y, 0);
-        assert_eq!(task_list.width, 200);
-        assert_eq!(task_list.height, 60 / 3);
     }
 
     #[test]
@@ -740,7 +718,7 @@ mod tests {
     mod visual_tests {
         use super::*;
         use ratatui::widgets::{Block, Borders};
-        use ratatui::{backend::TestBackend, Terminal};
+        use ratatui::{Terminal, backend::TestBackend};
 
         /// Render a layout configuration to a TestBackend for visualization
         fn render_layout(
@@ -824,19 +802,6 @@ mod tests {
             layout_manager.set_task_list_visibility(TaskListVisibility::Visible);
             layout_manager.set_pane_arrangement(PaneArrangement::Single);
             layout_manager.set_task_count(5);
-
-            let terminal = render_layout(120, 30, &layout_manager);
-            insta::assert_snapshot!(terminal.backend());
-        }
-
-        /// Visual test for auto mode with single task (should be vertical regardless of terminal size)
-        #[test]
-        fn test_visualize_auto_mode_single_task() {
-            let mut layout_manager = LayoutManager::new(5);
-            layout_manager.set_mode(LayoutMode::Auto);
-            layout_manager.set_task_list_visibility(TaskListVisibility::Visible);
-            layout_manager.set_pane_arrangement(PaneArrangement::Single);
-            layout_manager.set_task_count(1);
 
             let terminal = render_layout(120, 30, &layout_manager);
             insta::assert_snapshot!(terminal.backend());

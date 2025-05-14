@@ -3,6 +3,7 @@ use color_eyre::eyre::Result;
 use crossterm::{
     cursor,
     event::{Event as CrosstermEvent, KeyEvent, KeyEventKind, MouseEvent},
+    execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
 use futures::{FutureExt, StreamExt};
@@ -16,7 +17,7 @@ use tokio::{
     task::JoinHandle,
 };
 use tokio_util::sync::CancellationToken;
-use tracing::debug;
+use tracing::{debug, trace};
 
 pub type Frame<'a> = ratatui::Frame<'a>;
 
@@ -100,13 +101,13 @@ impl Tui {
                       _event_tx.send(Event::Render).expect("cannot send event");
                   },
                   maybe_event = crossterm_event => {
-                    debug!("Maybe Crossterm Event: {:?}", maybe_event);
+                    trace!("Maybe Crossterm Event: {:?}", maybe_event);
                     match maybe_event {
                       Some(Ok(evt)) => {
-                        debug!("Crossterm Event: {:?}", evt);
+                        trace!("Crossterm Event: {:?}", evt);
                         match evt {
                           CrosstermEvent::Key(key) if key.kind == KeyEventKind::Press => {
-                            debug!("Key: {:?}", key);
+                            trace!("Key: {:?}", key);
                             _event_tx.send(Event::Key(key)).unwrap();
                           },
                           CrosstermEvent::Mouse(mouse) => {
@@ -170,7 +171,7 @@ impl Tui {
         let _ = THEME.is_dark_mode;
         debug!("Enabling Raw Mode");
         crossterm::terminal::enable_raw_mode()?;
-        crossterm::execute!(std::io::stderr(), EnterAlternateScreen, cursor::Hide)?;
+        execute!(std::io::stderr(), EnterAlternateScreen, cursor::Hide)?;
         self.start();
         Ok(())
     }
@@ -179,7 +180,7 @@ impl Tui {
         self.stop()?;
         if crossterm::terminal::is_raw_mode_enabled()? {
             self.flush()?;
-            crossterm::execute!(std::io::stderr(), LeaveAlternateScreen, cursor::Show)?;
+            execute!(std::io::stderr(), LeaveAlternateScreen, cursor::Show)?;
             crossterm::terminal::disable_raw_mode()?;
         }
         Ok(())

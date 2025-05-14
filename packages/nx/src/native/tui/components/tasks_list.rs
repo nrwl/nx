@@ -1,11 +1,11 @@
 use color_eyre::eyre::Result;
 use hashbrown::HashSet;
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style, Stylize},
     text::{Line, Span},
     widgets::{Block, Cell, Paragraph, Row, Table},
-    Frame,
 };
 use std::{
     any::Any,
@@ -1001,7 +1001,11 @@ impl TasksList {
                                 .enumerate()
                                 .filter_map(|(idx, task)| {
                                     if task.as_deref() == Some(task_name.as_str()) {
-                                        Some(format!("[Pinned output {}]", idx + 1))
+                                        Some(if has_narrow_area_width {
+                                            format!("[{}]", idx + 1)
+                                        } else {
+                                            format!("[Pinned output {}]", idx + 1)
+                                        })
                                     } else {
                                         None
                                     }
@@ -1841,8 +1845,8 @@ impl Component for TasksList {
 mod tests {
     use super::*;
     use crate::native::tasks::types::TaskTarget;
-    use ratatui::backend::TestBackend;
     use ratatui::Terminal;
+    use ratatui::backend::TestBackend;
 
     // Helper function to create a TasksList with test task data
     fn create_test_tasks_list() -> (TasksList, Vec<Task>) {
@@ -2777,6 +2781,17 @@ mod tests {
                 "The remote cache will not be read from or written to during this run.".to_string(),
             ))
             .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_pinned_tasks_with_narrow_width() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(40, 15);
+
+        tasks_list.pin_task(test_tasks[0].id.clone(), 0);
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!(terminal.backend());

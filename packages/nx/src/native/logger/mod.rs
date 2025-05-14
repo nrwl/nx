@@ -1,13 +1,16 @@
+pub mod console;
+
 use colored::Colorize;
 use std::env;
 use std::fs::create_dir_all;
 use std::io::IsTerminal;
 use tracing::{Event, Level, Subscriber};
 use tracing_appender::rolling::{RollingFileAppender, Rotation};
-use tracing_subscriber::fmt::{format, FmtContext, FormatEvent, FormatFields, FormattedFields};
+use tracing_subscriber::fmt::{FmtContext, FormatEvent, FormatFields, FormattedFields, format};
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::registry::LookupSpan;
 use tracing_subscriber::{EnvFilter, Layer};
+use tui_logger::TuiTracingSubscriberLayer;
 
 struct NxLogFormatter;
 impl<S, N> FormatEvent<S, N> for NxLogFormatter
@@ -99,11 +102,13 @@ pub(crate) fn enable_logger() {
         .with_writer(std::io::stdout)
         .event_format(NxLogFormatter)
         .with_filter(
-            EnvFilter::try_from_env("NX_NATIVE_LOGGING")
-                .unwrap_or_else(|_| EnvFilter::new("ERROR")),
+            EnvFilter::try_from_env("NX_NATIVE_LOGGING").unwrap_or_else(|_| EnvFilter::new("OFF")),
         );
 
-    let registry = tracing_subscriber::registry().with(stdout_layer);
+    let registry = tracing_subscriber::registry()
+        .with(stdout_layer)
+        .with(TuiTracingSubscriberLayer);
+    tui_logger::init_logger(tui_logger::LevelFilter::Trace).ok();
 
     if env::var("NX_NATIVE_FILE_LOGGING").is_err() {
         // File logging is not enabled

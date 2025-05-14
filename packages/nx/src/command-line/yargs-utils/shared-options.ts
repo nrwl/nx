@@ -2,6 +2,7 @@ import { readNxJson } from '../../config/nx-json';
 import { shouldUseTui } from '../../tasks-runner/is-tui-enabled';
 import { NxArgs } from '../../utils/command-line-utils';
 import { Argv, coerce, ParserConfigurationOptions } from 'yargs';
+import { availableParallelism, cpus } from 'node:os';
 
 interface ExcludeOptions {
   exclude: string[];
@@ -380,17 +381,17 @@ export function readParallelFromArgsAndEnv(args: { [k: string]: any }) {
     args['parallel'] === 'true' ||
     args['parallel'] === true ||
     args['parallel'] === '' ||
-    // dont require passing --parallel if NX_PARALLEL is set, but allow overriding it
+    // don't require passing --parallel if NX_PARALLEL is set, but allow overriding it
     (process.env.NX_PARALLEL && args['parallel'] === undefined)
   ) {
-    return Number(
+    return concurrency(
       args['maxParallel'] ||
         args['max-parallel'] ||
         process.env.NX_PARALLEL ||
-        3
+        '3'
     );
   } else if (args['parallel'] !== undefined) {
-    return Number(args['parallel']);
+    return concurrency(args['parallel']);
   }
 }
 
@@ -407,3 +408,13 @@ const coerceTuiAutoExit = (value: string) => {
   }
   throw new Error(`Invalid value for --tui-auto-exit: ${value}`);
 };
+
+function concurrency(val: string | number) {
+  let parallel = typeof val === 'number' ? val : parseInt(val);
+
+  if (typeof val === 'string' && val.at(-1) === '%') {
+    const maxCores = availableParallelism?.() ?? cpus().length;
+    parallel = (maxCores * parallel) / 100;
+  }
+  return Math.max(1, Math.floor(parallel));
+}

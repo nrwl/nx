@@ -22,7 +22,7 @@ export default defineConfig({
   //  plugins: [ nxViteTsPaths() ],
   // },
   build: {
-    outDir: './build',
+    outDir: './build/react-store',
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {

@@ -108,13 +108,17 @@ afterEvaluate {
       }
     }
   }
-}
 
-signing {
-  afterEvaluate {
-    sign(publishing.publications["pluginMaven"])
-    sign(publishing.publications["nxProjectGraphPluginPluginMarkerMaven"])
+  val skipSign = project.findProperty("skipSign") == "true"
+  if (!skipSign) {
+    signing {
+      sign(publishing.publications["pluginMaven"])
+      sign(publishing.publications["nxProjectGraphPluginPluginMarkerMaven"])
+    }
   }
+
+  // Even if signing plugin was applied, we can prevent the sign tasks from running
+  tasks.withType<Sign>().configureEach { onlyIf { !skipSign } }
 }
 
 tasks.test { useJUnitPlatform() }

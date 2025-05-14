@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use crossbeam_channel::{bounded, unbounded, Receiver, Sender};
+use crossbeam_channel::{Receiver, Sender, bounded, unbounded};
 use crossterm::{
     terminal,
     terminal::{disable_raw_mode, enable_raw_mode},
@@ -13,8 +13,8 @@ use std::{
     collections::HashMap,
     io::{Read, Write},
     sync::{
-        atomic::{AtomicBool, Ordering},
         Arc,
+        atomic::{AtomicBool, Ordering},
     },
     time::Instant,
 };

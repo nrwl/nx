@@ -6,7 +6,7 @@
 /tools/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 package.json @nrwl/nx-core-reviewers
 pnpm-lock.yaml @nrwl/nx-core-reviewers
-rust-toolchain @nrwl/nx-native-reviewers
+rust-toolchain.toml @nrwl/nx-native-reviewers
 
 # Docs Site + Graph
 /docs @nrwl/nx-docs-reviewers

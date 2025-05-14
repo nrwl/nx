@@ -7,10 +7,10 @@ use std::{
 
 use super::{
     cache::CachedResult,
-    errors::{convert_response_to_error, report_request_error, HttpRemoteCacheErrors},
+    errors::{HttpRemoteCacheErrors, convert_response_to_error, report_request_error},
 };
 use flate2::Compression;
-use reqwest::{header, Client, ClientBuilder, StatusCode};
+use reqwest::{Client, ClientBuilder, StatusCode, header};
 use tar::{Archive, Builder};
 use tracing::trace;
 
@@ -109,6 +109,7 @@ impl HttpRemoteCache {
         let tar_gz: Vec<u8> = Vec::new();
         let enc = flate2::write::GzEncoder::new(tar_gz, Compression::default());
         let mut archive = Builder::new(enc);
+        archive.follow_symlinks(false);
         trace!("Created tar file for writing");
 
         let cache_path = Path::new(&cache_directory);

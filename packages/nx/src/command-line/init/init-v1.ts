@@ -50,7 +50,7 @@ export async function initHandler(options: InitArgs) {
 
       printFinalMessage({
         learnMoreLink: options.integrated
-          ? 'https://nx.dev/tutorials/2-react-monorepo/1r-introduction/1-welcome'
+          ? 'https://nx.dev/getting-started/tutorials/react-monorepo-tutorial'
           : 'https://nx.dev/getting-started/tutorials/react-standalone-tutorial',
       });
       return;

@@ -17,7 +17,7 @@ import {
   getTaskDetails,
   hashTasksThatDoNotDependOnOutputsOfOtherTasks,
 } from '../hasher/hash-task';
-import { RunMode } from '../native';
+import { logError, logInfo, RunMode } from '../native';
 import {
   runPostTasksExecution,
   runPreTasksExecution,
@@ -66,8 +66,8 @@ import {
 } from './task-graph-utils';
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { shouldStreamOutput } from './utils';
-import chalk = require('chalk');
 import { signalToCode } from '../utils/exit-codes';
+import chalk = require('chalk');
 
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 const originalStderrWrite = process.stderr.write.bind(process.stderr);
@@ -207,10 +207,27 @@ async function getTerminalOutputLifeCycle(
        * Patch stdout.write and stderr.write methods to pass Nx Cloud client logs to the TUI via the lifecycle
        */
       const createPatchedLogWrite = (
-        originalWrite: typeof process.stdout.write | typeof process.stderr.write
+        originalWrite:
+          | typeof process.stdout.write
+          | typeof process.stderr.write,
+        isError: boolean
       ): typeof process.stdout.write | typeof process.stderr.write => {
         // @ts-ignore
         return (chunk, encoding, callback) => {
+          if (isError) {
+            logError(
+              Buffer.isBuffer(chunk)
+                ? chunk.toString(encoding)
+                : chunk.toString()
+            );
+          } else {
+            logInfo(
+              Buffer.isBuffer(chunk)
+                ? chunk.toString(encoding)
+                : chunk.toString()
+            );
+          }
+
           // Check if the log came from the Nx Cloud client, otherwise invoke the original write method
           const stackTrace = new Error().stack;
           const isNxCloudLog = stackTrace.includes(
@@ -251,8 +268,8 @@ async function getTerminalOutputLifeCycle(
         };
       };
 
-      process.stdout.write = createPatchedLogWrite(originalStdoutWrite);
-      process.stderr.write = createPatchedLogWrite(originalStderrWrite);
+      process.stdout.write = createPatchedLogWrite(originalStdoutWrite, false);
+      process.stderr.write = createPatchedLogWrite(originalStderrWrite, true);
 
       // The cloud client calls console.log when NX_VERBOSE_LOGGING is set to true
       console.log = createPatchedConsoleMethod(originalConsoleLog);

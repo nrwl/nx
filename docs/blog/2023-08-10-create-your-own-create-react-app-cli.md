@@ -636,7 +636,7 @@ This should give you a good insight into how to get started. But there's more to
 - We could also include "[executors](/extending-nx/recipes/local-executors)", which are wrappers around tasks to abstract the lower-level details of it
 - etc.
 
-Now clearly this was a simple example of how you could build your own CRA using Nx. If you want to see a real-world React setup powered by Nx, check out our React Tutorial: [/tutorials/2-react-monorepo/1r-introduction/1-welcome](/tutorials/2-react-monorepo/1r-introduction/1-welcome)
+Now clearly this was a simple example of how you could build your own CRA using Nx. If you want to see a real-world React setup powered by Nx, check out our React Tutorial: [/getting-started/tutorials/react-monorepo-tutorial](/getting-started/tutorials/react-monorepo-tutorial)
 
 ## Learn more
 
