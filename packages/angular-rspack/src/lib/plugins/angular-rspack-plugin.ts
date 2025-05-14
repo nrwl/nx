@@ -349,6 +349,8 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         fileReplacements: this.#_options.fileReplacements,
         useTsProjectReferences: this.#_options.useTsProjectReferences,
         hasServer: this.#_options.hasServer,
+        includePaths: this.#_options.stylePreprocessorOptions?.includePaths,
+        sass: this.#_options.stylePreprocessorOptions?.sass,
       },
       this.#sourceFileCache,
       this.#angularCompilation,
