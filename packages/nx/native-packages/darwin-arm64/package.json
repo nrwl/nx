@@ -17,9 +17,6 @@
   "files": [
     "nx.darwin-arm64.node"
   ],
-  "engines": {
-    "node": ">= 10"
-  },
   "publishConfig": {
     "access": "public"
   }

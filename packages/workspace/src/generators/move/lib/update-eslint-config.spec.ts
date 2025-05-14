@@ -9,7 +9,6 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '../../../utils/lint';
 import { NormalizedSchema } from '../schema';
 import { updateEslintConfig } from './update-eslint-config';
 
@@ -36,7 +35,7 @@ describe('updateEslint', () => {
   it('should handle .eslintrc.json not existing', async () => {
     await libraryGenerator(tree, {
       directory: 'my-lib',
-      linter: Linter.None,
+      linter: 'none',
     });
 
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
@@ -49,7 +48,7 @@ describe('updateEslint', () => {
   it('should update .eslintrc.json extends path when project is moved to subdirectory', async () => {
     await libraryGenerator(tree, {
       directory: 'my-lib',
-      linter: Linter.EsLint,
+      linter: 'eslint',
     });
     // This step is usually handled elsewhere
     tree.rename(
@@ -71,7 +70,7 @@ describe('updateEslint', () => {
     await libraryGenerator(tree, {
       name: 'api-test',
       directory: 'api/test',
-      linter: Linter.EsLint,
+      linter: 'eslint',
     });
     // This step is usually handled elsewhere
     tree.rename('api/test/.eslintrc.json', 'test/.eslintrc.json');
@@ -98,7 +97,7 @@ describe('updateEslint', () => {
   it('should preserve .eslintrc.json non-relative extends when project is moved to subdirectory', async () => {
     await libraryGenerator(tree, {
       directory: 'my-lib',
-      linter: Linter.EsLint,
+      linter: 'eslint',
     });
     updateJson(tree, 'my-lib/.eslintrc.json', (eslintRcJson) => {
       eslintRcJson.extends = [
@@ -131,7 +130,7 @@ describe('updateEslint', () => {
   it('should update .eslintrc.json overrides parser project when project is moved', async () => {
     await libraryGenerator(tree, {
       directory: 'my-lib',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       setParserOptionsProject: true,
     });
     // This step is usually handled elsewhere
@@ -159,7 +158,7 @@ describe('updateEslint', () => {
   it('should update multiple .eslintrc.json overrides parser project when project is moved', async () => {
     await libraryGenerator(tree, {
       directory: 'my-lib',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       setParserOptionsProject: true,
     });
 
@@ -200,7 +199,7 @@ describe('updateEslint', () => {
   it('should update .eslintrc.json parserOptions.project as a string', async () => {
     await libraryGenerator(tree, {
       directory: 'my-lib',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       setParserOptionsProject: true,
     });
 
@@ -243,13 +242,13 @@ describe('updateEslint (flat config)', () => {
 
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     tree.delete('.eslintrc.json');
-    tree.write('eslint.config.js', `module.exports = [];`);
+    tree.write('eslint.config.cjs', `module.exports = [];`);
   });
 
   it('should handle config not existing', async () => {
     await libraryGenerator(tree, {
       directory: 'my-lib',
-      linter: Linter.None,
+      linter: 'none',
     });
 
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
@@ -262,32 +261,32 @@ describe('updateEslint (flat config)', () => {
   it('should update config extends path when project is moved to subdirectory', async () => {
     await libraryGenerator(tree, {
       directory: 'my-lib',
-      linter: Linter.EsLint,
+      linter: 'eslint',
     });
     convertToFlat(tree, 'my-lib');
     // This step is usually handled elsewhere
     tree.rename(
-      'my-lib/eslint.config.js',
-      'shared/my-destination/eslint.config.js'
+      'my-lib/eslint.config.cjs',
+      'shared/my-destination/eslint.config.cjs'
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
     updateEslintConfig(tree, schema, projectConfig);
 
     expect(
-      tree.read('shared/my-destination/eslint.config.js', 'utf-8')
-    ).toEqual(expect.stringContaining(`require('../../eslint.config.js')`));
+      tree.read('shared/my-destination/eslint.config.cjs', 'utf-8')
+    ).toEqual(expect.stringContaining(`require('../../eslint.config.cjs')`));
   });
 
   it('should update config extends path when project is moved from subdirectory', async () => {
     await libraryGenerator(tree, {
       name: 'api-test',
       directory: 'api/test',
-      linter: Linter.EsLint,
+      linter: 'eslint',
     });
     convertToFlat(tree, 'api/test');
     // This step is usually handled elsewhere
-    tree.rename('api/test/eslint.config.js', 'test/eslint.config.js');
+    tree.rename('api/test/eslint.config.cjs', 'test/eslint.config.cjs');
 
     const projectConfig = readProjectConfiguration(tree, 'api-test');
 
@@ -302,29 +301,29 @@ describe('updateEslint (flat config)', () => {
 
     updateEslintConfig(tree, newSchema, projectConfig);
 
-    expect(tree.read('test/eslint.config.js', 'utf-8')).toEqual(
-      expect.stringContaining(`require('../eslint.config.js')`)
+    expect(tree.read('test/eslint.config.cjs', 'utf-8')).toEqual(
+      expect.stringContaining(`require('../eslint.config.cjs')`)
     );
   });
 
   it('should update config overrides parser project when project is moved', async () => {
     await libraryGenerator(tree, {
       directory: 'my-lib',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       setParserOptionsProject: true,
     });
     convertToFlat(tree, 'my-lib', { hasParser: true });
     // This step is usually handled elsewhere
     tree.rename(
-      'my-lib/eslint.config.js',
-      'shared/my-destination/eslint.config.js'
+      'my-lib/eslint.config.cjs',
+      'shared/my-destination/eslint.config.cjs'
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
     updateEslintConfig(tree, schema, projectConfig);
 
     expect(
-      tree.read('shared/my-destination/eslint.config.js', 'utf-8')
+      tree.read('shared/my-destination/eslint.config.cjs', 'utf-8')
     ).toEqual(
       expect.stringContaining(
         `project: ["shared/my-destination/tsconfig.*?.json"]`
@@ -335,7 +334,7 @@ describe('updateEslint (flat config)', () => {
   it('should update multiple config overrides parser project when project is moved', async () => {
     await libraryGenerator(tree, {
       directory: 'my-lib',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       setParserOptionsProject: true,
     });
     // Add another parser project to eslint.json
@@ -346,15 +345,15 @@ describe('updateEslint (flat config)', () => {
     });
     // This step is usually handled elsewhere
     tree.rename(
-      'my-lib/eslint.config.js',
-      'shared/my-destination/eslint.config.js'
+      'my-lib/eslint.config.cjs',
+      'shared/my-destination/eslint.config.cjs'
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
     updateEslintConfig(tree, schema, projectConfig);
 
     expect(
-      tree.read('shared/my-destination/eslint.config.js', 'utf-8')
+      tree.read('shared/my-destination/eslint.config.cjs', 'utf-8')
     ).toEqual(
       expect.stringContaining(
         `project: ["shared/my-destination/tsconfig.*?.json", "shared/my-destination/${storybookProject}"]`
@@ -365,22 +364,22 @@ describe('updateEslint (flat config)', () => {
   it('should update config parserOptions.project as a string', async () => {
     await libraryGenerator(tree, {
       directory: 'my-lib',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       setParserOptionsProject: true,
     });
 
     convertToFlat(tree, 'my-lib', { hasParser: true, isString: true });
     // This step is usually handled elsewhere
     tree.rename(
-      'my-lib/eslint.config.js',
-      'shared/my-destination/eslint.config.js'
+      'my-lib/eslint.config.cjs',
+      'shared/my-destination/eslint.config.cjs'
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
     updateEslintConfig(tree, schema, projectConfig);
 
     expect(
-      tree.read('shared/my-destination/eslint.config.js', 'utf-8')
+      tree.read('shared/my-destination/eslint.config.cjs', 'utf-8')
     ).toEqual(
       expect.stringContaining(
         `project: "shared/my-destination/tsconfig.*?.json"`
@@ -417,9 +416,9 @@ function convertToFlat(
   }
 
   tree.write(
-    joinPathFragments(path, 'eslint.config.js'),
+    joinPathFragments(path, 'eslint.config.cjs'),
     `const { FlatCompat } = require("@eslint/eslintrc");
-  const baseConfig = require("${offset}eslint.config.js");
+  const baseConfig = require("${offset}eslint.config.cjs");
   const js = require("@eslint/js");
   const compat = new FlatCompat({
     baseDirectory: __dirname,

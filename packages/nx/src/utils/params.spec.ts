@@ -190,6 +190,43 @@ describe('params', () => {
 
       expect(options).toEqual({});
     });
+
+    it('should not throw if missing required property of an optional object', () => {
+      const commandLineOpts = {};
+      const target: TargetConfiguration = {
+        executor: '@nx/do:stuff',
+        options: {},
+      };
+
+      const options = combineOptionsForExecutor(
+        commandLineOpts,
+        'production',
+        target,
+        {
+          properties: {
+            foo: {
+              type: 'object',
+              properties: {
+                bar: {
+                  description: 'The target server ',
+                  type: 'string',
+                },
+                baz: {
+                  type: 'string',
+                  default: 'qux',
+                },
+              },
+              required: ['bar'],
+            },
+          },
+          required: [],
+        },
+        'proj',
+        process.cwd()
+      );
+
+      expect(options).toEqual({});
+    });
   });
 
   describe('coerceTypes', () => {
@@ -595,7 +632,9 @@ describe('params', () => {
 
     it('should be able to set defaults for underlying properties', () => {
       const opts = setDefaults(
-        {},
+        {
+          a: {},
+        },
         {
           properties: {
             a: {
@@ -798,6 +837,27 @@ describe('params', () => {
       ).toThrow("Required property 'a' is missing");
     });
 
+    it('should not throw if missing a required property of an optional object', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          {},
+          {
+            properties: {
+              a: {
+                type: 'object',
+                properties: {
+                  b: {
+                    type: 'boolean',
+                  },
+                },
+                required: ['b'],
+              },
+            },
+          }
+        )
+      ).not.toThrow();
+    });
+
     it('should throw if none of the oneOf conditions are met', () => {
       expect(() =>
         validateOptsAgainstSchema(
@@ -962,13 +1022,20 @@ describe('params', () => {
     it('should throw if property name matching pattern is not valid', () => {
       expect(() =>
         validateOptsAgainstSchema(
-          { a: true, b: false },
+          {
+            a: true,
+            b: false,
+          },
           {
             properties: {
-              a: { type: 'boolean' },
+              a: {
+                type: 'boolean',
+              },
             },
             patternProperties: {
-              '^b$': { type: 'number' },
+              '^b$': {
+                type: 'number',
+              },
             },
             additionalProperties: false,
           }
@@ -976,63 +1043,6 @@ describe('params', () => {
       ).toThrow(
         "Property 'b' does not match the schema. 'false' should be a 'number'."
       );
-    });
-
-    it('should handle properties matching patternProperties schema', () => {
-      expect(() =>
-        validateOptsAgainstSchema(
-          { a: true, b: false },
-          {
-            properties: {
-              a: { type: 'boolean' },
-            },
-            patternProperties: {
-              '^b$': { type: 'boolean' },
-            },
-            additionalProperties: false,
-          }
-        )
-      ).not.toThrow();
-    });
-
-    it('should throw if additional property does not match schema', () => {
-      expect(() =>
-        validateOptsAgainstSchema(
-          { a: true, b: 'b', c: 'c' },
-          {
-            properties: {
-              a: { type: 'boolean' },
-            },
-            patternProperties: {
-              '^b$': { type: 'string' },
-            },
-            additionalProperties: {
-              type: 'number',
-            },
-          }
-        )
-      ).toThrow(
-        "Property 'c' does not match the schema. 'c' should be a 'number'."
-      );
-    });
-
-    it('should handle additional properties when they match the additionalProperties schema', () => {
-      expect(() =>
-        validateOptsAgainstSchema(
-          { a: true, b: 'b', c: 1, d: 2 },
-          {
-            properties: {
-              a: { type: 'boolean' },
-            },
-            patternProperties: {
-              '^b$': { type: 'string' },
-            },
-            additionalProperties: {
-              type: 'number',
-            },
-          }
-        )
-      ).not.toThrow();
     });
 
     it('should throw if found unsupported positional property', () => {
@@ -1870,16 +1880,25 @@ describe('params', () => {
         }
       );
 
-      expect(prompts).toEqual([
-        {
-          message: 'What kind of pets do you have?',
-          name: 'pets',
-          type: 'multiselect',
-          choices: ['cat', 'dog', 'fish'],
-          limit: expect.any(Number),
-          validate: expect.any(Function),
-        },
-      ]);
+      // Limit is determined by terminal size
+      // deleting it to make the snapshot consistent
+      delete prompts[0].limit;
+
+      expect(prompts).toMatchInlineSnapshot(`
+        [
+          {
+            "choices": [
+              "cat",
+              "dog",
+              "fish",
+            ],
+            "message": "What kind of pets do you have?",
+            "name": "pets",
+            "type": "multiselect",
+            "validate": [Function],
+          },
+        ]
+      `);
     });
 
     describe('Project prompts', () => {

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "NxRspackConvertToInferred",
+  "description": "Convert existing Rspack project(s) using `@nx/rspack:rspack` executor to use `@nx/rspack/plugin`.",
+  "title": "Convert a Rspack project from executor to plugin",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The project to convert from using the `@nx/rspack:rspack` executor to use `@nx/rspack/plugin`. If not provided, all projects using the `@nx/rspack:rspack` executor will be converted.",
+      "x-priority": "important"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Whether to format files.",
+      "default": false
+    }
+  }
+}

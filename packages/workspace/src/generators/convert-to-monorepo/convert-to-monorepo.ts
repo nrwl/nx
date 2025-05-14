@@ -9,6 +9,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { moveGenerator } from '../move/move';
+import { getProjectType } from '../../utils/ts-solution-setup';
 
 export async function monorepoGenerator(tree: Tree, options: {}) {
   const projects = getProjects(tree);
@@ -32,7 +33,9 @@ export async function monorepoGenerator(tree: Tree, options: {}) {
   // Currently, Nx only handles apps+libs or packages. You cannot mix and match them.
   // If the standalone project is an app (React, Angular, etc), then use apps+libs.
   // Otherwise, for TS standalone (lib), use packages.
-  const isRootProjectApp = rootProject.projectType === 'application';
+  const isRootProjectApp =
+    getProjectType(tree, rootProject.root, rootProject.projectType) ===
+    'application';
   const appsDir = isRootProjectApp ? 'apps' : 'packages';
   const libsDir = isRootProjectApp ? 'libs' : 'packages';
 
@@ -50,11 +53,12 @@ export async function monorepoGenerator(tree: Tree, options: {}) {
   }
 
   for (const project of projectsToMove) {
+    const projectType = getProjectType(tree, project.root, project.projectType);
     await moveGenerator(tree, {
       projectName: project.name,
       newProjectName: project.name,
       destination:
-        project.projectType === 'application'
+        projectType === 'application'
           ? joinPathFragments(
               appsDir,
               project.root === '.' ? project.name : project.root
@@ -63,7 +67,7 @@ export async function monorepoGenerator(tree: Tree, options: {}) {
               libsDir,
               project.root === '.' ? project.name : project.root
             ),
-      updateImportPath: project.projectType === 'library',
+      updateImportPath: projectType === 'library',
     });
   }
 }

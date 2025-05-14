@@ -15,6 +15,10 @@ export interface Schema {
   e2eTestRunner: 'cypress' | 'playwright' | 'detox' | 'none'; // default is none
   standaloneConfig?: boolean;
   skipPackageJson?: boolean; // default is false
+  // Internal options
   addPlugin?: boolean;
   nxCloudToken?: string;
+  useTsSolution?: boolean;
+  formatter?: 'prettier' | 'none';
+  useProjectJson?: boolean;
 }

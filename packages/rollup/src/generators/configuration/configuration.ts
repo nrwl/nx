@@ -99,7 +99,7 @@ function createRollupConfig(
   };
 
   tree.write(
-    joinPathFragments(project.root, 'rollup.config.js'),
+    joinPathFragments(project.root, 'rollup.config.cjs'),
     `const { withNx } = require('@nx/rollup/with-nx');
 
 module.exports = withNx(
@@ -111,7 +111,7 @@ module.exports = withNx(
     format: ${JSON.stringify(options.format ?? ['esm'])},${
       !isTsSolutionSetup
         ? `
-    assets: [{ input: '.', output: '.', glob:'*.md' }],`
+    assets: [{ input: '{projectRoot}', output: '.', glob:'*.md' }],`
         : ''
     }
   },
@@ -181,6 +181,9 @@ function updatePackageJson(
       ({ main, outputPath } = mergedTarget.options);
     }
 
+    // the file must exist in the TS solution setup
+    const tsconfigBase = readJson(tree, 'tsconfig.base.json');
+
     packageJson = getUpdatedPackageJsonContent(packageJson, {
       main,
       outputPath,
@@ -191,6 +194,10 @@ function updatePackageJson(
       format: options.format ?? ['esm'],
       outputFileExtensionForCjs: '.cjs.js',
       outputFileExtensionForEsm: '.esm.js',
+      skipDevelopmentExports:
+        !tsconfigBase.compilerOptions?.customConditions?.includes(
+          'development'
+        ),
     });
 
     // rollup has a specific declaration file generation not handled by the util above,

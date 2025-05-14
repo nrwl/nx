@@ -3,6 +3,7 @@
   "implementation": "/packages/react-native/src/executors/run-android/run-android.impl.ts",
   "schema": {
     "version": 2,
+    "continuous": true,
     "outputCapture": "direct-nodejs",
     "cli": "nx",
     "$id": "NxReactNativeRunAndroid",
@@ -96,7 +97,7 @@
         "default": false
       }
     },
-    "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"run-android\": {\n      \"executor\": \"@nx/react-native:run-android\",\n      \"options\": {}\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:run-android\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Run on a specific device/simulator\" %}\nTo see all the avaiable emulators, run command:\n\n```bash\nemulator -list-avds\n```\n\nThe `deviceId` option allows you to launch your android app in a specific device/simulator:\n\n```json\n    \"run-android\": {\n      \"executor\": \"@nx/react-native:run-android\",\n      \"options\": {\n        \"deviceId\": \"Pixel_5_API_30\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Run the debug/release app\" %}\nThe `mode` option allows to specify the build variant, such as `debug` or `release`.\n\n```json\n    \"run-android\": {\n      \"executor\": \"@nx/react-native:run-android\",\n      \"options\": {\n        \"mode\": \"release\"\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n"
+    "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"run-android\": {\n      \"executor\": \"@nx/react-native:run-android\",\n      \"options\": {}\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:run-android\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Run on a specific device/simulator\" %}\nTo see all the available emulators, run command:\n\n```bash\nemulator -list-avds\n```\n\nThe `deviceId` option allows you to launch your android app in a specific device/simulator:\n\n```json\n    \"run-android\": {\n      \"executor\": \"@nx/react-native:run-android\",\n      \"options\": {\n        \"deviceId\": \"Pixel_5_API_30\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Run the debug/release app\" %}\nThe `mode` option allows to specify the build variant, such as `debug` or `release`.\n\n```json\n    \"run-android\": {\n      \"executor\": \"@nx/react-native:run-android\",\n      \"options\": {\n        \"mode\": \"release\"\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n"
   },
   "description": "Runs Android application.",
   "aliases": [],

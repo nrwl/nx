@@ -45,7 +45,8 @@ describe('convertPipeToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Pipe({
-        name: 'example'
+        name: 'example',
+        standalone: false
       })
       export class ExamplePipe implements PipeTransform {
         transform(value: unknown, ...args: unknown[]): unknown {

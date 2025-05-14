@@ -17,4 +17,5 @@ export interface Schema {
   standaloneConfig?: boolean;
   setParserOptionsProject?: boolean;
   addPlugin?: boolean;
+  useProjectJson?: boolean;
 }

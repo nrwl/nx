@@ -26,7 +26,7 @@ export class NxTsconfigPathsRspackPlugin {
   apply(compiler: Compiler): void {
     // TODO(Colum): Investigate the best way to handle this, currently it is not working and affecting HMR
     // // If we are not building libs from source, we need to remap paths so tsconfig may be updated.
-    // this.handleBuildLibsFromSource(compiler.options, this.options);
+    this.handleBuildLibsFromSource(compiler.options, this.options);
 
     const pathToTsconfig = !path.isAbsolute(this.options.tsConfig)
       ? path.join(workspaceRoot, this.options.tsConfig)
@@ -75,7 +75,8 @@ export class NxTsconfigPathsRspackPlugin {
         options.tsConfig,
         options.root,
         target.data.root,
-        dependencies
+        dependencies,
+        true // There is an issue with Rspack that requires the baseUrl to be set in the generated tsconfig
       );
       this.tmpTsConfigPath = options.tsConfig;
 

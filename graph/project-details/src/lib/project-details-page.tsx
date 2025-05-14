@@ -17,7 +17,7 @@ import {
   getProjectGraphDataService,
   useEnvironmentConfig,
   usePoll,
-} from '@nx/graph/shared';
+} from '@nx/graph/legacy/shared';
 import { ProjectDetailsHeader } from './project-details-header';
 
 export function ProjectDetailsPage() {

@@ -1,0 +1,18 @@
+{
+  "name": "21.0.1-package-updates",
+  "version": "21.0.1-beta.0",
+  "packages": {
+    "@rspack/core": { "version": "^1.3.8", "alwaysAddToPackageJson": false },
+    "@rspack/dev-server": {
+      "version": "^1.1.1",
+      "alwaysAddToPackageJson": false
+    }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/rspack",
+  "schema": null,
+  "type": "migration"
+}

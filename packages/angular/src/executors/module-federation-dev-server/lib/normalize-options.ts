@@ -26,6 +26,7 @@ export function normalizeOptions(schema: Schema): NormalizedSchema {
     liveReload: schema.liveReload ?? true,
     open: schema.open ?? false,
     ssl: schema.ssl ?? false,
+    verbose: schema.verbose ?? false,
     sslCert: schema.sslCert ? join(workspaceRoot, schema.sslCert) : undefined,
     sslKey: schema.sslKey ? join(workspaceRoot, schema.sslKey) : undefined,
   };

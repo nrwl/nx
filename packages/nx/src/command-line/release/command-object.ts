@@ -25,7 +25,7 @@ export interface NxReleaseArgs extends BaseNxReleaseArgs {
   dryRun?: boolean;
 }
 
-interface GitCommitAndTagOptions {
+interface GitOptions {
   stageChanges?: boolean;
   gitCommit?: boolean;
   gitCommitMessage?: string;
@@ -33,20 +33,29 @@ interface GitCommitAndTagOptions {
   gitTag?: boolean;
   gitTagMessage?: string;
   gitTagArgs?: string | string[];
+  gitPush?: boolean;
+  gitPushArgs?: string | string[];
+  gitRemote?: string;
 }
 
 export type VersionOptions = NxReleaseArgs &
-  GitCommitAndTagOptions &
+  GitOptions &
   VersionPlanArgs &
   FirstReleaseArgs & {
     specifier?: string;
     preid?: string;
     stageChanges?: boolean;
+    /**
+     * @deprecated Use versionActionsOptionsOverrides instead.
+     *
+     * Using generatorOptionsOverrides is only valid when release.version.useLegacyVersioning is set to true.
+     */
     generatorOptionsOverrides?: Record<string, unknown>;
+    versionActionsOptionsOverrides?: Record<string, unknown>;
   };
 
 export type ChangelogOptions = NxReleaseArgs &
-  GitCommitAndTagOptions &
+  GitOptions &
   VersionPlanArgs &
   FirstReleaseArgs & {
     // version and/or versionData must be set
@@ -55,8 +64,7 @@ export type ChangelogOptions = NxReleaseArgs &
     to?: string;
     from?: string;
     interactive?: string;
-    gitRemote?: string;
-    createRelease?: false | 'github';
+    createRelease?: false | 'github' | 'gitlab';
   };
 
 export type PublishOptions = NxReleaseArgs &
@@ -85,6 +93,7 @@ export type ReleaseOptions = NxReleaseArgs &
   FirstReleaseArgs & {
     specifier?: string;
     yes?: boolean;
+    preid?: VersionOptions['preid'];
     skipPublish?: boolean;
   };
 
@@ -185,6 +194,12 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
         describe:
           'Exact version or semver keyword to apply to the selected release group.',
       })
+      .option('preid', {
+        type: 'string',
+        describe:
+          'The optional prerelease identifier to apply to the version. This will only be applied in the case that the specifier argument has been set to `prerelease` OR when conventional commits are enabled, in which case it will modify the resolved specifier from conventional commits to be its prerelease equivalent. E.g. minor -> preminor.',
+        default: '',
+      })
       .option('yes', {
         type: 'boolean',
         alias: 'y',
@@ -222,7 +237,7 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
     'Create a version and release for one or more applications and libraries.',
   builder: (yargs) =>
     withFirstReleaseOptions(
-      withGitCommitAndGitTagOptions(
+      withGitOptions(
         yargs
           .positional('specifier', {
             type: 'string',
@@ -260,7 +275,7 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
     'Generate a changelog for one or more projects, and optionally push to Github.',
   builder: (yargs) =>
     withFirstReleaseOptions(
-      withGitCommitAndGitTagOptions(
+      withGitOptions(
         yargs
           // Disable default meaning of yargs version for this command
           .version(false)
@@ -286,12 +301,6 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
             description:
               'Interactively modify changelog markdown contents in your code editor before applying the changes. You can set it to be interactive for all changelogs, or only the workspace level, or only the project level.',
             choices: ['all', 'workspace', 'projects'],
-          })
-          .option('git-remote', {
-            type: 'string',
-            description:
-              'Alternate git remote in the form {user}/{repo} on which to create the Github release (useful for testing).',
-            default: 'origin',
           })
           .check((argv) => {
             if (!argv.version) {
@@ -415,9 +424,7 @@ function coerceParallelOption(args: any) {
   };
 }
 
-function withGitCommitAndGitTagOptions<T>(
-  yargs: Argv<T>
-): Argv<T & GitCommitAndTagOptions> {
+function withGitOptions<T>(yargs: Argv<T>): Argv<T & GitOptions> {
   return yargs
     .option('git-commit', {
       describe:
@@ -453,6 +460,22 @@ function withGitCommitAndGitTagOptions<T>(
       describe:
         'Whether or not to stage the changes made by this command. Always treated as true if git-commit is true.',
       type: 'boolean',
+    })
+    .option('git-push', {
+      describe:
+        'Whether or not to automatically push the changes made by this command to the remote git repository.',
+      type: 'boolean',
+    })
+    .option('git-push-args', {
+      describe:
+        'Additional arguments to pass to the `git push` command invoked behind the scenes.',
+      type: 'string',
+    })
+    .option('git-remote', {
+      type: 'string',
+      description:
+        'Alternate git remote to push commits and tags to (can be useful for testing).',
+      default: 'origin',
     });
 }
 

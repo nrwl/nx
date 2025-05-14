@@ -1,3 +1,8 @@
+---
+title: 'TSC Batch Mode'
+description: 'Learn how Nx TSC batch mode dramatically improves TypeScript compilation speed by leveraging project references and incremental builds while maintaining DX.'
+---
+
 # TSC Batch Mode
 
 ![Side by side demo of normal tsc taking 1m48s and batch mode tsc taking 28s](/shared/images/benchmarks/ts-benchmark.gif)

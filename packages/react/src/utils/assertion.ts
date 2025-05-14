@@ -1,3 +1,5 @@
+import { type Schema } from '../generators/application/schema';
+
 const VALID_STYLES = [
   'css',
   'scss',
@@ -15,6 +17,17 @@ export function assertValidStyle(style: string): void {
       `Unsupported style option found: ${style}. Valid values are: "${VALID_STYLES.join(
         '", "'
       )}"`
+    );
+  }
+}
+
+export function assertValidReactRouter(
+  reactRouter: boolean,
+  bundler: Schema['bundler']
+): void {
+  if (reactRouter && bundler !== 'vite') {
+    throw new Error(
+      `Unsupported bundler found: ${bundler}. React Router is only supported with 'vite'.`
     );
   }
 }

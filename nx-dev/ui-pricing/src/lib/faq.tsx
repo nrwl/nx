@@ -1,5 +1,10 @@
 'use client';
-import { Disclosure, Transition } from '@headlessui/react';
+import {
+  Disclosure,
+  DisclosureButton,
+  DisclosurePanel,
+  Transition,
+} from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import { SectionHeading } from '@nx/nx-dev/ui-common';
 import { cx } from '@nx/nx-dev/ui-primitives';
@@ -41,6 +46,12 @@ export function Faq(): ReactElement {
     },
     {
       question:
+        "I thought I was on the Pro plan, but I don't see it listed anymore. Does it still exist?",
+      answer:
+        "Yes, the Pro plan still exists for users who were grandfathered in. If you're already on the Pro plan, you will continue to receive support without any changes. However, this plan is no longer available to new users.",
+    },
+    {
+      question:
         'Is there a limit to the number of active contributors I can have on the Hobby plan?',
       answer:
         'Our free Hobby Plan is only limited by the number of credits you can use per month. This means you can use it free, forever, no matter your team size, as long as your use falls below 50,000 credits/month. This makes it ideal for small-scale projects or for larger teams looking to test out a proof of concept. For those larger teams, we offer the Team Plan which includes 5 active contributors at no cost and offers the flexibility to add even more contributors, concurrencies, and credits to fit the unique needs of each team. ',
@@ -54,12 +65,12 @@ export function Faq(): ReactElement {
       question:
         'What happens if I consume all my credits while on the Hobby plan?',
       answer:
-        'The Hobby plan allows you to configure and run a small project at no cost. If you consume all the credits, your organization will be disabled until you upgrade to Pro or wait for the next billing cycle.',
+        'The Hobby plan allows you to configure and run a small project at no cost. If you consume all the credits, your organization will be disabled until you upgrade to Team or wait for the next billing cycle.',
     },
     {
       question: 'What is a CI Pipeline Execution?',
       answer:
-        'By default, a CI pipeline execution is a 1:1 match to your CI provider of choice\'s concept of a "workflow".',
+        'A CI Pipeline Execution is a CI run or a Workflow run (depending on your CI provider). For instance, running a PR or running CI on the main branch are CI Pipeline Executions.',
     },
     {
       question: 'What is the Team Plan?',
@@ -93,7 +104,7 @@ export function Faq(): ReactElement {
         'We have a helpful comparison above. If you have additional questions, or these plans don’t fit your needs please reach out to https://nx.dev/contact/sales and we will do our best to help.',
     },
     {
-      question: 'What if I need more than 70 active contributors?',
+      question: 'What if I need more than 30 active contributors?',
       answer: 'Please reach out to https://nx.dev/contact/sales',
     },
     {
@@ -104,7 +115,7 @@ export function Faq(): ReactElement {
   ];
 
   return (
-    <section id="faq">
+    <section id="faq" className="scroll-mt-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           <header>
@@ -139,7 +150,7 @@ export function Faq(): ReactElement {
                   {({ open }) => (
                     <>
                       <dt className="text-lg">
-                        <Disclosure.Button className="flex w-full items-start justify-between text-left text-slate-400">
+                        <DisclosureButton className="flex w-full items-start justify-between text-left text-slate-400">
                           <span className="font-medium text-slate-800 dark:text-slate-300">
                             {faq.question}
                           </span>
@@ -152,7 +163,7 @@ export function Faq(): ReactElement {
                               aria-hidden="true"
                             />
                           </span>
-                        </Disclosure.Button>
+                        </DisclosureButton>
                       </dt>
                       <Transition
                         enter="transition duration-100 ease-out"
@@ -162,11 +173,11 @@ export function Faq(): ReactElement {
                         leaveFrom="transform translate-y-0 opacity-100"
                         leaveTo="transform -translate-y-6 opacity-0"
                       >
-                        <Disclosure.Panel as="dd" className="mt-2 pr-12">
+                        <DisclosurePanel as="dd" className="mt-2 pr-12">
                           <p className="text-base text-slate-500 dark:text-slate-400">
                             {faq.answer}
                           </p>
-                        </Disclosure.Panel>
+                        </DisclosurePanel>
                       </Transition>
                     </>
                   )}

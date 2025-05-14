@@ -141,7 +141,7 @@ describe('Jest', () => {
   it('should be able to test node lib with babel-jest', async () => {
     const libName = uniq('babel-test-lib');
     runCLI(
-      `generate @nx/node:lib libs/${libName} --buildable --importPath=@some-org/babel-test --publishable --babelJest`
+      `generate @nx/node:lib libs/${libName} --buildable --importPath=@some-org/babel-test --publishable --babelJest --unitTestRunner=jest`
     );
 
     const cliResults = await runCLIAsync(`test ${libName}`);

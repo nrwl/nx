@@ -210,11 +210,11 @@ export function executeDevServerBuilder(
                     // This will occur when workspaceDependencies = []
                     if (workspaceDependencies.length > 0) {
                       baseWebpackConfig.plugins.push(
-                        // @ts-expect-error - difference between angular and webpack plugin definitions bc of webpack versions
                         new WebpackNxBuildCoordinationPlugin(
                           `nx run-many --target=${
                             parsedBuildTarget.target
-                          } --projects=${workspaceDependencies.join(',')}`
+                          } --projects=${workspaceDependencies.join(',')}`,
+                          { skipWatchingDeps: !options.watchDependencies }
                         )
                       );
                     }
@@ -269,6 +269,7 @@ function getDelegateBuilderOptions(
 
   // delete extra option not supported by the delegate builder
   delete delegateBuilderOptions.buildLibsFromSource;
+  delete delegateBuilderOptions.watchDependencies;
 
   return delegateBuilderOptions;
 }

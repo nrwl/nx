@@ -1,7 +1,6 @@
 use crate::native::db::connection::NxDbConnection;
-use fs4::fs_std::FileExt;
 use rusqlite::{Connection, OpenFlags};
-use std::fs::{remove_file, File};
+use std::fs::{File, remove_file};
 use std::path::{Path, PathBuf};
 use tracing::{debug, trace};
 
@@ -12,9 +11,7 @@ pub(super) struct LockFile {
 
 pub(super) fn unlock_file(lock_file: &LockFile) {
     if lock_file.path.exists() {
-        lock_file
-            .file
-            .unlock()
+        fs4::fs_std::FileExt::unlock(&lock_file.file)
             .and_then(|_| remove_file(&lock_file.path))
             .ok();
     }
@@ -26,8 +23,7 @@ pub(super) fn create_lock_file(db_path: &Path) -> anyhow::Result<LockFile> {
         .map_err(|e| anyhow::anyhow!("Unable to create db lock file: {:?}", e))?;
 
     trace!("Getting lock on db lock file");
-    lock_file
-        .lock_exclusive()
+    fs4::fs_std::FileExt::lock_exclusive(&lock_file)
         .inspect(|_| trace!("Got lock on db lock file"))
         .map_err(|e| anyhow::anyhow!("Unable to lock the db lock file: {:?}", e))?;
     Ok(LockFile {
@@ -37,44 +33,57 @@ pub(super) fn create_lock_file(db_path: &Path) -> anyhow::Result<LockFile> {
 }
 
 pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Result<NxDbConnection> {
-    let mut c = open_database_connection(db_path)?;
+    match open_database_connection(db_path) {
+        Ok(mut c) => {
+            trace!(
+                "Checking if current existing database is compatible with Nx {}",
+                nx_version
+            );
+            let db_version = c.query_row(
+                "SELECT value FROM metadata WHERE key='NX_VERSION'",
+                [],
+                |row| {
+                    let r: String = row.get(0)?;
+                    Ok(r)
+                },
+            );
+            let c = match db_version {
+                Ok(Some(version)) if version == nx_version => {
+                    trace!("Database is compatible with Nx {}", nx_version);
+                    c
+                }
+                // If there is no metadata, it means that this database is new
+                Err(s) if s.to_string().contains("metadata") => {
+                    configure_database(&c)?;
+                    create_metadata_table(&mut c, &nx_version)?;
+                    c
+                }
+                reason => {
+                    trace!("Incompatible database because: {:?}", reason);
+                    trace!("Disconnecting from existing incompatible database");
+                    c.close()?;
+                    trace!("Removing existing incompatible database");
+                    remove_file(db_path)?;
 
-    trace!(
-        "Checking if current existing database is compatible with Nx {}",
-        nx_version
-    );
-    let db_version = c.query_row(
-        "SELECT value FROM metadata WHERE key='NX_VERSION'",
-        [],
-        |row| {
-            let r: String = row.get(0)?;
-            Ok(r)
-        },
-    );
-    let c = match db_version {
-        Ok(Some(version)) if version == nx_version => {
-            trace!("Database is compatible with Nx {}", nx_version);
-            c
+                    trace!("Initializing a new database");
+                    initialize_db(nx_version, db_path)?
+                }
+            };
+
+            Ok(c)
         }
-        // If there is no metadata, it means that this database is new
-        Err(s) if s.to_string().contains("metadata") => {
-            configure_database(&c)?;
-            create_metadata_table(&mut c, &nx_version)?;
-            c
-        }
-        reason => {
-            trace!("Incompatible database because: {:?}", reason);
-            trace!("Disconnecting from existing incompatible database");
-            c.close()?;
+        Err(reason) => {
+            trace!(
+                "Unable to connect to existing database because: {:?}",
+                reason
+            );
             trace!("Removing existing incompatible database");
             remove_file(db_path)?;
 
             trace!("Initializing a new database");
-            initialize_db(nx_version, db_path)?
+            initialize_db(nx_version, db_path)
         }
-    };
-
-    Ok(c)
+    }
 }
 
 fn create_metadata_table(c: &mut NxDbConnection, nx_version: &str) -> anyhow::Result<()> {

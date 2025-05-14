@@ -1,3 +1,8 @@
+---
+title: Nx and Angular Versions
+description: A comprehensive compatibility matrix showing which Nx versions work with different Angular versions, including recommended versions and supported ranges.
+---
+
 # Nx and Angular Versions
 
 The latest version of Nx supports the [actively supported versions of Angular (current and LTS versions)](https://angular.dev/reference/releases#actively-supported-versions). Workspaces in any of those versions are recommended to use the latest version of Nx to benefit from all the new features and fixes.
@@ -14,6 +19,9 @@ We provide a recommended version, and it is usually the latest minor version of 
 
 | Angular Version | **Nx Version _(recommended)_** | Nx Version _(range)_                     |
 | --------------- | ------------------------------ | ---------------------------------------- |
+| ~19.2.0         | **latest**                     | >=20.5.0 <=latest                        |
+| ~19.1.0         | **latest**                     | >=20.4.0 <=latest                        |
+| ~19.0.0         | **latest**                     | >=20.2.0 <=latest                        |
 | ~18.2.0         | **latest**                     | >=19.6.0 <=latest                        |
 | ~18.1.0         | **latest**                     | >=19.5.0 <=latest                        |
 | ~18.0.0         | **latest**                     | >=19.1.0 <=latest                        |
@@ -21,9 +29,9 @@ We provide a recommended version, and it is usually the latest minor version of 
 | ~17.2.0         | **latest**                     | >=18.1.1 <=latest                        |
 | ~17.1.0         | **latest**                     | >=17.3.0 <=latest                        |
 | ~17.0.0         | **latest**                     | >=17.1.0 <=latest                        |
-| ~16.2.0         | **latest**                     | >=16.7.0 <=latest                        |
-| ~16.1.0         | **latest**                     | >=16.4.0 <=latest                        |
-| ~16.0.0         | **latest**                     | >=16.1.0 <=latest                        |
+| ~16.2.0         | **~20.1.0**                    | >=16.7.0 <20.2.0                         |
+| ~16.1.0         | **~20.1.0**                    | >=16.4.0 <20.2.0                         |
+| ~16.0.0         | **~20.1.0**                    | >=16.1.0 <20.2.0                         |
 | ~15.2.0         | **~19.0.0**                    | >=15.8.0 <19.1.0                         |
 | ~15.1.0         | **~19.0.0**                    | >=15.5.0 <19.1.0                         |
 | ~15.0.0         | **~19.0.0**                    | >=15.2.0 <=15.4.8 \|\| >=15.7.0 <19.1.0  |
@@ -38,3 +46,13 @@ We provide a recommended version, and it is usually the latest minor version of 
 | ^8.0.0          | **8.12.2**                     | >=8.7.0 <=8.12.2                         |
 
 Additionally, you can check the supported versions of Node and Typescript for the version of Angular you are using in the [Angular docs](https://angular.dev/reference/versions#actively-supported-versions).
+
+## Nx and Angular Rspack Version Compatibility Matrix
+
+Below is a reference table that matches versions of [Angular Rspack](/recipes/angular/rspack/introduction) to the versions of Angular and Nx that is compatible with it.
+
+| Angular Rspack | Angular     | Nx                  |
+| -------------- | ----------- | ------------------- |
+| ~20.8.0        | **~19.2.0** | >= 20.8.1 <= latest |
+| ~20.7.0        | **~19.2.0** | >= 20.8.1 <= latest |
+| ~20.6.0        | **~19.2.0** | >= 20.6.0 <= latest |

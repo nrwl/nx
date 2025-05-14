@@ -9,7 +9,6 @@ use crate::native::{
     tasks::{inputs::SplitInputs, types::Task},
 };
 use napi::bindgen_prelude::External;
-use napi::{Env, JsExternal};
 use rayon::prelude::*;
 use std::collections::HashMap;
 use tracing::trace;
@@ -102,13 +101,11 @@ impl HashPlanner {
     #[napi]
     pub fn get_plans_reference(
         &self,
-        env: Env,
         task_ids: Vec<&str>,
         task_graph: TaskGraph,
-    ) -> anyhow::Result<JsExternal> {
+    ) -> anyhow::Result<External<HashMap<String, Vec<HashInstruction>>>> {
         let plans = self.get_plans_internal(task_ids, task_graph)?;
-        env.create_external(plans, None)
-            .map_err(anyhow::Error::from)
+        Ok(External::new(plans))
     }
 
     fn target_input<'a>(
@@ -175,12 +172,18 @@ impl HashPlanner {
                                 if self.project_graph.nodes.contains_key(dep) {
                                     let deps = self.project_graph.dependencies.get(project_name);
                                     if deps.is_some_and(|deps| deps.contains(dep)) {
-                                        anyhow::bail!("The externalDependency '{dep}' for '{project_name}:{target_name}' is not an external node and is already a dependency. Please remove it from the externalDependency inputs.")
+                                        anyhow::bail!(
+                                            "The externalDependency '{dep}' for '{project_name}:{target_name}' is not an external node and is already a dependency. Please remove it from the externalDependency inputs."
+                                        )
                                     } else {
-                                        anyhow::bail!("The externalDependency '{dep}' for '{project_name}:{target_name}' is not an external node. If you believe this is a dependency, add an implicitDependency to '{project_name}'")
+                                        anyhow::bail!(
+                                            "The externalDependency '{dep}' for '{project_name}:{target_name}' is not an external node. If you believe this is a dependency, add an implicitDependency to '{project_name}'"
+                                        )
                                     }
                                 } else {
-                                    anyhow::bail!("The externalDependency '{dep}' for '{project_name}:{target_name}' could not be found")
+                                    anyhow::bail!(
+                                        "The externalDependency '{dep}' for '{project_name}:{target_name}' could not be found"
+                                    )
                                 }
                             };
                             trace!(
@@ -332,11 +335,28 @@ impl HashPlanner {
                 file_set.starts_with("{projectRoot}/") || file_set.starts_with("!{projectRoot}/")
             });
 
-        let project_file_set_inputs = project_file_set_inputs(project_name, project_file_sets);
-        // let workspace_file_set_inputs = workspace_file_set_inputs(workspace_file_sets);
-        let workspace_file_set_inputs = match workspace_file_sets.is_empty() {
-            true => vec![],
-            false => vec![workspace_file_set_inputs(workspace_file_sets)],
+        let project_inputs = if project_file_sets.is_empty() {
+            vec![
+                HashInstruction::ProjectConfiguration(project_name.to_string()),
+                HashInstruction::TsConfiguration(project_name.to_string()),
+            ]
+        } else {
+            vec![
+                HashInstruction::ProjectFileSet(
+                    project_name.to_string(),
+                    project_file_sets.iter().map(|f| f.to_string()).collect(),
+                ),
+                HashInstruction::ProjectConfiguration(project_name.to_string()),
+                HashInstruction::TsConfiguration(project_name.to_string()),
+            ]
+        };
+
+        let workspace_file_set_inputs = if workspace_file_sets.is_empty() {
+            vec![]
+        } else {
+            vec![HashInstruction::WorkspaceFileSet(
+                workspace_file_sets.iter().map(|f| f.to_string()).collect(),
+            )]
         };
         let runtime_and_env_inputs = self_inputs.iter().filter_map(|i| match i {
             Input::Runtime(runtime) => Some(HashInstruction::Runtime(runtime.to_string())),
@@ -344,7 +364,7 @@ impl HashPlanner {
             _ => None,
         });
 
-        project_file_set_inputs
+        project_inputs
             .into_iter()
             .chain(workspace_file_set_inputs)
             .chain(runtime_and_env_inputs)
@@ -428,19 +448,4 @@ fn find_external_dependency_node_name<'a>(
         }
         None
     }
-}
-
-fn project_file_set_inputs(project_name: &str, file_sets: Vec<&str>) -> Vec<HashInstruction> {
-    vec![
-        HashInstruction::ProjectFileSet(
-            project_name.to_string(),
-            file_sets.iter().map(|f| f.to_string()).collect(),
-        ),
-        HashInstruction::ProjectConfiguration(project_name.to_string()),
-        HashInstruction::TsConfiguration(project_name.to_string()),
-    ]
-}
-
-fn workspace_file_set_inputs(file_sets: Vec<&str>) -> HashInstruction {
-    HashInstruction::WorkspaceFileSet(file_sets.iter().map(|f| f.to_string()).collect())
 }

@@ -45,19 +45,4 @@ describe('meta', () => {
     expect(content).toMatch(`export const meta: MetaFunction`);
     expect(content).toMatch(`return [`);
   });
-
-  it('--nameAndDirectoryFormat=as=provided', async () => {
-    await metaGenerator(tree, {
-      path: 'apps/demo/app/routes/example.tsx',
-      nameAndDirectoryFormat: 'as-provided',
-    });
-
-    const content = tree.read('apps/demo/app/routes/example.tsx', 'utf-8');
-    expect(content).toMatch(
-      `import type { MetaFunction } from '@remix-run/node';`
-    );
-
-    expect(content).toMatch(`export const meta: MetaFunction`);
-    expect(content).toMatch(`return [`);
-  });
 });

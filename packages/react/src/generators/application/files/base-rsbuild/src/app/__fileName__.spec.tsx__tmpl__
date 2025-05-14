@@ -1,0 +1,10 @@
+import { render } from '@testing-library/react';
+<%_ if (routing) { _%>
+import { BrowserRouter } from 'react-router-dom';
+<%_ } _%>
+
+import App from './<%= fileName %>';
+
+describe('App', () => {
+  <%- appTests _%>
+});

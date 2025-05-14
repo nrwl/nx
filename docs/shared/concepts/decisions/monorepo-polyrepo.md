@@ -1,3 +1,8 @@
+---
+title: Monorepo or Polyrepo
+description: Evaluate the organizational considerations for choosing between monorepo and polyrepo approaches, including team agreements on code management and workflows.
+---
+
 # Monorepo or Polyrepo
 
 Monorepos have a lot of benefits, but there are also some costs involved. We feel strongly that the [technical challenges](/concepts/decisions/why-monorepos) involved in maintaining large monorepos are fully addressed through the efficient use of Nx and Nx Cloud. Rather, the limiting factors in how large your monorepo grows are interpersonal.

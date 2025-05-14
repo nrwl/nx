@@ -24,10 +24,10 @@ describe('Webpack Plugin (legacy)', () => {
       packages: ['@nx/react'],
     });
     runCLI(
-      `generate @nx/react:app ${appName} --bundler webpack --e2eTestRunner=cypress --rootProject --no-interactive`
+      `generate @nx/react:app ${appName} --bundler webpack --e2eTestRunner=cypress --rootProject --no-interactive --unitTestRunner=jest --linter=eslint`
     );
     runCLI(
-      `generate @nx/react:lib ${libName} --unitTestRunner jest --no-interactive`
+      `generate @nx/react:lib ${libName} --unitTestRunner jest --no-interactive --linter=eslint`
     );
   });
 
@@ -72,7 +72,9 @@ describe('Webpack Plugin (legacy)', () => {
   // Issue: https://github.com/nrwl/nx/issues/20179
   it('should allow main/styles entries to be spread within composePlugins() function (#20179)', () => {
     const appName = uniq('app');
-    runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
+    runCLI(
+      `generate @nx/web:app ${appName} --bundler webpack --unitTestRunner=jest --linter=eslint`
+    );
 
     checkFilesExist(`${appName}/src/main.ts`);
     updateFile(`${appName}/src/main.ts`, `console.log('Hello');\n`);
@@ -109,7 +111,7 @@ describe('Webpack Plugin (legacy)', () => {
   it('should support standard webpack config with executors', () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nx/web:app ${appName} --bundler webpack --e2eTestRunner=playwright`
+      `generate @nx/web:app ${appName} --bundler webpack --e2eTestRunner=playwright --unitTestRunner=jest --linter=eslint`
     );
     updateFile(
       `${appName}/src/main.ts`,
@@ -153,7 +155,7 @@ describe('Webpack Plugin (legacy)', () => {
     it('should convert withNx webpack config to a standard config using NxWebpackPlugin', () => {
       const appName = 'app3224373'; // Needs to be reserved so that the snapshot projectName matches
       runCLI(
-        `generate @nx/web:app ${appName} --bundler webpack --e2eTestRunner=playwright`
+        `generate @nx/web:app ${appName} --bundler webpack --e2eTestRunner=playwright --unitTestRunner=vitest --linter=eslint`
       );
       updateFile(
         `${appName}/src/main.ts`,

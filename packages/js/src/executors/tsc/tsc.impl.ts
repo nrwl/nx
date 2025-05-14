@@ -114,19 +114,21 @@ export async function* tscExecutor(
     tsCompilationOptions,
     async () => {
       await assetHandler.processAllAssetsOnce();
-      updatePackageJson(
-        {
-          ...options,
-          additionalEntryPoints: createEntryPoints(
-            options.additionalEntryPoints,
-            context.root
-          ),
-          format: [determineModuleFormatFromTsConfig(options.tsConfig)],
-        },
-        context,
-        target,
-        dependencies
-      );
+      if (options.generatePackageJson) {
+        updatePackageJson(
+          {
+            ...options,
+            additionalEntryPoints: createEntryPoints(
+              options.additionalEntryPoints,
+              context.root
+            ),
+            format: [determineModuleFormatFromTsConfig(options.tsConfig)],
+          },
+          context,
+          target,
+          dependencies
+        );
+      }
       postProcessInlinedDependencies(
         tsCompilationOptions.outputPath,
         tsCompilationOptions.projectRoot,
@@ -145,29 +147,32 @@ export async function* tscExecutor(
   if (isDaemonEnabled() && options.watch) {
     const disposeWatchAssetChanges =
       await assetHandler.watchAndProcessOnAssetChange();
-    const disposePackageJsonChanges = await watchForSingleFileChanges(
-      context.projectName,
-      options.projectRoot,
-      'package.json',
-      () =>
-        updatePackageJson(
-          {
-            ...options,
-            additionalEntryPoints: createEntryPoints(
-              options.additionalEntryPoints,
-              context.root
-            ),
-            format: [determineModuleFormatFromTsConfig(options.tsConfig)],
-          },
-          context,
-          target,
-          dependencies
-        )
-    );
+    let disposePackageJsonChanges: undefined | (() => void);
+    if (options.generatePackageJson) {
+      disposePackageJsonChanges = await watchForSingleFileChanges(
+        context.projectName,
+        options.projectRoot,
+        'package.json',
+        () =>
+          updatePackageJson(
+            {
+              ...options,
+              additionalEntryPoints: createEntryPoints(
+                options.additionalEntryPoints,
+                context.root
+              ),
+              format: [determineModuleFormatFromTsConfig(options.tsConfig)],
+            },
+            context,
+            target,
+            dependencies
+          )
+      );
+    }
     const handleTermination = async (exitCode: number) => {
       await typescriptCompilation.close();
       disposeWatchAssetChanges();
-      disposePackageJsonChanges();
+      disposePackageJsonChanges?.();
       process.exit(exitCode);
     };
     process.on('SIGINT', () => handleTermination(128 + 2));

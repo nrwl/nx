@@ -10,10 +10,12 @@ export function addViteCommandsToPackageScripts(
   const packageJson = readJsonFile(packageJsonPath);
   packageJson.scripts = {
     ...packageJson.scripts,
-    start: 'nx exec -- vite',
-    serve: 'nx exec -- vite',
-    build: `nx exec -- vite build`,
-    test: 'nx exec -- vitest',
+    // These should be replaced by the vite init generator later.
+    start: 'vite',
+    test: 'vitest',
+    dev: 'vite',
+    build: 'vite build',
+    eject: undefined,
   };
   writeJsonFile(packageJsonPath, packageJson, { spaces: 2 });
 }

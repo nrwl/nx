@@ -1,0 +1,14 @@
+{
+  "name": "update-19-0-0-change-webpack-to-metro",
+  "version": "19.0.0-beta.9",
+  "cli": "nx",
+  "description": "Change webpack to metro in expo projects",
+  "factory": "./src/migrations/update-19-0-0/change-webpack-to-metro",
+  "implementation": "/packages/expo/src/migrations/update-19-0-0/change-webpack-to-metro.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/expo",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

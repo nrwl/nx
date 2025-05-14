@@ -1,5 +1,7 @@
 export const iconsMap: Record<string, string> = {
   angular: '/images/icons/angular.svg',
+  'angular-rsbuild': '/images/icons/rsbuild.svg',
+  'angular-rspack': '/images/icons/rspack.svg',
   cli: '/images/icons/nx.svg',
   cypress: '/images/icons/cypress.svg',
   detox: '/images/icons/react.svg',
@@ -32,6 +34,7 @@ export const iconsMap: Record<string, string> = {
   'react-native': '/images/icons/react.svg',
   remix: '/images/icons/remix.svg',
   rollup: '/images/icons/rollup.svg',
+  rsbuild: '/images/icons/rsbuild.svg',
   rspack: '/images/icons/rspack.svg',
   storybook: '/images/icons/storybook.svg',
   vite: '/images/icons/vite.svg',

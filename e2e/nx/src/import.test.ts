@@ -5,9 +5,11 @@ import {
   newProject,
   runCLI,
   runCommand,
-  updateJson,
-  updateFile,
   e2eCwd,
+  readJson,
+  readFile,
+  updateFile,
+  updateJson,
 } from '@nx/e2e/utils';
 import { writeFileSync, mkdirSync, rmdirSync } from 'fs';
 import { execSync } from 'node:child_process';
@@ -38,7 +40,10 @@ describe('Nx Import', () => {
     try {
       rmdirSync(join(tempImportE2ERoot));
     } catch {}
+  });
 
+  beforeEach(() => {
+    // Clean up the temp import directory before each test to not have any uncommited changes
     runCommand(`git add .`);
     runCommand(`git commit -am "Update" --allow-empty`);
   });
@@ -110,9 +115,13 @@ describe('Nx Import', () => {
     execSync(`git commit -am "initial commit"`, {
       cwd: repoPath,
     });
-    execSync(`git checkout -b main`, {
-      cwd: repoPath,
-    });
+    try {
+      execSync(`git checkout -b main`, {
+        cwd: repoPath,
+      });
+    } catch {
+      // This fails if git is already configured to have `main` branch, but that's OK
+    }
     mkdirSync(join(repoPath, 'packages/a'), { recursive: true });
     writeFileSync(join(repoPath, 'packages/a/README.md'), `# A`);
     execSync(`git add .`, {
@@ -142,6 +151,16 @@ describe('Nx Import', () => {
         verbose: true,
       }
     );
+
+    if (getSelectedPackageManager() === 'pnpm') {
+      const workspaceYaml = readFile('pnpm-workspace.yaml');
+      expect(workspaceYaml).toMatch(/(packages\/a)/);
+      expect(workspaceYaml).toMatch(/(packages\/b)/);
+    } else {
+      const packageJson = readJson('package.json');
+      expect(packageJson.workspaces).toContain('packages/a');
+      expect(packageJson.workspaces).toContain('packages/b');
+    }
 
     checkFilesExist('packages/a/README.md', 'packages/b/README.md');
   });

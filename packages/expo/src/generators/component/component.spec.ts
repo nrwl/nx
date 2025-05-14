@@ -2,7 +2,6 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import { logger, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import expoApplicationGenerator from '../application/application';
 import expoLibraryGenerator from '../library/library';
 import { expoComponentGenerator } from './component';
@@ -19,7 +18,6 @@ describe('component', () => {
     appTree = createTreeWithEmptyWorkspace();
     appTree.write('.gitignore', '');
     defaultSchema = {
-      name: 'hello',
       path: 'my-lib/src/lib/hello/hello',
       skipTests: false,
       export: false,
@@ -30,7 +28,7 @@ describe('component', () => {
 
     await expoApplicationGenerator(appTree, {
       directory: 'my-app',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
       skipFormat: false,
       js: true,
@@ -38,7 +36,7 @@ describe('component', () => {
     });
     await expoLibraryGenerator(appTree, {
       directory: projectName,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: false,
       skipTsConfig: false,
       unitTestRunner: 'jest',
@@ -55,6 +53,16 @@ describe('component', () => {
 
   it('should generate files', async () => {
     await expoComponentGenerator(appTree, defaultSchema);
+
+    expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
+    expect(appTree.exists('my-lib/src/lib/hello/hello.spec.tsx')).toBeTruthy();
+  });
+
+  it('should handle path with file extension', async () => {
+    await expoComponentGenerator(appTree, {
+      ...defaultSchema,
+      path: 'my-lib/src/lib/hello/hello.tsx',
+    });
 
     expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
     expect(appTree.exists('my-lib/src/lib/hello/hello.spec.tsx')).toBeTruthy();

@@ -22,7 +22,9 @@ async function normalizeDecoratorOptions(
   tree: Tree,
   options: DecoratorGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const normalizedOptions = await normalizeOptions(tree, options);
+  const normalizedOptions = await normalizeOptions(tree, options, {
+    suffix: 'decorator',
+  });
   return {
     ...normalizedOptions,
     language: options.language,

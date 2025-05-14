@@ -3,6 +3,7 @@
   "implementation": "/packages/vite/src/executors/dev-server/dev-server.impl.ts",
   "schema": {
     "version": 2,
+    "continuous": true,
     "outputCapture": "direct-nodejs",
     "title": "Vite Dev Server",
     "cli": "nx",

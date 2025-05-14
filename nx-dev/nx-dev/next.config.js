@@ -14,6 +14,13 @@ module.exports = withNx({
   async headers() {
     return [
       {
+        source: '/tutorials/:path*',
+        headers: [
+          { key: 'Cross-Origin-Embedder-Policy', value: 'require-corp' },
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+        ],
+      },
+      {
         source: '/:path*',
         headers: [
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
@@ -24,8 +31,20 @@ module.exports = withNx({
           { key: 'X-XSS-Protection', value: '1; mode=block' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-Frame-Options', value: 'DENY' },
-          { key: 'Referrer-Policy', value: 'no-referrer' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
         ],
+      },
+    ];
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/tutorials/:path*',
+        destination: '/tutorials/:path*/index.html',
+      },
+      {
+        source: '/tutorials',
+        destination: '/tutorials/index.html',
       },
     ];
   },

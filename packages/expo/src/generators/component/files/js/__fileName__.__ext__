@@ -1,0 +1,28 @@
+<%_ if (classComponent) { _%>
+import { Component } from 'react';
+<%_ } else { _%>
+import React from 'react';
+<%_ } _%>
+import { View, Text } from 'react-native';
+
+<%_ if (classComponent) { _%>
+export class <%= className %> extends Component {
+  render() {
+    return (
+      <View>
+        <Text>Welcome to <%= name %>!</Text>
+      </View>
+    );
+  }
+}
+<%_ } else { _%>
+export function <%= className %>(props) {
+  return (
+    <View>
+      <Text>Welcome to <%= name %>!</Text>
+    </View>
+  );
+}
+<%_ } _%>
+
+export default <%= className %>;

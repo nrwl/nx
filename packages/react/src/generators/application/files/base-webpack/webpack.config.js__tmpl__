@@ -5,7 +5,7 @@ const { join } = require('path');
 
 module.exports = {
   output: {
-    path: join(__dirname, '<%= offsetFromRoot %><%= webpackPluginOptions.outputPath %>'),
+    path: join(__dirname, '<%= webpackPluginOptions.outputPath %>'),
   },
   devServer: {
     port: 4200,

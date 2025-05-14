@@ -135,7 +135,9 @@ export class ProjectMigrator<
         .flat(),
     ];
     allSupportedBuilders.push(
-      ...this.builderMigrators.map((migrator) => migrator.builderName)
+      ...this.builderMigrators.flatMap(
+        (migrator) => migrator.possibleBuilderNames
+      )
     );
     const unsupportedBuilders: [target: string, builder: string][] = [];
 

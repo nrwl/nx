@@ -1,12 +1,12 @@
 import { type Tree, formatFiles, visitNotIgnoredFiles } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
-import { minimatch } from 'minimatch';
+import picomatch = require('picomatch');
 import { tsquery } from '@phenomnomnominal/tsquery';
 
 export default async function (tree: Tree) {
   visitNotIgnoredFiles(tree, '', (path) => {
     const webpackConfigGlob = '**/webpack*.config*.{js,ts,mjs,cjs}';
-    const result = minimatch(path, webpackConfigGlob);
+    const result = picomatch(webpackConfigGlob)(path);
     if (!result) {
       return;
     }

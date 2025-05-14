@@ -4,40 +4,54 @@ import {
   joinPathFragments,
   readProjectConfiguration,
 } from '@nx/devkit';
+import { join } from 'path';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
-import type { Schema } from '../schema';
+import type { NormalizedGeneratorOptions } from '../schema';
 import { DEFAULT_BROWSER_DIR } from './constants';
 
-export function addServerFile(
-  tree: Tree,
-  schema: Schema,
-  isUsingApplicationBuilder: boolean
-) {
-  const { root: projectRoot, targets } = readProjectConfiguration(
-    tree,
-    schema.project
-  );
-  const { outputPath } = targets.build.options;
-  const browserBundleOutputPath = isUsingApplicationBuilder
+export function addServerFile(tree: Tree, options: NormalizedGeneratorOptions) {
+  const project = readProjectConfiguration(tree, options.project);
+  const { outputPath } = project.targets.build.options;
+  const browserDistDirectory = options.isUsingApplicationBuilder
     ? getApplicationBuilderBrowserOutputPath(outputPath)
     : outputPath;
 
-  const pathToFiles = joinPathFragments(__dirname, '..', 'files');
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  const baseFilesPath = join(__dirname, '..', 'files');
+  let pathToFiles: string;
+  if (angularMajorVersion >= 19) {
+    pathToFiles = join(
+      baseFilesPath,
+      'v19+',
+      options.isUsingApplicationBuilder
+        ? 'application-builder' +
+            (options.serverRouting ? '' : '-common-engine')
+        : 'server-builder',
+      'server'
+    );
+  } else {
+    pathToFiles = join(
+      baseFilesPath,
+      'pre-v19',
+      'server',
+      options.isUsingApplicationBuilder
+        ? 'application-builder'
+        : 'server-builder'
+    );
+  }
+
+  const sourceRoot =
+    project.sourceRoot ?? joinPathFragments(project.root, 'src');
 
   generateFiles(
     tree,
-    joinPathFragments(
-      pathToFiles,
-      'server',
-      ...(isUsingApplicationBuilder
-        ? ['application-builder']
-        : angularMajorVersion >= 17
-        ? ['server-builder', 'v17+']
-        : ['server-builder', 'pre-v17'])
-    ),
-    projectRoot,
-    { ...schema, browserBundleOutputPath, tpl: '' }
+    pathToFiles,
+    angularMajorVersion >= 19 ? sourceRoot : project.root,
+    {
+      ...options,
+      browserDistDirectory,
+      tpl: '',
+    }
   );
 }
 

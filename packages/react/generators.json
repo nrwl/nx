@@ -64,13 +64,15 @@
       "factory": "./src/generators/host/host",
       "schema": "./src/generators/host/schema.json",
       "x-type": "application",
-      "description": "Generate a host react application"
+      "description": "Generate a host react application",
+      "aliases": ["consumer"]
     },
     "remote": {
       "factory": "./src/generators/remote/remote",
       "schema": "./src/generators/remote/schema.json",
       "x-type": "application",
-      "description": "Generate a remote react application"
+      "description": "Generate a remote react application",
+      "aliases": ["producer"]
     },
     "cypress-component-configuration": {
       "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigGenerator",

@@ -1,7 +1,8 @@
 import { readJsonFile, workspaceRoot } from '@nx/devkit';
-import { execSync } from 'child_process';
 import { existsSync } from 'fs-extra';
+import { execSync } from 'node:child_process';
 import { join } from 'path';
+import { gte } from 'semver';
 import { dirSync } from 'tmp';
 
 import * as isCI from 'is-ci';
@@ -23,7 +24,7 @@ export function getPublishedVersion(): string {
 }
 
 export function detectPackageManager(dir: string = ''): PackageManager {
-  return existsSync(join(dir, 'bun.lockb'))
+  return existsSync(join(dir, 'bun.lockb')) || existsSync(join(dir, 'bun.lock'))
     ? 'bun'
     : existsSync(join(dir, 'yarn.lock'))
     ? 'yarn'
@@ -99,6 +100,17 @@ export function getYarnMajorVersion(path: string): string | undefined {
   }
 }
 
+export function getPnpmVersion(): string | undefined {
+  try {
+    const pnpmVersion = execSync(`pnpm -v`, {
+      encoding: 'utf-8',
+    }).trim();
+    return pnpmVersion;
+  } catch {
+    return undefined;
+  }
+}
+
 export function getLatestLernaVersion(): string {
   const lernaVersion = execSync(`npm view lerna version`, {
     encoding: 'utf-8',
@@ -110,7 +122,16 @@ export const packageManagerLockFile = {
   npm: 'package-lock.json',
   yarn: 'yarn.lock',
   pnpm: 'pnpm-lock.yaml',
-  bun: 'bun.lockb',
+  bun: (() => {
+    try {
+      // In version 1.2.0, bun switched to a text based lockfile format by default
+      return gte(execSync('bun --version').toString().trim(), '1.2.0')
+        ? 'bun.lock'
+        : 'bun.lockb';
+    } catch {
+      return 'bun.lockb';
+    }
+  })(),
 };
 
 export function ensureCypressInstallation() {

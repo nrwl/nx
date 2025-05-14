@@ -3,7 +3,10 @@ import {
   CreateDependencies,
   CreateNodes,
   CreateNodesContext,
+  createNodesFromFiles,
+  CreateNodesV2,
   detectPackageManager,
+  getPackageManagerCommand,
   readJsonFile,
   TargetConfiguration,
   workspaceRoot,
@@ -17,9 +20,12 @@ import { getLockFileName } from '@nx/js';
 import { dirname, isAbsolute, join, relative } from 'path';
 import { existsSync, readdirSync } from 'fs';
 import { loadNuxtKitDynamicImport } from '../utils/executor-utils';
+import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 const cachePath = join(workspaceDataDirectory, 'nuxt.hash');
 const targetsCache = readTargetsCache();
+
+const pmc = getPackageManagerCommand();
 
 function readTargetsCache(): Record<
   string,
@@ -36,17 +42,29 @@ function writeTargetsToCache() {
   });
 }
 
-export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache();
-  return [];
-};
-
 export interface NuxtPluginOptions {
   buildTargetName?: string;
   serveTargetName?: string;
   serveStaticTargetName?: string;
   buildStaticTargetName?: string;
+  buildDepsTargetName?: string;
+  watchDepsTargetName?: string;
 }
+
+export const createNodesV2: CreateNodesV2<NuxtPluginOptions> = [
+  '**/nuxt.config.{js,ts,mjs,mts,cjs,cts}',
+  async (files, options, context) => {
+    //TODO(@nrwl/nx-vue-reviewers): This should batch hashing like our other plugins.
+    const result = await createNodesFromFiles(
+      createNodes[1],
+      files,
+      options,
+      context
+    );
+    writeTargetsToCache();
+    return result;
+  },
+];
 
 export const createNodes: CreateNodes<NuxtPluginOptions> = [
   '**/nuxt.config.{js,ts,mjs,mts,cjs,cts}',
@@ -121,6 +139,14 @@ async function buildNuxtTargets(
     projectRoot
   );
 
+  addBuildAndWatchDepsTargets(
+    context.workspaceRoot,
+    projectRoot,
+    targets,
+    options,
+    pmc
+  );
+
   return targets;
 }
 
@@ -156,6 +182,7 @@ function serveTarget(projectRoot: string) {
     options: {
       cwd: projectRoot,
     },
+    continuous: true,
   };
 
   return targetConfig;
@@ -163,6 +190,8 @@ function serveTarget(projectRoot: string) {
 
 function serveStaticTarget(options: NuxtPluginOptions) {
   const targetConfig: TargetConfiguration = {
+    dependsOn: [`${options.buildStaticTargetName}`],
+    continuous: true,
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.buildStaticTargetName}`,

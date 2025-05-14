@@ -11,6 +11,111 @@ export function transformEsmConfigFile(tree: Tree, configPath: string) {
     transformWithModuleFederation(tree, configPath, scope);
     transformWithModuleFederationSSR(tree, configPath, scope);
   });
+
+  // Add useLegacyHtmlPlugin: true to withWeb() calls
+  transformWithWebCalls(tree, configPath);
+}
+
+function transformWithWebCalls(tree: Tree, configPath: string) {
+  const configContents = tree.read(configPath, 'utf-8');
+  const ast = tsquery.ast(configContents);
+
+  // Find withWeb() calls
+  const withWebCallNodes = tsquery(
+    ast,
+    'CallExpression > Identifier[name=withWeb]'
+  );
+
+  // If there are withWeb calls, update them
+  if (withWebCallNodes.length > 0) {
+    let newContents = configContents;
+
+    for (const node of withWebCallNodes) {
+      const callExpr = node.parent;
+      if (!callExpr) continue;
+
+      const startPos = callExpr.getStart();
+      const endPos = callExpr.getEnd();
+      const callText = configContents.substring(startPos, endPos);
+
+      // Skip if useLegacyHtmlPlugin is already present
+      if (callText.includes('useLegacyHtmlPlugin')) {
+        continue;
+      }
+
+      // If it's already withWeb({ ... }), add useLegacyHtmlPlugin: true to the options
+      if (callText.includes('{') && callText.includes('}')) {
+        const newCallText = callText.replace(
+          /\{\s*/,
+          '{ useLegacyHtmlPlugin: true,\n      '
+        );
+        newContents =
+          newContents.substring(0, startPos) +
+          newCallText +
+          newContents.substring(endPos);
+      } else {
+        // If it's just withWeb(), replace with withWeb({ useLegacyHtmlPlugin: true })
+        const newCallText = 'withWeb({ useLegacyHtmlPlugin: true })';
+        newContents =
+          newContents.substring(0, startPos) +
+          newCallText +
+          newContents.substring(endPos);
+      }
+    }
+
+    if (newContents !== configContents) {
+      tree.write(configPath, newContents);
+    }
+    return;
+  }
+
+  // If no withWeb calls, check for withReact calls
+  const withReactCallNodes = tsquery(
+    ast,
+    'CallExpression > Identifier[name=withReact]'
+  );
+  if (withReactCallNodes.length === 0) {
+    return;
+  }
+
+  let newContents = configContents;
+
+  for (const node of withReactCallNodes) {
+    const callExpr = node.parent;
+    if (!callExpr) continue;
+
+    const startPos = callExpr.getStart();
+    const endPos = callExpr.getEnd();
+    const callText = configContents.substring(startPos, endPos);
+
+    // Skip if useLegacyHtmlPlugin is already present
+    if (callText.includes('useLegacyHtmlPlugin')) {
+      continue;
+    }
+
+    // If it's already withReact({ ... }), add useLegacyHtmlPlugin: true to the options
+    if (callText.includes('{') && callText.includes('}')) {
+      const newCallText = callText.replace(
+        /\{\s*/,
+        '{ useLegacyHtmlPlugin: true,\n      '
+      );
+      newContents =
+        newContents.substring(0, startPos) +
+        newCallText +
+        newContents.substring(endPos);
+    } else {
+      // If it's just withReact(), replace with withReact({ useLegacyHtmlPlugin: true })
+      const newCallText = 'withReact({ useLegacyHtmlPlugin: true })';
+      newContents =
+        newContents.substring(0, startPos) +
+        newCallText +
+        newContents.substring(endPos);
+    }
+  }
+
+  if (newContents !== configContents) {
+    tree.write(configPath, newContents);
+  }
 }
 
 function transformComposePlugins(
@@ -153,7 +258,7 @@ function transformWithModuleFederation(
   const configContents = tree.read(configPath, 'utf-8');
   const ast = tsquery.ast(configContents);
 
-  const HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT = `ImportDeclaration:has(Identifier[name=withModuleFederation]) > StringLiteral[value=${scope}/react/module-federation]`;
+  const HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT = `ImportDeclaration:has(Identifier[name=withModuleFederation]) > StringLiteral[value=${scope}/module-federation/webpack]`;
   const nodes = tsquery(ast, HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT);
   if (nodes.length === 0) {
     return;
@@ -172,7 +277,7 @@ function transformWithModuleFederation(
     endIndex++;
   }
 
-  const newContents = `import { withModuleFederation } from '@nx/rspack/module-federation';
+  const newContents = `import { withModuleFederation } from '@nx/module-federation/rspack';
   ${configContents.slice(0, startIndex)}${configContents.slice(endIndex)}`;
 
   tree.write(configPath, newContents);
@@ -205,7 +310,7 @@ function transformModuleFederationConfig(
     endIndex++;
   }
 
-  const newContents = `import { ModuleFederationConfig } from '@nx/rspack/module-federation';
+  const newContents = `import { ModuleFederationConfig } from '@nx/module-federation';
   ${configContents.slice(0, startIndex)}${configContents.slice(endIndex)}`;
 
   tree.write(configPath, newContents);
@@ -219,7 +324,7 @@ function transformWithModuleFederationSSR(
   const configContents = tree.read(configPath, 'utf-8');
   const ast = tsquery.ast(configContents);
 
-  const HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT = `ImportDeclaration:has(Identifier[name=withModuleFederationForSSR]) > StringLiteral[value=${scope}/react/module-federation]`;
+  const HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT = `ImportDeclaration:has(Identifier[name=withModuleFederationForSSR]) > StringLiteral[value=${scope}/module-federation/webpack]`;
   const nodes = tsquery(ast, HAS_WITH_MODULE_FEDERATION_FROM_NX_REACT);
   if (nodes.length === 0) {
     return;
@@ -238,7 +343,7 @@ function transformWithModuleFederationSSR(
     endIndex++;
   }
 
-  const newContents = `import { withModuleFederationForSSR } from '@nx/rspack/module-federation';
+  const newContents = `import { withModuleFederationForSSR } from '@nx/module-federation/rspack';
   ${configContents.slice(0, startIndex)}${configContents.slice(endIndex)}`;
 
   tree.write(configPath, newContents);

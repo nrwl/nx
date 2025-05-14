@@ -78,7 +78,6 @@
               "stylus-loader",
               "swc-loader",
               "tsconfig-paths-webpack-plugin",
-              "url-loader",
               "webpack",
               "webpack-merge",
               // used via the CT react plugin installed via vite plugin

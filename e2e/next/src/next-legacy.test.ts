@@ -279,4 +279,44 @@ describe('@nx/next (legacy)', () => {
     await killPort(prodServePort);
     await killPort(selfContainedPort);
   }, 600_000);
+
+  it('should support --custom-server flag (swc)', async () => {
+    const appName = uniq('app');
+
+    runCLI(
+      `generate @nx/next:app ${appName} --no-interactive --custom-server --linter=eslint --unitTestRunner=jest`,
+      { env: { NX_ADD_PLUGINS: 'false' } }
+    );
+
+    // Check for custom server files added to source
+    checkFilesExist(`${appName}/server/main.ts`);
+    checkFilesExist(`${appName}/.server.swcrc`);
+
+    const result = runCLI(`build ${appName}`);
+
+    checkFilesExist(`dist/${appName}-server/server/main.js`);
+
+    expect(result).toContain(
+      `Successfully ran target build for project ${appName}`
+    );
+  }, 300_000);
+
+  it('should support --custom-server flag (tsc)', async () => {
+    const appName = uniq('app');
+
+    runCLI(
+      `generate @nx/next:app ${appName} --swc=false --no-interactive --custom-server --linter=eslint --unitTestRunner=jest`,
+      { env: { NX_ADD_PLUGINS: 'false' } }
+    );
+
+    checkFilesExist(`${appName}/server/main.ts`);
+
+    const result = runCLI(`build ${appName}`);
+
+    checkFilesExist(`dist/${appName}-server/server/main.js`);
+
+    expect(result).toContain(
+      `Successfully ran target build for project ${appName}`
+    );
+  }, 300_000);
 });

@@ -7,7 +7,6 @@ import { createWorkspace } from '../src/create-workspace';
 import { isKnownPreset, Preset } from '../src/utils/preset/preset';
 import { CLIErrorMessageConfig, output } from '../src/utils/output';
 import { nxVersion } from '../src/utils/nx/nx-version';
-import { pointToTutorialAndCourse } from '../src/utils/preset/point-to-tutorial-and-course';
 
 import { yargsDecorator } from './decorator';
 import { getPackageNameFromThirdPartyPreset } from '../src/utils/preset/get-third-party-preset';
@@ -29,9 +28,14 @@ import { messages, recordStat } from '../src/utils/nx/ab-testing';
 import { mapErrorToBodyLines } from '../src/utils/error-utils';
 import { existsSync } from 'fs';
 import { isCI } from '../src/utils/ci/is-ci';
+import { printSocialInformation } from '../src/utils/social-information';
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;
+  linter?: 'none' | 'eslint';
+  formatter?: 'none' | 'prettier';
+  workspaces?: boolean;
+  useProjectJson?: boolean;
 }
 
 interface NoneArguments extends BaseArguments {
@@ -39,18 +43,20 @@ interface NoneArguments extends BaseArguments {
   workspaceType?: 'package-based' | 'integrated' | 'standalone';
   js?: boolean;
   appName?: string | undefined;
-  formatter?: 'none' | 'prettier';
 }
 
 interface ReactArguments extends BaseArguments {
   stack: 'react';
   workspaceType: 'standalone' | 'integrated';
   appName: string;
-  framework: 'none' | 'next' | 'remix';
+  framework: 'none' | 'next';
   style: string;
   bundler: 'webpack' | 'vite' | 'rspack';
   nextAppDir: boolean;
   nextSrcDir: boolean;
+  useReactRouter: boolean;
+  routing: boolean;
+  unitTestRunner: 'none' | 'jest' | 'vitest';
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
 }
 
@@ -61,9 +67,11 @@ interface AngularArguments extends BaseArguments {
   style: string;
   routing: boolean;
   standaloneApi: boolean;
+  unitTestRunner: 'none' | 'jest' | 'vitest';
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
-  bundler: 'webpack' | 'esbuild';
+  bundler: 'webpack' | 'rspack' | 'esbuild';
   ssr: boolean;
+  serverRouting: boolean;
   prefix: string;
 }
 
@@ -73,6 +81,7 @@ interface VueArguments extends BaseArguments {
   appName: string;
   framework: 'none' | 'nuxt';
   style: string;
+  unitTestRunner: 'none' | 'vitest';
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
 }
 
@@ -80,8 +89,9 @@ interface NodeArguments extends BaseArguments {
   stack: 'node';
   workspaceType: 'standalone' | 'integrated';
   appName: string;
-  framework: 'express' | 'fastify' | 'koa' | 'nest';
+  framework: 'none' | 'express' | 'fastify' | 'koa' | 'nest';
   docker: boolean;
+  unitTestRunner: 'none' | 'jest';
 }
 
 interface UnknownStackArguments extends BaseArguments {
@@ -149,12 +159,29 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             default: true,
           })
           .option('routing', {
-            describe: chalk.dim`Add a routing setup for an Angular app.`,
+            describe: chalk.dim`Add a routing setup for an Angular or React app.`,
             type: 'boolean',
             default: true,
           })
+          .option('useReactRouter', {
+            describe: chalk.dim`Generate a Server-Side Rendered (SSR) React app using React Router.`,
+            type: 'boolean',
+          })
           .option('bundler', {
             describe: chalk.dim`Bundler to be used to build the app.`,
+            type: 'string',
+          })
+          .option('workspaces', {
+            describe: chalk.dim`Use package manager workspaces.`,
+            type: 'boolean',
+            default: true,
+          })
+          .option('useProjectJson', {
+            describe: chalk.dim`Use a 'project.json' file for the Nx configuration instead of a 'package.json' file. This defaults to 'true' when '--no-workspaces' is used. Otherwise, it defaults to 'false'.`,
+            type: 'boolean',
+          })
+          .option('formatter', {
+            describe: chalk.dim`Code formatter to use.`,
             type: 'string',
           })
           .option('framework', {
@@ -176,6 +203,11 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('e2eTestRunner', {
             describe: chalk.dim`Test runner to use for end to end (E2E) tests.`,
             choices: ['playwright', 'cypress', 'none'],
+            type: 'string',
+          })
+          .option('unitTestRunner', {
+            describe: chalk.dim`Test runner to use for unit tests.`,
+            choices: ['jest', 'vitest', 'none'],
             type: 'string',
           })
           .option('ssr', {
@@ -234,11 +266,11 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
   });
 
   if (parsedArgs.nxCloud && workspaceInfo.nxCloudInfo) {
-    console.log(workspaceInfo.nxCloudInfo);
+    process.stdout.write(workspaceInfo.nxCloudInfo);
   }
 
   if (isKnownPreset(parsedArgs.preset)) {
-    pointToTutorialAndCourse(parsedArgs.preset as Preset);
+    printSocialInformation();
   } else {
     output.log({
       title: `Successfully applied preset: ${parsedArgs.preset}`,
@@ -259,6 +291,9 @@ async function normalizeArgsMiddleware(
     title:
       "Let's create a new workspace [https://nx.dev/getting-started/intro]",
   });
+
+  argv.workspaces ??= true;
+  argv.useProjectJson ??= !argv.workspaces;
 
   try {
     argv.name = await determineFolder(argv);
@@ -289,7 +324,7 @@ async function normalizeArgsMiddleware(
     const useGitHub =
       nxCloud === 'skip'
         ? undefined
-        : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(nxCloud));
+        : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(argv));
     Object.assign(argv, {
       nxCloud,
       useGitHub,
@@ -355,8 +390,6 @@ async function determineStack(
       case Preset.ReactMonorepo:
       case Preset.NextJs:
       case Preset.NextJsStandalone:
-      case Preset.RemixStandalone:
-      case Preset.RemixMonorepo:
       case Preset.ReactNative:
       case Preset.Expo:
         return 'react';
@@ -393,8 +426,7 @@ async function determineStack(
         {
           name: `none`,
           message:
-            process.env.NX_ADD_PLUGINS !== 'false' &&
-            process.env.NX_ADD_TS_PLUGIN !== 'false'
+            process.env.NX_ADD_PLUGINS !== 'false' && parsedArgs.workspaces
               ? `None:          Configures a TypeScript/JavaScript monorepo.`
               : `None:          Configures a TypeScript/JavaScript project with minimal structure.`,
         },
@@ -440,34 +472,69 @@ async function determinePresetOptions(
   }
 }
 
+async function determineFormatterOptions(
+  args: {
+    formatter?: 'none' | 'prettier';
+    interactive?: boolean;
+  },
+  opts?: { preferPrettier?: boolean }
+) {
+  if (args.formatter) return args.formatter;
+  const reply = await enquirer.prompt<{ prettier: 'Yes' | 'No' }>([
+    {
+      name: 'prettier',
+      message: `Would you like to use Prettier for code formatting?`,
+      type: 'autocomplete',
+      choices: [
+        {
+          name: 'Yes',
+        },
+        {
+          name: 'No',
+        },
+      ],
+      initial: opts?.preferPrettier ? 0 : 1,
+      skip: !args.interactive || isCI(),
+    },
+  ]);
+  return reply.prettier === 'Yes' ? 'prettier' : 'none';
+}
+
+async function determineLinterOptions(
+  args: { interactive?: boolean },
+  opts?: { preferEslint?: boolean }
+) {
+  const reply = await enquirer.prompt<{ eslint: 'Yes' | 'No' }>([
+    {
+      name: 'eslint',
+      message: `Would you like to use ESLint?`,
+      type: 'autocomplete',
+      choices: [
+        {
+          name: 'Yes',
+        },
+        {
+          name: 'No',
+        },
+      ],
+      initial: opts?.preferEslint ? 0 : 1,
+      skip: !args.interactive || isCI(),
+    },
+  ]);
+  return reply.eslint === 'Yes' ? 'eslint' : 'none';
+}
+
 async function determineNoneOptions(
   parsedArgs: yargs.Arguments<NoneArguments>
 ): Promise<Partial<NoneArguments>> {
   if (
     (!parsedArgs.preset || parsedArgs.preset === Preset.TS) &&
     process.env.NX_ADD_PLUGINS !== 'false' &&
-    process.env.NX_ADD_TS_PLUGIN !== 'false'
+    parsedArgs.workspaces
   ) {
-    const reply = await enquirer.prompt<{ prettier: 'Yes' | 'No' }>([
-      {
-        name: 'prettier',
-        message: `Would you like to use Prettier for code formatting?`,
-        type: 'autocomplete',
-        choices: [
-          {
-            name: 'Yes',
-          },
-          {
-            name: 'No',
-          },
-        ],
-        initial: 1,
-        skip: !parsedArgs.interactive || isCI(),
-      },
-    ]);
     return {
       preset: Preset.TS,
-      formatter: reply.prettier === 'Yes' ? 'prettier' : 'none',
+      formatter: await determineFormatterOptions(parsedArgs),
     };
   } else {
     let preset: Preset;
@@ -527,21 +594,27 @@ async function determineNoneOptions(
 
 async function determineReactOptions(
   parsedArgs: yargs.Arguments<ReactArguments>
-): Promise<Partial<Arguments>> {
+): Promise<Partial<ReactArguments>> {
   let preset: Preset;
   let style: undefined | string = undefined;
   let appName: string;
   let bundler: undefined | 'webpack' | 'vite' | 'rspack' = undefined;
+  let unitTestRunner: undefined | 'none' | 'jest' | 'vitest' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
+  let useReactRouter = false;
+  let routing = true;
   let nextAppDir = false;
   let nextSrcDir = false;
+  let linter: undefined | 'none' | 'eslint';
+  let formatter: undefined | 'none' | 'prettier';
+
+  const workspaces = parsedArgs.workspaces;
 
   if (parsedArgs.preset && parsedArgs.preset !== Preset.React) {
     preset = parsedArgs.preset;
     if (
       preset === Preset.ReactStandalone ||
-      preset === Preset.NextJsStandalone ||
-      preset === Preset.RemixStandalone
+      preset === Preset.NextJsStandalone
     ) {
       appName = parsedArgs.appName ?? parsedArgs.name;
     } else {
@@ -550,37 +623,30 @@ async function determineReactOptions(
   } else {
     const framework = await determineReactFramework(parsedArgs);
 
-    // React Native and Expo only support integrated monorepos for now.
-    // TODO(jack): Add standalone support for React Native and Expo.
-    const workspaceType =
-      framework === 'react-native' || framework === 'expo'
-        ? 'integrated'
-        : await determineStandaloneOrMonorepo();
+    const isStandalone =
+      workspaces || framework === 'react-native' || framework === 'expo'
+        ? false
+        : (await determineStandaloneOrMonorepo()) === 'standalone';
 
-    if (workspaceType === 'standalone') {
+    if (isStandalone) {
       appName = parsedArgs.name;
     } else {
       appName = await determineAppName(parsedArgs);
     }
 
     if (framework === 'nextjs') {
-      if (workspaceType === 'standalone') {
+      if (isStandalone) {
         preset = Preset.NextJsStandalone;
       } else {
         preset = Preset.NextJs;
-      }
-    } else if (framework === 'remix') {
-      if (workspaceType === 'standalone') {
-        preset = Preset.RemixStandalone;
-      } else {
-        preset = Preset.RemixMonorepo;
       }
     } else if (framework === 'react-native') {
       preset = Preset.ReactNative;
     } else if (framework === 'expo') {
       preset = Preset.Expo;
     } else {
-      if (workspaceType === 'standalone') {
+      useReactRouter = await determineReactRouter(parsedArgs);
+      if (isStandalone) {
         preset = Preset.ReactStandalone;
       } else {
         preset = Preset.ReactMonorepo;
@@ -589,18 +655,22 @@ async function determineReactOptions(
   }
 
   if (preset === Preset.ReactStandalone || preset === Preset.ReactMonorepo) {
-    bundler = await determineReactBundler(parsedArgs);
+    bundler = useReactRouter ? 'vite' : await determineReactBundler(parsedArgs);
+    unitTestRunner = await determineUnitTestRunner(parsedArgs, {
+      preferVitest: bundler === 'vite',
+    });
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   } else if (preset === Preset.NextJs || preset === Preset.NextJsStandalone) {
     nextAppDir = await determineNextAppDir(parsedArgs);
     nextSrcDir = await determineNextSrcDir(parsedArgs);
+    unitTestRunner = await determineUnitTestRunner(parsedArgs, {
+      exclude: 'vitest',
+    });
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
-  } else if (
-    preset === Preset.RemixMonorepo ||
-    preset === Preset.RemixStandalone ||
-    preset === Preset.ReactNative ||
-    preset === Preset.Expo
-  ) {
+  } else if (preset === Preset.ReactNative || preset === Preset.Expo) {
+    unitTestRunner = await determineUnitTestRunner(parsedArgs, {
+      exclude: 'vitest',
+    });
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   }
 
@@ -657,6 +727,16 @@ async function determineReactOptions(
     style = reply.style;
   }
 
+  if (workspaces) {
+    linter = await determineLinterOptions(parsedArgs, { preferEslint: true });
+    formatter = await determineFormatterOptions(parsedArgs, {
+      preferPrettier: true,
+    });
+  } else {
+    linter = 'eslint';
+    formatter = 'prettier';
+  }
+
   return {
     preset,
     style,
@@ -664,17 +744,28 @@ async function determineReactOptions(
     bundler,
     nextAppDir,
     nextSrcDir,
+    unitTestRunner,
     e2eTestRunner,
+    useReactRouter,
+    routing,
+    linter,
+    formatter,
+    workspaces,
   };
 }
 
 async function determineVueOptions(
   parsedArgs: yargs.Arguments<VueArguments>
-): Promise<Partial<Arguments>> {
+): Promise<Partial<VueArguments>> {
   let preset: Preset;
   let style: undefined | string = undefined;
   let appName: string;
+  let unitTestRunner: undefined | 'none' | 'vitest' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
+  let linter: undefined | 'none' | 'eslint';
+  let formatter: undefined | 'none' | 'prettier';
+
+  const workspaces = parsedArgs.workspaces;
 
   if (parsedArgs.preset && parsedArgs.preset !== Preset.Vue) {
     preset = parsedArgs.preset;
@@ -686,7 +777,9 @@ async function determineVueOptions(
   } else {
     const framework = await determineVueFramework(parsedArgs);
 
-    const workspaceType = await determineStandaloneOrMonorepo();
+    const workspaceType = workspaces
+      ? 'monorepo'
+      : await determineStandaloneOrMonorepo();
     if (workspaceType === 'standalone') {
       appName = parsedArgs.appName ?? parsedArgs.name;
     } else {
@@ -708,6 +801,9 @@ async function determineVueOptions(
     }
   }
 
+  unitTestRunner = await determineUnitTestRunner(parsedArgs, {
+    exclude: 'jest',
+  });
   e2eTestRunner = await determineE2eTestRunner(parsedArgs);
 
   if (parsedArgs.style) {
@@ -743,18 +839,39 @@ async function determineVueOptions(
     style = reply.style;
   }
 
-  return { preset, style, appName, e2eTestRunner };
+  if (workspaces) {
+    linter = await determineLinterOptions(parsedArgs, { preferEslint: true });
+    formatter = await determineFormatterOptions(parsedArgs, {
+      preferPrettier: true,
+    });
+  } else {
+    linter = 'eslint';
+    formatter = 'prettier';
+  }
+
+  return {
+    preset,
+    style,
+    appName,
+    unitTestRunner,
+    e2eTestRunner,
+    linter,
+    formatter,
+    workspaces,
+  };
 }
 
 async function determineAngularOptions(
   parsedArgs: yargs.Arguments<AngularArguments>
-): Promise<Partial<Arguments>> {
+): Promise<Partial<AngularArguments>> {
   let preset: Preset;
   let style: string;
   let appName: string;
+  let unitTestRunner: undefined | 'none' | 'jest' | 'vitest' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
-  let bundler: undefined | 'webpack' | 'esbuild' = undefined;
+  let bundler: undefined | 'webpack' | 'rspack' | 'esbuild' = undefined;
   let ssr: undefined | boolean = undefined;
+  let serverRouting: undefined | boolean = undefined;
 
   const standaloneApi = parsedArgs.standaloneApi;
   const routing = parsedArgs.routing;
@@ -813,6 +930,10 @@ async function determineAngularOptions(
             message: 'esbuild [ https://esbuild.github.io/ ]',
           },
           {
+            name: 'rspack',
+            message: 'Rspack [ https://rspack.dev/ ]',
+          },
+          {
             name: 'webpack',
             message: 'Webpack [ https://webpack.js.org/ ]',
           },
@@ -858,8 +979,11 @@ async function determineAngularOptions(
     const reply = await enquirer.prompt<{ ssr: 'Yes' | 'No' }>([
       {
         name: 'ssr',
-        message:
-          'Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)?',
+        message: `Do you want to enable Server-Side Rendering (SSR)${
+          bundler !== 'rspack'
+            ? ' and Static Site Generation (SSG/Prerendering)?'
+            : '?'
+        }`,
         type: 'autocomplete',
         choices: [{ name: 'Yes' }, { name: 'No' }],
         initial: 1,
@@ -869,6 +993,26 @@ async function determineAngularOptions(
     ssr = reply.ssr === 'Yes';
   }
 
+  if (parsedArgs.serverRouting !== undefined) {
+    serverRouting = parsedArgs.serverRouting;
+  } else if (ssr && bundler === 'esbuild') {
+    const reply = await enquirer.prompt<{ serverRouting: 'Yes' | 'No' }>([
+      {
+        name: 'serverRouting',
+        message:
+          'Would you like to use the Server Routing and App Engine APIs (Developer Preview) for this server application?',
+        type: 'autocomplete',
+        choices: [{ name: 'Yes' }, { name: 'No' }],
+        initial: 1,
+        skip: !parsedArgs.interactive || isCI(),
+      },
+    ]);
+    serverRouting = reply.serverRouting === 'Yes';
+  } else {
+    serverRouting = false;
+  }
+
+  unitTestRunner = await determineUnitTestRunner(parsedArgs);
   e2eTestRunner = await determineE2eTestRunner(parsedArgs);
 
   return {
@@ -877,20 +1021,26 @@ async function determineAngularOptions(
     appName,
     standaloneApi,
     routing,
+    unitTestRunner,
     e2eTestRunner,
     bundler,
     ssr,
+    serverRouting,
     prefix,
   };
 }
 
 async function determineNodeOptions(
   parsedArgs: yargs.Arguments<NodeArguments>
-): Promise<Partial<Arguments>> {
+): Promise<Partial<NodeArguments>> {
   let preset: Preset;
   let appName: string;
   let framework: 'express' | 'fastify' | 'koa' | 'nest' | 'none';
   let docker: boolean;
+  let linter: undefined | 'none' | 'eslint';
+  let formatter: undefined | 'none' | 'prettier';
+  let unitTestRunner: undefined | 'none' | 'jest' = undefined;
+  const workspaces = parsedArgs.workspaces;
 
   if (parsedArgs.preset) {
     preset = parsedArgs.preset;
@@ -913,7 +1063,9 @@ async function determineNodeOptions(
   } else {
     framework = await determineNodeFramework(parsedArgs);
 
-    const workspaceType = await determineStandaloneOrMonorepo();
+    const workspaceType = workspaces
+      ? 'monorepo'
+      : await determineStandaloneOrMonorepo();
     if (workspaceType === 'standalone') {
       preset = Preset.NodeStandalone;
       appName = parsedArgs.name;
@@ -948,11 +1100,29 @@ async function determineNodeOptions(
     docker = reply.docker === 'Yes';
   }
 
+  unitTestRunner = await determineUnitTestRunner(parsedArgs, {
+    exclude: 'vitest',
+  });
+
+  if (workspaces) {
+    linter = await determineLinterOptions(parsedArgs, { preferEslint: true });
+    formatter = await determineFormatterOptions(parsedArgs, {
+      preferPrettier: true,
+    });
+  } else {
+    linter = 'eslint';
+    formatter = 'prettier';
+  }
+
   return {
     preset,
     appName,
     framework,
     docker,
+    linter,
+    formatter,
+    workspaces,
+    unitTestRunner,
   };
 }
 
@@ -1058,9 +1228,9 @@ async function determineAppName(
 
 async function determineReactFramework(
   parsedArgs: yargs.Arguments<ReactArguments>
-): Promise<'none' | 'nextjs' | 'remix' | 'expo' | 'react-native'> {
+): Promise<'none' | 'nextjs' | 'expo' | 'react-native'> {
   const reply = await enquirer.prompt<{
-    framework: 'none' | 'nextjs' | 'remix' | 'expo' | 'react-native';
+    framework: 'none' | 'nextjs' | 'expo' | 'react-native';
   }>([
     {
       name: 'framework',
@@ -1070,23 +1240,19 @@ async function determineReactFramework(
         {
           name: 'none',
           message: 'None',
-          hint: '         I only want react and react-dom',
+          hint: '         I only want react, react-dom or react-router',
         },
         {
           name: 'nextjs',
-          message: 'Next.js       [ https://nextjs.org/      ]',
-        },
-        {
-          name: 'remix',
-          message: 'Remix         [ https://remix.run/       ]',
+          message: 'Next.js       [ https://nextjs.org/       ]',
         },
         {
           name: 'expo',
-          message: 'Expo          [ https://expo.io/         ]',
+          message: 'Expo          [ https://expo.io/          ]',
         },
         {
           name: 'react-native',
-          message: 'React Native  [ https://reactnative.dev/ ]',
+          message: 'React Native  [ https://reactnative.dev/  ]',
         },
       ],
       initial: 0,
@@ -1244,6 +1410,60 @@ async function determineNodeFramework(
   return reply.framework;
 }
 
+async function determineUnitTestRunner<T extends 'none' | 'jest' | 'vitest'>(
+  parsedArgs: yargs.Arguments<{
+    bundler?: 'vite' | string;
+    unitTestRunner?: T;
+    workspaces?: boolean;
+  }>,
+  options?: {
+    exclude?: 'jest' | 'vitest';
+    preferVitest?: boolean;
+  }
+): Promise<T | undefined> {
+  if (parsedArgs.unitTestRunner) {
+    return parsedArgs.unitTestRunner;
+  } else if (!parsedArgs.workspaces) {
+    return undefined;
+  }
+
+  const reply = await enquirer.prompt<{
+    unitTestRunner: 'none' | 'jest' | 'vitest';
+  }>([
+    {
+      message: 'Which unit test runner would you like to use?',
+      type: 'autocomplete',
+      name: 'unitTestRunner',
+      skip: !parsedArgs.interactive || isCI(),
+      choices: [
+        {
+          name: 'none',
+          message: 'None',
+        },
+        {
+          name: 'jest',
+          message: 'Jest   [ https://jestjs.io/ ]',
+        },
+        {
+          name: 'vitest',
+          message: 'Vitest [ https://vitest.dev/ ]',
+        },
+      ]
+        .filter((t) => !options?.exclude || options.exclude !== t.name)
+        .sort((a, b) => {
+          if (a.name === 'none') return 1;
+          if (b.name === 'none') return -1;
+          if (options?.preferVitest && a.name === 'vitest') return -1;
+          if (options?.preferVitest && b.name === 'vitest') return 1;
+          return 0;
+        }),
+      initial: 0, // This should be either vite or jest
+    },
+  ]);
+
+  return reply.unitTestRunner as T;
+}
+
 async function determineE2eTestRunner(
   parsedArgs: yargs.Arguments<{
     e2eTestRunner?: 'none' | 'cypress' | 'playwright';
@@ -1276,4 +1496,36 @@ async function determineE2eTestRunner(
     },
   ]);
   return reply.e2eTestRunner;
+}
+
+async function determineReactRouter(
+  parsedArgs: yargs.Arguments<{
+    useReactRouter?: boolean;
+  }>
+): Promise<boolean> {
+  if (parsedArgs.routing !== undefined && parsedArgs.routing === false)
+    return false;
+  if (parsedArgs.useReactRouter !== undefined) return parsedArgs.useReactRouter;
+  const reply = await enquirer.prompt<{
+    response: 'Yes' | 'No';
+  }>([
+    {
+      message:
+        'Would you like to use React Router for server-side rendering [https://reactrouter.com/]?',
+      type: 'autocomplete',
+      name: 'response',
+      skip: !parsedArgs.interactive || isCI(),
+      choices: [
+        {
+          name: 'Yes',
+          hint: 'I want to use React Router',
+        },
+        {
+          name: 'No',
+        },
+      ],
+      initial: 0,
+    },
+  ]);
+  return reply.response === 'Yes';
 }

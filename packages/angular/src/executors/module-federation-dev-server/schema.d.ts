@@ -29,6 +29,9 @@ interface BaseSchema {
 }
 
 export type SchemaWithBrowserTarget = BaseSchema & {
+  /**
+   * @deprecated Use `buildTarget` instead. It will be removed when Angular v20 is released.
+   */
   browserTarget: string;
 };
 
@@ -43,4 +46,5 @@ export type NormalizedSchema = SchemaWithBuildTarget & {
   liveReload: boolean;
   open: boolean;
   ssl: boolean;
+  verbose: boolean;
 };

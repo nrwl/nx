@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`convert-to-flat-config generator should add env configuration 1`] = `
+exports[`convert-to-flat-config generator CJS should add env configuration 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
 const nxEslintPlugin = require('@nx/eslint-plugin');
@@ -12,6 +12,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
   {
@@ -38,7 +41,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.ts', '**/*.tsx'],
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
       rules: {
         ...config.rules,
       },
@@ -49,7 +52,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.js', '**/*.jsx'],
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
       rules: {
         ...config.rules,
       },
@@ -58,7 +61,7 @@ module.exports = [
 "
 `;
 
-exports[`convert-to-flat-config generator should add global and env configuration 1`] = `
+exports[`convert-to-flat-config generator CJS should add global and env configuration 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
 const nxEslintPlugin = require('@nx/eslint-plugin');
@@ -70,6 +73,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   {
     languageOptions: {
@@ -100,7 +106,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.ts', '**/*.tsx'],
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
       rules: {
         ...config.rules,
       },
@@ -111,7 +117,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.js', '**/*.jsx'],
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
       rules: {
         ...config.rules,
       },
@@ -120,7 +126,7 @@ module.exports = [
 "
 `;
 
-exports[`convert-to-flat-config generator should add global configuration 1`] = `
+exports[`convert-to-flat-config generator CJS should add global configuration 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
 const nxEslintPlugin = require('@nx/eslint-plugin');
@@ -131,6 +137,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { globals: { myCustomGlobal: 'readonly' } } },
   {
@@ -157,7 +166,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.ts', '**/*.tsx'],
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
       rules: {
         ...config.rules,
       },
@@ -168,7 +177,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.js', '**/*.jsx'],
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
       rules: {
         ...config.rules,
       },
@@ -177,7 +186,7 @@ module.exports = [
 "
 `;
 
-exports[`convert-to-flat-config generator should add global eslintignores 1`] = `
+exports[`convert-to-flat-config generator CJS should add global eslintignores 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
 const nxEslintPlugin = require('@nx/eslint-plugin');
@@ -188,6 +197,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -213,7 +225,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.ts', '**/*.tsx'],
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
       rules: {
         ...config.rules,
       },
@@ -224,7 +236,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.js', '**/*.jsx'],
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
       rules: {
         ...config.rules,
       },
@@ -236,7 +248,7 @@ module.exports = [
 "
 `;
 
-exports[`convert-to-flat-config generator should add parser 1`] = `
+exports[`convert-to-flat-config generator CJS should add parser 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
 const nxEslintPlugin = require('@nx/eslint-plugin');
@@ -248,6 +260,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { parser: typescriptEslintParser } },
   {
@@ -274,7 +289,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.ts', '**/*.tsx'],
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
       rules: {
         ...config.rules,
       },
@@ -285,7 +300,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.js', '**/*.jsx'],
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
       rules: {
         ...config.rules,
       },
@@ -294,7 +309,7 @@ module.exports = [
 "
 `;
 
-exports[`convert-to-flat-config generator should add plugins 1`] = `
+exports[`convert-to-flat-config generator CJS should add plugins 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
 const eslintPluginImport = require('eslint-plugin-import');
@@ -308,6 +323,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   {
     plugins: {
       'eslint-plugin-import': eslintPluginImport,
@@ -340,7 +358,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.ts', '**/*.tsx'],
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
       rules: {
         ...config.rules,
       },
@@ -351,7 +369,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.js', '**/*.jsx'],
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
       rules: {
         ...config.rules,
       },
@@ -360,7 +378,7 @@ module.exports = [
 "
 `;
 
-exports[`convert-to-flat-config generator should add settings 1`] = `
+exports[`convert-to-flat-config generator CJS should add settings 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
 const nxEslintPlugin = require('@nx/eslint-plugin');
@@ -371,6 +389,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   {
     settings: {
@@ -401,7 +422,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.ts', '**/*.tsx'],
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
       rules: {
         ...config.rules,
       },
@@ -412,7 +433,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.js', '**/*.jsx'],
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
       rules: {
         ...config.rules,
       },
@@ -421,7 +442,7 @@ module.exports = [
 "
 `;
 
-exports[`convert-to-flat-config generator should convert json successfully 1`] = `
+exports[`convert-to-flat-config generator CJS should convert json successfully 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
 const nxEslintPlugin = require('@nx/eslint-plugin');
@@ -432,6 +453,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -457,7 +481,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.ts', '**/*.tsx'],
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
       rules: {
         ...config.rules,
       },
@@ -468,7 +492,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.js', '**/*.jsx'],
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
       rules: {
         ...config.rules,
       },
@@ -477,10 +501,13 @@ module.exports = [
 "
 `;
 
-exports[`convert-to-flat-config generator should convert json successfully 2`] = `
-"const baseConfig = require('../../eslint.config.js');
+exports[`convert-to-flat-config generator CJS should convert json successfully 2`] = `
+"const baseConfig = require('../../eslint.config.cjs');
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   ...baseConfig,
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -501,7 +528,7 @@ module.exports = [
 "
 `;
 
-exports[`convert-to-flat-config generator should convert yaml successfully 1`] = `
+exports[`convert-to-flat-config generator CJS should convert yaml successfully 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
 const nxEslintPlugin = require('@nx/eslint-plugin');
@@ -512,6 +539,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -537,7 +567,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.ts', '**/*.tsx'],
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
       rules: {
         ...config.rules,
       },
@@ -548,7 +578,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.js', '**/*.jsx'],
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
       rules: {
         ...config.rules,
       },
@@ -557,10 +587,13 @@ module.exports = [
 "
 `;
 
-exports[`convert-to-flat-config generator should convert yaml successfully 2`] = `
-"const baseConfig = require('../../eslint.config.js');
+exports[`convert-to-flat-config generator CJS should convert yaml successfully 2`] = `
+"const baseConfig = require('../../eslint.config.cjs');
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   ...baseConfig,
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -581,7 +614,7 @@ module.exports = [
 "
 `;
 
-exports[`convert-to-flat-config generator should convert yml successfully 1`] = `
+exports[`convert-to-flat-config generator CJS should convert yml successfully 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
 const nxEslintPlugin = require('@nx/eslint-plugin');
@@ -592,6 +625,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   { plugins: { '@nx': nxEslintPlugin } },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -617,7 +653,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.ts', '**/*.tsx'],
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
       rules: {
         ...config.rules,
       },
@@ -628,7 +664,7 @@ module.exports = [
     })
     .map((config) => ({
       ...config,
-      files: ['**/*.js', '**/*.jsx'],
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
       rules: {
         ...config.rules,
       },
@@ -637,10 +673,13 @@ module.exports = [
 "
 `;
 
-exports[`convert-to-flat-config generator should convert yml successfully 2`] = `
-"const baseConfig = require('../../eslint.config.js');
+exports[`convert-to-flat-config generator CJS should convert yml successfully 2`] = `
+"const baseConfig = require('../../eslint.config.cjs');
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
   ...baseConfig,
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -661,10 +700,766 @@ module.exports = [
 "
 `;
 
-exports[`convert-to-flat-config generator should handle custom eslintignores 1`] = `
-"const baseConfig = require('../../eslint.config.js');
+exports[`convert-to-flat-config generator CJS should handle custom eslintignores 1`] = `
+"const baseConfig = require('../../eslint.config.cjs');
 
 module.exports = [
+  {
+    ignores: ['**/dist'],
+  },
+  ...baseConfig,
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    // Override or add rules here
+    rules: {},
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    // Override or add rules here
+    rules: {},
+  },
+  {
+    files: ['**/*.js', '**/*.jsx'],
+    // Override or add rules here
+    rules: {},
+  },
+  {
+    ignores: ['ignore/me'],
+  },
+  {
+    ignores: ['ignore/me/as/well'],
+  },
+];
+"
+`;
+
+exports[`convert-to-flat-config generator MJS should add env configuration 1`] = `
+"import { FlatCompat } from '@eslint/eslintrc';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import js from '@eslint/js';
+import nxEslintPlugin from '@nx/eslint-plugin';
+import globals from 'globals';
+
+const compat = new FlatCompat({
+  baseDirectory: dirname(fileURLToPath(import.meta.url)),
+  recommendedConfig: js.configs.recommended,
+});
+
+export default [
+  {
+    ignores: ['**/dist'],
+  },
+  { plugins: { '@nx': nxEslintPlugin } },
+  { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: [],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+];
+"
+`;
+
+exports[`convert-to-flat-config generator MJS should add global and env configuration 1`] = `
+"import { FlatCompat } from '@eslint/eslintrc';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import js from '@eslint/js';
+import nxEslintPlugin from '@nx/eslint-plugin';
+import globals from 'globals';
+
+const compat = new FlatCompat({
+  baseDirectory: dirname(fileURLToPath(import.meta.url)),
+  recommendedConfig: js.configs.recommended,
+});
+
+export default [
+  {
+    ignores: ['**/dist'],
+  },
+  { plugins: { '@nx': nxEslintPlugin } },
+  {
+    languageOptions: {
+      globals: { ...globals.browser, myCustomGlobal: 'readonly' },
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: [],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+];
+"
+`;
+
+exports[`convert-to-flat-config generator MJS should add global configuration 1`] = `
+"import { FlatCompat } from '@eslint/eslintrc';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import js from '@eslint/js';
+import nxEslintPlugin from '@nx/eslint-plugin';
+
+const compat = new FlatCompat({
+  baseDirectory: dirname(fileURLToPath(import.meta.url)),
+  recommendedConfig: js.configs.recommended,
+});
+
+export default [
+  {
+    ignores: ['**/dist'],
+  },
+  { plugins: { '@nx': nxEslintPlugin } },
+  { languageOptions: { globals: { myCustomGlobal: 'readonly' } } },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: [],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+];
+"
+`;
+
+exports[`convert-to-flat-config generator MJS should add global eslintignores 1`] = `
+"import { FlatCompat } from '@eslint/eslintrc';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import js from '@eslint/js';
+import nxEslintPlugin from '@nx/eslint-plugin';
+
+const compat = new FlatCompat({
+  baseDirectory: dirname(fileURLToPath(import.meta.url)),
+  recommendedConfig: js.configs.recommended,
+});
+
+export default [
+  {
+    ignores: ['**/dist'],
+  },
+  { plugins: { '@nx': nxEslintPlugin } },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: [],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  {
+    ignores: ['ignore/me'],
+  },
+];
+"
+`;
+
+exports[`convert-to-flat-config generator MJS should add parser 1`] = `
+"import { FlatCompat } from '@eslint/eslintrc';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import js from '@eslint/js';
+import nxEslintPlugin from '@nx/eslint-plugin';
+import typescriptEslintParser from '@typescript-eslint/parser';
+
+const compat = new FlatCompat({
+  baseDirectory: dirname(fileURLToPath(import.meta.url)),
+  recommendedConfig: js.configs.recommended,
+});
+
+export default [
+  {
+    ignores: ['**/dist'],
+  },
+  { plugins: { '@nx': nxEslintPlugin } },
+  { languageOptions: { parser: typescriptEslintParser } },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: [],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+];
+"
+`;
+
+exports[`convert-to-flat-config generator MJS should add plugins 1`] = `
+"import { FlatCompat } from '@eslint/eslintrc';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import js from '@eslint/js';
+import eslintPluginImport from 'eslint-plugin-import';
+import eslintPluginSingleName from 'eslint-plugin-single-name';
+import scopeEslintPluginWithName from '@scope/eslint-plugin-with-name';
+import justScopeEslintPlugin from '@just-scope/eslint-plugin';
+
+const compat = new FlatCompat({
+  baseDirectory: dirname(fileURLToPath(import.meta.url)),
+  recommendedConfig: js.configs.recommended,
+});
+
+export default [
+  {
+    ignores: ['**/dist'],
+  },
+  {
+    plugins: {
+      'eslint-plugin-import': eslintPluginImport,
+      'single-name': eslintPluginSingleName,
+      '@scope/with-name': scopeEslintPluginWithName,
+      '@just-scope': justScopeEslintPlugin,
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: [],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+];
+"
+`;
+
+exports[`convert-to-flat-config generator MJS should add settings 1`] = `
+"import { FlatCompat } from '@eslint/eslintrc';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import js from '@eslint/js';
+import nxEslintPlugin from '@nx/eslint-plugin';
+
+const compat = new FlatCompat({
+  baseDirectory: dirname(fileURLToPath(import.meta.url)),
+  recommendedConfig: js.configs.recommended,
+});
+
+export default [
+  {
+    ignores: ['**/dist'],
+  },
+  { plugins: { '@nx': nxEslintPlugin } },
+  {
+    settings: {
+      sharedData: 'Hello',
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: [],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+];
+"
+`;
+
+exports[`convert-to-flat-config generator MJS should convert json successfully 1`] = `
+"import { FlatCompat } from '@eslint/eslintrc';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import js from '@eslint/js';
+import nxEslintPlugin from '@nx/eslint-plugin';
+
+const compat = new FlatCompat({
+  baseDirectory: dirname(fileURLToPath(import.meta.url)),
+  recommendedConfig: js.configs.recommended,
+});
+
+export default [
+  {
+    ignores: ['**/dist'],
+  },
+  { plugins: { '@nx': nxEslintPlugin } },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: [],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+];
+"
+`;
+
+exports[`convert-to-flat-config generator MJS should convert json successfully 2`] = `
+"import baseConfig from '../../eslint.config.mjs';
+
+export default [
+  {
+    ignores: ['**/dist'],
+  },
+  ...baseConfig,
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    // Override or add rules here
+    rules: {},
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    // Override or add rules here
+    rules: {},
+  },
+  {
+    files: ['**/*.js', '**/*.jsx'],
+    // Override or add rules here
+    rules: {},
+  },
+];
+"
+`;
+
+exports[`convert-to-flat-config generator MJS should convert yaml successfully 1`] = `
+"import { FlatCompat } from '@eslint/eslintrc';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import js from '@eslint/js';
+import nxEslintPlugin from '@nx/eslint-plugin';
+
+const compat = new FlatCompat({
+  baseDirectory: dirname(fileURLToPath(import.meta.url)),
+  recommendedConfig: js.configs.recommended,
+});
+
+export default [
+  {
+    ignores: ['**/dist'],
+  },
+  { plugins: { '@nx': nxEslintPlugin } },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: [],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+];
+"
+`;
+
+exports[`convert-to-flat-config generator MJS should convert yaml successfully 2`] = `
+"import baseConfig from '../../eslint.config.mjs';
+
+export default [
+  {
+    ignores: ['**/dist'],
+  },
+  ...baseConfig,
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    // Override or add rules here
+    rules: {},
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    // Override or add rules here
+    rules: {},
+  },
+  {
+    files: ['**/*.js', '**/*.jsx'],
+    // Override or add rules here
+    rules: {},
+  },
+];
+"
+`;
+
+exports[`convert-to-flat-config generator MJS should convert yml successfully 1`] = `
+"import { FlatCompat } from '@eslint/eslintrc';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import js from '@eslint/js';
+import nxEslintPlugin from '@nx/eslint-plugin';
+
+const compat = new FlatCompat({
+  baseDirectory: dirname(fileURLToPath(import.meta.url)),
+  recommendedConfig: js.configs.recommended,
+});
+
+export default [
+  {
+    ignores: ['**/dist'],
+  },
+  { plugins: { '@nx': nxEslintPlugin } },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: [],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+  ...compat
+    .config({
+      extends: ['plugin:@nx/typescript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+  ...compat
+    .config({
+      extends: ['plugin:@nx/javascript'],
+    })
+    .map((config) => ({
+      ...config,
+      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+      rules: {
+        ...config.rules,
+      },
+    })),
+];
+"
+`;
+
+exports[`convert-to-flat-config generator MJS should convert yml successfully 2`] = `
+"import baseConfig from '../../eslint.config.mjs';
+
+export default [
+  {
+    ignores: ['**/dist'],
+  },
+  ...baseConfig,
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    // Override or add rules here
+    rules: {},
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    // Override or add rules here
+    rules: {},
+  },
+  {
+    files: ['**/*.js', '**/*.jsx'],
+    // Override or add rules here
+    rules: {},
+  },
+];
+"
+`;
+
+exports[`convert-to-flat-config generator MJS should handle custom eslintignores 1`] = `
+"import baseConfig from '../../eslint.config.mjs';
+
+export default [
+  {
+    ignores: ['**/dist'],
+  },
   ...baseConfig,
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],

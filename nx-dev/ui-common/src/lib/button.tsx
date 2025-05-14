@@ -17,6 +17,12 @@ interface ButtonProps {
   children: ReactNode | ReactNode[];
 }
 
+export type ButtonLinkProps = ButtonProps & {
+  className?: string;
+  href: string;
+  title: string;
+} & AnchorHTMLAttributes<HTMLAnchorElement>;
+
 const variantStyles: Record<AllowedVariants, string> = {
   primary:
     'bg-blue-500 dark:bg-sky-500 text-white group-hover:bg-blue-600 dark:group-hover:bg-sky-600 group-focus:ring-2 group-focus:ring-blue-500 dark:group-focus:ring-sky-500 focus:group-ring-offset-2',
@@ -99,11 +105,7 @@ export const ButtonLink = forwardRef(function (
     variant = 'primary',
     title = '',
     ...props
-  }: ButtonProps & {
-    className?: string;
-    href: string;
-    title: string;
-  } & AnchorHTMLAttributes<HTMLAnchorElement>,
+  }: ButtonLinkProps,
   ref: ForwardedRef<HTMLAnchorElement>
 ): JSX.Element {
   return (

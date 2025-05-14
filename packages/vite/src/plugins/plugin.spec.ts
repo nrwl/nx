@@ -2,6 +2,7 @@ import { CreateNodesContext } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { loadViteDynamicImport } from '../utils/executor-utils';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 jest.mock('../utils/executor-utils', () => ({
   loadViteDynamicImport: jest.fn().mockResolvedValue({
@@ -9,9 +10,18 @@ jest.mock('../utils/executor-utils', () => ({
   }),
 }));
 
+jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
+  ...jest.requireActual('@nx/js/src/utils/typescript/ts-solution-setup'),
+  isUsingTsSolutionSetup: jest.fn(),
+}));
+
 describe('@nx/vite/plugin', () => {
   let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
+
+  beforeEach(() => {
+    (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
+  });
 
   describe('root project', () => {
     let tempFs: TempFs;
@@ -36,12 +46,11 @@ describe('@nx/vite/plugin', () => {
       };
       tempFs.createFileSync('vite.config.ts', '');
       tempFs.createFileSync('index.html', '');
-      tempFs.createFileSync('package.json', '');
+      tempFs.createFileSync('package.json', '{}');
     });
 
     afterEach(() => {
       jest.resetModules();
-      tempFs.cleanup();
     });
 
     it('should create nodes', async () => {
@@ -58,6 +67,39 @@ describe('@nx/vite/plugin', () => {
       );
 
       expect(nodes).toMatchSnapshot();
+    });
+
+    it('should not create nodes when react-router.config is present', async () => {
+      tempFs.createFileSync('react-router.config.ts', '');
+
+      const nodes = await createNodesFunction(
+        ['vite.config.ts'],
+        {
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+          previewTargetName: 'preview',
+          testTargetName: 'test',
+          serveStaticTargetName: 'serve-static',
+        },
+        context
+      );
+
+      expect(nodes).toMatchInlineSnapshot(`
+        [
+          [
+            "vite.config.ts",
+            {
+              "projects": {
+                ".": {
+                  "metadata": {},
+                  "root": ".",
+                  "targets": {},
+                },
+              },
+            },
+          ],
+        ]
+      `);
     });
 
     it('should create nodes when rollupOptions contains input', async () => {
@@ -86,6 +128,117 @@ describe('@nx/vite/plugin', () => {
       const targets = nodes[0]?.[1]?.projects?.['.']?.targets;
       expect(targets?.['build-input']?.command).toMatch(/vite/);
       expect(targets?.['serve-input'].command).toMatch(/vite/);
+    });
+
+    it('should infer typecheck with -p flag when not using TS solution setup', async () => {
+      tempFs.createFileSync('tsconfig.json', '');
+
+      const nodes = await createNodesFunction(
+        ['vite.config.ts'],
+        {
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+          previewTargetName: 'preview',
+          testTargetName: 'test',
+          serveStaticTargetName: 'serve-static',
+        },
+        context
+      );
+
+      expect(nodes[0][1].projects['.'].targets.typecheck.command).toEqual(
+        `tsc --noEmit -p tsconfig.json`
+      );
+      expect(nodes[0][1].projects['.'].targets.typecheck.metadata)
+        .toMatchInlineSnapshot(`
+        {
+          "description": "Runs type-checking for the project.",
+          "help": {
+            "command": "npx tsc -p tsconfig.json --help",
+            "example": {
+              "options": {
+                "noEmit": true,
+              },
+            },
+          },
+          "technologies": [
+            "typescript",
+          ],
+        }
+      `);
+      expect(
+        nodes[0][1].projects['.'].targets.typecheck.dependsOn
+      ).toBeUndefined();
+      expect(
+        nodes[0][1].projects['.'].targets.typecheck.syncGenerators
+      ).toBeUndefined();
+    });
+
+    it('should infer typecheck with --build flag when using TS solution setup', async () => {
+      (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
+      tempFs.createFileSync('tsconfig.json', '');
+
+      const nodes = await createNodesFunction(
+        ['vite.config.ts'],
+        {
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+          previewTargetName: 'preview',
+          testTargetName: 'test',
+          serveStaticTargetName: 'serve-static',
+        },
+        context
+      );
+
+      expect(nodes[0][1].projects['.'].targets.typecheck.command).toEqual(
+        `tsc --build --emitDeclarationOnly`
+      );
+      expect(nodes[0][1].projects['.'].targets.typecheck.metadata)
+        .toMatchInlineSnapshot(`
+        {
+          "description": "Runs type-checking for the project.",
+          "help": {
+            "command": "npx tsc --build --help",
+            "example": {
+              "args": [
+                "--force",
+              ],
+            },
+          },
+          "technologies": [
+            "typescript",
+          ],
+        }
+      `);
+      expect(nodes[0][1].projects['.'].targets.typecheck.dependsOn).toEqual([
+        `^typecheck`,
+      ]);
+      expect(
+        nodes[0][1].projects['.'].targets.typecheck.syncGenerators
+      ).toEqual(['@nx/js:typescript-sync']);
+    });
+
+    it('should infer the sync generator when using TS solution setup', async () => {
+      (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
+      tempFs.createFileSync('tsconfig.json', '');
+
+      const nodes = await createNodesFunction(
+        ['vite.config.ts'],
+        {
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+          previewTargetName: 'preview',
+          testTargetName: 'test',
+          serveStaticTargetName: 'serve-static',
+        },
+        context
+      );
+
+      expect(nodes[0][1].projects['.'].targets.build.syncGenerators).toEqual([
+        '@nx/js:typescript-sync',
+      ]);
+      expect(
+        nodes[0][1].projects['.'].targets.typecheck.syncGenerators
+      ).toEqual(['@nx/js:typescript-sync']);
     });
   });
 
@@ -131,6 +284,39 @@ describe('@nx/vite/plugin', () => {
       );
 
       expect(nodes).toMatchSnapshot();
+    });
+
+    it('should not create nodes when react-router.config is present', async () => {
+      tempFs.createFileSync('my-app/react-router.config.ts', '');
+
+      const nodes = await createNodesFunction(
+        ['my-app/vite.config.ts'],
+        {
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+          previewTargetName: 'preview',
+          testTargetName: 'test',
+          serveStaticTargetName: 'serve-static',
+        },
+        context
+      );
+
+      expect(nodes).toMatchInlineSnapshot(`
+        [
+          [
+            "my-app/vite.config.ts",
+            {
+              "projects": {
+                "my-app": {
+                  "metadata": {},
+                  "root": "my-app",
+                  "targets": {},
+                },
+              },
+            },
+          ],
+        ]
+      `);
     });
   });
 
@@ -262,8 +448,35 @@ describe('@nx/vite/plugin', () => {
                         "{workspaceRoot}/dist/{projectRoot}",
                       ],
                     },
+                    "build-deps": {
+                      "dependsOn": [
+                        "^build",
+                      ],
+                    },
+                    "dev": {
+                      "command": "vite",
+                      "continuous": true,
+                      "metadata": {
+                        "description": "Starts Vite dev server",
+                        "help": {
+                          "command": "npx vite --help",
+                          "example": {
+                            "options": {
+                              "port": 3000,
+                            },
+                          },
+                        },
+                        "technologies": [
+                          "vite",
+                        ],
+                      },
+                      "options": {
+                        "cwd": "my-lib",
+                      },
+                    },
                     "preview": {
                       "command": "vite preview",
+                      "continuous": true,
                       "dependsOn": [
                         "build",
                       ],
@@ -286,8 +499,10 @@ describe('@nx/vite/plugin', () => {
                       },
                     },
                     "serve": {
-                      "command": "vite serve",
+                      "command": "vite",
+                      "continuous": true,
                       "metadata": {
+                        "deprecated": "Use devTargetName instead. This option will be removed in Nx 22.",
                         "description": "Starts Vite dev server",
                         "help": {
                           "command": "npx vite --help",
@@ -306,11 +521,19 @@ describe('@nx/vite/plugin', () => {
                       },
                     },
                     "serve-static": {
+                      "continuous": true,
                       "executor": "@nx/web:file-server",
                       "options": {
                         "buildTarget": "build",
                         "spa": true,
                       },
+                    },
+                    "watch-deps": {
+                      "command": "npx nx watch --projects my-lib --includeDependentProjects -- npx nx build-deps my-lib",
+                      "continuous": true,
+                      "dependsOn": [
+                        "build-deps",
+                      ],
                     },
                   },
                 },

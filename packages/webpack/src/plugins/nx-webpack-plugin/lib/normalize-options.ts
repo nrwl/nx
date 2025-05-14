@@ -1,5 +1,5 @@
 import { basename, dirname, join, parse, relative, resolve } from 'path';
-import { statSync } from 'fs';
+import { existsSync, statSync } from 'fs';
 import {
   normalizePath,
   parseTargetString,
@@ -74,7 +74,11 @@ export function normalizeOptions(
     );
   }
 
-  const sourceRoot = projectNode.data.sourceRoot ?? projectNode.data.root;
+  const sourceRoot =
+    projectNode.data.sourceRoot ??
+    (existsSync(join(workspaceRoot, projectNode.data.root, 'src'))
+      ? join(projectNode.data.root, 'src')
+      : projectNode.data.root);
 
   if (!combinedPluginAndMaybeExecutorOptions.main) {
     throw new Error(
@@ -128,6 +132,9 @@ export function normalizeOptions(
     target: combinedPluginAndMaybeExecutorOptions.target,
     targetName,
     vendorChunk: combinedPluginAndMaybeExecutorOptions.vendorChunk ?? !isProd,
+    sassImplementation:
+      combinedPluginAndMaybeExecutorOptions.sassImplementation ??
+      'sass-embedded',
   };
 }
 

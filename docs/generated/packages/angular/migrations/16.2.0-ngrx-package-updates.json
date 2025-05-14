@@ -1,0 +1,15 @@
+{
+  "name": "16.2.0-ngrx-package-updates",
+  "version": "16.2.0-beta.0",
+  "requires": { "@angular/core": "^16.0.0" },
+  "packages": {
+    "@ngrx/store": { "version": "~16.0.0", "alwaysAddToPackageJson": false }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration"
+}

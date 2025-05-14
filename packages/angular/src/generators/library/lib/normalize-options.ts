@@ -1,9 +1,8 @@
 import { names, Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { Linter } from '@nx/eslint';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import { Schema } from '../schema';
 import { NormalizedSchema } from './normalized-schema';
@@ -16,7 +15,7 @@ export async function normalizeOptions(
   // Create a schema with populated default values
   const options: Schema = {
     buildable: false,
-    linter: Linter.EsLint,
+    linter: 'eslint',
     publishable: false,
     simpleName: false,
     skipFormat: false,
@@ -29,7 +28,7 @@ export async function normalizeOptions(
     ...schema,
   };
 
-  await ensureProjectName(host, options, 'library');
+  await ensureRootProjectName(options, 'library');
   const {
     projectName,
     names: projectNames,
@@ -55,7 +54,7 @@ export async function normalizeOptions(
   const ngCliSchematicLibRoot = projectName;
   const allNormalizedOptions = {
     ...options,
-    linter: options.linter ?? Linter.EsLint,
+    linter: options.linter ?? 'eslint',
     unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
     prefix: options.prefix ?? 'lib',
     name: projectName,

@@ -1,16 +1,20 @@
 import { DependencyType, ProjectGraph, TaskGraph } from '@nx/devkit';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { readFileSync } from 'fs';
 import {
-  calculateProjectDependencies,
   calculateDependenciesFromTaskGraph,
+  calculateProjectDependencies,
+  createTmpTsConfig,
   DependentBuildableProjectNode,
   updatePaths,
 } from './buildable-libs-utils';
+import { join } from 'path';
 
 describe('updatePaths', () => {
   const deps: DependentBuildableProjectNode[] = [
     {
       name: '@proj/lib',
-      node: { data: { root: 'libs/lib' } } as any,
+      node: { type: 'lib', data: { root: 'libs/lib' } } as any,
       outputs: ['dist/libs/lib'],
     },
   ];
@@ -39,6 +43,41 @@ describe('updatePaths', () => {
         'dist/libs/lib/sub/src/index',
         'dist/libs/lib/sub/src/index.ts',
       ],
+    });
+  });
+
+  it('should handle outputs with glob patterns', () => {
+    const paths: Record<string, string[]> = {
+      '@proj/lib1': ['libs/lib1/src/index.ts'],
+      '@proj/lib2': ['libs/lib2/src/index.ts'],
+      '@proj/lib3': ['libs/lib3/src/index.ts'],
+    };
+
+    updatePaths(
+      [
+        {
+          name: '@proj/lib1',
+          node: { name: 'lib1', type: 'lib', data: { root: 'libs/lib1' } },
+          outputs: ['dist/libs/lib1/**/*.js'],
+        },
+        {
+          name: '@proj/lib2',
+          node: { name: 'lib2', type: 'lib', data: { root: 'libs/lib2' } },
+          outputs: ['dist/libs/lib2/*.js'],
+        },
+        {
+          name: '@proj/lib3',
+          node: { name: 'lib3', type: 'lib', data: { root: 'libs/lib3' } },
+          outputs: ['dist/libs/lib3/foo-*/*.js'],
+        },
+      ],
+      paths
+    );
+
+    expect(paths).toEqual({
+      '@proj/lib1': ['dist/libs/lib1'],
+      '@proj/lib2': ['dist/libs/lib2'],
+      '@proj/lib3': ['dist/libs/lib3'],
     });
   });
 });
@@ -390,6 +429,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
         'lib3:build': [],
         'lib4:build': [],
       },
+      continuousDependencies: {},
       roots: [],
       tasks: {
         'lib1:build': {
@@ -398,6 +438,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib1', target: 'build' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
         'lib2:build': {
           id: 'lib2:build',
@@ -405,6 +446,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib2', target: 'build' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
         'lib2:build-base': {
           id: 'lib2:build-base',
@@ -412,6 +454,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib2', target: 'build-base' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
         'lib3:build': {
           id: 'lib3:build',
@@ -419,6 +462,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib3', target: 'build' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
         'lib4:build': {
           id: 'lib4:build',
@@ -426,6 +470,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib4', target: 'build' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
       },
     };
@@ -565,6 +610,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
         'lib4:build': ['lib4:build-base'],
         'lib4:build-base': [],
       },
+      continuousDependencies: {},
       roots: [],
       tasks: {
         'lib1:build': {
@@ -573,6 +619,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib1', target: 'build' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
         'lib1:build-base': {
           id: 'lib1:build-base',
@@ -580,6 +627,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib1', target: 'build-base' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
         'lib2:build': {
           id: 'lib2:build',
@@ -587,6 +635,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib2', target: 'build' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
         'lib2:build-base': {
           id: 'lib2:build-base',
@@ -594,6 +643,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib2', target: 'build-base' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
         'lib3:build': {
           id: 'lib3:build',
@@ -601,6 +651,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib3', target: 'build' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
         'lib3:build-base': {
           id: 'lib3:build-base',
@@ -608,6 +659,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib3', target: 'build-base' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
         'lib4:build': {
           id: 'lib4:build',
@@ -615,6 +667,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib4', target: 'build' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
         'lib4:build-base': {
           id: 'lib4:build-base',
@@ -622,6 +675,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib4', target: 'build-base' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
       },
     };
@@ -713,6 +767,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
     // not relevant for this test case
     const taskGraph: TaskGraph = {
       dependencies: {},
+      continuousDependencies: {},
       roots: [],
       tasks: {},
     };
@@ -766,5 +821,47 @@ describe('missingDependencies', () => {
     expect(() =>
       calculateProjectDependencies(graph, 'root', 'example', 'build', undefined)
     ).toThrow();
+  });
+});
+
+describe('createTmpTsConfig', () => {
+  it('should create a temporary tsconfig file extending the provided tsconfig', () => {
+    const fs = new TempFs('buildable-libs-utils#createTmpTsConfig');
+    const tsconfigPath = 'packages/foo/tsconfig.json';
+    fs.createFileSync(tsconfigPath, '{}');
+
+    const tmpTsConfigPath = createTmpTsConfig(
+      tsconfigPath,
+      fs.tempDir,
+      'packages/foo',
+      []
+    );
+
+    const tmpTsConfig = readFileSync(tmpTsConfigPath, 'utf8');
+    // would be generated at <workspaceRoot>/tmp/packages/foo/build/tsconfig.generated.json
+    // while the extended tsconfig path is <workspaceRoot>/packages/foo/tsconfig.json
+    expect(JSON.parse(tmpTsConfig).extends).toBe(
+      '../../../../packages/foo/tsconfig.json'
+    );
+  });
+
+  it('should also work when the provided tsconfig is an absolute path', () => {
+    const fs = new TempFs('buildable-libs-utils#createTmpTsConfig');
+    const tsconfigPath = join(fs.tempDir, 'packages/foo/tsconfig.json');
+    fs.createFileSync(tsconfigPath, '{}');
+
+    const tmpTsConfigPath = createTmpTsConfig(
+      tsconfigPath,
+      fs.tempDir,
+      'packages/foo',
+      []
+    );
+
+    const tmpTsConfig = readFileSync(tmpTsConfigPath, 'utf8');
+    // would be generated at <workspaceRoot>/tmp/packages/foo/build/tsconfig.generated.json
+    // while the extended tsconfig path is <workspaceRoot>/packages/foo/tsconfig.json
+    expect(JSON.parse(tmpTsConfig).extends).toBe(
+      '../../../../packages/foo/tsconfig.json'
+    );
   });
 });

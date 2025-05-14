@@ -2,31 +2,32 @@
 title: 'Introducing Nx Ecosystem CI'
 slug: 'introducing-nx-ecosystem-ci'
 authors: ['Katerina Skroumpelou']
-cover_image: '/blog/images/2023-06-20/EffyLKcVe5gE_x3MT8PJUQ.png'
+cover_image: '/blog/images/2023-06-20/EffyLKcVe5gE_x3MT8PJUQ.avif'
 tags: [nx]
+description: Introducing Nx Ecosystem CI, a Vite-inspired automated testing framework for Nx ecosystem compatibility, pre-release testing, migration checks, and test suite management.
 ---
 
-The JavaScript ecosystem evolves at a rapid pace, frequently introducing new tools and packages. At Nx, we provide out-of-the-box integrations with the most popular among them so you don’t have to worry when stitching them together. That, however…yes you guessed it… can be a challenging task. There’s just one way to keep up: automation.
+The JavaScript ecosystem evolves at a rapid pace, frequently introducing new tools and packages. At Nx, we provide out-of-the-box integrations with the most popular among them so you don't have to worry when stitching them together. That, however…yes you guessed it… can be a challenging task. There's just one way to keep up: automation.
 
-We already run a ton of automated testing on our repository to ensure we don’t break anything. But given Nx’s popularity and vast usage across open source and enterprise projects, we want to go a step further: introducing the [Nx Ecosystem CI](https://github.com/nrwl/nx-ecosystem-ci). Inspired by the work done by our friends on the [Vite](https://vitejs.dev/) team, the [Nx Ecosystem CI](https://github.com/nrwl/nx-ecosystem-ci) is designed to enhance the stability of Nx by testing pre-release versions with projects in the Nx ecosystem.
+We already run a ton of automated testing on our repository to ensure we don't break anything. But given Nx's popularity and vast usage across open source and enterprise projects, we want to go a step further: introducing the [Nx Ecosystem CI](https://github.com/nrwl/nx-ecosystem-ci). Inspired by the work done by our friends on the [Vite](https://vitejs.dev/) team, the [Nx Ecosystem CI](https://github.com/nrwl/nx-ecosystem-ci) is designed to enhance the stability of Nx by testing pre-release versions with projects in the Nx ecosystem.
 
 ### Inspired by the Vite Ecosystem CI
 
 The [Vite Ecosystem CI](https://github.com/vitejs/vite-ecosystem-ci) is an innovative tool that has significantly enhanced the use of [Vite](https://vitejs.dev/). It monitors the compatibility of Vite with various other packages and projects in the ecosystem by running tests against the latest changes in the Vite codebase and the projects it integrates with. This allows the Vite team to catch issues early and maintain a high level of stability, ensuring that developers using Vite can trust that new contributions to either Vite or their project will not result in breaking changes.
 
-This robust testing system is essential because it gives users confidence in Vite’s reliability, encouraging more developers to adopt Vite. It’s a great example of proactive testing in a fast-paced ecosystem and an inspiration for other projects, including Nx. The concept of the Ecosystem CI introduces a framework-agnostic way of testing integrations of one tool with other tools in the ecosystem. It puts together a “syntax” with which tools can easily find the way to test their latest versions with one another.
+This robust testing system is essential because it gives users confidence in Vite's reliability, encouraging more developers to adopt Vite. It's a great example of proactive testing in a fast-paced ecosystem and an inspiration for other projects, including Nx. The concept of the Ecosystem CI introduces a framework-agnostic way of testing integrations of one tool with other tools in the ecosystem. It puts together a "syntax" with which tools can easily find the way to test their latest versions with one another.
 
 ### Nx Ecosystem CI
 
-The [Nx Ecosystem CI](https://github.com/nrwl/nx-ecosystem-ci) is a fork of the [Vite Ecosystem CI](https://github.com/vitejs/vite-ecosystem-ci) but is tailored specifically for the Nx ecosystem. It’s designed to ensure that Nx maintains its high standards of reliability and compatibility with all our users.
+The [Nx Ecosystem CI](https://github.com/nrwl/nx-ecosystem-ci) is a fork of the [Vite Ecosystem CI](https://github.com/vitejs/vite-ecosystem-ci) but is tailored specifically for the Nx ecosystem. It's designed to ensure that Nx maintains its high standards of reliability and compatibility with all our users.
 
 ### How Nx Ecosystem CI Works
 
 The Nx Ecosystem CI works in the following way:
 
 1.  It clones the provided repo which uses Nx
-2.  It installs the project’s dependencies
-3.  It runs a number of scripts specified by the project’s author (eg. `test`, `build`, `e2e`)
+2.  It installs the project's dependencies
+3.  It runs a number of scripts specified by the project's author (eg. `test`, `build`, `e2e`)
 4.  It migrates the repository to the `next` version of Nx (using `nx migrate next`)
 5.  It runs the scripts again
 6.  It reports the results of the runs to the [Nx Official Discord Server](https://go.nx.dev/community)
@@ -49,7 +50,7 @@ import { RunOptions } from '../types';
 
 `RunOptions` is a type that represents the options for running a test suite. It includes properties such as the repository to test, the branch to use, and the commands to run for building, testing, and performing e2e tests (all optional).
 
-Next, you need to define the `test` function that accepts the `RunOptions`. Within this function, you’ll call the `runInRepo` function, passing in the options as well as any specific properties required for your suite:
+Next, you need to define the `test` function that accepts the `RunOptions`. Within this function, you'll call the `runInRepo` function, passing in the options as well as any specific properties required for your suite:
 
 Again, using the example of `nx-rspack`:
 
@@ -66,11 +67,11 @@ export async function test(options: RunOptions) {
 }
 ```
 
-In this example, the suite is set up to run on the ‘nrwl/nx-labs’ repository on the `main` branch. It will run `build rspack`, `test rspack`, and `e2e rspack-e2e` as its build, test, and e2e tests respectively. These commands will be invoked using the package manager used by your repository. So, in the `nx-labs` case, it will run `yarn build rspack` in the `nrwl/nx-labs` repo.
+In this example, the suite is set up to run on the 'nrwl/nx-labs' repository on the `main` branch. It will run `build rspack`, `test rspack`, and `e2e rspack-e2e` as its build, test, and e2e tests respectively. These commands will be invoked using the package manager used by your repository. So, in the `nx-labs` case, it will run `yarn build rspack` in the `nrwl/nx-labs` repo.
 
-For this reason, adding a new test suite to the Nx Ecosystem CI also requires setting up appropriate `scripts` in your repository’s `package.json` file. These scripts provide the commands that will be invoked by your package manager to carry out the `build`, `test`, and `e2e` steps.
+For this reason, adding a new test suite to the Nx Ecosystem CI also requires setting up appropriate `scripts` in your repository's `package.json` file. These scripts provide the commands that will be invoked by your package manager to carry out the `build`, `test`, and `e2e` steps.
 
-Here’s an example of how scripts might be configured in a package.json file for a repository using Nx:
+Here's an example of how scripts might be configured in a package.json file for a repository using Nx:
 
 ```
 "scripts": {
@@ -84,7 +85,7 @@ Here’s an example of how scripts might be configured in a package.json file fo
 
 These scripts should be set up in such a way that they can be invoked directly by your package manager. For example, in a repository using `pnpm`, you could run the build script with the command `pnpm run build`.
 
-When you create your test suite file, you’ll specify these script names in the `build`, `test`, and `e2e` properties of the `options` object passed to `runInRepo`.
+When you create your test suite file, you'll specify these script names in the `build`, `test`, and `e2e` properties of the `options` object passed to `runInRepo`.
 
 ```
 export async function test(options: RunOptions) {
@@ -103,14 +104,14 @@ With this setup, the Nx Ecosystem CI will run these scripts in your repository a
 
 In addition to creating the test suite and setting up the package.json scripts, you will also need to add the name of the new suite to the workflow configuration files in the `.github/workflows` directory of the Nx Ecosystem CI repository. This suite name should match the filename of your test suite script.
 
-There are two workflow files you’ll need to update:
+There are two workflow files you'll need to update:
 
 - `.github/workflows/ecosystem-ci-selected.yml`
 - `.github/workflows/ecosystem-ci.yml`
 
-In `.github/workflows/ecosystem-ci.yml` you’ll find a strategy section with a `matrix` property. This `matrix` property specifies an array of suite names for the workflow to run. You’ll need to add your new suite name to this array.
+In `.github/workflows/ecosystem-ci.yml` you'll find a strategy section with a `matrix` property. This `matrix` property specifies an array of suite names for the workflow to run. You'll need to add your new suite name to this array.
 
-Here’s what the strategy section might look like after adding a new suite named `my-new-suite`:
+Here's what the strategy section might look like after adding a new suite named `my-new-suite`:
 
 ```
 strategy:
@@ -123,11 +124,11 @@ strategy:
      - my-new-suite # your new suite
 ```
 
-By adding your suite name to this file, you’re instructing the Nx Ecosystem CI to include your suite in its test runs.
+By adding your suite name to this file, you're instructing the Nx Ecosystem CI to include your suite in its test runs.
 
 In addition to the `.github/workflows/ecosystem-ci.yml` file, you also need to include your suite in the `.github/workflows/ecosystem-ci-selected.yml` file.
 
-The `ecosystem-ci-selected.yml` workflow is designed to allow manual selection of a test suite to run. To add a suite to this workflow, you add it to the options array under `workflow_dispatch > inputs > suite`. Here’s what it might look like with a new suite named `my-new-suite`:
+The `ecosystem-ci-selected.yml` workflow is designed to allow manual selection of a test suite to run. To add a suite to this workflow, you add it to the options array under `workflow_dispatch > inputs > suite`. Here's what it might look like with a new suite named `my-new-suite`:
 
 ```
 on:
@@ -172,7 +173,7 @@ We are not alone in recognizing the value of an Ecosystem CI approach. Other OSS
 - Rspack: [https://github.com/web-infra-dev/rspack-ecosystem-ci](https://github.com/web-infra-dev/rspack-ecosystem-ci)
 - Storybook: [https://storybook.js.org/blog/storybook-ecosystem-ci/](https://storybook.js.org/blog/storybook-ecosystem-ci/)
 
-As we continue to improve and refine the Nx Ecosystem CI, we remain committed to the goal of making Nx a reliable and integral part of your development workflow. If you’re an open-source maintainer, you can create your own Ecosystem CI either from scratch (like Storybook) or by cloning the Vite Ecosystem CI. If your project uses Nx, you can easily add a new test suite for it.
+As we continue to improve and refine the Nx Ecosystem CI, we remain committed to the goal of making Nx a reliable and integral part of your development workflow. If you're an open-source maintainer, you can create your own Ecosystem CI either from scratch (like Storybook) or by cloning the Vite Ecosystem CI. If your project uses Nx, you can easily add a new test suite for it.
 
 ## Learn more
 

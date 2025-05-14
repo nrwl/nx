@@ -7,6 +7,7 @@
     "cli": "nx",
     "title": "Vite Preview Server",
     "description": "Preview Server for Vite.",
+    "continuous": true,
     "type": "object",
     "presets": [
       { "name": "Default minimum setup", "keys": ["buildTarget"] },

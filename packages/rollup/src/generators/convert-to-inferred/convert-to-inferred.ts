@@ -79,10 +79,10 @@ export async function convertToInferred(tree: Tree, options: Schema) {
         (target.outputs[0] === '{options.outputPath}' ||
           target.outputs[0] === '{workspaceRoot}/{options.outputPath}')
       ) {
-        // If only the default `options.outputPath` is set as output, remove it and use path inferred from `rollup.config.js`.
+        // If only the default `options.outputPath` is set as output, remove it and use path inferred from `rollup.config.cjs`.
         delete target.outputs;
       } else {
-        // Otherwise, replace `options.outputPath` with what is inferred from `rollup.config.js`.
+        // Otherwise, replace `options.outputPath` with what is inferred from `rollup.config.cjs`.
         target.outputs = target.outputs.map((output) =>
           // Again, "{projectRoot}/{options.outputPath}" is an invalid output for Rollup.
           output === '{options.outputPath}' ||

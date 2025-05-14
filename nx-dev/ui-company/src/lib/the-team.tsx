@@ -1,14 +1,15 @@
 import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { ReactElement } from 'react';
 
 const teamMembers = [
   {
-    name: 'Altan stalker',
-    title: 'Senior Engineer',
+    name: 'Altan Stalker',
+    title: 'Architect',
     imageUrl: 'altan-stalker.avif',
   },
   {
     name: 'Austin Fahsl',
-    title: 'Senior Engineer',
+    title: 'Developer Productivity Engineer',
     imageUrl: 'austin-fahsl.avif',
   },
   {
@@ -23,7 +24,7 @@ const teamMembers = [
   },
   {
     name: 'Caleb Ukle',
-    title: 'Senior Engineer',
+    title: 'Developer Productivity Engineer',
     imageUrl: 'caleb-ukle.avif',
   },
   {
@@ -68,7 +69,7 @@ const teamMembers = [
   },
   {
     name: 'Jack Butler',
-    title: 'Account Exec',
+    title: 'Account Executive',
     imageUrl: 'jack-butler.avif',
   },
   {
@@ -93,18 +94,23 @@ const teamMembers = [
   },
   {
     name: 'Joe Johnson',
-    title: 'Director of Professional Services',
+    title: 'VP of Customer Success',
     imageUrl: 'joe-johnson.avif',
-  },
-  {
-    name: 'Johanna Pearce',
-    title: 'Architect',
-    imageUrl: 'johanna-pearce.avif',
   },
   {
     name: 'Jonathan Cammisuli',
     title: 'Architect',
     imageUrl: 'jonathan-cammisuli.avif',
+  },
+  {
+    name: 'Jordan Powell',
+    title: 'Developer Productivity Engineer',
+    imageUrl: 'jordan-powell.avif',
+  },
+  {
+    name: 'Josh VanAllen',
+    title: 'Developer Productivity Engineer',
+    imageUrl: 'josh-vanallen.avif',
   },
   {
     name: 'Juri Strumpflohner',
@@ -143,8 +149,13 @@ const teamMembers = [
   },
   {
     name: 'Miroslav Jonas',
-    title: 'Senior Engineer',
+    title: 'Developer Productivity Engineer',
     imageUrl: 'miroslav-jonas.avif',
+  },
+  {
+    name: 'Nate Bohn',
+    title: 'Director of Finance & Accounting',
+    imageUrl: 'nate-bohn.avif',
   },
   {
     name: 'Nicholas Cunningham',
@@ -162,6 +173,11 @@ const teamMembers = [
     imageUrl: 'patrick-mariglia.avif',
   },
   {
+    name: 'Phillip Dacosta',
+    title: 'Software Engineer',
+    imageUrl: 'phillip-dacosta.avif',
+  },
+  {
     name: 'Philip Fulcher',
     title: 'Senior Engineer',
     imageUrl: 'philip-fulcher.avif',
@@ -173,8 +189,13 @@ const teamMembers = [
   },
   {
     name: 'Steve Pentland',
-    title: 'Senior Engineer',
+    title: 'Architect',
     imageUrl: 'steve-pentland.avif',
+  },
+  {
+    name: 'Steven Nance',
+    title: 'Developer Productivity Engineer',
+    imageUrl: 'steven-nance.avif',
   },
   {
     name: 'Whitney Loy',
@@ -183,11 +204,11 @@ const teamMembers = [
   },
   {
     name: 'Zack DeRose',
-    title: 'Senior Engineer',
+    title: 'Architect',
     imageUrl: 'zack-derose.avif',
   },
 ];
-export function TheTeam(): JSX.Element {
+export function TheTeam(): ReactElement {
   return (
     <section>
       <div className="max-w-7x1 mx-auto px-4 text-center sm:px-6 lg:px-8">

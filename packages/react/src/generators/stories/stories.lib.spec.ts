@@ -3,7 +3,6 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 import { Tree } from '@nx/devkit';
 import storiesGenerator from './stories';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import libraryGenerator from '../library/library';
 
 describe('react:stories for libraries', () => {
@@ -233,7 +232,7 @@ export async function createTestUILib(
   let appTree = createTreeWithEmptyWorkspace();
 
   await libraryGenerator(appTree, {
-    linter: Linter.EsLint,
+    linter: 'eslint',
     component: true,
     skipFormat: true,
     skipTsConfig: false,

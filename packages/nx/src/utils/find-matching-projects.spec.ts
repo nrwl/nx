@@ -47,6 +47,63 @@ describe('findMatchingProjects', () => {
         tags: [],
       },
     },
+    '@acme/foo': {
+      name: '@acme/foo',
+      type: 'lib',
+      data: {
+        root: 'lib/foo',
+        tags: [],
+      },
+    },
+    '@acme/foo-e2e': {
+      name: '@acme/foo-e2e',
+      type: 'lib',
+      data: {
+        root: 'lib/foo-e2e',
+        tags: [],
+      },
+    },
+    '@acme/bar': {
+      name: '@acme/bar',
+      type: 'lib',
+      data: {
+        root: 'lib/bar',
+        tags: [],
+      },
+    },
+    foo_bar1: {
+      name: 'foo_bar11',
+      type: 'lib',
+      data: {
+        root: 'lib/foo_bar1',
+        tags: [],
+      },
+    },
+    // Technically, this isn't a valid npm package name, but we can handle it anyway just in case.
+    '@acme/nested/foo': {
+      name: '@acme/nested/foo',
+      type: 'lib',
+      data: {
+        root: 'lib/nested/foo',
+        tags: [],
+      },
+    },
+    '@test/test': {
+      name: '@test/test',
+      type: 'app',
+      data: {
+        root: 'apps/test',
+        tags: [],
+      },
+    },
+    '@test/test-e2e': {
+      name: '@test/test-e2e',
+      type: 'app',
+      data: {
+        root: 'apps/test-e2e',
+        tags: [],
+      },
+    },
   };
 
   it('should return no projects when passed no patterns', () => {
@@ -68,6 +125,13 @@ describe('findMatchingProjects', () => {
       'b',
       'c',
       'nested',
+      '@acme/foo',
+      '@acme/foo-e2e',
+      '@acme/bar',
+      'foo_bar1',
+      '@acme/nested/foo',
+      '@test/test',
+      '@test/test-e2e',
     ]);
   });
 
@@ -77,6 +141,13 @@ describe('findMatchingProjects', () => {
       'b',
       'c',
       'nested',
+      '@acme/foo',
+      '@acme/foo-e2e',
+      '@acme/bar',
+      'foo_bar1',
+      '@acme/nested/foo',
+      '@test/test',
+      '@test/test-e2e',
     ]);
     expect(findMatchingProjects(['a', '!*'], projectGraph)).toEqual([]);
   });
@@ -120,6 +191,13 @@ describe('findMatchingProjects', () => {
       'b',
       'c',
       'nested',
+      '@acme/foo',
+      '@acme/foo-e2e',
+      '@acme/bar',
+      'foo_bar1',
+      '@acme/nested/foo',
+      '@test/test',
+      '@test/test-e2e',
     ]);
   });
 
@@ -131,7 +209,7 @@ describe('findMatchingProjects', () => {
       projectGraph
     );
     expect(matches).toEqual(expect.arrayContaining(['a', 'b', 'nested']));
-    expect(matches.length).toEqual(3);
+    expect(matches.length).toEqual(10);
   });
 
   it('should expand generic glob patterns for tags', () => {
@@ -156,8 +234,16 @@ describe('findMatchingProjects', () => {
       'test-project',
       'a',
       'b',
+      '@acme/foo',
+      '@acme/foo-e2e',
+      '@acme/bar',
+      'foo_bar1',
     ]);
-    expect(findMatchingProjects(['apps/*'], projectGraph)).toEqual(['c']);
+    expect(findMatchingProjects(['apps/*'], projectGraph)).toEqual([
+      'c',
+      '@test/test',
+      '@test/test-e2e',
+    ]);
     expect(findMatchingProjects(['**/nested'], projectGraph)).toEqual([
       'nested',
     ]);
@@ -169,14 +255,71 @@ describe('findMatchingProjects', () => {
       'b',
       'c',
       'nested',
+      '@acme/foo',
+      '@acme/foo-e2e',
+      '@acme/bar',
+      'foo_bar1',
+      '@acme/nested/foo',
+      '@test/test',
+      '@test/test-e2e',
     ]);
     expect(findMatchingProjects(['!tag:api'], projectGraph)).toEqual([
       'b',
       'nested',
+      '@acme/foo',
+      '@acme/foo-e2e',
+      '@acme/bar',
+      'foo_bar1',
+      '@acme/nested/foo',
+      '@test/test',
+      '@test/test-e2e',
     ]);
     expect(
       findMatchingProjects(['!tag:api', 'test-project'], projectGraph)
-    ).toEqual(['b', 'nested', 'test-project']);
+    ).toEqual([
+      'b',
+      'nested',
+      '@acme/foo',
+      '@acme/foo-e2e',
+      '@acme/bar',
+      'foo_bar1',
+      '@acme/nested/foo',
+      '@test/test',
+      '@test/test-e2e',
+      'test-project',
+    ]);
+  });
+
+  it('should match on name segments', () => {
+    expect(findMatchingProjects(['foo'], projectGraph)).toEqual([
+      '@acme/foo',
+      'foo_bar1',
+      '@acme/nested/foo',
+    ]);
+    expect(findMatchingProjects(['foo-e2e'], projectGraph)).toEqual([
+      '@acme/foo-e2e',
+    ]);
+    expect(findMatchingProjects(['bar'], projectGraph)).toEqual(['@acme/bar']);
+    // Case insensitive
+    expect(findMatchingProjects(['Bar1'], projectGraph)).toEqual(['foo_bar1']);
+    expect(findMatchingProjects(['foo_bar1'], projectGraph)).toEqual([
+      'foo_bar1',
+    ]);
+    expect(findMatchingProjects(['nested/foo'], projectGraph)).toEqual([
+      '@acme/nested/foo',
+    ]);
+    // Only full segments are matched
+    expect(findMatchingProjects(['fo'], projectGraph)).toEqual([]);
+    expect(findMatchingProjects(['nested/fo'], projectGraph)).toEqual([]);
+  });
+
+  it('should handle case where scope and names are the same', () => {
+    expect(findMatchingProjects(['test'], projectGraph)).toEqual([
+      '@test/test',
+    ]);
+    expect(findMatchingProjects(['test-e2e'], projectGraph)).toEqual([
+      '@test/test-e2e',
+    ]);
   });
 });
 

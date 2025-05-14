@@ -18,14 +18,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 9.8.0
 
       - name: Use Node.js ${{ matrix.node_version }}
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20.19.0'
           cache: 'pnpm'
 
       - name: Cache node_modules
@@ -50,11 +50,11 @@ jobs:
 
       - name: Collect Issue Data
         id: collect
-        run: npx ts-node ./scripts/issues-scraper/index.ts
+        run: npx tsx ./scripts/issues-scraper/index.ts
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: cached-issue-data
           path: ./scripts/issues-scraper/cached/data.json

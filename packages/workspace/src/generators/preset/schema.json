@@ -17,13 +17,18 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["eslint"],
+      "enum": ["eslint", "none"],
       "default": "eslint"
     },
     "routing": {
       "description": "Add routing to the generated application.",
       "type": "boolean",
       "default": true
+    },
+    "useReactRouter": {
+      "description": "Use React Router for routing.",
+      "type": "boolean",
+      "default": false
     },
     "style": {
       "description": "The file extension to be used for style files.",
@@ -72,7 +77,7 @@
     "bundler": {
       "description": "The bundler to use for building the application.",
       "type": "string",
-      "enum": ["webpack", "vite", "rspack", "esbuild"],
+      "enum": ["vite", "rspack", "rsbuild", "esbuild", "webpack"],
       "default": "vite"
     },
     "docker": {
@@ -90,6 +95,11 @@
       "type": "boolean",
       "default": true
     },
+    "unitTestRunner": {
+      "description": "The tool to use for running unit tests.",
+      "type": "string",
+      "enum": ["jest", "vitest", "none"]
+    },
     "e2eTestRunner": {
       "description": "The tool to use for running e2e tests.",
       "type": "string",
@@ -100,9 +110,28 @@
       "type": "boolean",
       "default": false
     },
+    "serverRouting": {
+      "description": "Use the Angular Server Routing and App Engine APIs (Developer Preview).",
+      "type": "boolean"
+    },
     "prefix": {
       "description": "The prefix to use for Angular component and directive selectors.",
       "type": "string"
+    },
+    "formatter": {
+      "description": "The tool to use for code formatting.",
+      "type": "string",
+      "enum": ["none", "prettier"],
+      "default": "none"
+    },
+    "workspaces": {
+      "description": "Whether to use package manager workspaces.",
+      "type": "boolean",
+      "default": true
+    },
+    "useProjectJson": {
+      "type": "boolean",
+      "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
     }
   },
   "required": ["preset", "name"]

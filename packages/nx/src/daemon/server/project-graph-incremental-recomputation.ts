@@ -30,13 +30,13 @@ import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { serverLogger } from './logger';
 import { NxWorkspaceFilesExternals } from '../../native';
 import { ConfigurationResult } from '../../project-graph/utils/project-configuration-utils';
-import { LoadedNxPlugin } from '../../project-graph/plugins/internal-api';
-import { getPlugins } from './plugins';
+import type { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
 import {
   DaemonProjectGraphError,
   ProjectConfigurationsError,
   isAggregateProjectGraphError,
 } from '../../project-graph/error-types';
+import { getPlugins } from '../../project-graph/plugins/get-plugins';
 
 interface SerializedProjectGraph {
   error: Error | null;
@@ -299,7 +299,12 @@ async function processFilesAndCreateAndSerializeProjectGraph(
         };
       }
     }
-
+    writeCache(
+      g.projectFileMapCache,
+      g.projectGraph,
+      projectConfigurationsResult.sourceMaps,
+      errors
+    );
     if (errors.length > 0) {
       return {
         error: new DaemonProjectGraphError(
@@ -316,7 +321,6 @@ async function processFilesAndCreateAndSerializeProjectGraph(
         serializedSourceMaps: null,
       };
     } else {
-      writeCache(g.projectFileMapCache, g.projectGraph);
       return g;
     }
   } catch (err) {

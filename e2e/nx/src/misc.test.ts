@@ -68,9 +68,11 @@ describe('Nx Commands', () => {
 
     it('should show detailed project info', () => {
       const app = uniq('myapp');
-      runCLI(`generate @nx/web:app apps/${app}`);
+      runCLI(
+        `generate @nx/web:app apps/${app} --bundler=webpack --unitTestRunner=vitest --linter=eslint`
+      );
       const project: ProjectConfiguration = JSON.parse(
-        runCLI(`show project ${app}`)
+        runCLI(`show project ${app} --json`)
       );
       expect(project.targets.build).toBeDefined();
       expect(project.targets.lint).toBeDefined();

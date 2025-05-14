@@ -68,9 +68,9 @@ export function updateJestConfig(
   const findProject = `'<rootDir>/${project.root}'`;
 
   const oldRootJestConfigContent = tree.read(rootJestConfigPath, 'utf-8');
-  const usingJestProjects =
-    oldRootJestConfigContent.includes('getJestProjects()') ||
-    oldRootJestConfigContent.includes('getJestProjectsAsync()');
+  const usingJestProjects = oldRootJestConfigContent.includes(
+    'getJestProjectsAsync()'
+  );
 
   const newRootJestConfigContent = oldRootJestConfigContent.replace(
     findProject,

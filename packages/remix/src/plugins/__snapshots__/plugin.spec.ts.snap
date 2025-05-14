@@ -33,14 +33,21 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should create 
                 "{workspaceRoot}/my-app/public/build",
               ],
             },
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
             "dev": {
               "command": "remix dev --manual",
+              "continuous": true,
               "options": {
                 "cwd": "my-app",
               },
             },
             "serve-static": {
               "command": "remix-serve build/index.js",
+              "continuous": true,
               "dependsOn": [
                 "build",
               ],
@@ -50,15 +57,7 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should create 
             },
             "start": {
               "command": "remix-serve build/index.js",
-              "dependsOn": [
-                "build",
-              ],
-              "options": {
-                "cwd": "my-app",
-              },
-            },
-            "static-serve": {
-              "command": "remix-serve build/index.js",
+              "continuous": true,
               "dependsOn": [
                 "build",
               ],
@@ -68,7 +67,7 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should create 
             },
             "tsc": {
               "cache": true,
-              "command": "tsc",
+              "command": "tsc --noEmit",
               "inputs": [
                 "production",
                 "^production",
@@ -78,9 +77,140 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should create 
                   ],
                 },
               ],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "help": {
+                  "command": "npx tsc --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "typescript",
+                ],
+              },
               "options": {
                 "cwd": "my-app",
               },
+            },
+            "watch-deps": {
+              "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+              "continuous": true,
+              "dependsOn": [
+                "build-deps",
+              ],
+            },
+          },
+        },
+      },
+    },
+  ],
+]
+`;
+
+exports[`@nx/remix/plugin Remix Classic Compiler non-root project should infer watch-deps target 1`] = `
+[
+  [
+    "my-app/remix.config.cjs",
+    {
+      "projects": {
+        "my-app": {
+          "metadata": {},
+          "root": "my-app",
+          "targets": {
+            "build": {
+              "cache": true,
+              "command": "remix build",
+              "dependsOn": [
+                "^build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
+              ],
+              "options": {
+                "cwd": "my-app",
+              },
+              "outputs": [
+                "{workspaceRoot}/my-app/build",
+                "{workspaceRoot}/my-app/public/build",
+              ],
+            },
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
+            "dev": {
+              "command": "remix dev --manual",
+              "continuous": true,
+              "options": {
+                "cwd": "my-app",
+              },
+            },
+            "serve-static": {
+              "command": "remix-serve build/index.js",
+              "continuous": true,
+              "dependsOn": [
+                "build",
+              ],
+              "options": {
+                "cwd": "my-app",
+              },
+            },
+            "start": {
+              "command": "remix-serve build/index.js",
+              "continuous": true,
+              "dependsOn": [
+                "build",
+              ],
+              "options": {
+                "cwd": "my-app",
+              },
+            },
+            "tsc": {
+              "cache": true,
+              "command": "tsc --noEmit",
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "typescript",
+                  ],
+                },
+              ],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "help": {
+                  "command": "npx tsc --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "typescript",
+                ],
+              },
+              "options": {
+                "cwd": "my-app",
+              },
+            },
+            "watch-deps": {
+              "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+              "continuous": true,
+              "dependsOn": [
+                "build-deps",
+              ],
             },
           },
         },
@@ -125,12 +255,14 @@ exports[`@nx/remix/plugin Remix Classic Compiler root project should create node
             },
             "dev": {
               "command": "remix dev --manual",
+              "continuous": true,
               "options": {
                 "cwd": ".",
               },
             },
             "serve-static": {
               "command": "remix-serve build/index.js",
+              "continuous": true,
               "dependsOn": [
                 "build",
               ],
@@ -140,15 +272,7 @@ exports[`@nx/remix/plugin Remix Classic Compiler root project should create node
             },
             "start": {
               "command": "remix-serve build/index.js",
-              "dependsOn": [
-                "build",
-              ],
-              "options": {
-                "cwd": ".",
-              },
-            },
-            "static-serve": {
-              "command": "remix-serve build/index.js",
+              "continuous": true,
               "dependsOn": [
                 "build",
               ],
@@ -158,7 +282,7 @@ exports[`@nx/remix/plugin Remix Classic Compiler root project should create node
             },
             "typecheck": {
               "cache": true,
-              "command": "tsc",
+              "command": "tsc --noEmit",
               "inputs": [
                 "production",
                 "^production",
@@ -168,6 +292,20 @@ exports[`@nx/remix/plugin Remix Classic Compiler root project should create node
                   ],
                 },
               ],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "help": {
+                  "command": "npx tsc --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "typescript",
+                ],
+              },
               "options": {
                 "cwd": ".",
               },
@@ -212,14 +350,21 @@ exports[`@nx/remix/plugin Remix Vite Compiler non-root project should create nod
                 "{workspaceRoot}/my-app/build",
               ],
             },
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
             "dev": {
               "command": "remix vite:dev",
+              "continuous": true,
               "options": {
                 "cwd": "my-app",
               },
             },
             "serve-static": {
               "command": "remix-serve build/server/index.js",
+              "continuous": true,
               "dependsOn": [
                 "build",
               ],
@@ -229,15 +374,7 @@ exports[`@nx/remix/plugin Remix Vite Compiler non-root project should create nod
             },
             "start": {
               "command": "remix-serve build/server/index.js",
-              "dependsOn": [
-                "build",
-              ],
-              "options": {
-                "cwd": "my-app",
-              },
-            },
-            "static-serve": {
-              "command": "remix-serve build/server/index.js",
+              "continuous": true,
               "dependsOn": [
                 "build",
               ],
@@ -247,7 +384,7 @@ exports[`@nx/remix/plugin Remix Vite Compiler non-root project should create nod
             },
             "tsc": {
               "cache": true,
-              "command": "tsc",
+              "command": "tsc --noEmit",
               "inputs": [
                 "production",
                 "^production",
@@ -257,9 +394,30 @@ exports[`@nx/remix/plugin Remix Vite Compiler non-root project should create nod
                   ],
                 },
               ],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "help": {
+                  "command": "npx tsc --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "typescript",
+                ],
+              },
               "options": {
                 "cwd": "my-app",
               },
+            },
+            "watch-deps": {
+              "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+              "continuous": true,
+              "dependsOn": [
+                "build-deps",
+              ],
             },
           },
         },
@@ -303,12 +461,14 @@ exports[`@nx/remix/plugin Remix Vite Compiler root project should create nodes 1
             },
             "dev": {
               "command": "remix vite:dev",
+              "continuous": true,
               "options": {
                 "cwd": ".",
               },
             },
             "serve-static": {
               "command": "remix-serve build/server/index.js",
+              "continuous": true,
               "dependsOn": [
                 "build",
               ],
@@ -318,15 +478,7 @@ exports[`@nx/remix/plugin Remix Vite Compiler root project should create nodes 1
             },
             "start": {
               "command": "remix-serve build/server/index.js",
-              "dependsOn": [
-                "build",
-              ],
-              "options": {
-                "cwd": ".",
-              },
-            },
-            "static-serve": {
-              "command": "remix-serve build/server/index.js",
+              "continuous": true,
               "dependsOn": [
                 "build",
               ],
@@ -336,7 +488,7 @@ exports[`@nx/remix/plugin Remix Vite Compiler root project should create nodes 1
             },
             "typecheck": {
               "cache": true,
-              "command": "tsc",
+              "command": "tsc --noEmit",
               "inputs": [
                 "production",
                 "^production",
@@ -346,6 +498,20 @@ exports[`@nx/remix/plugin Remix Vite Compiler root project should create nodes 1
                   ],
                 },
               ],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "help": {
+                  "command": "npx tsc --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "typescript",
+                ],
+              },
               "options": {
                 "cwd": ".",
               },

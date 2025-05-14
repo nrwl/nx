@@ -1,7 +1,8 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "<%= baseTsConfigPath %>",
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "noEmit": false,
     "incremental": true,
     <% if(hasPlugin && compiler === 'tsc') { %>

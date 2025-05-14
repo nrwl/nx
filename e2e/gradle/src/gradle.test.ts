@@ -6,6 +6,7 @@ import {
   runCLI,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e/utils';
 
 import { createGradleProject } from './utils/create-gradle-project';
@@ -30,10 +31,7 @@ describe('Gradle', () => {
         expect(projects).toContain(gradleProjectName);
 
         let buildOutput = runCLI('build app', { verbose: true });
-        // app depends on list and utilities
-        expect(buildOutput).toContain('nx run list:build');
         expect(buildOutput).toContain(':list:classes');
-        expect(buildOutput).toContain('nx run utilities:build');
         expect(buildOutput).toContain(':utilities:classes');
 
         checkFilesExist(
@@ -42,13 +40,8 @@ describe('Gradle', () => {
           `utilities/build/libs/utilities.jar`
         );
 
-        buildOutput = runCLI(`build ${gradleProjectName}`, { verbose: true });
-        // root project depends on app, list and utilities
-        expect(buildOutput).toContain('nx run app:build');
-        expect(buildOutput).toContain(':app:classes');
-        expect(buildOutput).toContain('nx run list:build');
+        buildOutput = runCLI('build app --batch', { verbose: true });
         expect(buildOutput).toContain(':list:classes');
-        expect(buildOutput).toContain('nx run utilities:build');
         expect(buildOutput).toContain(':utilities:classes');
       });
 
@@ -92,8 +85,30 @@ dependencies {
 
         let buildOutput = runCLI('build app2', { verbose: true });
         // app2 depends on app
-        expect(buildOutput).toContain('nx run app:build');
         expect(buildOutput).toContain(':app:classes');
+        expect(buildOutput).toContain(':list:classes');
+        expect(buildOutput).toContain(':utilities:classes');
+
+        checkFilesExist(`app2/build/libs/app2.jar`);
+
+        buildOutput = runCLI('build app2 --batch', { verbose: true });
+        expect(buildOutput).toContain(':app:classes');
+        expect(buildOutput).toContain(':list:classes');
+        expect(buildOutput).toContain(':utilities:classes');
+      });
+
+      it('should run atomized test target', () => {
+        updateJson('nx.json', (json) => {
+          json.plugins.find((p) => p.plugin === '@nx/gradle').options[
+            'ciTestTargetName'
+          ] = 'test-ci';
+          return json;
+        });
+
+        expect(() => {
+          runCLI('run app:test-ci--MessageUtilsTest', { verbose: true });
+          runCLI('run list:test-ci--LinkedListTest', { verbose: true });
+        }).not.toThrow();
       });
     }
   );

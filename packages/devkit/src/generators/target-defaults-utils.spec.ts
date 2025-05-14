@@ -17,7 +17,7 @@ describe('target-defaults-utils', () => {
       jest.resetModules();
     });
 
-    it('should add e2e-ci--**/* target default for e2e plugin for specified build target when it does not exist', async () => {
+    it('should add e2e-ci--**/** target default for e2e plugin for specified build target when it does not exist', async () => {
       // ARRANGE
       const nxJson = readNxJson(tree);
       nxJson.plugins ??= [];
@@ -43,7 +43,7 @@ describe('target-defaults-utils', () => {
 
       // ASSERT
       const newNxJson = readNxJson(tree);
-      expect(newNxJson.targetDefaults['e2e-ci--**/*']).toMatchInlineSnapshot(`
+      expect(newNxJson.targetDefaults['e2e-ci--**/**']).toMatchInlineSnapshot(`
         {
           "dependsOn": [
             "^build",
@@ -52,7 +52,7 @@ describe('target-defaults-utils', () => {
       `);
     });
 
-    it('should update existing e2e-ci--**/* target default for e2e plugin for specified build target when it does not exist in dependsOn', async () => {
+    it('should update existing e2e-ci--**/** target default for e2e plugin for specified build target when it does not exist in dependsOn', async () => {
       // ARRANGE
       const nxJson = readNxJson(tree);
       nxJson.plugins ??= [];
@@ -64,7 +64,7 @@ describe('target-defaults-utils', () => {
         },
       });
       nxJson.targetDefaults ??= {};
-      nxJson.targetDefaults['e2e-ci--**/*'] = {
+      nxJson.targetDefaults['e2e-ci--**/**'] = {
         dependsOn: ['^build'],
       };
       updateNxJson(tree, nxJson);
@@ -82,7 +82,7 @@ describe('target-defaults-utils', () => {
 
       // ASSERT
       const newNxJson = readNxJson(tree);
-      expect(newNxJson.targetDefaults['e2e-ci--**/*']).toMatchInlineSnapshot(`
+      expect(newNxJson.targetDefaults['e2e-ci--**/**']).toMatchInlineSnapshot(`
         {
           "dependsOn": [
             "^build",
@@ -104,7 +104,7 @@ describe('target-defaults-utils', () => {
         },
       });
       nxJson.targetDefaults ??= {};
-      nxJson.targetDefaults['e2e-ci--**/*'] = {
+      nxJson.targetDefaults['e2e-ci--**/**'] = {
         dependsOn: ['^build'],
       };
       updateNxJson(tree, nxJson);
@@ -122,14 +122,14 @@ describe('target-defaults-utils', () => {
 
       // ASSERT
       const newNxJson = readNxJson(tree);
-      expect(newNxJson.targetDefaults['e2e-ci--**/*']).toMatchInlineSnapshot(`
+      expect(newNxJson.targetDefaults['e2e-ci--**/**']).toMatchInlineSnapshot(`
         {
           "dependsOn": [
             "^build",
           ],
         }
       `);
-      expect(newNxJson.targetDefaults['cypress:e2e-ci--**/*'])
+      expect(newNxJson.targetDefaults['cypress:e2e-ci--**/**'])
         .toMatchInlineSnapshot(`
         {
           "dependsOn": [
@@ -139,7 +139,7 @@ describe('target-defaults-utils', () => {
       `);
     });
 
-    it('should not add additional e2e-ci--**/* target default for e2e plugin when it already exists with build target', async () => {
+    it('should not add additional e2e-ci--**/** target default for e2e plugin when it already exists with build target', async () => {
       // ARRANGE
       const nxJson = readNxJson(tree);
       nxJson.plugins ??= [];
@@ -151,7 +151,7 @@ describe('target-defaults-utils', () => {
         },
       });
       nxJson.targetDefaults ??= {};
-      nxJson.targetDefaults['e2e-ci--**/*'] = {
+      nxJson.targetDefaults['e2e-ci--**/**'] = {
         dependsOn: ['^build'],
       };
       updateNxJson(tree, nxJson);
@@ -174,7 +174,7 @@ describe('target-defaults-utils', () => {
           "build": {
             "cache": true,
           },
-          "e2e-ci--**/*": {
+          "e2e-ci--**/**": {
             "dependsOn": [
               "^build",
             ],
@@ -290,7 +290,7 @@ describe('target-defaults-utils', () => {
 
       // ASSERT
       const newNxJson = readNxJson(tree);
-      expect(newNxJson.targetDefaults['cypress:e2e-ci--**/*'])
+      expect(newNxJson.targetDefaults['cypress:e2e-ci--**/**'])
         .toMatchInlineSnapshot(`
         {
           "dependsOn": [
@@ -335,7 +335,7 @@ describe('target-defaults-utils', () => {
 
       // ASSERT
       const newNxJson = readNxJson(tree);
-      expect(newNxJson.targetDefaults['cypress:e2e-ci--**/*'])
+      expect(newNxJson.targetDefaults['cypress:e2e-ci--**/**'])
         .toMatchInlineSnapshot(`
         {
           "dependsOn": [
@@ -365,7 +365,7 @@ describe('target-defaults-utils', () => {
 
       // ASSERT
       const newNxJson = readNxJson(tree);
-      expect(newNxJson.targetDefaults['e2e-ci--**/*']).toMatchInlineSnapshot(`
+      expect(newNxJson.targetDefaults['e2e-ci--**/**']).toMatchInlineSnapshot(`
         {
           "dependsOn": [
             "^build",

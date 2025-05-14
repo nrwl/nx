@@ -10,8 +10,8 @@ import { mergeTargetConfigurations } from '../project-graph/utils/project-config
 import { readJsonFile } from './fileutils';
 import { getNxRequirePaths } from './installation-directory';
 import {
-  PackageManagerCommands,
   getPackageManagerCommand,
+  PackageManagerCommands,
 } from './package-manager';
 
 export interface NxProjectPackageJsonConfiguration
@@ -42,12 +42,21 @@ export interface PackageJson {
   type?: 'module' | 'commonjs';
   main?: string;
   types?: string;
+  // interchangeable with `types`: https://www.typescriptlang.org/docs/handbook/declaration-files/publishing.html#including-declarations-in-your-npm-package
+  typings?: string;
   module?: string;
   exports?:
     | string
     | Record<
         string,
-        string | { types?: string; require?: string; import?: string }
+        | string
+        | {
+            types?: string;
+            require?: string;
+            import?: string;
+            development?: string;
+            default?: string;
+          }
       >;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
@@ -145,15 +154,22 @@ export function buildTargetFromScript(
 let packageManagerCommand: PackageManagerCommands | undefined;
 
 export function getMetadataFromPackageJson(
-  packageJson: PackageJson
+  packageJson: PackageJson,
+  isInPackageManagerWorkspaces: boolean
 ): ProjectMetadata {
-  const { scripts, nx, description } = packageJson ?? {};
+  const { scripts, nx, description, name, exports, main } = packageJson;
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
   return {
     targetGroups: {
       ...(includedScripts.length ? { 'NPM Scripts': includedScripts } : {}),
     },
     description,
+    js: {
+      packageName: name,
+      packageExports: exports,
+      packageMain: main,
+      isInPackageManagerWorkspaces,
+    },
   };
 }
 
@@ -170,13 +186,15 @@ export function getTagsFromPackageJson(packageJson: PackageJson): string[] {
 
 export function readTargetsFromPackageJson(
   packageJson: PackageJson,
-  nxJson: NxJsonConfiguration
+  nxJson: NxJsonConfiguration,
+  projectRoot: string,
+  workspaceRoot: string
 ) {
   const { scripts, nx, private: isPrivate } = packageJson ?? {};
   const res: Record<string, TargetConfiguration> = {};
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
-  packageManagerCommand ??= getPackageManagerCommand();
   for (const script of includedScripts) {
+    packageManagerCommand ??= getPackageManagerCommand();
     res[script] = buildTargetFromScript(script, scripts, packageManagerCommand);
   }
   for (const targetName in nx?.targets) {
@@ -194,7 +212,11 @@ export function readTargetsFromPackageJson(
    * Any targetDefaults for the nx-release-publish target set by the user should
    * be merged with the implicit target.
    */
-  if (!isPrivate && !res['nx-release-publish']) {
+  if (
+    !isPrivate &&
+    !res['nx-release-publish'] &&
+    hasNxJsPlugin(projectRoot, workspaceRoot)
+  ) {
     const nxReleasePublishTargetDefaults =
       nxJson?.targetDefaults?.['nx-release-publish'] ?? {};
     res['nx-release-publish'] = {
@@ -212,6 +234,18 @@ export function readTargetsFromPackageJson(
   }
 
   return res;
+}
+
+function hasNxJsPlugin(projectRoot: string, workspaceRoot: string) {
+  try {
+    // nx-ignore-next-line
+    require.resolve('@nx/js', {
+      paths: [projectRoot, ...getNxRequirePaths(workspaceRoot), __dirname],
+    });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**

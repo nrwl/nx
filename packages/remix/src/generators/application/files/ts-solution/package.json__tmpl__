@@ -1,0 +1,23 @@
+{
+  "private": true,
+  "name": "<%= importPath %>",
+  "scripts": {},
+  "type": "module",
+  "dependencies": {
+    "@remix-run/node": "<%= remixVersion %>",
+    "@remix-run/react": "<%= remixVersion %>",
+    "@remix-run/serve": "<%= remixVersion %>",
+    "isbot": "<%= isbotVersion %>",
+    "react": "<%= reactVersion %>",
+    "react-dom": "<%= reactDomVersion %>"
+  },
+  "devDependencies": {
+    "@remix-run/dev": "<%= remixVersion %>",
+    "@types/react": "<%= typesReactVersion %>",
+    "@types/react-dom": "<%= typesReactDomVersion %>"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "sideEffects": false
+}

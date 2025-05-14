@@ -18,9 +18,10 @@ describe('scam-to-standalone', () => {
     tree.write(
       'foo/src/app/mymodule.module.ts',
       `import { BarComponentModule } from './bar/bar.component';
+      import { ExtraBarComponentModule } from './bar/extra-bar.component';
       
       @NgModule({
-        imports: [BarComponentModule]
+        imports: [BarComponentModule, ExtraBarComponentModule]
       })
       export class MyModule {}`
     );
@@ -36,9 +37,9 @@ describe('scam-to-standalone', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        standalone: true,
         imports: [CommonModule],
         selector: 'app-bar',
+        standalone: false,
         templateUrl: './bar.component.html',
         styleUrl: './bar.component.css',
       })
@@ -49,9 +50,10 @@ describe('scam-to-standalone', () => {
     expect(tree.read('foo/src/app/mymodule.module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { BarComponent } from './bar/bar.component';
+      import { ExtraBarComponentModule } from './bar/extra-bar.component';
 
       @NgModule({
-        imports: [BarComponent],
+        imports: [BarComponent, ExtraBarComponentModule],
       })
       export class MyModule {}
       "

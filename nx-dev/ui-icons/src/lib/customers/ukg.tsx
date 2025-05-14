@@ -1,5 +1,7 @@
 import { FC, SVGProps } from 'react';
-
+/**
+ * Use `#005151` for a colored version.
+ */
 export const UkgIcon: FC<SVGProps<SVGSVGElement>> = (props) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"

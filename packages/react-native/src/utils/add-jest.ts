@@ -8,7 +8,8 @@ export async function addJest(
   appProjectRoot: string,
   js: boolean,
   skipPackageJson: boolean,
-  addPlugin: boolean
+  addPlugin: boolean,
+  runtimeTsconfigFileName: string
 ) {
   if (unitTestRunner !== 'jest') {
     return () => {};
@@ -24,6 +25,7 @@ export async function addJest(
     skipPackageJson,
     skipFormat: true,
     addPlugin,
+    runtimeTsconfigFileName,
   });
 
   // overwrite the jest.config.ts file because react native needs to have special transform property

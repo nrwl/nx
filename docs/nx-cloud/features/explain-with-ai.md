@@ -15,7 +15,7 @@ To use the "Explain with AI" feature, you need to [enable AI features for your o
 
 ![enable ai features](/nx-cloud/features/ai-features.png)
 
-AI features are available only for the [Nx Cloud Pro plan](/pricing). If you are on the Hobby plan, you can start a free trial to test AI features in your workspace.
+AI features are available only for the [Nx Cloud Team plan](/pricing).
 
 ## Using Explain with AI
 

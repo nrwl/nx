@@ -1,0 +1,77 @@
+---
+type: lesson
+title: Share Code
+---
+
+### Import Libraries into the Angular Applications
+
+All libraries that we generate automatically have aliases created in the root-level `tsconfig.base.json`.
+
+```json title="/tsconfig.base.json"
+{
+  "compilerOptions": {
+    ...
+    "paths": {
+      "@angular-monorepo/orders": ["libs/orders/src/index.ts"],
+      "@angular-monorepo/products": ["libs/products/src/index.ts"],
+      "@angular-monorepo/shared-ui": ["libs/shared/ui/src/index.ts"]
+    },
+    ...
+  },
+}
+```
+
+Hence we can easily import them into other libraries and our Angular application. As an example, let's use the pre-generated `ProductsComponent` component from our `libs/products` library.
+
+You can see that the `ProductsComponent` is exported via the `index.ts` file of our `products` library so that other projects in the repository can use it. This is our public API with the rest of the workspace. Only export what's really necessary to be usable outside the library itself.
+
+```ts title="/libs/products/src/index.ts"
+export * from './lib/products/products.component';
+```
+
+We're ready to import it into our main application now. First (if you haven't already), let's set up the Angular router. Remove the `app-nx-welcome` component from `app.component.html`:
+
+```solution:/apps/angular-store/src/app/app.component.html title="/apps/angular-store/src/app/app.component.html"
+
+```
+
+Then we can add the `ProductsComponent` component to our `app.routes.ts` and render it via the routing mechanism whenever a user hits the `/products` route.
+
+```solution:/apps/angular-store/src/app/app.routes.ts title="/apps/angular-store/src/app/app.routes.ts" {10-14} collapse={15-19}
+
+```
+
+Serving your app (`npx nx serve angular-store`) and then navigating to `/products` should give you the following result:
+
+![products route](/documentation/shared/tutorials/app-products-route.png)
+
+Let's apply the same for our `orders` library. Import the `OrdersComponent` from `libs/orders` into the `app.routes.ts` and render it via the routing mechanism whenever a user hits the `/orders` route
+
+In the end, your `app.routes.ts` should look similar to this:
+
+```solution:/apps/angular-store/src/app/app.routes.ts title="apps/angular-store/src/app/app.routes.ts" {15-19}
+
+```
+
+Let's also show products in the `inventory` app.
+
+```solution:/apps/inventory/src/app/app.component.ts title="/apps/inventory/src/app/app.component.ts" {2,5}
+
+```
+
+```solution:/apps/inventory/src/app/app.component.html title="/apps/inventory/src/app/app.component.html"
+
+```
+
+## Testing and Linting
+
+{/* // import { VideoLink } from '@nx/nx-dev/ui-markdoc'; */}
+
+{/* <VideoLink link="https://youtu.be/ZzTP4bVJEnI?t=410"></VideoLink> */}
+
+Our current setup not only has targets for serving and building the Angular application, but also has targets for unit testing and linting. The `test` and `lint` targets are defined in the application `project.json` file. We can use the same syntax as before to run these tasks:
+
+```shell
+npx nx test angular-store # runs the tests for angular-store
+npx nx lint inventory # runs the linter on inventory
+```

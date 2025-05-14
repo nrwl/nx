@@ -12,13 +12,10 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
-  visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { extractTsConfigBase } from '@nx/js/src/utils/typescript/create-ts-config';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { dirname } from 'node:path';
 import {
   createNxCloudOnboardingURLForWelcomeApp,
   getNxCloudAppOnBoardingUrl,
@@ -40,11 +37,16 @@ import initGenerator from '../init/init';
 import { updateDependencies } from '../utils/update-dependencies';
 import {
   addE2E,
+  ignoreViteTempFiles,
   normalizeOptions,
   updateUnitTestConfig,
-  addViteTempFilesToGitIgnore,
 } from './lib';
 import { NxRemixGeneratorSchema } from './schema';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export function remixApplicationGenerator(
   tree: Tree,
@@ -52,6 +54,7 @@ export function remixApplicationGenerator(
 ) {
   return remixApplicationGeneratorInternal(tree, {
     addPlugin: true,
+    useProjectJson: true,
     ...options,
   });
 }
@@ -60,7 +63,18 @@ export async function remixApplicationGeneratorInternal(
   tree: Tree,
   _options: NxRemixGeneratorSchema
 ) {
-  assertNotUsingTsSolutionSetup(tree, 'remix', 'application');
+  const tasks: GeneratorCallback[] = [
+    await initGenerator(tree, {
+      skipFormat: true,
+      addPlugin: true,
+    }),
+    await jsInitGenerator(tree, {
+      skipFormat: true,
+      addTsPlugin: _options.useTsSolution,
+      formatter: _options.formatter,
+      platform: 'web',
+    }),
+  ];
 
   const options = await normalizeOptions(tree, _options);
   if (!options.addPlugin) {
@@ -69,21 +83,21 @@ export async function remixApplicationGeneratorInternal(
     );
   }
 
-  const tasks: GeneratorCallback[] = [
-    await initGenerator(tree, {
-      skipFormat: true,
-      addPlugin: true,
-    }),
-    await jsInitGenerator(tree, { skipFormat: true }),
-  ];
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    await addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+  }
 
-  addProjectConfiguration(tree, options.projectName, {
-    root: options.projectRoot,
-    sourceRoot: `${options.projectRoot}`,
-    projectType: 'application',
-    tags: options.parsedTags,
-    targets: {},
-  });
+  if (options.useProjectJson) {
+    addProjectConfiguration(tree, options.projectName, {
+      root: options.projectRoot,
+      sourceRoot: `${options.projectRoot}`,
+      projectType: 'application',
+      tags: options.parsedTags,
+      targets: {},
+    });
+  }
 
   const installTask = updateDependencies(tree);
   tasks.push(installTask);
@@ -135,9 +149,35 @@ export async function remixApplicationGeneratorInternal(
   } else {
     generateFiles(
       tree,
-      joinPathFragments(__dirname, 'files/integrated'),
+      joinPathFragments(__dirname, 'files/non-root'),
       options.projectRoot,
       vars
+    );
+  }
+
+  if (options.isUsingTsSolutionConfig) {
+    generateFiles(
+      tree,
+      joinPathFragments(__dirname, 'files/ts-solution'),
+      options.projectRoot,
+      vars
+    );
+  }
+
+  if (!options.useProjectJson) {
+    updateJson(
+      tree,
+      joinPathFragments(options.projectRoot, 'package.json'),
+      (json) => {
+        if (options.projectName !== options.importPath) {
+          json.nx = { name: options.projectName };
+        }
+        if (options.parsedTags?.length) {
+          json.nx ??= {};
+          json.nx.tags = options.parsedTags;
+        }
+        return json;
+      }
     );
   }
 
@@ -185,9 +225,10 @@ export async function remixApplicationGeneratorInternal(
         skipPackageJson: false,
         skipFormat: true,
         addPlugin: true,
+        compiler: options.useTsSolution ? 'swc' : undefined,
       });
       const projectConfig = readProjectConfiguration(tree, options.projectName);
-      if (projectConfig.targets['test']?.options) {
+      if (projectConfig.targets?.['test']?.options) {
         projectConfig.targets['test'].options.passWithNoTests = true;
         updateProjectConfiguration(tree, options.projectName, projectConfig);
       }
@@ -289,53 +330,25 @@ export default {...nxPreset};
 
   tasks.push(await addE2E(tree, options));
 
-  // If the project package.json uses type module, and the project uses flat eslint config, we need to make sure the eslint config uses an explicit .cjs extension
-  // TODO: This could be re-evaluated once we support ESM in eslint configs
-  if (
-    tree.exists(joinPathFragments(options.projectRoot, 'package.json')) &&
-    tree.exists(joinPathFragments(options.projectRoot, 'eslint.config.js'))
-  ) {
-    const pkgJson = readJson(
-      tree,
-      joinPathFragments(options.projectRoot, 'package.json')
-    );
-    if (pkgJson.type === 'module') {
-      tree.rename(
-        joinPathFragments(options.projectRoot, 'eslint.config.js'),
-        joinPathFragments(options.projectRoot, 'eslint.config.cjs')
-      );
-      visitNotIgnoredFiles(tree, options.projectRoot, (file) => {
-        if (file.endsWith('eslint.config.js')) {
-          // Replace any extends on the eslint config to use the .cjs extension
-          const content = tree.read(file).toString();
-          if (content.includes('eslint.config')) {
-            tree.write(
-              file,
-              content
-                .replace(/eslint\.config'/g, `eslint.config.cjs'`)
-                .replace(/eslint\.config"/g, `eslint.config.cjs"`)
-                .replace(/eslint\.config\.js/g, `eslint.config.cjs`)
-            );
-          }
+  await ignoreViteTempFiles(tree, options.projectRoot);
 
-          // If there is no sibling package.json with type commonjs, we need to rename the .js files to .cjs
-          const siblingPackageJsonPath = joinPathFragments(
-            dirname(file),
-            'package.json'
-          );
-          if (tree.exists(siblingPackageJsonPath)) {
-            const siblingPkgJson = readJson(tree, siblingPackageJsonPath);
-            if (siblingPkgJson.type === 'module') {
-              return;
-            }
-          }
-          tree.rename(file, file.replace('.js', '.cjs'));
-        }
-      });
-    }
-  }
+  updateTsconfigFiles(
+    tree,
+    options.projectRoot,
+    'tsconfig.app.json',
+    {
+      jsx: 'react-jsx',
+      module: 'esnext',
+      moduleResolution: 'bundler',
+    },
+    options.linter === 'eslint'
+      ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+      : undefined,
+    '.'
+  );
 
-  addViteTempFilesToGitIgnore(tree);
+  sortPackageJsonFields(tree, options.projectRoot);
+
   if (!options.skipFormat) {
     await formatFiles(tree);
   }

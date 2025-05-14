@@ -59,7 +59,7 @@ describe('configurationGenerator', () => {
       main: './libs/mypkg/src/index.ts',
     });
 
-    const rollupConfig = tree.read('libs/mypkg/rollup.config.js', 'utf-8');
+    const rollupConfig = tree.read('libs/mypkg/rollup.config.cjs', 'utf-8');
 
     expect(rollupConfig)
       .toEqual(`const { withNx } = require('@nx/rollup/with-nx');
@@ -71,7 +71,7 @@ module.exports = withNx(
     tsConfig: './tsconfig.lib.json',
     compiler: 'babel',
     format: ['esm'],
-    assets: [{ input: '.', output: '.', glob: '*.md' }],
+    assets: [{ input: '{projectRoot}', output: '.', glob: '*.md' }],
   },
   {
     // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
@@ -88,7 +88,7 @@ module.exports = withNx(
       tsConfig: 'libs/mypkg/tsconfig.custom.json',
     });
 
-    const rollupConfig = tree.read('libs/mypkg/rollup.config.js', 'utf-8');
+    const rollupConfig = tree.read('libs/mypkg/rollup.config.cjs', 'utf-8');
 
     expect(rollupConfig)
       .toEqual(`const { withNx } = require('@nx/rollup/with-nx');
@@ -100,7 +100,7 @@ module.exports = withNx(
     tsConfig: './tsconfig.custom.json',
     compiler: 'babel',
     format: ['esm'],
-    assets: [{ input: '.', output: '.', glob: '*.md' }],
+    assets: [{ input: '{projectRoot}', output: '.', glob: '*.md' }],
   },
   {
     // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options

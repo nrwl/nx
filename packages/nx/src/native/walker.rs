@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use crate::native::glob::build_glob_set;
 
 use crate::native::logger::enable_logger;
-use crate::native::utils::{get_mod_time, Normalize};
+use crate::native::utils::{Normalize, get_mod_time};
 use walkdir::WalkDir;
 
 #[derive(PartialEq, Debug, Ord, PartialOrd, Eq, Clone)]
@@ -50,14 +50,13 @@ where
             !ignore_glob_set.is_match(path.as_ref())
         })
         .filter_map(move |entry| {
-            entry
-                .ok()
-                .and_then(|e|
-                    e.path()
-                    .strip_prefix(&base_dir).ok()
+            entry.ok().and_then(|e| {
+                e.path()
+                    .strip_prefix(&base_dir)
+                    .ok()
                     .filter(|p| !p.to_string_lossy().is_empty())
                     .map(|p| p.to_owned())
-                )
+            })
         })
 }
 
@@ -193,8 +192,8 @@ where
 mod test {
     use std::{assert_eq, vec};
 
-    use assert_fs::prelude::*;
     use assert_fs::TempDir;
+    use assert_fs::prelude::*;
 
     use super::*;
 

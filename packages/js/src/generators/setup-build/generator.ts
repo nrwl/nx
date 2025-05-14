@@ -17,7 +17,7 @@ import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-default
 import { basename, dirname, join } from 'node:path/posix';
 import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { ensureProjectIsIncludedInPluginRegistrations } from '../..//utils/typescript/plugin';
+import { ensureProjectIsIncludedInPluginRegistrations } from '../../utils/typescript/plugin';
 import { getImportPath } from '../../utils/get-import-path';
 import {
   getUpdatedPackageJsonContent,
@@ -131,7 +131,7 @@ export async function setupBuildGenerator(
         project: options.project,
         skipFormat: true,
         skipValidation: true,
-        format: ['cjs'],
+        format: isTsSolutionSetup ? ['esm'] : ['cjs'],
       });
       tasks.push(task);
       break;
@@ -144,7 +144,7 @@ export async function setupBuildGenerator(
         tsConfig: tsConfigFile,
         project: options.project,
         compiler: 'tsc',
-        format: ['cjs', 'esm'],
+        format: isTsSolutionSetup ? ['esm'] : ['cjs', 'esm'],
         addPlugin,
         skipFormat: true,
         skipValidation: true,
@@ -204,7 +204,7 @@ export async function setupBuildGenerator(
 
       updateProjectConfiguration(tree, options.project, project);
       tasks.push(addSwcDependencies(tree));
-      addSwcConfig(tree, project.root, 'commonjs');
+      addSwcConfig(tree, project.root, isTsSolutionSetup ? 'es6' : 'commonjs');
       if (isTsSolutionSetup) {
         updatePackageJsonForSwc(tree, options, project);
       }
@@ -325,6 +325,11 @@ function updatePackageJson(
       version: '0.0.1',
     };
   }
+
+  // the file must exist in the TS solution setup, which is the only case this
+  // function is called
+  const tsconfigBase = readJson(tree, 'tsconfig.base.json');
+
   packageJson = getUpdatedPackageJsonContent(packageJson, {
     main,
     outputPath,
@@ -333,6 +338,8 @@ function updatePackageJson(
     packageJsonPath,
     rootDir,
     format,
+    skipDevelopmentExports:
+      !tsconfigBase.compilerOptions?.customConditions?.includes('development'),
   });
   writeJson(tree, packageJsonPath, packageJson);
 }

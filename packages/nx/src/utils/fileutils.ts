@@ -10,7 +10,7 @@ import {
   statSync,
   existsSync,
 } from 'node:fs';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname } from 'path';
 import * as tar from 'tar-stream';
 import { createGunzip } from 'zlib';

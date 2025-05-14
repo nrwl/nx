@@ -7,9 +7,9 @@ import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { readJsonFile } from '../fileutils';
 import { getNxRequirePaths } from '../installation-directory';
 import { readPluginPackageJson } from '../../project-graph/plugins';
-import { loadNxPlugin } from '../../project-graph/plugins/loader';
+import { loadNxPlugin } from '../../project-graph/plugins/in-process-loader';
 import { PackageJson } from '../package-json';
-import { LoadedNxPlugin } from '../../project-graph/plugins/internal-api';
+import { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
 
 export interface PluginCapabilities {
   name: string;

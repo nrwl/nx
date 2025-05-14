@@ -63,6 +63,7 @@ module.exports = {
   theme: {
     extend: {
       animation: {
+        progress: `progress linear forwards`,
         marquee: 'marquee var(--duration) linear infinite',
         'marquee-vertical': 'marquee-vertical var(--duration) linear infinite',
       },
@@ -74,6 +75,10 @@ module.exports = {
         'marquee-vertical': {
           from: { transform: 'translateY(0)' },
           to: { transform: 'translateY(calc(-100% - var(--gap)))' },
+        },
+        progress: {
+          '0%': { width: '0%' },
+          '100%': { width: '100%' },
         },
       },
       typography: {
@@ -90,6 +95,9 @@ module.exports = {
             },
             'blockquote p:last-of-type::after': {
               content: '',
+            },
+            s: {
+              '@apply text-gray-500': {},
             },
           },
         },

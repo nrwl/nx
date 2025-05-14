@@ -47,11 +47,6 @@ exports[`@nx/storybook:configuration for Storybook v7 basic functionalities shou
     "emitDecoratorMetadata": true,
     "outDir": ""
   },
-  "files": [
-    "../node_modules/@nx/react/typings/styled-jsx.d.ts",
-    "../node_modules/@nx/react/typings/cssmodule.d.ts",
-    "../node_modules/@nx/react/typings/image.d.ts"
-  ],
   "exclude": [
     "src/**/*.spec.ts",
     "src/**/*.test.ts",
@@ -70,6 +65,11 @@ exports[`@nx/storybook:configuration for Storybook v7 basic functionalities shou
     "src/**/*.stories.mdx",
     ".storybook/*.js",
     ".storybook/*.ts"
+  ],
+  "files": [
+    "../node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../node_modules/@nx/react/typings/image.d.ts"
   ]
 }
 "

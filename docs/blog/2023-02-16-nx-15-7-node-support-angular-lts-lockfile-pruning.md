@@ -2,11 +2,12 @@
 title: 'Nx 15.7 — Node Support, Angular LTS, Lockfile Pruning'
 slug: 'nx-15-7-node-support-angular-lts-lockfile-pruning'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2023-02-16/2AAo-mng7QyJP9yC80zNFQ.png'
+cover_image: '/blog/images/2023-02-16/2AAo-mng7QyJP9yC80zNFQ.avif'
 tags: [nx, release]
+description: Nx 15.7 introduces first-class Node.js support, detached Angular version support, enhanced lockfile parsing, and Storybook 7.0 beta integration.
 ---
 
-Here’s all you need to know about our latest Nx release.
+Here's all you need to know about our latest Nx release.
 
 ### Table of Contents
 
@@ -21,23 +22,23 @@ Here’s all you need to know about our latest Nx release.
 · [How to Update Nx](#how-to-update-nx)  
 · [Coming up](#coming-up)
 
-### Prefer a video? We’ve got you covered!
+### Prefer a video? We've got you covered!
 
 {% youtube src="https://www.youtube.com/watch?v=IStJODzZSoc" /%}
 
 ## 10k Subscribers on Youtube
 
-It’s almost a tradition to have some stats at the beginning of our Nx release blog posts. This time, about our YT channel: incredibly, we crossed 10k subscribers [on our Youtube channel](https://www.youtube.com/@nxdevtools)!!
+It's almost a tradition to have some stats at the beginning of our Nx release blog posts. This time, about our YT channel: incredibly, we crossed 10k subscribers [on our Youtube channel](https://www.youtube.com/@nxdevtools)!!
 
 ![](/blog/images/2023-02-16/s8uTPTC3X01sE3u2.avif)
 
-Apart from delivering high-quality engineering work, we’re very invested in producing educational content around developer tooling and monorepos. We’ve been almost consistently shipping new content every week, whether that is blog posts on the [Nx blog](/blog) or in the form of new videos and live streams on our channel. Seeing our audience grow on Youtube confirms we’re on the right track and gives us new fuel to keep pushing!!
+Apart from delivering high-quality engineering work, we're very invested in producing educational content around developer tooling and monorepos. We've been almost consistently shipping new content every week, whether that is blog posts on the [Nx blog](/blog) or in the form of new videos and live streams on our channel. Seeing our audience grow on Youtube confirms we're on the right track and gives us new fuel to keep pushing!!
 
-If you haven’t subscribed yet, please do 🙏: [https://www.youtube.com/@nxdevtools](https://www.youtube.com/@nxdevtools). We also announce most of our new videos and live streams [on Twitter](https://twitter.com/nxdevtools).
+If you haven't subscribed yet, please do 🙏: [https://www.youtube.com/@nxdevtools](https://www.youtube.com/@nxdevtools). We also announce most of our new videos and live streams [on Twitter](https://twitter.com/nxdevtools).
 
 ## Updates to our Nx Plugin Guides
 
-Nx has been designed to be extensible from the ground up. Which is precisely why Nx Plugins are so powerful. They don’t just come as part of an Nx integrated monorepo or standalone setup. Still, you can leverage them in the same way to automate your local workspace or even share them as proper Nx plugins with the community.
+Nx has been designed to be extensible from the ground up. Which is precisely why Nx Plugins are so powerful. They don't just come as part of an Nx integrated monorepo or standalone setup. Still, you can leverage them in the same way to automate your local workspace or even share them as proper Nx plugins with the community.
 
 Please have a look at our updated guide: [/extending-nx/tutorials/organization-specific-plugin](/extending-nx/tutorials/organization-specific-plugin)
 
@@ -45,8 +46,8 @@ Please have a look at our updated guide: [/extending-nx/tutorials/organization-s
 
 {% youtube src="https://youtu.be/K4f-fMuAoRY" /%}
 
-Due to a lack of time we never invested much more into streamlining the Node experience within Nx, though. This [changed now](/blog/from-bootstrapped-to-venture-backed), which is why we’re committed to making Nx the best developer tool for node based apps. Starting with v15.7 we improved support for [ExpressJS](https://expressjs.com/), [Fastify](https://fastify.io/) and [Koa](https://koajs.com/).  
-When starting a new Nx workspace, you now have a new option: “Standalone Node Server app”.
+Due to a lack of time we never invested much more into streamlining the Node experience within Nx, though. This [changed now](/blog/from-bootstrapped-to-venture-backed), which is why we're committed to making Nx the best developer tool for node based apps. Starting with v15.7 we improved support for [ExpressJS](https://expressjs.com/), [Fastify](https://fastify.io/) and [Koa](https://koajs.com/).  
+When starting a new Nx workspace, you now have a new option: "Standalone Node Server app".
 
 ![](/blog/images/2023-02-16/yTl82iMY0EsbjmBQ.avif)
 
@@ -61,7 +62,7 @@ All the features Nx is known for also apply to backend development. That include
 - **Speed** via running building, linting, testing for only **(**[**affected**](/ci/features/affected)**) parts of your applications**, via [caching](/concepts/how-caching-works) and [optimized CI setups](/ci/features/distribute-task-execution)
 - the ability to use and/or expand to a monorepo
 
-This is the first iteration with first-class Node support. But we’re already working on a whole set of improvements for the Nx + Node story. So stay tuned!
+This is the first iteration with first-class Node support. But we're already working on a whole set of improvements for the Nx + Node story. So stay tuned!
 
 ## Detaching Angular versions
 
@@ -77,7 +78,7 @@ New workspaces will always be created with the latest Angular version, but durin
 $ nx migrate latest --interactive
 ```
 
-When collecting migrations in interactive mode, you’ll be prompted to apply any optional migrations, and any updates you choose to skip won’t be applied. The rest of the updates will be used as usual.
+When collecting migrations in interactive mode, you'll be prompted to apply any optional migrations, and any updates you choose to skip won't be applied. The rest of the updates will be used as usual.
 
 If you need to apply an Angular update that you previously skipped, you can collect migrations from an older version of Nx by running:
 
@@ -85,7 +86,7 @@ If you need to apply an Angular update that you previously skipped, you can coll
 $ nx migrate latest --from=nx@<version>
 ```
 
-In particular, we’re working on making that part more intuitive in upcoming versions.
+In particular, we're working on making that part more intuitive in upcoming versions.
 
 Also, have a look at our [updated docs](/recipes/tips-n-tricks/advanced-update) as well as our [Nx and Angular compatibility matrix](/nx-api/angular/documents/angular-nx-version-matrix) for more details.
 
@@ -93,7 +94,7 @@ Also, have a look at our [updated docs](/recipes/tips-n-tricks/advanced-update) 
 
 {% youtube src="https://youtu.be/Hi3aJ0Rlkls" /%}
 
-Angular’s new [standalone APIs](https://angular.io/guide/standalone-components) is exciting as it provides a new, more lightweight way of developing and composing Angular applications without the need for `NgModules`. Nx has had the ability to generate new Angular components using the Standalone API for a while. With v15.7, we now also allow you to quickly bootstrap a new single-project Nx workspace with a NgModule-less Angular application.
+Angular's new [standalone APIs](https://angular.io/guide/standalone-components) is exciting as it provides a new, more lightweight way of developing and composing Angular applications without the need for `NgModules`. Nx has had the ability to generate new Angular components using the Standalone API for a while. With v15.7, we now also allow you to quickly bootstrap a new single-project Nx workspace with a NgModule-less Angular application.
 
 ```shell
 npx create-nx-workspace@latest ngapp
@@ -103,7 +104,7 @@ npx create-nx-workspace@latest ngapp
 
 ## Lockfile parsing and pruning
 
-Lockfiles can be highly complex, and different formats across the NPM, Yarn, and PNPM package managers don’t make it easier. Nx used to consider the lock-file a black box. Starting with 15.7, this changes! Nx can now properly process the lock-file of all three major package managers (and their different versions!).
+Lockfiles can be highly complex, and different formats across the NPM, Yarn, and PNPM package managers don't make it easier. Nx used to consider the lock-file a black box. Starting with 15.7, this changes! Nx can now properly process the lock-file of all three major package managers (and their different versions!).
 
 Why is this useful? Glad you asked! Mostly for three reasons:
 
@@ -111,12 +112,12 @@ Why is this useful? Glad you asked! Mostly for three reasons:
 - generate a `package.json` with **precise snapshot of the used versions** (especially useful in a monorepo with single-version policy)
 - ability to **generate a pruned lock-file** that can be used along-side the `package.json` when packaging your app in a Docker container
 
-Some of our plugins’ `build` executors include:
+Some of our plugins' `build` executors include:
 
 - `generatePackageJson` flag (`@nrwl/webpack:webpack` and `@nrwl/node:webpack`) that automatically generates `package.json` and lock file.
 - `generateLockfile` flag (`@nrwl/js:swc`, `@nrwl/js:tsc` and `@nrwl/next:build`) that generates lock file
 
-If you’re an Nx plugin developer, you can generate `package.json` and lock file using the following functions from the `@nrwl/devkit` package:
+If you're an Nx plugin developer, you can generate `package.json` and lock file using the following functions from the `@nrwl/devkit` package:
 
 ```
 import { createPackageJson, createLockFile } from '@nrwl/devkit';
@@ -150,7 +151,7 @@ Inspired by our new [Vite setup](/nx-api/vite), which allows for a more modular 
 
 ![](/blog/images/2023-02-16/emRP2gF7umWc4UE-.avif)
 
-If you want to upgrade but still retain the previous behavior, we introduced an `isolatedConfig` mode that can be set to `false`. More details on our docs: [/recipes/webpack/webpack-config-setup](/recipes/webpack/webpack-config-setup)
+If you want to upgrade but still retain the previous behavior, we introduced an `isolatedConfig` mode that can be set to `false`. More details in our docs: [/recipes/webpack/webpack-config-setup](/recipes/webpack/webpack-config-setup)
 
 ## How to Update Nx
 
@@ -184,5 +185,5 @@ So keep an eye on our [Twitter](https://twitter.com/nxdevtools), [Youtube](https
 - 🧠 [Nx Docs](/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
-- 📹 [Nrwl Youtube Channel](https://www.youtube.com/nrwl_io)
+- 📹 [Nrwl Youtube Channel](https://www.youtube.com/@nxdevtools)
 - 🥚 [Free Egghead course](https://egghead.io/courses/scale-react-development-with-nx-4038)

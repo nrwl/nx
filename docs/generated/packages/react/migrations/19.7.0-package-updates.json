@@ -1,0 +1,21 @@
+{
+  "name": "19.7.0-package-updates",
+  "version": "19.7.0-beta.0",
+  "packages": {
+    "@module-federation/enhanced": {
+      "version": "~0.6.0",
+      "alwaysAddToPackageJson": false
+    },
+    "@module-federation/node": {
+      "version": "~2.5.0",
+      "alwaysAddToPackageJson": false
+    }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/react",
+  "schema": null,
+  "type": "migration"
+}

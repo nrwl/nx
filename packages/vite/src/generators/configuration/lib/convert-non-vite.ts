@@ -16,12 +16,13 @@ import {
   handleUnknownConfiguration,
   moveAndEditIndexHtml,
 } from '../../../utils/generator-utils';
+import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function convertNonVite(
   tree: Tree,
   schema: ViteConfigurationGeneratorSchema,
   projectRoot: string,
-  projectType: string,
+  _projectType: string,
   targets: {
     [targetName: string]: TargetConfiguration<any>;
   }
@@ -34,6 +35,11 @@ export async function convertNonVite(
 
   // Check if it has webpack
   const hasWebpackConfig = findWebpackConfig(tree, projectRoot);
+  const projectType = getProjectType(
+    tree,
+    projectRoot,
+    _projectType as 'application' | 'library'
+  );
   if (hasWebpackConfig) {
     if (projectType === 'application') {
       moveAndEditIndexHtml(tree, schema);

@@ -59,7 +59,10 @@ export const createNodesV2: CreateNodesV2<ReactNativePluginOptions> = [
   '**/app.{json,config.js,config.ts}',
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
-    const cachePath = join(workspaceDataDirectory, `expo-${optionsHash}.hash`);
+    const cachePath = join(
+      workspaceDataDirectory,
+      `react-native-${optionsHash}.hash`
+    );
     const targetsCache = readTargetsCache(cachePath);
 
     try {
@@ -161,6 +164,7 @@ function buildReactNativeTargets(
   const targets: Record<string, TargetConfiguration> = {
     [options.startTargetName]: {
       command: `react-native start`,
+      continuous: true,
       options: { cwd: projectRoot },
     },
     [options.podInstallTargetName]: {
@@ -170,10 +174,12 @@ function buildReactNativeTargets(
     },
     [options.runIosTargetName]: {
       command: `react-native run-ios`,
+      continuous: true,
       options: { cwd: projectRoot },
     },
     [options.runAndroidTargetName]: {
       command: `react-native run-android`,
+      continuous: true,
       options: { cwd: projectRoot },
     },
     [options.buildIosTargetName]: {

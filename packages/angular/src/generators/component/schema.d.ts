@@ -15,6 +15,7 @@ export interface Schema {
   module?: string;
   skipSelector?: boolean;
   export?: boolean;
+  exportDefault?: boolean;
   prefix?: string;
   skipFormat?: boolean;
 }

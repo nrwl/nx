@@ -19,10 +19,11 @@ import {
   updateJson,
   updateProjectConfiguration,
   updateTsConfigsToJs,
+  writeJson,
 } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { configurationGenerator } from '@nx/jest';
 import {
@@ -30,9 +31,8 @@ import {
   initGenerator as jsInitGenerator,
   tsConfigBaseOptions,
 } from '@nx/js';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { esbuildVersion } from '@nx/js/src/utils/versions';
-import { Linter, lintProjectGenerator } from '@nx/eslint';
+import { lintProjectGenerator } from '@nx/eslint';
 import { join } from 'path';
 import {
   expressTypingsVersion,
@@ -54,11 +54,20 @@ import { Schema } from './schema';
 import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import {
+  addProjectToTsSolutionWorkspace,
+  isUsingTsSolutionSetup,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
-export interface NormalizedSchema extends Schema {
+export interface NormalizedSchema extends Omit<Schema, 'useTsSolution'> {
   appProjectRoot: string;
   parsedTags: string[];
   outputPath: string;
+  importPath: string;
+  isUsingTsSolutionConfig: boolean;
 }
 
 function getWebpackBuildConfig(
@@ -83,7 +92,7 @@ function getWebpackBuildConfig(
         options.appProjectRoot,
         'webpack.config.js'
       ),
-      generatePackageJson: true,
+      generatePackageJson: options.isUsingTsSolutionConfig ? undefined : true,
     },
     configurations: {
       development: {},
@@ -114,7 +123,7 @@ function getEsBuildConfig(
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       assets: [joinPathFragments(project.sourceRoot, 'assets')],
-      generatePackageJson: true,
+      generatePackageJson: options.isUsingTsSolutionConfig ? undefined : true,
       esbuildOptions: {
         sourcemap: true,
         // Generate CJS files as .js so imports can be './foo' rather than './foo.cjs'.
@@ -137,6 +146,7 @@ function getEsBuildConfig(
 
 function getServeConfig(options: NormalizedSchema): TargetConfiguration {
   return {
+    continuous: true,
     executor: '@nx/js:node',
     defaultConfiguration: 'development',
     // Run build, which includes dependency on "^build" by default, so the first run
@@ -159,6 +169,21 @@ function getServeConfig(options: NormalizedSchema): TargetConfiguration {
   };
 }
 
+function getNestWebpackBuildConfig(): TargetConfiguration {
+  return {
+    executor: 'nx:run-commands',
+    options: {
+      command: 'webpack-cli build',
+      args: ['node-env=production'],
+    },
+    configurations: {
+      development: {
+        args: ['node-env=development'],
+      },
+    },
+  };
+}
+
 function addProject(tree: Tree, options: NormalizedSchema) {
   const project: ProjectConfiguration = {
     root: options.appProjectRoot,
@@ -175,20 +200,45 @@ function addProject(tree: Tree, options: NormalizedSchema) {
     if (!hasWebpackPlugin(tree)) {
       addBuildTargetDefaults(tree, `@nx/webpack:webpack`);
       project.targets.build = getWebpackBuildConfig(project, options);
+    } else if (options.isNest) {
+      // If we are using Nest that has the webpack plugin we need to override the
+      // build target so that node-env can be set to production or development so the serve target can be run in development mode
+      project.targets.build = getNestWebpackBuildConfig();
     }
   }
   project.targets.serve = getServeConfig(options);
 
-  addProjectConfiguration(
-    tree,
-    options.name,
-    project,
-    options.standaloneConfig
-  );
+  const packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    private: true,
+  };
+
+  if (!options.useProjectJson) {
+    packageJson.nx = {
+      name: options.name !== options.importPath ? options.name : undefined,
+      targets: project.targets,
+      tags: project.tags?.length ? project.tags : undefined,
+    };
+  } else {
+    addProjectConfiguration(
+      tree,
+      options.name,
+      project,
+      options.standaloneConfig
+    );
+  }
+
+  if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+    writeJson(
+      tree,
+      joinPathFragments(options.appProjectRoot, 'package.json'),
+      packageJson
+    );
+  }
 }
 
 function addAppFiles(tree: Tree, options: NormalizedSchema) {
-  const sourceRoot = joinPathFragments(options.appProjectRoot, 'src');
   generateFiles(
     tree,
     join(__dirname, './files/common'),
@@ -205,7 +255,13 @@ function addAppFiles(tree: Tree, options: NormalizedSchema) {
       ),
       webpackPluginOptions: hasWebpackPlugin(tree)
         ? {
-            outputPath: options.outputPath,
+            outputPath: options.isUsingTsSolutionConfig
+              ? 'dist'
+              : joinPathFragments(
+                  offsetFromRoot(options.appProjectRoot),
+                  'dist',
+                  options.rootProject ? options.name : options.appProjectRoot
+                ),
             main: './src/main' + (options.js ? '.js' : '.ts'),
             tsConfig: './tsconfig.app.json',
             assets: ['./src/assets'],
@@ -243,10 +299,18 @@ function addAppFiles(tree: Tree, options: NormalizedSchema) {
 
 function addProxy(tree: Tree, options: NormalizedSchema) {
   const projectConfig = readProjectConfiguration(tree, options.frontendProject);
-  if (projectConfig.targets && projectConfig.targets.serve) {
+  if (
+    projectConfig.targets &&
+    ['serve', 'dev'].find((t) => !!projectConfig.targets[t])
+  ) {
+    const targetName = ['serve', 'dev'].find((t) => !!projectConfig.targets[t]);
+    projectConfig.targets[targetName].dependsOn = [
+      ...(projectConfig.targets[targetName].dependsOn ?? []),
+      `${options.name}:serve`,
+    ];
     const pathToProxyFile = `${projectConfig.root}/proxy.conf.json`;
-    projectConfig.targets.serve.options = {
-      ...projectConfig.targets.serve.options,
+    projectConfig.targets[targetName].options = {
+      ...projectConfig.targets[targetName].options,
       proxyConfig: pathToProxyFile,
     };
 
@@ -359,6 +423,10 @@ function addProjectDependencies(
 }
 
 function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
+  if (options.isUsingTsSolutionConfig) {
+    return;
+  }
+
   updateJson(tree, `${options.appProjectRoot}/tsconfig.json`, (json) => {
     if (options.rootProject) {
       return {
@@ -386,15 +454,23 @@ function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   return await applicationGeneratorInternal(tree, {
     addPlugin: false,
+    useProjectJson: true,
     ...schema,
   });
 }
 
 export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
-  assertNotUsingTsSolutionSetup(tree, 'node', 'application');
+  const tasks: GeneratorCallback[] = [];
+
+  const jsInitTask = await jsInitGenerator(tree, {
+    ...schema,
+    tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
+    skipFormat: true,
+    addTsPlugin: schema.useTsSolution,
+  });
+  tasks.push(jsInitTask);
 
   const options = await normalizeOptions(tree, schema);
-  const tasks: GeneratorCallback[] = [];
 
   if (options.framework === 'nest') {
     // nx-ignore-next-line
@@ -423,12 +499,6 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     );
   }
 
-  const jsInitTask = await jsInitGenerator(tree, {
-    ...schema,
-    tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
-    skipFormat: true,
-  });
-  tasks.push(jsInitTask);
   const initTask = await initGenerator(tree, {
     ...schema,
     skipFormat: true,
@@ -463,9 +533,15 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   addAppFiles(tree, options);
   addProject(tree, options);
 
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    await addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
+  }
+
   updateTsConfigOptions(tree, options);
 
-  if (options.linter === Linter.EsLint) {
+  if (options.linter === 'eslint') {
     const lintTask = await addLintingToApplication(tree, options);
     tasks.push(lintTask);
   }
@@ -482,6 +558,13 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       skipFormat: true,
     });
     tasks.push(jestTask);
+    // There are no tests by default, so set `--passWithNoTests` to avoid test failure on new project.
+    const projectConfig = readProjectConfiguration(tree, options.name);
+    projectConfig.targets ??= {};
+    projectConfig.targets.test = {
+      options: { passWithNoTests: true },
+    };
+    updateProjectConfiguration(tree, options.name, projectConfig);
   } else {
     // No need for default spec file if unit testing is not setup.
     tree.delete(
@@ -521,6 +604,23 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     tasks.push(dockerTask);
   }
 
+  if (options.isUsingTsSolutionConfig) {
+    updateTsconfigFiles(
+      tree,
+      options.appProjectRoot,
+      'tsconfig.app.json',
+      {
+        module: 'nodenext',
+        moduleResolution: 'nodenext',
+      },
+      options.linter === 'eslint'
+        ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+        : undefined
+    );
+  }
+
+  sortPackageJsonFields(tree, options.appProjectRoot);
+
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
@@ -536,14 +636,17 @@ async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  await ensureProjectName(host, options, 'application');
-  const { projectName: appProjectName, projectRoot: appProjectRoot } =
-    await determineProjectNameAndRootOptions(host, {
-      name: options.name,
-      projectType: 'application',
-      directory: options.directory,
-      rootProject: options.rootProject,
-    });
+  await ensureRootProjectName(options, 'application');
+  const {
+    projectName,
+    projectRoot: appProjectRoot,
+    importPath,
+  } = await determineProjectNameAndRootOptions(host, {
+    name: options.name,
+    projectType: 'application',
+    directory: options.directory,
+    rootProject: options.rootProject,
+  });
   options.rootProject = appProjectRoot === '.';
 
   options.bundler = options.bundler ?? 'esbuild';
@@ -558,6 +661,13 @@ async function normalizeOptions(
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
 
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
+  const swcJest = options.swcJest ?? isUsingTsSolutionConfig;
+
+  const appProjectName =
+    !isUsingTsSolutionConfig || options.name ? projectName : importPath;
+  const useProjectJson = options.useProjectJson ?? !isUsingTsSolutionConfig;
+
   return {
     addPlugin,
     ...options,
@@ -566,15 +676,21 @@ async function normalizeOptions(
       ? names(options.frontendProject).fileName
       : undefined,
     appProjectRoot,
+    importPath,
     parsedTags,
-    linter: options.linter ?? Linter.EsLint,
+    linter: options.linter ?? 'eslint',
     unitTestRunner: options.unitTestRunner ?? 'jest',
     rootProject: options.rootProject ?? false,
     port: options.port ?? 3000,
-    outputPath: joinPathFragments(
-      'dist',
-      options.rootProject ? options.name : appProjectRoot
-    ),
+    outputPath: isUsingTsSolutionConfig
+      ? joinPathFragments(appProjectRoot, 'dist')
+      : joinPathFragments(
+          'dist',
+          options.rootProject ? appProjectName : appProjectRoot
+        ),
+    isUsingTsSolutionConfig,
+    swcJest,
+    useProjectJson,
   };
 }
 

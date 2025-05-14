@@ -1,3 +1,4 @@
+import type { buildApplication as buildApplicationFn } from '@angular-devkit/build-angular';
 import type { ExecutorContext } from '@nx/devkit';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
@@ -9,14 +10,15 @@ import {
   loadPlugins,
 } from '../utilities/esbuild-extensions';
 import type { ApplicationExecutorOptions } from './schema';
+import { normalizeOptions } from './utils/normalize-options';
 import { validateOptions } from './utils/validate-options';
-import type { buildApplication as buildApplicationFn } from '@angular-devkit/build-angular';
 
 export default async function* applicationExecutor(
   options: ApplicationExecutorOptions,
   context: ExecutorContext
 ): ReturnType<typeof buildApplicationFn> {
   validateOptions(options);
+  options = normalizeOptions(options);
 
   const {
     buildLibsFromSource = true,
@@ -42,7 +44,6 @@ export default async function* applicationExecutor(
     ? await loadIndexHtmlTransformer(indexHtmlTransformerPath, options.tsConfig)
     : undefined;
 
-  const { buildApplication } = await import('@angular-devkit/build-angular');
   const builderContext = await createBuilderContext(
     {
       builderName: 'application',
@@ -54,12 +55,14 @@ export default async function* applicationExecutor(
 
   const { version: angularVersion } = getInstalledAngularVersionInfo();
   if (gte(angularVersion, '17.1.0')) {
+    const { buildApplication } = await import('@angular-devkit/build-angular');
     return yield* buildApplication(delegateExecutorOptions, builderContext, {
       codePlugins: plugins,
       indexHtmlTransformer,
     });
   }
 
+  const { buildApplication } = require('@angular-devkit/build-angular');
   return yield* buildApplication(
     delegateExecutorOptions,
     builderContext,

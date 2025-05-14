@@ -6,7 +6,7 @@
   "targets": {
     "build": {
       "command": "node ./scripts/copy-readme.js remix",
-      "outputs": ["{workspaceRoot}/build/packages/remix"]
+      "outputs": ["{workspaceRoot}/build/packages/remix/README.md"]
     },
     "build-base": {
       "executor": "@nx/js:tsc",

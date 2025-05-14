@@ -8,9 +8,8 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { createNodes } from '../../../plugins/plugin';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
+import { createNodesV2 } from '../../../plugins/plugin';
 import {
   nxVersion,
   reactDomVersion,
@@ -31,8 +30,6 @@ export async function reactNativeInitGeneratorInternal(
   host: Tree,
   schema: Schema
 ) {
-  assertNotUsingTsSolutionSetup(host, 'react-native', 'init');
-
   addGitIgnoreEntry(host);
 
   const nxJson = readNxJson(host);
@@ -42,11 +39,11 @@ export async function reactNativeInitGeneratorInternal(
   schema.addPlugin ??= addPluginDefault;
 
   if (schema.addPlugin) {
-    await addPluginV1(
+    await addPlugin(
       host,
       await createProjectGraphAsync(),
       '@nx/react-native/plugin',
-      createNodes,
+      createNodesV2,
       {
         startTargetName: ['start', 'react-native:start', 'react-native-start'],
         upgradeTargetName: [

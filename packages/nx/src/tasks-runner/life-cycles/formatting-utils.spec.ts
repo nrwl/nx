@@ -59,6 +59,7 @@ describe('formatTargetsAndProjects', () => {
             },
             overrides: {},
             parallelism: false,
+            continuous: false,
             outputs: [],
           },
         ]
@@ -78,6 +79,7 @@ describe('formatTargetsAndProjects', () => {
             },
             overrides: {},
             parallelism: false,
+            continuous: false,
             outputs: [],
           },
         ]
@@ -99,6 +101,7 @@ describe('formatTargetsAndProjects', () => {
             },
             overrides: {},
             parallelism: false,
+            continuous: false,
             outputs: [],
           },
           {
@@ -109,6 +112,7 @@ describe('formatTargetsAndProjects', () => {
             },
             overrides: {},
             parallelism: false,
+            continuous: false,
             outputs: [],
           },
         ]
@@ -131,6 +135,7 @@ describe('formatTargetsAndProjects', () => {
             },
             overrides: {},
             parallelism: false,
+            continuous: false,
             outputs: [],
           },
         ]
@@ -150,6 +155,7 @@ describe('formatTargetsAndProjects', () => {
             },
             overrides: {},
             parallelism: false,
+            continuous: false,
             outputs: [],
           },
         ]
@@ -171,6 +177,7 @@ describe('formatTargetsAndProjects', () => {
             },
             overrides: {},
             parallelism: false,
+            continuous: false,
             outputs: [],
           },
           {
@@ -181,6 +188,7 @@ describe('formatTargetsAndProjects', () => {
             },
             overrides: {},
             parallelism: false,
+            continuous: false,
             outputs: [],
           },
         ]
@@ -200,6 +208,7 @@ describe('formatTargetsAndProjects', () => {
             },
             overrides: {},
             parallelism: false,
+            continuous: false,
             outputs: [],
           },
           {
@@ -210,6 +219,7 @@ describe('formatTargetsAndProjects', () => {
             },
             overrides: {},
             parallelism: false,
+            continuous: false,
             outputs: [],
           },
         ]
@@ -229,6 +239,7 @@ describe('formatTargetsAndProjects', () => {
             },
             overrides: {},
             parallelism: false,
+            continuous: false,
             outputs: [],
           },
           {
@@ -239,6 +250,7 @@ describe('formatTargetsAndProjects', () => {
             },
             overrides: {},
             parallelism: false,
+            continuous: false,
             outputs: [],
           },
         ]
@@ -262,6 +274,7 @@ describe('formatTargetsAndProjects', () => {
             },
             overrides: {},
             parallelism: false,
+            continuous: false,
             outputs: [],
           },
           {
@@ -272,6 +285,7 @@ describe('formatTargetsAndProjects', () => {
             },
             overrides: {},
             parallelism: false,
+            continuous: false,
             outputs: [],
           },
         ]
@@ -295,6 +309,7 @@ describe('formatTargetsAndProjects', () => {
             },
             overrides: {},
             parallelism: false,
+            continuous: false,
             outputs: [],
           },
           {
@@ -305,6 +320,7 @@ describe('formatTargetsAndProjects', () => {
             },
             overrides: {},
             parallelism: false,
+            continuous: false,
             outputs: [],
           },
           {
@@ -315,6 +331,7 @@ describe('formatTargetsAndProjects', () => {
             },
             overrides: {},
             parallelism: false,
+            continuous: false,
             outputs: [],
           },
         ]
@@ -338,6 +355,7 @@ describe('formatTargetsAndProjects', () => {
             },
             overrides: {},
             parallelism: false,
+            continuous: false,
             outputs: [],
           },
           {
@@ -348,6 +366,7 @@ describe('formatTargetsAndProjects', () => {
             },
             overrides: {},
             parallelism: false,
+            continuous: false,
             outputs: [],
           },
           {
@@ -358,6 +377,7 @@ describe('formatTargetsAndProjects', () => {
             },
             overrides: {},
             parallelism: false,
+            continuous: false,
             outputs: [],
           },
           {
@@ -368,6 +388,7 @@ describe('formatTargetsAndProjects', () => {
             },
             overrides: {},
             parallelism: false,
+            continuous: false,
             outputs: [],
           },
         ]

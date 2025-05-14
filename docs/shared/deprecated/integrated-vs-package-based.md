@@ -1,4 +1,7 @@
-# Integrated Repos vs. Package-Based Repos vs. Standalone Apps
+---
+title: 'Integrated Repos vs. Package-Based Repos vs. Standalone Apps'
+description: 'Understand the historical differences between integrated, package-based, and standalone repositories in Nx, and how to choose the right approach for your needs.'
+---
 
 {% callout type="note" title="" %}
 As of Nx 20, it is no longer useful to draw a distinction between integrated and package-based repositories. We've removed references to these terms in the rest of the documentation, but this page is kept here to describe the terms for historical reasons.
@@ -24,7 +27,7 @@ Nx's features can be enabled in each of these types of repositories. Just as eac
 
 A package-based repo is a collection of packages that depend on each other via `package.json` files and nested `node_modules`. With this setup, you typically have [different dependencies for each project](/concepts/decisions/dependency-management). Build tools like Jest and Webpack work as usual, since everything is resolved as if each package was in a separate repo and all of its dependencies were published to npm. Moving an existing package into a package-based repo is very easy since you generally leave that package's existing build tooling untouched. Creating a new package inside the repo is just as difficult as spinning up a new repo since you have to create all the build tooling from scratch.
 
-Lerna, Yarn, Lage, [Turborepo](/concepts/turbo-and-nx) and Nx support this style.
+Lerna, Yarn, Lage, [Turborepo](/recipes/adopting-nx/from-turborepo) and Nx support this style.
 
 Someone who appreciates the flexibility of a package-based repository will be most interested in the following features of Nx:
 
@@ -33,7 +36,7 @@ Someone who appreciates the flexibility of a package-based repository will be mo
 - Easily create new projects or tools with [code generators](/features/generate-code)
 
 {% cards %}
-{% card title="NPM Workspaces Tutorial" description="Add Nx to an existing NPM workspaces repo" type="documentation" url="/getting-started/tutorials/npm-workspaces-tutorial" /%}
+{% card title="TypeScript Monorepo Tutorial" description="Add Nx to an existing TypeScript repo" type="documentation" url="/getting-started/tutorials/typescript-packages-tutorial" /%}
 {% /cards %}
 
 ## Integrated Repos
@@ -64,8 +67,6 @@ Someone whose main focus is on improving their single application will be most i
 
 {% cards %}
 {% card title="Standalone Applications with Nx" description="Learn what Standlone Apps are and how Nx can be useful" type="video" url="https://youtu.be/qEaVzh-oBBc" /%}
-{% card title="Tutorial: React Standalone Tutorial" description="Walkthrough for creating a React standalone application with Nx" type="documentation" url="/getting-started/tutorials/react-standalone-tutorial" /%}
-{% card title="Tutorial: Angular Standalone Tutorial" description="Walkthrough for creating an Angular standalone application with Nx" type="documentation" url="/getting-started/tutorials/angular-standalone-tutorial" /%}
 {% /cards %}
 
 ## How to Choose

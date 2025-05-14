@@ -1,7 +1,5 @@
 import '../internal-testing-utils/mock-fs';
 
-import { vol } from 'memfs';
-
 import {
   findCycle,
   findCycles,
@@ -22,7 +20,7 @@ describe('task graph utils', () => {
             e: ['q', 'a'],
             q: [],
           },
-        } as any)
+        })
       ).toEqual(['a', 'c', 'e', 'a']);
 
       expect(
@@ -36,8 +34,54 @@ describe('task graph utils', () => {
             f: ['q'],
             q: ['e'],
           },
-        } as any)
+        })
       ).toEqual(['a', 'c', 'a']);
+    });
+
+    it('should return a continuous cycle is there', () => {
+      expect(
+        findCycle({
+          dependencies: {
+            a: [],
+            b: [],
+            c: [],
+            d: [],
+            e: [],
+            q: [],
+          },
+          continuousDependencies: {
+            a: ['b', 'c'],
+            b: ['d'],
+            c: ['e'],
+            d: [],
+            e: ['q', 'a'],
+            q: [],
+          },
+        })
+      ).toEqual(['a', 'c', 'e', 'a']);
+
+      expect(
+        findCycle({
+          dependencies: {
+            a: ['b'],
+            b: [],
+            c: [],
+            d: [],
+            e: [],
+            f: [],
+            q: [],
+          },
+          continuousDependencies: {
+            a: [],
+            b: ['a'],
+            c: [],
+            d: [],
+            e: [],
+            f: [],
+            q: [],
+          },
+        })
+      ).toEqual(['a', 'b', 'a']);
     });
 
     it('should return null when no cycle', () => {
@@ -51,7 +95,7 @@ describe('task graph utils', () => {
             e: ['q'],
             q: [],
           },
-        } as any)
+        })
       ).toEqual(null);
     });
   });
@@ -68,7 +112,7 @@ describe('task graph utils', () => {
             e: ['q', 'a'],
             q: [],
           },
-        } as any)
+        })
       ).toEqual(new Set(['a', 'c', 'e']));
 
       expect(
@@ -82,7 +126,7 @@ describe('task graph utils', () => {
             f: ['q'],
             q: ['e'],
           },
-        } as any)
+        })
       ).toEqual(new Set(['a', 'c', 'e', 'f', 'q']));
       expect(
         findCycles({
@@ -95,7 +139,7 @@ describe('task graph utils', () => {
             f: ['q'],
             q: ['c'],
           },
-        } as any)
+        })
       ).toEqual(new Set(['a', 'b', 'd', 'c', 'f', 'q']));
     });
 
@@ -110,7 +154,7 @@ describe('task graph utils', () => {
             e: ['q'],
             q: [],
           },
-        } as any)
+        })
       ).toEqual(null);
     });
   });
@@ -126,7 +170,7 @@ describe('task graph utils', () => {
           d: [],
           e: ['a'],
         },
-      } as any;
+      };
       makeAcyclic(graph);
 
       expect(graph.dependencies).toEqual({
@@ -151,13 +195,12 @@ describe('task graph utils', () => {
       mockProcessExit = jest
         .spyOn(process, 'exit')
         .mockImplementation((code: number) => {
-          return undefined as any as never;
+          return undefined as never;
         });
     });
 
     afterEach(() => {
       process.env = env;
-      vol.reset();
       mockProcessExit.mockRestore();
     });
 

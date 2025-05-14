@@ -6,7 +6,6 @@ import {
   joinPathFragments,
   Tree,
 } from '@nx/devkit';
-import { Linter } from '@nx/eslint';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
 import init from '../../generators/init/init';
 import addLintingGenerator from '../add-linting/add-linting';
@@ -33,6 +32,7 @@ import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-com
 import { UnitTestRunner } from '../../utils/test-runners';
 import { addVitest } from '../utils/add-vitest';
 import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { releaseTasks } from '@nx/js/src/generators/library/utils/add-release-config';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -73,7 +73,7 @@ export async function libraryGenerator(
     ensureAngularDependencies(tree);
   }
 
-  const project = addProject(tree, libraryOptions);
+  const project = await addProject(tree, libraryOptions);
 
   createFiles(tree, options, project);
   updateTsConfig(tree, libraryOptions);
@@ -112,6 +112,9 @@ export async function libraryGenerator(
       true
     );
     addBuildableLibrariesPostCssDependencies(tree);
+    if (libraryOptions.publishable) {
+      await releaseTasks(tree);
+    }
   }
 
   addTsConfigPath(tree, libraryOptions.importPath, [
@@ -176,7 +179,7 @@ async function addLinting(
   host: Tree,
   options: NormalizedSchema['libraryOptions']
 ) {
-  if (options.linter === Linter.None) {
+  if (options.linter === 'none') {
     return;
   }
   await addLintingGenerator(host, {

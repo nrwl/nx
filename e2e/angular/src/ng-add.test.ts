@@ -199,8 +199,8 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
             },
             {
               type: 'anyComponentStyle',
-              maximumWarning: '2kB',
-              maximumError: '4kB',
+              maximumWarning: '4kB',
+              maximumError: '8kB',
             },
           ],
           outputHashing: 'all',

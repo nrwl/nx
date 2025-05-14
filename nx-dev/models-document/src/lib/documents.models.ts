@@ -29,6 +29,7 @@ export interface ProcessedDocument {
   id: string;
   name: string;
   relatedDocuments: Record<string, RelatedDocument[]>;
+  parentDocuments?: RelatedDocument[];
   tags: string[];
 }
 

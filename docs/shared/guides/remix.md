@@ -1,3 +1,14 @@
+---
+title: Remix with Nx
+description: Learn how to create, build, serve, and test Remix applications within an Nx workspace, leveraging Nx's powerful tooling for modern web development.
+---
+
+{% callout type="warning" title="The future of Remix is React Router" %}
+Remix has announced its transition to React Router. The `@nx/remix` plugin is based on Remix v2 and is incompatible with the latest version of React Router unless you [upgrade](https://reactrouter.com/upgrading/remix) your Remix application. In the future, the `@nx/remix` plugin will be deprecated in favor of the `@nx/react/router` plugin. If you are starting a new project, we recommend using the `@nx/react/router` plugin instead.
+
+For an example of how to use React Router with Nx, see the [React Router with Nx](/recipes/react/react-router) recipe.
+{% /callout %}
+
 # Remix with Nx
 
 In this recipe, we'll show you how to create a [Remix](https://remix.run) application with Nx.
@@ -23,10 +34,6 @@ nx add @nx/remix
 ```
 
 ## Generate a Remix Application
-
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
 
 ```{% command="nx g @nx/remix:app apps/myapp"  path="~/acme" %}
 NX  Generating @nx/remix:application

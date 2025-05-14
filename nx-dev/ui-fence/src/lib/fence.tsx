@@ -7,13 +7,15 @@ import {
 import cx from 'classnames';
 import { JSX, ReactNode, useEffect, useState } from 'react';
 // @ts-ignore
-import { CopyToClipboard } from 'react-copy-to-clipboard';
+import * as reactCopyToClipboard from 'react-copy-to-clipboard';
 // @ts-ignore
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { CodeOutput } from './fences/code-output';
 import { TerminalOutput } from './fences/terminal-output';
 
 import { Selector } from './selector';
+
+const { CopyToClipboard } = reactCopyToClipboard;
 
 function resolveLanguage(lang: string) {
   switch (lang) {
@@ -99,6 +101,7 @@ export interface FenceProps {
   selectedLineGroup?: string;
   onLineGroupSelectionChange?: (selection: string) => void;
   isWithinTab?: boolean;
+  lineWrap?: number;
 }
 
 export function Fence({
@@ -115,6 +118,7 @@ export function Fence({
   skipRescope,
   onLineGroupSelectionChange,
   isWithinTab,
+  lineWrap,
 }: FenceProps) {
   if (highlightLines) {
     highlightLines = processHighlightLines(highlightLines);
@@ -224,18 +228,42 @@ export function Fence({
           showLineNumbers={true}
           lineNumberStyle={lineNumberStyle}
           language={resolveLanguage(language)}
-          children={children}
+          children={lineWrap ? wrapChildren(children, lineWrap) : children}
           PreTag={CodeWrapper({
             fileName,
             command,
             title,
             path,
             language,
-            children,
+            children: lineWrap ? wrapChildren(children, lineWrap) : children,
             isWithinTab,
           })}
         />
       </div>
     </div>
   );
+}
+
+function wrapChildren(children: string, wrapLength = 80): string {
+  const incomingLines = children.split('\n');
+  const outgoingLines: string[] = [];
+  for (const line of incomingLines) {
+    let count = 0;
+    const words = line.split(' ');
+    let currentLine: string[] = [];
+    for (const word of words) {
+      if (count + 1 + word.length >= wrapLength) {
+        outgoingLines.push(currentLine.join(' '));
+        currentLine = [word];
+        count = word.length + 1;
+      } else {
+        currentLine.push(word);
+        count += word.length + 1;
+      }
+    }
+    outgoingLines.push(currentLine.join(' '));
+  }
+  const toReturn = outgoingLines.join('\n');
+  console.log(toReturn);
+  return toReturn;
 }

@@ -1,0 +1,29 @@
+{
+  "name": "20.2.0-module-federation-package-updates",
+  "version": "20.2.0-beta.3",
+  "packages": {
+    "@module-federation/enhanced": {
+      "version": "0.7.6",
+      "alwaysAddToPackageJson": false
+    },
+    "@module-federation/runtime": {
+      "version": "0.7.6",
+      "alwaysAddToPackageJson": false
+    },
+    "@module-federation/sdk": {
+      "version": "0.7.6",
+      "alwaysAddToPackageJson": false
+    },
+    "@module-federation/node": {
+      "version": "2.6.11",
+      "alwaysAddToPackageJson": false
+    }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration"
+}

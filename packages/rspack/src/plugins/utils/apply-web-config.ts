@@ -4,10 +4,12 @@ import {
   type RuleSetRule,
   LightningCssMinimizerRspackPlugin,
   DefinePlugin,
-  HtmlRspackPlugin,
   CssExtractRspackPlugin,
   EnvironmentPlugin,
+  RspackOptionsNormalized,
+  HtmlRspackPlugin,
 } from '@rspack/core';
+import { WriteIndexHtmlPlugin } from '../write-index-html-plugin';
 import { instantiateScriptPlugins } from './instantiate-script-plugins';
 import { join, resolve } from 'path';
 import { getOutputHashFormat } from './hash-format';
@@ -21,7 +23,7 @@ import { NormalizedNxAppRspackPluginOptions } from './models';
 
 export function applyWebConfig(
   options: NormalizedNxAppRspackPluginOptions,
-  config: Configuration = {},
+  config: Partial<RspackOptionsNormalized | Configuration> = {},
   {
     useNormalizedEntry,
   }: {
@@ -65,16 +67,32 @@ export function applyWebConfig(
     plugins.push(...instantiateScriptPlugins(options));
   }
   if (options.index && options.generateIndexHtml) {
-    plugins.push(
-      new HtmlRspackPlugin({
-        template: options.index,
-        sri: 'sha256',
-        ...(options.baseHref ? { base: { href: options.baseHref } } : {}),
-        ...(config.output?.scriptType === 'module'
-          ? { scriptLoading: 'module' }
-          : {}),
-      })
-    );
+    if (options.useLegacyHtmlPlugin) {
+      plugins.push(
+        new WriteIndexHtmlPlugin({
+          indexPath: options.index,
+          outputPath: 'index.html',
+          baseHref:
+            typeof options.baseHref === 'string' ? options.baseHref : undefined,
+          sri: options.subresourceIntegrity,
+          scripts: options.scripts,
+          styles: options.styles,
+          crossOrigin:
+            config.output?.scriptType === 'module' ? 'anonymous' : undefined,
+        })
+      );
+    } else {
+      plugins.push(
+        new HtmlRspackPlugin({
+          template: options.index,
+          sri: options.subresourceIntegrity ? 'sha256' : undefined,
+          ...(options.baseHref ? { base: { href: options.baseHref } } : {}),
+          ...(config.output?.scriptType === 'module'
+            ? { scriptLoading: 'module' }
+            : {}),
+        })
+      );
+    }
   }
 
   const minimizer: RspackPluginInstance[] = [];
@@ -97,6 +115,8 @@ export function applyWebConfig(
   // Determine hashing format.
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
 
+  const sassOptions = options.stylePreprocessorOptions?.sassOptions;
+  const lessOptions = options.stylePreprocessorOptions?.lessOptions;
   const includePaths: string[] = [];
   if (options?.stylePreprocessorOptions?.includePaths?.length > 0) {
     options.stylePreprocessorOptions.includePaths.forEach(
@@ -119,12 +139,6 @@ export function applyWebConfig(
       const resolvedPath = style.input.startsWith('.')
         ? style.input
         : resolve(options.root, style.input);
-      // Add style entry points.
-      if (entries[style.bundleName]) {
-        entries[style.bundleName].import.push(resolvedPath);
-      } else {
-        entries[style.bundleName] = { import: [resolvedPath] };
-      }
 
       // Add global css paths.
       globalStylePaths.push(resolvedPath);
@@ -145,11 +159,16 @@ export function applyWebConfig(
         {
           loader: require.resolve('sass-loader'),
           options: {
-            implementation: require('sass'),
+            implementation:
+              options.sassImplementation === 'sass'
+                ? require.resolve('sass')
+                : require.resolve('sass-embedded'),
+            api: 'modern-compiler',
             sassOptions: {
               fiber: false,
               precision: 8,
               includePaths,
+              ...(sassOptions ?? {}),
             },
           },
         },
@@ -165,6 +184,7 @@ export function applyWebConfig(
           options: {
             lessOptions: {
               paths: includePaths,
+              ...(lessOptions ?? {}),
             },
           },
         },
@@ -204,13 +224,18 @@ export function applyWebConfig(
         {
           loader: require.resolve('sass-loader'),
           options: {
-            implementation: require('sass'),
+            api: 'modern-compiler',
+            implementation:
+              options.sassImplementation === 'sass'
+                ? require.resolve('sass')
+                : require.resolve('sass-embedded'),
             sourceMap: !!options.sourceMap,
             sassOptions: {
               fiber: false,
               // bootstrap-sass requires a minimum precision of 8
               precision: 8,
               includePaths,
+              ...(sassOptions ?? {}),
             },
           },
         },
@@ -228,6 +253,7 @@ export function applyWebConfig(
             lessOptions: {
               javascriptEnabled: true,
               ...lessPathOptions,
+              ...(lessOptions ?? {}),
             },
           },
         },
@@ -268,13 +294,18 @@ export function applyWebConfig(
         {
           loader: require.resolve('sass-loader'),
           options: {
-            implementation: require('sass'),
+            api: 'modern-compiler',
+            implementation:
+              options.sassImplementation === 'sass'
+                ? require.resolve('sass')
+                : require.resolve('sass-embedded'),
             sourceMap: !!options.sourceMap,
             sassOptions: {
               fiber: false,
               // bootstrap-sass requires a minimum precision of 8
               precision: 8,
               includePaths,
+              ...(sassOptions ?? {}),
             },
           },
         },
@@ -292,6 +323,7 @@ export function applyWebConfig(
             lessOptions: {
               javascriptEnabled: true,
               ...lessPathOptions,
+              ...(lessOptions ?? {}),
             },
           },
         },
@@ -357,7 +389,7 @@ export function applyWebConfig(
   });
 
   config.optimization = !isProd
-    ? undefined
+    ? {}
     : {
         ...(config.optimization ?? {}),
         minimizer: [...(config.optimization?.minimizer ?? []), ...minimizer],

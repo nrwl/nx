@@ -130,7 +130,13 @@
               "@nx/nx-linux-arm-gnueabihf",
               "@nx/nx-win32-arm64-msvc",
               "@nx/nx-freebsd-x64",
-              "@nx/powerpack-license"
+              "@nx/powerpack-license",
+              "@nx/key",
+              // Powerpack plugin conditionally available dynamically at runtime
+              "@nx/powerpack-conformance",
+              "@nx/conformance",
+              // Only used in test-utils at the time of writing
+              "@ltd/j-toml"
             ]
           }
         ]

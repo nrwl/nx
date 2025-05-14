@@ -51,6 +51,7 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
         {
           '@nx/web': nxVersion,
           '@nx/webpack': nxVersion,
+          '@nx/module-federation': nxVersion,
         }
       );
     }
@@ -82,6 +83,7 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
         {
           '@nx/webpack': nxVersion,
           '@module-federation/enhanced': moduleFederationEnhancedVersion,
+          '@nx/module-federation': nxVersion,
         }
       );
     }

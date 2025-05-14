@@ -16,6 +16,10 @@ export interface RollupWithNxPluginOptions {
    */
   babelUpwardRootMode?: boolean;
   /**
+   * Build the libraries from source. Default is `true`.
+   */
+  buildLibsFromSource?: boolean;
+  /**
    * Which compiler to use.
    */
   compiler?: 'babel' | 'tsc' | 'swc';

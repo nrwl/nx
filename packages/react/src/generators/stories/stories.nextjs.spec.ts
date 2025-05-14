@@ -7,7 +7,6 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 // nx-ignore-next-line
 import { applicationGenerator } from '@nx/next';
 /* eslint-enable @nx/enforce-module-boundaries */
-import { Linter } from '@nx/eslint';
 
 describe('nextjs:stories for applications', () => {
   let tree: Tree;
@@ -87,7 +86,7 @@ export async function createTestUIApp(name: string): Promise<Tree> {
   const tree = createTreeWithEmptyWorkspace();
   await applicationGenerator(tree, {
     e2eTestRunner: 'none',
-    linter: Linter.EsLint,
+    linter: 'eslint',
     skipFormat: true,
     style: 'css',
     unitTestRunner: 'none',

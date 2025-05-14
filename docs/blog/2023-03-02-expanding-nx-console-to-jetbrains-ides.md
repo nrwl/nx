@@ -2,8 +2,9 @@
 title: 'Expanding Nx Console to JetBrains IDEs'
 slug: 'expanding-nx-console-to-jetbrains-ides'
 authors: ['Max Kless']
-cover_image: '/blog/images/2023-03-02/lEAhfd3d17hGichyT-oGbw.png'
+cover_image: '/blog/images/2023-03-02/lEAhfd3d17hGichyT-oGbw.avif'
 tags: [nx]
+description: Explore the technical journey of bringing Nx Console to JetBrains IDEs, featuring Language Server integration and Generate UI implementation for IntelliJ.
 ---
 
 **_Co-authored by_** [**_Jon Cammisuli_**](https://twitter.com/jcammisuli)
@@ -19,13 +20,13 @@ Go grab it on the official store.
 
 ![](/blog/images/2023-03-02/gnMRzttFFaoTX0tVw-zZbQ.avif)
 
-Before we go into details of Nx Console for IntelliJ, we’d really want to go and **thank our community**. [\* \*_Issam Guissouma_\*\*](https://twitter.com/iguissouma) and [**_Edward Tkachev_**](https://twitter.com/etkachev) from the
+Before we go into details of Nx Console for IntelliJ, we'd really want to go and **thank our community**. [\* \*_Issam Guissouma_\*\*](https://twitter.com/iguissouma) and [**_Edward Tkachev_**](https://twitter.com/etkachev) from the
 Nx community had their own Nx Console plugins for IntelliJ out there already for a while. And they have been super
-popular. As such we’d like to take the occasion to give them a shout-out for the awesome work on the community plugins,
+popular. As such we'd like to take the occasion to give them a shout-out for the awesome work on the community plugins,
 but also for closely collaborating with us over the last weeks to build our official IntelliJ support for Nx Console.
 
 Especially Issam has been actively helping us port over all the features he built to the official Nx Console plugin. So
-be sure to look out for the upcoming release because it’s going to be another huge one!
+be sure to look out for the upcoming release because it's going to be another huge one!
 
 ### Table of Contents
 
@@ -38,7 +39,7 @@ be sure to look out for the upcoming release because it’s going to be another 
 · [Glueing it together](#glueing-it-together)  
 · [Looking ahead](#looking-ahead)
 
-**Prefer a video version? We’ve got you covered!**
+**Prefer a video version? We've got you covered!**
 
 {% youtube src="https://www.youtube.com/watch?v=xUTm6GDqwJM" /%}
 
@@ -54,18 +55,18 @@ Language Server and the Generate UI.
 the [Language Server Protocol (LSP)](https://microsoft.github.io/language-server-protocol/). It serves as a single
 source of truth for all information about your workspace and its projects. With it, you get features such a code
 completion for `project.json` and `nx.json` files, clickable links for all kinds of files and more. Being a standalone
-process, it’s editor-agnostic per default, which is great! However, IntelliJ doesn’t natively support the language
+process, it's editor-agnostic per default, which is great! However, IntelliJ doesn't natively support the language
 server protocol yet, so we had to write some code that bridges the gap between the two. More about that in the following
 section!
 
-The great thing about having a central “brain” for both extensions is that it saves a lot of time writing the same
+The great thing about having a central "brain" for both extensions is that it saves a lot of time writing the same
 functionality multiple times. We only have to deal with platform-specific code for rendering UI or defining actions
 instead of parsing `nx.json` files and the like. This makes both VSCode and IntelliJ extensions thin, DRY wrappers
 around the nxls.
 
 Another major part of Nx Console is the **Generate UI**. Instead of combing through CLI commands to fit your specific
-use-case, you can use the form-based view it provides. It’s a separate web application (currently built with Angular)
-that runs inside VSCode as a webview. Again, being a standalone application means that we didn’t have to rewrite it
+use-case, you can use the form-based view it provides. It's a separate web application (currently built with Angular)
+that runs inside VSCode as a webview. Again, being a standalone application means that we didn't have to rewrite it
 completely in order to integrate it into JetBrains-based editors!
 
 ## Nx Language Server
@@ -86,7 +87,7 @@ to get information about the workspace. Since this workspace information is alre
 solution to just use that same workspace info in the IDEs without us having to rewrite this logic in multiple
 languages (ie, TypeScript and Kotlin).
 
-We found out quickly that we can implement custom requests within the `nxls` to respond to other queries that aren’t
+We found out quickly that we can implement custom requests within the `nxls` to respond to other queries that aren't
 actually part of the Language Server Protocol. These requests are what allows us to use the `nxls` in multiple IDEs and
 allow us to quickly iterate.
 
@@ -112,7 +113,7 @@ that moved to the `nxls` .
 
 **IntelliJ**
 
-For JetBrains editors (IntelliJ/Webstorm), calling a language server wasn’t so obvious.
+For JetBrains editors (IntelliJ/Webstorm), calling a language server wasn't so obvious.
 
 Thankfully, there were already plugins that integrated language servers using
 the [lsp4j](https://github.com/eclipse/lsp4j) library. This was a great starting out point for us and we quickly got
@@ -165,7 +166,7 @@ step, which is easily done with [`kotlinx.serialization`](https://github.com/Kot
 ## Adapting Styling
 
 One aspect that makes designing webviews for VSCode a breeze is the massive stylesheets they ship by default. Every UI
-element’s colors are available in primary, secondary and disabled variants as well as fonts, background colors and more.
+element's colors are available in primary, secondary and disabled variants as well as fonts, background colors and more.
 
 However, this ended up being a struggle as all styling was very tightly coupled to these VSCode stylesheets, which are
 obviously not present within a different host IDE. We replaced all of the VSCode styles with custom css variables. In a
@@ -177,11 +178,11 @@ the same style variables using `UIUtil` and pass them to the app.
 To integrate the web application into IntelliJ, Nx Console
 uses [JCEF (Java Chromium Embedded Framework)](https://plugins.jetbrains.com/docs/intellij/jcef.html). JCEF enables Java
 applications to render web pages using Chromium. It comes with great debugging support using Chrome Devtools and we
-haven’t run into any issues with it yet. The docs are sadly a bit lacking, but with some trial and error we managed to
+haven't run into any issues with it yet. The docs are sadly a bit lacking, but with some trial and error we managed to
 wire everything up. I want to give a special shoutout to Rafal Mucha and his
 article [Creating IntelliJ plugin with WebView](https://medium.com/virtuslab/creating-intellij-plugin-with-webview-3b27c3f87aea).
-It explains how to enable JCEF to load files from the `/resources` folder bundled in the plugin JAR. There’s not much
-info on this topic so this one blog post was a true lifesaver. It’s written in Scala but I learned a lot rewriting it to
+It explains how to enable JCEF to load files from the `/resources` folder bundled in the plugin JAR. There's not much
+info on this topic so this one blog post was a true lifesaver. It's written in Scala but I learned a lot rewriting it to
 Kotlin. Now we have
 a [Kotlin version](https://github.com/nrwl/nx-console/blob/master/apps/intellij/src/main/kotlin/dev/nx/console/generate_ui/CustomResourceHandler.kt)
 out there too!  
@@ -194,9 +195,9 @@ callbacks on the host side.
 ## Glueing it together
 
 One of the unique aspects of the Nx Console for IntelliJ is that it combines different technologies in a polyglot
-monorepo. While Nx is often used for Typescript- or Javascript-based repos, it’s actually technology-agnostic and can
+monorepo. While Nx is often used for Typescript- or Javascript-based repos, it's actually technology-agnostic and can
 host apps and libraries in any language. With the newly released [**_Encapsulated Nx_
-**](/recipes/installation/install-non-javascript) setting, this is even taken a step further! Now you don’t need a
+**](/recipes/installation/install-non-javascript) setting, this is even taken a step further! Now you don't need a
 `package.json` or `node_modules` to run Nx.
 
 The codebase contains both Typescript code for the VSCode extension and Kotlin code for the IntelliJ plugin. Currently,
@@ -209,7 +210,7 @@ from the other (and back again) could definitely be improved and we might look i
 integration later.
 
 For the generate UI, we were able to keep it as a single app. Using different configurations for the `build` target,
-we’re including the different stylesheets needed for each configuration and copying the files to where they need to be.
+we're including the different stylesheets needed for each configuration and copying the files to where they need to be.
 
 ## Looking ahead
 

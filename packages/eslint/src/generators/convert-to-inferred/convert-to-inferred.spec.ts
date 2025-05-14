@@ -573,7 +573,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
           'default',
           '{projectRoot}/.eslintrc.json',
           '{projectRoot}/.eslintignore',
-          '{projectRoot}/eslint.config.js',
+          '{projectRoot}/eslint.config.cjs',
         ],
       };
       updateNxJson(tree, nxJson);
@@ -589,7 +589,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
         'default',
         '{projectRoot}/.eslintrc.json',
         '{projectRoot}/.eslintignore',
-        '{projectRoot}/eslint.config.js',
+        '{projectRoot}/eslint.config.cjs',
         { externalDependencies: ['eslint'] },
       ]);
     });
@@ -604,7 +604,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
           'default',
           '{projectRoot}/.eslintrc.json',
           '{projectRoot}/.eslintignore',
-          '{projectRoot}/eslint.config.js',
+          '{projectRoot}/eslint.config.cjs',
           { externalDependencies: ['eslint-plugin-react'] },
         ],
       };
@@ -621,7 +621,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
         'default',
         '{projectRoot}/.eslintrc.json',
         '{projectRoot}/.eslintignore',
-        '{projectRoot}/eslint.config.js',
+        '{projectRoot}/eslint.config.cjs',
         { externalDependencies: ['eslint-plugin-react', 'eslint'] },
       ]);
     });
@@ -636,7 +636,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
           'default',
           '{projectRoot}/.eslintrc.json',
           '{projectRoot}/.eslintignore',
-          '{projectRoot}/eslint.config.js',
+          '{projectRoot}/eslint.config.cjs',
           { externalDependencies: ['eslint', 'eslint-plugin-react'] },
         ],
       };
@@ -653,7 +653,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
         'default',
         '{projectRoot}/.eslintrc.json',
         '{projectRoot}/.eslintignore',
-        '{projectRoot}/eslint.config.js',
+        '{projectRoot}/eslint.config.cjs',
         { externalDependencies: ['eslint', 'eslint-plugin-react'] },
       ]);
     });

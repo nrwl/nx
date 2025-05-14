@@ -58,6 +58,12 @@
       "skipPackageManager": {
         "type": "boolean",
         "description": "Do not add a `packageManager` entry to the generated package.json file. Only works in conjunction with `generatePackageJson` option."
+      },
+      "useEnvironmentsApi": {
+        "alias": "app",
+        "type": "boolean",
+        "description": "Use the new Environments API for building multiple environments at once. Only works with Vite 6.0.0 or higher.",
+        "default": false
       }
     },
     "definitions": {},

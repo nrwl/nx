@@ -16,6 +16,9 @@ import {
   MicrophoneIcon,
   VideoCameraIcon,
   CheckBadgeIcon,
+  LifebuoyIcon,
+  BookOpenIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
 import { DiscordIcon } from '../discord-icon';
@@ -126,35 +129,25 @@ export const featuresItems: Record<string, MenuItem[]> = {
     },
   ],
 };
-export const solutions: MenuItem[] = [
+export const ossProducts: MenuItem[] = [
   {
-    name: 'Nx Cloud',
-    description:
-      'End-to-end solution for smart, efficient and maintainable CI.',
-    href: '/nx-cloud',
+    name: 'Nx',
+    description: 'Smart Monorepos - Fast CI',
+    href: '/getting-started/intro',
     icon: null,
     isNew: false,
     isHighlight: false,
   },
   {
-    name: 'Nx Powerpack',
-    description:
-      'A suite of paid extensions for the Nx CLI specifically designed for enterprises.',
-    href: '/powerpack',
-    icon: null,
-    isNew: false,
-    isHighlight: false,
-  },
-  {
-    name: 'Nx Enterprise',
-    description:
-      'The ultimate Nx & Nx Cloud toolchain, tailored to your needs.',
-    href: '/enterprise',
+    name: 'Nx Console',
+    description: 'Editor integration for VSCode, Cursor and IntelliJ IDEs',
+    href: '/getting-started/editor-setup',
     icon: null,
     isNew: false,
     isHighlight: false,
   },
 ];
+
 export const learnItems: MenuItem[] = [
   {
     name: 'Step by step tutorials',
@@ -183,7 +176,7 @@ export const learnItems: MenuItem[] = [
   {
     name: 'Webinars',
     description: null,
-    href: 'https://go.nx.dev/webinar',
+    href: '/webinar',
     icon: ComputerDesktopIcon,
     isNew: false,
     isHighlight: false,
@@ -223,10 +216,10 @@ export const learnItems: MenuItem[] = [
 ];
 export const eventItems: MenuItem[] = [
   {
-    name: 'Monorepo World',
+    name: 'Office Hours',
     description: null,
-    href: 'https://monorepo.world',
-    icon: GlobeAltIcon,
+    href: 'https://go.nx.dev/office-hours',
+    icon: DiscordIcon,
     isNew: false,
     isHighlight: false,
   },
@@ -257,11 +250,36 @@ export const companyItems: MenuItem[] = [
     isNew: false,
     isHighlight: false,
   },
+  {
+    name: 'Partners',
+    description: null,
+    icon: LifebuoyIcon,
+    href: '/partners',
+    isNew: false,
+    isHighlight: false,
+  },
 ];
-export const solutionsMenuItems = {
-  'Helping you grow': solutions,
-  // 'Use cases': useCaseItems
-};
+export const enterpriseItems: MenuItem[] = [
+  {
+    name: 'Solutions',
+    description:
+      "Accelerate your organization's journey to tighter collaboration, better developer experience, and speed.",
+    href: '/enterprise',
+    icon: BuildingOfficeIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Security',
+    description:
+      'Protect your codebase from artifact poisoning with infrastructure-first security.',
+    icon: ShieldCheckIcon,
+    href: '/enterprise/security',
+    isNew: false,
+    isHighlight: false,
+  },
+];
+
 export const resourceMenuItems = {
   Learn: learnItems,
   Events: eventItems,

@@ -3,6 +3,7 @@
   "implementation": "/packages/expo/src/executors/start/start.impl.ts",
   "schema": {
     "version": 2,
+    "continuous": true,
     "outputCapture": "direct-nodejs",
     "cli": "nx",
     "$id": "NxExpoStart",

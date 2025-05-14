@@ -1,4 +1,4 @@
-import { Linter, lintProjectGenerator } from '@nx/eslint';
+import { lintProjectGenerator } from '@nx/eslint';
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
@@ -22,6 +22,8 @@ export async function addLinting(
   host: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
+  if (options.linter !== 'eslint') return () => {};
+
   const tasks: GeneratorCallback[] = [];
 
   tasks.push(
@@ -39,7 +41,7 @@ export async function addLinting(
     })
   );
 
-  if (options.linter === Linter.EsLint && isEslintConfigSupported(host)) {
+  if (options.linter === 'eslint' && isEslintConfigSupported(host)) {
     if (useFlatConfig(host)) {
       addPredefinedConfigToFlatLintConfig(
         host,
@@ -97,6 +99,7 @@ export async function addLinting(
       addDependenciesToPackageJson(host, extraEslintDependencies.dependencies, {
         ...extraEslintDependencies.devDependencies,
         'eslint-config-next': eslintConfigNextVersion,
+        '@next/eslint-plugin-next': eslintConfigNextVersion,
       })
     );
   }

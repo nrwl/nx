@@ -6,4 +6,10 @@ module.exports = {
   exposes: {
     './Module': './src/remote-entry.<%= js ? 'js' : 'ts' %>',
   },
+  shared: (libraryName, libraryConfig) => {
+      return {
+        ...libraryConfig,
+        eager: true
+      }
+    },
 };

@@ -1,3 +1,8 @@
+---
+title: 'Enforce Module Boundaries'
+description: 'Learn how to use Nx module boundaries to maintain a clean architecture by controlling dependencies between projects using tags and ESLint rules.'
+---
+
 # Enforce Module Boundaries
 
 If you partition your code into well-defined cohesive units, even a small organization will end up with a dozen apps and dozens or hundreds of libs. If all of them can depend on each other freely, chaos will ensue, and the workspace will become unmanageable.
@@ -101,7 +106,7 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 
 Next, you should update your root lint configuration:
 
-- If you are using **ESLint** you should look for an existing rule entry in your root `.eslintrc.json` called `"@nx/enforce-module-boundaries"` and you should update the `"depConstraints"`:
+- If you are using **ESLint** you should look for an existing rule entry in your root `.eslintrc.json` called `@nx/enforce-module-boundaries` and you should update the `depConstraints`:
 
 ```jsonc {% fileName=".eslintrc.json" %}
 {

@@ -16,7 +16,7 @@ import type {
   ProjectSnapshot,
   ResolvedDependencies,
 } from '@pnpm/lockfile-types';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { valid } from 'semver';
 import { workspaceRoot } from '../../../../utils/workspace-root';
 import { hashObject } from '../../../../hasher/file-hasher';

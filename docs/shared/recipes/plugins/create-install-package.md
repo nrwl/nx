@@ -1,3 +1,8 @@
+---
+title: Creating an Install Package
+description: Learn how to create a custom "create-x" package for your Nx plugin to provide a seamless project bootstrapping experience with npm, yarn, or other package managers.
+---
+
 # Creating an Install Package
 
 {% youtube
@@ -160,4 +165,4 @@ Your plugin and create package will both need to be published to NPM to be useab
 
 ## Further Reading
 
-- [Blog post: Create your own create-react-app CLI](https://blog.nrwl.io/create-your-own-create-react-app-cli-d1bf13904e35?sk=a156dddcf85223e7d3e57312955714ea)
+- [Blog post: Create your own create-react-app CLI](/blog/create-your-own-create-react-app-cli)

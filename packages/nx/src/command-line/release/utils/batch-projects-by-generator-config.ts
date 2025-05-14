@@ -1,3 +1,4 @@
+import { LegacyNxReleaseVersionConfiguration } from '../../../config/nx-json';
 import { ProjectGraph } from '../../../config/project-graph';
 import { deepEquals } from '../../../utils/json-diff';
 import { ReleaseGroupWithName } from '../config/filter-release-groups';
@@ -15,11 +16,14 @@ export function batchProjectsByGeneratorConfig(
   for (const projectName of projectNamesToBatch) {
     const project = projectGraph.nodes[projectName];
     const generator =
-      project.data.release?.version?.generator ||
-      releaseGroup.version.generator;
+      (project.data.release?.version as LegacyNxReleaseVersionConfiguration)
+        ?.generator ||
+      (releaseGroup.version as LegacyNxReleaseVersionConfiguration).generator;
     const generatorOptions = {
-      ...releaseGroup.version.generatorOptions,
-      ...project.data.release?.version?.generatorOptions,
+      ...(releaseGroup.version as LegacyNxReleaseVersionConfiguration)
+        .generatorOptions,
+      ...(project.data.release?.version as LegacyNxReleaseVersionConfiguration)
+        ?.generatorOptions,
     };
 
     let found = false;

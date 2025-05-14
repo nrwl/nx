@@ -9,15 +9,15 @@ import {
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { initGenerator } from '@nx/js';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { createNodesV2 } from '../../../plugin';
 import {
   lessLoaderVersion,
   reactRefreshVersion,
   rspackCoreVersion,
   rspackDevServerVersion,
-  rspackPluginMinifyVersion,
   rspackPluginReactRefreshVersion,
+  sassEmbeddedVersion,
+  sassLoaderVersion,
 } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
 
@@ -25,8 +25,6 @@ export async function rspackInitGenerator(
   tree: Tree,
   schema: InitGeneratorSchema
 ) {
-  assertNotUsingTsSolutionSetup(tree, 'rspack', 'init');
-
   const tasks: GeneratorCallback[] = [];
 
   const nxJson = readNxJson(tree);
@@ -63,6 +61,16 @@ export async function rspackInitGenerator(
           'rspack-preview',
           'preview-rspack',
         ],
+        buildDepsTargetName: [
+          'build-deps',
+          'rspack:build-deps',
+          'rspack-build-deps',
+        ],
+        watchDepsTargetName: [
+          'watch-deps',
+          'rspack:watch-deps',
+          'rspack-watch-deps',
+        ],
       },
       schema.updatePackageScripts
     );
@@ -79,9 +87,12 @@ export async function rspackInitGenerator(
   const devDependencies = {
     '@rspack/core': rspackCoreVersion,
     '@rspack/cli': rspackCoreVersion,
-    '@rspack/plugin-minify': rspackPluginMinifyVersion,
-    '@rspack/plugin-react-refresh': rspackPluginReactRefreshVersion,
-    'react-refresh': reactRefreshVersion,
+    ...(!schema.framework || schema.framework === 'react'
+      ? {
+          '@rspack/plugin-react-refresh': rspackPluginReactRefreshVersion,
+          'react-refresh': reactRefreshVersion,
+        }
+      : {}),
   };
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -93,6 +104,10 @@ export async function rspackInitGenerator(
 
   if (schema.style === 'less') {
     devDependencies['less-loader'] = lessLoaderVersion;
+  }
+  if (schema.style === 'scss') {
+    devDependencies['sass-loader'] = sassLoaderVersion;
+    devDependencies['sass-embedded'] = sassEmbeddedVersion;
   }
 
   if (schema.framework !== 'none' || schema.devServer) {

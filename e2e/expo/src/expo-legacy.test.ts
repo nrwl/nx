@@ -40,10 +40,10 @@ describe('@nx/expo (legacy)', () => {
       return nxJson;
     });
     runCLI(
-      `generate @nx/expo:application apps/${appName} --e2eTestRunner=cypress --no-interactive`
+      `generate @nx/expo:application apps/${appName} --e2eTestRunner=cypress --no-interactive --unitTestRunner=jest --linter=eslint`
     );
     runCLI(
-      `generate @nx/expo:library libs/${libName} --buildable --publishable --importPath=${proj}/${libName}`
+      `generate @nx/expo:library libs/${libName} --buildable --publishable --importPath=${proj}/${libName} --unitTestRunner=jest --linter=eslint`
     );
   });
   afterAll(() => {
@@ -79,7 +79,7 @@ describe('@nx/expo (legacy)', () => {
 
   it('should serve with metro', async () => {
     let process: ChildProcess;
-    const port = 8081;
+    const port = 8051;
 
     try {
       process = await runCommandUntil(
@@ -168,16 +168,17 @@ describe('@nx/expo (legacy)', () => {
   });
 
   it('should start', async () => {
+    const port = 8041;
     // run start command
     const startProcess = await runCommandUntil(
-      `start ${appName} -- --port=8081`,
-      (output) => output.includes(`http://localhost:8081`)
+      `start ${appName} -- --port=${port}`,
+      (output) => output.includes(`http://localhost:${port}`)
     );
 
     // port and process cleanup
     try {
       await promisifiedTreeKill(startProcess.pid, 'SIGKILL');
-      await killPorts(8081);
+      await killPorts(port);
     } catch (err) {
       expect(err).toBeFalsy();
     }
@@ -210,7 +211,9 @@ describe('@nx/expo (legacy)', () => {
     const appName = uniq('app1');
     const libName = uniq('@my-org/lib1');
 
-    runCLI(`generate @nx/expo:application ${appName} --no-interactive`);
+    runCLI(
+      `generate @nx/expo:application ${appName} --no-interactive --unitTestRunner=jest --linter=eslint`
+    );
 
     // check files are generated without the layout directory ("apps/") and
     // using the project name as the directory when no directory is provided
@@ -221,7 +224,9 @@ describe('@nx/expo (legacy)', () => {
       `Successfully ran target test for project ${appName}`
     );
 
-    runCLI(`generate @nx/expo:library ${libName} --buildable`);
+    runCLI(
+      `generate @nx/expo:library ${libName} --buildable --unitTestRunner=jest --linter=eslint`
+    );
 
     // check files are generated without the layout directory ("libs/") and
     // using the project name as the directory when no directory is provided
@@ -274,7 +279,7 @@ describe('@nx/expo (legacy)', () => {
   it('should run e2e for playwright', async () => {
     const appName2 = uniq('my-app');
     runCLI(
-      `generate @nx/expo:application ${appName2} --e2eTestRunner=playwright --no-interactive`
+      `generate @nx/expo:application ${appName2} --e2eTestRunner=playwright --no-interactive --unitTestRunner=jest --linter=eslint`
     );
     if (runE2ETests()) {
       const results = runCLI(`e2e ${appName2}-e2e`, { verbose: true });

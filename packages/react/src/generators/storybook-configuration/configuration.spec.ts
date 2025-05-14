@@ -1,14 +1,13 @@
 import { logger, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import applicationGenerator from '../application/application';
 import componentGenerator from '../component/component';
 import libraryGenerator from '../library/library';
 import storybookConfigurationGenerator from './configuration';
 
 // nested code imports graph from the repo, which might have innacurate graph version
-jest.mock('nx/src/project-graph/project-graph', () => ({
-  ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual<any>('@nx/devkit'),
   createProjectGraphAsync: jest
     .fn()
     .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
@@ -133,7 +132,7 @@ export async function createTestUILib(
   let appTree = createTreeWithEmptyWorkspace();
 
   await libraryGenerator(appTree, {
-    linter: Linter.EsLint,
+    linter: 'eslint',
     component: true,
     skipFormat: true,
     skipTsConfig: false,
@@ -153,7 +152,7 @@ export async function createTestAppLib(
 
   await applicationGenerator(appTree, {
     e2eTestRunner: 'none',
-    linter: Linter.EsLint,
+    linter: 'eslint',
     skipFormat: false,
     style: 'css',
     unitTestRunner: 'none',

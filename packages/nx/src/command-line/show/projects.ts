@@ -23,6 +23,8 @@ import { ShowProjectsOptions } from './command-object';
 export async function showProjectsHandler(
   args: ShowProjectsOptions
 ): Promise<void> {
+  performance.mark('code-loading:end');
+  performance.measure('code-loading', 'init-local', 'code-loading:end');
   let graph = await createProjectGraphAsync();
   const nxJson = readNxJson();
   const { nxArgs } = splitArgsIntoNxArgsAndOverrides(
@@ -82,6 +84,8 @@ export async function showProjectsHandler(
     }
   }
 
+  // TODO: Find a better fix for this
+  await new Promise((res) => setImmediate(res));
   await output.drain();
 }
 

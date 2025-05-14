@@ -1,4 +1,4 @@
-import { ModuleFederationConfig } from '@nx/rspack/module-federation';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: '<%= projectName %>',
@@ -8,6 +8,12 @@ const config: ModuleFederationConfig = {
     "<%= r.fileName %>", 
       <%_ }); } _%>
   ],
+  shared: (libraryName, libraryConfig) => {
+    return {
+      ...libraryConfig,
+      eager: true
+    }
+  },
 };
 
 /**

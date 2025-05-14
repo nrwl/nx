@@ -129,27 +129,4 @@ describe('style', () => {
       "import stylesUrl from '~/styles/example/$withParam.css';"
     );
   });
-
-  it('--nameAndDirectoryFormat=as-provided', async () => {
-    await applicationGenerator(tree, { name: 'demo', directory: 'apps/demo' });
-    await routeGenerator(tree, {
-      path: 'apps/demo/app/routes/example/$withParam.tsx',
-      style: 'none',
-      loader: false,
-      action: false,
-      meta: false,
-      skipChecks: false,
-    });
-    await styleGenerator(tree, {
-      path: 'apps/demo/app/routes/example/$withParam.tsx',
-    });
-    const content = tree.read(
-      'apps/demo/app/routes/example/$withParam.tsx',
-      'utf-8'
-    );
-
-    expect(content).toMatch(
-      "import stylesUrl from '../../styles/example/$withParam.css';"
-    );
-  });
 });

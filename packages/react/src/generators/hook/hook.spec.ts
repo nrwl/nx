@@ -34,6 +34,17 @@ describe('hook', () => {
     ).toBeTruthy();
   });
 
+  it('should handle path with file extension', async () => {
+    await hookGenerator(appTree, {
+      path: `${projectName}/src/lib/use-form/use-form.ts`,
+    });
+
+    expect(appTree.exists('my-lib/src/lib/use-form/use-form.ts')).toBeTruthy();
+    expect(
+      appTree.exists('my-lib/src/lib/use-form/use-form.spec.tsx')
+    ).toBeTruthy();
+  });
+
   it('should generate files for an app', async () => {
     await hookGenerator(appTree, {
       name: 'use-form',

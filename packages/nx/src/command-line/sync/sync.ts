@@ -47,10 +47,7 @@ export function syncHandler(options: SyncOptions): Promise<number> {
           ? 'The workspace is up to date'
           : 'The workspace is already up to date',
         bodyLines: syncGenerators.map(
-          (generator) =>
-            `The ${chalk.bold(
-              generator
-            )} sync generator didn't identify any files in the workspace that are out of sync.`
+          (generator) => `[${chalk.bold(generator)}]: All files are up to date.`
         ),
       });
       return 0;
@@ -133,9 +130,9 @@ export function syncHandler(options: SyncOptions): Promise<number> {
           'Syncing the workspace failed with the following error:',
           '',
           e.message,
-          ...(options.verbose && !!e.stack ? [`\n${e.stack}`] : []),
+          ...(!!e.stack ? [`\n${e.stack}`] : []),
           '',
-          'Please rerun with `--verbose` and report the error at: https://github.com/nrwl/nx/issues/new/choose',
+          'Please report the error at: https://github.com/nrwl/nx/issues/new/choose',
         ],
       });
 

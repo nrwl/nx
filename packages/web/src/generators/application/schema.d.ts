@@ -13,8 +13,8 @@ export interface Schema {
   inSourceTests?: boolean;
   e2eTestRunner?: 'cypress' | 'playwright' | 'none';
   linter?: Linter | LinterType;
-  standaloneConfig?: boolean;
   setParserOptionsProject?: boolean;
   strict?: boolean;
   addPlugin?: boolean;
+  useProjectJson?: boolean;
 }

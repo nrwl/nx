@@ -20,12 +20,15 @@ describe('filterReleaseGroups()', () => {
           tagMessage: '',
           tagArgs: '',
           stageChanges: false,
+          push: false,
+          pushArgs: '',
         },
         workspaceChangelog: false,
         projectChangelogs: false,
         automaticFromRef: false,
       },
       version: {
+        useLegacyVersioning: true,
         conventionalCommits: false,
         generator: '',
         generatorOptions: {},
@@ -37,10 +40,13 @@ describe('filterReleaseGroups()', () => {
           tag: false,
           tagMessage: '',
           tagArgs: '',
+          push: false,
+          pushArgs: '',
         },
         preVersionCommand: '',
       },
       releaseTagPattern: '',
+      releaseTagPatternCheckAllBranchesWhen: undefined,
       git: {
         commit: false,
         commitMessage: '',
@@ -49,6 +55,8 @@ describe('filterReleaseGroups()', () => {
         tagMessage: '',
         tagArgs: '',
         stageChanges: false,
+        push: false,
+        pushArgs: '',
       },
       conventionalCommits: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
       versionPlans: false,
@@ -105,6 +113,7 @@ describe('filterReleaseGroups()', () => {
             groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
+          releaseTagPatternCheckAllBranchesWhen: undefined,
           versionPlans: false,
         },
       };
@@ -134,6 +143,7 @@ describe('filterReleaseGroups()', () => {
             groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
+          releaseTagPatternCheckAllBranchesWhen: undefined,
           versionPlans: false,
         },
         bar: {
@@ -147,6 +157,7 @@ describe('filterReleaseGroups()', () => {
             groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
+          releaseTagPatternCheckAllBranchesWhen: undefined,
           versionPlans: false,
         },
       };
@@ -163,6 +174,7 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
@@ -180,6 +192,7 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
@@ -201,6 +214,7 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
@@ -220,6 +234,7 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
@@ -248,6 +263,7 @@ describe('filterReleaseGroups()', () => {
             groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
+          releaseTagPatternCheckAllBranchesWhen: undefined,
           versionPlans: false,
         },
       };
@@ -276,6 +292,7 @@ describe('filterReleaseGroups()', () => {
             groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
+          releaseTagPatternCheckAllBranchesWhen: undefined,
           versionPlans: false,
         },
         bar: {
@@ -289,6 +306,7 @@ describe('filterReleaseGroups()', () => {
             groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
+          releaseTagPatternCheckAllBranchesWhen: undefined,
           versionPlans: false,
         },
       };
@@ -318,6 +336,7 @@ describe('filterReleaseGroups()', () => {
             groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
+          releaseTagPatternCheckAllBranchesWhen: undefined,
           versionPlans: false,
         },
         bar: {
@@ -331,6 +350,7 @@ describe('filterReleaseGroups()', () => {
             groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
+          releaseTagPatternCheckAllBranchesWhen: undefined,
           versionPlans: false,
         },
       };
@@ -347,6 +367,7 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "independent",
             "releaseTagPattern": "",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
@@ -368,6 +389,7 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "independent",
             "releaseTagPattern": "",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
@@ -412,6 +434,7 @@ describe('filterReleaseGroups()', () => {
             groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
+          releaseTagPatternCheckAllBranchesWhen: undefined,
           versionPlans: false,
         },
         bar: {
@@ -425,6 +448,7 @@ describe('filterReleaseGroups()', () => {
             groupPreVersionCommand: '',
           },
           releaseTagPattern: '',
+          releaseTagPatternCheckAllBranchesWhen: undefined,
           versionPlans: false,
         },
       };
@@ -441,6 +465,7 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
@@ -462,6 +487,7 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,

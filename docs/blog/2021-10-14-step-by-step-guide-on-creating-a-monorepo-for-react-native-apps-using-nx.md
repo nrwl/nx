@@ -2,8 +2,9 @@
 title: 'Step by Step Guide on Creating a Monorepo for React Native Apps using Nx'
 slug: 'step-by-step-guide-on-creating-a-monorepo-for-react-native-apps-using-nx'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2021-10-14/92uzyqB8oJ8tZJB9wAdoWQ.png'
+cover_image: '/blog/images/2021-10-14/92uzyqB8oJ8tZJB9wAdoWQ.avif'
 tags: [nx, tutorial]
+description: Learn how to set up a monorepo with Nx to manage React Native mobile and React web apps with shared libraries, demonstrated through a daily horoscope app example.
 ---
 
 Do you want to have both mobile and web apps in the same repo? Do you wish that you could share code between mobile and web apps? This blog post shows you how to create a React Native mobile app and a React web app in the same repo with shared libraries using Nx.
@@ -66,7 +67,7 @@ npm install --save @rneui/base @rneui/themed react-native-vector-icons react-nat
 _**yarn add @rneui/base @rneui/themed react-native-vector-icons react-native-safe-area-context
 ```
 
-In the app’s package.json at `apps/daily-horoscope-app/package.json`, under dependencies, add the above packages:
+In the app's package.json at `apps/daily-horoscope-app/package.json`, under dependencies, add the above packages:
 
 ```json5
 {
@@ -166,7 +167,7 @@ export enum AdhZodiacSign {
 }
 ```
 
-**Note**: the enum has a prefix “Adh” to indicate it is a model under domain “aztro-daily-horoscope”. Add this prefix to distinguish model names from component names.
+**Note**: the enum has a prefix "Adh" to indicate it is a model under domain "aztro-daily-horoscope". Add this prefix to distinguish model names from component names.
 
 This example uses icons from [Material Community Icons](https://materialdesignicons.com/). You need to create a list that contains the zodiac sign name and its matching icon.
 
@@ -542,7 +543,7 @@ npm install --save-dev redux-logger @types/redux-logger
 yarn add redux-logger @types/redux-logger --dev
 ```
 
-Then you need to add the redux-logger to the root store’s middleware, so the rootStore becomes:
+Then you need to add the redux-logger to the root store's middleware, so the rootStore becomes:
 
 ```typescript
 import logger from 'redux-logger';
@@ -559,7 +560,7 @@ const rootStore = configureStore({
 
 Since the code is running in simulators, how to use the Redux Devtools extension and view the Redux Logger?
 
-Open the debug menu in the simulator by entering `d` in the terminal that runs the start command. Then in the debug menu, choose “Debug with Chrome” for iOS and “Debug” for Android.
+Open the debug menu in the simulator by entering `d` in the terminal that runs the start command. Then in the debug menu, choose "Debug with Chrome" for iOS and "Debug" for Android.
 
 ![](/blog/images/2021-10-14/4QVoNHRjzW0agHGnxyWvpw.avif)
 _Debug Menu in iOS and Android_
@@ -587,7 +588,7 @@ npm install --save @react-navigation/native @react-navigation/stack react-native
 yarn add @react-navigation/native @react-navigation/stack react-native-reanimated react-native-gesture-handler react-native-screens @react-native-community/masked-view
 ```
 
-In the app’s package.json at `apps/daily-horoscope-app/package.json`, under dependencies, add the above packages:
+In the app's package.json at `apps/daily-horoscope-app/package.json`, under dependencies, add the above packages:
 
 ```json5
 {
@@ -694,45 +695,7 @@ export default HoroscopeCard;
 
 Now you need to add this screen to your app. In file `apps/daily-horoscope-app/src/app/App.tsx`, you need to update it to add a stack screen for the `horoscope-card` component:
 
-```tsx
-import { store } from '@aztro-daily-horoscope/store';
-import {
-  ZodiacSignListContainer,
-  HoroscopeCard,
-} from '@aztro-daily-horoscope/ui';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import * as React from 'react';
-import { Provider } from 'react-redux';
-
-const Stack = createStackNavigator();
-
-const App = () => {
-  return (
-    <Provider store={store}>
-      <NavigationContainer>
-        <Stack.Navigator>
-          <Stack.Screen
-            name="Zodiac Sign List"
-            component={ZodiacSignListContainer}
-          />
-          <Stack.Screen name="Horoscope Card" component={HoroscopeCard} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </Provider>
-  );
-};
-
-export default App;
-```
-
-In the `libs/ui/src/lib/zodiac-sign-list/zodiac-sign-list.tsx`, you need to trigger navigation when the list item got pressed.
-
-Below code uses [`useNavigation`](https://reactnavigation.org/docs/use-navigation/) hook from [React Navigation](https://reactnavigation.org/) library. When the list item got pressed, it is going to call `navigation.navigate(‘Horoscope Card’)` to navigate the `horoscope-card` component you created above.
-
-[https://gist.github.com/xiongemi/c78c719e70aa4948b98e68033d7fe4a3](https://gist.github.com/xiongemi/c78c719e70aa4948b98e68033d7fe4a3)
-
-```tsx {% fileName="App.tsx" %}
+```tsx {% fileName="zodiac-sign-list.tsx" %}
 import {
   AdhZodiacSignItem,
   AdhZodiacSignList,
@@ -800,7 +763,7 @@ nx generate lib services
 In the services folder, add the below files:
 
 - `aztro-horoscope-response.interface.ts` defines what the response object looks like. It has a transform function to transform response data to the app domain model.
-- `aztro.service.ts` calls the API to get the user’s horoscope based on the zodiac sign and day.
+- `aztro.service.ts` calls the API to get the user's horoscope based on the zodiac sign and day.
 
 ```typescript {% fileName="aztro-horoscope-response.interface.ts" %}
 import { AdhHoroscope, AdhZodiacSign } from '@aztro-daily-horoscope/models';
@@ -899,7 +862,7 @@ export interface HoroscopeState {
 
 - `loadingStatus` is the API request status from `aztro.service`.
 - `error` is the API request error from `aztro.service`.
-- `zodiacSignItem` is the user’s selected zodiac sign.
+- `zodiacSignItem` is the user's selected zodiac sign.
 - `day` is the parameter passed to `aztro.service`.
 - `horoscope` is the transformed response from `aztro.service.`
 
@@ -1255,7 +1218,7 @@ AppRegistry.runApplication('main', {
 });
 ```
 
-Copy your code from `daily-horoscope-app`’s app file to `daily-horoscope-web`’s app file and add styles for the icon font files:
+Copy your code from `daily-horoscope-app`'s app file to `daily-horoscope-web`'s app file and add styles for the icon font files:
 
 ```tsx {% fileName="app.tsx" %}
 import { rootStore } from '@aztro-daily-horoscope/store';

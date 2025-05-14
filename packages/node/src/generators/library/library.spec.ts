@@ -5,6 +5,8 @@ import {
   readJson,
   readProjectConfiguration,
   Tree,
+  updateJson,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
@@ -474,7 +476,7 @@ describe('lib', () => {
         'src/**/*.js',
       ]);
       expect(readJson(tree, 'my-lib/tsconfig.lib.json').exclude).toEqual([
-        'jest.config.ts',
+        'jest.config.js',
         'src/**/*.spec.ts',
         'src/**/*.test.ts',
         'src/**/*.spec.js',
@@ -515,6 +517,316 @@ describe('lib', () => {
       expect(tree.exists('my-dir/my-lib/src/index.js')).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/lib/my-lib.js')).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/lib/my-lib.spec.js')).toBeTruthy();
+    });
+  });
+
+  describe('TS solution setup', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+          customConditions: ['development'],
+        },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should add project references when using TS solution', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+        useProjectJson: false,
+      } as Schema);
+
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./mylib",
+          },
+        ]
+      `);
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'mylib/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "main",
+          "types",
+          "exports",
+          "dependencies",
+        ]
+      `);
+      expect(readJson(tree, 'mylib/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {},
+          "exports": {
+            ".": {
+              "default": "./src/index.ts",
+              "import": "./src/index.ts",
+              "types": "./src/index.ts",
+            },
+            "./package.json": "./package.json",
+          },
+          "main": "./src/index.ts",
+          "name": "@proj/mylib",
+          "private": true,
+          "types": "./src/index.ts",
+          "version": "0.0.1",
+        }
+      `);
+      expect(readJson(tree, 'mylib/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "../tsconfig.base.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+            {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
+        }
+      `);
+      expect(readJson(tree, 'mylib/tsconfig.lib.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "baseUrl": ".",
+            "emitDeclarationOnly": true,
+            "module": "nodenext",
+            "moduleResolution": "nodenext",
+            "outDir": "dist",
+            "rootDir": "src",
+            "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
+            "types": [
+              "node",
+            ],
+          },
+          "exclude": [
+            "jest.config.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.ts",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "src/**/*.ts",
+          ],
+          "references": [],
+        }
+      `);
+      expect(readJson(tree, 'mylib/tsconfig.spec.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "module": "nodenext",
+            "moduleResolution": "nodenext",
+            "outDir": "./out-tsc/jest",
+            "types": [
+              "jest",
+              "node",
+            ],
+          },
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "jest.config.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+          ],
+        }
+      `);
+    });
+
+    it('should create a correct package.json for buildable libraries', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+        useProjectJson: false,
+        buildable: true,
+        skipFormat: true,
+      } as Schema);
+
+      expect(tree.read('mylib/package.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "name": "@proj/mylib",
+          "version": "0.0.1",
+          "private": true,
+          "main": "./dist/index.js",
+          "module": "./dist/index.js",
+          "types": "./dist/index.d.ts",
+          "exports": {
+            "./package.json": "./package.json",
+            ".": {
+              "development": "./src/index.ts",
+              "types": "./dist/index.d.ts",
+              "import": "./dist/index.js",
+              "default": "./dist/index.js"
+            }
+          },
+          "dependencies": {
+            "tslib": "^2.3.0"
+          }
+        }
+        "
+      `);
+    });
+
+    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+      updateJson(tree, 'tsconfig.base.json', (json) => {
+        delete json.compilerOptions.customConditions;
+        return json;
+      });
+
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+        useProjectJson: false,
+        buildable: true,
+        skipFormat: true,
+      } as Schema);
+
+      expect(
+        readJson(tree, 'mylib/package.json').exports['.']
+      ).not.toHaveProperty('development');
+    });
+
+    it('should set correct options for swc', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        buildable: true,
+        compiler: 'swc',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+        useProjectJson: false,
+      } as Schema);
+
+      expect(readJson(tree, 'mylib/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "tslib": "^2.3.0",
+          },
+          "exports": {
+            ".": {
+              "default": "./dist/index.js",
+              "development": "./src/index.ts",
+              "import": "./dist/index.js",
+              "types": "./dist/index.d.ts",
+            },
+            "./package.json": "./package.json",
+          },
+          "main": "./dist/index.js",
+          "module": "./dist/index.js",
+          "name": "@proj/mylib",
+          "nx": {
+            "targets": {
+              "build": {
+                "executor": "@nx/js:swc",
+                "options": {
+                  "main": "mylib/src/index.ts",
+                  "outputPath": "mylib/dist",
+                  "packageJson": "mylib/package.json",
+                  "stripLeadingPaths": true,
+                  "tsConfig": "mylib/tsconfig.lib.json",
+                },
+                "outputs": [
+                  "{options.outputPath}",
+                ],
+              },
+            },
+          },
+          "private": true,
+          "types": "./dist/index.d.ts",
+          "version": "0.0.1",
+        }
+      `);
+    });
+
+    it('should set "nx.name" in package.json when the user provides a name that is different than the package name', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        name: 'my-lib',
+        linter: 'none',
+        unitTestRunner: 'none',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      } as Schema);
+
+      expect(readJson(tree, 'mylib/package.json').nx).toStrictEqual({
+        name: 'my-lib',
+      });
+    });
+
+    it('should not set "nx.name" in package.json when the provided name matches the package name', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        name: '@proj/my-lib',
+        linter: 'none',
+        unitTestRunner: 'none',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      } as Schema);
+
+      expect(readJson(tree, 'mylib/package.json').nx).toBeUndefined();
+    });
+
+    it('should not set "nx.name" in package.json when the user does not provide a name', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        linter: 'none',
+        unitTestRunner: 'none',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      } as Schema);
+
+      expect(readJson(tree, 'mylib/package.json').nx).toBeUndefined();
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+        useProjectJson: true,
+        skipFormat: true,
+      } as Schema);
+
+      expect(tree.exists('mylib/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/mylib'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/mylib",
+          "projectType": "library",
+          "root": "mylib",
+          "sourceRoot": "mylib/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'mylib/package.json').nx).toBeUndefined();
     });
   });
 });

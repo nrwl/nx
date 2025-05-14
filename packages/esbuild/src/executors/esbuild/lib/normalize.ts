@@ -110,6 +110,7 @@ export function normalizeOptions(
       userDefinedBuildOptions,
       external: options.external ?? [],
       singleEntry: false,
+      isTsSolutionSetup,
       // Use the `main` file name as the output file name.
       // This is needed for `@nx/js:node` to know the main file to execute.
       // NOTE: The .js default extension may be replaced later in getOutfile() call.
@@ -126,6 +127,7 @@ export function normalizeOptions(
       userDefinedBuildOptions,
       external: options.external ?? [],
       singleEntry: true,
+      isTsSolutionSetup,
       outputFileName:
         // NOTE: The .js default extension may be replaced later in getOutfile() call.
         options.outputFileName ?? `${path.parse(options.main).name}.js`,

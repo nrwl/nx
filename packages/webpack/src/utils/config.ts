@@ -99,6 +99,7 @@ function ensureNxWebpackExecutionContext(ctx: NxWebpackExecutionContext): void {
     outputPath: undefined,
     tsConfig: undefined,
     outputFileName: undefined,
+    useTsconfigPaths: undefined,
   };
   ctx.context ??= {
     projectName,

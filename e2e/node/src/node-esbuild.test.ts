@@ -24,7 +24,7 @@ describe('Node Applications + esbuild', () => {
     const app = uniq('nodeapp');
 
     runCLI(
-      `generate @nx/node:app apps/${app} --bundler=esbuild --no-interactive`
+      `generate @nx/node:app apps/${app} --bundler=esbuild --no-interactive --linter=eslint --unitTestRunner=jest`
     );
 
     checkFilesDoNotExist(`apps/${app}/webpack.config.js`);

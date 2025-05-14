@@ -12,7 +12,7 @@ export function PowerpackPricing() {
       <div className="flex flex-col gap-2">
         <div className="group relative flex w-full items-center justify-between gap-8 rounded-md border border-slate-200 bg-white px-6 py-4 transition hover:bg-white/90 hover:shadow dark:border-slate-800/60 dark:bg-slate-900/60 dark:hover:bg-slate-900/100">
           <a
-            href="https://cloud.nx.app/powerpack/purchase?utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl"
+            href="https://cloud.nx.app/powerpack/purchase?utm_source=nx-website&utm_medium=referral&utm_campaign=powerpack-landing-page&utm_content=cta-button&utm_term=purchase-powerpack-annually"
             title="Buy your license"
             className="flex items-center gap-2"
           >
@@ -39,7 +39,7 @@ export function PowerpackPricing() {
       <div className="mt-4 flex flex-col gap-2">
         <div className="group relative flex w-full items-center justify-between gap-8 rounded-md border border-slate-200 bg-white px-6 py-4 transition hover:bg-white/90 hover:shadow dark:border-slate-800/60 dark:bg-slate-900/60 dark:hover:bg-slate-900/100">
           <a
-            href="https://cloud.nx.app/powerpack/purchase?utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl"
+            href="https://cloud.nx.app/powerpack/purchase?utm_source=nx-website&utm_medium=referral&utm_campaign=powerpack-landing-page&utm_content=cta-button&utm_term=purchase-powerpack-monthly"
             title="Buy your license"
             className="flex items-center gap-2"
           >
@@ -61,12 +61,22 @@ export function PowerpackPricing() {
       </div>
       <div className="mt-4 flex flex-col gap-2">
         <ButtonLink
-          href="https://cloud.nx.app/powerpack/purchase?utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl"
+          href="https://cloud.nx.app/powerpack/purchase?utm_source=nx-website&utm_medium=referral&utm_campaign=powerpack-landing-page&utm_content=cta-button&utm_term=buy-powerpack-license"
           title="Talk to the engineering team"
           variant="primary"
           size="default"
         >
           Buy your Nx Powerpack license
+        </ButtonLink>
+      </div>
+      <div className="mt-4 flex flex-col gap-2">
+        <ButtonLink
+          href="https://cloud.nx.app/powerpack/request/trial?utm_source=nx-website&utm_medium=referral&utm_campaign=powerpack-landing-page&utm_content=cta-button&utm_term=start-with-powerpack-trial"
+          title="Talk to the engineering team"
+          variant="secondary"
+          size="default"
+        >
+          Start with a free trial
         </ButtonLink>
       </div>
     </aside>

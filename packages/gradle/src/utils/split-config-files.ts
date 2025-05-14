@@ -8,6 +8,8 @@ export const GRADLE_TEST_FILES = [
   '**/src/test/kotlin/**/*Test.kt',
   '**/src/test/java/**/*Tests.java',
   '**/src/test/kotlin/**/*Tests.kt',
+  '**/src/test/groovy/**/*Test.groovy',
+  '**/src/test/groovy/**/*Tests.groovy',
 ];
 
 export const gradleConfigGlob = combineGlobPatterns(
@@ -15,6 +17,8 @@ export const gradleConfigGlob = combineGlobPatterns(
 );
 
 export const gradleConfigAndTestGlob = combineGlobPatterns(
+  ...Array.from(GRADLE_BUILD_FILES),
+  ...Array.from(GRALDEW_FILES),
   ...Array.from(GRADLE_BUILD_FILES).map((file) => `**/${file}`),
   ...Array.from(GRALDEW_FILES).map((file) => `**/${file}`),
   ...GRADLE_TEST_FILES

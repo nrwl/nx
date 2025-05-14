@@ -11,7 +11,6 @@ import {
   generateTestHostApplication,
   generateTestRemoteApplication,
 } from '../utils/testing';
-import { Linter } from '@nx/eslint';
 
 describe('Host App Generator', () => {
   it('should generate a host app with no remotes', async () => {
@@ -365,7 +364,7 @@ describe('Host App Generator', () => {
         tree.read(`test/src/bootstrap.server.ts`, 'utf-8')
       ).toMatchSnapshot();
       expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
-      expect(tree.read(`test/server.ts`, 'utf-8')).toMatchSnapshot();
+      expect(tree.read(`test/src/server.ts`, 'utf-8')).toMatchSnapshot();
       expect(
         tree.read(`test/module-federation.config.js`, 'utf-8')
       ).toMatchSnapshot();
@@ -402,7 +401,7 @@ describe('Host App Generator', () => {
         tree.read(`test/src/bootstrap.server.ts`, 'utf-8')
       ).toMatchSnapshot();
       expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
-      expect(tree.read(`test/server.ts`, 'utf-8')).toMatchSnapshot();
+      expect(tree.read(`test/src/server.ts`, 'utf-8')).toMatchSnapshot();
       expect(
         tree.read(`test/module-federation.config.ts`, 'utf-8')
       ).toMatchSnapshot();
@@ -435,7 +434,7 @@ describe('Host App Generator', () => {
         tree.read(`test/src/bootstrap.server.ts`, 'utf-8')
       ).toMatchSnapshot();
       expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
-      expect(tree.read(`test/server.ts`, 'utf-8')).toMatchSnapshot();
+      expect(tree.read(`test/src/server.ts`, 'utf-8')).toMatchSnapshot();
       expect(
         tree.read(`test/module-federation.config.js`, 'utf-8')
       ).toMatchSnapshot();
@@ -475,7 +474,7 @@ describe('Host App Generator', () => {
         tree.read(`test/src/bootstrap.server.ts`, 'utf-8')
       ).toMatchSnapshot();
       expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
-      expect(tree.read(`test/server.ts`, 'utf-8')).toMatchSnapshot();
+      expect(tree.read(`test/src/server.ts`, 'utf-8')).toMatchSnapshot();
       expect(
         tree.read(`test/module-federation.config.ts`, 'utf-8')
       ).toMatchSnapshot();
@@ -496,30 +495,12 @@ describe('Host App Generator', () => {
     });
 
     describe('compat', () => {
-      it('should generate the correct main.server.ts', async () => {
-        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-        updateJson(tree, 'package.json', (json) => ({
-          ...json,
-          dependencies: {
-            '@angular/core': '15.2.0',
-          },
-        }));
-
-        await generateTestHostApplication(tree, {
-          directory: 'test',
-          ssr: true,
-          skipFormat: true,
-        });
-
-        expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
-      });
-
       it('should generate the correct app component spec file using RouterTestingModule', async () => {
         const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
         updateJson(tree, 'package.json', (json) => ({
           ...json,
           dependencies: {
-            '@angular/core': '15.2.0',
+            '@angular/core': '17.0.0',
           },
         }));
 
@@ -568,7 +549,7 @@ describe('Host App Generator', () => {
         remotes: [remote],
         dynamic: true,
         e2eTestRunner: E2eTestRunner.None,
-        linter: Linter.None,
+        linter: 'none',
         style: 'css',
         unitTestRunner: UnitTestRunner.None,
         typescriptConfiguration: false,

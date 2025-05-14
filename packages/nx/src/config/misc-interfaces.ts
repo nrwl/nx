@@ -7,7 +7,8 @@ import {
 } from './workspace-json-project-json';
 
 import type { NxJsonConfiguration } from './nx-json';
-import { Schema } from '../utils/params';
+import type { Schema } from '../utils/params';
+import type { Tree } from '../generators/tree';
 /**
  * A callback function that is executed after changes are made to the file system
  */
@@ -66,13 +67,33 @@ export type PackageJsonUpdates = {
   };
 };
 
+/**
+ * Represents a migration that is executed when running `nx migrate`.
+ *
+ * Returning a string[] from the migration function will be interpreted as
+ * a list of next steps to be displayed to the user.
+ */
+export type Migration = (
+  tree: Tree
+) => void | Promise<void> | string[] | Promise<string[]>;
+
 export interface MigrationsJsonEntry {
   version: string;
   description?: string;
-  cli?: string;
   implementation?: string;
   factory?: string;
   requires?: Record<string, string>;
+}
+
+export type MigrationDetailsWithId = GeneratedMigrationDetails & {
+  id: string;
+};
+export interface GeneratedMigrationDetails {
+  name: string;
+  version: string;
+  package: string;
+  description: string;
+  implementation: string;
 }
 
 export interface MigrationsJson {
@@ -99,6 +120,7 @@ export interface ExecutorConfig {
   schema: {
     version?: number;
     outputCapture?: OutputCaptureMethod;
+    continuous?: boolean;
   } & Schema;
   hasherFactory?: () => CustomHasher;
   implementationFactory: () => Executor;

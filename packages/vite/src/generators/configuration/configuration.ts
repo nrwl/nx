@@ -15,7 +15,10 @@ import {
   initGenerator as jsInitGenerator,
 } from '@nx/js';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  getProjectType,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'node:path/posix';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
@@ -50,7 +53,11 @@ export async function viteConfigurationGeneratorInternal(
   const projectConfig = readProjectConfiguration(tree, schema.project);
   const { targets, root: projectRoot } = projectConfig;
 
-  const projectType = projectConfig.projectType ?? 'library';
+  const projectType = getProjectType(
+    tree,
+    projectConfig.root,
+    schema.projectType ?? projectConfig.projectType
+  );
 
   schema.includeLib ??= projectType === 'library';
 
@@ -74,7 +81,11 @@ export async function viteConfigurationGeneratorInternal(
     tsConfigName: projectRoot === '.' ? 'tsconfig.json' : 'tsconfig.base.json',
   });
   tasks.push(jsInitTask);
-  const initTask = await initGenerator(tree, { ...schema, skipFormat: true });
+  const initTask = await initGenerator(tree, {
+    ...schema,
+    projectRoot,
+    skipFormat: true,
+  });
   tasks.push(initTask);
   tasks.push(ensureDependencies(tree, schema));
 
@@ -161,12 +172,13 @@ export async function viteConfigurationGeneratorInternal(
       skipFormat: true,
       addPlugin: schema.addPlugin,
       compiler: schema.compiler,
+      projectType,
     });
     tasks.push(vitestTask);
   }
 
   if (isUsingTsSolutionSetup(tree)) {
-    updatePackageJson(tree, schema);
+    updatePackageJson(tree, schema, projectType);
   }
 
   if (!schema.skipFormat) {
@@ -180,7 +192,8 @@ export default viteConfigurationGenerator;
 
 function updatePackageJson(
   tree: Tree,
-  options: ViteConfigurationGeneratorSchema
+  options: ViteConfigurationGeneratorSchema,
+  projectType: 'application' | 'library'
 ) {
   const project = readProjectConfiguration(tree, options.project);
 
@@ -193,28 +206,37 @@ function updatePackageJson(
       name: getImportPath(tree, options.project),
       version: '0.0.1',
     };
+    if (getProjectType(tree, project.root, projectType) === 'application') {
+      packageJson.private = true;
+    }
   }
 
-  // we always write/override the vite and project config with some set values,
-  // so we can rely on them
-  const main = join(project.root, 'src/index.ts');
-  // we configure the dts plugin with the entryRoot set to `src`
-  const rootDir = join(project.root, 'src');
-  const outputPath = joinPathFragments(project.root, 'dist');
+  if (projectType === 'library') {
+    // we always write/override the vite and project config with some set values,
+    // so we can rely on them
+    const main = join(project.root, 'src/index.ts');
+    // we configure the dts plugin with the entryRoot set to `src`
+    const rootDir = join(project.root, 'src');
+    const outputPath = joinPathFragments(project.root, 'dist');
 
-  packageJson = getUpdatedPackageJsonContent(packageJson, {
-    main,
-    outputPath,
-    projectRoot: project.root,
-    rootDir,
-    generateExportsField: true,
-    packageJsonPath,
-    format: ['esm', 'cjs'],
-    // when building both formats, we don't set the package.json "type" field, so
-    // we need to set the esm extension to ".mjs" to match vite output
-    // see the "File Extensions" callout in https://vite.dev/guide/build.html#library-mode
-    outputFileExtensionForEsm: '.mjs',
-  });
+    // the file must exist in the TS solution setup, which is the only case this
+    // function is called
+    const tsconfigBase = readJson(tree, 'tsconfig.base.json');
+
+    packageJson = getUpdatedPackageJsonContent(packageJson, {
+      main,
+      outputPath,
+      projectRoot: project.root,
+      rootDir,
+      generateExportsField: true,
+      packageJsonPath,
+      format: ['esm'],
+      skipDevelopmentExports:
+        !tsconfigBase.compilerOptions?.customConditions?.includes(
+          'development'
+        ),
+    });
+  }
 
   writeJson(tree, packageJsonPath, packageJson);
 }

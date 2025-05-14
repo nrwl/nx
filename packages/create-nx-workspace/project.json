@@ -46,7 +46,10 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/create-nx-workspace"],
+      "outputs": [
+        "{workspaceRoot}/build/packages/create-nx-workspace/bin/create-nx-workspace.js",
+        "{workspaceRoot}/build/packages/create-nx-workspace/README.md"
+      ],
       "options": {
         "commands": [
           {

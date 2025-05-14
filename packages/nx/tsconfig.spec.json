@@ -11,6 +11,8 @@
     "**/*.spec.tsx",
     "**/*.spec.js",
     "**/*.spec.jsx",
+    "**/*.fixture.js",
+    "**/*.fixture.ts",
     "**/*.d.ts",
     "./src/internal-testing-utils/**/*.ts",
     "jest.config.ts"

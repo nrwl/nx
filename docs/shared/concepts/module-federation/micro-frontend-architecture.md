@@ -1,3 +1,8 @@
+---
+title: Micro Frontend Architecture
+description: Explore how Nx supports Micro Frontend architecture with Module Federation, enabling independent deployment while managing associated challenges.
+---
+
 # Micro Frontend Architecture
 
 Nx provides out-of-the-box [Module Federation](/concepts/module-federation/faster-builds-with-module-federation) support to both
@@ -92,7 +97,7 @@ in case of a bad deployment.
 ## Shared libraries
 
 Since deployments with MFEs are not atomic, there is a chance that shared libraries -- both external (npm) and workspace --
-between the host and remotes are mismatched. The default the Nx setup configures all libraries as singletons, which requires
+between the host and remotes are mismatched. The default Nx setup configures all libraries as singletons, which requires
 that all affected applications be deployed for any given changeset, and makes à la carte deployments riskier.
 
 There are mitigation strategies that can minimize mismatch errors. One such strategy is to share as little as possible

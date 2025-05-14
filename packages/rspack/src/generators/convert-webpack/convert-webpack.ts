@@ -2,7 +2,9 @@ import {
   addDependenciesToPackageJson,
   formatFiles,
   getProjects,
+  readNxJson,
   type Tree,
+  updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { Schema } from './schema';
@@ -78,6 +80,37 @@ export default async function (tree: Tree, options: Schema) {
   }
 
   updateProjectConfiguration(tree, options.project, project);
+  const nxJson = readNxJson(tree);
+  if (nxJson.plugins !== undefined && nxJson.plugins.length > 0) {
+    const nonRspackPlugins = nxJson.plugins.filter(
+      (plugin) =>
+        (typeof plugin !== 'string' && plugin.plugin !== '@nx/rspack/plugin') ||
+        (typeof plugin === 'string' && plugin !== '@nx/rspack/plugin')
+    );
+    let rspackPlugins = nxJson.plugins.filter(
+      (plugin) =>
+        (typeof plugin !== 'string' && plugin.plugin === '@nx/rspack/plugin') ||
+        (typeof plugin === 'string' && plugin === '@nx/rspack/plugin')
+    );
+
+    if (rspackPlugins.length === 0) {
+      rspackPlugins = rspackPlugins.map((plugin) => {
+        if (typeof plugin === 'string') {
+          return {
+            plugin: plugin,
+            exclude: [`${project.root}/*`],
+          };
+        }
+
+        return {
+          ...plugin,
+          exclude: [...(plugin.exclude ?? []), `${project.root}/*`],
+        };
+      });
+      nxJson.plugins = [...nonRspackPlugins, ...rspackPlugins];
+      updateNxJson(tree, nxJson);
+    }
+  }
   const installTask = addDependenciesToPackageJson(
     tree,
     {},

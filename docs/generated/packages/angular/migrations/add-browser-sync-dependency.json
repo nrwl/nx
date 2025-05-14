@@ -1,0 +1,15 @@
+{
+  "name": "add-browser-sync-dependency",
+  "cli": "nx",
+  "version": "17.3.0-beta.10",
+  "requires": { "@angular/core": ">=17.1.0" },
+  "description": "Add 'browser-sync' as dev dependency when '@angular-devkit/build-angular:ssr-dev-server' or '@nx/angular:module-federation-dev-ssr' is used.",
+  "factory": "./src/migrations/update-17-3-0/add-browser-sync-dependency",
+  "implementation": "/packages/angular/src/migrations/update-17-3-0/add-browser-sync-dependency.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

@@ -28,7 +28,9 @@ async function normalizeResolverOptions(
   tree: Tree,
   options: ResolverGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const normalizedOptions = await normalizeOptions(tree, options);
+  const normalizedOptions = await normalizeOptions(tree, options, {
+    suffix: 'resolver',
+  });
   return {
     ...normalizedOptions,
     language: options.language,

@@ -27,6 +27,18 @@ describe('pipe generator', () => {
     ).toMatchSnapshot();
   });
 
+  it('should handle path with file extension', async () => {
+    await generatePipeWithDefaultOptions(tree, {
+      path: 'test/src/app/test.pipe.ts',
+      skipFormat: false,
+    });
+
+    expect(tree.read('test/src/app/test.pipe.ts', 'utf-8')).toMatchSnapshot();
+    expect(
+      tree.read('test/src/app/test.pipe.spec.ts', 'utf-8')
+    ).toMatchSnapshot();
+  });
+
   it('should not import the pipe into an existing module', async () => {
     // ARRANGE
     addModule(tree);
@@ -51,6 +63,12 @@ describe('pipe generator', () => {
     expect(
       tree.exists('test/src/app/my-pipes/test/test.pipe.spec.ts')
     ).toBeFalsy();
+  });
+
+  it('should error when the class name is invalid', async () => {
+    await expect(
+      generatePipeWithDefaultOptions(tree, { name: '404' })
+    ).rejects.toThrow('Class name "404Pipe" is invalid.');
   });
 
   describe('--no-standalone', () => {

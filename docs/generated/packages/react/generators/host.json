@@ -5,8 +5,8 @@
     "$schema": "https://json-schema.org/schema",
     "$id": "GeneratorReactHost",
     "cli": "nx",
-    "title": "Generate Module Federation Setup for React Host App",
-    "description": "Create Module Federation configuration files for given React Host Application.",
+    "title": "Generate Module Federation Setup for React Consumer (Host) App",
+    "description": "Create Module Federation configuration files for given React Consumer (Host) Application.",
     "type": "object",
     "properties": {
       "directory": {
@@ -18,7 +18,7 @@
       },
       "name": {
         "type": "string",
-        "description": "The name of the host application to generate the Module Federation configuration",
+        "description": "The name of the Consumer (host) application to generate the Module Federation configuration",
         "pattern": "^[a-zA-Z][^:]*$",
         "x-priority": "important"
       },
@@ -68,7 +68,7 @@
       },
       "dynamic": {
         "type": "boolean",
-        "description": "Should the host application use dynamic federation?",
+        "description": "Should the Consumer (host) application use dynamic federation?",
         "default": false
       },
       "skipFormat": {
@@ -135,18 +135,19 @@
       },
       "remotes": {
         "type": "array",
-        "description": "A list of remote application names that the host application should consume.",
+        "description": "A list of Producer (remote) application names that the Consumer (host) application should consume.",
         "default": [],
-        "x-priority": "important"
+        "x-priority": "important",
+        "alias": "producers"
       },
       "devServerPort": {
         "type": "number",
-        "description": "The port for the dev server of the remote app.",
+        "description": "The port for the dev server of the Producer (remote) app.",
         "default": 4200,
         "x-priority": "important"
       },
       "ssr": {
-        "description": "Whether to configure SSR for the host application",
+        "description": "Whether to configure SSR for the Consumer (host) application",
         "type": "boolean",
         "default": false
       },
@@ -181,8 +182,8 @@
   },
   "x-type": "application",
   "description": "Generate a host react application",
+  "aliases": ["consumer"],
   "implementation": "/packages/react/src/generators/host/host.ts",
-  "aliases": [],
   "hidden": false,
   "path": "/packages/react/src/generators/host/schema.json",
   "type": "generator"

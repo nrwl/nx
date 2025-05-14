@@ -1,3 +1,7 @@
+---
+keywords: [split tasks, atomizer]
+---
+
 # Automatically Split E2E Tasks by File (Atomizer)
 
 {% youtube
@@ -50,6 +54,13 @@ nx add @nx/jest
 ```
 
 {% /tab %}
+{% tab label="Gradle" %}
+
+```shell {% skipRescope=true %}
+nx add @nx/gradle
+```
+
+{% /tab %}
 {% /tabs %}
 
 This command will register the appropriate plugin in the `plugins` array of `nx.json`.
@@ -71,6 +82,7 @@ If you are already using the `@nx/cypress`, `@nx/playwright`, or `@nx/jest` plug
 - [Configure Cypress Task Splitting](/nx-api/cypress#nxcypress-configuration)
 - [Configure Playwright Task Splitting](/nx-api/playwright#nxplaywright-configuration)
 - [Configure Jest Task Splitting](/nx-api/jest#splitting-e2e-tests)
+- [Configure Gradle Testing Task Splitting](/nx-api/gradle#splitting-tests)
 
 ## Verify Automated Task Splitting Works
 
@@ -423,6 +435,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
 
       - uses: pnpm/action-setup@v4
         with:

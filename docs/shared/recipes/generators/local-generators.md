@@ -1,3 +1,8 @@
+---
+title: Local Generators
+description: Learn how to create, run, and customize local generators in your Nx workspace to automate common development tasks and standardize workflows.
+---
+
 # Local Generators
 
 Local plugin generators provide a way to automate many tasks you regularly perform as part of your development workflow. Whether it is scaffolding out components, features, or ensuring libraries are generated and structured in a certain way, generators help you standardize these tasks in a consistent, and predictable manner.

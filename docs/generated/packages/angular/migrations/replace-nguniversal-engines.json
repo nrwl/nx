@@ -1,0 +1,15 @@
+{
+  "name": "replace-nguniversal-engines",
+  "cli": "nx",
+  "version": "17.1.0-beta.5",
+  "requires": { "@angular/core": ">=17.0.0" },
+  "description": "Replace usages of '@nguniversal/' packages with '@angular/ssr'.",
+  "factory": "./src/migrations/update-17-1-0/replace-nguniversal-engines",
+  "implementation": "/packages/angular/src/migrations/update-17-1-0/replace-nguniversal-engines.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

@@ -1,4 +1,4 @@
-import { minimatch } from 'minimatch';
+import picomatch = require('picomatch');
 import {
   copyFileSync,
   existsSync,
@@ -10,10 +10,11 @@ import {
 import * as pathPosix from 'node:path/posix';
 import * as path from 'node:path';
 import ignore from 'ignore';
-import * as fg from 'fast-glob';
+import { globSync } from 'tinyglobby';
 import { AssetGlob } from './assets';
-import { logger } from '@nx/devkit';
+import { logger, workspaceRoot } from '@nx/devkit';
 import { ChangedFile, daemonClient } from 'nx/src/daemon/client/client';
+import { dim } from 'picocolors';
 
 export type FileEventType = 'create' | 'update' | 'delete';
 
@@ -52,6 +53,9 @@ export const defaultFileEventHandler = (events: FileEvent[]) => {
     } else {
       logger.error(`Unknown file event: ${event.type}`);
     }
+    const eventDir = path.dirname(event.src);
+    const relativeDest = path.relative(eventDir, event.dest);
+    logger.log(`\n${dim(relativeDest)}`);
   });
 };
 
@@ -115,10 +119,11 @@ export class CopyAssetsHandler {
       this.assetGlobs.map(async (ag) => {
         const pattern = this.normalizeAssetPattern(ag);
 
-        // fast-glob only supports Unix paths
-        const files = await fg(pattern.replace(/\\/g, '/'), {
+        // globbing only supports Unix paths
+        const files = await globSync(pattern.replace(/\\/g, '/'), {
           cwd: this.rootDir,
           dot: true, // enable hidden files
+          expandDirectories: false,
         });
 
         this.callback(this.filesToEvent(files, ag));
@@ -130,10 +135,11 @@ export class CopyAssetsHandler {
     this.assetGlobs.forEach((ag) => {
       const pattern = this.normalizeAssetPattern(ag);
 
-      // fast-glob only supports Unix paths
-      const files = fg.sync(pattern.replace(/\\/g, '/'), {
+      // globbing only supports Unix paths
+      const files = globSync(pattern.replace(/\\/g, '/'), {
         cwd: this.rootDir,
         dot: true, // enable hidden files
+        expandDirectories: false,
       });
 
       this.callback(this.filesToEvent(files, ag));
@@ -164,11 +170,13 @@ export class CopyAssetsHandler {
   async processWatchEvents(events: ChangedFile[]): Promise<void> {
     const fileEvents: FileEvent[] = [];
     for (const event of events) {
-      const pathFromRoot = path.relative(this.rootDir, event.path);
+      const pathFromRoot = event.path.startsWith(this.rootDir)
+        ? path.relative(this.rootDir, event.path)
+        : event.path;
       for (const ag of this.assetGlobs) {
         if (
-          minimatch(pathFromRoot, ag.pattern) &&
-          !ag.ignore?.some((ig) => minimatch(pathFromRoot, ig)) &&
+          picomatch(ag.pattern)(pathFromRoot) &&
+          !ag.ignore?.some((ig) => picomatch(ig)(pathFromRoot)) &&
           !this.ignore.ignores(pathFromRoot)
         ) {
           const relPath = path.relative(ag.input, pathFromRoot);
@@ -190,7 +198,7 @@ export class CopyAssetsHandler {
   private filesToEvent(files: string[], assetGlob: AssetEntry): FileEvent[] {
     return files.reduce((acc, src) => {
       if (
-        !assetGlob.ignore?.some((ig) => minimatch(src, ig)) &&
+        !assetGlob.ignore?.some((ig) => picomatch(ig)(src)) &&
         !this.ignore.ignores(src)
       ) {
         const relPath = path.relative(assetGlob.input, src);

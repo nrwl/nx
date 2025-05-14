@@ -1,3 +1,8 @@
+---
+title: Extending Nx with Plugins
+description: Learn how to create custom Nx plugins to enforce best practices, integrate tools, and share functionality across your organization's repositories.
+---
+
 # Extending Nx with Plugins
 
 Nx's core functionality focuses on task running and understanding your project and task graph. Nx plugins leverage that functionality to enforce best practices, seamlessly integrate tooling and allow developers to get up and running quickly.
@@ -37,8 +42,8 @@ You can follow along with one of the step by step tutorials below that is focuse
 
 {% cards cols="2" %}
 
-{% link-card title="Enforce Best Practices in Your Repository" type="tutorial" url="/extending-nx/tutorials/organization-specific-plugin" icon="office" /%}
-{% link-card title="Integrate a Tool Into an Nx Repository" type="tutorial" url="/extending-nx/tutorials/tooling-plugin" icon="tool" /%}
+{% link-card title="Enforce Best Practices in Your Repository" type="tutorial" url="/extending-nx/tutorials/organization-specific-plugin" icon="BuildingOfficeIcon" /%}
+{% link-card title="Integrate a Tool Into an Nx Repository" type="tutorial" url="/extending-nx/tutorials/tooling-plugin" icon="WrenchScrewdriverIcon" /%}
 
 {% /cards %}
 

@@ -24,6 +24,7 @@ export function normalizeExecutorSchema(
     version,
     outputCapture:
       schema.outputCapture ?? version < 2 ? 'direct-nodejs' : 'pipe',
+    continuous: schema.continuous ?? false,
     properties:
       !schema.properties || typeof schema.properties !== 'object'
         ? {}
@@ -36,12 +37,21 @@ function cacheKey(nodeModule: string, executor: string, root: string) {
   return `${root}:${nodeModule}:${executor}`;
 }
 
+export function parseExecutor(
+  executorString: string
+): [module: string, name: string] {
+  return executorString.split(':') as [string, string];
+}
+
 const cachedExecutorInformation = {};
 
 export function getExecutorInformation(
   nodeModule: string,
   executor: string,
   root: string,
+  /**
+   * A map of projects keyed by project name
+   */
   projects: Record<string, ProjectConfiguration>
 ): ExecutorConfig & { isNgCompat: boolean; isNxExecutor: boolean } {
   try {
@@ -55,25 +65,36 @@ export function getExecutorInformation(
       projects
     );
     const executorsDir = dirname(executorsFilePath);
-    const schemaPath = resolveSchema(executorConfig.schema, executorsDir);
+    const schemaPath = resolveSchema(
+      executorConfig.schema,
+      executorsDir,
+      nodeModule,
+      projects
+    );
     const schema = normalizeExecutorSchema(readJsonFile(schemaPath));
 
     const implementationFactory = getImplementationFactory<Executor>(
       executorConfig.implementation,
-      executorsDir
+      executorsDir,
+      nodeModule,
+      projects
     );
 
     const batchImplementationFactory = executorConfig.batchImplementation
       ? getImplementationFactory<TaskGraphExecutor>(
           executorConfig.batchImplementation,
-          executorsDir
+          executorsDir,
+          nodeModule,
+          projects
         )
       : null;
 
     const hasherFactory = executorConfig.hasher
       ? getImplementationFactory<CustomHasher>(
           executorConfig.hasher,
-          executorsDir
+          executorsDir,
+          nodeModule,
+          projects
         )
       : null;
 

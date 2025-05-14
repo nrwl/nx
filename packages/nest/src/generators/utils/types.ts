@@ -25,7 +25,6 @@ export type TransportLayer =
 
 export type NestGeneratorOptions = {
   path: string;
-  name?: string;
   skipFormat?: boolean;
 };
 

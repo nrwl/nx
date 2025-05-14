@@ -1,3 +1,8 @@
+---
+title: Run Root-Level NPM Scripts with Nx
+description: Learn how to run npm scripts from your root package.json using Nx to benefit from caching, task orchestration, and other Nx features.
+---
+
 # Run Root-Level NPM Scripts with Nx
 
 {% youtube

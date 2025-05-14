@@ -103,9 +103,18 @@ function getDependencyTasksInOtherProjects(
   project: string,
   context: ExecutorContext
 ): string[] {
-  return context.taskGraph.dependencies[task].filter(
-    (t) => t !== task && parseTargetString(t, context).project !== project
+  const implicitDependencies = new Set(
+    context.projectGraph.nodes[project].data.implicitDependencies ?? []
   );
+  return context.taskGraph.dependencies[task].filter((t) => {
+    const { project: dependencyProject } = parseTargetString(t, context);
+    // Tasks for implicit dependencies are skipped since incremental builds only apply to explicit dependencies
+    return (
+      t !== task &&
+      dependencyProject !== project &&
+      !implicitDependencies.has(dependencyProject)
+    );
+  });
 }
 
 function getDependencyTasksInSameProject(

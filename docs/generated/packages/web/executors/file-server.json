@@ -3,6 +3,7 @@
   "implementation": "/packages/web/src/executors/file-server/file-server.impl.ts",
   "schema": {
     "version": 2,
+    "continuous": true,
     "outputCapture": "direct-nodejs",
     "title": "File Server",
     "description": "Serve a web application from a folder. This executor is a wrapper around the [http-server](https://www.npmjs.com/package/http-server) package.",
@@ -72,7 +73,7 @@
         "description": "Path where the build artifacts are located. If not provided then it will be infered from the buildTarget executor options as outputPath"
       },
       "cors": {
-        "type": "boolean",
+        "oneOf": [{ "type": "boolean" }, { "type": "string" }],
         "description": "Enable CORS",
         "default": true
       },

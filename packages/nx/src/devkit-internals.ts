@@ -4,7 +4,10 @@
  * These may not be available in certain version of Nx, so be sure to check them first.
  */
 export { createTempNpmDirectory } from './utils/package-manager';
-export { getExecutorInformation } from './command-line/run/executor-utils';
+export {
+  getExecutorInformation,
+  parseExecutor,
+} from './command-line/run/executor-utils';
 export { readNxJson as readNxJsonFromDisk } from './config/nx-json';
 export { calculateDefaultProjectName } from './config/calculate-default-project-name';
 export { retrieveProjectConfigurationsWithAngularProjects } from './project-graph/utils/retrieve-workspace-files';
@@ -20,14 +23,18 @@ export { stripIndent } from './utils/logger';
 export { readModulePackageJson } from './utils/package-json';
 export { splitByColons } from './utils/split-target';
 export { hashObject } from './hasher/file-hasher';
-export { hashWithWorkspaceContext } from './utils/workspace-context';
+export {
+  hashWithWorkspaceContext,
+  hashMultiGlobWithWorkspaceContext,
+} from './utils/workspace-context';
 export {
   createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
 } from './project-graph/utils/find-project-for-path';
 export { retrieveProjectConfigurations } from './project-graph/utils/retrieve-workspace-files';
-export { LoadedNxPlugin } from './project-graph/plugins/internal-api';
+export { LoadedNxPlugin } from './project-graph/plugins/loaded-nx-plugin';
 export * from './project-graph/error-types';
 export { registerTsProject } from './plugins/js/utils/register';
 export { interpolate } from './tasks-runner/utils';
 export { isCI } from './utils/is-ci';
+export { isUsingPrettierInTree } from './utils/is-using-prettier';

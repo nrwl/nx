@@ -1,0 +1,14 @@
+{
+  "name": "19.2.0-package-updates",
+  "version": "19.2.0-beta.8",
+  "packages": {
+    "postcss": { "version": "8.4.38", "alwaysAddToPackageJson": false }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/react",
+  "schema": null,
+  "type": "migration"
+}

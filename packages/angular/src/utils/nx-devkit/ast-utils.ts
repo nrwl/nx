@@ -1,4 +1,4 @@
-import type * as ts from 'typescript';
+import { names, readProjectConfiguration, Tree } from '@nx/devkit';
 import {
   findNodes,
   getImport,
@@ -7,9 +7,11 @@ import {
   removeChange,
   replaceChange,
 } from '@nx/js';
-import { dirname, join } from 'path';
-import { names, readProjectConfiguration, Tree } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { dirname, join } from 'path';
+import type * as ts from 'typescript';
+import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
+import { getInstalledAngularVersionInfo as getInstalledAngularVersionInfoFromTree } from '../../generators/utils/version-utils';
 
 let tsModule: typeof import('typescript');
 
@@ -72,20 +74,42 @@ function _angularImportsFromNode(
 
 /**
  * Check if the Component, Directive or Pipe is standalone
+ * @param tree The file system tree
  * @param sourceFile TS Source File containing the token to check
  * @param decoratorName The type of decorator to check (Component, Directive, Pipe)
  */
 export function isStandalone(
+  tree: Tree,
   sourceFile: ts.SourceFile,
   decoratorName: DecoratorName
-) {
+): boolean {
   const decoratorMetadata = getDecoratorMetadata(
     sourceFile,
     decoratorName,
     '@angular/core'
   );
-  return decoratorMetadata.some((node) =>
+  const hasStandaloneTrue = decoratorMetadata.some((node) =>
     node.getText().includes('standalone: true')
+  );
+
+  if (hasStandaloneTrue) {
+    return true;
+  }
+
+  const { major: angularMajorVersion } = tree
+    ? getInstalledAngularVersionInfoFromTree(tree)
+    : getInstalledAngularVersionInfo();
+  if (angularMajorVersion !== null && angularMajorVersion < 19) {
+    // in angular 18 and below, standalone: false is the default, so, if
+    // standalone: true is not set, then it is false
+    return false;
+  }
+
+  // in case angularMajorVersion is null, we assume that the version is 19 or
+  // above, in which case, standalone: true is the default, so we need to
+  // check that standalone: false is not set
+  return !decoratorMetadata.some((node) =>
+    node.getText().includes('standalone: false')
   );
 }
 

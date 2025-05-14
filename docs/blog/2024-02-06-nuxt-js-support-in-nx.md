@@ -1,9 +1,10 @@
 ---
 title: Introducing @nx/nuxt Enhanced Nuxt.js Support in Nx
 slug: 'introducing-nx-nuxt-enhanced-nuxt-js-support-in-nx'
-cover_image: '/blog/images/2024-02-06/featured_img.png'
+cover_image: '/blog/images/2024-02-06/featured_img.avif'
 authors: ['Katerina Skroumpelou']
 tags: [devtools, javascript, monorepos, nuxt]
+description: 'Explore how the new @nx/nuxt plugin enhances Nuxt.js development with automated task recognition and improved monorepo capabilities.'
 ---
 
 We're excited to introduce a new way to enhance your [Nuxt](https://nuxt.com/) development workflow! After the Vue plugin, we're introducing our new Nx plugin for Nuxt, `@nx/nuxt`. Designed for Nuxt developers and existing Nx users alike, this integration brings the best of both worlds into your development ecosystem, enabling you to leverage Nx's powerful capabilities seamlessly within your Nuxt projects.
@@ -180,7 +181,7 @@ Whether you're starting a new Nuxt project or looking to enhance an existing one
 
 ## Nx Live With Nuxt Maintainer Daniel Roe
 
-Don’t miss Nx team members Zack and Katerina with Nuxt’s maintainer, Daniel Roe — live!
+Don't miss Nx team members Zack and Katerina with Nuxt's maintainer, Daniel Roe — live!
 
 {% youtube src="https://www.youtube.com/watch?v=uHwUxFYX2DY" %}
 

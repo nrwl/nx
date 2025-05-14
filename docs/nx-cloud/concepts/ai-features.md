@@ -17,7 +17,7 @@ Ensure that you **accept the AI terms** to start using the AI features.
 
 {% callout type="info" title="AI Features Availability" %}
 
-AI features are available only for the [Nx Cloud Pro plan](/pricing). If you are on the Hobby plan, you can start a free trial to test AI features in your workspace.
+AI features are available only for the [Nx Cloud Team plan](/pricing).
 
 {% /callout %}
 

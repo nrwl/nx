@@ -1,3 +1,8 @@
+---
+title: Deploying a Node App to Fly.io
+description: Learn how to deploy a Node.js backend application from an Nx workspace to Fly.io, including Docker setup and automating the deployment process.
+---
+
 # Deploying a Node App to Fly.io
 
 This recipe guides you through deploying your Nx based Node backend application to [Fly.io](https://fly.io/).
@@ -72,7 +77,7 @@ That's is! Our server is now deployed for the world to use.
 
 You can also automate the deployment by adding a target to your project. In addition, that allows us to leverage the Nx [task pipeline](/concepts/task-pipeline-configuration) to make sure we first run the `build` and then the `deploy`.
 
-By using [Nx run-commands](/recipes/running-tasks/run-commands-executor), you can add a `deploy` target to the project. Go to the project's `project.json` file (under `"targets"`) and add the following:
+By using [Nx run-commands](/recipes/running-tasks/run-commands-executor), you can add a `deploy` target to the project. Go to the project's `project.json` file (under `targets`) and add the following:
 
 ```json {% fileName="project.json" %}
 "deploy": {

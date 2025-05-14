@@ -127,6 +127,7 @@ Able to find CT project, ${!!ctProjectConfig}.`);
     projectRoot: ctProjectConfig.root,
     sourceRoot: ctProjectConfig.sourceRoot,
     main: '',
+    useTsconfigPaths: undefined,
     fileReplacements: buildFileReplacements,
     assets: buildAssets,
     outputPath: buildOuputPath,

@@ -1,164 +1,22 @@
-import {
-  ExecutorContext,
-  logger,
-  parseTargetString,
-  readTargetOptions,
-  runExecutor,
-  workspaceRoot,
-} from '@nx/devkit';
+import { ExecutorContext, logger } from '@nx/devkit';
 import {
   combineAsyncIterables,
   createAsyncIterable,
 } from '@nx/devkit/src/utils/async-iterable';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
-import { cpSync, existsSync } from 'fs';
+import { existsSync } from 'fs';
 import { extname, join } from 'path';
-import {
-  getModuleFederationConfig,
-  getRemotes,
-} from '../../utils/module-federation';
-import { buildStaticRemotes } from '../../utils/module-federation/build-static.remotes';
-import {
-  parseStaticRemotesConfig,
-  type StaticRemotesConfig,
-} from '../../utils/module-federation/parse-static-remotes-config';
-import { startRemoteProxies } from '../../utils/module-federation/start-remote-proxies';
+import { startRemoteIterators } from '@nx/module-federation/src/executors/utils';
 import devServerExecutor from '../dev-server/dev-server.impl';
 import { ModuleFederationDevServerOptions } from './schema';
-
-function getBuildOptions(buildTarget: string, context: ExecutorContext) {
-  const target = parseTargetString(buildTarget, context);
-
-  const buildOptions = readTargetOptions(target, context);
-
-  return {
-    ...buildOptions,
-  };
-}
-
-function startStaticRemotesFileServer(
-  staticRemotesConfig: StaticRemotesConfig,
-  context: ExecutorContext,
-  options: ModuleFederationDevServerOptions
-) {
-  if (
-    !staticRemotesConfig.remotes ||
-    staticRemotesConfig.remotes.length === 0
-  ) {
-    return;
-  }
-  let shouldMoveToCommonLocation = false;
-  let commonOutputDirectory: string;
-  for (const app of staticRemotesConfig.remotes) {
-    const remoteBasePath = staticRemotesConfig.config[app].basePath;
-    if (!commonOutputDirectory) {
-      commonOutputDirectory = remoteBasePath;
-    } else if (commonOutputDirectory !== remoteBasePath) {
-      shouldMoveToCommonLocation = true;
-      break;
-    }
-  }
-
-  if (shouldMoveToCommonLocation) {
-    commonOutputDirectory = join(workspaceRoot, 'tmp/static-remotes');
-    for (const app of staticRemotesConfig.remotes) {
-      const remoteConfig = staticRemotesConfig.config[app];
-      cpSync(
-        remoteConfig.outputPath,
-        join(commonOutputDirectory, remoteConfig.urlSegment),
-        {
-          force: true,
-          recursive: true,
-        }
-      );
-    }
-  }
-
-  const staticRemotesIter = fileServerExecutor(
-    {
-      cors: true,
-      watch: false,
-      staticFilePath: commonOutputDirectory,
-      parallel: false,
-      spa: false,
-      withDeps: false,
-      host: options.host,
-      port: options.staticRemotesPort,
-      ssl: options.ssl,
-      sslCert: options.sslCert,
-      sslKey: options.sslKey,
-      cacheSeconds: -1,
-    },
-    context
-  );
-
-  return staticRemotesIter;
-}
-
-async function startRemotes(
-  remotes: string[],
-  context: ExecutorContext,
-  options: ModuleFederationDevServerOptions,
-  target: 'serve' | 'serve-static' = 'serve'
-) {
-  const remoteIters: AsyncIterable<{ success: boolean }>[] = [];
-
-  for (const app of remotes) {
-    const remoteProjectServeTarget =
-      context.projectGraph.nodes[app].data.targets[target];
-    const isUsingModuleFederationDevServerExecutor =
-      remoteProjectServeTarget.executor.includes(
-        'module-federation-dev-server'
-      );
-
-    const configurationOverride = options.devRemotes?.find(
-      (
-        r
-      ): r is {
-        remoteName: string;
-        configuration: string;
-      } => typeof r !== 'string' && r.remoteName === app
-    )?.configuration;
-
-    const defaultOverrides = {
-      ...(options.host ? { host: options.host } : {}),
-      ...(options.ssl ? { ssl: options.ssl } : {}),
-      ...(options.sslCert ? { sslCert: options.sslCert } : {}),
-      ...(options.sslKey ? { sslKey: options.sslKey } : {}),
-    };
-    const overrides =
-      target === 'serve'
-        ? {
-            watch: true,
-            ...(isUsingModuleFederationDevServerExecutor
-              ? { isInitialHost: false }
-              : {}),
-            ...defaultOverrides,
-          }
-        : { ...defaultOverrides };
-
-    remoteIters.push(
-      await runExecutor(
-        {
-          project: app,
-          target,
-          configuration: configurationOverride ?? context.configurationName,
-        },
-        overrides,
-        context
-      )
-    );
-  }
-  return remoteIters;
-}
+import { getBuildOptions, normalizeOptions, startRemotes } from './lib';
 
 export default async function* moduleFederationDevServer(
-  options: ModuleFederationDevServerOptions,
+  schema: ModuleFederationDevServerOptions,
   context: ExecutorContext
 ): AsyncIterableIterator<{ success: boolean; baseUrl?: string }> {
-  // Force Node to resolve to look for the nx binary that is inside node_modules
-  const nxBin = require.resolve('nx/bin/nx');
+  const options = normalizeOptions(schema);
   const currIter = options.static
     ? fileServerExecutor(
         {
@@ -203,74 +61,14 @@ export default async function* moduleFederationDevServer(
     return yield* currIter;
   }
 
-  const moduleFederationConfig = getModuleFederationConfig(
-    buildOptions.tsConfig,
-    context.root,
-    p.root,
-    'react'
-  );
-
-  const remoteNames = options.devRemotes?.map((r) =>
-    typeof r === 'string' ? r : r.remoteName
-  );
-
-  const remotes = getRemotes(
-    remoteNames,
-    options.skipRemotes,
-    moduleFederationConfig,
-    {
-      projectName: context.projectName,
-      projectGraph: context.projectGraph,
-      root: context.root,
-    },
-    pathToManifestFile
-  );
-  options.staticRemotesPort ??= remotes.staticRemotePort;
-
-  // Set NX_MF_DEV_REMOTES for the Nx Runtime Library Control Plugin
-  process.env.NX_MF_DEV_REMOTES = JSON.stringify([
-    ...(
-      remotes.devRemotes.map((r) =>
-        typeof r === 'string' ? r : r.remoteName
-      ) ?? []
-    ).map((r) => r.replace(/-/g, '_')),
-    p.name.replace(/-/g, '_'),
-  ]);
-
-  const staticRemotesConfig = parseStaticRemotesConfig(
-    [...remotes.staticRemotes, ...remotes.dynamicRemotes],
-    context
-  );
-  const mappedLocationsOfStaticRemotes = await buildStaticRemotes(
-    staticRemotesConfig,
-    nxBin,
-    context,
-    options
-  );
-
-  const devRemoteIters = await startRemotes(
-    remotes.devRemotes,
-    context,
-    options,
-    'serve'
-  );
-
-  const staticRemotesIter = startStaticRemotesFileServer(
-    staticRemotesConfig,
-    context,
-    options
-  );
-
-  startRemoteProxies(
-    staticRemotesConfig,
-    mappedLocationsOfStaticRemotes,
-    options.ssl
-      ? {
-          pathToCert: join(workspaceRoot, options.sslCert),
-          pathToKey: join(workspaceRoot, options.sslKey),
-        }
-      : undefined
-  );
+  const { staticRemotesIter, devRemoteIters, remotes } =
+    await startRemoteIterators(
+      options,
+      context,
+      startRemotes,
+      pathToManifestFile,
+      'react'
+    );
 
   return yield* combineAsyncIterables(
     currIter,

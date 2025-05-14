@@ -1,11 +1,13 @@
+---
+title: 'Manage Releases'
+description: 'Learn how to use Nx release tools to version, generate changelogs, and publish your projects with confidence using conventional commits.'
+---
+
 # Manage Releases - `nx release`
 
 Once you have leveraged Nx's powerful code generation and task running capabilities to build your libraries and applications, you will want to share them with your users.
 
-{% youtube
-src="https://youtu.be/KjZKFGu3_9I"
-title="Releasing Nx Release"
-width="100%" /%}
+{% link-card title="Free Course: Versioning and Releasing NPM packages with Nx" type="external" url="https://www.epicweb.dev/tutorials/versioning-and-releasing-npm-packages-with-nx" icon="/documentation/shared/images/nx-release-course-logo.webp" /%}
 
 Nx provides a set of tools to help you manage your releases called `nx release`.
 
@@ -20,7 +22,7 @@ nx release --dry-run
 A release can be thought about in three main phases:
 
 1. **Versioning** - The process of determining the next version of your projects, and updating any projects that depend on them to use the new version.
-2. **Changelog** - The process of deriving a changelog from your commit messages, which can be used to communicate the changes to your users.
+2. **Changelog** - The process of deriving a changelog from your commit messages or [version plan](/recipes/nx-release/file-based-versioning-version-plans) files, which can be used to communicate the changes to your users.
 3. **Publishing** - The process of publishing your projects to a registry, such as npm for TypeScript/JavaScript libraries.
 
 ## Running releases
@@ -43,7 +45,7 @@ If you are working with a brand new workspace, or one that has never been releas
 
 The `nx release` command is highly customizable. You can customize the versioning, changelog, and publishing phases of the release process independently through a mixture of configuration and CLI arguments.
 
-The configuration lives in your `nx.json` file under the `"release"` section.
+The configuration lives in your `nx.json` file under the `release` section.
 
 ```jsonc {% fileName="nx.json" %}
 {
@@ -73,7 +75,9 @@ Changelog render options can be passed as [an object](https://github.com/nrwl/nx
           // Whether or not the commit references (such as commit and/or PR links) should be included in the changelog.
           "commitReferences": true,
           // Whether or not to include the date in the version title. It can be set to false to disable it, or true to enable with the default of (YYYY-MM-DD).
-          "versionTitleDate": true
+          "versionTitleDate": true,
+          // Whether to apply usernames to authors in the Thank You section. Note, this option was called mapAuthorsToGitHubUsernames prior to Nx v21.
+          "applyUsernameToAuthors": true
         }
       },
       "workspaceChangelog": {
@@ -83,7 +87,9 @@ Changelog render options can be passed as [an object](https://github.com/nrwl/nx
           // Whether or not the commit references (such as commit and/or PR links) should be included in the changelog.
           "commitReferences": true,
           // Whether or not to include the date in the version title. It can be set to false to disable it, or true to enable with the default of (YYYY-MM-DD).
-          "versionTitleDate": true
+          "versionTitleDate": true,
+          // Whether to apply usernames to authors in the Thank You section. Note, this option was called mapAuthorsToGitHubUsernames prior to Nx v21.
+          "applyUsernameToAuthors": true
         }
       }
     }
@@ -151,11 +157,14 @@ import * as yargs from 'yargs';
     verbose: options.verbose,
   });
 
-  // The returned number value from releasePublish will be zero if all projects are published successfully, non-zero if not
-  const publishStatus = await releasePublish({
+  // publishResults contains a map of project names and their exit codes
+  const publishResults = await releasePublish({
     dryRun: options.dryRun,
     verbose: options.verbose,
   });
-  process.exit(publishStatus);
+
+  process.exit(
+    Object.values(publishResults).every((result) => result.code === 0) ? 0 : 1
+  );
 })();
 ```

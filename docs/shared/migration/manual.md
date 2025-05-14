@@ -1,3 +1,8 @@
+---
+title: Manual Migration of Existing Code Bases
+description: Learn how to manually integrate Nx into your existing codebase by installing dependencies, configuring nx.json, setting up caching, and updating your gitignore file.
+---
+
 # Manual migration of existing code bases
 
 The easiest way to start using Nx is to run the `nx init` command.

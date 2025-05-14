@@ -1,6 +1,5 @@
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { Schema } from '../schema';
 import { NormalizedSchema, normalizeOptions } from './normalize-options';
 
@@ -14,7 +13,7 @@ describe('Normalize Options', () => {
   it('should normalize options with name in kebab case', async () => {
     const schema: Schema = {
       directory: 'my-app',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
       skipFormat: false,
       js: true,
@@ -28,24 +27,27 @@ describe('Normalize Options', () => {
       directory: 'my-app',
       displayName: 'MyApp',
       lowerCaseName: 'myapp',
-      name: 'my-app',
+      simpleName: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
+      importPath: '@proj/my-app',
       unitTestRunner: 'jest',
       skipFormat: false,
       js: true,
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'my-app-e2e',
+      isTsSolutionSetup: false,
+      useProjectJson: true,
     } as NormalizedSchema);
   });
 
   it('should normalize options with name in camel case', async () => {
     const schema: Schema = {
       directory: 'myApp',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
       skipFormat: false,
       js: true,
@@ -59,17 +61,20 @@ describe('Normalize Options', () => {
       directory: 'myApp',
       displayName: 'MyApp',
       lowerCaseName: 'myapp',
-      name: 'myApp',
+      simpleName: 'myApp',
       parsedTags: [],
       projectName: 'myApp',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
+      importPath: '@proj/myApp',
       skipFormat: false,
       js: true,
       unitTestRunner: 'jest',
       rootProject: false,
       e2eProjectName: 'myApp-e2e',
       e2eProjectRoot: 'myApp-e2e',
+      isTsSolutionSetup: false,
+      useProjectJson: true,
     } as NormalizedSchema);
   });
 
@@ -77,7 +82,7 @@ describe('Normalize Options', () => {
     const schema: Schema = {
       name: 'my-app',
       directory: 'directory',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
       skipFormat: false,
       js: true,
@@ -91,24 +96,28 @@ describe('Normalize Options', () => {
       displayName: 'MyApp',
       lowerCaseName: 'myapp',
       name: 'my-app',
+      simpleName: 'my-app',
       directory: 'directory',
       parsedTags: [],
       projectName: 'my-app',
       e2eTestRunner: 'none',
+      importPath: '@proj/my-app',
       unitTestRunner: 'jest',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: false,
       js: true,
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'directory-e2e',
+      isTsSolutionSetup: false,
+      useProjectJson: true,
     } as NormalizedSchema);
   });
 
   it('should normalize options that has directory in its name', async () => {
     const schema: Schema = {
       directory: 'directory/my-app',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
       skipFormat: false,
       js: true,
@@ -122,17 +131,20 @@ describe('Normalize Options', () => {
       directory: 'directory/my-app',
       displayName: 'MyApp',
       lowerCaseName: 'myapp',
-      name: 'my-app',
+      simpleName: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
       e2eTestRunner: 'none',
+      importPath: '@proj/my-app',
       unitTestRunner: 'jest',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: false,
       js: true,
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'directory/my-app-e2e',
+      isTsSolutionSetup: false,
+      useProjectJson: true,
     } as NormalizedSchema);
   });
 
@@ -140,7 +152,7 @@ describe('Normalize Options', () => {
     const schema: Schema = {
       directory: 'my-app',
       displayName: 'My App',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
       skipFormat: false,
       js: true,
@@ -154,17 +166,20 @@ describe('Normalize Options', () => {
       className: 'MyApp',
       displayName: 'My App',
       lowerCaseName: 'myapp',
-      name: 'my-app',
+      simpleName: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
       e2eTestRunner: 'none',
+      importPath: '@proj/my-app',
       unitTestRunner: 'jest',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: false,
       js: true,
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'my-app-e2e',
+      isTsSolutionSetup: false,
+      useProjectJson: true,
     } as NormalizedSchema);
   });
 });

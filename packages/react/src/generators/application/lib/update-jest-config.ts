@@ -20,6 +20,11 @@ export function updateSpecConfig(host: Tree, options: NormalizedSchema) {
     );
     compilerOptions.types = types;
     json.compilerOptions = compilerOptions;
+    if (options.isUsingTsSolutionConfig) {
+      // add project reference to the runtime tsconfig.app.json file
+      json.references ??= [];
+      json.references.push({ path: './tsconfig.app.json' });
+    }
     return json;
   });
 

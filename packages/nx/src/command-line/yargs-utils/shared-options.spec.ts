@@ -1,6 +1,12 @@
 import * as yargs from 'yargs';
 
-import { withAffectedOptions, withRunManyOptions } from './shared-options';
+import {
+  readParallelFromArgsAndEnv,
+  withAffectedOptions,
+  withOutputStyleOption,
+  withRunManyOptions,
+} from './shared-options';
+import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 
 const argv = yargs.default([]);
 
@@ -76,5 +82,96 @@ describe('shared-options', () => {
         })
       );
     });
+  });
+
+  describe('withOutputStyle', () => {
+    it('should coerce outputStyle based on NX_TUI', () =>
+      withEnvironmentVariables(
+        {
+          NX_TUI: 'true',
+          CI: 'false',
+          NX_TUI_SKIP_CAPABILITY_CHECK: 'true',
+        },
+        () => {
+          const command = withOutputStyleOption(argv);
+          const result = command.parseSync([]);
+          expect(result['output-style']).toEqual('tui');
+        }
+      ));
+
+    it('should set NX_TUI if using not set', () =>
+      withEnvironmentVariables(
+        {
+          NX_TUI: false,
+          CI: 'false',
+          NX_TUI_SKIP_CAPABILITY_CHECK: 'true',
+        },
+        () => {
+          const command = withOutputStyleOption(argv);
+          const result = command.parseSync([]);
+          expect(process.env.NX_TUI).toEqual('true');
+        }
+      ));
+
+    it.each(['dynamic', 'tui'])(
+      'should set NX_TUI if using output-style=%s',
+      () =>
+        withEnvironmentVariables(
+          {
+            NX_TUI: false,
+            CI: 'false',
+            NX_TUI_SKIP_CAPABILITY_CHECK: 'true',
+          },
+          () => {
+            const command = withOutputStyleOption(argv);
+            const result = command.parseSync(['--output-style', 'dynamic']);
+            expect(process.env.NX_TUI).toEqual('true');
+          }
+        )
+    );
+  });
+});
+
+describe('readParallelFromArgsAndEnv', () => {
+  it('default parallel should be 3', () => {
+    const result = readParallelFromArgsAndEnv({ parallel: 'true' });
+    expect(result).toEqual(3);
+  });
+
+  it('use maxParallel', () => {
+    const result = readParallelFromArgsAndEnv({
+      parallel: '',
+      maxParallel: '4',
+    });
+    expect(result).toEqual(4);
+  });
+
+  it('use max-parallel', () => {
+    const result = readParallelFromArgsAndEnv({
+      parallel: '',
+      'max-parallel': '5',
+    });
+    expect(result).toEqual(5);
+  });
+
+  it('should read parallel 6', () => {
+    const result = readParallelFromArgsAndEnv({
+      parallel: '6',
+    });
+    expect(result).toEqual(6);
+  });
+
+  it('0% parallel should be 1', () => {
+    const result = readParallelFromArgsAndEnv({
+      parallel: '0%',
+    });
+    expect(result).toEqual(1);
+  });
+
+  it('100% parallel should not be less than 1', () => {
+    const result = readParallelFromArgsAndEnv({
+      parallel: '100%',
+    });
+    expect(result).toBeGreaterThanOrEqual(1);
   });
 });

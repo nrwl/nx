@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    {
+      "path": "./packages/animals"
+    },
+    {
+      "path": "./packages/names"
+    },
+    {
+      "path": "./packages/zoo"
+    }
+  ]
+}

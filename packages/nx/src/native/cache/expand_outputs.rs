@@ -170,8 +170,8 @@ pub fn get_files_for_outputs(
 #[cfg(test)]
 mod test {
     use super::*;
-    use assert_fs::prelude::*;
     use assert_fs::TempDir;
+    use assert_fs::prelude::*;
     use std::{assert_eq, vec};
 
     fn setup_fs() -> TempDir {

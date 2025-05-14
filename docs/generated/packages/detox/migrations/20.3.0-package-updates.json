@@ -1,0 +1,18 @@
+{
+  "name": "20.3.0-package-updates",
+  "version": "20.3.0-beta.0",
+  "packages": {
+    "detox": { "version": "~20.28.0", "alwaysAddToPackageJson": false },
+    "@testing-library/jest-dom": {
+      "version": "~6.6.3",
+      "alwaysAddToPackageJson": false
+    }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/detox",
+  "schema": null,
+  "type": "migration"
+}

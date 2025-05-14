@@ -25,7 +25,7 @@ describe('Next Playwright e2e tests', () => {
   afterAll(() => cleanupProject());
 
   it('should execute e2e tests using playwright', () => {
-    if (runE2ETests()) {
+    if (runE2ETests('playwright')) {
       const result = runCLI(`e2e ${appName}-e2e --verbose`);
       expect(result).toContain(
         `Successfully ran target e2e for project ${appName}-e2e`
@@ -53,7 +53,7 @@ describe('Next Playwright e2e tests', () => {
       `
     );
 
-    if (runE2ETests()) {
+    if (runE2ETests('playwright')) {
       const result = runCLI(`e2e ${appName}-e2e --verbose`);
       expect(result).toContain(
         `Successfully ran target e2e for project ${appName}-e2e`

@@ -18,6 +18,16 @@ export function PlansDisplay(): ReactElement {
           <SectionHeading as="p" variant="subtitle" className="mt-6">
             Level up your CI with Nx Cloud
           </SectionHeading>
+          <div className="mt-10 flex items-center justify-center gap-x-6">
+            <ButtonLink
+              href="/contact/engineering"
+              title="Talk to the engineering team"
+              variant="secondary"
+              size="default"
+            >
+              Got questions? Talk to our team
+            </ButtonLink>
+          </div>
         </header>
         <div className="mt-20 flow-root">
           <div className="isolate -mt-16 grid max-w-full grid-cols-1 gap-6 sm:mx-auto lg:mt-0 lg:grid-cols-3 xl:-mx-4 xl:gap-8">
@@ -43,7 +53,7 @@ export function PlansDisplay(): ReactElement {
                 </p>
                 <div className="my-12">
                   <ButtonLink
-                    href="https://cloud.nx.app"
+                    href="https://cloud.nx.app/get-started/?utm_source=nx-dev&utm_medium=nx-cloud-plans&utm_campaign=hobby-plan"
                     aria-describedby="hobby-plan"
                     title="Start now"
                     size="default"
@@ -57,7 +67,7 @@ export function PlansDisplay(): ReactElement {
                     }
                     className="w-full"
                   >
-                    Get started
+                    Start now
                   </ButtonLink>
                 </div>
                 <ul className="mt-4 divide-y divide-slate-200 text-sm dark:divide-slate-800">
@@ -95,7 +105,7 @@ export function PlansDisplay(): ReactElement {
                       </Link>
                     </span>
                   </li>
-                  <li className="flex items-start justify-start gap-x-2 py-2.5">
+                  <li className="flex items-center justify-start gap-x-2 py-2.5">
                     <CheckCircleIcon
                       aria-hidden="true"
                       className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
@@ -147,7 +157,7 @@ export function PlansDisplay(): ReactElement {
 
               <div className="my-12">
                 <ButtonLink
-                  href="https://cloud.nx.app"
+                  href="https://cloud.nx.app/get-started/?utm_source=nx-dev&utm_medium=nx-cloud-plans&utm_campaign=team-plan"
                   aria-describedby="team-plan"
                   title="Get started"
                   size="default"
@@ -161,35 +171,35 @@ export function PlansDisplay(): ReactElement {
                   }
                   className="w-full"
                 >
-                  Get started
+                  Free to start
                 </ButtonLink>
               </div>
               <ul className="mt-4 divide-y divide-slate-200 text-sm dark:divide-slate-800">
                 <li className="py-2.5">
                   <span className="font-medium">Included for free</span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                   />
                   <span>5 active contributors¹</span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                   />
                   <span>50,000 monthly credits</span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                   />
                   <span>10 concurrent CI connections</span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
@@ -210,7 +220,7 @@ export function PlansDisplay(): ReactElement {
                     AI integrations
                   </Link>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
@@ -220,21 +230,21 @@ export function PlansDisplay(): ReactElement {
                 <li className="py-2.5">
                   <span className="font-medium">Add-ons</span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <PlusIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                   />
                   <span>$19 per active contributor¹ / month</span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <PlusIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                   />
                   <span>$5.50 per 10,000 credits</span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <PlusIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
@@ -244,7 +254,7 @@ export function PlansDisplay(): ReactElement {
               </ul>
               <p className="mt-4 text-xs text-slate-500">
                 ¹Any person or actor that has triggered a CI Pipeline Execution
-                within the current billing cycle. Up to 70 active contributors.
+                within the current billing cycle. Up to 30 active contributors.
               </p>
             </div>
 
@@ -266,42 +276,42 @@ export function PlansDisplay(): ReactElement {
               </p>
               <div className="my-12">
                 <ButtonLink
-                  href="/enterprise"
+                  href="/enterprise/trial"
                   aria-describedby="enterprise-plan"
                   title="Enterprise"
                   size="default"
                   variant="secondary"
                   onClick={() =>
                     sendCustomEvent(
-                      'learn-enterprise-click',
+                      'request-enterprise-trial',
                       'plans-table',
                       'pricing-plans'
                     )
                   }
                   className="w-full"
                 >
-                  Learn more
+                  Request a trial
                 </ButtonLink>
               </div>
               <ul className="mt-4 divide-y divide-slate-200 text-sm dark:divide-slate-800">
                 <li className="py-2.5">
                   <span className="font-medium">Includes</span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                   />
                   <span>Volume discounts on credits available</span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                   />
                   <span>White glove onboarding</span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
@@ -325,7 +335,7 @@ export function PlansDisplay(): ReactElement {
                     : a suite of premium extensions for the Nx CLI
                   </span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
@@ -334,7 +344,7 @@ export function PlansDisplay(): ReactElement {
                     Work hand-in-hand with the Nx team for continual improvement
                   </span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
@@ -344,14 +354,14 @@ export function PlansDisplay(): ReactElement {
                     self-contained, on-prem
                   </span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                   />
                   <span>SSO / SAML Login</span>
                 </li>
-                <li className="flex items-start justify-start gap-x-2 py-2.5">
+                <li className="flex items-center justify-start gap-x-2 py-2.5">
                   <CheckCircleIcon
                     aria-hidden="true"
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
@@ -366,6 +376,12 @@ export function PlansDisplay(): ReactElement {
             <p className="text-sm opacity-80">
               Credits are the Nx Cloud currency allowing for usage based
               pricing. Prices do not include applicable taxes.
+            </p>
+          </div>
+          <div className="mt-4 text-center">
+            <p className="text-sm font-medium opacity-80">
+              Looking for the Pro plan?{' '}
+              <Link href="#faq">Checkout our FAQ ↓</Link>
             </p>
           </div>
         </div>

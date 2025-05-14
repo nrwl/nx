@@ -661,7 +661,7 @@ export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent 
     });
   });
 
-  describe('angular v15 support', () => {
+  describe('angular compat support', () => {
     beforeEach(async () => {
       jest.clearAllMocks();
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
@@ -674,35 +674,35 @@ export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent 
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/core': '16.0.0',
+          '@angular/core': '17.0.0',
         },
       }));
     });
 
-    it('should install the ngrx 16 packages', async () => {
+    it('should install the ngrx 17 packages', async () => {
       await ngrxGenerator(tree, defaultOptions);
 
       const packageJson = devkit.readJson(tree, 'package.json');
       expect(packageJson.dependencies['@ngrx/store']).toEqual(
-        backwardCompatibleVersions.angularV16.ngrxVersion
+        backwardCompatibleVersions.angularV17.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/effects']).toEqual(
-        backwardCompatibleVersions.angularV16.ngrxVersion
+        backwardCompatibleVersions.angularV17.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/entity']).toEqual(
-        backwardCompatibleVersions.angularV16.ngrxVersion
+        backwardCompatibleVersions.angularV17.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/router-store']).toEqual(
-        backwardCompatibleVersions.angularV16.ngrxVersion
+        backwardCompatibleVersions.angularV17.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/component-store']).toEqual(
-        backwardCompatibleVersions.angularV16.ngrxVersion
+        backwardCompatibleVersions.angularV17.ngrxVersion
       );
       expect(packageJson.devDependencies['@ngrx/schematics']).toEqual(
-        backwardCompatibleVersions.angularV16.ngrxVersion
+        backwardCompatibleVersions.angularV17.ngrxVersion
       );
       expect(packageJson.devDependencies['@ngrx/store-devtools']).toEqual(
-        backwardCompatibleVersions.angularV16.ngrxVersion
+        backwardCompatibleVersions.angularV17.ngrxVersion
       );
       expect(packageJson.devDependencies['jasmine-marbles']).toBeDefined();
     });

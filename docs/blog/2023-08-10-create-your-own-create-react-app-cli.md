@@ -2,8 +2,9 @@
 title: 'Create Your Own create-react-app CLI'
 slug: 'create-your-own-create-react-app-cli'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2023-08-10/j2QU-hjxt-1krFST8CGFiA.png'
+cover_image: '/blog/images/2023-08-10/j2QU-hjxt-1krFST8CGFiA.avif'
 tags: [nx]
+description: Build a custom create-react-app CLI with Nx plugins, including workspace setup, Verdaccio testing, and project template customization for a branded React app scaffolding experience.
 ---
 
 Most technologies have a CLI to create a new workspace. In fact, it is so prevalent that NPM and other package managers support it natively. For example:
@@ -15,11 +16,11 @@ Most technologies have a CLI to create a new workspace. In fact, it is so preval
 
 Having a CLI to quickly scaffold a starting project is great for onboarding new people, but it can also be a burden for framework authors as they want to rather focus on building the framework. Additionally, building **and supporting** a good CLI is another beast to tackle. And this is where Nx comes in.
 
-Nx has had support for [creating custom “presets”](/extending-nx/recipes/create-preset) for a while, allowing plugin authors to fully customize the workspace structure from the ground up. To use them you had to go via the `create-nx-workspace` command though, passing the name of your plugin as the `--preset` . This works, but you might want to have a more “branded command” experience, like `npx create-my-own-app` .
+Nx has had support for [creating custom "presets"](/extending-nx/recipes/create-preset) for a while, allowing plugin authors to fully customize the workspace structure from the ground up. To use them you had to go via the `create-nx-workspace` command though, passing the name of your plugin as the `--preset` . This works, but you might want to have a more "branded command" experience, like `npx create-my-own-app` .
 
-And this is exactly what we’re going to explore in this article. We will write our own CLI. And out of nostalgia, let’s build our own version of Create-React-App.
+And this is exactly what we're going to explore in this article. We will write our own CLI. And out of nostalgia, let's build our own version of Create-React-App.
 
-If you want to check out the final result, here’s the corresponding Github repo: [https://github.com/nrwl/nx-recipes/tree/main/nx-devkit-create-own-cli](https://github.com/nrwl/nx-recipes/tree/main/nx-devkit-create-own-cli)
+If you want to check out the final result, here's the corresponding Github repo: [https://github.com/nrwl/nx-recipes/tree/main/nx-devkit-create-own-cli](https://github.com/nrwl/nx-recipes/tree/main/nx-devkit-create-own-cli)
 
 **Prefer a video? We got you covered!**
 
@@ -53,11 +54,11 @@ _Project graph of the workspace_
 The resulting workspace contains 2 projects: a CLI and an Nx plugin.
 
 - **create-my-own-react-app:** The CLI project. It contains the code to run when developers invoke `npx create-my-own-react-app`. This will set up a workspace for the developer.
-- **my-own-react:** Nx plugin to integrate react with Nx. It will contain the code for creating and serving an app. It is under the src folder. This will be installed in the user’s workspace.
+- **my-own-react:** Nx plugin to integrate react with Nx. It will contain the code for creating and serving an app. It is under the src folder. This will be installed in the user's workspace.
 
 ### CLI Package Structure
 
-Let’s focus on the `create-my-own-react-app` project which is our CLI.
+Let's focus on the `create-my-own-react-app` project which is our CLI.
 
 ![](/blog/images/2023-08-10/00F7H_Z13uonZiflZSQd8Q.avif)
 
@@ -130,17 +131,17 @@ cd tmp
 npx create-my-own-react-app@1.0.0 test
 ```
 
-What you’ll get is an Nx workspace with the base setup and a `test` library project with a single TS file. Because that’s exactly what our current `preset` generator does.
+What you'll get is an Nx workspace with the base setup and a `test` library project with a single TS file. Because that's exactly what our current `preset` generator does.
 
 ![](/blog/images/2023-08-10/v70qP_BS6LJm3NMAYkv2KQ.avif)
 
-Let’s fix that in the next step.
+Let's fix that in the next step.
 
 ### Step 3: Change the CLI to Setup a React App
 
 In this step, we dive a bit more into the actual Nx plugin development to create our CRA replica.
 
-We’ll go rather quickly but if you want a slower walkthrough you might be interested in this video that leverages a generator for automating the creation of projects. Exactly what we’re going to do in our preset now.
+We'll go rather quickly but if you want a slower walkthrough you might be interested in this video that leverages a generator for automating the creation of projects. Exactly what we're going to do in our preset now.
 
 {% youtube src="https://youtu.be/myqfGDWC2go" /%}
 
@@ -180,9 +181,9 @@ export default presetGenerator;
 
 The preset generator does 2 things:
 
-- Create an Nx project using the`addProjectConfiguration` function. This creates a `project.json` file which allows Nx to run commands on it.
-- Generates files in the project using the`generateFiles` function. This uses the templates under `src/generators/preset/files` which are interpolated to become the files that are generated for the user.
-- Format the generated files with `prettier` with the`formatFiles` function
+- Create an Nx project using the `addProjectConfiguration` function. This creates a `project.json` file which allows Nx to run commands on it.
+- Generates files in the project using the `generateFiles` function. This uses the templates under `src/generators/preset/files` which are interpolated to become the files that are generated for the user.
+- Format the generated files with `prettier` with the `formatFiles` function
 
 ![](/blog/images/2023-08-10/38RvkLIwUAvVDDrEp5sFPQ.avif)
 _preset generator_
@@ -200,8 +201,8 @@ addProjectConfiguration(tree, options.name, {
 });
 ```
 
-- The `projectRoot` will be ‘.’, the root of a workspace
-- The `projectType` changes to `application`
+- The `projectRoot` will be ''.', the root of a workspace
+- The `projectType` changes to 'application'
 
 2\. Next, change the files generated into the project under `src/generators/preset/files`. We will use the same template as `create-react-app` .
 
@@ -397,16 +398,16 @@ The CLI now creates a workspace with the dependencies we want and the code for t
 
 ## Step 5: Add a Serve Target
 
-The workspace setup is done, what we’re missing though is a way to easily serve our app. To stick to what CRA does we simply need to run `react-scripts start` , but ideally, we want to make that more convenient for the developer by pre-generating that script into the workspace.
+The workspace setup is done, what we're missing though is a way to easily serve our app. To stick to what CRA does we simply need to run `react-scripts start` , but ideally, we want to make that more convenient for the developer by pre-generating that script into the workspace.
 
 We have two possibilities:
 
 - add the script to the root-level`package.json` using the `updateJson` function exposed by `@nx/devkit`
 - add a target to the `project.json` using the `addProjectConfiguration` function exposed by `@nx/devkit`
 
-Nx can use both. The `project.json` is Nx’s variant of a more evolved package.json scripts declaration, that allows to specify metadata in a structured way.
+Nx can use both. The `project.json` is Nx's variant of a more evolved package.json scripts declaration, that allows to specify metadata in a structured way.
 
-To keep things simple, let’s just generate a new script for the root-level `package.json`. We need to modify our `src/generators/preset/generator.ts` as follows:
+To keep things simple, let's just generate a new script for the root-level `package.json`. We need to modify our `src/generators/preset/generator.ts` as follows:
 
 ```shell
 import {
@@ -431,7 +432,7 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
 }
 ```
 
-Note, we want to keep our `project.json` file even though it doesn’t have any targets defined. That way Nx recognizes it as a proper project and applies caching and other optimization strategies.
+Note, we want to keep our `project.json` file even though it doesn't have any targets defined. That way Nx recognizes it as a proper project and applies caching and other optimization strategies.
 
 ### Adding the target to the `project.json` rather than `package.json`
 
@@ -464,7 +465,7 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
 
 ## Step 6: Run it Again to Get a React App That Can Be Served
 
-To test our changes, let’s publish a new version and run it again.
+To test our changes, let's publish a new version and run it again.
 
 ```shell
 npx nx run-many --targets publish --ver 1.0.2 --tag latest
@@ -485,9 +486,9 @@ _serve output_
 
 ## Step 7: Add a Prompt to the CLI to Customize the Starter App
 
-Now, you have a CLI that creates a workspace that users can use to get started with React. But that’s not all. Let’s take it a step further and make it interactive by adding a prompt that can let different users customize the kind of workspace that they want to create.
+Now, you have a CLI that creates a workspace that users can use to get started with React. But that's not all. Let's take it a step further and make it interactive by adding a prompt that can let different users customize the kind of workspace that they want to create.
 
-Take a look at the CLI code at `create-my-own-react-package/bin/index.ts`, you will notice it is pretty barebone. It reads the`name` from the command’s arguments.
+Take a look at the CLI code at `create-my-own-react-package/bin/index.ts`, you will notice it is pretty barebone. It reads the`name` from the command's arguments.
 
 You can use libraries like [enquirer](https://github.com/enquirer/enquirer) (or even fancier ones like [Clack](https://www.npmjs.com/package/@clack/prompts)) to prompt developers for options. For this example, prompt developers to select a light or dark theme for the starter app.
 
@@ -546,7 +547,7 @@ async function main() {
 main();
 ```
 
-You can assemble options for `createWorkspace`; however, you’d like and they will be passed to the `my-own-react` preset.
+You can assemble options for `createWorkspace`; however, you'd like and they will be passed to the `my-own-react` preset.
 
 3\. Change `src/generators/preset` to accept this option and apply it.
 
@@ -588,7 +589,7 @@ You can modify this e2e test to test your CLI. Then, run it using the command `n
 
 The default test works like this:
 
-1.  Creates a test workspace at `tmp/`using the `create-my-own-react-app` CLI
+1.  Creates a test workspace at `tmp/` using the `create-my-own-react-app` CLI
 2.  Runs `npm ls my-own-react` to validate that the plugin is installed in the test workspace
 3.  Cleans up the test workspace
 
@@ -628,14 +629,14 @@ Recap:
 - We adjusted the preset generator to setup a CRA-like React setup
 - We wrote some e2e tests to ensure that things do not break
 
-This should give you a good insight into how to get started. But there’s more to explore:
+This should give you a good insight into how to get started. But there's more to explore:
 
 - We could provide more [generators](/plugins/recipes/local-generators\) to our users that help with setting up new components, adding unit tests, configuring the React Router etc.
 - Add a generator to add other Nx plugins such as Jest, ESLint, or Cypress
-- We could also include “[executors](/extending-nx/recipes/local-executors)”, which are wrappers around tasks to abstract the lower-level details of it
+- We could also include "[executors](/extending-nx/recipes/local-executors)", which are wrappers around tasks to abstract the lower-level details of it
 - etc.
 
-Now clearly this was a simple example of how you could build your own CRA using Nx. If you want to see a real-world React setup powered by Nx, check out our React Tutorial: [/getting-started/tutorials/react-standalone-tutorial](/getting-started/tutorials/react-standalone-tutorial)
+Now clearly this was a simple example of how you could build your own CRA using Nx. If you want to see a real-world React setup powered by Nx, check out our React Tutorial: [/getting-started/tutorials/react-monorepo-tutorial](/getting-started/tutorials/react-monorepo-tutorial)
 
 ## Learn more
 

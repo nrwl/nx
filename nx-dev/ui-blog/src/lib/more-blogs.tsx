@@ -9,9 +9,6 @@ export interface MoreBlogsProps {
 export function MoreBlogs({ blogs }: MoreBlogsProps) {
   return (
     <>
-      <div className="mx-auto mb-8 mt-20 border-b-2 border-slate-300 pb-3 text-sm dark:border-slate-700">
-        <h2 className="font-semibold">More blogs</h2>
-      </div>
       <div className="mx-auto">
         {blogs?.map((post) => {
           const formattedDate = new Date(post.date).toLocaleDateString(

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import {
   Faq,
   Oss,
-  ResourceClasses,
+  CreditPricing,
   PlansDisplay,
   TrialCallout,
 } from '@nx/nx-dev/ui-pricing';
@@ -12,11 +12,15 @@ import {
   Testimonials,
   TrustedBy,
 } from '@nx/nx-dev/ui-common';
+import { gotoAppButton } from '../../lib/components/headerCtaConfigs';
 
 export const metadata: Metadata = {
   title: 'Nx Cloud - Available Plans',
   description:
     "Distribute everything, don't waste time waiting on CI. Use Nx Cloud's distributed task execution and caching features to release faster. Save time and money.",
+  alternates: {
+    canonical: 'https://nx.dev/pricing',
+  },
   openGraph: {
     url: 'https://nx.dev/pricing',
     title: 'Nx Cloud - Available Plans',
@@ -38,7 +42,7 @@ export const metadata: Metadata = {
 
 export default function PricingPage() {
   return (
-    <DefaultLayout>
+    <DefaultLayout headerCTAConfig={[gotoAppButton]}>
       <PlansDisplay />
       <div className="mt-18 lg:mt-32">
         <TrustedBy utmSource="pricingpage" utmCampaign="pricing" />
@@ -47,7 +51,7 @@ export default function PricingPage() {
         <TrialCallout pageId="pricing" />
       </div>
       <div className="mt-32 lg:mt-56">
-        <ResourceClasses />
+        <CreditPricing />
       </div>
       <div className="mt-32 lg:mt-56">
         <Faq />

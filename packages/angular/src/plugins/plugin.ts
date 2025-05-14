@@ -52,6 +52,7 @@ const knownExecutors = {
     '@angular-devkit/build-angular:browser-esbuild',
     '@angular-devkit/build-angular:browser',
     '@angular-devkit/build-angular:ng-packagr',
+    '@angular/build:ng-packagr',
   ]),
   devServer: new Set(['@angular-devkit/build-angular:dev-server']),
   extractI18n: new Set(['@angular-devkit/build-angular:extract-i18n']),
@@ -207,6 +208,7 @@ async function buildAngularProjects(
           namedInputs
         );
       } else if (knownExecutors.devServer.has(angularTarget.builder)) {
+        targets[nxTargetName].continuous = true;
         targets[nxTargetName].metadata.help.example.options = { port: 4201 };
       } else if (knownExecutors.extractI18n.has(angularTarget.builder)) {
         targets[nxTargetName].metadata.help.example.options = {
@@ -232,6 +234,7 @@ async function buildAngularProjects(
           namedInputs
         );
       } else if (knownExecutors.serveSsr.has(angularTarget.builder)) {
+        targets[nxTargetName].continuous = true;
         targets[nxTargetName].metadata.help.example.options = { port: 4201 };
       } else if (knownExecutors.prerender.has(angularTarget.builder)) {
         prerenderTargets.push({ target: nxTargetName, project: projectName });
@@ -371,7 +374,8 @@ async function updateBuildTarget(
       ),
     ];
   } else if (
-    angularTarget.builder === '@angular-devkit/build-angular:ng-packagr'
+    angularTarget.builder === '@angular-devkit/build-angular:ng-packagr' ||
+    angularTarget.builder === '@angular/build:ng-packagr'
   ) {
     const outputs = await getNgPackagrOutputs(
       angularTarget,
@@ -393,7 +397,10 @@ async function updateBuildTarget(
         : ['default', '^default'];
   }
 
-  if (angularTarget.builder === '@angular-devkit/build-angular:ng-packagr') {
+  if (
+    angularTarget.builder === '@angular-devkit/build-angular:ng-packagr' ||
+    angularTarget.builder === '@angular/build:ng-packagr'
+  ) {
     target.metadata.help.example.options = { watch: true };
   } else {
     target.metadata.help.example.options = { localize: true };

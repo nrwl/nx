@@ -37,9 +37,65 @@ export class DocumentsApi {
     }
 
     this.manifest = structuredClone(this.options.manifest);
+    if (
+      options.id === 'angular-rspack-documents' ||
+      options.id === 'angular-rsbuild-documents'
+    ) {
+      this.manifest = Object.assign(
+        this.manifest,
+        this.getAngularRspackPackage()
+      );
+    }
   }
+
   private getManifestKey(path: string): string {
     return '/' + path;
+  }
+
+  // TODO(colum): Remove this once we move angular rspack into main repo (when stable).
+  getAngularRspackPackage(): Record<string, DocumentMetadata> {
+    return {
+      '/nx-api/angular-rspack/documents/create-config': {
+        id: 'create-config',
+        name: 'createConfig',
+        description: 'createConfig for @nx/angular-rspack',
+        path: '/nx-api/angular-rspack/documents/create-config',
+        file: 'shared/guides/angular-rspack/api/nx-angular-rspack/create-config',
+        isExternal: false,
+        itemList: [],
+        tags: [],
+      },
+      '/nx-api/angular-rspack/documents/create-server': {
+        id: 'create-server',
+        name: 'createServer',
+        description: 'createServer for @nx/angular-rspack',
+        path: '/nx-api/angular-rspack/documents/create-server',
+        file: 'shared/guides/angular-rspack/api/nx-angular-rspack/create-server',
+        isExternal: false,
+        itemList: [],
+        tags: [],
+      },
+      '/nx-api/angular-rsbuild/documents/create-config': {
+        id: 'create-config',
+        name: 'createConfig',
+        description: 'createConfig for @nx/angular-rsbuild',
+        path: '/nx-api/angular-rspack/documents/create-config',
+        file: 'shared/guides/angular-rspack/api/nx-angular-rsbuild/create-config',
+        isExternal: false,
+        itemList: [],
+        tags: [],
+      },
+      '/nx-api/angular-rsbuild/documents/create-server': {
+        id: 'create-server',
+        name: 'createServer',
+        description: 'createServer for @nx/angular-rsbuild',
+        path: '/nx-api/angular-rspack/documents/create-server',
+        file: 'shared/guides/angular-rspack/api/nx-angular-rsbuild/create-server',
+        isExternal: false,
+        itemList: [],
+        tags: [],
+      },
+    };
   }
 
   getFilePath(path: string): string {
@@ -55,6 +111,7 @@ export class DocumentsApi {
       },
     }));
   }
+
   getSlugsStaticDocumentPaths(): string[] {
     if (this.options.prefix)
       return Object.keys(this.manifest).map(
@@ -97,6 +154,27 @@ export class DocumentsApi {
       name: document.name,
       mediaImage: document.mediaImage || '',
       relatedDocuments: this.getRelatedDocuments(document.tags),
+      parentDocuments: path.map((segment, index): RelatedDocument => {
+        const parentPath = path.slice(0, index + 1).join('/');
+        const parentDocument =
+          this.manifest[this.getManifestKey(parentPath)] || null;
+        if (!parentDocument) {
+          return {
+            id: segment,
+            name: '',
+            description: '',
+            file: '',
+            path: '/' + path.slice(0, index + 1).join('/'),
+          };
+        }
+        return {
+          id: parentDocument.id,
+          name: parentDocument.name,
+          description: parentDocument.description,
+          file: parentDocument.file,
+          path: parentDocument.path,
+        };
+      }),
       tags: document.tags,
     };
   }
@@ -114,6 +192,7 @@ export class DocumentsApi {
   isDocumentIndex(document: DocumentMetadata): boolean {
     return !!document.itemList.length;
   }
+
   generateDocumentIndexTemplate(document: DocumentMetadata): string {
     const cardsTemplate = document.itemList
       .map((i) => ({
@@ -137,6 +216,7 @@ export class DocumentsApi {
       '{% /cards %}\n\n',
     ].join('');
   }
+
   getDocumentIndex(path: string[]): ProcessedDocument {
     const document: DocumentMetadata | null =
       this.manifest[this.getManifestKey(path.join('/'))] || null;

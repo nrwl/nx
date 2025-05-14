@@ -1,14 +1,22 @@
 import * as fs from 'fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { join } from 'path';
 import * as childProcess from 'child_process';
+import { tmpdir } from 'os';
+
 import * as configModule from '../config/configuration';
 import * as projectGraphFileUtils from '../project-graph/file-utils';
 import * as fileUtils from '../utils/fileutils';
 import {
+  addPackagePathToWorkspaces,
   detectPackageManager,
   getPackageManagerVersion,
+  getPackageWorkspaces,
   isWorkspacesEnabled,
   modifyYarnRcToFitNewDirectory,
   modifyYarnRcYmlToFitNewDirectory,
+  parseVersionFromPackageManagerField,
+  PackageManager,
 } from './package-manager';
 
 describe('package-manager', () => {
@@ -22,8 +30,14 @@ describe('package-manager', () => {
           packageManager: 'pnpm',
         },
       });
-      const packageManager = detectPackageManager();
-      expect(packageManager).toEqual('pnpm');
+      expect(detectPackageManager()).toEqual('pnpm');
+
+      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({
+        cli: {
+          packageManager: 'yarn',
+        },
+      });
+      expect(detectPackageManager()).toEqual('yarn');
     });
 
     it('should detect yarn package manager from yarn.lock', () => {
@@ -38,13 +52,15 @@ describe('package-manager', () => {
             return false;
           case 'bun.lockb':
             return false;
+          case 'bun.lock':
+            return false;
           default:
             return jest.requireActual('fs').existsSync(p);
         }
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('yarn');
-      expect(fs.existsSync).toHaveBeenNthCalledWith(2, 'yarn.lock');
+      expect(fs.existsSync).toHaveBeenNthCalledWith(3, 'yarn.lock');
     });
 
     it('should detect pnpm package manager from pnpm-lock.yaml', () => {
@@ -59,13 +75,15 @@ describe('package-manager', () => {
             return false;
           case 'bun.lockb':
             return false;
+          case 'bun.lock':
+            return false;
           default:
             return jest.requireActual('fs').existsSync(p);
         }
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('pnpm');
-      expect(fs.existsSync).toHaveBeenCalledTimes(3);
+      expect(fs.existsSync).toHaveBeenCalledTimes(4);
     });
 
     it('should detect bun package manager from bun.lockb', () => {
@@ -80,6 +98,8 @@ describe('package-manager', () => {
             return false;
           case 'bun.lockb':
             return true;
+          case 'bun.lock':
+            return false;
           default:
             return jest.requireActual('fs').existsSync(p);
         }
@@ -87,6 +107,29 @@ describe('package-manager', () => {
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('bun');
       expect(fs.existsSync).toHaveBeenCalledTimes(1);
+    });
+
+    it('should detect bun package manager from bun.lock', () => {
+      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
+      jest.spyOn(fs, 'existsSync').mockImplementation((p) => {
+        switch (p) {
+          case 'yarn.lock':
+            return false;
+          case 'pnpm-lock.yaml':
+            return false;
+          case 'package-lock.json':
+            return false;
+          case 'bun.lock':
+            return true;
+          case 'bun.lockb':
+            return false;
+          default:
+            return jest.requireActual('fs').existsSync(p);
+        }
+      });
+      const packageManager = detectPackageManager();
+      expect(packageManager).toEqual('bun');
+      expect(fs.existsSync).toHaveBeenCalledTimes(2);
     });
 
     it('should use npm package manager as default', () => {
@@ -101,13 +144,15 @@ describe('package-manager', () => {
             return false;
           case 'bun.lockb':
             return false;
+          case 'bun.lock':
+            return false;
           default:
             return jest.requireActual('fs').existsSync(p);
         }
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('npm');
-      expect(fs.existsSync).toHaveBeenCalledTimes(3);
+      expect(fs.existsSync).toHaveBeenCalledTimes(4);
     });
   });
 
@@ -258,6 +303,248 @@ describe('package-manager', () => {
           ['yarn-path ./bin/yarn.js', 'enableProgressBars false'].join('\n')
         )
       ).toEqual('enableProgressBars false');
+    });
+  });
+
+  describe('getPackageWorkspaces', () => {
+    const tempWorkspace = join(tmpdir(), 'addPackagePathToWorkspaces');
+
+    beforeAll(() => {
+      if (!existsSync(tempWorkspace)) {
+        mkdirSync(tempWorkspace, { recursive: true });
+      }
+    });
+    describe.each(['npm', 'yarn', 'bun'])('%s workspaces', (packageManager) => {
+      it('should return workspaces from package.json', () => {
+        writeFileSync(
+          join(tempWorkspace, 'package.json'),
+          '{"workspaces": ["packages/*"]}'
+        );
+        const workspaces = getPackageWorkspaces(
+          packageManager as PackageManager,
+          tempWorkspace
+        );
+        expect(workspaces).toEqual(['packages/*']);
+      });
+
+      it('should return empty array if workspaces does not exist', () => {
+        writeFileSync(join(tempWorkspace, 'package.json'), '{}');
+        const workspaces = getPackageWorkspaces(
+          packageManager as PackageManager,
+          tempWorkspace
+        );
+        expect(workspaces).toEqual([]);
+      });
+    });
+
+    describe('pnpm workspaces', () => {
+      beforeEach(() => {
+        if (existsSync(join(tempWorkspace, 'pnpm-workspace.yaml'))) {
+          rmSync(join(tempWorkspace, 'pnpm-workspace.yaml'));
+        }
+      });
+
+      it('should return workspaces from package.json', () => {
+        writeFileSync(
+          join(tempWorkspace, 'pnpm-workspace.yaml'),
+          `packages:\n  - apps/*`
+        );
+        const workspaces = getPackageWorkspaces('pnpm', tempWorkspace);
+        expect(workspaces).toEqual(['apps/*']);
+      });
+
+      it('should return empty array if workspaces is empty', () => {
+        writeFileSync(join(tempWorkspace, 'pnpm-workspace.yaml'), '');
+        const workspaces = getPackageWorkspaces('pnpm', tempWorkspace);
+        expect(workspaces).toEqual([]);
+      });
+    });
+  });
+
+  describe('addPackagePathToWorkspaces', () => {
+    const tempWorkspace = join(tmpdir(), 'addPackagePathToWorkspaces');
+
+    beforeAll(() => {
+      if (!existsSync(tempWorkspace)) {
+        mkdirSync(tempWorkspace, { recursive: true });
+      }
+    });
+
+    describe.each(['npm', 'yarn', 'bun'])('%s workspaces', (packageManager) => {
+      it('should add to workspaces if it is empty', () => {
+        writeFileSync(join(tempWorkspace, 'package.json'), '{}');
+        addPackagePathToWorkspaces(
+          'packages/app',
+          packageManager as PackageManager,
+          [],
+          tempWorkspace
+        );
+        expect(readFileSync(join(tempWorkspace, 'package.json'), 'utf-8'))
+          .toMatchInlineSnapshot(`
+          "{
+            "workspaces": [
+              "packages/app"
+            ]
+          }"
+        `);
+      });
+
+      it('should add to workspaces if it is defined', () => {
+        writeFileSync(
+          join(tempWorkspace, 'package.json'),
+          '{"workspaces": ["test"]}'
+        );
+        addPackagePathToWorkspaces(
+          'packages/app',
+          packageManager as PackageManager,
+          ['test'],
+          tempWorkspace
+        );
+        expect(readFileSync(join(tempWorkspace, 'package.json'), 'utf-8'))
+          .toMatchInlineSnapshot(`
+            "{
+              "workspaces": [
+                "test",
+                "packages/app"
+              ]
+            }"
+          `);
+      });
+
+      it('should not add if package path is already in existing workspaces', () => {
+        writeFileSync(
+          join(tempWorkspace, 'package.json'),
+          '{"workspaces": ["packages/*"]}'
+        );
+        addPackagePathToWorkspaces(
+          'packages/app',
+          packageManager as PackageManager,
+          ['packages/*'],
+          tempWorkspace
+        );
+      });
+    });
+
+    describe('pnpm workspaces', () => {
+      beforeEach(() => {
+        if (existsSync(join(tempWorkspace, 'pnpm-workspace.yaml'))) {
+          rmSync(join(tempWorkspace, 'pnpm-workspace.yaml'));
+        }
+      });
+
+      it('should create pnpm-workspace.yaml if it does not exist', () => {
+        addPackagePathToWorkspaces('packages/app', 'pnpm', [], tempWorkspace);
+        expect(
+          readFileSync(join(tempWorkspace, 'pnpm-workspace.yaml'), 'utf-8')
+        ).toMatchInlineSnapshot(`
+          "packages:
+            - packages/app
+          "
+        `);
+      });
+
+      it('should add to packages if pnpm-workspace.yaml is empty', () => {
+        writeFileSync(join(tempWorkspace, 'pnpm-workspace.yaml'), '');
+        addPackagePathToWorkspaces('packages/app', 'pnpm', [], tempWorkspace);
+        expect(
+          readFileSync(join(tempWorkspace, 'pnpm-workspace.yaml'), 'utf-8')
+        ).toMatchInlineSnapshot(`
+          "packages:
+            - packages/app
+          "
+        `);
+      });
+
+      it('should add to packages if packages is empty', () => {
+        writeFileSync(join(tempWorkspace, 'pnpm-workspace.yaml'), 'packages:');
+        addPackagePathToWorkspaces('packages/app', 'pnpm', [], tempWorkspace);
+        expect(
+          readFileSync(join(tempWorkspace, 'pnpm-workspace.yaml'), 'utf-8')
+        ).toMatchInlineSnapshot(`
+          "packages:
+            - packages/app
+          "
+        `);
+      });
+
+      it('should add to pnpm workspace if there are packages defined', () => {
+        writeFileSync(
+          join(tempWorkspace, 'pnpm-workspace.yaml'),
+          `packages:\n  - apps/*`
+        );
+        addPackagePathToWorkspaces('packages/app', 'pnpm', [], tempWorkspace);
+        expect(readFileSync(`${tempWorkspace}/pnpm-workspace.yaml`, 'utf-8'))
+          .toMatchInlineSnapshot(`
+          "packages:
+            - apps/*
+            - packages/app
+          "
+        `);
+      });
+
+      it('should not add to pnpm workspace if package path is already in', () => {
+        writeFileSync(
+          join(tempWorkspace, 'pnpm-workspace.yaml'),
+          `packages:\n  - apps/*`
+        );
+        addPackagePathToWorkspaces('apps/app1', 'pnpm', [], tempWorkspace);
+      });
+
+      it('should preserve comments', () => {
+        writeFileSync(
+          join(tempWorkspace, 'pnpm-workspace.yaml'),
+          `packages:\n  - apps/* # comment`
+        );
+        addPackagePathToWorkspaces('packages/app', 'pnpm', [], tempWorkspace);
+        expect(readFileSync(`${tempWorkspace}/pnpm-workspace.yaml`, 'utf-8'))
+          .toMatchInlineSnapshot(`
+          "packages:
+            - apps/* # comment
+            - packages/app
+          "
+        `);
+      });
+
+      it('should add packages key if it is not defined', () => {
+        writeFileSync(
+          join(tempWorkspace, 'pnpm-workspace.yaml'),
+          `something:\n  - random/* # comment`
+        );
+        addPackagePathToWorkspaces('packages/app', 'pnpm', [], tempWorkspace);
+        expect(readFileSync(`${tempWorkspace}/pnpm-workspace.yaml`, 'utf-8'))
+          .toMatchInlineSnapshot(`
+          "something:
+            - random/* # comment
+          packages:
+            - packages/app
+          "
+        `);
+      });
+    });
+  });
+
+  describe('parseVersionFromPackageManagerField', () => {
+    it('should return null for invalid semver', () => {
+      expect(parseVersionFromPackageManagerField('yarn', 'bad')).toEqual(null);
+      expect(parseVersionFromPackageManagerField('yarn', '2.1')).toEqual(null);
+      expect(
+        parseVersionFromPackageManagerField(
+          'yarn',
+          'https://registry.npmjs.org/@yarnpkg/cli-dist/-/cli-dist-3.2.3.tgz#sha224.16a0797d1710d1fb7ec40ab5c3801b68370a612a9b66ba117ad9924b'
+        )
+      ).toEqual(null);
+    });
+
+    it('should <major>.<minor>.<patch> version', () => {
+      expect(parseVersionFromPackageManagerField('yarn', 'yarn@3.2.3')).toEqual(
+        '3.2.3'
+      );
+      expect(
+        parseVersionFromPackageManagerField(
+          'yarn',
+          'yarn@3.2.3+sha224.953c8233f7a92884eee2de69a1b92d1f2ec1655e66d08071ba9a02fa'
+        )
+      ).toEqual('3.2.3');
     });
   });
 });
