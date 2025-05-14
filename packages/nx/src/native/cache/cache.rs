@@ -179,8 +179,7 @@ impl NxCache {
     ) -> anyhow::Result<()> {
         trace!(
             "applying remote cache results: {:?} ({})",
-            &hash,
-            &result.outputs_path
+            &hash, &result.outputs_path
         );
         let terminal_output = result.terminal_output.clone().unwrap_or(String::from(""));
         let mut size = terminal_output.len() as i64;
@@ -298,8 +297,7 @@ impl NxCache {
 
         trace!(
             "Copying Files from Cache {:?} -> {:?}",
-            &outputs_path,
-            &self.workspace_root
+            &outputs_path, &self.workspace_root
         );
         let sz = _copy(outputs_path, &self.workspace_root);
 

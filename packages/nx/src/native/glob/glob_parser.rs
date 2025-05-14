@@ -2,7 +2,7 @@ use crate::native::glob::glob_group::GlobGroup;
 use nom::branch::alt;
 use nom::bytes::complete::{is_not, tag, take_till, take_until, take_while};
 use nom::combinator::{eof, map, map_parser};
-use nom::error::{context, convert_error, VerboseError};
+use nom::error::{VerboseError, context, convert_error};
 use nom::multi::{many_till, separated_list0};
 use nom::sequence::{preceded, terminated};
 use nom::{Finish, IResult};
