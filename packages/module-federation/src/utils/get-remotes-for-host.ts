@@ -1,4 +1,10 @@
-import { logger, parseTargetString, type ProjectGraph } from '@nx/devkit';
+import {
+  logger,
+  parseTargetString,
+  type ProjectConfiguration,
+  type ProjectGraph,
+  ProjectGraphProjectNode,
+} from '@nx/devkit';
 import { registerTsProject } from '@nx/js/src/internal';
 import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 import * as pc from 'picocolors';
@@ -46,6 +52,37 @@ function extractRemoteProjectsFromConfig(
   return { remotes, dynamicRemotes };
 }
 
+// Find the target that uses the module-federation-dev-server executor
+export function getBuildTargetNameFromMFDevServer(
+  projectConfig: ProjectConfiguration,
+  projectGraph: ProjectGraph
+) {
+  if (projectConfig.targets) {
+    for (const [targetKey, targetConfig] of Object.entries(
+      projectConfig.targets
+    )) {
+      const executor = targetConfig.executor || '';
+      // Extract the portion after the `:` in the executor name
+      const executorParts = executor.split(':');
+      const executorName =
+        executorParts.length > 1 ? executorParts[1] : executor;
+
+      if (executorName === 'module-federation-dev-server') {
+        // Extract the buildTarget from the options
+        if (targetConfig.options?.buildTarget) {
+          const parsedTarget = parseTargetString(
+            targetConfig.options.buildTarget,
+            projectGraph
+          );
+          return parsedTarget.target;
+        }
+      }
+    }
+  }
+
+  return 'build';
+}
+
 function collectRemoteProjects(
   remote: string,
   collected: Set<string>,
@@ -60,45 +97,13 @@ function collectRemoteProjects(
 
   const remoteProjectRoot = remoteProject.root;
 
-  // Find the target that uses the module-federation-dev-server executor
-  let buildTargetName = 'build';
-  if (remoteProject.targets) {
-    for (const [targetKey, targetConfig] of Object.entries(
-      remoteProject.targets
-    )) {
-      const executor = targetConfig.executor || '';
-      // Extract the portion after the `:` in the executor name
-      const executorParts = executor.split(':');
-      const executorName =
-        executorParts.length > 1 ? executorParts[1] : executor;
-
-      if (executorName === 'module-federation-dev-server') {
-        // Extract the buildTarget from the options
-        if (targetConfig.options?.buildTarget) {
-          const parsedTarget = parseTargetString(
-            targetConfig.options.buildTarget,
-            context.projectGraph
-          );
-          buildTargetName = parsedTarget.target;
-          break;
-        }
-      }
-    }
-  }
+  const buildTargetName = getBuildTargetNameFromMFDevServer(
+    remoteProject,
+    context.projectGraph
+  );
 
   let remoteProjectTsConfig =
-    remoteProject.targets?.[buildTargetName]?.options?.tsConfig ??
-    [
-      join(remoteProjectRoot, 'tsconfig.app.json'),
-      join(remoteProjectRoot, 'tsconfig.json'),
-      join(context.root, 'tsconfig.json'),
-      join(context.root, 'tsconfig.base.json'),
-    ].find((p) => existsSync(p));
-  if (!remoteProjectTsConfig) {
-    throw new Error(
-      `Could not find a tsconfig for remote project ${remote}. Please add a tsconfig.app.json or tsconfig.json to the project.`
-    );
-  }
+    remoteProject.targets?.[buildTargetName]?.options?.tsConfig;
   const remoteProjectConfig = getModuleFederationConfig(
     remoteProjectTsConfig,
     context.root,
@@ -200,7 +205,7 @@ export function getRemotes(
 }
 
 export function getModuleFederationConfig(
-  tsconfigPath: string,
+  tsconfigPath: string | undefined,
   workspaceRoot: string,
   projectRoot: string,
   pluginName: 'react' | 'angular' = 'react'
@@ -218,6 +223,20 @@ export function getModuleFederationConfig(
   );
 
   let moduleFederationConfigPath = moduleFederationConfigPathJS;
+
+  tsconfigPath =
+    tsconfigPath ??
+    [
+      join(projectRoot, 'tsconfig.app.json'),
+      join(projectRoot, 'tsconfig.json'),
+      join(workspaceRoot, 'tsconfig.json'),
+      join(workspaceRoot, 'tsconfig.base.json'),
+    ].find((p) => existsSync(p));
+  if (!tsconfigPath) {
+    throw new Error(
+      `Could not find a tsconfig for remote project located at ${projectRoot}. Please add a tsconfig.app.json or tsconfig.json to the project.`
+    );
+  }
 
   // create a no-op so this can be called with issue
   const fullTSconfigPath = tsconfigPath.startsWith(workspaceRoot)
