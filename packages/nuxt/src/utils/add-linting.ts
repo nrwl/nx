@@ -1,6 +1,7 @@
 import { Tree } from 'nx/src/generators/tree';
 import type { Linter as EsLintLinter } from 'eslint';
 import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
+import { typescriptESLintVersion } from '@nx/eslint/src/utils/versions';
 import { joinPathFragments } from 'nx/src/utils/path';
 import {
   addDependenciesToPackageJson,
@@ -43,6 +44,10 @@ export async function addLinting(
     });
     tasks.push(lintTask);
 
+    const devDependencies = {
+      '@nuxt/eslint-config': nuxtEslintConfigVersion,
+    };
+
     if (isEslintConfigSupported(host, options.projectRoot)) {
       editEslintConfigFiles(host, options.projectRoot);
 
@@ -65,6 +70,7 @@ export async function addLinting(
             },
           } as unknown // languageOptions is not in eslintrc format but for flat config
         );
+        devDependencies['@typescript-eslint/parser'] = typescriptESLintVersion;
       }
 
       addIgnoresToLintConfig(host, options.projectRoot, [
@@ -74,13 +80,7 @@ export async function addLinting(
       ]);
     }
 
-    const installTask = addDependenciesToPackageJson(
-      host,
-      {},
-      {
-        '@nuxt/eslint-config': nuxtEslintConfigVersion,
-      }
-    );
+    const installTask = addDependenciesToPackageJson(host, {}, devDependencies);
     tasks.push(installTask);
   }
   return runTasksInSerial(...tasks);

@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18]
+        node-version: ['20.19.0']
 
     steps:
       - name: Checkout
@@ -19,7 +19,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: '20.19.0'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4

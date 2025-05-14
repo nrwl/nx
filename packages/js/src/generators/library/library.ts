@@ -10,6 +10,7 @@ import {
   names,
   offsetFromRoot,
   ProjectConfiguration,
+  readJson,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -27,10 +28,12 @@ import {
 import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { shouldUseLegacyVersioning } from 'nx/src/command-line/release/config/use-legacy-versioning';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
 import { normalizeLinterOption } from '../../utils/generator-prompts';
+import { sortPackageJsonFields } from '../../utils/package-json/sort-fields';
 import { getUpdatedPackageJsonContent } from '../../utils/package-json/update-package-json';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { getSwcDependencies } from '../../utils/swc/add-swc-dependencies';
@@ -62,7 +65,6 @@ import type {
   LibraryGeneratorSchema,
   NormalizedLibraryGeneratorOptions,
 } from './schema';
-import { sortPackageJsonFields } from '../../utils/package-json/sort-fields';
 import {
   addReleaseConfigForNonTsSolution,
   addReleaseConfigForTsSolution,
@@ -263,8 +265,9 @@ async function configureProject(
   tree: Tree,
   options: NormalizedLibraryGeneratorOptions
 ) {
+  const nxJson = readNxJson(tree);
+
   if (options.hasPlugin) {
-    const nxJson = readNxJson(tree);
     ensureProjectIsIncludedInPluginRegistrations(
       nxJson,
       options.projectRoot,
@@ -342,6 +345,7 @@ async function configureProject(
       );
     } else {
       await addReleaseConfigForNonTsSolution(
+        shouldUseLegacyVersioning(nxJson.release),
         tree,
         options.name,
         projectConfiguration,
@@ -631,6 +635,9 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
         options.isUsingTsSolutionConfig &&
         !['none', 'rollup', 'vite'].includes(options.bundler)
       ) {
+        // the file must exist in the TS solution setup
+        const tsconfigBase = readJson(tree, 'tsconfig.base.json');
+
         return getUpdatedPackageJsonContent(updatedPackageJson, {
           main: join(options.projectRoot, 'src/index.ts'),
           outputPath: joinPathFragments(options.projectRoot, 'dist'),
@@ -639,6 +646,10 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
           generateExportsField: true,
           packageJsonPath,
           format: ['esm'],
+          skipDevelopmentExports:
+            !tsconfigBase.compilerOptions?.customConditions?.includes(
+              'development'
+            ),
         });
       }
 
@@ -664,6 +675,8 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
       options.isUsingTsSolutionConfig &&
       !['none', 'rollup', 'vite'].includes(options.bundler)
     ) {
+      const tsconfigBase = readJson(tree, 'tsconfig.base.json');
+
       packageJson = getUpdatedPackageJsonContent(packageJson, {
         main: join(options.projectRoot, 'src/index.ts'),
         outputPath: joinPathFragments(options.projectRoot, 'dist'),
@@ -672,6 +685,10 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
         generateExportsField: true,
         packageJsonPath,
         format: ['esm'],
+        skipDevelopmentExports:
+          !tsconfigBase.compilerOptions?.customConditions?.includes(
+            'development'
+          ),
       });
     }
 
@@ -833,7 +850,7 @@ async function normalizeOptions(
   }
 
   if (options.publishable) {
-    if (!options.importPath) {
+    if (!isUsingTsSolutionConfig && !options.importPath) {
       throw new Error(
         `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
       );
@@ -1043,12 +1060,6 @@ function createProjectTsConfigs(
         json.references.push({
           path: './tsconfig.lib.json',
         });
-        // If using `tsc` to build, then we do not want a typecheck target that duplicates the work, since both run `tsc`.
-        // This applies to `@nx/js/typescript` plugin only.
-        if (options.bundler === 'tsc') {
-          json['nx'] ??= {};
-          json['nx'].addTypecheckTarget = false;
-        }
         return json;
       });
     } else {
@@ -1059,12 +1070,6 @@ function createProjectTsConfigs(
         include: [],
         references: [{ path: './tsconfig.lib.json' }],
       };
-      // If using `tsc` to build, then we do not want a typecheck target that duplicates the work, since both run `tsc`.
-      // This applies to `@nx/js/typescript` plugin only.
-      if (options.bundler === 'tsc') {
-        tsconfig['nx'] ??= {};
-        tsconfig['nx'].addTypecheckTarget = false;
-      }
       writeJson(
         tree,
         joinPathFragments(options.projectRoot, 'tsconfig.json'),

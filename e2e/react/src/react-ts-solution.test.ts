@@ -1,9 +1,15 @@
 import {
+  checkFilesExist,
   cleanupProject,
+  getPackageManagerCommand,
   newProject,
+  readFile,
   readJson,
   runCLI,
+  runCommand,
   uniq,
+  updateFile,
+  updateJson,
 } from '@nx/e2e/utils';
 
 describe('React (TS solution)', () => {
@@ -38,4 +44,47 @@ describe('React (TS solution)', () => {
       `Successfully ran target test for project ${lib}`
     );
   }, 90000);
+
+  it('should be able to use Webpack to build apps with an imported lib', async () => {
+    const appName = uniq('app');
+    const libName = uniq('lib');
+
+    runCLI(
+      `generate @nx/react:app packages/${appName} --bundler=webpack --no-interactive --skipFormat --linter=eslint --unitTestRunner=none`
+    );
+    runCLI(
+      `generate @nx/js:lib libs/${libName} --bundler=none --no-interactive --unit-test-runner=none --skipFormat --linter=eslint`
+    );
+
+    const mainPath = `packages/${appName}/src/main.tsx`;
+    updateFile(
+      mainPath,
+      `
+          import {${libName}} from '@${workspaceName}/${libName}';
+          ${readFile(mainPath)}
+          console.log(${libName}());
+        `
+    );
+
+    runCLI('sync');
+
+    // Add library to package.json to make sure it is linked (not needed for npm package manager)
+    updateJson(`packages/${appName}/package.json`, (json) => {
+      return {
+        ...json,
+        devDependencies: {
+          ...(json.devDependencies || {}),
+          [`@${workspaceName}/${libName}`]: 'workspace:*',
+        },
+      };
+    });
+
+    runCommand(
+      `cd packages/${appName} && ${getPackageManagerCommand().install}`
+    );
+
+    runCLI(`build ${appName}`);
+
+    checkFilesExist(`packages/${appName}/dist/index.html`);
+  }, 90_000);
 });

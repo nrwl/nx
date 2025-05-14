@@ -1,8 +1,8 @@
 name: E2E matrix
 
 on:
-  schedule:
-    - cron: "0 5 * * *"
+  # schedule:
+  #   - cron: "0 5 * * *"
   workflow_dispatch:
     inputs:
       debug_enabled:
@@ -24,24 +24,28 @@ jobs:
         os:
           - ubuntu-latest
           - macos-latest
+          - windows-latest
         node_version:
-          - 18
           - 20
           - 22
           # - 23
         exclude:
-          # run just node v20 on macos
-          - os: macos-latest
-            node_version: 18
+          # run just node v20 on macos and windows
           - os: macos-latest
             node_version: 22
           # - os: macos-latest
+          #   node_version: 23
+          - os: windows-latest
+            node_version: 22
+          # - os: windows-latest
           #   node_version: 23
 
     name: Cache install (${{ matrix.os }}, node v${{ matrix.node_version }})
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -99,300 +103,41 @@ jobs:
         if: steps.cache-cypress.outputs.cache-hit != 'true'
         run: npx cypress install
 
+  prepare-matrix:
+    name: Prepare matrix combinations
+    if: ${{ github.repository_owner == 'nrwl' }}
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.process-json.outputs.MATRIX }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Process matrix data
+        id: process-json
+        run:
+          echo "MATRIX=$(npx tsx .github/workflows/nightly/process-matrix.ts | jq -c .)" >> $GITHUB_OUTPUT
+
   e2e:
     if: ${{ github.repository_owner == 'nrwl' }}
-    needs: preinstall
+    needs:
+      - preinstall
+      - prepare-matrix
     permissions:
       contents: read
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 90
     strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-          - macos-latest
-        node_version:
-          - 18
-          - 20
-          - 22
-          # - 23
-        package_manager:
-          - npm
-          - yarn
-          - pnpm
-        project:
-          - e2e-angular
-          - e2e-cypress
-          - e2e-detox
-          - e2e-esbuild
-          - e2e-eslint
-          - e2e-expo
-          - e2e-gradle
-          - e2e-jest
-          - e2e-js
-          - e2e-lerna-smoke-tests
-          - e2e-next
-          - e2e-node
-          - e2e-nuxt
-          - e2e-nx-init
-          - e2e-nx
-          - e2e-playwright
-          - e2e-plugin
-          - e2e-react
-          - e2e-react-native
-          - e2e-release
-          - e2e-remix
-          - e2e-rollup
-          - e2e-storybook
-          - e2e-vite
-          - e2e-vue
-          - e2e-web
-          - e2e-webpack
-          - e2e-workspace-create
-        include:
-          # os short names
-          - os: ubuntu-latest
-            os_name: 'Linux'
-          - os: macos-latest
-            os_name: 'MacOS'
-          # test timeouts
-          - os: ubuntu-latest
-            os_timeout: 60
-          - os: macos-latest
-            os_timeout: 90
-          # codeowner groups
-          - project: e2e-angular
-            codeowners: 'S04SS457V38'
-          - project: e2e-cypress
-            codeowners: 'S04T16BTJJY'
-          - project: e2e-detox
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-esbuild
-            codeowners: 'S04SJ6HHP0X'
-          - project: e2e-expo
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-gradle
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-jest
-            codeowners: 'S04T16BTJJY'
-          - project: e2e-js
-            codeowners: 'S04SJ6HHP0X'
-          - project: e2e-lerna-smoke-tests
-            codeowners: 'S04TNCVEETS'
-          - project: e2e-eslint
-            codeowners: 'S04SYJGKSCT'
-          - project: e2e-next
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-node
-            codeowners: 'S04SJ6HHP0X'
-          - project: e2e-nx-init
-            codeowners: 'S04SYHYKGNP'
-          - project: e2e-nx
-            codeowners: 'S04SYHYKGNP'
-          - project: e2e-plugin
-            codeowners: 'S04SYHYKGNP'
-          - project: e2e-release
-            codeowners: 'S04SYHYKGNP'
-          - project: e2e-react
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-react-native
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-web
-            codeowners: 'S04SJ6PL98X'
-          - project: e2e-rollup
-            codeowners: 'S04SJ6PL98X'
-          - project: e2e-storybook
-            codeowners: 'S04SVQ8H0G5'
-          - project: e2e-playwright
-            codeowners: 'S04SVQ8H0G5'
-          - project: e2e-remix
-            codeowners: 'S04SVQ8H0G5'
-          - project: e2e-vite
-            codeowners: 'S04SJ6PL98X'
-          - project: e2e-vue
-            codeowners: 'S04SJ6PL98X'
-          - project: e2e-nuxt
-            codeowners: 'S04SJ6PL98X'
-          - project: e2e-webpack
-            codeowners: 'S04SJ6PL98X'
-          - project: e2e-workspace-create
-            codeowners: 'S04SYHYKGNP'
-        exclude:
-          # exclude react-native tests from ubuntu
-          - os: ubuntu-latest
-            project: e2e-react-native
-          - os: ubuntu-latest
-            project: e2e-detox
-          - os: ubuntu-latest
-            project: e2e-expo
-          # exclude non-CNW/Lerna tests from non-LTS node versions
-          - node_version: 18
-            project: e2e-angular
-          - node_version: 18
-            project: e2e-cypress
-          - node_version: 18
-            project: e2e-detox
-          - node_version: 18
-            project: e2e-esbuild
-          - node_version: 18
-            project: e2e-expo
-          - node_version: 18
-            project: e2e-gradle
-          - node_version: 18
-            project: e2e-jest
-          - node_version: 18
-            project: e2e-js
-          - node_version: 18
-            project: e2e-eslint
-          - node_version: 18
-            project: e2e-next
-          - node_version: 18
-            project: e2e-node
-          - node_version: 18
-            project: e2e-nuxt
-          - node_version: 18
-            project: e2e-nx-init
-          - node_version: 18
-            project: e2e-nx
-          - node_version: 18
-            project: e2e-plugin
-          - node_version: 18
-            project: e2e-playwright
-          - node_version: 18
-            project: e2e-react
-          - node_version: 18
-            project: e2e-react-native
-          - node_version: 18
-            project: e2e-web
-          - node_version: 18
-            project: e2e-remix
-          - node_version: 18
-            project: e2e-rollup
-          - node_version: 18
-            project: e2e-storybook
-          - node_version: 18
-            project: e2e-vite
-          - node_version: 18
-            project: e2e-vue
-          - node_version: 18
-            project: e2e-webpack
-          - node_version: 22
-            project: e2e-angular
-          - node_version: 22
-            project: e2e-cypress
-          - node_version: 22
-            project: e2e-detox
-          - node_version: 22
-            project: e2e-esbuild
-          - node_version: 22
-            project: e2e-expo
-          - node_version: 22
-            project: e2e-gradle
-          - node_version: 22
-            project: e2e-jest
-          - node_version: 22
-            project: e2e-js
-          - node_version: 22
-            project: e2e-eslint
-          - node_version: 22
-            project: e2e-next
-          - node_version: 22
-            project: e2e-node
-          - node_version: 22
-            project: e2e-nuxt
-          - node_version: 22
-            project: e2e-nx-init
-          - node_version: 22
-            project: e2e-nx
-          - node_version: 22
-            project: e2e-plugin
-          - node_version: 22
-            project: e2e-playwright
-          - node_version: 22
-            project: e2e-react
-          - node_version: 22
-            project: e2e-react-native
-          - node_version: 22
-            project: e2e-web
-          - node_version: 22
-            project: e2e-remix
-          - node_version: 22
-            project: e2e-rollup
-          - node_version: 22
-            project: e2e-storybook
-          - node_version: 22
-            project: e2e-vite
-          - node_version: 22
-            project: e2e-vue
-          - node_version: 22
-            project: e2e-webpack
-          # - node_version: 23
-          #   project: e2e-angular
-          # - node_version: 23
-          #   project: e2e-cypress
-          # - node_version: 23
-          #   project: e2e-detox
-          # - node_version: 23
-          #   project: e2e-esbuild
-          # - node_version: 23
-          #   project: e2e-expo
-          # - node_version: 23
-          #   project: e2e-gradle
-          # - node_version: 23
-          #   project: e2e-jest
-          # - node_version: 23
-          #   project: e2e-js
-          # - node_version: 23
-          #   project: e2e-eslint
-          # - node_version: 23
-          #   project: e2e-next
-          # - node_version: 23
-          #   project: e2e-node
-          # - node_version: 23
-          #   project: e2e-nuxt
-          # - node_version: 23
-          #   project: e2e-nx-init
-          # - node_version: 23
-          #   project: e2e-nx
-          # - node_version: 23
-          #   project: e2e-plugin
-          # - node_version: 23
-          #   project: e2e-playwright
-          # - node_version: 23
-          #   project: e2e-react
-          # - node_version: 23
-          #   project: e2e-react-native
-          # - node_version: 23
-          #   project: e2e-web
-          # - node_version: 23
-          #   project: e2e-remix
-          # - node_version: 23
-          #   project: e2e-rollup
-          # - node_version: 23
-          #   project: e2e-storybook
-          # - node_version: 23
-          #   project: e2e-vite
-          # - node_version: 23
-          #   project: e2e-vue
-          # - node_version: 23
-          #   project: e2e-webpack
-          # run just npm v20 on macos
-          - os: macos-latest
-            package_manager: yarn
-          - os: macos-latest
-            package_manager: pnpm
-          - os: macos-latest
-            node_version: 18
-          - os: macos-latest
-            node_version: 22
-          # - os: macos-latest
-          #   node_version: 23
+      matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix)}} # Load matrix from previous job
       fail-fast: false
 
     name: ${{ matrix.os_name }}/${{ matrix.package_manager }}/${{ matrix.node_version }} ${{ join(matrix.project) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Prepare dir for output
         run: mkdir -p outputs
@@ -470,30 +215,28 @@ jobs:
 
       - name: Set starting timestamp
         id: before-e2e
+        shell: bash
         run: |
           echo "timestamp=$(date +%s)" >> $GITHUB_OUTPUT
 
       - name: Run e2e tests
         id: e2e-run
-        run: pnpm nx run-many -t e2e-local -p ${{ matrix.project }}
+        run: pnpm nx run ${{ matrix.project }}:e2e-local
+        shell: bash
         timeout-minutes: ${{ matrix.os_timeout }}
         env:
-          GIT_AUTHOR_EMAIL: test@test.com
-          GIT_AUTHOR_NAME: Test
-          GIT_COMMITTER_EMAIL: test@test.com
-          GIT_COMMITTER_NAME: Test
           NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
+          NX_DAEMON: 'true'
+          NX_PERF_LOGGING: 'false'
+          NX_E2E_VERBOSE_LOGGING: 'true'
+          NX_NATIVE_LOGGING: 'false'
+          NX_E2E_RUN_E2E: 'true'
+          NX_CLOUD_NO_TIMEOUTS: 'true'
+          NX_E2E_SKIP_CLEANUP: 'true'
           NODE_OPTIONS: --max_old_space_size=8192
           SELECTED_PM: ${{ matrix.package_manager }}
           npm_config_registry: http://localhost:4872
           YARN_REGISTRY: http://localhost:4872
-          NX_CACHE_DIRECTORY: 'tmp'
-          NX_E2E_SKIP_CLEANUP: 'true'
-          NX_E2E_RUN_E2E: 'true'
-          NX_E2E_VERBOSE_LOGGING: 'true'
-          NX_PERF_LOGGING: 'false'
-          NX_DAEMON: 'true'
-          NX_SKIP_LOG_GROUPING: 'true'
 
       - name: Save matrix config in file
         if: ${{ always() }}
@@ -521,6 +264,8 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && failure() }}
         uses: mxschmitt/action-tmate@v3.8
         timeout-minutes: 15
+        with:
+          sudo: ${{ matrix.os != 'windows-latest' }} # disable sudo for windows debugging
 
   process-result:
     if: ${{ always() && github.repository_owner == 'nrwl' }}
@@ -580,6 +325,7 @@ jobs:
             });
             result += `\`\`\``;
             core.setOutput('SLACK_MESSAGE', trimSpace(result));
+            console.log(trimSpace(result));
 
             function humanizeDuration(num) {
               let res = '';
@@ -607,7 +353,7 @@ jobs:
             };
             const macosProjects = ['e2e-detox', 'e2e-expo', 'e2e-react-native'];
             combined.forEach((matrix) => {
-              if (matrix.os_name === 'Linux' && matrix.node_version === 18) {
+              if (matrix.os_name === 'Linux' && matrix.node_version === 20) {
                 pmReport[matrix.package_manager] += matrix.duration;
               }
               if (matrix.os_name === 'Linux' || macosProjects.includes(matrix.project)) {

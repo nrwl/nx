@@ -21,10 +21,7 @@ an existing NPM/Yarn or PNPM-based monorepo setup, you can easily add Nx to get
 This is a low-impact operation because all that needs to be done is to install the `nx` package at the root level and
 add an `nx.json` for configuring caching and task pipelines.
 
-{% youtube
-src="https://www.youtube.com/embed/ngdoUQBvAjo"
-title="Add Nx to a PNPM workspaces monorepo"
-width="100%" /%}
+{% course-video src="https://youtu.be/3hW53b1IJ84" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="/courses/pnpm-nx-next/lessons-01-nx-init" title="Initialize Nx in Your Project with nx init" /%}
 
 ## Installing Nx
 
@@ -168,7 +165,8 @@ nx show project my-workspace --web
         "dev": {
           "options": {
             "cwd": ".",
-            "command": "next dev"
+            "command": "next dev",
+            "continuous": true
           },
           "executor": "nx:run-commands",
           "configurations": {},
@@ -179,7 +177,8 @@ nx show project my-workspace --web
         "start": {
           "options": {
             "cwd": ".",
-            "command": "next start"
+            "command": "next start",
+            "continuous": true
           },
           "dependsOn": ["build"],
           "executor": "nx:run-commands",
@@ -373,6 +372,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
+
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun

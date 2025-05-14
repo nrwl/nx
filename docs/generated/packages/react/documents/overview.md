@@ -1,6 +1,7 @@
 ---
 title: React Plugin for Nx
 description: Learn how to use the @nx/react plugin to create and manage React applications and libraries in your Nx workspace, including components, hooks, and more.
+keywords: [react]
 ---
 
 The React plugin contains executors and generators for managing React applications and libraries within an Nx workspace.
@@ -29,26 +30,11 @@ Make sure to install the `@nx/react` version that matches the version of `nx` in
 
 In any Nx workspace, you can install `@nx/react` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/react
 ```
 
 This will install the correct version of `@nx/react`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/react` package with your package manager.
-
-```shell
-npm add -D @nx/react
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Using the @nx/react Plugin
 

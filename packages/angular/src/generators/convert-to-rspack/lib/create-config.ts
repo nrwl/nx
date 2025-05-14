@@ -13,7 +13,7 @@ export function createConfig(
     ? Object.entries(configurationOptions)
         .map(([configurationName, configurationOptions]) => {
           return `
-      ${configurationName}: {
+      "${configurationName}": {
         options: {
           ${JSON.stringify(configurationOptions, undefined, 2).slice(1, -1)}
         }
@@ -21,6 +21,14 @@ export function createConfig(
         })
         .join(',\n')
     : '';
+
+  const createConfigContents = `createConfig({ 
+    options: {
+      root: __dirname,
+      ${JSON.stringify(createConfigOptions, undefined, 2).slice(1, -1)}
+    }
+  }${hasConfigurations ? `, {${expandedConfigurationOptions}}` : ''});`;
+
   const configContents = `
   import { createConfig }from '@nx/angular-rspack';
   ${
@@ -35,28 +43,17 @@ export function createConfig(
   }
   
   ${
-    existingWebpackConfigPath ? 'const baseConfig = ' : 'export default '
-  }createConfig({ 
-    options: {
-      root: __dirname,
-      ${JSON.stringify(createConfigOptions, undefined, 2).slice(1, -1)}
-    }
-  }${hasConfigurations ? `, {${expandedConfigurationOptions}}` : ''});
-  ${
     existingWebpackConfigPath
-      ? `
-    export default ${
-      isExistingWebpackConfigFunction
-        ? `async function (env, argv) { 
-        const oldConfig = await baseWebpackConfig;
+      ? `export default async () => {
+        const baseConfig = await ${createConfigContents}
+        ${
+          isExistingWebpackConfigFunction
+            ? `const oldConfig = await baseWebpackConfig;
         const browserConfig = baseConfig[0];
-        return oldConfig(browserConfig);
-        }`
-        : 'webpackMerge(baseConfig[0], baseWebpackConfig);'
-    }
-  `
-      : ''
-  }
-  `;
+        return oldConfig(browserConfig);`
+            : 'return webpackMerge(baseConfig[0], baseWebpackConfig);'
+        }};`
+      : `export default ${createConfigContents}`
+  }`;
   tree.write(joinPathFragments(root, 'rspack.config.ts'), configContents);
 }

@@ -1,54 +1,35 @@
-import { ChildProcess, exec, Serializable } from 'child_process';
-import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
-import { env as appendLocalEnv } from 'npm-run-path';
 import { ExecutorContext } from '../../config/misc-interfaces';
-import * as chalk from 'chalk';
+import { isTuiEnabled } from '../../tasks-runner/is-tui-enabled';
+import { PseudoTerminal } from '../../tasks-runner/pseudo-terminal';
 import {
-  getPseudoTerminal,
-  PseudoTerminal,
-  PseudoTtyProcess,
-} from '../../tasks-runner/pseudo-terminal';
-import { signalToCode } from '../../utils/exit-codes';
-import {
-  loadAndExpandDotEnvFile,
-  unloadDotEnvFile,
-} from '../../tasks-runner/task-env';
+  ParallelRunningTasks,
+  runSingleCommandWithPseudoTerminal,
+  SeriallyRunningTasks,
+} from './running-tasks';
 
 export const LARGE_BUFFER = 1024 * 1000000;
-let pseudoTerminal: PseudoTerminal | null;
-const childProcesses = new Set<ChildProcess | PseudoTtyProcess>();
-
-function loadEnvVarsFile(path: string, env: Record<string, string> = {}) {
-  unloadDotEnvFile(path, env);
-  const result = loadAndExpandDotEnvFile(path, env);
-  if (result.error) {
-    throw result.error;
-  }
-}
-
 export type Json = {
   [k: string]: any;
 };
 
+export interface RunCommandsCommandOptions {
+  command: string;
+  forwardAllArgs?: boolean;
+  /**
+   * description was added to allow users to document their commands inline,
+   * it is not intended to be used as part of the execution of the command.
+   */
+  description?: string;
+  prefix?: string;
+  prefixColor?: string;
+  color?: string;
+  bgColor?: string;
+}
+
 export interface RunCommandsOptions extends Json {
   command?: string | string[];
-  commands?: (
-    | {
-        command: string;
-        forwardAllArgs?: boolean;
-        /**
-         * description was added to allow users to document their commands inline,
-         * it is not intended to be used as part of the execution of the command.
-         */
-        description?: string;
-        prefix?: string;
-        prefixColor?: string;
-        color?: string;
-        bgColor?: string;
-      }
-    | string
-  )[];
+  commands?: Array<RunCommandsCommandOptions | string>;
   color?: boolean;
   parallel?: boolean;
   readyWhen?: string | string[];
@@ -84,10 +65,7 @@ const propKeys = [
 ];
 
 export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
-  commands: {
-    command: string;
-    forwardAllArgs?: boolean;
-  }[];
+  commands: Array<RunCommandsCommandOptions>;
   unknownOptions?: {
     [k: string]: any;
   };
@@ -108,7 +86,18 @@ export default async function (
   success: boolean;
   terminalOutput: string;
 }> {
-  registerProcessListener();
+  const task = await runCommands(options, context);
+  const results = await task.getResults();
+  return {
+    ...results,
+    success: results.code === 0,
+  };
+}
+
+export async function runCommands(
+  options: RunCommandsOptions,
+  context: ExecutorContext
+) {
   const normalized = normalizeOptions(options);
 
   if (normalized.readyWhenStatus.length && !normalized.parallel) {
@@ -128,11 +117,27 @@ export default async function (
     );
   }
 
+  const isSingleCommand = normalized.commands.length === 1;
+
+  const usePseudoTerminal =
+    (isSingleCommand || !options.parallel) && PseudoTerminal.isSupported();
+
+  const isSingleCommandAndCanUsePseudoTerminal =
+    isSingleCommand &&
+    usePseudoTerminal &&
+    process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
+    !normalized.commands[0].prefix &&
+    normalized.usePty;
+
+  const tuiEnabled = isTuiEnabled();
+
   try {
-    const result = options.parallel
-      ? await runInParallel(normalized, context)
-      : await runSerially(normalized, context);
-    return result;
+    const runningTask = isSingleCommandAndCanUsePseudoTerminal
+      ? await runSingleCommandWithPseudoTerminal(normalized, context)
+      : options.parallel
+      ? new ParallelRunningTasks(normalized, context)
+      : new SeriallyRunningTasks(normalized, context, tuiEnabled);
+    return runningTask;
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       console.error(e);
@@ -140,77 +145,6 @@ export default async function (
     throw new Error(
       `ERROR: Something went wrong in run-commands - ${e.message}`
     );
-  }
-}
-
-async function runInParallel(
-  options: NormalizedRunCommandsOptions,
-  context: ExecutorContext
-): Promise<{ success: boolean; terminalOutput: string }> {
-  const procs = options.commands.map((c) =>
-    createProcess(
-      null,
-      c,
-      options.readyWhenStatus,
-      options.color,
-      calculateCwd(options.cwd, context),
-      options.env ?? {},
-      true,
-      options.usePty,
-      options.streamOutput,
-      options.tty,
-      options.envFile
-    ).then((result: { success: boolean; terminalOutput: string }) => ({
-      result,
-      command: c.command,
-    }))
-  );
-
-  let terminalOutput = '';
-  if (options.readyWhenStatus.length) {
-    const r: {
-      result: { success: boolean; terminalOutput: string };
-      command: string;
-    } = await Promise.race(procs);
-    terminalOutput += r.result.terminalOutput;
-    if (!r.result.success) {
-      const output = `Warning: command "${r.command}" exited with non-zero status code`;
-      terminalOutput += output;
-      if (options.streamOutput) {
-        process.stderr.write(output);
-      }
-      return { success: false, terminalOutput };
-    } else {
-      return { success: true, terminalOutput };
-    }
-  } else {
-    const r: {
-      result: { success: boolean; terminalOutput: string };
-      command: string;
-    }[] = await Promise.all(procs);
-    terminalOutput += r.map((f) => f.result.terminalOutput).join('');
-    const failed = r.filter((v) => !v.result.success);
-    if (failed.length > 0) {
-      const output = failed
-        .map(
-          (f) =>
-            `Warning: command "${f.command}" exited with non-zero status code`
-        )
-        .join('\r\n');
-      terminalOutput += output;
-      if (options.streamOutput) {
-        process.stderr.write(output);
-      }
-      return {
-        success: false,
-        terminalOutput,
-      };
-    } else {
-      return {
-        success: true,
-        terminalOutput,
-      };
-    }
   }
 }
 
@@ -277,241 +211,6 @@ function normalizeOptions(
     );
   });
   return options as NormalizedRunCommandsOptions;
-}
-
-async function runSerially(
-  options: NormalizedRunCommandsOptions,
-  context: ExecutorContext
-): Promise<{ success: boolean; terminalOutput: string }> {
-  pseudoTerminal ??= PseudoTerminal.isSupported() ? getPseudoTerminal() : null;
-  let terminalOutput = '';
-  for (const c of options.commands) {
-    const result: { success: boolean; terminalOutput: string } =
-      await createProcess(
-        pseudoTerminal,
-        c,
-        [],
-        options.color,
-        calculateCwd(options.cwd, context),
-        options.processEnv ?? options.env ?? {},
-        false,
-        options.usePty,
-        options.streamOutput,
-        options.tty,
-        options.envFile
-      );
-    terminalOutput += result.terminalOutput;
-    if (!result.success) {
-      const output = `Warning: command "${c.command}" exited with non-zero status code`;
-      result.terminalOutput += output;
-      if (options.streamOutput) {
-        process.stderr.write(output);
-      }
-      return { success: false, terminalOutput };
-    }
-  }
-  return { success: true, terminalOutput };
-}
-
-async function createProcess(
-  pseudoTerminal: PseudoTerminal | null,
-  commandConfig: {
-    command: string;
-    color?: string;
-    bgColor?: string;
-    prefix?: string;
-    prefixColor?: string;
-  },
-  readyWhenStatus: { stringToMatch: string; found: boolean }[] = [],
-  color: boolean,
-  cwd: string,
-  env: Record<string, string>,
-  isParallel: boolean,
-  usePty: boolean = true,
-  streamOutput: boolean = true,
-  tty: boolean,
-  envFile?: string
-): Promise<{ success: boolean; terminalOutput: string }> {
-  env = processEnv(color, cwd, env, envFile);
-  // The rust runCommand is always a tty, so it will not look nice in parallel and if we need prefixes
-  // currently does not work properly in windows
-  if (
-    pseudoTerminal &&
-    process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
-    !commandConfig.prefix &&
-    readyWhenStatus.length === 0 &&
-    !isParallel &&
-    usePty
-  ) {
-    let terminalOutput = chalk.dim('> ') + commandConfig.command + '\r\n\r\n';
-    if (streamOutput) {
-      process.stdout.write(terminalOutput);
-    }
-
-    const cp = pseudoTerminal.runCommand(commandConfig.command, {
-      cwd,
-      jsEnv: env,
-      quiet: !streamOutput,
-      tty,
-    });
-
-    childProcesses.add(cp);
-
-    return new Promise((res) => {
-      cp.onOutput((output) => {
-        terminalOutput += output;
-      });
-
-      cp.onExit((code) => {
-        if (code >= 128) {
-          process.exit(code);
-        } else {
-          res({ success: code === 0, terminalOutput });
-        }
-      });
-    });
-  }
-
-  return nodeProcess(commandConfig, cwd, env, readyWhenStatus, streamOutput);
-}
-
-function nodeProcess(
-  commandConfig: {
-    command: string;
-    color?: string;
-    bgColor?: string;
-    prefix?: string;
-    prefixColor?: string;
-  },
-  cwd: string,
-  env: Record<string, string>,
-  readyWhenStatus: { stringToMatch: string; found: boolean }[],
-  streamOutput = true
-): Promise<{ success: boolean; terminalOutput: string }> {
-  let terminalOutput = chalk.dim('> ') + commandConfig.command + '\r\n\r\n';
-  if (streamOutput) {
-    process.stdout.write(terminalOutput);
-  }
-  return new Promise((res) => {
-    const childProcess = exec(commandConfig.command, {
-      maxBuffer: LARGE_BUFFER,
-      env,
-      cwd,
-      windowsHide: false,
-    });
-
-    childProcesses.add(childProcess);
-
-    childProcess.stdout.on('data', (data) => {
-      const output = addColorAndPrefix(data, commandConfig);
-      terminalOutput += output;
-      if (streamOutput) {
-        process.stdout.write(output);
-      }
-      if (readyWhenStatus.length && isReady(readyWhenStatus, data.toString())) {
-        res({ success: true, terminalOutput });
-      }
-    });
-    childProcess.stderr.on('data', (err) => {
-      const output = addColorAndPrefix(err, commandConfig);
-      terminalOutput += output;
-      if (streamOutput) {
-        process.stderr.write(output);
-      }
-      if (readyWhenStatus.length && isReady(readyWhenStatus, err.toString())) {
-        res({ success: true, terminalOutput });
-      }
-    });
-    childProcess.on('error', (err) => {
-      const ouptput = addColorAndPrefix(err.toString(), commandConfig);
-      terminalOutput += ouptput;
-      if (streamOutput) {
-        process.stderr.write(ouptput);
-      }
-      res({ success: false, terminalOutput });
-    });
-    childProcess.on('exit', (code) => {
-      childProcesses.delete(childProcess);
-      if (!readyWhenStatus.length || isReady(readyWhenStatus)) {
-        res({ success: code === 0, terminalOutput });
-      }
-    });
-  });
-}
-
-function addColorAndPrefix(
-  out: string,
-  config: {
-    prefix?: string;
-    prefixColor?: string;
-    color?: string;
-    bgColor?: string;
-  }
-) {
-  if (config.prefix) {
-    out = out
-      .split('\n')
-      .map((l) => {
-        let prefixText = config.prefix;
-        if (config.prefixColor && chalk[config.prefixColor]) {
-          prefixText = chalk[config.prefixColor](prefixText);
-        }
-        prefixText = chalk.bold(prefixText);
-        return l.trim().length > 0 ? `${prefixText} ${l}` : l;
-      })
-      .join('\n');
-  }
-  if (config.color && chalk[config.color]) {
-    out = chalk[config.color](out);
-  }
-  if (config.bgColor && chalk[config.bgColor]) {
-    out = chalk[config.bgColor](out);
-  }
-  return out;
-}
-
-function calculateCwd(
-  cwd: string | undefined,
-  context: ExecutorContext
-): string {
-  if (!cwd) return context.root;
-  if (path.isAbsolute(cwd)) return cwd;
-  return path.join(context.root, cwd);
-}
-
-/**
- * Env variables are processed in the following order:
- * - env option from executor options
- * - env file from envFile option if provided
- * - local env variables
- */
-function processEnv(
-  color: boolean,
-  cwd: string,
-  envOptionFromExecutor: Record<string, string>,
-  envFile?: string
-) {
-  let localEnv = appendLocalEnv({ cwd: cwd ?? process.cwd() });
-  localEnv = {
-    ...process.env,
-    ...localEnv,
-  };
-
-  if (process.env.NX_LOAD_DOT_ENV_FILES !== 'false' && envFile) {
-    loadEnvVarsFile(envFile, localEnv);
-  }
-  let res: Record<string, string> = {
-    ...localEnv,
-    ...envOptionFromExecutor,
-  };
-  // need to override PATH to make sure we are using the local node_modules
-  if (localEnv.PATH) res.PATH = localEnv.PATH; // UNIX-like
-  if (localEnv.Path) res.Path = localEnv.Path; // Windows
-
-  if (color) {
-    res.FORCE_COLOR = `${color}`;
-  }
-  return res;
 }
 
 export function interpolateArgsIntoCommand(
@@ -629,65 +328,6 @@ function filterPropKeysFromUnParsedOptions(
   return parsedOptions;
 }
 
-let registered = false;
-
-function registerProcessListener() {
-  if (registered) {
-    return;
-  }
-
-  registered = true;
-  // When the nx process gets a message, it will be sent into the task's process
-  process.on('message', (message: Serializable) => {
-    // this.publisher.publish(message.toString());
-    if (pseudoTerminal) {
-      pseudoTerminal.sendMessageToChildren(message);
-    }
-
-    childProcesses.forEach((p) => {
-      if ('connected' in p && p.connected) {
-        p.send(message);
-      }
-    });
-  });
-
-  // Terminate any task processes on exit
-  process.on('exit', () => {
-    childProcesses.forEach((p) => {
-      if ('connected' in p ? p.connected : p.isAlive) {
-        p.kill();
-      }
-    });
-  });
-  process.on('SIGINT', () => {
-    childProcesses.forEach((p) => {
-      if ('connected' in p ? p.connected : p.isAlive) {
-        p.kill('SIGTERM');
-      }
-    });
-    // we exit here because we don't need to write anything to cache.
-    process.exit(signalToCode('SIGINT'));
-  });
-  process.on('SIGTERM', () => {
-    childProcesses.forEach((p) => {
-      if ('connected' in p ? p.connected : p.isAlive) {
-        p.kill('SIGTERM');
-      }
-    });
-    // no exit here because we expect child processes to terminate which
-    // will store results to the cache and will terminate this process
-  });
-  process.on('SIGHUP', () => {
-    childProcesses.forEach((p) => {
-      if ('connected' in p ? p.connected : p.isAlive) {
-        p.kill('SIGTERM');
-      }
-    });
-    // no exit here because we expect child processes to terminate which
-    // will store results to the cache and will terminate this process
-  });
-}
-
 function wrapArgIntoQuotesIfNeeded(arg: string): string {
   if (arg.includes('=')) {
     const [key, value] = arg.split('=');
@@ -704,20 +344,4 @@ function wrapArgIntoQuotesIfNeeded(arg: string): string {
   } else {
     return arg;
   }
-}
-
-function isReady(
-  readyWhenStatus: { stringToMatch: string; found: boolean }[] = [],
-  data?: string
-): boolean {
-  if (data) {
-    for (const readyWhenElement of readyWhenStatus) {
-      if (data.toString().indexOf(readyWhenElement.stringToMatch) > -1) {
-        readyWhenElement.found = true;
-        break;
-      }
-    }
-  }
-
-  return readyWhenStatus.every((readyWhenElement) => readyWhenElement.found);
 }

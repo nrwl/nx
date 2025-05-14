@@ -15,7 +15,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { Linter, lintProjectGenerator } from '@nx/eslint';
+import { lintProjectGenerator } from '@nx/eslint';
 import {
   javaScriptOverride,
   typeScriptOverride,
@@ -76,7 +76,7 @@ export async function e2eProjectGeneratorInternal(
             jestConfig: `${options.e2eProjectRoot}/jest.config.ts`,
             passWithNoTests: true,
           },
-          dependsOn: [`${options.project}:build`],
+          dependsOn: [`${options.project}:build`, `${options.project}:serve`],
         },
       },
     };
@@ -93,7 +93,7 @@ export async function e2eProjectGeneratorInternal(
             jestConfig: `${options.e2eProjectRoot}/jest.config.ts`,
             passWithNoTests: true,
           },
-          dependsOn: [`${options.project}:build`],
+          dependsOn: [`${options.project}:build`, `${options.project}:serve`],
         },
       },
     });
@@ -230,10 +230,10 @@ export async function e2eProjectGeneratorInternal(
   );
   tasks.push(installTask);
 
-  if (options.linter === Linter.EsLint) {
+  if (options.linter === 'eslint') {
     const linterTask = await lintProjectGenerator(host, {
       project: options.e2eProjectName,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: true,
       tsConfigPaths: [
         joinPathFragments(options.e2eProjectRoot, 'tsconfig.json'),

@@ -2,7 +2,7 @@
 title: 'Storybook Interaction Tests in Nx'
 slug: 'storybook-interaction-tests-in-nx'
 authors: ['Katerina Skroumpelou']
-cover_image: '/blog/images/2023-08-03/NfJA7VBZvDwyyZHmV8qsiw.png'
+cover_image: '/blog/images/2023-08-03/NfJA7VBZvDwyyZHmV8qsiw.avif'
 tags: [nx]
 description: Nx 16.6 introduces Storybook interaction tests, offering automated UI testing, Jest and Playwright integration, and a streamlined workflow.
 ---

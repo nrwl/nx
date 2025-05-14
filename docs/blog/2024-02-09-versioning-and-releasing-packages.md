@@ -3,7 +3,7 @@ title: Versioning and Releasing Packages in a Monorepo
 slug: 'versioning-and-releasing-packages-in-a-monorepo'
 authors: [Juri Strumpflohner]
 description: 'Learn how to use Nx Release to version and publish packages in your monorepo with conventional commits and automated changelog generation.'
-cover_image: '/blog/images/2024-02-09/featured_img.png'
+cover_image: '/blog/images/2024-02-09/featured_img.avif'
 tags: [nx, nx-cloud, releases, changelog]
 ---
 

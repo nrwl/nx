@@ -18,9 +18,9 @@ import {
   getLastValueFromAsyncIterableIterator,
   isAsyncIterator,
 } from '../../utils/async-iterator';
-import { getExecutorInformation } from './executor-utils';
+import { getExecutorInformation, parseExecutor } from './executor-utils';
 import {
-  getPseudoTerminal,
+  createPseudoTerminal,
   PseudoTerminal,
 } from '../../tasks-runner/pseudo-terminal';
 import { exec } from 'child_process';
@@ -83,7 +83,7 @@ async function parseExecutorAndTarget(
     throw new Error(`Cannot find target '${target}' for project '${project}'`);
   }
 
-  const [nodeModule, executor] = targetConfig.executor.split(':');
+  const [nodeModule, executor] = parseExecutor(targetConfig.executor);
   const { schema, implementationFactory } = getExecutorInformation(
     nodeModule,
     executor,
@@ -124,7 +124,7 @@ async function printTargetRunHelpInternal(
       ...localEnv,
     };
     if (PseudoTerminal.isSupported()) {
-      const terminal = getPseudoTerminal();
+      const terminal = createPseudoTerminal();
       await new Promise(() => {
         const cp = terminal.runCommand(helpCommand, { jsEnv: env });
         cp.onExit((code) => {

@@ -109,13 +109,48 @@ describe('CI Workflow generator', () => {
           ).toMatchSnapshot();
         });
 
+        it('should generate github CI config when packageManager is defined in package.json', async () => {
+          updateJson(tree, 'package.json', (json) => ({
+            ...json,
+            packageManager: `${packageManager}@latest`,
+          }));
+
+          await ciWorkflowGenerator(tree, { ci: 'github', name: 'CI' });
+
+          expect(
+            tree.read('.github/workflows/ci.yml', 'utf-8')
+          ).toMatchSnapshot();
+        });
+
         it('should generate circleci CI config', async () => {
           await ciWorkflowGenerator(tree, { ci: 'circleci', name: 'CI' });
 
           expect(tree.read('.circleci/config.yml', 'utf-8')).toMatchSnapshot();
         });
 
+        it(`should generate circleci CI config when packageManager is set to ${packageManager} in package.json`, async () => {
+          updateJson(tree, 'package.json', (json) => ({
+            ...json,
+            packageManager: `${packageManager}@latest`,
+          }));
+
+          await ciWorkflowGenerator(tree, { ci: 'circleci', name: 'CI' });
+
+          expect(tree.read('.circleci/config.yml', 'utf-8')).toMatchSnapshot();
+        });
+
         it('should generate azure CI config', async () => {
+          await ciWorkflowGenerator(tree, { ci: 'azure', name: 'CI' });
+
+          expect(tree.read('azure-pipelines.yml', 'utf-8')).toMatchSnapshot();
+        });
+
+        it('should generate azure CI config when packageManager is set to ${packageManager} in package.json', async () => {
+          updateJson(tree, 'package.json', (json) => ({
+            ...json,
+            packageManager: `${packageManager}@latest`,
+          }));
+
           await ciWorkflowGenerator(tree, { ci: 'azure', name: 'CI' });
 
           expect(tree.read('azure-pipelines.yml', 'utf-8')).toMatchSnapshot();
@@ -133,6 +168,22 @@ describe('CI Workflow generator', () => {
         });
 
         it('should generate bitbucket pipelines config', async () => {
+          await ciWorkflowGenerator(tree, {
+            ci: 'bitbucket-pipelines',
+            name: 'CI',
+          });
+
+          expect(
+            tree.read('bitbucket-pipelines.yml', 'utf-8')
+          ).toMatchSnapshot();
+        });
+
+        it('should generate bitbucket pipelines config when packageManager is set to ${packageManager} in package.json', async () => {
+          updateJson(tree, 'package.json', (json) => ({
+            ...json,
+            packageManager: `${packageManager}@latest`,
+          }));
+
           await ciWorkflowGenerator(tree, {
             ci: 'bitbucket-pipelines',
             name: 'CI',
@@ -334,6 +385,7 @@ describe('CI Workflow generator', () => {
             steps:
               - uses: actions/checkout@v4
                 with:
+                  filter: tree:0
                   fetch-depth: 0
 
               # This enables task distribution via Nx Cloud
@@ -429,6 +481,7 @@ describe('CI Workflow generator', () => {
             steps:
               - checkout: self
                 fetchDepth: 0
+                fetchFilter: tree:0
               # Set Azure Devops CLI default settings
               - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
                 displayName: 'Set default Azure DevOps organization and project'
@@ -460,7 +513,7 @@ describe('CI Workflow generator', () => {
               # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
               # - script: npx nx-cloud record -- echo Hello World
               # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-              - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build typecheck
+              - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build typecheck
         "
       `);
     });

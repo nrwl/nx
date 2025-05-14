@@ -5,7 +5,7 @@ import { ChatItem, CustomError } from '@nx/nx-dev/util-ai';
 export const config = {
   runtime: 'edge',
 };
-
+// TODO: move this endpoint to the nx api. nx.dev shouldn't be for external consumption.
 export default async function handler(request: NextRequest) {
   const country = request.geo.country;
   const restrictedCountries: string[] = [

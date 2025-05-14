@@ -3,7 +3,7 @@ title: 'Run Tasks'
 description: 'Learn how to use Nx task runner to efficiently manage and execute tasks across multiple projects in your monorepo, including parallel execution and caching.'
 ---
 
-# Run Tasks
+# Tasks
 
 {% youtube src="https://youtu.be/aEdfYiA5U34" title="Run tasks with Nx" /%}
 
@@ -14,7 +14,7 @@ In a monorepo setup, you don't just run tasks for a single project; you might ha
 - only run tasks for **projects affected by a given change**
 - **speed up task execution** with [caching](/features/cache-task-results)
 
-## Defining Tasks
+## Define Tasks
 
 Nx tasks can be created from existing `package.json` scripts, [inferred from tooling configuration files](/concepts/inferred-tasks), or defined in a `project.json` file. Nx combines these three sources to determine the tasks for a particular project.
 
@@ -94,11 +94,17 @@ Learn more about [inferred tasks here](/concepts/inferred-tasks).
 
 The [project configuration docs](/reference/project-configuration) has the details for all the available configuration options.
 
-## Running Tasks
+## Run Tasks
 
 Nx uses the following syntax:
 
 ![Syntax for Running Tasks in Nx](/shared/images/run-target-syntax.svg)
+
+{% callout type="note" title="Terminal UI" %}
+
+In Nx 21, task output is displayed in an [interactive terminal UI](/recipes/running-tasks/terminal-ui) that allows you to actively choose which task output to display, search through the list of tasks and display multiple tasks side by side.
+
+{% /callout %}
 
 ### Run a Single Task
 

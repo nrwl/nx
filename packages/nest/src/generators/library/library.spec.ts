@@ -1,6 +1,11 @@
 import type { Tree } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
-import { readJson, readProjectConfiguration, writeJson } from '@nx/devkit';
+import {
+  readJson,
+  readProjectConfiguration,
+  updateJson,
+  writeJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { libraryGenerator } from './library';
 
@@ -357,6 +362,7 @@ describe('lib', () => {
         compilerOptions: {
           composite: true,
           declaration: true,
+          customConditions: ['development'],
         },
       });
       writeJson(tree, 'tsconfig.json', {
@@ -496,6 +502,90 @@ describe('lib', () => {
           ],
         }
       `);
+    });
+
+    it('should create a correct package.json for buildable libraries', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        unitTestRunner: 'jest',
+        useProjectJson: false,
+        buildable: true,
+        skipFormat: true,
+      });
+
+      expect(tree.read('mylib/package.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "name": "@proj/mylib",
+          "version": "0.0.1",
+          "private": true,
+          "main": "./dist/index.js",
+          "module": "./dist/index.js",
+          "types": "./dist/index.d.ts",
+          "exports": {
+            "./package.json": "./package.json",
+            ".": {
+              "development": "./src/index.ts",
+              "types": "./dist/index.d.ts",
+              "import": "./dist/index.js",
+              "default": "./dist/index.js"
+            }
+          },
+          "nx": {
+            "targets": {
+              "lint": {
+                "executor": "@nx/eslint:lint"
+              },
+              "test": {
+                "executor": "@nx/jest:jest",
+                "outputs": [
+                  "{projectRoot}/test-output/jest/coverage"
+                ],
+                "options": {
+                  "jestConfig": "mylib/jest.config.ts"
+                }
+              },
+              "build": {
+                "executor": "@nx/js:tsc",
+                "outputs": [
+                  "{options.outputPath}"
+                ],
+                "options": {
+                  "outputPath": "dist/mylib",
+                  "tsConfig": "mylib/tsconfig.lib.json",
+                  "packageJson": "mylib/package.json",
+                  "main": "mylib/src/index.ts",
+                  "assets": [
+                    "mylib/*.md"
+                  ]
+                }
+              }
+            }
+          },
+          "dependencies": {
+            "tslib": "^2.3.0"
+          }
+        }
+        "
+      `);
+    });
+
+    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+      updateJson(tree, 'tsconfig.base.json', (json) => {
+        delete json.compilerOptions.customConditions;
+        return json;
+      });
+
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        unitTestRunner: 'jest',
+        useProjectJson: false,
+        buildable: true,
+        skipFormat: true,
+      });
+
+      expect(
+        readJson(tree, 'mylib/package.json').exports['.']
+      ).not.toHaveProperty('development');
     });
 
     it('should set "nx.name" in package.json when the user provides a name that is different than the package name', async () => {

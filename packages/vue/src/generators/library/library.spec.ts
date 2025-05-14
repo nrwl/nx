@@ -8,7 +8,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { nxVersion } from '../../utils/versions';
 import libraryGenerator from './library';
 import { Schema } from './schema';
@@ -18,7 +17,7 @@ describe('library', () => {
 
   let defaultSchema: Schema = {
     directory: 'my-lib',
-    linter: Linter.EsLint,
+    linter: 'eslint',
     skipFormat: false,
     skipTsConfig: false,
     unitTestRunner: 'vitest',
@@ -521,6 +520,7 @@ module.exports = [
         compilerOptions: {
           composite: true,
           declaration: true,
+          customConditions: ['development'],
         },
       });
       writeJson(tree, 'tsconfig.json', {
@@ -584,6 +584,39 @@ module.exports = [
           "exports",
           "nx",
         ]
+      `);
+      expect(tree.read('my-lib/package.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "name": "@proj/my-lib",
+          "version": "0.0.1",
+          "module": "./src/index.ts",
+          "types": "./src/index.ts",
+          "exports": {
+            ".": {
+              "types": "./src/index.ts",
+              "import": "./src/index.ts",
+              "default": "./src/index.ts"
+            },
+            "./package.json": "./package.json"
+          },
+          "nx": {
+            "targets": {
+              "lint": {
+                "executor": "@nx/eslint:lint"
+              },
+              "test": {
+                "executor": "@nx/vite:test",
+                "outputs": [
+                  "{options.reportsDirectory}"
+                ],
+                "options": {
+                  "reportsDirectory": "../coverage/my-lib"
+                }
+              }
+            }
+          }
+        }
+        "
       `);
       expect(readJson(tree, 'my-lib/tsconfig.json')).toMatchInlineSnapshot(`
         {
@@ -688,6 +721,60 @@ module.exports = [
           ],
         }
       `);
+    });
+
+    it('should create a correct package.json for buildable libraries', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        setParserOptionsProject: true,
+        linter: 'eslint',
+        addPlugin: true,
+        useProjectJson: false,
+        bundler: 'vite',
+        skipFormat: true,
+      });
+
+      expect(tree.read('my-lib/package.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "name": "@proj/my-lib",
+          "version": "0.0.1",
+          "type": "module",
+          "main": "./dist/index.js",
+          "module": "./dist/index.js",
+          "types": "./dist/index.d.ts",
+          "exports": {
+            "./package.json": "./package.json",
+            ".": {
+              "development": "./src/index.ts",
+              "types": "./dist/index.d.ts",
+              "import": "./dist/index.js",
+              "default": "./dist/index.js"
+            }
+          }
+        }
+        "
+      `);
+    });
+
+    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+      updateJson(tree, 'tsconfig.base.json', (json) => {
+        delete json.compilerOptions.customConditions;
+        return json;
+      });
+
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        setParserOptionsProject: true,
+        linter: 'eslint',
+        addPlugin: true,
+        useProjectJson: false,
+        bundler: 'vite',
+        skipFormat: true,
+      });
+
+      expect(
+        readJson(tree, 'my-lib/package.json').exports['.']
+      ).not.toHaveProperty('development');
     });
 
     it('should set "nx.name" in package.json when the user provides a name that is different than the package name', async () => {

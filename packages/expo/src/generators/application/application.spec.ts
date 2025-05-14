@@ -3,14 +3,12 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 import {
   getProjects,
   readJson,
-  readNxJson,
   readProjectConfiguration,
   Tree,
   updateJson,
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { expoApplicationGenerator } from './application';
 
 describe('app', () => {
@@ -25,7 +23,7 @@ describe('app', () => {
     await expoApplicationGenerator(appTree, {
       directory: 'my-app',
       displayName: 'myApp',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
       skipFormat: false,
       js: false,
@@ -41,7 +39,7 @@ describe('app', () => {
       directory: 'my-app',
       displayName: 'myApp',
       tags: 'one,two',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
       skipFormat: false,
       js: false,
@@ -58,7 +56,7 @@ describe('app', () => {
     await expoApplicationGenerator(appTree, {
       directory: 'my-app',
       displayName: 'myApp',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
       skipFormat: false,
       js: false,
@@ -77,7 +75,7 @@ describe('app', () => {
     await expoApplicationGenerator(appTree, {
       directory: 'my-app',
       displayName: 'myApp',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
       skipFormat: false,
       js: true,
@@ -97,7 +95,7 @@ describe('app', () => {
       await expoApplicationGenerator(appTree, {
         name: 'my-app',
         directory: 'my-dir',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         e2eTestRunner: 'detox',
         js: false,
         skipFormat: false,
@@ -158,7 +156,7 @@ describe('app', () => {
     it('should create e2e app without directory', async () => {
       await expoApplicationGenerator(appTree, {
         directory: 'my-app',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         e2eTestRunner: 'detox',
         js: false,
         skipFormat: false,
@@ -219,7 +217,7 @@ describe('app', () => {
       await expoApplicationGenerator(appTree, {
         directory: 'my-app',
         displayName: 'my app name',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         e2eTestRunner: 'detox',
         js: false,
         skipFormat: false,
@@ -280,56 +278,6 @@ describe('app', () => {
     });
   });
 
-  describe('cypress', () => {
-    it('should create e2e app with e2e-ci targetDefaults', async () => {
-      await expoApplicationGenerator(appTree, {
-        name: 'my-app',
-        directory: 'my-dir',
-        linter: Linter.EsLint,
-        e2eTestRunner: 'cypress',
-        js: false,
-        skipFormat: false,
-        unitTestRunner: 'none',
-        addPlugin: true,
-      });
-
-      // ASSERT
-      const nxJson = readNxJson(appTree);
-      expect(nxJson.targetDefaults['e2e-ci--**/*']).toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^export",
-          ],
-        }
-      `);
-    });
-  });
-
-  describe('playwright', () => {
-    it('should create e2e app with e2e-ci targetDefaults', async () => {
-      await expoApplicationGenerator(appTree, {
-        name: 'my-app',
-        directory: 'my-dir',
-        linter: Linter.EsLint,
-        e2eTestRunner: 'playwright',
-        js: false,
-        skipFormat: false,
-        unitTestRunner: 'none',
-        addPlugin: true,
-      });
-
-      // ASSERT
-      const nxJson = readNxJson(appTree);
-      expect(nxJson.targetDefaults['e2e-ci--**/*']).toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^export",
-          ],
-        }
-      `);
-    });
-  });
-
   describe('TS solution setup', () => {
     let tree: Tree;
 
@@ -357,7 +305,7 @@ describe('app', () => {
       await expoApplicationGenerator(tree, {
         directory: 'my-app',
         displayName: 'myApp',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         e2eTestRunner: 'none',
         skipFormat: false,
         js: false,
@@ -487,7 +435,7 @@ describe('app', () => {
         directory: 'my-app',
         name: 'my-app',
         displayName: 'myApp',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         e2eTestRunner: 'none',
         skipFormat: false,
         js: false,
@@ -513,7 +461,7 @@ describe('app', () => {
     it('should generate project.json if useProjectJson is true', async () => {
       await expoApplicationGenerator(tree, {
         directory: 'my-app',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         e2eTestRunner: 'cypress',
         useProjectJson: true,
         unitTestRunner: 'none',

@@ -35,6 +35,7 @@ interface BaseArguments extends CreateWorkspaceOptions {
   linter?: 'none' | 'eslint';
   formatter?: 'none' | 'prettier';
   workspaces?: boolean;
+  useProjectJson?: boolean;
 }
 
 interface NoneArguments extends BaseArguments {
@@ -68,7 +69,7 @@ interface AngularArguments extends BaseArguments {
   standaloneApi: boolean;
   unitTestRunner: 'none' | 'jest' | 'vitest';
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
-  bundler: 'webpack' | 'esbuild';
+  bundler: 'webpack' | 'rspack' | 'esbuild';
   ssr: boolean;
   serverRouting: boolean;
   prefix: string;
@@ -174,6 +175,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             describe: chalk.dim`Use package manager workspaces.`,
             type: 'boolean',
             default: true,
+          })
+          .option('useProjectJson', {
+            describe: chalk.dim`Use a 'project.json' file for the Nx configuration instead of a 'package.json' file. This defaults to 'true' when '--no-workspaces' is used. Otherwise, it defaults to 'false'.`,
+            type: 'boolean',
           })
           .option('formatter', {
             describe: chalk.dim`Code formatter to use.`,
@@ -288,6 +293,7 @@ async function normalizeArgsMiddleware(
   });
 
   argv.workspaces ??= true;
+  argv.useProjectJson ??= !argv.workspaces;
 
   try {
     argv.name = await determineFolder(argv);
@@ -863,7 +869,7 @@ async function determineAngularOptions(
   let appName: string;
   let unitTestRunner: undefined | 'none' | 'jest' | 'vitest' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
-  let bundler: undefined | 'webpack' | 'esbuild' = undefined;
+  let bundler: undefined | 'webpack' | 'rspack' | 'esbuild' = undefined;
   let ssr: undefined | boolean = undefined;
   let serverRouting: undefined | boolean = undefined;
 
@@ -924,6 +930,10 @@ async function determineAngularOptions(
             message: 'esbuild [ https://esbuild.github.io/ ]',
           },
           {
+            name: 'rspack',
+            message: 'Rspack [ https://rspack.dev/ ]',
+          },
+          {
             name: 'webpack',
             message: 'Webpack [ https://webpack.js.org/ ]',
           },
@@ -969,8 +979,11 @@ async function determineAngularOptions(
     const reply = await enquirer.prompt<{ ssr: 'Yes' | 'No' }>([
       {
         name: 'ssr',
-        message:
-          'Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)?',
+        message: `Do you want to enable Server-Side Rendering (SSR)${
+          bundler !== 'rspack'
+            ? ' and Static Site Generation (SSG/Prerendering)?'
+            : '?'
+        }`,
         type: 'autocomplete',
         choices: [{ name: 'Yes' }, { name: 'No' }],
         initial: 1,

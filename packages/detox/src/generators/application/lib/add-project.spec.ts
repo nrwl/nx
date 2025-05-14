@@ -4,7 +4,6 @@ import {
   Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { addProject } from './add-project';
 
 describe('Add Project', () => {
@@ -39,7 +38,7 @@ describe('Add Project', () => {
         appDisplayName: 'MyApp',
         appExpoName: 'MyApp',
         appRoot: 'apps/my-app',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         framework: 'react-native',
         useProjectJson: true,
       });
@@ -90,7 +89,7 @@ describe('Add Project', () => {
         appDisplayName: 'MyApp',
         appExpoName: 'MyApp',
         appRoot: 'apps/my-dir/my-app',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         framework: 'react-native',
         useProjectJson: true,
       });

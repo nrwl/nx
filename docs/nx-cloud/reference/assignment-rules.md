@@ -65,10 +65,10 @@ You can mix and match any of the criteria in an assignment rule provided that yo
 
 - At least one of the following properties is defined: `projects`, `targets`, `configurations`.
 - There is at least one [agent type](/ci/reference/launch-templates) specified in the `run-on` field. If no parallelism is specified, the parallelism of the executed command will be used instead. If that is not specified, then the parallelism will default to `1`
-- For assignment rules with Nx Agents, every changeset in your `distribute-on` field must include at **least one agent** that matches each agent type specified in the `runs-on` field across all assignment rules. For example, if your rules distribute tasks on `linux-small-js`, `linux-medium-js`, and `linux-large-js`, then at least one agent of each type must be available; otherwise, tasks associated with those rules cannot be executed.
+- For assignment rules with Nx Agents, every changeset in your `distribute-on` field must include at **least one agent** that matches each agent type specified in the `run-on` field across all assignment rules. For example, if your rules distribute tasks on `linux-small-js`, `linux-medium-js`, and `linux-large-js`, then at least one agent of each type must be available; otherwise, tasks associated with those rules cannot be executed.
 
 {% callout type="note" title="If you are using Manual DTE, you must define your own agent types" %}
-You must define your own agent types and attach them to your agents using the `NX_AGENT_LAUNCH_TEMPLATE` environment variable. Ensure that for each `runs-on` field in your assignment rules, you have corresponding agents in your agent pool that have the same agent type.
+You must define your own agent types and attach them to your agents using the `NX_AGENT_LAUNCH_TEMPLATE` environment variable. Ensure that for each `run-on` field in your assignment rules, you have corresponding agents in your agent pool that have the same agent type.
 See below for an [example](#using-assignment-rules-with-manual-dte) of how to define your own agent types when using Manual DTE.
 {% /callout %}
 
@@ -177,16 +177,16 @@ nx affected -t lint test build --parallel=3
 ```
 
 ```yaml {% fileName=".nx/workflows/assignment-rules.yaml" %}
-assignment-rules
+assignment-rules:
   - targets:
-    - lint
-    - test
+      - lint
+      - test
     run-on:
       - agent: linux-medium
         parallelism: 4
 
-  - target:
-    - build
+  - targets:
+      - build
     run-on:
       - agent: linux-large
 ```
@@ -248,8 +248,16 @@ In this example, the task defined below can match multiple assignment rules. How
 
 ```yaml {% fileName=".nx/workflows/distribution-config.yaml" %}
 assignment-rules:
+  - projects:
+      - app1
+    targets:
+      - build
+    run-on:
+      - agent: linux-large-js
+        parallelism: 3
+
   # A task for app1:build:production will use this rule because it is more
-  # specific (matches all three properties instead of just two)
+  # specific (matches three properties instead of just two)
   - projects:
       - app1
     targets:
@@ -259,14 +267,6 @@ assignment-rules:
     run-on:
       - agent: linux-medium-js
         parallelism: 5
-
-  - projects:
-      - app1
-    targets:
-      - build
-    run-on:
-      - agent: linux-large-js
-        parallelism: 3
 ```
 
 ## Using Assignment Rules with Manual DTE
@@ -288,7 +288,7 @@ assignment-rules:
 
   - targets:
       - lint
-    runs-on:
+    run-on:
       - agent: linux-medium
 
   - configurations:
@@ -347,7 +347,7 @@ jobs:
         run: npx nx-cloud start-agent
         env:
           NX_AGENT_NAME: ${{ matrix.agent }}
-          NX_AGENT_LAUNCH_TEMPLATE: 'linux-medium' # This value needs to match one of the 'runs-on' values defined in the assignment rules
+          NX_AGENT_LAUNCH_TEMPLATE: 'linux-medium' # This value needs to match one of the 'run-on' values defined in the assignment rules
 
   large-agents:
     name: Agents ${{ matrix.agent }}
@@ -355,7 +355,7 @@ jobs:
       group: large-agents
     strategy:
       matrix:
-        agent: [1, 2, 3]
+        agent: [4, 5, 6]
 
     steps:
       - name: Checkout
@@ -375,7 +375,7 @@ jobs:
         run: npx nx-cloud start-agent
         env:
           NX_AGENT_NAME: ${{ matrix.agent }}
-          NX_AGENT_LAUNCH_TEMPLATE: 'linux-large' # This value needs to match one of the 'runs-on' values defined in the assignment rules
+          NX_AGENT_LAUNCH_TEMPLATE: 'linux-large' # This value needs to match one of the 'run-on' values defined in the assignment rules
 ```
 
 ## Using Assignment Rules with Dynamic Nx Agents
@@ -442,7 +442,7 @@ assignment-rules:
       - agent: linux-large-js
         parallelism: 3
 
-  # Missing `runs-on`
+  # Missing `run-on`
   - targets:
       - lint
     configurations:

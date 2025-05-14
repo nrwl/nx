@@ -361,12 +361,15 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
+module.exports.AppLifeCycle = nativeBinding.AppLifeCycle
 module.exports.ChildProcess = nativeBinding.ChildProcess
 module.exports.FileLock = nativeBinding.FileLock
 module.exports.HashPlanner = nativeBinding.HashPlanner
+module.exports.HttpRemoteCache = nativeBinding.HttpRemoteCache
 module.exports.ImportResult = nativeBinding.ImportResult
 module.exports.NxCache = nativeBinding.NxCache
 module.exports.NxTaskHistory = nativeBinding.NxTaskHistory
+module.exports.RunningTasksService = nativeBinding.RunningTasksService
 module.exports.RustPseudoTerminal = nativeBinding.RustPseudoTerminal
 module.exports.TaskDetails = nativeBinding.TaskDetails
 module.exports.TaskHasher = nativeBinding.TaskHasher
@@ -385,7 +388,13 @@ module.exports.getTransformableOutputs = nativeBinding.getTransformableOutputs
 module.exports.hashArray = nativeBinding.hashArray
 module.exports.hashFile = nativeBinding.hashFile
 module.exports.IS_WASM = nativeBinding.IS_WASM
+module.exports.logError = nativeBinding.logError
+module.exports.logInfo = nativeBinding.logInfo
+module.exports.parseTaskStatus = nativeBinding.parseTaskStatus
 module.exports.remove = nativeBinding.remove
+module.exports.restoreTerminal = nativeBinding.restoreTerminal
+module.exports.RunMode = nativeBinding.RunMode
+module.exports.TaskStatus = nativeBinding.TaskStatus
 module.exports.testOnlyTransferFileMap = nativeBinding.testOnlyTransferFileMap
 module.exports.transferProjectGraph = nativeBinding.transferProjectGraph
 module.exports.validateOutputs = nativeBinding.validateOutputs

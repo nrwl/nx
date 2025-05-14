@@ -123,7 +123,7 @@ function postcssOptionsCreator(
         ? []
         : [
             PostcssCliResources({
-              baseHref: options.baseHref,
+              baseHref: options.baseHref ? options.baseHref : undefined,
               deployUrl: options.deployUrl,
               loader,
               filename: `[name]${hashFormat.file}.[ext]`,

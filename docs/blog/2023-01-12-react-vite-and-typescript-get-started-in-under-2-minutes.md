@@ -2,7 +2,7 @@
 title: 'React, Vite and TypeScript: Get started in under 2 minutes'
 slug: 'react-vite-and-typescript-get-started-in-under-2-minutes'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2023-01-12/ucL7YQ2v8aaOy426soLPZA.png'
+cover_image: '/blog/images/2023-01-12/ucL7YQ2v8aaOy426soLPZA.avif'
 tags: [nx]
 description: Learn how to quickly set up a modern React application with Vite and TypeScript using Nx, featuring built-in testing, linting, and development tools.
 ---

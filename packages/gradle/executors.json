@@ -1,0 +1,10 @@
+{
+  "executors": {
+    "gradle": {
+      "batchImplementation": "./src/executors/gradle/gradle-batch.impl",
+      "implementation": "./src/executors/gradle/gradle.impl",
+      "schema": "./src/executors/gradle/schema.json",
+      "description": "Runs gradle tasks via the Gradle Tooling API or by invoking gradlew."
+    }
+  }
+}

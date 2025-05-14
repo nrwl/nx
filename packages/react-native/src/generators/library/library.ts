@@ -78,13 +78,13 @@ export async function reactNativeLibraryGeneratorInternal(
 
   createFiles(host, options);
 
+  if (options.isUsingTsSolutionConfig) {
+    await addProjectToTsSolutionWorkspace(host, options.projectRoot);
+  }
+
   const addProjectTask = await addProject(host, options);
   if (addProjectTask) {
     tasks.push(addProjectTask);
-  }
-
-  if (options.isUsingTsSolutionConfig) {
-    await addProjectToTsSolutionWorkspace(host, options.projectRoot);
   }
 
   const lintTask = await addLinting(host, {
@@ -296,6 +296,15 @@ function createFiles(host: Tree, options: NormalizedSchema) {
 function determineEntryFields(
   options: NormalizedSchema
 ): Pick<PackageJson, 'main' | 'types' | 'exports'> {
+  if (
+    options.buildable ||
+    options.publishable ||
+    !options.isUsingTsSolutionConfig
+  ) {
+    // For buildable libraries, the entries are configured by the bundler (i.e. Rollup).
+    return undefined;
+  }
+
   return {
     main: options.js ? './src/index.js' : './src/index.ts',
     types: options.js ? './src/index.js' : './src/index.ts',

@@ -1,6 +1,8 @@
 import { prompt } from 'enquirer';
+import { join } from 'node:path';
+import { stripVTControlCharacters } from 'node:util';
 import * as ora from 'ora';
-import { join } from 'path';
+import type { Observable } from 'rxjs';
 import {
   NxJsonConfiguration,
   readNxJson,
@@ -15,14 +17,18 @@ import {
   getTaskDetails,
   hashTasksThatDoNotDependOnOutputsOfOtherTasks,
 } from '../hasher/hash-task';
-import { IS_WASM } from '../native';
+import { logError, logInfo, RunMode } from '../native';
+import {
+  runPostTasksExecution,
+  runPreTasksExecution,
+} from '../project-graph/plugins/tasks-execution-hooks';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { NxArgs } from '../utils/command-line-utils';
-import { isRelativePath } from '../utils/fileutils';
+import { handleErrors } from '../utils/handle-errors';
 import { isCI } from '../utils/is-ci';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
+import { printNxKey } from '../utils/nx-key';
 import { output } from '../utils/output';
-import { handleErrors } from '../utils/handle-errors';
 import {
   collectEnabledTaskSyncGeneratorsFromTaskGraph,
   flushSyncGeneratorChanges,
@@ -34,6 +40,7 @@ import {
 } from '../utils/sync-generators';
 import { workspaceRoot } from '../utils/workspace-root';
 import { createTaskGraph } from './create-task-graph';
+import { isTuiEnabled } from './is-tui-enabled';
 import {
   CompositeLifeCycle,
   LifeCycle,
@@ -45,44 +52,281 @@ import { createRunOneDynamicOutputRenderer } from './life-cycles/dynamic-run-one
 import { StaticRunManyTerminalOutputLifeCycle } from './life-cycles/static-run-many-terminal-output-life-cycle';
 import { StaticRunOneTerminalOutputLifeCycle } from './life-cycles/static-run-one-terminal-output-life-cycle';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
-import { TaskHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
-import { LegacyTaskHistoryLifeCycle } from './life-cycles/task-history-life-cycle-old';
+import { getTasksHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
 import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
-import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
+import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
+import { getTuiTerminalSummaryLifeCycle } from './life-cycles/tui-summary-life-cycle';
 import {
+  assertTaskGraphDoesNotContainInvalidTargets,
   findCycle,
+  getLeafTasks,
   makeAcyclic,
   validateNoAtomizedTasks,
 } from './task-graph-utils';
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { shouldStreamOutput } from './utils';
+import { signalToCode } from '../utils/exit-codes';
 import chalk = require('chalk');
-import type { Observable } from 'rxjs';
-import { printNxKey } from '../utils/nx-key';
-import {
-  runPostTasksExecution,
-  runPreTasksExecution,
-} from '../project-graph/plugins/tasks-execution-hooks';
+
+const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+const originalStderrWrite = process.stderr.write.bind(process.stderr);
+const originalConsoleLog = console.log.bind(console);
+const originalConsoleError = console.error.bind(console);
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
+  initiatingTasks: Task[],
   projectNames: string[],
   tasks: Task[],
+  taskGraph: TaskGraph,
   nxArgs: NxArgs,
   nxJson: NxJsonConfiguration,
   overrides: Record<string, unknown>
-): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
-  const { runnerOptions } = getRunner(nxArgs, nxJson);
+): Promise<{
+  lifeCycle: LifeCycle;
+  printSummary?: () => void;
+  restoreTerminal?: () => void;
+  renderIsDone: Promise<void>;
+}> {
+  const overridesWithoutHidden = { ...overrides };
+  delete overridesWithoutHidden['__overrides_unparsed__'];
+
   const isRunOne = initiatingProject != null;
+
+  if (isTuiEnabled()) {
+    const interceptedNxCloudLogs: (string | Uint8Array<ArrayBufferLike>)[] = [];
+
+    const createPatchedConsoleMethod = (
+      originalMethod: typeof console.log | typeof console.error
+    ): typeof console.log | typeof console.error => {
+      return (...args: any[]) => {
+        // Check if the log came from the Nx Cloud client, otherwise invoke the original write method
+        const stackTrace = new Error().stack;
+        const isNxCloudLog = stackTrace.includes(
+          join(workspaceRoot, '.nx', 'cache', 'cloud')
+        );
+        if (!isNxCloudLog) {
+          return originalMethod(...args);
+        }
+        // No-op the Nx Cloud client logs
+      };
+    };
+    // The cloud client calls console.log when NX_VERBOSE_LOGGING is set to true
+    console.log = createPatchedConsoleMethod(originalConsoleLog);
+    console.error = createPatchedConsoleMethod(originalConsoleError);
+
+    const patchedWrite = (_chunk, _encoding, callback) => {
+      // Preserve original behavior around callback and return value, just in case
+      if (callback) {
+        callback();
+      }
+      return true;
+    };
+
+    process.stdout.write = patchedWrite as any;
+    process.stderr.write = patchedWrite as any;
+
+    const { AppLifeCycle, restoreTerminal } = await import('../native');
+    let appLifeCycle;
+
+    const isRunOne = initiatingProject != null;
+
+    const pinnedTasks: string[] = [];
+    const taskText = tasks.length === 1 ? 'task' : 'tasks';
+    const projectText = projectNames.length === 1 ? 'project' : 'projects';
+    let titleText = '';
+
+    if (isRunOne) {
+      const mainTaskId = initiatingTasks[0].id;
+      pinnedTasks.push(mainTaskId);
+      const mainContinuousDependencies =
+        taskGraph.continuousDependencies[mainTaskId];
+      if (mainContinuousDependencies.length > 0) {
+        pinnedTasks.push(mainContinuousDependencies[0]);
+      }
+      const [project, target] = mainTaskId.split(':');
+      titleText = `${target} ${project}`;
+      if (tasks.length > 1) {
+        titleText += `, and ${tasks.length - 1} requisite ${taskText}`;
+      }
+    } else {
+      titleText =
+        nxArgs.targets.join(', ') +
+        ` for ${projectNames.length} ${projectText}`;
+      if (tasks.length > projectNames.length) {
+        titleText += `, and ${
+          tasks.length - projectNames.length
+        } requisite ${taskText}`;
+      }
+    }
+
+    let resolveRenderIsDonePromise: (value: void) => void;
+    // Default renderIsDone that will be overridden if the TUI is used
+    let renderIsDone = new Promise<void>(
+      (resolve) => (resolveRenderIsDonePromise = resolve)
+    );
+
+    const { lifeCycle: tsLifeCycle, printSummary } =
+      getTuiTerminalSummaryLifeCycle({
+        projectNames,
+        tasks,
+        taskGraph,
+        args: nxArgs,
+        overrides: overridesWithoutHidden,
+        initiatingProject,
+        initiatingTasks,
+        resolveRenderIsDonePromise,
+      });
+
+    if (tasks.length === 0) {
+      renderIsDone = renderIsDone.then(() => {
+        // Revert the patched methods
+        process.stdout.write = originalStdoutWrite;
+        process.stderr.write = originalStderrWrite;
+        console.log = originalConsoleLog;
+        console.error = originalConsoleError;
+      });
+    }
+
+    const lifeCycles: LifeCycle[] = [tsLifeCycle];
+    // Only run the TUI if there are tasks to run
+    if (tasks.length > 0) {
+      appLifeCycle = new AppLifeCycle(
+        tasks,
+        initiatingTasks.map((t) => t.id),
+        isRunOne ? RunMode.RunOne : RunMode.RunMany,
+        pinnedTasks,
+        nxArgs ?? {},
+        nxJson.tui ?? {},
+        titleText
+      );
+      lifeCycles.unshift(appLifeCycle);
+
+      /**
+       * Patch stdout.write and stderr.write methods to pass Nx Cloud client logs to the TUI via the lifecycle
+       */
+      const createPatchedLogWrite = (
+        originalWrite:
+          | typeof process.stdout.write
+          | typeof process.stderr.write,
+        isError: boolean
+      ): typeof process.stdout.write | typeof process.stderr.write => {
+        // @ts-ignore
+        return (chunk, encoding, callback) => {
+          if (isError) {
+            logError(
+              Buffer.isBuffer(chunk)
+                ? chunk.toString(encoding)
+                : chunk.toString()
+            );
+          } else {
+            logInfo(
+              Buffer.isBuffer(chunk)
+                ? chunk.toString(encoding)
+                : chunk.toString()
+            );
+          }
+
+          // Check if the log came from the Nx Cloud client, otherwise invoke the original write method
+          const stackTrace = new Error().stack;
+          const isNxCloudLog = stackTrace.includes(
+            join(workspaceRoot, '.nx', 'cache', 'cloud')
+          );
+          if (isNxCloudLog) {
+            interceptedNxCloudLogs.push(chunk);
+            // Do not bother to store logs with only whitespace characters, they aren't relevant for the TUI
+            const trimmedChunk = chunk.toString().trim();
+            if (trimmedChunk.length) {
+              // Remove ANSI escape codes, the TUI will control the formatting
+              appLifeCycle?.__setCloudMessage(
+                stripVTControlCharacters(trimmedChunk)
+              );
+            }
+          }
+          // Preserve original behavior around callback and return value, just in case
+          if (callback) {
+            callback();
+          }
+          return true;
+        };
+      };
+
+      const createPatchedConsoleMethod = (
+        originalMethod: typeof console.log | typeof console.error
+      ): typeof console.log | typeof console.error => {
+        return (...args: any[]) => {
+          // Check if the log came from the Nx Cloud client, otherwise invoke the original write method
+          const stackTrace = new Error().stack;
+          const isNxCloudLog = stackTrace.includes(
+            join(workspaceRoot, '.nx', 'cache', 'cloud')
+          );
+          if (!isNxCloudLog) {
+            return originalMethod(...args);
+          }
+          // No-op the Nx Cloud client logs
+        };
+      };
+
+      process.stdout.write = createPatchedLogWrite(originalStdoutWrite, false);
+      process.stderr.write = createPatchedLogWrite(originalStderrWrite, true);
+
+      // The cloud client calls console.log when NX_VERBOSE_LOGGING is set to true
+      console.log = createPatchedConsoleMethod(originalConsoleLog);
+      console.error = createPatchedConsoleMethod(originalConsoleError);
+
+      globalThis.tuiOnProcessExit = () => {
+        restoreTerminal();
+        // Revert the patched methods
+        process.stdout.write = originalStdoutWrite;
+        process.stderr.write = originalStderrWrite;
+        console.log = originalConsoleLog;
+        console.error = originalConsoleError;
+        process.stdout.write('\n');
+        // Print the intercepted Nx Cloud logs
+        for (const log of interceptedNxCloudLogs) {
+          const logString = log.toString().trimStart();
+          process.stdout.write(logString);
+          if (logString) {
+            process.stdout.write('\n');
+          }
+        }
+      };
+
+      renderIsDone = new Promise<void>((resolve) => {
+        appLifeCycle.__init(() => {
+          resolve();
+        });
+      }).finally(() => {
+        restoreTerminal();
+        // Revert the patched methods
+        process.stdout.write = originalStdoutWrite;
+        process.stderr.write = originalStderrWrite;
+        console.log = originalConsoleLog;
+        console.error = originalConsoleError;
+      });
+    }
+
+    return {
+      lifeCycle: new CompositeLifeCycle(lifeCycles),
+      restoreTerminal: () => {
+        process.stdout.write = originalStdoutWrite;
+        process.stderr.write = originalStderrWrite;
+        console.log = originalConsoleLog;
+        console.error = originalConsoleError;
+        restoreTerminal();
+      },
+      printSummary,
+      renderIsDone,
+    };
+  }
+
+  const { runnerOptions } = getRunner(nxArgs, nxJson);
   const useDynamicOutput = shouldUseDynamicLifeCycle(
     tasks,
     runnerOptions,
     nxArgs.outputStyle
   );
-
-  const overridesWithoutHidden = { ...overrides };
-  delete overridesWithoutHidden['__overrides_unparsed__'];
 
   if (isRunOne) {
     if (useDynamicOutput) {
@@ -145,6 +389,8 @@ function createTaskGraphAndRunValidations(
     extraOptions.excludeTaskDependencies
   );
 
+  assertTaskGraphDoesNotContainInvalidTargets(taskGraph);
+
   const cycle = findCycle(taskGraph);
   if (cycle) {
     if (process.env.NX_IGNORE_CYCLES === 'true' || nxArgs.nxIgnoreCycles) {
@@ -191,7 +437,7 @@ export async function runCommand(
         nxJsonConfiguration: nxJson,
       });
 
-      const taskResults = await runCommandForTasks(
+      const { taskResults, completed } = await runCommandForTasks(
         projectsToRun,
         currentProjectGraph,
         { nxJson },
@@ -208,10 +454,12 @@ export async function runCommand(
         extraOptions
       );
 
-      const result = Object.values(taskResults).some(
-        (taskResult) =>
-          taskResult.status === 'failure' || taskResult.status === 'skipped'
-      )
+      const exitCode = !completed
+        ? signalToCode('SIGINT')
+        : Object.values(taskResults).some(
+            (taskResult) =>
+              taskResult.status === 'failure' || taskResult.status === 'skipped'
+          )
         ? 1
         : 0;
 
@@ -221,7 +469,7 @@ export async function runCommand(
         nxJsonConfiguration: nxJson,
       });
 
-      return result;
+      return exitCode;
     }
   );
 
@@ -237,8 +485,9 @@ export async function runCommandForTasks(
   initiatingProject: string | null,
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
   extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
-): Promise<TaskResults> {
+): Promise<{ taskResults: TaskResults; completed: boolean }> {
   const projectNames = projectsToRun.map((t) => t.name);
+  const projectNameSet = new Set(projectNames);
 
   const { projectGraph, taskGraph } = await ensureWorkspaceIsInSyncAndGetGraphs(
     currentProjectGraph,
@@ -251,31 +500,85 @@ export async function runCommandForTasks(
   );
   const tasks = Object.values(taskGraph.tasks);
 
-  const { lifeCycle, renderIsDone } = await getTerminalOutputLifeCycle(
-    initiatingProject,
-    projectNames,
-    tasks,
-    nxArgs,
-    nxJson,
-    overrides
+  const initiatingTasks = tasks.filter(
+    (t) =>
+      projectNameSet.has(t.target.project) &&
+      nxArgs.targets.includes(t.target.target)
   );
 
-  const taskResults = await invokeTasksRunner({
-    tasks,
-    projectGraph,
-    taskGraph,
-    lifeCycle,
-    nxJson,
-    nxArgs,
-    loadDotEnvFiles: extraOptions.loadDotEnvFiles,
-    initiatingProject,
-  });
+  const { lifeCycle, renderIsDone, printSummary, restoreTerminal } =
+    await getTerminalOutputLifeCycle(
+      initiatingProject,
+      initiatingTasks,
+      projectNames,
+      tasks,
+      taskGraph,
+      nxArgs,
+      nxJson,
+      overrides
+    );
 
-  await renderIsDone;
+  try {
+    const taskResults = await invokeTasksRunner({
+      tasks,
+      projectGraph,
+      taskGraph,
+      lifeCycle,
+      nxJson,
+      nxArgs,
+      loadDotEnvFiles: extraOptions.loadDotEnvFiles,
+      initiatingProject,
+      initiatingTasks,
+    });
 
-  await printNxKey();
+    await renderIsDone;
 
-  return taskResults;
+    if (printSummary) {
+      printSummary();
+    }
+
+    await printNxKey();
+
+    return {
+      taskResults,
+      completed: didCommandComplete(tasks, taskGraph, taskResults),
+    };
+  } catch (e) {
+    if (restoreTerminal) {
+      restoreTerminal();
+    }
+    throw e;
+  }
+}
+
+function didCommandComplete(
+  tasks: Task[],
+  taskGraph: TaskGraph,
+  taskResults: TaskResults
+): boolean {
+  // If no tasks, then we can consider it complete
+  if (tasks.length === 0) {
+    return true;
+  }
+
+  let continousLeafTasks = false;
+  const leafTasks = getLeafTasks(taskGraph);
+  for (const task of tasks) {
+    if (!task.continuous) {
+      // If any discrete task does not have a result then it did not run
+      if (!taskResults[task.id]) {
+        return false;
+      }
+    } else {
+      if (leafTasks.has(task.id)) {
+        continousLeafTasks = true;
+      }
+    }
+  }
+
+  // If a leaf task is continous, we must have cancelled it.
+  // Otherwise, we've looped through all the discrete tasks and they have results
+  return !continousLeafTasks;
 }
 
 async function ensureWorkspaceIsInSyncAndGetGraphs(
@@ -299,7 +602,7 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     extraOptions
   );
 
-  if (nxArgs.skipSync) {
+  if (nxArgs.skipSync || isCI()) {
     return { projectGraph, taskGraph };
   }
 
@@ -333,10 +636,9 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
   const resultBodyLines = getSyncGeneratorSuccessResultsMessageLines(results);
   const fixMessage =
     'Make sure to run `nx sync` to apply the identified changes or set `sync.applyChanges` to `true` in your `nx.json` to apply them automatically when running tasks in interactive environments.';
-  const willErrorOnCiMessage = 'This will result in an error in CI.';
 
-  if (isCI() || !process.stdout.isTTY) {
-    // If the user is running in CI or is running in a non-TTY environment we
+  if (!process.stdout.isTTY) {
+    // If the user is running a non-TTY environment we
     // throw an error to stop the execution of the tasks.
     if (areAllResultsFailures) {
       output.error({
@@ -394,7 +696,6 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
         ...resultBodyLines,
         '',
         'Your workspace is set to not apply the identified changes automatically (`sync.applyChanges` is set to `false` in your `nx.json`).',
-        willErrorOnCiMessage,
         fixMessage,
       ],
     });
@@ -418,10 +719,12 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     title: outOfSyncTitle,
     bodyLines: [
       ...resultBodyLines,
-      '',
-      nxJson.sync?.applyChanges === true
-        ? 'Proceeding to sync the identified changes automatically (`sync.applyChanges` is set to `true` in your `nx.json`).'
-        : willErrorOnCiMessage,
+      ...(nxJson.sync?.applyChanges === true
+        ? [
+            '',
+            'Proceeding to sync the identified changes automatically (`sync.applyChanges` is set to `true` in your `nx.json`).',
+          ]
+        : []),
     ],
   });
 
@@ -581,7 +884,10 @@ async function confirmRunningTasksWithSyncFailures(): Promise<void> {
   }
 }
 
-function setEnvVarsBasedOnArgs(nxArgs: NxArgs, loadDotEnvFiles: boolean) {
+export function setEnvVarsBasedOnArgs(
+  nxArgs: NxArgs,
+  loadDotEnvFiles: boolean
+) {
   if (
     nxArgs.outputStyle == 'stream' ||
     process.env.NX_BATCH_MODE === 'true' ||
@@ -607,6 +913,7 @@ export async function invokeTasksRunner({
   nxArgs,
   loadDotEnvFiles,
   initiatingProject,
+  initiatingTasks,
 }: {
   tasks: Task[];
   projectGraph: ProjectGraph;
@@ -616,6 +923,7 @@ export async function invokeTasksRunner({
   nxArgs: NxArgs;
   loadDotEnvFiles: boolean;
   initiatingProject: string | null;
+  initiatingTasks: Task[];
 }): Promise<{ [id: string]: TaskResult }> {
   setEnvVarsBasedOnArgs(nxArgs, loadDotEnvFiles);
 
@@ -652,8 +960,8 @@ export async function invokeTasksRunner({
       lifeCycle: compositedLifeCycle,
     },
     {
-      initiatingProject:
-        nxArgs.outputStyle === 'compact' ? null : initiatingProject,
+      initiatingProject,
+      initiatingTasks,
       projectGraph,
       nxJson,
       nxArgs,
@@ -726,7 +1034,7 @@ export async function invokeTasksRunner({
   return taskResultsLifecycle.getTaskResults();
 }
 
-function constructLifeCycles(lifeCycle: LifeCycle): LifeCycle[] {
+export function constructLifeCycles(lifeCycle: LifeCycle): LifeCycle[] {
   const lifeCycles = [] as LifeCycle[];
   lifeCycles.push(new StoreRunInformationLifeCycle());
   lifeCycles.push(lifeCycle);
@@ -736,12 +1044,9 @@ function constructLifeCycles(lifeCycle: LifeCycle): LifeCycle[] {
   if (process.env.NX_PROFILE) {
     lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
   }
-  if (!isNxCloudUsed(readNxJson())) {
-    lifeCycles.push(
-      process.env.NX_DISABLE_DB !== 'true' && !IS_WASM
-        ? new TaskHistoryLifeCycle()
-        : new LegacyTaskHistoryLifeCycle()
-    );
+  const historyLifeCycle = getTasksHistoryLifeCycle();
+  if (historyLifeCycle) {
+    lifeCycles.push(historyLifeCycle);
   }
   return lifeCycles;
 }
@@ -826,15 +1131,6 @@ export function getRunner(
   const modulePath: string = getTasksRunnerPath(runner, nxJson);
 
   try {
-    if (isCustomRunnerPath(modulePath)) {
-      output.warn({
-        title: `Custom task runners will be replaced by a new API starting with Nx 21.`,
-        bodyLines: [
-          `For more information, see https://nx.dev/deprecated/custom-tasks-runner`,
-        ],
-      });
-    }
-
     const tasksRunner = loadTasksRunner(modulePath);
 
     return {
@@ -857,20 +1153,14 @@ function getTasksRunnerPath(
   runner: string,
   nxJson: NxJsonConfiguration<string[] | '*'>
 ) {
-  let modulePath: string = nxJson.tasksRunnerOptions?.[runner]?.runner;
-
-  if (modulePath) {
-    if (isRelativePath(modulePath)) {
-      return join(workspaceRoot, modulePath);
-    }
-    return modulePath;
-  }
-
   const isCloudRunner =
     // No tasksRunnerOptions for given --runner
     nxJson.nxCloudAccessToken ||
     // No runner prop in tasks runner options, check if access token is set.
     nxJson.tasksRunnerOptions?.[runner]?.options?.accessToken ||
+    ['nx-cloud', '@nrwl/nx-cloud'].includes(
+      nxJson.tasksRunnerOptions?.[runner]?.runner
+    ) ||
     // Cloud access token specified in env var.
     process.env.NX_CLOUD_ACCESS_TOKEN ||
     // Nx Cloud ID specified in nxJson
@@ -938,13 +1228,4 @@ export function getRunnerOptions(
   }
 
   return result;
-}
-
-function isCustomRunnerPath(modulePath: string) {
-  return ![
-    'nx-cloud',
-    '@nrwl/nx-cloud',
-    'nx/tasks-runners/default',
-    defaultTasksRunnerPath,
-  ].includes(modulePath);
 }

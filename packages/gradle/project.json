@@ -12,6 +12,11 @@
       }
     },
     "build-base": {
+      "dependsOn": [
+        "^build-base",
+        "build-native",
+        "gradle-batch-runner:assemble"
+      ],
       "executor": "@nx/js:tsc",
       "options": {
         "assets": [
@@ -43,6 +48,11 @@
             "output": "/"
           },
           {
+            "input": "packages/gradle/batch-runner",
+            "glob": "**/*.jar",
+            "output": "/batch-runner"
+          },
+          {
             "input": "",
             "glob": "LICENSE",
             "output": "/"
@@ -51,11 +61,8 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/gradle"],
-      "options": {
-        "command": "node ./scripts/copy-readme.js gradle"
-      }
+      "outputs": ["{workspaceRoot}/build/packages/gradle/README.md"],
+      "command": "node ./scripts/copy-readme.js gradle"
     }
   },
   "tags": []

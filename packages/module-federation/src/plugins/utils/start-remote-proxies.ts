@@ -8,7 +8,8 @@ export function startRemoteProxies(
   sslOptions?: {
     pathToCert: string;
     pathToKey: string;
-  }
+  },
+  isServer?: boolean
 ) {
   const { createProxyMiddleware } = require('http-proxy-middleware');
   const express = require('express');
@@ -40,6 +41,15 @@ export function startRemoteProxies(
         target: mappedLocationsOfRemotes[app],
         changeOrigin: true,
         secure: sslCert ? false : undefined,
+        pathRewrite: isServer
+          ? (path) => {
+              if (path.includes('/server')) {
+                return path;
+              } else {
+                return `browser/${path}`;
+              }
+            }
+          : undefined,
       })
     );
     const proxyServer = (sslCert ? https : http)

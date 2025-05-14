@@ -70,6 +70,8 @@ export function runCommand(
       cwd: tmpProjPath(),
       stdio: 'pipe',
       env: {
+        // Use new versioning by default in e2e tests
+        NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
         ...getStrippedEnvironmentVariables(),
         ...childProcessOptions?.env,
         FORCE_COLOR: 'false',
@@ -235,6 +237,8 @@ export function runCommandAsync(
         cwd: opts.cwd || tmpProjPath(),
         env: {
           CI: 'true',
+          // Use new versioning by default in e2e tests
+          NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
           ...(opts.env || getStrippedEnvironmentVariables()),
           FORCE_COLOR: 'false',
         },
@@ -279,6 +283,8 @@ export function runCommandUntil(
     encoding: 'utf-8',
     env: {
       CI: 'true',
+      // Use new versioning by default in e2e tests
+      NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
       ...getStrippedEnvironmentVariables(),
       ...opts.env,
       FORCE_COLOR: 'false',
@@ -392,6 +398,8 @@ export function runCLI(
       cwd: opts.cwd || tmpProjPath(),
       env: {
         CI: 'true',
+        // Use new versioning by default in e2e tests
+        NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
         ...getStrippedEnvironmentVariables(),
         ...opts.env,
       },

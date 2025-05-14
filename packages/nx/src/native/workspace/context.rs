@@ -1,13 +1,14 @@
 use std::collections::{HashMap, HashSet};
+use std::mem;
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use crate::native::hasher::hash;
 use crate::native::logger::enable_logger;
-use crate::native::project_graph::utils::{find_project_for_path, ProjectRootMappings};
+use crate::native::project_graph::utils::{ProjectRootMappings, find_project_for_path};
 use crate::native::types::FileData;
-use crate::native::utils::{path::get_child_files, Normalize, NxCondvar, NxMutex};
+use crate::native::utils::{Normalize, NxCondvar, NxMutex, path::get_child_files};
 use crate::native::workspace::files_archive::{read_files_archive, write_files_archive};
 use crate::native::workspace::files_hashing::{full_files_hash, selective_files_hash};
 use crate::native::workspace::types::{
@@ -51,6 +52,7 @@ fn gather_and_hash_files(workspace_root: &Path, cache_dir: String) -> Vec<(PathB
     files
 }
 
+#[derive(Default)]
 struct FilesWorker(Option<Arc<(NxMutex<Files>, NxCondvar)>>);
 impl FilesWorker {
     #[cfg(not(target_arch = "wasm32"))]
@@ -413,5 +415,12 @@ impl WorkspaceContext {
     #[napi]
     pub fn get_files_in_directory(&self, directory: String) -> Vec<String> {
         get_child_files(directory, self.files_worker.get_files())
+    }
+}
+
+impl Drop for WorkspaceContext {
+    fn drop(&mut self) {
+        let fw = mem::take(&mut self.files_worker);
+        drop(fw);
     }
 }

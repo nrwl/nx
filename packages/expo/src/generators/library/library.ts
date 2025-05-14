@@ -295,6 +295,15 @@ function createFiles(host: Tree, options: NormalizedSchema) {
 function determineEntryFields(
   options: NormalizedSchema
 ): Pick<PackageJson, 'main' | 'types' | 'exports'> {
+  if (
+    options.buildable ||
+    options.publishable ||
+    !options.isUsingTsSolutionConfig
+  ) {
+    // For buildable libraries, the entries are configured by the bundler (i.e. Rollup).
+    return undefined;
+  }
+
   return {
     main: options.js ? './src/index.js' : './src/index.ts',
     types: options.js ? './src/index.js' : './src/index.ts',

@@ -33,41 +33,13 @@ import {
   typesReactVersion,
 } from '../../../utils/versions';
 
-export async function createApplicationFiles(
+export function getDefaultTemplateVariables(
   host: Tree,
   options: NormalizedSchema
 ) {
-  let styleSolutionSpecificAppFiles: string;
-  if (options.styledModule && options.style !== 'styled-jsx') {
-    styleSolutionSpecificAppFiles = '../files/style-styled-module';
-  } else if (options.style === 'styled-jsx') {
-    styleSolutionSpecificAppFiles = '../files/style-styled-jsx';
-  } else if (options.style === 'tailwind') {
-    styleSolutionSpecificAppFiles = '../files/style-tailwind';
-  } else if (options.style === 'none') {
-    styleSolutionSpecificAppFiles = '../files/style-none';
-  } else if (options.globalCss) {
-    styleSolutionSpecificAppFiles = '../files/style-global-css';
-  } else {
-    styleSolutionSpecificAppFiles = '../files/style-css-module';
-  }
   const hasStyleFile = ['scss', 'css', 'less'].includes(options.style);
-
-  const onBoardingStatus = await createNxCloudOnboardingURLForWelcomeApp(
-    host,
-    options.nxCloudToken
-  );
-
-  const connectCloudUrl =
-    onBoardingStatus === 'unclaimed' &&
-    (await getNxCloudAppOnBoardingUrl(options.nxCloudToken));
-
-  const relativePathToRootTsConfig = getRelativePathToRootTsConfig(
-    host,
-    options.appProjectRoot
-  );
   const appTests = getAppTests(options);
-  const templateVariables = {
+  return {
     ...options.names,
     ...options,
     typesNodeVersion,
@@ -86,6 +58,79 @@ export async function createApplicationFiles(
     hasStyleFile,
     isUsingTsSolutionSetup: isUsingTsSolutionSetup(host),
   };
+}
+
+export function createNxRspackPluginOptions(
+  options: NormalizedSchema,
+  rootOffset: string,
+  tsx: boolean = true
+): WithNxOptions & WithReactOptions {
+  return {
+    target: 'web',
+    outputPath: options.isUsingTsSolutionConfig
+      ? 'dist'
+      : joinPathFragments(
+          rootOffset,
+          'dist',
+          options.appProjectRoot != '.'
+            ? options.appProjectRoot
+            : options.projectName
+        ),
+    index: './src/index.html',
+    baseHref: '/',
+    main: maybeJs(
+      {
+        js: options.js,
+        useJsx: true,
+      },
+      `./src/main.${tsx ? 'tsx' : 'ts'}`
+    ),
+    tsConfig: './tsconfig.app.json',
+    assets: ['./src/favicon.ico', './src/assets'],
+    styles:
+      options.styledModule || !options.hasStyles
+        ? []
+        : [
+            `./src/styles.${
+              options.style !== 'tailwind' ? options.style : 'css'
+            }`,
+          ],
+  };
+}
+
+export async function createApplicationFiles(
+  host: Tree,
+  options: NormalizedSchema
+) {
+  let styleSolutionSpecificAppFiles: string;
+  if (options.styledModule && options.style !== 'styled-jsx') {
+    styleSolutionSpecificAppFiles = '../files/style-styled-module';
+  } else if (options.style === 'styled-jsx') {
+    styleSolutionSpecificAppFiles = '../files/style-styled-jsx';
+  } else if (options.style === 'tailwind') {
+    styleSolutionSpecificAppFiles = '../files/style-tailwind';
+  } else if (options.style === 'none') {
+    styleSolutionSpecificAppFiles = '../files/style-none';
+  } else if (options.globalCss) {
+    styleSolutionSpecificAppFiles = '../files/style-global-css';
+  } else {
+    styleSolutionSpecificAppFiles = '../files/style-css-module';
+  }
+
+  const onBoardingStatus = await createNxCloudOnboardingURLForWelcomeApp(
+    host,
+    options.nxCloudToken
+  );
+
+  const connectCloudUrl =
+    onBoardingStatus === 'unclaimed' &&
+    (await getNxCloudAppOnBoardingUrl(options.nxCloudToken));
+
+  const relativePathToRootTsConfig = getRelativePathToRootTsConfig(
+    host,
+    options.appProjectRoot
+  );
+  const templateVariables = getDefaultTemplateVariables(host, options);
 
   if (options.bundler === 'vite' && !options.useReactRouter) {
     generateFiles(
@@ -263,43 +308,6 @@ function createNxWebpackPluginOptions(
       {
         js: options.js,
         useJsx: options.bundler === 'vite' || options.bundler === 'rspack',
-      },
-      `./src/main.tsx`
-    ),
-    tsConfig: './tsconfig.app.json',
-    assets: ['./src/favicon.ico', './src/assets'],
-    styles:
-      options.styledModule || !options.hasStyles
-        ? []
-        : [
-            `./src/styles.${
-              options.style !== 'tailwind' ? options.style : 'css'
-            }`,
-          ],
-  };
-}
-
-function createNxRspackPluginOptions(
-  options: NormalizedSchema,
-  rootOffset: string
-): WithNxOptions & WithReactOptions {
-  return {
-    target: 'web',
-    outputPath: options.isUsingTsSolutionConfig
-      ? 'dist'
-      : joinPathFragments(
-          rootOffset,
-          'dist',
-          options.appProjectRoot != '.'
-            ? options.appProjectRoot
-            : options.projectName
-        ),
-    index: './src/index.html',
-    baseHref: '/',
-    main: maybeJs(
-      {
-        js: options.js,
-        useJsx: true,
       },
       `./src/main.tsx`
     ),

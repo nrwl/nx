@@ -1,11 +1,13 @@
+import { execSync } from 'child_process';
 import * as path from 'path';
 import type { ExecutorContext } from '../../config/misc-interfaces';
-import { getPackageManagerCommand } from '../../utils/package-manager';
-import { execSync } from 'child_process';
 import {
-  getPseudoTerminal,
+  createPseudoTerminal,
   PseudoTerminal,
+  PseudoTtyProcess,
 } from '../../tasks-runner/pseudo-terminal';
+import { getPackageManagerCommand } from '../../utils/package-manager';
+import { signalToCode } from '../../utils/exit-codes';
 
 export interface RunScriptOptions {
   script: string;
@@ -58,15 +60,18 @@ function nodeProcess(
   });
 }
 
+let cp: PseudoTtyProcess | undefined;
+
 async function ptyProcess(
   command: string,
   cwd: string,
   env: Record<string, string>
 ) {
-  const terminal = getPseudoTerminal();
+  const terminal = createPseudoTerminal();
+  await terminal.init();
 
   return new Promise<void>((res, rej) => {
-    const cp = terminal.runCommand(command, { cwd, jsEnv: env });
+    cp = terminal.runCommand(command, { cwd, jsEnv: env });
     cp.onExit((code) => {
       if (code === 0) {
         res();

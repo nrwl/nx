@@ -22,9 +22,8 @@ export interface SvgrOptions {
 export interface WithNxOptions extends NextConfig {
   nx?: {
     /**
-     * @deprecated Next.js via turbo conflicts with how webpack handles the import of SVGs.
-     * It is best to configure SVGR manually with the `@svgr/webpack` loader.
-     * We will remove this option in Nx 21.
+     * @deprecated Add SVGR support in your Webpack configuration without relying on Nx. See https://react-svgr.com/docs/webpack/
+     * TODO(v22): Remove this option and migrate userland webpack config to explicitly configure @svgr/webpack
      * */
     svgr?: boolean | SvgrOptions;
     babelUpwardRootMode?: boolean;
@@ -374,26 +373,7 @@ export function getNextConfig(
 
         const svgrOptions =
           typeof nx?.svgr === 'object' ? nx.svgr : defaultSvgrOptions;
-        // TODO(v21): Remove file-loader and use `?react` querystring to differentiate between asset and SVGR.
-        // It should be:
-        // use: [{
-        //   test: /\.svg$/i,
-        //   type: 'asset',
-        //   resourceQuery: /react/, // *.svg?react
-        // },
-        // {
-        //   test: /\.svg$/i,
-        //   issuer: /\.[jt]sx?$/,
-        //   resourceQuery: { not: [/react/] }, // exclude react component if *.svg?react
-        //   use: ['@svgr/webpack'],
-        // }],
-        // See:
-        // - SVGR: https://react-svgr.com/docs/webpack/#use-svgr-and-asset-svg-in-the-same-project
-        // - Vite: https://www.npmjs.com/package/vite-plugin-svgr
-        // - Rsbuild: https://github.com/web-infra-dev/rsbuild/pull/1783
-        // Note: We also need a migration for any projects that are using SVGR to convert
-        //       `import { ReactComponent as X } from './x.svg` to
-        //       `import X from './x.svg?react';
+        // TODO(v22): Remove SVGR support
         config.module.rules.push({
           test: /\.svg$/,
           issuer: { not: /\.(css|scss|sass)$/ },

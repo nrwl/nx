@@ -2,7 +2,7 @@
 title: 'Distributing CI: Binning and Distributed Task Execution'
 slug: 'distributing-ci-binning-and-distributed-task-execution'
 authors: ['Victor Savkin']
-cover_image: '/blog/images/2021-06-15/jFVfKEglfQIM9QsP.png'
+cover_image: '/blog/images/2021-06-15/jFVfKEglfQIM9QsP.avif'
 tags: [nx]
 description: "Learn how to scale your CI pipeline using two distribution strategies: binning for workload distribution and Nx Cloud's distributed task execution for optimal performance."
 ---

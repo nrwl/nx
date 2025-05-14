@@ -169,7 +169,8 @@ nx show project my-workspace --web
         "dev": {
           "options": {
             "cwd": ".",
-            "command": "next dev"
+            "command": "next dev",
+            "continuous": true
           },
           "executor": "nx:run-commands",
           "configurations": {},
@@ -180,7 +181,8 @@ nx show project my-workspace --web
         "start": {
           "options": {
             "cwd": ".",
-            "command": "next start"
+            "command": "next start",
+            "continuous": true
           },
           "dependsOn": ["build"],
           "executor": "nx:run-commands",
@@ -354,6 +356,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
+
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun

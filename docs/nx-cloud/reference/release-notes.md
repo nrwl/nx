@@ -1,5 +1,35 @@
 # Enterprise Release Notes
 
+### 2025.03.3
+
+- Feat: provide prebuilt Java cert store to NxAPI
+  - Full details [here](https://github.com/nrwl/nx-cloud-helm/blob/main/PROXY-GUIDE.md#pre-built-java-cacerts)
+
+### 2025.03.2
+
+- Feat: Nx Agents "bundled executors"
+
+  - up until now, the "executor" binaries that run on each Nx Agent (and know how to parse your agents.yaml and run each step) had to be downloaded separately from an external bucket
+  - this made the on-prem upgrade process more difficult, as it required a separate step to download the executor and then upload it in the correct folder on an internally available repository
+  - now, the executors are available as Docker images that can be imported alongside all your other NxCloud images
+  - to get started:
+
+    - when upgrading to this version, make sure you also pull in the executor image `nxprivatecloud/nx-cloud-workflow-executor:2025.03.2`([link](https://hub.docker.com/repository/docker/nxprivatecloud/nx-cloud-workflow-executor/tags/2025.03.2/sha256-a42835a3126f21178af87f02b68d68fec1ff0654d37a57855a762c01e7795a6b))
+    - as part of your controller [args](https://github.com/nrwl/nx-cloud-helm/blob/main/charts/nx-agents/values.yaml#L76) pass this option:
+
+      ```
+      args:
+        # pass the internal image registry where the pods can pull the executor images from
+        # for example: image-registry: us-east1-docker.pkg.dev/nxcloudoperations/nx-cloud-enterprise-public
+        image-registry=<registry-where-nxcloud-images-are-hosted>
+
+        # you can REMOVE the below option, as it's not needed anymore
+        # kube-unix-init-container-name=...
+      ```
+
+    - you no longer need to upload the executor binary separately to a bucket
+    - now whenever you start your agent pods, they will load the above image and copy the executor from there
+
 ### 2025.03.1
 
 - Fix: use custom "github URL" (if defined) when checking out the repo on Nx Agents

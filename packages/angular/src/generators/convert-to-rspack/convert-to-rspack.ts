@@ -13,7 +13,11 @@ import {
   writeJson,
 } from '@nx/devkit';
 import type { ConvertToRspackSchema } from './schema';
-import { angularRspackVersion, nxVersion } from '../../utils/versions';
+import {
+  angularRspackVersion,
+  nxVersion,
+  tsNodeVersion,
+} from '../../utils/versions';
 import { createConfig } from './lib/create-config';
 import { getCustomWebpackConfig } from './lib/get-custom-webpack-config';
 import { updateTsconfig } from './lib/update-tsconfig';
@@ -27,7 +31,11 @@ import { prompt } from 'enquirer';
 const SUPPORTED_EXECUTORS = [
   '@angular-devkit/build-angular:browser',
   '@angular-devkit/build-angular:dev-server',
+  '@angular-devkit/build-angular:server',
+  '@angular-devkit/build-angular:prerender',
+  '@angular-devkit/build-angular:app-shell',
   '@nx/angular:webpack-browser',
+  '@nx/angular:webpack-server',
   '@nx/angular:dev-server',
   '@nx/angular:module-federation-dev-server',
 ];
@@ -37,20 +45,13 @@ const RENAMED_OPTIONS = {
   ngswConfigPath: 'serviceWorker',
 };
 
+const DEFAULT_PORT = 4200;
+
 const REMOVED_OPTIONS = [
-  'publicHost',
-  'disableHostCheck',
-  'resourcesOutputPath',
-  'routesFile',
-  'routes',
-  'discoverRoutes',
-  'appModuleBundle',
-  'inputIndexPath',
-  'outputIndexPath',
   'buildOptimizer',
-  'deployUrl',
   'buildTarget',
   'browserTarget',
+  'publicHost',
 ];
 
 function normalizeFromProjectRoot(
@@ -112,6 +113,10 @@ const PATH_NORMALIZER = {
   polyfills: (tree: Tree, paths: string | string[], root: string) => {
     const normalizedPaths: string[] = [];
     const normalizeFn = (path: string) => {
+      if (path.startsWith('zone.js')) {
+        normalizedPaths.push(path);
+        return;
+      }
       try {
         const resolvedPath = require.resolve(path, {
           paths: [join(workspaceRoot, 'node_modules')],
@@ -353,6 +358,8 @@ export async function convertToRspack(
 
   validateSupportedBuildExecutor(Object.values(project.targets));
 
+  let projectServePort = DEFAULT_PORT;
+
   for (const [targetName, target] of Object.entries(project.targets)) {
     if (
       target.executor === '@angular-devkit/build-angular:browser' ||
@@ -379,6 +386,18 @@ export async function convertToRspack(
       }
       buildTargetNames.push(targetName);
     } else if (
+      target.executor === '@angular-devkit/build-angular:server' ||
+      target.executor === '@nx/angular:webpack-server'
+    ) {
+      createConfigOptions.ssr ??= {};
+      createConfigOptions.ssr.entry ??= normalizeFromProjectRoot(
+        tree,
+        target.options.main,
+        project.root
+      );
+      createConfigOptions.server = './src/main.server.ts';
+      buildTargetNames.push(targetName);
+    } else if (
       target.executor === '@angular-devkit/build-angular:dev-server' ||
       target.executor === '@nx/angular:dev-server' ||
       target.executor === '@nx/angular:module-federation-dev-server'
@@ -391,6 +410,10 @@ export async function convertToRspack(
           createConfigOptions.devServer,
           project.root
         );
+
+        if (target.options.port !== DEFAULT_PORT) {
+          projectServePort = target.options.port;
+        }
       }
       if (target.configurations) {
         for (const [configurationName, configuration] of Object.entries(
@@ -406,8 +429,33 @@ export async function convertToRspack(
           );
         }
       }
+      serveTargetNames.push(targetName);
+    } else if (target.executor === '@angular-devkit/build-angular:prerender') {
+      if (target.options) {
+        const prerenderOptions = {
+          routesFile: target.options.routesFile,
+          discoverRoutes: target.options.discoverRoutes ?? true,
+          routes: target.options.routes ?? [],
+        };
+        createConfigOptions.prerender = prerenderOptions;
+        if (target.configurations) {
+          for (const [configurationName, configuration] of Object.entries(
+            target.configurations
+          )) {
+            configurationOptions[configurationName] ??= {};
+            configurationOptions[configurationName].prerender ??= {
+              routesFile: configuration.routesFile,
+              discoverRoutes: configuration.discoverRoutes ?? true,
+              routes: configuration.routes ?? [],
+            };
+          }
+        }
+      }
+      buildTargetNames.push(targetName);
+    } else if (target.executor === '@angular-devkit/build-angular:app-shell') {
+      createConfigOptions.appShell = true;
+      buildTargetNames.push(targetName);
     }
-    serveTargetNames.push(targetName);
   }
 
   const customWebpackConfigInfo = customWebpackConfigPath
@@ -427,6 +475,12 @@ export async function convertToRspack(
     delete project.targets[targetName];
   }
 
+  if (projectServePort !== DEFAULT_PORT) {
+    project.targets.serve ??= {};
+    project.targets.serve.options ??= {};
+    project.targets.serve.options.port = projectServePort;
+  }
+
   updateProjectConfiguration(tree, projectName, project);
 
   const { rspackInitGenerator } = ensurePackage<typeof import('@nx/rspack')>(
@@ -436,6 +490,7 @@ export async function convertToRspack(
 
   await rspackInitGenerator(tree, {
     addPlugin: true,
+    framework: 'angular',
   });
 
   // This is needed to prevent a circular execution of the build target
@@ -451,6 +506,7 @@ export async function convertToRspack(
       {},
       {
         '@nx/angular-rspack': angularRspackVersion,
+        'ts-node': tsNodeVersion,
       }
     );
     tasks.push(installTask);

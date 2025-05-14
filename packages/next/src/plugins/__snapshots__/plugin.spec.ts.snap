@@ -34,18 +34,20 @@ exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
                 "tty": false,
               },
               "outputs": [
-                "{workspaceRoot}/my-app/.next",
+                "{workspaceRoot}/my-app/.next/!(cache)/**/*",
                 "{workspaceRoot}/my-app/.next/!(cache)",
               ],
             },
             "my-serve": {
               "command": "next dev",
+              "continuous": true,
               "options": {
                 "cwd": "my-app",
               },
             },
             "my-serve-static": {
               "command": "next start",
+              "continuous": true,
               "dependsOn": [
                 "my-build",
               ],
@@ -55,6 +57,7 @@ exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
             },
             "my-start": {
               "command": "next start",
+              "continuous": true,
               "dependsOn": [
                 "my-build",
               ],
@@ -64,6 +67,7 @@ exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
             },
             "watch-deps": {
               "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+              "continuous": true,
               "dependsOn": [
                 "build-deps",
               ],
@@ -105,7 +109,7 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
                 "tty": false,
               },
               "outputs": [
-                "{projectRoot}/.next",
+                "{projectRoot}/.next/!(cache)/**/*",
                 "{projectRoot}/.next/!(cache)",
               ],
             },
@@ -116,12 +120,14 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
             },
             "dev": {
               "command": "next dev",
+              "continuous": true,
               "options": {
                 "cwd": ".",
               },
             },
             "serve-static": {
               "command": "next start",
+              "continuous": true,
               "dependsOn": [
                 "build",
               ],
@@ -131,6 +137,7 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
             },
             "start": {
               "command": "next start",
+              "continuous": true,
               "dependsOn": [
                 "build",
               ],
@@ -140,6 +147,7 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
             },
             "watch-deps": {
               "command": "npx nx watch --projects next --includeDependentProjects -- npx nx build-deps next",
+              "continuous": true,
               "dependsOn": [
                 "build-deps",
               ],
