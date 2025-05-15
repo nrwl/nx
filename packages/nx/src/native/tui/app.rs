@@ -9,13 +9,12 @@ use ratatui::style::Style;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph};
 use std::collections::HashMap;
-use std::io::{self, Write};
-use std::sync::{Arc, Mutex, RwLock};
+use std::io;
+use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::UnboundedSender;
 use tracing::{debug, trace};
 use tui_logger::{LevelFilter, TuiLoggerSmartWidget, TuiWidgetEvent, TuiWidgetState};
-use vt100_ctt::Parser;
 
 use crate::native::tui::tui::Tui;
 use crate::native::{
@@ -174,22 +173,30 @@ impl App {
 
     pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
         self.dispatch_action(Action::UpdateTaskStatus(task_id.clone(), status));
-        if status == TaskStatus::InProgress && self.tasks.len() == 1 {
+        if status == TaskStatus::InProgress && self.should_set_interactive_by_default(&task_id) {
             self.terminal_pane_data[0].set_interactive(true);
         }
+    }
+
+    fn should_set_interactive_by_default(&self, task_id: &str) -> bool {
+        self.tasks.len() == 1
+            && self
+                .pty_instances
+                .get(task_id)
+                .is_some_and(|pty| pty.can_be_interactive())
     }
 
     pub fn print_task_terminal_output(&mut self, task_id: String, output: String) {
         // Tasks run within a pseudo-terminal always have a pty instance and do not need a new one
         // Tasks not run within a pseudo-terminal need a new pty instance to print output
         if !self.pty_instances.contains_key(&task_id) {
-            let (parser, parser_and_writer) = Self::create_empty_parser_and_noop_writer();
+            let pty = PtyInstance::non_interactive();
 
             // Add ANSI escape sequence to hide cursor at the end of output, it would be confusing to have it visible when a task is a cache hit
             let output_with_hidden_cursor = format!("{}\x1b[?25l", output);
-            Self::write_output_to_parser(parser, output_with_hidden_cursor);
+            Self::write_output_to_parser(&pty, output_with_hidden_cursor);
 
-            self.create_and_register_pty_instance(&task_id, parser_and_writer);
+            self.register_pty_instance(&task_id, pty);
             // Ensure the pty instances get resized appropriately
             let _ = self.debounce_pty_resize();
             return;
@@ -255,21 +262,29 @@ impl App {
     }
 
     // A pseudo-terminal running task will provide the parser and writer directly
-    pub fn register_running_task(
+    pub fn register_running_interactive_task(
         &mut self,
         task_id: String,
         parser_and_writer: External<(ParserArc, WriterArc)>,
     ) {
-        self.create_and_register_pty_instance(&task_id, parser_and_writer);
-        self.update_task_status(task_id.clone(), TaskStatus::InProgress);
+        debug!("Registering interactive task: {task_id}");
+        let pty =
+            PtyInstance::interactive(parser_and_writer.0.clone(), parser_and_writer.1.clone());
+        self.register_running_task(task_id, pty)
     }
 
-    pub fn register_running_task_with_empty_parser(&mut self, task_id: String) {
-        let (_, parser_and_writer) = Self::create_empty_parser_and_noop_writer();
-        self.create_and_register_pty_instance(&task_id, parser_and_writer);
+    pub fn register_running_non_interactive_task(&mut self, task_id: String) {
+        debug!("Registering non-interactive task: {task_id}");
+        let pty = PtyInstance::non_interactive();
+        self.register_pty_instance(&task_id, pty);
         self.update_task_status(task_id.clone(), TaskStatus::InProgress);
         // Ensure the pty instances get resized appropriately
         let _ = self.debounce_pty_resize();
+    }
+
+    fn register_running_task(&mut self, task_id: String, pty: PtyInstance) {
+        self.register_pty_instance(&task_id, pty);
+        self.update_task_status(task_id.clone(), TaskStatus::InProgress);
     }
 
     pub fn append_task_output(&mut self, task_id: String, output: String) {
@@ -973,13 +988,14 @@ impl App {
                                 let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
                                 terminal_pane_data.is_continuous = task.continuous;
                                 let in_progress = task.status == TaskStatus::InProgress;
-                                terminal_pane_data.can_be_interactive = in_progress;
                                 if !in_progress {
                                     terminal_pane_data.set_interactive(false);
                                 }
 
                                 let mut has_pty = false;
                                 if let Some(pty) = self.pty_instances.get(&relevant_pane_task) {
+                                    terminal_pane_data.can_be_interactive =
+                                        in_progress && pty.can_be_interactive();
                                     terminal_pane_data.pty = Some(pty.clone());
                                     has_pty = true;
                                 }
@@ -1487,41 +1503,17 @@ impl App {
         self.layout_manager.get_task_list_visibility() == TaskListVisibility::Hidden
     }
 
-    fn create_and_register_pty_instance(
-        &mut self,
-        task_id: &str,
-        parser_and_writer: External<(ParserArc, WriterArc)>,
-    ) {
+    fn register_pty_instance(&mut self, task_id: &str, pty: PtyInstance) {
         // Access the contents of the External
-        let pty = Arc::new(
-            PtyInstance::new(
-                task_id.to_string(),
-                parser_and_writer.0.clone(),
-                parser_and_writer.1.clone(),
-            )
-            .map_err(|e| napi::Error::from_reason(format!("Failed to create PTY: {}", e)))
-            .unwrap(),
-        );
+        let pty = Arc::new(pty);
 
         self.pty_instances.insert(task_id.to_string(), pty);
     }
 
-    fn create_empty_parser_and_noop_writer() -> (ParserArc, External<(ParserArc, WriterArc)>) {
-        // Use sane defaults for rows, cols and scrollback buffer size. The dimensions will be adjusted dynamically later.
-        let parser = Arc::new(RwLock::new(Parser::new(24, 80, 10000)));
-        let writer: Arc<Mutex<Box<dyn Write + Send>>> =
-            Arc::new(Mutex::new(Box::new(std::io::sink())));
-        (parser.clone(), External::new((parser, writer)))
-    }
-
     // Writes the given output to the given parser, used for the case where a task is a cache hit, or when it is run outside of the rust pseudo-terminal
-    fn write_output_to_parser(parser: ParserArc, output: String) {
+    fn write_output_to_parser(parser: &PtyInstance, output: String) {
         let normalized_output = normalize_newlines(output.as_bytes());
-        parser
-            .write()
-            .unwrap()
-            .write_all(&normalized_output)
-            .unwrap();
+        parser.process_output(&normalized_output);
     }
 
     fn display_and_focus_current_task_in_terminal_pane(&mut self, force_spacebar_mode: bool) {

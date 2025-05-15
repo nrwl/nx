@@ -46,10 +46,9 @@ pub fn write_to_pty(stdin: &mut Stdin, writer: WriterArc) -> anyhow::Result<()> 
                 mio::Token(0) => {
                     // Read data from stdin
                     loop {
-                        let mut writer = writer.lock().expect("Failed to lock writer");
-
                         match stdin.read(&mut buffer) {
                             Ok(n) => {
+                                let mut writer = writer.lock();
                                 writer.write_all(&buffer[..n])?;
                                 writer.flush()?;
                             }
