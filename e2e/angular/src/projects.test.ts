@@ -154,6 +154,17 @@ describe('Angular Projects', () => {
     runCLI(
       `generate @nx/angular:app my-dir/${app} --bundler=rspack --no-interactive`
     );
+    const rspackConfigFileContents = readFile(
+      join('my-dir', app, 'rspack.config.ts')
+    );
+    const updatedConfigFileContents = rspackConfigFileContents.replace(
+      `maximumError: '1mb'`,
+      `maximumError: '3mb'`
+    );
+    updateFile(
+      join('my-dir', app, 'rspack.config.ts'),
+      updatedConfigFileContents
+    );
     runCLI(`build ${app}`);
 
     if (runE2ETests()) {
