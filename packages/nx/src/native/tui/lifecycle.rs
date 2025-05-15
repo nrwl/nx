@@ -256,14 +256,14 @@ impl AppLifeCycle {
     ) {
         self.app
             .lock()
-            .register_running_task(task_id, parser_and_writer)
+            .register_running_interactive_task(task_id, parser_and_writer)
     }
 
     #[napi]
     pub fn register_running_task_with_empty_parser(&mut self, task_id: String) {
         self.app
             .lock()
-            .register_running_task_with_empty_parser(task_id)
+            .register_running_non_interactive_task(task_id)
     }
 
     #[napi]

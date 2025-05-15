@@ -26,7 +26,7 @@ pub fn handle_path_space(path: String) -> String {
 }
 
 pub fn write_to_pty(stdin: &mut Stdin, writer: WriterArc) -> anyhow::Result<()> {
-    let mut writer = writer.lock().expect("Failed to lock writer");
+    let mut writer = writer.lock();
     std::io::copy(stdin, writer.as_mut())
         .map_err(|e| anyhow::anyhow!(e))
         .map(|_| ())

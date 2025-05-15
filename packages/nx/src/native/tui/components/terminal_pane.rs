@@ -11,6 +11,7 @@ use ratatui::{
     },
 };
 use std::{io, sync::Arc};
+use tracing::debug;
 use tui_term::widget::PseudoTerminal;
 
 use crate::native::tui::components::tasks_list::TaskStatus;
@@ -100,6 +101,7 @@ impl TerminalPaneData {
                 _ if self.is_interactive => match key.code {
                     KeyCode::Char(c) if key.modifiers.contains(KeyModifiers::CONTROL) => {
                         let ascii_code = (c as u8) - 0x60;
+                        debug!("Sending ASCII code: {}", &[ascii_code].escape_ascii());
                         pty_mut.write_input(&[ascii_code])?;
                     }
                     KeyCode::Char(c) => {
