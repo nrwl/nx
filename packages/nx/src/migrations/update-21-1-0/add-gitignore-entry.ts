@@ -11,15 +11,10 @@ export default async function addGitignoreEntry(tree: Tree) {
   }
   let content = tree.read('.gitignore', 'utf-8') || '';
   const ig = ignore().add(content);
-  let updated = false;
   for (const entry of GITIGNORE_ENTRIES) {
     if (!ig.ignores(entry)) {
       content = content.trimEnd() + '\n' + entry + '\n';
-      updated = true;
-      ig.add(entry);
     }
   }
-  if (updated) {
-    tree.write('.gitignore', content);
-  }
+  tree.write('.gitignore', content);
 }
