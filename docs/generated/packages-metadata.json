@@ -3391,6 +3391,16 @@
     ],
     "migrations": [
       {
+        "description": "Adds **/nx-rules.mdc and **/nx.instructions.md to .gitignore if not present",
+        "file": "generated/packages/nx/migrations/21-1-0-add-ignore-entries-for-nx-rule-files.json",
+        "hidden": false,
+        "name": "21-1-0-add-ignore-entries-for-nx-rule-files",
+        "version": "21.1.0-beta.2",
+        "originalFilePath": "/packages/nx",
+        "path": "nx/migrations/21-1-0-add-ignore-entries-for-nx-rule-files",
+        "type": "migration"
+      },
+      {
         "description": "Updates release version config based on the breaking changes in Nx v21",
         "file": "generated/packages/nx/migrations/release-version-config-changes.json",
         "hidden": false,
