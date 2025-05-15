@@ -6,15 +6,17 @@ import dev.nx.gradle.runner.OutputProcessor.buildTerminalOutput
 import dev.nx.gradle.runner.OutputProcessor.finalizeTaskResults
 import dev.nx.gradle.util.logger
 import java.io.ByteArrayOutputStream
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import org.gradle.tooling.ProjectConnection
 import org.gradle.tooling.events.OperationType
 
-fun runTasksInParallel(
+suspend fun runTasksInParallel(
     connection: ProjectConnection,
     tasks: Map<String, GradleTask>,
     additionalArgs: String,
     excludeTasks: List<String>
-): Map<String, TaskResult> {
+): Map<String, TaskResult> = coroutineScope {
   logger.info("▶️ Running all tasks in a single Gradle run: ${tasks.keys.joinToString(", ")}")
 
   val (testClassTasks, buildTasks) = tasks.entries.partition { it.value.testClassName != null }
@@ -22,10 +24,10 @@ fun runTasksInParallel(
   logger.info("🧪 Test launcher tasks: ${testClassTasks.joinToString(", ") { it.key }}")
   logger.info("🛠️ Build launcher tasks: ${buildTasks.joinToString(", ") { it.key }}")
 
-  val allResults = mutableMapOf<String, TaskResult>()
-
-  val outputStream = ByteArrayOutputStream()
-  val errorStream = ByteArrayOutputStream()
+  val outputStream1 = ByteArrayOutputStream()
+  val errorStream1 = ByteArrayOutputStream()
+  val outputStream2 = ByteArrayOutputStream()
+  val errorStream2 = ByteArrayOutputStream()
 
   val args = buildList {
     // --info is for terminal per task
@@ -34,38 +36,41 @@ fun runTasksInParallel(
     // -Dorg.gradle.daemon.idletimeout=10000 is to kill daemon after 10 seconds
     addAll(listOf("--info", "--continue", "-Dorg.gradle.daemon.idletimeout=10000"))
     addAll(additionalArgs.split(" ").filter { it.isNotBlank() })
-
-    // Add --exclude-task for each excluded task
-    if (excludeTasks.isNotEmpty()) {
-      excludeTasks.forEach { taskName ->
-        add("--exclude-task")
-        add(taskName)
-      }
+    excludeTasks.forEach {
+      add("--exclude-task")
+      add(it)
     }
   }
+
   logger.info("🏳️ Args: ${args.joinToString(", ")}")
 
-  if (buildTasks.isNotEmpty()) {
-    allResults.putAll(
-        runBuildLauncher(
-            connection,
-            buildTasks.associate { it.key to it.value },
-            args,
-            outputStream,
-            errorStream))
+  val buildJob = async {
+    if (buildTasks.isNotEmpty()) {
+      runBuildLauncher(
+          connection,
+          buildTasks.associate { it.key to it.value },
+          args,
+          outputStream1,
+          errorStream1)
+    } else emptyMap()
   }
 
-  if (testClassTasks.isNotEmpty()) {
-    allResults.putAll(
-        runTestLauncher(
-            connection,
-            testClassTasks.associate { it.key to it.value },
-            args,
-            outputStream,
-            errorStream))
+  val testJob = async {
+    if (testClassTasks.isNotEmpty()) {
+      runTestLauncher(
+          connection,
+          testClassTasks.associate { it.key to it.value },
+          args,
+          outputStream2,
+          errorStream2)
+    } else emptyMap()
   }
 
-  return allResults
+  val allResults = mutableMapOf<String, TaskResult>()
+  allResults.putAll(buildJob.await())
+  allResults.putAll(testJob.await())
+
+  return@coroutineScope allResults
 }
 
 fun runBuildLauncher(
@@ -99,7 +104,7 @@ fun runBuildLauncher(
   } catch (e: Exception) {
     globalOutput =
         buildTerminalOutput(outputStream, errorStream) + "\nException occurred: ${e.message}"
-    logger.warning("\ud83d\udca5 Gradle run failed: ${e.message} ${errorStream}")
+    logger.warning("\ud83d\udca5 Gradle run failed: ${e.message} $errorStream")
   } finally {
     outputStream.close()
     errorStream.close()
@@ -155,11 +160,7 @@ fun runTestLauncher(
                 withArguments("--tests", it)
                 withJvmTestClasses(it)
               }
-          withArguments(
-              *args.toTypedArray(),
-              "-Dorg.gradle.workers.max=3",
-              "-PmaxParallelForks=3",
-              "-Dorg.gradle.parallel=true")
+          withArguments(*args.toTypedArray())
           setStandardOutput(outputStream)
           setStandardError(errorStream)
           addProgressListener(
@@ -173,7 +174,7 @@ fun runTestLauncher(
     logger.warning(errorStream.toString())
     globalOutput =
         buildTerminalOutput(outputStream, errorStream) + "\nException occurred: ${e.message}"
-    logger.warning("\ud83d\udca5 Gradle test run failed: ${e.message} ${errorStream}")
+    logger.warning("\ud83d\udca5 Gradle test run failed: ${e.message} $errorStream")
   } finally {
     outputStream.close()
     errorStream.close()
