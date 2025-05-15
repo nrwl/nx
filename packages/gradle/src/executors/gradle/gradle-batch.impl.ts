@@ -13,7 +13,6 @@ import {
   PseudoTerminal,
 } from 'nx/src/tasks-runner/pseudo-terminal';
 import { getAllDependsOn, getExcludeTasks } from './get-exclude-task';
-import { all } from 'axios';
 
 export const batchRunnerPath = join(
   __dirname,
@@ -149,18 +148,17 @@ async function runTasksInBatch(
     ','
   )}' ${process.env.NX_VERBOSE_LOGGING === 'true' ? '' : '--quiet'}`;
   let batchResults;
-  if (usePseudoTerminal) {
+  if (usePseudoTerminal && process.env.NX_VERBOSE_LOGGING !== 'true') {
     const terminal = createPseudoTerminal();
     await terminal.init();
 
     const cp = terminal.runCommand(command, {
       cwd: workspaceRoot,
       jsEnv: process.env,
-      quiet: process.env.NX_VERBOSE_LOGGING !== 'true',
+      quiet: true,
     });
-    terminal.shutdown(0);
-
     const results = await cp.getResults();
+    terminal.shutdown(0);
     batchResults = results.terminalOutput;
 
     batchResults = batchResults.replace(command, '');
@@ -182,9 +180,7 @@ async function runTasksInBatch(
     gradlewBatchStart.name,
     gradlewBatchEnd.name
   );
-  const gradlewBatchResults = JSON.parse(
-    batchResults.toString()
-  ) as BatchResults;
+  const gradlewBatchResults = JSON.parse(batchResults) as BatchResults;
 
   return gradlewBatchResults;
 }
