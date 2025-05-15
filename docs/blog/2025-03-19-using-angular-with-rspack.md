@@ -210,11 +210,9 @@ The following are known limitations and missing features of Angular Rspack:
 - Angular's built-in support for Internationalization (i18n) is not supported. _**UPDATE**: As of Angular Rspack version 20.8, i18n is supported._
 - Server Routing is not supported - still experimental in Angular currently.
 - App Engine APIs are not supported - still experimental in Angular currently.
-- Optimization is not currently 1:1 with Angular's optimization - however, there are still great optimizations that are made.
-  - Styles optimization for `inline-critical` and `remove-special-comments` are not yet implemented.
-  - Inlining of fonts is not yet implemented.
+- Optimization is not currently 1:1 with Angular's optimization - however, there are still great optimizations that are made. _**UPDATE**: As of Angular Rspack version 21, Optimization is 1:1 with Angular's optimization._
 - Web Workers are not fully supported. _**UPDATE**: As of Angular Rspack version 20.8, Web Workers are supported._
-- Hot Module Replacement (HMR) is partially supported.
+- Hot Module Replacement (HMR) is partially supported. _**UPDATE**: As of Angular Rspack version 21, HMR is supported._
 
 If you have any other missing features or limitations, please [let us know](https://github.com/nrwl/angular-rspack/issues/new).
 

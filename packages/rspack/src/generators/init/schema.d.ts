@@ -1,4 +1,4 @@
-export type Framework = 'none' | 'react' | 'web' | 'nest';
+export type Framework = 'none' | 'react' | 'web' | 'nest' | 'angular';
 
 export interface InitGeneratorSchema {
   addPlugin?: boolean;

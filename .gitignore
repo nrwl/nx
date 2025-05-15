@@ -72,3 +72,6 @@ storybook-static
 # Ignore Gradle project-specific cache directory
 .gradle
 .kotlin
+
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md

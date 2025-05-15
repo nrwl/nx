@@ -133,6 +133,7 @@ It’s been great to see the progress on Angular Rspack so far, but it’s not d
 
 **[UPDATE - 2025-04-25]** - We've released version 20.8 of Angular Rspack that includes support for i18n.
 **[UPDATE - 2025-05-06]** - We've released version 20.9 of Angular Rspack that includes support for SSG.
+**[UPDATE - 2025-05-14]** - We've released version 21 of Angular Rspack that reaches feature parity with the Angular 19.2.
 
 Stay tuned to our socials to stay up to date on the latest Angular Rspack news!
 

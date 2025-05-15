@@ -87,8 +87,12 @@ export async function rspackInitGenerator(
   const devDependencies = {
     '@rspack/core': rspackCoreVersion,
     '@rspack/cli': rspackCoreVersion,
-    '@rspack/plugin-react-refresh': rspackPluginReactRefreshVersion,
-    'react-refresh': reactRefreshVersion,
+    ...(!schema.framework || schema.framework === 'react'
+      ? {
+          '@rspack/plugin-react-refresh': rspackPluginReactRefreshVersion,
+          'react-refresh': reactRefreshVersion,
+        }
+      : {}),
   };
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
