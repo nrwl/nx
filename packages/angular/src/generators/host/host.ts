@@ -2,8 +2,10 @@ import {
   formatFiles,
   getProjects,
   joinPathFragments,
+  readProjectConfiguration,
   runTasksInSerial,
   Tree,
+  updateProjectConfiguration,
 } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
@@ -18,9 +20,19 @@ import { setupMf } from '../setup-mf/setup-mf';
 import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs';
 import { updateSsrSetup } from './lib';
 import type { Schema } from './schema';
+import { assertRspackIsCSR } from '../utils/assert-mf-utils';
+import convertToRspack from '../convert-to-rspack/convert-to-rspack';
 
 export async function host(tree: Tree, schema: Schema) {
   assertNotUsingTsSolutionSetup(tree, 'angular', 'host');
+  // TODO: Replace with Rspack when confidence is high enough
+  schema.bundler ??= 'webpack';
+  const isRspack = schema.bundler === 'rspack';
+  assertRspackIsCSR(
+    schema.bundler,
+    schema.ssr ?? false,
+    schema.serverRouting ?? false
+  );
 
   const { typescriptConfiguration = true, ...options }: Schema = schema;
   options.standalone = options.standalone ?? true;
@@ -118,6 +130,20 @@ export async function host(tree: Tree, schema: Schema) {
   }
 
   addMfEnvToTargetDefaultInputs(tree);
+
+  if (isRspack) {
+    await convertToRspack(tree, {
+      project: hostProjectName,
+      skipInstall: options.skipPackageJson,
+      skipFormat: true,
+    });
+  }
+
+  const project = readProjectConfiguration(tree, hostProjectName);
+  project.targets.serve ??= {};
+  project.targets.serve.options ??= {};
+  project.targets.serve.options.port = 4200;
+  updateProjectConfiguration(tree, hostProjectName, project);
 
   if (!options.skipFormat) {
     await formatFiles(tree);

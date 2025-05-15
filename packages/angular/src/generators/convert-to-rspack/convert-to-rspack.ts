@@ -17,6 +17,7 @@ import {
   angularRspackVersion,
   nxVersion,
   tsNodeVersion,
+  webpackMergeVersion,
 } from '../../utils/versions';
 import { createConfig } from './lib/create-config';
 import { getCustomWebpackConfig } from './lib/get-custom-webpack-config';
@@ -506,6 +507,7 @@ export async function convertToRspack(
       {},
       {
         '@nx/angular-rspack': angularRspackVersion,
+        'webpack-merge': webpackMergeVersion,
         'ts-node': tsNodeVersion,
       }
     );
