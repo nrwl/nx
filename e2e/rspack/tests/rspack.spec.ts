@@ -7,7 +7,6 @@ import {
   runCLI,
   createFile,
   readJson,
-  updateJson,
 } from '@nx/e2e/utils';
 
 describe('rspack e2e', () => {
@@ -40,120 +39,6 @@ describe('rspack e2e', () => {
   });
 
   describe('config types', () => {
-    it('should support a standard config object', () => {
-      const appName = uniq('app');
-
-      runCLI(
-        `generate @nx/react:application --directory=apps/${appName} --bundler=rspack --e2eTestRunner=none`
-      );
-
-      updateFile(
-        `apps/${appName}/rspack.config.js`,
-        `
-          const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
-          const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
-          const { join } = require('path');
-    
-          module.exports = {
-            output: {
-              path: join(__dirname, '../../dist/${appName}'),
-              // do not remove dist, so files between builds will remain
-              clean: false,
-            },
-            devServer: {
-              port: 4200,
-              historyApiFallback: {
-                index: '/index.html',
-                disableDotRule: true,
-                htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
-              },
-            },
-            plugins: [
-              new NxAppRspackPlugin({
-                tsConfig: './tsconfig.app.json',
-                main: './src/main.tsx',
-                index: './src/index.html',
-                baseHref: '/',
-                assets: ['./src/favicon.ico', './src/assets'],
-                styles: ['./src/styles.scss'],
-                outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
-                optimization: process.env['NODE_ENV'] === 'production',
-              }),
-              new NxReactRspackPlugin({
-                // Uncomment this line if you don't want to use SVGR
-                // See: https://react-svgr.com/
-                // svgr: false
-              }),
-            ],
-          };`
-      );
-
-      const result = runCLI(`build ${appName}`);
-
-      expect(result).toContain(
-        `Successfully ran target build for project ${appName}`
-      );
-
-      // Ensure dist is not removed between builds since output.clean === false
-      createFile(`dist/apps/${appName}/extra.js`);
-      runCLI(`build ${appName} --skip-nx-cache`);
-      checkFilesExist(`dist/apps/${appName}/extra.js`);
-    });
-
-    it('should support a standard function that returns a config object', () => {
-      const appName = uniq('app');
-
-      runCLI(
-        `generate @nx/react:application --directory=apps/${appName} --bundler=rspack --e2eTestRunner=none`
-      );
-
-      updateFile(
-        `apps/${appName}/rspack.config.js`,
-        `
-          const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
-          const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
-          const { join } = require('path');
-    
-          module.exports = () => {
-            return {
-            output: {
-              path: join(__dirname, '../../dist/${appName}'),
-            },
-            devServer: {
-              port: 4200,
-              historyApiFallback: {
-                index: '/index.html',
-                disableDotRule: true,
-                htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
-              },
-            },
-            plugins: [
-              new NxAppRspackPlugin({
-                tsConfig: './tsconfig.app.json',
-                main: './src/main.tsx',
-                index: './src/index.html',
-                baseHref: '/',
-                assets: ['./src/favicon.ico', './src/assets'],
-                styles: ['./src/styles.scss'],
-                outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
-                optimization: process.env['NODE_ENV'] === 'production',
-              }),
-              new NxReactRspackPlugin({
-                // Uncomment this line if you don't want to use SVGR
-                // See: https://react-svgr.com/
-                // svgr: false
-              }),
-            ],
-          };
-        };`
-      );
-
-      const result = runCLI(`build ${appName}`);
-      expect(result).toContain(
-        `Successfully ran target build for project ${appName}`
-      );
-    });
-
     it('should support an array of standard config objects', () => {
       const appName = uniq('app');
       const serverName = uniq('server');

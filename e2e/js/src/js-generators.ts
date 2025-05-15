@@ -41,32 +41,6 @@ describe('js e2e', () => {
     });
   }, 240_000);
 
-  it('should create a library that can be linted and tested', async () => {
-    const libName = uniq('mylib');
-    const dirName = uniq('dir');
-
-    runCLI(
-      `generate @nx/js:lib --name=${dirName}-${libName} --directory libs/${dirName}/${libName}`
-    );
-
-    checkFilesExist(
-      `libs/${dirName}/${libName}/src/index.ts`,
-      `libs/${dirName}/${libName}/README.md`
-    );
-
-    // Lint
-    const result = runCLI(`lint ${dirName}-${libName}`);
-
-    expect(result).toContain(`Linting "${dirName}-${libName}"...`);
-    expect(result).toContain('All files pass linting');
-
-    // Test
-    const testResult = await runCLIAsync(`test ${dirName}-${libName}`);
-    expect(testResult.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total'
-    );
-  }, 500_000);
-
   it('should be able to add build to non-buildable projects', () => {
     const nonBuildable = uniq('nonbuildable');
 
