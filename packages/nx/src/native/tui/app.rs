@@ -23,7 +23,6 @@ use crate::native::{
     tasks::types::{Task, TaskResult},
 };
 
-use super::action::Action;
 use super::components::Component;
 use super::components::countdown_popup::CountdownPopup;
 use super::components::help_popup::HelpPopup;
@@ -39,6 +38,7 @@ use super::pty::PtyInstance;
 use super::theme::THEME;
 use super::tui;
 use super::utils::normalize_newlines;
+use super::{action::Action, nx_console::messaging::NxConsoleMessageConnection};
 
 pub struct App {
     pub components: Vec<Box<dyn Component>>,
@@ -68,6 +68,7 @@ pub struct App {
     tasks: Vec<Task>,
     debug_mode: bool,
     debug_state: TuiWidgetState,
+    console_messenger: Option<NxConsoleMessageConnection>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -134,6 +135,7 @@ impl App {
             tasks,
             debug_mode: false,
             debug_state: TuiWidgetState::default().set_default_display_level(LevelFilter::Debug),
+            console_messenger: None,
         })
     }
 
@@ -209,6 +211,10 @@ impl App {
 
     // Show countdown popup for the configured duration (making sure the help popup is not open first)
     pub fn end_command(&mut self) {
+        self.console_messenger
+            .as_ref()
+            .and_then(|c| c.end_running_tasks());
+
         // If the user has interacted with the app, or auto-exit is disabled, do nothing
         if self.user_has_interacted || !self.tui_config.auto_exit.should_exit_automatically() {
             return;
@@ -321,6 +327,10 @@ impl App {
                     && !(matches!(self.focus, Focus::MultipleOutput(_))
                         && self.is_interactive_mode())
                 {
+                    self.console_messenger
+                        .as_ref()
+                        .and_then(|c| c.end_running_tasks());
+
                     self.is_forced_shutdown = true;
                     // Quit immediately
                     self.quit_at = Some(std::time::Instant::now());
@@ -769,8 +779,25 @@ impl App {
             trace!("{action:?}");
         }
         match &action {
+            Action::StartCommand(_) => {
+                self.console_messenger
+                    .as_ref()
+                    .and_then(|c| c.start_running_tasks());
+            }
+            Action::Tick => {
+                self.console_messenger.as_ref().and_then(|messenger| {
+                    self.components
+                        .iter()
+                        .find_map(|c| c.as_any().downcast_ref::<TasksList>())
+                        .and_then(|tasks_list| {
+                            messenger.update_running_tasks(&tasks_list.tasks, &self.pty_instances)
+                        })
+                });
+            }
             // Quit immediately
-            Action::Quit => self.quit_at = Some(std::time::Instant::now()),
+            Action::Quit => {
+                self.quit_at = Some(std::time::Instant::now());
+            }
             // Cancel quitting
             Action::CancelQuit => {
                 self.quit_at = None;
@@ -981,6 +1008,7 @@ impl App {
                                     is_focused,
                                     has_pty,
                                     is_next_tab_target,
+                                    self.console_messenger.is_some(),
                                 );
 
                                 let terminal_pane = TerminalPane::new()
@@ -1007,6 +1035,13 @@ impl App {
                     let _ = countdown_popup.draw(f, frame_area);
                 })
                 .ok();
+            }
+            Action::SendConsoleMessage(msg) => {
+                if let Some(connection) = &self.console_messenger {
+                    connection.send_terminal_string(msg);
+                } else {
+                    trace!("No console connection available");
+                }
             }
             _ => {}
         }
@@ -1358,7 +1393,10 @@ impl App {
     fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<()> {
         if let Focus::MultipleOutput(pane_idx) = self.focus {
             let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
-            terminal_pane_data.handle_key_event(key)
+            if let Some(action) = terminal_pane_data.handle_key_event(key)? {
+                self.dispatch_action(action);
+            }
+            Ok(())
         } else {
             Ok(())
         }
@@ -1538,6 +1576,17 @@ impl App {
 
         if let Some(event) = debug_widget_event {
             self.debug_state.transition(event);
+        }
+    }
+
+    pub fn set_console_messenger(&mut self, messenger: NxConsoleMessageConnection) {
+        self.console_messenger = Some(messenger);
+        if self
+            .console_messenger
+            .as_ref()
+            .is_some_and(|c| c.is_connected())
+        {
+            self.dispatch_action(Action::ConsoleMessengerAvailable(true));
         }
     }
 }

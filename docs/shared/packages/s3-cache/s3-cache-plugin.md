@@ -155,10 +155,15 @@ Below is an example on how to connect to MinIO:
     "endpoint": "https://play.min.io",
     "forcePathStyle": true,
     "accessKeyId": "abc1234",
-    "secretAccessKey": "4321cba"
+    "secretAccessKey": "4321cba",
+    "disableChecksum: true
   }
 }
 ```
+
+{% callout type="note" title="Minio and checksum validation" %}
+If you are using MinIO earlier than `2024-07-04T14-25-45Z` it is recommended to enabled `disabledChecksum` else you may trigger aws-sdk checksum errors such as `x-amz-checksum-crc32`.
+{% /callout %}
 
 | **Property**        | **Description**                                                                                           |
 | ------------------- | --------------------------------------------------------------------------------------------------------- |
@@ -168,6 +173,7 @@ Below is an example on how to connect to MinIO:
 | **endpoint**        | The custom endpoint to upload artifacts to. If endpoint is not defined, the default AWS endpoint is used  |
 | **accessKeyId**     | AWS Access Key ID (optional if `AWS_ACCESS_KEY_ID` is set in the environment)                             |
 | **secretAccessKey** | AWS secret access key (optional if `AWS_SECRET_ACCESS_KEY` is set in the environment)                     |
+| **disableChecksum** | This disables AWS' checksum validation for cache entries                                                  |
 
 # Cache Modes
 
