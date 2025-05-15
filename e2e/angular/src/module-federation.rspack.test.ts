@@ -171,7 +171,7 @@ describe('Angular Module Federation', () => {
       `serve ${remoteApp1}`,
       (output) =>
         !output.includes(`Remote '${remoteApp1}' failed to serve correctly`) &&
-        output.includes(`browser compiled`)
+        output.includes(`Build at:`)
     );
     await killProcessAndPorts(processSwc.pid, remotePort);
   }, 20_000_000);
