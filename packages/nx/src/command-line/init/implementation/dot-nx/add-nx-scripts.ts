@@ -63,6 +63,9 @@ export function generateDotNxSetup(version?: string) {
   const changes = host.listChanges();
   printChanges(changes);
   flushChanges(host.root, changes);
+  // Ensure that the dot-nx installation is available.
+  // This is needed when using a global nx with dot-nx, otherwise running any nx command using global command will fail due to missing modules.
+  execSync('./nx --version', { stdio: 'ignore' });
 }
 
 export function normalizeVersionForNxJson(pkg: string, version: string) {
