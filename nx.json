@@ -25,6 +25,9 @@
         "runtime": "node -p '`${process.platform}_${process.arch}`'"
       },
       {
+        "runtime": "rustc --version"
+      },
+      {
         "externalDependencies": ["npm:@monodon/rust", "npm:@napi-rs/cli"]
       }
     ],
