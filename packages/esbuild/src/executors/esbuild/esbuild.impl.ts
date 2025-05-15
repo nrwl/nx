@@ -169,14 +169,21 @@ export async function* esbuildExecutor(
             });
 
             await ctx.watch();
-            return () => ctx.dispose();
+            return async () => ctx.dispose();
           })
         );
 
         registerCleanupCallback(() => {
-          assetsResult?.stop();
-          packageJsonResult?.stop();
-          disposeFns.forEach((fn) => fn());
+          if (typeof assetsResult?.stop === 'function') assetsResult.stop();
+
+          if (typeof packageJsonResult?.stop === 'function') {
+            packageJsonResult.stop();
+          }
+
+          disposeFns.forEach(async (fn) => {
+            await fn();
+          });
+
           done(); // return from async iterable
         });
       }
