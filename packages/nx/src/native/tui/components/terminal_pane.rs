@@ -13,9 +13,9 @@ use ratatui::{
 use std::{io, sync::Arc};
 use tui_term::widget::PseudoTerminal;
 
-use super::tasks_list::TaskStatus;
-use crate::native::tui::pty::PtyInstance;
+use crate::native::tui::components::tasks_list::TaskStatus;
 use crate::native::tui::theme::THEME;
+use crate::native::tui::{action::Action, pty::PtyInstance};
 
 pub struct TerminalPaneData {
     pub pty: Option<Arc<PtyInstance>>,
@@ -34,7 +34,7 @@ impl TerminalPaneData {
         }
     }
 
-    pub fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<()> {
+    pub fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<Option<Action>> {
         if let Some(pty) = &mut self.pty {
             let mut pty_mut = pty.as_ref().clone();
             match key.code {
@@ -42,11 +42,11 @@ impl TerminalPaneData {
                 // If interactive, the event falls through to be forwarded to the PTY so that we can support things like interactive prompts within tasks.
                 KeyCode::Up | KeyCode::Char('k') if !self.is_interactive => {
                     pty_mut.scroll_up();
-                    return Ok(());
+                    return Ok(None);
                 }
                 KeyCode::Down | KeyCode::Char('j') if !self.is_interactive => {
                     pty_mut.scroll_down();
-                    return Ok(());
+                    return Ok(None);
                 }
                 // Handle ctrl+u and ctrl+d for scrolling when not in interactive mode
                 KeyCode::Char('u')
@@ -56,7 +56,7 @@ impl TerminalPaneData {
                     for _ in 0..12 {
                         pty_mut.scroll_up();
                     }
-                    return Ok(());
+                    return Ok(None);
                 }
                 KeyCode::Char('d')
                     if key.modifiers.contains(KeyModifiers::CONTROL) && !self.is_interactive =>
@@ -65,7 +65,7 @@ impl TerminalPaneData {
                     for _ in 0..12 {
                         pty_mut.scroll_down();
                     }
-                    return Ok(());
+                    return Ok(None);
                 }
                 // Handle 'c' for copying when not in interactive mode
                 KeyCode::Char('c') if !self.is_interactive => {
@@ -81,12 +81,20 @@ impl TerminalPaneData {
                             }
                         }
                     }
-                    return Ok(());
+                    return Ok(None);
                 }
                 // Handle 'i' to enter interactive mode for in progress tasks
                 KeyCode::Char('i') if self.can_be_interactive && !self.is_interactive => {
                     self.set_interactive(true);
-                    return Ok(());
+                    return Ok(None);
+                }
+                KeyCode::Char('a')
+                    if key.modifiers.contains(KeyModifiers::CONTROL) && !self.is_interactive =>
+                {
+                    let Some(screen) = pty.get_screen() else {
+                        return Ok(None);
+                    };
+                    return Ok(Some(Action::SendConsoleMessage(screen.all_contents())));
                 }
                 // Only send input to PTY if we're in interactive mode
                 _ if self.is_interactive => match key.code {
@@ -114,7 +122,7 @@ impl TerminalPaneData {
                 _ => {}
             }
         }
-        Ok(())
+        Ok(None)
     }
 
     pub fn handle_mouse_event(&mut self, event: MouseEvent) -> io::Result<()> {
@@ -161,6 +169,7 @@ pub struct TerminalPaneState {
     pub scrollbar_state: ScrollbarState,
     pub has_pty: bool,
     pub is_next_tab_target: bool,
+    pub console_available: bool,
 }
 
 impl TerminalPaneState {
@@ -171,6 +180,7 @@ impl TerminalPaneState {
         is_focused: bool,
         has_pty: bool,
         is_next_tab_target: bool,
+        console_available: bool,
     ) -> Self {
         Self {
             task_name,
@@ -181,6 +191,7 @@ impl TerminalPaneState {
             scrollbar_state: ScrollbarState::default(),
             has_pty,
             is_next_tab_target,
+            console_available,
         }
     }
 }

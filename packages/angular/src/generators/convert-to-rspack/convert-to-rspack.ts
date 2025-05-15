@@ -32,6 +32,8 @@ const SUPPORTED_EXECUTORS = [
   '@angular-devkit/build-angular:browser',
   '@angular-devkit/build-angular:dev-server',
   '@angular-devkit/build-angular:server',
+  '@angular-devkit/build-angular:prerender',
+  '@angular-devkit/build-angular:app-shell',
   '@nx/angular:webpack-browser',
   '@nx/angular:webpack-server',
   '@nx/angular:dev-server',
@@ -428,6 +430,31 @@ export async function convertToRspack(
         }
       }
       serveTargetNames.push(targetName);
+    } else if (target.executor === '@angular-devkit/build-angular:prerender') {
+      if (target.options) {
+        const prerenderOptions = {
+          routesFile: target.options.routesFile,
+          discoverRoutes: target.options.discoverRoutes ?? true,
+          routes: target.options.routes ?? [],
+        };
+        createConfigOptions.prerender = prerenderOptions;
+        if (target.configurations) {
+          for (const [configurationName, configuration] of Object.entries(
+            target.configurations
+          )) {
+            configurationOptions[configurationName] ??= {};
+            configurationOptions[configurationName].prerender ??= {
+              routesFile: configuration.routesFile,
+              discoverRoutes: configuration.discoverRoutes ?? true,
+              routes: configuration.routes ?? [],
+            };
+          }
+        }
+      }
+      buildTargetNames.push(targetName);
+    } else if (target.executor === '@angular-devkit/build-angular:app-shell') {
+      createConfigOptions.appShell = true;
+      buildTargetNames.push(targetName);
     }
   }
 
@@ -463,6 +490,7 @@ export async function convertToRspack(
 
   await rspackInitGenerator(tree, {
     addPlugin: true,
+    framework: 'angular',
   });
 
   // This is needed to prevent a circular execution of the build target

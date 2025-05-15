@@ -88,8 +88,10 @@ private fun buildTestCiTarget(
     testFile: File,
     testTask: Task,
     projectRoot: String,
-    workspaceRoot: String
+    workspaceRoot: String,
 ): MutableMap<String, Any?> {
+  val taskInputs = getInputsForTask(testTask, projectRoot, workspaceRoot, null)
+
   val target =
       mutableMapOf<String, Any?>(
           "executor" to "@nx/gradle:gradle",
@@ -100,7 +102,7 @@ private fun buildTestCiTarget(
           "metadata" to
               getMetadata("Runs Gradle test $testClassName in CI", projectBuildPath, "test"),
           "cache" to true,
-          "inputs" to arrayOf(replaceRootInPath(testFile.path, projectRoot, workspaceRoot)))
+          "inputs" to taskInputs)
 
   getDependsOnForTask(testTask, null)
       ?.takeIf { it.isNotEmpty() }
@@ -115,7 +117,6 @@ private fun buildTestCiTarget(
         testTask.logger.info("${testTask.path}: found ${it.size} outputs entries")
         target["outputs"] = it
       }
-
   return target
 }
 

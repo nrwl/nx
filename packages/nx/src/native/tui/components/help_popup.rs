@@ -12,9 +12,11 @@ use std::any::Any;
 use tokio::sync::mpsc::UnboundedSender;
 
 use super::{Component, Frame};
-use crate::native::tui::action::Action;
+use crate::native::tui::{action::Action, nx_console};
+
 use crate::native::tui::theme::THEME;
 
+#[derive(Default)]
 pub struct HelpPopup {
     scroll_offset: usize,
     scrollbar_state: ScrollbarState,
@@ -22,6 +24,7 @@ pub struct HelpPopup {
     viewport_height: usize,
     visible: bool,
     action_tx: Option<UnboundedSender<Action>>,
+    console_available: bool,
 }
 
 impl HelpPopup {
@@ -33,11 +36,16 @@ impl HelpPopup {
             viewport_height: 0,
             visible: false,
             action_tx: None,
+            console_available: false,
         }
     }
 
     pub fn set_visible(&mut self, visible: bool) {
         self.visible = visible;
+    }
+
+    pub fn set_console_available(&mut self, available: bool) {
+        self.console_available = available;
     }
 
     // Ensure the scroll state is reset to avoid recalc issues
@@ -110,7 +118,7 @@ impl HelpPopup {
             ])
             .split(popup_layout[1])[1];
 
-        let keybindings = vec![
+        let mut keybindings = vec![
             // Misc
             ("?", "Toggle this popup"),
             ("q or <ctrl>+c", "Quit the TUI"),
@@ -148,6 +156,25 @@ impl HelpPopup {
             ("i", "Interact with a continuous task when it is in focus"),
             ("<ctrl>+z", "Stop interacting with a continuous task"),
         ];
+
+        if self.console_available {
+            // add Copilot specific keybindings for AI assistance
+
+            keybindings.extend([
+                ("", ""),
+                (
+                    "<ctrl>+a",
+                    match nx_console::get_current_editor() {
+                        nx_console::SupportedEditor::VSCode => {
+                            "Send terminal output to Copilot so that it can assist with any issues"
+                        }
+                        _ => {
+                            "Send terminal output to your AI assistant so that it can assist with any issues"
+                        }
+                    },
+                ),
+            ]);
+        }
 
         let mut content: Vec<Line> = vec![
             // Welcome text
@@ -357,8 +384,14 @@ impl Component for HelpPopup {
     }
 
     fn update(&mut self, action: Action) -> Result<Option<Action>> {
-        if let Action::Resize(w, h) = action {
-            self.handle_resize(w, h);
+        match action {
+            Action::Resize(w, h) => {
+                self.handle_resize(w, h);
+            }
+            Action::ConsoleMessengerAvailable(available) => {
+                self.set_console_available(available);
+            }
+            _ => {}
         }
         Ok(None)
     }
