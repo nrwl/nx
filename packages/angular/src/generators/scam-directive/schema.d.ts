@@ -6,6 +6,7 @@ export interface Schema {
   prefix?: string;
   selector?: string;
   export?: boolean;
+  type?: string;
   skipFormat?: boolean;
 }
 
