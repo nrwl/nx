@@ -23,7 +23,7 @@ describe('setupSSR', () => {
   describe('with application builder', () => {
     it('should create the files correctly for ssr', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      const tree = createTreeWithEmptyWorkspace();
       await generateTestApplication(tree, {
         directory: 'app1',
         standalone: false,
@@ -64,14 +64,14 @@ describe('setupSSR', () => {
         .toMatchInlineSnapshot(`
         "import { NgModule } from '@angular/core';
         import { provideServerRendering, withRoutes } from '@angular/ssr';
-        import { AppComponent } from './app.component';
+        import { App } from './app';
         import { AppModule } from './app.module';
         import { serverRoutes } from './app.routes.server';
 
         @NgModule({
           imports: [AppModule],
           providers: [provideServerRendering(withRoutes(serverRoutes))],
-          bootstrap: [AppComponent],
+          bootstrap: [App],
         })
         export class AppServerModule {}
         "
@@ -97,18 +97,18 @@ describe('setupSSR', () => {
           withEventReplay,
         } from '@angular/platform-browser';
         import { RouterModule } from '@angular/router';
-        import { AppComponent } from './app.component';
+        import { App } from './app';
         import { appRoutes } from './app.routes';
-        import { NxWelcomeComponent } from './nx-welcome.component';
+        import { NxWelcome } from './nx-welcome';
 
         @NgModule({
-          declarations: [AppComponent, NxWelcomeComponent],
+          declarations: [App, NxWelcome],
           imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
           providers: [
             provideBrowserGlobalErrorListeners(),
             provideClientHydration(withEventReplay()),
           ],
-          bootstrap: [AppComponent],
+          bootstrap: [App],
         })
         export class AppModule {}
         "
@@ -119,7 +119,7 @@ describe('setupSSR', () => {
 
     it('should create the files correctly for ssr when app is standalone', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      const tree = createTreeWithEmptyWorkspace();
       await generateTestApplication(tree, {
         directory: 'app1',
         skipFormat: true,
@@ -136,10 +136,10 @@ describe('setupSSR', () => {
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { bootstrapApplication } from '@angular/platform-browser';
-        import { AppComponent } from './app/app.component';
+        import { App } from './app/app';
         import { config } from './app/app.config.server';
 
-        const bootstrap = () => bootstrapApplication(AppComponent, config);
+        const bootstrap = () => bootstrapApplication(App, config);
 
         export default bootstrap;
         "
@@ -181,7 +181,7 @@ describe('setupSSR', () => {
     });
 
     it('should support object output option using a custom "outputPath.browser" and "outputPath.server" values', async () => {
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      const tree = createTreeWithEmptyWorkspace();
       await generateTestApplication(tree, {
         directory: 'app1',
         skipFormat: true,
@@ -243,7 +243,7 @@ describe('setupSSR', () => {
     });
 
     it('should remove "outputPath.browser" when it is an empty string', async () => {
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      const tree = createTreeWithEmptyWorkspace();
       await generateTestApplication(tree, {
         directory: 'app1',
         skipFormat: true,
@@ -266,7 +266,7 @@ describe('setupSSR', () => {
     });
 
     it('should update "outputs" when set to "{options.outputPath.base}" and "outputPath" is converted to a string', async () => {
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      const tree = createTreeWithEmptyWorkspace();
       await generateTestApplication(tree, {
         directory: 'app1',
         skipFormat: true,
@@ -296,7 +296,7 @@ describe('setupSSR', () => {
   describe('with browser builder', () => {
     it('should create the files correctly for ssr', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      const tree = createTreeWithEmptyWorkspace();
       await generateTestApplication(tree, {
         directory: 'app1',
         standalone: false,
@@ -353,14 +353,14 @@ describe('setupSSR', () => {
         import { ServerModule } from '@angular/platform-server';
 
         import { AppModule } from './app.module';
-        import { AppComponent } from './app.component';
+        import { App } from './app';
 
         @NgModule({
           imports: [
             AppModule,
             ServerModule,
           ],
-          bootstrap: [AppComponent],
+          bootstrap: [App],
         })
         export class AppServerModule {}
         "
@@ -370,18 +370,18 @@ describe('setupSSR', () => {
         "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
         import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
         import { RouterModule } from '@angular/router';
-        import { AppComponent } from './app.component';
+        import { App } from './app';
         import { appRoutes } from './app.routes';
-        import { NxWelcomeComponent } from './nx-welcome.component';
+        import { NxWelcome } from './nx-welcome';
 
         @NgModule({
-          declarations: [AppComponent, NxWelcomeComponent],
+          declarations: [App, NxWelcome],
           imports: [
             BrowserModule,
             RouterModule.forRoot(appRoutes),
           ],
           providers: [provideBrowserGlobalErrorListeners(), provideClientHydration(withEventReplay())],
-          bootstrap: [AppComponent],
+          bootstrap: [App],
         })
         export class AppModule {}
         "
@@ -392,7 +392,7 @@ describe('setupSSR', () => {
 
     it('should create the files correctly for ssr when app is standalone', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      const tree = createTreeWithEmptyWorkspace();
       await generateTestApplication(tree, {
         directory: 'app1',
         bundler: 'webpack',
@@ -410,10 +410,10 @@ describe('setupSSR', () => {
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { bootstrapApplication } from '@angular/platform-browser';
-        import { AppComponent } from './app/app.component';
+        import { App } from './app/app';
         import { config } from './app/app.config.server';
 
-        const bootstrap = () => bootstrapApplication(AppComponent, config);
+        const bootstrap = () => bootstrapApplication(App, config);
 
         export default bootstrap;
         "
@@ -457,7 +457,7 @@ describe('setupSSR', () => {
     });
 
     it('should update build target output path', async () => {
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      const tree = createTreeWithEmptyWorkspace();
       await generateTestApplication(tree, {
         directory: 'app1',
         standalone: false,
@@ -478,7 +478,7 @@ describe('setupSSR', () => {
   });
 
   it('should install the correct dependencies', async () => {
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const tree = createTreeWithEmptyWorkspace();
     await generateTestApplication(tree, {
       directory: 'app1',
       skipFormat: true,
@@ -499,7 +499,7 @@ describe('setupSSR', () => {
   });
 
   it('should not touch the package.json when run with `--skipPackageJson`', async () => {
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const tree = createTreeWithEmptyWorkspace();
     await generateTestApplication(tree, {
       directory: 'app1',
       skipFormat: true,
@@ -525,7 +525,7 @@ describe('setupSSR', () => {
 
   it('should add hydration correctly for NgModule apps', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const tree = createTreeWithEmptyWorkspace();
 
     await generateTestApplication(tree, {
       directory: 'app1',
@@ -546,18 +546,18 @@ describe('setupSSR', () => {
       "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
       import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
       import { RouterModule } from '@angular/router';
-      import { AppComponent } from './app.component';
+      import { App } from './app';
       import { appRoutes } from './app.routes';
-      import { NxWelcomeComponent } from './nx-welcome.component';
+      import { NxWelcome } from './nx-welcome';
 
       @NgModule({
-        declarations: [AppComponent, NxWelcomeComponent],
+        declarations: [App, NxWelcome],
         imports: [
           BrowserModule,
           RouterModule.forRoot(appRoutes),
         ],
         providers: [provideBrowserGlobalErrorListeners(), provideClientHydration(withEventReplay())],
-        bootstrap: [AppComponent],
+        bootstrap: [App],
       })
       export class AppModule {}
       "
@@ -566,7 +566,7 @@ describe('setupSSR', () => {
 
   it('should add hydration correctly to standalone', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const tree = createTreeWithEmptyWorkspace();
 
     await generateTestApplication(tree, {
       directory: 'app1',
@@ -618,7 +618,7 @@ describe('setupSSR', () => {
 
   it('should set "initialNavigation: enabledBlocking" in "RouterModule.forRoot" options when hydration=false', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const tree = createTreeWithEmptyWorkspace();
     await generateTestApplication(tree, {
       directory: 'app1',
       standalone: false,
@@ -636,18 +636,18 @@ describe('setupSSR', () => {
       "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
       import { BrowserModule } from '@angular/platform-browser';
       import { RouterModule } from '@angular/router';
-      import { AppComponent } from './app.component';
+      import { App } from './app';
       import { appRoutes } from './app.routes';
-      import { NxWelcomeComponent } from './nx-welcome.component';
+      import { NxWelcome } from './nx-welcome';
 
       @NgModule({
-        declarations: [AppComponent, NxWelcomeComponent],
+        declarations: [App, NxWelcome],
         imports: [
           BrowserModule,
           RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
         ],
         providers: [provideBrowserGlobalErrorListeners()],
-        bootstrap: [AppComponent],
+        bootstrap: [App],
       })
       export class AppModule {}
       "
@@ -655,7 +655,7 @@ describe('setupSSR', () => {
   });
 
   it('should set "withEnabledBlockingInitialNavigation()" in "provideRouter" features when hydration=false', async () => {
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const tree = createTreeWithEmptyWorkspace();
     await generateTestApplication(tree, {
       directory: 'app1',
       skipFormat: true,
@@ -687,7 +687,7 @@ describe('setupSSR', () => {
   describe('compat', () => {
     it('should install the correct versions when using older versions of Angular', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      const tree = createTreeWithEmptyWorkspace();
       updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {
@@ -818,7 +818,7 @@ describe('setupSSR', () => {
     });
 
     it('should setup server routing using "provideServerRoutesConfig" for NgModule apps when "serverRouting" is true and @angular/ssr version is lower than 19.2.0', async () => {
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      const tree = createTreeWithEmptyWorkspace();
       updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: { '@angular/core': '19.1.0', '@angular/ssr': '19.1.0' },
@@ -864,7 +864,7 @@ describe('setupSSR', () => {
     });
 
     it('should setup server routing using "provideServerRouting" for NgModule apps when "serverRouting" is true and @angular/ssr version is 19.2.x', async () => {
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      const tree = createTreeWithEmptyWorkspace();
       updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: { '@angular/core': '19.2.0', '@angular/ssr': '19.2.0' },
@@ -910,7 +910,7 @@ describe('setupSSR', () => {
     });
 
     it('should setup server routing using "provideServerRoutesConfig" for standalone apps when "serverRouting" is true and @angular/ssr version is lower than 19.2.0', async () => {
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      const tree = createTreeWithEmptyWorkspace();
       updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: { '@angular/core': '19.1.0', '@angular/ssr': '19.1.0' },
@@ -957,7 +957,7 @@ describe('setupSSR', () => {
     });
 
     it('should setup server routing using "provideServerRouting" for standalone apps when "serverRouting" is true and @angular/ssr version is 19.2.x', async () => {
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      const tree = createTreeWithEmptyWorkspace();
       updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: { '@angular/core': '19.2.0', '@angular/ssr': '19.2.0' },

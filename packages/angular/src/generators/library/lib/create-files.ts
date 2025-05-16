@@ -30,6 +30,13 @@ export function createFiles(
   const { major, minor } = parse(version);
   const disableModernClassFieldsBehavior = lt(version, '18.1.0-rc.0');
 
+  const componentType = options.componentOptions.type
+    ? names(options.componentOptions.type).className
+    : '';
+  const componentFileSuffix = options.componentOptions.type
+    ? `.${options.componentOptions.type}`
+    : '';
+
   const substitutions = {
     libName: options.libraryOptions.name,
     libFileName: options.libraryOptions.fileName,
@@ -45,6 +52,8 @@ export function createFiles(
     rootOffset,
     angularPeerDepVersion: `^${major}.${minor}.0`,
     disableModernClassFieldsBehavior,
+    componentType,
+    componentFileSuffix,
     tpl: '',
   };
 

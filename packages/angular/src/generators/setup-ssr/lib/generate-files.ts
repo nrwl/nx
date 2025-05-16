@@ -11,6 +11,8 @@ import {
 } from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
 import { clean, coerce, gte } from 'semver';
+import { getAppComponentInfo } from '../../utils/app-components-info';
+import { getComponentType } from '../../utils/artifact-types';
 
 export function generateSSRFiles(
   tree: Tree,
@@ -64,12 +66,21 @@ export function generateSSRFiles(
     ? clean(ssrVersion) ?? coerce(ssrVersion).version
     : null;
 
+  const componentType = getComponentType(tree);
+  const appComponentInfo = getAppComponentInfo(
+    tree,
+    componentType ? `.${componentType}` : '',
+    project
+  );
+
   generateFiles(tree, pathToFiles, sourceRoot, {
     ...options,
     provideServerRoutingFn:
       !cleanedSsrVersion || gte(cleanedSsrVersion, '19.2.0')
         ? 'provideServerRouting'
         : 'provideServerRoutesConfig',
+    appFileName: appComponentInfo.extensionlessFileName,
+    appSymbolName: appComponentInfo.symbolName,
     tpl: '',
   });
 

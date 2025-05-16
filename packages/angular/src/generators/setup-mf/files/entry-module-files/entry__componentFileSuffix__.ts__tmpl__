@@ -7,4 +7,4 @@ import { Component } from '@angular/core';
   selector: '<%= appName %>-entry',
   template: `<nx-welcome></nx-welcome>`<% } %>
 })
-export class RemoteEntryComponent {}
+export class RemoteEntry<%= componentType %> {}

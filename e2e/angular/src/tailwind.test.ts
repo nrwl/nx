@@ -132,7 +132,7 @@ describe('Tailwind support', () => {
       buttonBgColor: string = defaultButtonBgColor
     ) => {
       updateFile(
-        `${lib}/src/lib/foo.component.ts`,
+        `${lib}/src/lib/foo.ts`,
         `import { Component } from '@angular/core';
   
         @Component({
@@ -145,7 +145,7 @@ describe('Tailwind support', () => {
             }
           \`]
         })
-        export class FooComponent {}
+        export class Foo {}
       `
       );
 
@@ -153,12 +153,12 @@ describe('Tailwind support', () => {
         `${lib}/src/lib/${lib}.module.ts`,
         `import { NgModule } from '@angular/core';
         import { CommonModule } from '@angular/common';
-        import { FooComponent } from './foo.component';
+        import { Foo } from './foo';
   
         @NgModule({
           imports: [CommonModule],
-          declarations: [FooComponent],
-          exports: [FooComponent],
+          declarations: [Foo],
+          exports: [Foo],
         })
         export class LibModule {}
       `
@@ -166,7 +166,7 @@ describe('Tailwind support', () => {
 
       updateFile(
         `${lib}/src/index.ts`,
-        `export * from './lib/foo.component';
+        `export * from './lib/foo';
         export * from './lib/${lib}.module';
         `
       );
@@ -180,7 +180,7 @@ describe('Tailwind support', () => {
       const builtComponentContent = readFile(
         isPublishable
           ? `dist/${lib}/fesm2022/${project}-${lib}.mjs`
-          : `dist/${lib}/esm2022/lib/foo.component.js`
+          : `dist/${lib}/esm2022/lib/foo.js`
       );
       let expectedStylesRegex = new RegExp(
         `styles: \\[\\"\\.custom\\-btn(\\[_ngcontent\\-%COMP%\\])?{margin:${libSpacing.md};padding:${libSpacing.sm}}(\\\\n)?\\"\\]`
@@ -362,24 +362,24 @@ describe('Tailwind support', () => {
         import { LibModule as LibModule1 } from '@${project}/${buildLibWithTailwind.name}';
         import { LibModule as LibModule2 } from '@${project}/${pubLibWithTailwind.name}';
 
-        import { AppComponent } from './app.component';
+        import { App } from './app';
 
         @NgModule({
-          declarations: [AppComponent],
+          declarations: [App],
           imports: [BrowserModule, LibModule1, LibModule2],
           providers: [],
-          bootstrap: [AppComponent],
+          bootstrap: [App],
         })
         export class AppModule {}
         `
       );
       updateFile(
-        `${appName}/src/app/app.component.html`,
+        `${appName}/src/app/app.html`,
         `<button class="custom-btn text-white">Click me!</button>`
       );
 
       updateFile(
-        `${appName}/src/app/app.component.css`,
+        `${appName}/src/app/app.css`,
         `.custom-btn {
           @apply m-md p-sm;
         }`

@@ -82,6 +82,10 @@ export async function addLintingGenerator(
               style: 'kebab-case',
             },
           ],
+          // Temporary disable these rules until Angular ESLint recommended
+          // rules are updated with the new Style Guide
+          '@angular-eslint/component-class-suffix': 'off',
+          '@angular-eslint/directive-class-suffix': 'off',
         },
       });
       addOverrideToLintConfig(tree, options.projectRoot, {

@@ -735,14 +735,11 @@ describe('Cypress Component Testing Configuration', () => {
     });
 
     expect(
-      tree.read(
-        'secondary/src/lib/button/fancy-button.component.cy.ts',
-        'utf-8'
-      )
+      tree.read('secondary/src/lib/button/fancy-button.cy.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(
       tree.read(
-        'secondary/src/lib/button/standalone-fancy-button.component.cy.ts',
+        'secondary/src/lib/button/standalone-fancy-button.cy.ts',
         'utf-8'
       )
     ).toMatchSnapshot();
@@ -756,15 +753,15 @@ describe('Cypress Component Testing Configuration', () => {
     });
     await setup(tree, { project: 'cool-lib', name: 'abc', standalone: false });
     tree.write(
-      'cool-lib/src/lib/abc-one/abc-one.component.cy.ts',
+      'cool-lib/src/lib/abc-one/abc-one.cy.ts',
       `const msg = 'should not overwrite abc-one';`
     );
     tree.write(
-      'cool-lib/src/lib/abc-two/abc-two.component.cy.ts',
+      'cool-lib/src/lib/abc-two/abc-two.cy.ts',
       `const msg = 'should not overwrite abc-two';`
     );
     tree.write(
-      'cool-lib/src/lib/abc-three/abc-three.component.cy.ts',
+      'cool-lib/src/lib/abc-three/abc-three.cy.ts',
       `const msg = 'should not overwrite abc-three';`
     );
     projectGraph = {
@@ -917,11 +914,7 @@ async function setup(
     });
 
     if (options.withInputs) {
-      const cmpPath = joinPathFragments(
-        options.basePath,
-        name,
-        `${name}.component.ts`
-      );
+      const cmpPath = joinPathFragments(options.basePath, name, `${name}.ts`);
       const oldContent = tree.read(cmpPath, 'utf-8');
 
       const newContent = oldContent.replace(
@@ -953,20 +946,18 @@ function getCmpsFromTree(
     `${options.name}-three`,
   ].map((n) => {
     expect(
-      tree.exists(joinPathFragments(options.basePath, n, `${n}.component.ts`))
+      tree.exists(joinPathFragments(options.basePath, n, `${n}.ts`))
     ).toBeTruthy();
     expect(
-      tree.exists(
-        joinPathFragments(options.basePath, n, `${n}.component.cy.ts`)
-      )
+      tree.exists(joinPathFragments(options.basePath, n, `${n}.cy.ts`))
     ).toBeTruthy();
     return {
       cmp: tree.read(
-        joinPathFragments(options.basePath, n, `${n}.component.ts`),
+        joinPathFragments(options.basePath, n, `${n}.ts`),
         'utf-8'
       ),
       cy: tree.read(
-        joinPathFragments(options.basePath, n, `${n}.component.cy.ts`),
+        joinPathFragments(options.basePath, n, `${n}.cy.ts`),
         'utf-8'
       ),
     };
