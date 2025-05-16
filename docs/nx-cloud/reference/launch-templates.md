@@ -418,7 +418,7 @@ To do this, run the `nx-cloud validate` command, with the path to the launch tem
 nx-cloud validate --workflow-file=./.nx/workflows/agents.yaml
 ```
 
-## Pass Environment Variables to Agents
+## Pass Environment Variables
 
 If you need to send environment variables to agents, you can use the [--with-env-vars](/ci/reference/nx-cloud-cli#withenvvars-nx-agents-only) flag on the `nx-cloud start-ci-run` command. You can pass a specific list of environment variables like this:
 
@@ -555,7 +555,7 @@ Nx Agents have [corepack enabled](https://nodejs.org/api/corepack.html#corepack)
 Currently, corepack [only supports yarn or pnpm](https://nodejs.org/api/corepack.html#supported-package-managers) as package managers. If you need to use a specific npm version, you will need to create a custom launch template and install the specific npm version, i.e. `npm install -g npm@<version>`
 {%/callout %}
 
-## Installing Packages on Nx Agents
+## Installing Packages
 
 You can use `apt` to install popular linux packages. This is helpful in streamlining setting up various toolchains needed for your workspace.
 
