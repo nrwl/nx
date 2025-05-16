@@ -474,6 +474,16 @@
         "path": "/nx-api/angular/migrations/replace-provide-server-routing",
         "type": "migration"
       },
+      "/nx-api/angular/migrations/set-generator-defaults-for-previous-style-guide": {
+        "description": "Update the generator defaults to maintain the previous style guide behavior.",
+        "file": "generated/packages/angular/migrations/set-generator-defaults-for-previous-style-guide.json",
+        "hidden": false,
+        "name": "set-generator-defaults-for-previous-style-guide",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/set-generator-defaults-for-previous-style-guide",
+        "type": "migration"
+      },
       "/nx-api/angular/migrations/21.2.0-package-updates": {
         "description": "",
         "file": "generated/packages/angular/migrations/21.2.0-package-updates.json",
