@@ -6,7 +6,7 @@ import { convertPipeToScam } from './convert-pipe-to-scam';
 describe('convertPipeToScam', () => {
   it('should create the scam pipe inline correctly', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -26,8 +26,8 @@ describe('convertPipeToScam', () => {
     convertPipeToScam(tree, {
       path: 'apps/app1/src/app/example/example',
       directory: 'apps/app1/src/app/example',
-      fileName: 'example.pipe',
-      filePath: 'apps/app1/src/app/example/example.pipe.ts',
+      fileName: 'example-pipe',
+      filePath: 'apps/app1/src/app/example/example-pipe.ts',
       name: 'example',
       projectName: 'app1',
       export: false,
@@ -37,7 +37,7 @@ describe('convertPipeToScam', () => {
 
     // ASSERT
     const pipeSource = tree.read(
-      'apps/app1/src/app/example/example.pipe.ts',
+      'apps/app1/src/app/example/example-pipe.ts',
       'utf-8'
     );
     expect(pipeSource).toMatchInlineSnapshot(`
@@ -66,7 +66,7 @@ describe('convertPipeToScam', () => {
 
   it('should create the scam pipe separately correctly', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -85,8 +85,8 @@ describe('convertPipeToScam', () => {
     convertPipeToScam(tree, {
       path: 'apps/app1/src/app/example/example',
       directory: 'apps/app1/src/app/example',
-      fileName: 'example.pipe',
-      filePath: 'apps/app1/src/app/example/example.pipe.ts',
+      fileName: 'example-pipe',
+      filePath: 'apps/app1/src/app/example/example-pipe.ts',
       name: 'example',
       projectName: 'app1',
       export: false,
@@ -102,7 +102,7 @@ describe('convertPipeToScam', () => {
     expect(pipeModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
-      import { ExamplePipe } from './example.pipe';
+      import { ExamplePipe } from './example-pipe';
 
       @NgModule({
         imports: [CommonModule],

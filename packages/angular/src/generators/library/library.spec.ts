@@ -681,7 +681,9 @@ describe('lib', () => {
                     "prefix": "lib",
                     "style": "kebab-case"
                   }
-                ]
+                ],
+                "@angular-eslint/component-class-suffix": "off",
+                "@angular-eslint/directive-class-suffix": "off"
               }
             },
             {
@@ -1272,6 +1274,7 @@ describe('lib', () => {
                   "*.ts",
                 ],
                 "rules": {
+                  "@angular-eslint/component-class-suffix": "off",
                   "@angular-eslint/component-selector": [
                     "error",
                     {
@@ -1280,6 +1283,7 @@ describe('lib', () => {
                       "type": "element",
                     },
                   ],
+                  "@angular-eslint/directive-class-suffix": "off",
                   "@angular-eslint/directive-selector": [
                     "error",
                     {
@@ -1332,6 +1336,7 @@ describe('lib', () => {
                   "*.ts",
                 ],
                 "rules": {
+                  "@angular-eslint/component-class-suffix": "off",
                   "@angular-eslint/component-selector": [
                     "error",
                     {
@@ -1340,6 +1345,7 @@ describe('lib', () => {
                       "type": "element",
                     },
                   ],
+                  "@angular-eslint/directive-class-suffix": "off",
                   "@angular-eslint/directive-selector": [
                     "error",
                     {
