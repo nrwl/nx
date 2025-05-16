@@ -25,6 +25,7 @@ fun buildListener(
             taskStartTimes[nxTaskId] = min(System.currentTimeMillis(), event.eventTime)
           }
     }
+
     is TaskFinishEvent -> {
       val taskPath = event.descriptor.taskPath
       val success =
@@ -33,10 +34,12 @@ fun buildListener(
               logger.info("✅ Task finished successfully: $taskPath")
               true
             }
+
             is TaskFailureResult -> {
               logger.warning("❌ Task failed: $taskPath")
               false
             }
+
             else -> true
           }
 
