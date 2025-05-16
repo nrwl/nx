@@ -44,12 +44,12 @@ describe('preset', () => {
     `);
     expect(tree.children(`apps/${name}/src/app`).sort()).toMatchInlineSnapshot(`
       [
-        "app.component.css",
-        "app.component.html",
-        "app.component.spec.ts",
-        "app.component.ts",
+        "app.css",
+        "app.html",
         "app.module.ts",
-        "nx-welcome.component.ts",
+        "app.spec.ts",
+        "app.ts",
+        "nx-welcome.ts",
       ]
     `);
   }, 60_000);
