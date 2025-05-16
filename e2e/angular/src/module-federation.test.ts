@@ -94,12 +94,12 @@ describe('Angular Module Federation', () => {
       import { ${
         names(secondaryEntry).className
       }Module } from '@${proj}/${sharedLib}/${secondaryEntry}';
-      import { AppComponent } from './app.component';
-      import { NxWelcomeComponent } from './nx-welcome.component';
+      import { App } from './app';
+      import { NxWelcome } from './nx-welcome';
       import { RouterModule } from '@angular/router';
 
       @NgModule({
-        declarations: [AppComponent, NxWelcomeComponent],
+        declarations: [App, NxWelcome],
         imports: [
           BrowserModule,
           ${names(sharedLib).className}Module,
@@ -118,7 +118,7 @@ describe('Angular Module Federation', () => {
           ),
         ],
         providers: [],
-        bootstrap: [AppComponent],
+        bootstrap: [App],
       })
       export class AppModule {}
       `
@@ -132,18 +132,18 @@ describe('Angular Module Federation', () => {
       import { ${
         names(secondaryEntry).className
       }Module } from '@${proj}/${sharedLib}/${secondaryEntry}';
-    import { RemoteEntryComponent } from './entry.component';
-    import { NxWelcomeComponent } from './nx-welcome.component';
+    import { RemoteEntry } from './entry';
+    import { NxWelcome } from './nx-welcome';
 
     @NgModule({
-      declarations: [RemoteEntryComponent, NxWelcomeComponent],
+      declarations: [RemoteEntry, NxWelcome],
       imports: [
         CommonModule,
         ${names(sharedLib).className}Module,
         RouterModule.forChild([
           {
             path: '',
-            component: RemoteEntryComponent,
+            component: RemoteEntry,
           },
         ]),
       ],
@@ -301,7 +301,7 @@ test('renders remotes', async ({ page }) => {
 
     // Update Host to use the module
     updateFile(
-      `${host}/src/app/app.component.ts`,
+      `${host}/src/app/app.ts`,
       `
       import { Component } from '@angular/core';
       import { isEven } from '${remote}/${module}';
@@ -311,7 +311,7 @@ test('renders remotes', async ({ page }) => {
         template: \`<div class="host">{{title}}</div>\`,
         standalone: true
       })
-      export class AppComponent {
+      export class App {
         title = \`shell is \${isEven(2) ? 'even' : 'odd'}\`;
       }`
     );
@@ -373,7 +373,7 @@ test('renders remotes', async ({ page }) => {
 
     // Update Host to use the module
     updateFile(
-      `${remote}/src/app/remote-entry/entry.component.ts`,
+      `${remote}/src/app/remote-entry/entry.ts`,
       `
       import { Component } from '@angular/core';
       import { isEven } from '${childRemote}/${module}';
@@ -383,7 +383,7 @@ test('renders remotes', async ({ page }) => {
         template: \`<div class="childremote">{{title}}</div>\`,
         standalone: true
       })
-      export class RemoteEntryComponent {
+      export class RemoteEntry {
         title = \`shell is \${isEven(2) ? 'even' : 'odd'}\`;
       }`
     );
@@ -398,7 +398,7 @@ test('renders remotes', async ({ page }) => {
         remotes: ['${childRemote}'],
         exposes: {
           './Routes': '${remote}/src/app/remote-entry/entry.routes.ts',
-          './Module': '${remote}/src/app/remote-entry/entry.component.ts',
+          './Module': '${remote}/src/app/remote-entry/entry.ts',
         },
       };
 

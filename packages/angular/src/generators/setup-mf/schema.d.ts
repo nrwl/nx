@@ -1,3 +1,5 @@
+import type { ComponentMetadata } from '../utils/app-components-info';
+
 type FederationType = 'static' | 'dynamic';
 
 export interface Schema {
@@ -21,4 +23,8 @@ export interface Schema {
 export interface NormalizedOptions extends Schema {
   federationType: FederationType;
   prefix: string | undefined;
+  componentType: string;
+  componentFileSuffix: string;
+  appComponentInfo: ComponentMetadata;
+  nxWelcomeComponentInfo: ComponentMetadata;
 }

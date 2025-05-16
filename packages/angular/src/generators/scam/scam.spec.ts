@@ -1,11 +1,11 @@
-import { addProjectConfiguration, writeJson } from '@nx/devkit';
+import { addProjectConfiguration, updateJson, writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { scamGenerator } from './scam';
 
 describe('SCAM Generator', () => {
   it('should create the inline scam correctly', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -22,7 +22,7 @@ describe('SCAM Generator', () => {
 
     // ASSERT
     const componentSource = tree.read(
-      'apps/app1/src/app/example/example.component.ts',
+      'apps/app1/src/app/example/example.ts',
       'utf-8'
     );
     expect(componentSource).toMatchInlineSnapshot(`
@@ -32,24 +32,24 @@ describe('SCAM Generator', () => {
       @Component({
         selector: 'example',
         standalone: false,
-        templateUrl: './example.component.html',
-        styleUrl: './example.component.css'
+        templateUrl: './example.html',
+        styleUrl: './example.css'
       })
-      export class ExampleComponent {}
+      export class Example {}
 
       @NgModule({
         imports: [CommonModule],
-        declarations: [ExampleComponent],
-        exports: [ExampleComponent],
+        declarations: [Example],
+        exports: [Example],
       })
-      export class ExampleComponentModule {}
+      export class ExampleModule {}
       "
     `);
   });
 
   it('should create the separate scam correctly', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -72,20 +72,20 @@ describe('SCAM Generator', () => {
     expect(componentModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
-      import { ExampleComponent } from './example.component';
+      import { Example } from './example';
 
       @NgModule({
         imports: [CommonModule],
-        declarations: [ExampleComponent],
-        exports: [ExampleComponent],
+        declarations: [Example],
+        exports: [Example],
       })
-      export class ExampleComponentModule {}
+      export class ExampleModule {}
       "
     `);
   });
 
   it('should handle path with file extension', async () => {
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -113,21 +113,21 @@ describe('SCAM Generator', () => {
         templateUrl: './example.component.html',
         styleUrl: './example.component.css'
       })
-      export class ExampleComponent {}
+      export class Example {}
 
       @NgModule({
         imports: [CommonModule],
-        declarations: [ExampleComponent],
-        exports: [ExampleComponent],
+        declarations: [Example],
+        exports: [Example],
       })
-      export class ExampleComponentModule {}
+      export class ExampleModule {}
       "
     `);
   });
 
   it('should create the scam correctly and export it for a secondary entrypoint', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'lib1', {
       projectType: 'library',
       sourceRoot: 'libs/lib1/src',
@@ -155,14 +155,14 @@ describe('SCAM Generator', () => {
     expect(componentModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
-      import { ExampleComponent } from './example.component';
+      import { Example } from './example';
 
       @NgModule({
         imports: [CommonModule],
-        declarations: [ExampleComponent],
-        exports: [ExampleComponent],
+        declarations: [Example],
+        exports: [Example],
       })
-      export class ExampleComponentModule {}
+      export class ExampleModule {}
       "
     `);
     const secondaryEntryPointSource = tree.read(
@@ -170,7 +170,7 @@ describe('SCAM Generator', () => {
       'utf-8'
     );
     expect(secondaryEntryPointSource).toMatchInlineSnapshot(`
-      "export * from './lib/example/example.component';
+      "export * from './lib/example/example';
       export * from './lib/example/example.module';"
     `);
   });
@@ -188,13 +188,13 @@ describe('SCAM Generator', () => {
         name: '404',
         path: 'apps/app1/src/app/example/example',
       })
-    ).rejects.toThrow('Class name "404Component" is invalid.');
+    ).rejects.toThrow('Class name "404" is invalid.');
   });
 
   describe('--path', () => {
-    it('should not throw when the directory does not exist under project', async () => {
+    it('should not throw when the directory exists under project', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      const tree = createTreeWithEmptyWorkspace();
       addProjectConfiguration(tree, 'app1', {
         projectType: 'application',
         sourceRoot: 'apps/app1/src',
@@ -211,7 +211,7 @@ describe('SCAM Generator', () => {
 
       // ASSERT
       const componentSource = tree.read(
-        'apps/app1/src/app/random/example/example.component.ts',
+        'apps/app1/src/app/random/example/example.ts',
         'utf-8'
       );
       expect(componentSource).toMatchInlineSnapshot(`
@@ -221,24 +221,24 @@ describe('SCAM Generator', () => {
         @Component({
           selector: 'example',
           standalone: false,
-          templateUrl: './example.component.html',
-          styleUrl: './example.component.css'
+          templateUrl: './example.html',
+          styleUrl: './example.css'
         })
-        export class ExampleComponent {}
+        export class Example {}
 
         @NgModule({
           imports: [CommonModule],
-          declarations: [ExampleComponent],
-          exports: [ExampleComponent],
+          declarations: [Example],
+          exports: [Example],
         })
-        export class ExampleComponentModule {}
+        export class ExampleModule {}
         "
       `);
     });
 
     it('should not matter if the directory starts with a slash', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      const tree = createTreeWithEmptyWorkspace();
       addProjectConfiguration(tree, 'app1', {
         projectType: 'application',
         sourceRoot: 'apps/app1/src',
@@ -255,7 +255,7 @@ describe('SCAM Generator', () => {
 
       // ASSERT
       const componentSource = tree.read(
-        'apps/app1/src/app/random/example/example.component.ts',
+        'apps/app1/src/app/random/example/example.ts',
         'utf-8'
       );
       expect(componentSource).toMatchInlineSnapshot(`
@@ -265,24 +265,24 @@ describe('SCAM Generator', () => {
         @Component({
           selector: 'example',
           standalone: false,
-          templateUrl: './example.component.html',
-          styleUrl: './example.component.css'
+          templateUrl: './example.html',
+          styleUrl: './example.css'
         })
-        export class ExampleComponent {}
+        export class Example {}
 
         @NgModule({
           imports: [CommonModule],
-          declarations: [ExampleComponent],
-          exports: [ExampleComponent],
+          declarations: [Example],
+          exports: [Example],
         })
-        export class ExampleComponentModule {}
+        export class ExampleModule {}
         "
       `);
     });
 
     it('should throw when the directory does not exist under project', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      const tree = createTreeWithEmptyWorkspace();
       addProjectConfiguration(tree, 'app1', {
         projectType: 'application',
         sourceRoot: 'apps/app1/src',
@@ -300,6 +300,53 @@ describe('SCAM Generator', () => {
       ).rejects.toThrowErrorMatchingInlineSnapshot(
         `"The provided directory resolved relative to the current working directory "libs/proj/src/lib/random/example" does not exist under any project root. Please make sure to navigate to a location or provide a directory that exists under a project root."`
       );
+    });
+  });
+
+  describe('compat', () => {
+    it('should generate the component with the "component" type for versions lower than v20', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.dependencies['@angular/core'] = '~19.2.0';
+        return json;
+      });
+      addProjectConfiguration(tree, 'app1', {
+        projectType: 'application',
+        sourceRoot: 'apps/app1/src',
+        root: 'apps/app1',
+      });
+
+      await scamGenerator(tree, {
+        name: 'example',
+        path: 'apps/app1/src/app/example/example',
+        inlineScam: true,
+        skipFormat: true,
+      });
+
+      const componentSource = tree.read(
+        'apps/app1/src/app/example/example.component.ts',
+        'utf-8'
+      );
+      expect(componentSource).toMatchInlineSnapshot(`
+        "import { Component, NgModule } from '@angular/core';
+        import { CommonModule } from '@angular/common';
+
+        @Component({
+          selector: 'example',
+          standalone: false,
+          templateUrl: './example.component.html',
+          styleUrl: './example.component.css'
+        })
+        export class ExampleComponent {}
+
+        @NgModule({
+          imports: [CommonModule],
+          declarations: [ExampleComponent],
+          exports: [ExampleComponent],
+        })
+        export class ExampleComponentModule {}
+        "
+      `);
     });
   });
 });

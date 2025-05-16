@@ -51,5 +51,6 @@ export interface NormalizedSchema {
     selector?: string;
     skipSelector?: boolean;
     flat?: boolean;
+    type?: string;
   };
 }

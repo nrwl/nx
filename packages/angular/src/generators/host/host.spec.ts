@@ -113,7 +113,7 @@ describe('Host App Generator', () => {
     expect(
       tree.read('host-app/module-federation.config.js', 'utf-8')
     ).toContain(`'remote1','remote2'`);
-    expect(tree.read('host-app/src/app/app.component.html', 'utf-8'))
+    expect(tree.read('host-app/src/app/app.html', 'utf-8'))
       .toMatchInlineSnapshot(`
       "<ul class="remote-menu">
       <li><a routerLink="/">Home</a></li>
@@ -145,7 +145,7 @@ describe('Host App Generator', () => {
     expect(
       tree.read('host-app/module-federation.config.ts', 'utf-8')
     ).toContain(`'remote1','remote2'`);
-    expect(tree.read('host-app/src/app/app.component.html', 'utf-8'))
+    expect(tree.read('host-app/src/app/app.html', 'utf-8'))
       .toMatchInlineSnapshot(`
       "<ul class="remote-menu">
       <li><a routerLink="/">Home</a></li>
@@ -283,9 +283,7 @@ describe('Host App Generator', () => {
     // ASSERT
     expect(tree.exists(`host/src/app/app.module.ts`)).toBeFalsy();
     expect(tree.read(`host/src/bootstrap.ts`, 'utf-8')).toMatchSnapshot();
-    expect(
-      tree.read(`host/src/app/app.component.ts`, 'utf-8')
-    ).toMatchSnapshot();
+    expect(tree.read(`host/src/app/app.ts`, 'utf-8')).toMatchSnapshot();
   });
 
   it('should generate the correct app component spec file', async () => {
@@ -300,9 +298,7 @@ describe('Host App Generator', () => {
     });
 
     // ASSERT
-    expect(
-      tree.read(`host/src/app/app.component.spec.ts`, 'utf-8')
-    ).toMatchSnapshot();
+    expect(tree.read(`host/src/app/app.spec.ts`, 'utf-8')).toMatchSnapshot();
   });
 
   it('should generate the correct app component spec file with a directory', async () => {
@@ -318,7 +314,7 @@ describe('Host App Generator', () => {
 
     // ASSERT
     expect(
-      tree.read(`test/dashboard/src/app/app.component.spec.ts`, 'utf-8')
+      tree.read(`test/dashboard/src/app/app.spec.ts`, 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -532,6 +528,81 @@ describe('Host App Generator', () => {
         unitTestRunner: UnitTestRunner.None,
         typescriptConfiguration: false,
       })
-    ).rejects.toThrowError(`Invalid remote name provided: ${remote}.`);
+    ).rejects.toThrow(`Invalid remote name provided: ${remote}.`);
+  });
+
+  describe('compat', () => {
+    it('should generate components with the "component" type for versions lower than v20', async () => {
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      updateJson(tree, 'package.json', (json) => {
+        json.dependencies = {
+          ...json.dependencies,
+          '@angular/core': '~19.2.0',
+        };
+        return json;
+      });
+
+      await generateTestHostApplication(tree, {
+        directory: 'host',
+        remotes: ['remote1'],
+        skipFormat: true,
+      });
+
+      expect(tree.read('host/src/app/app.component.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { Component } from '@angular/core';
+        import { RouterModule } from '@angular/router';
+        import { NxWelcomeComponent } from './nx-welcome.component';
+
+        @Component({
+          imports: [NxWelcomeComponent, RouterModule],
+          selector: 'app-root',
+          templateUrl: './app.component.html',
+          styleUrl: './app.component.css',
+        })
+        export class AppComponent {
+          title = 'host';
+        }
+        "
+      `);
+      expect(tree.read('host/src/app/app.routes.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { NxWelcomeComponent } from './nx-welcome.component';
+        import { Route } from '@angular/router';
+
+        export const appRoutes: Route[] = [
+            {
+            path: 'remote1',
+            loadChildren: () => import('remote1/Routes').then(m => m!.remoteRoutes)
+            },
+            {
+              path: '',
+              component: NxWelcomeComponent
+            },];
+        "
+      `);
+      expect(
+        tree.read('remote1/src/app/remote-entry/entry.component.ts', 'utf-8')
+      ).toMatchInlineSnapshot(`
+        "import { Component } from '@angular/core';
+        import { CommonModule } from '@angular/common';
+        import { NxWelcomeComponent } from './nx-welcome.component';
+
+        @Component({
+          imports: [CommonModule, NxWelcomeComponent],
+          selector: 'app-remote1-entry',
+          template: \`<app-nx-welcome></app-nx-welcome>\`
+        })
+        export class RemoteEntryComponent {}
+        "
+      `);
+      expect(tree.read('remote1/src/app/remote-entry/entry.routes.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { Route } from '@angular/router';
+        import { RemoteEntryComponent } from './entry.component';
+
+        export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntryComponent }];"
+      `);
+    });
   });
 });

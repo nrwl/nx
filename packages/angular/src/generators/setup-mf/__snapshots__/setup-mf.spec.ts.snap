@@ -21,7 +21,7 @@ fetch('/module-federation.manifest.json')
 `;
 
 exports[`Init MF --federationType=dynamic should wire up existing remote to dynamic host correctly 1`] = `
-"import { NxWelcomeComponent } from './nx-welcome.component';
+"import { NxWelcome } from './nx-welcome';
 import { Route } from '@angular/router';
 import { loadRemote } from '@module-federation/enhanced/runtime';
 
@@ -32,13 +32,13 @@ export const appRoutes: Route[] = [
     },
     {
       path: '',
-      component: NxWelcomeComponent
+      component: NxWelcome
     },];
 "
 `;
 
 exports[`Init MF --federationType=dynamic should wire up existing remote to dynamic host correctly when --typescriptConfiguration=true 1`] = `
-"import { NxWelcomeComponent } from './nx-welcome.component';
+"import { NxWelcome } from './nx-welcome';
 import { Route } from '@angular/router';
 import { loadRemote } from '@module-federation/enhanced/runtime';
 
@@ -49,13 +49,13 @@ export const appRoutes: Route[] = [
     },
     {
       path: '',
-      component: NxWelcomeComponent
+      component: NxWelcome
     },];
 "
 `;
 
 exports[`Init MF should add a remote application and add it to a specified host applications router config 1`] = `
-"import { NxWelcomeComponent } from './nx-welcome.component';
+"import { NxWelcome } from './nx-welcome';
 import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
@@ -69,7 +69,7 @@ export const appRoutes: Route[] = [
     },
     {
       path: '',
-      component: NxWelcomeComponent
+      component: NxWelcome
     },];
 "
 `;
@@ -175,7 +175,7 @@ export default config;
 `;
 
 exports[`Init MF should add a remote to dynamic host correctly 1`] = `
-"import { NxWelcomeComponent } from './nx-welcome.component';
+"import { NxWelcome } from './nx-welcome';
 import { Route } from '@angular/router';
 import { loadRemote } from '@module-federation/enhanced/runtime';
 
@@ -186,13 +186,13 @@ export const appRoutes: Route[] = [
     },
     {
       path: '',
-      component: NxWelcomeComponent
+      component: NxWelcome
     },];
 "
 `;
 
 exports[`Init MF should add a remote to dynamic host correctly when --typescriptConfiguration=true 1`] = `
-"import { NxWelcomeComponent } from './nx-welcome.component';
+"import { NxWelcome } from './nx-welcome';
 import { Route } from '@angular/router';
 import { loadRemote } from '@module-federation/enhanced/runtime';
 
@@ -203,7 +203,7 @@ export const appRoutes: Route[] = [
     },
     {
       path: '',
-      component: NxWelcomeComponent
+      component: NxWelcome
     },];
 "
 `;
@@ -348,7 +348,7 @@ exports[`Init MF should generate the remote entry component correctly when prefi
   standalone: false,
   template: \`<app-nx-welcome></app-nx-welcome>\`
 })
-export class RemoteEntryComponent {}
+export class RemoteEntry {}
 "
 `;
 
@@ -360,7 +360,7 @@ exports[`Init MF should generate the remote entry module and component correctly
   standalone: false,
   template: \`<my-org-nx-welcome></my-org-nx-welcome>\`,
 })
-export class RemoteEntryComponent {}
+export class RemoteEntry {}
 "
 `;
 
@@ -368,14 +368,14 @@ exports[`Init MF should generate the remote entry module and component correctly
 "import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-import { RemoteEntryComponent } from './entry.component';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { RemoteEntry } from './entry';
+import { NxWelcome } from './nx-welcome';
 
 @NgModule({
-  declarations: [RemoteEntryComponent, NxWelcomeComponent],
+  declarations: [RemoteEntry, NxWelcome],
   imports: [CommonModule],
   providers: [],
-  exports: [RemoteEntryComponent],
+  exports: [RemoteEntry],
 })
 export class RemoteEntryModule {}
 "

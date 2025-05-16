@@ -1088,7 +1088,7 @@ describe('Users Selectors', () => {
 
 exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 11`] = `
 "import { Route } from '@angular/router';
-import { FeatureComponent } from './feature/feature.component';
+import { Feature } from './feature/feature';
 import { provideStore, provideState } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 import * as fromUsers from './+state/users.reducer';
@@ -1096,7 +1096,7 @@ import { UsersEffects } from './+state/users.effects';
 import { UsersFacade } from './+state/users.facade';
 
 export const featureRoutes: Route[] = [
-  { path: '', component: FeatureComponent , providers: [UsersFacade, provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer), provideEffects(UsersEffects)]}
+  { path: '', component: Feature , providers: [UsersFacade, provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer), provideEffects(UsersEffects)]}
 ];
 "
 `;
@@ -1109,7 +1109,7 @@ export * from './lib/+state/users.reducer';
 export * from './lib/+state/users.actions';
 export * from './lib/lib.routes';
 
-export * from './lib/feature/feature.component';"
+export * from './lib/feature/feature';"
 `;
 
 exports[`ngrx-feature-store Standalone APIs should have the correct entry point when --barrels=true 1`] = `
@@ -1126,5 +1126,5 @@ export * from './lib/+state/users.models';
 export { UsersActions, UsersFeature, UsersSelectors };
 export * from './lib/lib.routes';
 
-export * from './lib/feature/feature.component';"
+export * from './lib/feature/feature';"
 `;

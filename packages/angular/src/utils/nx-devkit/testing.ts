@@ -40,11 +40,11 @@ export function createApp(
     `import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 ${routing ? "import { RouterModule } from '@angular/router'" : ''};
-import { AppComponent } from './app.component';
+import { App } from './app';
 @NgModule({
   imports: [BrowserModule, ${routing ? 'RouterModule.forRoot([])' : ''}],
-  declarations: [AppComponent],
-  bootstrap: [AppComponent]
+  declarations: [App],
+  bootstrap: [App]
 })
 export class AppModule {}
 `

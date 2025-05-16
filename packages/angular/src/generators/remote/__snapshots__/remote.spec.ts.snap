@@ -4,10 +4,10 @@ exports[`MF Remote App Generator --ssr should generate the correct files 1`] = `
 "import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
-import { AppComponent } from './app.component';
+import { App } from './app';
 
 @NgModule({
-  declarations: [AppComponent],
+  declarations: [App],
   imports: [
     BrowserModule,
     RouterModule.forRoot(
@@ -24,7 +24,7 @@ import { AppComponent } from './app.component';
     ),
   ],
   providers: [],
-  bootstrap: [AppComponent],
+  bootstrap: [App],
 })
 export class AppModule {}
 "
@@ -163,7 +163,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files 8`] = `
   standalone: false,
   template: \`<app-nx-welcome></app-nx-welcome>\`,
 })
-export class RemoteEntryComponent {}
+export class RemoteEntry {}
 "
 `;
 
@@ -182,11 +182,9 @@ export const appRoutes: Route[] = [
 
 exports[`MF Remote App Generator --ssr should generate the correct files 10`] = `
 "import { Route } from '@angular/router';
-import { RemoteEntryComponent } from './entry.component';
+import { RemoteEntry } from './entry';
 
-export const remoteRoutes: Route[] = [
-  { path: '', component: RemoteEntryComponent },
-];
+export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntry }];
 "
 `;
 
@@ -221,11 +219,9 @@ exports[`MF Remote App Generator --ssr should generate the correct files 11`] = 
 
 exports[`MF Remote App Generator --ssr should generate the correct files 12`] = `
 "import { Route } from '@angular/router';
-import { RemoteEntryComponent } from './entry.component';
+import { RemoteEntry } from './entry';
 
-export const remoteRoutes: Route[] = [
-  { path: '', component: RemoteEntryComponent },
-];
+export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntry }];
 "
 `;
 
@@ -246,10 +242,10 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
 "import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
-import { AppComponent } from './app.component';
+import { App } from './app';
 
 @NgModule({
-  declarations: [AppComponent],
+  declarations: [App],
   imports: [
     BrowserModule,
     RouterModule.forRoot([{
@@ -258,7 +254,7 @@ import { AppComponent } from './app.component';
     }], { initialNavigation: 'enabledBlocking' }),
   ],
   providers: [],
-  bootstrap: [AppComponent],
+  bootstrap: [App],
 })
 export class AppModule {}"
 `;
@@ -397,7 +393,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
   standalone: false,
   template: \`<app-nx-welcome></app-nx-welcome>\`
 })
-export class RemoteEntryComponent {}
+export class RemoteEntry {}
 "
 `;
 
@@ -411,9 +407,9 @@ export const appRoutes: Route[] = [
 
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 10`] = `
 "import { Route } from '@angular/router';
-import { RemoteEntryComponent } from './entry.component';
+import { RemoteEntry } from './entry';
 
-export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntryComponent }];"
+export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntry }];"
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 11`] = `
@@ -447,9 +443,9 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
 
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 12`] = `
 "import { Route } from '@angular/router';
-import { RemoteEntryComponent } from './entry.component';
+import { RemoteEntry } from './entry';
 
-export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntryComponent }];"
+export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntry }];"
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 13`] = `
@@ -546,11 +542,9 @@ export default withModuleFederation(config, { dts: false });
 exports[`MF Remote App Generator should generate the a remote setup for standalone components 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
-import { RemoteEntryComponent } from './app/remote-entry/entry.component';
+import { RemoteEntry } from './app/remote-entry/entry';
 
-bootstrapApplication(RemoteEntryComponent, appConfig).catch((err) =>
-  console.error(err)
-);
+bootstrapApplication(RemoteEntry, appConfig).catch((err) => console.error(err));
 "
 `;
 
@@ -570,14 +564,14 @@ module.exports = {
 exports[`MF Remote App Generator should generate the a remote setup for standalone components 3`] = `
 "import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { NxWelcome } from './nx-welcome';
 
 @Component({
-  imports: [CommonModule, NxWelcomeComponent],
+  imports: [CommonModule, NxWelcome],
   selector: 'app-test-entry',
   template: \`<app-nx-welcome></app-nx-welcome>\`,
 })
-export class RemoteEntryComponent {}
+export class RemoteEntry {}
 "
 `;
 
@@ -596,20 +590,18 @@ export const appRoutes: Route[] = [
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components 5`] = `
 "import { Route } from '@angular/router';
-import { RemoteEntryComponent } from './entry.component';
+import { RemoteEntry } from './entry';
 
-export const remoteRoutes: Route[] = [
-  { path: '', component: RemoteEntryComponent },
-];
+export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntry }];
 "
 `;
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components when --typescriptConfiguration=true 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
-import { RemoteEntryComponent } from './app/remote-entry/entry.component';
+import { RemoteEntry } from './app/remote-entry/entry';
 
-bootstrapApplication(RemoteEntryComponent, appConfig).catch((err) =>
+bootstrapApplication(RemoteEntry, appConfig).catch((err) =>
   console.error(err)
 );
 "
@@ -635,14 +627,14 @@ export default config;
 exports[`MF Remote App Generator should generate the a remote setup for standalone components when --typescriptConfiguration=true 3`] = `
 "import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { NxWelcome } from './nx-welcome';
 
 @Component({
-  imports: [CommonModule, NxWelcomeComponent],
+  imports: [CommonModule, NxWelcome],
   selector: 'app-test-entry',
   template: \`<app-nx-welcome></app-nx-welcome>\`
 })
-export class RemoteEntryComponent {}
+export class RemoteEntry {}
 "
 `;
 
@@ -656,7 +648,7 @@ export const appRoutes: Route[] = [
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components when --typescriptConfiguration=true 5`] = `
 "import { Route } from '@angular/router';
-import { RemoteEntryComponent } from './entry.component';
+import { RemoteEntry } from './entry';
 
-export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntryComponent }];"
+export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntry }];"
 `;
