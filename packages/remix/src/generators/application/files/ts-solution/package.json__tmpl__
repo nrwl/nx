@@ -16,8 +16,5 @@
     "@types/react": "<%= typesReactVersion %>",
     "@types/react-dom": "<%= typesReactDomVersion %>"
   },
-  "engines": {
-    "node": ">=20"
-  },
   "sideEffects": false
 }
