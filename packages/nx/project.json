@@ -143,6 +143,7 @@
     "format-native": {
       "command": "cargo fmt",
       "cache": true,
+      "inputs": ["native"],
       "options": {
         "cwd": "{projectRoot}/src/native",
         "args": ["--all", "--check"]
@@ -156,6 +157,7 @@
     "lint-native": {
       "command": "cargo clippy",
       "cache": true,
+      "inputs": ["native"],
       "options": {
         "cwd": "{projectRoot}/src/native",
         "args": ["--frozen"]

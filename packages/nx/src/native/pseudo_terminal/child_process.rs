@@ -9,8 +9,9 @@ use napi::{
         ErrorStrategy::Fatal, ThreadsafeFunction, ThreadsafeFunctionCallMode::NonBlocking,
     },
 };
+use parking_lot::Mutex;
 use std::io::Write;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, RwLock};
 use tracing::warn;
 use vt100_ctt::Parser;
 

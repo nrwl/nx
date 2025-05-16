@@ -6,9 +6,10 @@ use crossterm::{
     tty::IsTty,
 };
 use napi::bindgen_prelude::*;
+use parking_lot::Mutex;
 use portable_pty::{CommandBuilder, NativePtySystem, PtyPair, PtySize, PtySystem};
 use std::io::stdout;
-use std::sync::{Mutex, RwLock};
+use std::sync::RwLock;
 use std::{
     collections::HashMap,
     io::{Read, Write},
