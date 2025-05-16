@@ -135,7 +135,7 @@ Stay tuned for a more in-depth blog post coming soon to [our blog](/blog).
 
 Nx provides support for Storybook version 7.0 beta, with generators and executors, so that you can try it out now, either in a new or in your existing Nx workspace. Storybook version 7 is a major release that brings a lot of new features and improvements. You can read more about it in the [Storybook 7 beta announcement blog post](https://storybook.js.org/blog/7-0-beta/). Apart from the new features and enhancements, it also brings some breaking changes. You can read more about them in the [Storybook 7 migration docs](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#from-version-65x-to-700) and the [Storybook 7 migration guide](https://chromatic-ui.notion.site/Storybook-7-migration-guide-dbf41fa347304eb2a5e9c69b34503937). Do note that _version 7 is still in beta_, and so is the Nx support for it.
 
-You can try out Storybook 7.0 beta in a new Nx workspace by passing the `--storybook7betaConfiguration` flag when generating the Storybook configuration for your projects. Read more in our [Storybook 7 setup guide](/nx-api/storybook/documents/storybook-7-setup). If you want to migrate your existing Storybook configuration to Storybook 7.0 beta, please read our [migration guide](/nx-api/storybook/generators/migrate-7).
+You can try out Storybook 7.0 beta in a new Nx workspace by passing the `--storybook7betaConfiguration` flag when generating the Storybook configuration for your projects.
 
 ## More flexible Webpack config
 

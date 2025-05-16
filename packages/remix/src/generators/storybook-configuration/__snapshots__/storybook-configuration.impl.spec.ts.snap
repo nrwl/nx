@@ -24,7 +24,7 @@ exports[`Storybook Configuration it should create a storybook configuration and 
 
 const config: StorybookConfig = {
   stories: ['../src/lib/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
-  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
+  addons: [],
   framework: {
     name: '@storybook/react-vite',
     options: {
@@ -67,7 +67,7 @@ exports[`Storybook Configuration it should create a storybook configuration and 
 
 const config: StorybookConfig = {
   stories: ['../src/lib/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
-  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
+  addons: [],
   framework: {
     name: '@storybook/react-vite',
     options: {
@@ -121,7 +121,7 @@ exports[`Storybook Configuration it should create a storybook configuration and 
 
 const config: StorybookConfig = {
   stories: ['../src/lib/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
-  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
+  addons: [],
   framework: {
     name: '@storybook/react-vite',
     options: {

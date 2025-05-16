@@ -9,7 +9,7 @@ import react from '@vitejs/plugin-react';
 
 const config: StorybookConfig = {
   stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
-  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
+  addons: [],
   framework: {
     name: '@storybook/react-vite',
     options: {},
@@ -71,11 +71,7 @@ exports[`@nx/storybook:configuration for workspaces with Root project basic func
 
 const config: StorybookConfig = {
   stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
-  addons: [
-    '@storybook/addon-essentials',
-    '@storybook/addon-interactions',
-    '@nx/react/plugins/storybook',
-  ],
+  addons: [, '@nx/react/plugins/storybook'],
   framework: {
     name: '@storybook/react-webpack5',
     options: {},

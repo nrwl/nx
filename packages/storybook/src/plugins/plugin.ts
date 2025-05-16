@@ -20,7 +20,7 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
-import type { StorybookConfig } from '@storybook/types';
+import type { StorybookConfig } from 'storybook/internal/types';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 
 export interface StorybookPluginOptions {

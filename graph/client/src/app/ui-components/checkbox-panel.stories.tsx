@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import { CheckboxPanel } from './checkbox-panel';
 
 const meta: Meta<typeof CheckboxPanel> = {

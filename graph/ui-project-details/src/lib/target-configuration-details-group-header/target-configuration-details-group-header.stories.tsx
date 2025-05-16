@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import { TargetConfigurationGroupHeader } from './target-configuration-details-group-header';
 
 const meta: Meta<typeof TargetConfigurationGroupHeader> = {

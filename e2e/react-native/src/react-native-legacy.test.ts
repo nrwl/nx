@@ -172,7 +172,7 @@ describe('@nx/react-native (legacy)', () => {
 
   it('should create storybook with application', async () => {
     runCLI(
-      `generate @nx/react-native:storybook-configuration ${appName} --generateStories --no-interactive`
+      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`
     );
     checkFilesExist(
       `apps/${appName}/.storybook/main.ts`,
@@ -296,7 +296,7 @@ describe('@nx/react-native (legacy)', () => {
     }
 
     runCLI(
-      `generate @nx/react-native:storybook-configuration ${appName2} --generateStories --no-interactive`
+      `generate @nx/react:storybook-configuration ${appName2} --generateStories --no-interactive`
     );
     checkFilesExist(
       `apps/${appName2}/.storybook/main.ts`,

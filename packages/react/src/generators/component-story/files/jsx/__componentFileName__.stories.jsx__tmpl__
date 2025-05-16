@@ -1,7 +1,6 @@
 import componentName from './<%= componentImportFileName %>';
 <%_ if ( interactionTests ) { _%>
-import { within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { expect } from 'storybook/jest';
 <%_ } _%>
 
 export default {
@@ -21,9 +20,8 @@ export const Primary = {
 
 <%_ if ( interactionTests ) { _%>
 export const Heading: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    expect(canvas.getByText(/Welcome to <%=componentName%>!/gi)).toBeTruthy();
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/Welcome to <%=componentName%>!/gi)).toBeTruthy();
   },
 };
 <%_ } _%>

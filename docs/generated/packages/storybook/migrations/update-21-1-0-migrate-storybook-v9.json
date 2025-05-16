@@ -1,0 +1,13 @@
+{
+  "name": "update-21-1-0-migrate-storybook-v9",
+  "cli": "nx",
+  "version": "21.1.0-beta.0",
+  "description": "Update workspace to use Storybook v9",
+  "implementation": "/packages/storybook/src/migrations/update-21-1-0/update-sb-9.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/storybook",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}
