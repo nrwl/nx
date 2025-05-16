@@ -6,7 +6,6 @@ import {
 } from './lock-file-changes';
 import { TempFs } from '../../../../internal-testing-utils/temp-fs';
 import { JsonDiffType } from '../../../../utils/json-diff';
-// const tempFs = new TempFs('lock-file-changes-test');
 
 describe('getTouchedProjectsFromLockFile', () => {
   let graph: ProjectGraph;
