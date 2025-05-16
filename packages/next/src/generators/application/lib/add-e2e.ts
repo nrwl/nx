@@ -11,6 +11,7 @@ import { webStaticServeGenerator } from '@nx/web';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from './normalize-options';
+import { ERR_MODULE_NOT_FOUND } from '@nx/devkit/src/utils/package-json';
 
 export async function addE2e(host: Tree, options: NormalizedSchema) {
   const nxJson = readNxJson(host);
@@ -88,9 +89,17 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
 
     return e2eTask;
   } else if (options.e2eTestRunner === 'playwright') {
-    const { configurationGenerator } = ensurePackage<
-      typeof import('@nx/playwright')
-    >('@nx/playwright', nxVersion);
+    let playwrightPkg: typeof import('@nx/playwright');
+    try {
+      playwrightPkg = ensurePackage<
+        typeof playwrightPkg
+      >('@nx/playwright', nxVersion);
+    }
+    catch (e) {
+      if (e instanceof Error && e.cause === ERR_MODULE_NOT_FOUND) {
+        console.log("NOTE: @nx/playwright couldn't be found in this project's dependencies and will be installed once you remove the \"dryRun\" flag (or once you hit the \"Generate\" button if you are running this in Nx Console)")
+      }
+    }
 
     const packageJson: PackageJson = {
       name: options.e2eProjectName,
@@ -121,7 +130,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       );
     }
 
-    const e2eTask = await configurationGenerator(host, {
+    const e2eTask = await playwrightPkg.configurationGenerator(host, {
       rootProject: options.rootProject,
       project: options.e2eProjectName,
       skipFormat: true,
