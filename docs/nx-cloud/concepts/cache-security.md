@@ -32,9 +32,13 @@ You can strengthen your workspace security further by revoking all access to the
 
 While you can [specify a token](/ci/recipes/security/access-tokens) with the `nxCloudAccessToken` property in `nx.json`, this is visible to anyone who can view your codebase. A read-write token would give someone who may not even have permission to create a PR the access to add entries to the remote cache, which would then be used on other developer's machines and in CI. We recommend you restrict CI Access Tokens to CI use only and rely on [personal access tokens](/ci/recipes/security/personal-access-tokens) for local development instead.
 
-### Use a Read-Write Token in CI
+### Use Scoped Tokens in CI
 
-If you're in an environment (like an open source project) where you can't trust the contents of a pull request, we recommend restricting the use of a [read-write token](/ci/recipes/security/access-tokens) in CI to just be used on the `main` branch. If you know that everyone who can make a PR is a trusted developer, you can extend that [read-write token](/ci/recipes/security/access-tokens) to also include pull request branches.
+For all branches marked as protected, we recommend using a [read-write token](/ci/recipes/security/access-tokens#read-write-access). 
+`read-write` access tokens allow reading and writing from the shared primary cache for your workspace. 
+
+In all other branches, we recommend using a [read-only token](/ci/recipes/security/access-tokens#read-only-access). A `read-only` token only allows reading from the shared primary cache, and writing to a branch specific isolated cache. This allows for your CI Pipelines to still benefit from previous computational work, without opening up the possibility of cache poisoning into your trusted environments. Learn more about [access token architecture](/ci/recipes/security/access-tokens#scoped-security).
+
 
 ### No Need to Revoke Tokens After Employees Leave
 
