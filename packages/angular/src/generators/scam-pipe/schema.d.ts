@@ -4,6 +4,7 @@ export interface Schema {
   skipTests?: boolean;
   inlineScam?: boolean;
   export?: boolean;
+  typeSeparator?: string;
   skipFormat?: boolean;
 }
 

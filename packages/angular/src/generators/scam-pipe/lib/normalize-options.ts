@@ -3,11 +3,15 @@ import { names } from '@nx/devkit';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { validateClassName } from '../../utils/validations';
 import type { NormalizedSchema, Schema } from '../schema';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 
 export async function normalizeOptions(
   tree: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  options.typeSeparator ??= angularMajorVersion < 20 ? '.' : '-';
+
   const {
     artifactName: name,
     directory,
@@ -18,6 +22,7 @@ export async function normalizeOptions(
     name: options.name,
     path: options.path,
     suffix: 'pipe',
+    suffixSeparator: options.typeSeparator,
     allowedFileExtensions: ['ts'],
     fileExtension: 'ts',
   });
