@@ -477,9 +477,6 @@ describe('Remix Application', () => {
             "@types/react": "^18.2.0",
             "@types/react-dom": "^18.2.0",
           },
-          "engines": {
-            "node": ">=20",
-          },
           "name": "@proj/myapp",
           "nx": {
             "tags": [
@@ -693,9 +690,6 @@ describe('Remix Application', () => {
             "@remix-run/dev": "^2.15.0",
             "@types/react": "^18.2.0",
             "@types/react-dom": "^18.2.0",
-          },
-          "engines": {
-            "node": ">=20",
           },
           "name": "@proj/myapp",
           "private": true,
