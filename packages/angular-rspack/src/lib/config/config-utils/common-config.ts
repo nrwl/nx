@@ -22,6 +22,7 @@ export async function getCommonConfig(
   i18nHash: string | (() => void),
   hashFormat: HashFormat
 ) {
+  const isDevServer = process.env['WEBPACK_SERVE'];
   const isProduction = process.env['NODE_ENV'] === 'production';
   const crossOriginLoading = getCrossOriginLoading(normalizedOptions);
   const sourceMapOptions = configureSourceMap(normalizedOptions.sourceMap);
@@ -65,7 +66,7 @@ export async function getCommonConfig(
       sourceMapFilename: normalizedOptions.sourceMap.scripts
         ? '[file].map'
         : undefined,
-      scriptType: 'module',
+      ...(isDevServer ? {} : { scriptType: 'module' }),
     },
     resolve: {
       extensions: ['.ts', '.tsx', '.mjs', '.js'],
@@ -102,7 +103,6 @@ export async function getCommonConfig(
     module: {
       parser: {
         javascript: {
-          requireContext: false,
           url: false,
         },
       },

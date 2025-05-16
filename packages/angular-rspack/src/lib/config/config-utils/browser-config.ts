@@ -18,6 +18,7 @@ export async function getBrowserConfig(
   hashFormat: HashFormat,
   defaultConfig: Configuration
 ): Promise<Configuration> {
+  const isDevServer = process.env['WEBPACK_SERVE'];
   const isProduction = process.env['NODE_ENV'] === 'production';
   const { root } = normalizedOptions;
 
@@ -51,8 +52,7 @@ export async function getBrowserConfig(
       cssFilename: `[name]${hashFormat.file}.css`,
       filename: `[name]${hashFormat.chunk}.js`,
       chunkFilename: `[name]${hashFormat.chunk}.js`,
-      scriptType: 'module',
-      module: true,
+      ...(isDevServer ? {} : { scriptType: 'module', module: true }),
     },
     optimization: getOptimization(normalizedOptions, 'browser'),
     module: {
