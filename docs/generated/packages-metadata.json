@@ -470,6 +470,16 @@
         "type": "migration"
       },
       {
+        "description": "Update the generator defaults to maintain the previous style guide behavior.",
+        "file": "generated/packages/angular/migrations/set-generator-defaults-for-previous-style-guide.json",
+        "hidden": false,
+        "name": "set-generator-defaults-for-previous-style-guide",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/set-generator-defaults-for-previous-style-guide",
+        "type": "migration"
+      },
+      {
         "description": "",
         "file": "generated/packages/angular/migrations/21.2.0-package-updates.json",
         "hidden": false,
