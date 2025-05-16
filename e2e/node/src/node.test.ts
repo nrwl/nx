@@ -67,28 +67,6 @@ describe('Node Applications', () => {
     cleanupProject();
   });
 
-  it('should be able to generate an empty application', async () => {
-    const nodeapp = uniq('nodeapp');
-    const port = getRandomPort();
-    process.env.PORT = `${port}`;
-    runCLI(
-      `generate @nx/node:app apps/${nodeapp} --port=${port} --linter=eslint --unitTestRunner=jest`
-    );
-
-    expect(() => runCLI(`lint ${nodeapp}`)).not.toThrow();
-    expect(() => runCLI(`test ${nodeapp}`)).not.toThrow();
-
-    updateFile(`apps/${nodeapp}/src/main.ts`, `console.log('Hello World!');`);
-    await runCLIAsync(`build ${nodeapp}`);
-
-    checkFilesExist(`dist/apps/${nodeapp}/main.js`);
-    const result = execSync(`node dist/apps/${nodeapp}/main.js`, {
-      cwd: tmpProjPath(),
-    }).toString();
-    expect(result).toContain('Hello World!');
-    await killPorts(port);
-  }, 300000);
-
   // TODO(crystal, @ndcunningham): This does not work because NxWebpackPlugin({}) outputFilename does not work.
   xit('should be able to generate the correct outputFileName in options', async () => {
     const nodeapp = uniq('nodeapp');

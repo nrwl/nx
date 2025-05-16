@@ -11,6 +11,7 @@ import {
   babelPresetReactVersion,
   lessVersion,
   sassVersion,
+  testingLibraryDomVersion,
   testingLibraryReactVersion,
   tsLibVersion,
   typesNodeVersion,
@@ -52,6 +53,7 @@ export async function installCommonDependencies(
 
   if (options.unitTestRunner && options.unitTestRunner !== 'none') {
     devDependencies['@testing-library/react'] = testingLibraryReactVersion;
+    devDependencies['@testing-library/dom'] = testingLibraryDomVersion;
   }
 
   const baseInstallTask = addDependenciesToPackageJson(
