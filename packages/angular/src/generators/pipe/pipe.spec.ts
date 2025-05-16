@@ -1,4 +1,4 @@
-import { addProjectConfiguration, Tree } from '@nx/devkit';
+import { addProjectConfiguration, type Tree, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { pipeGenerator } from './pipe';
 import type { Schema } from './schema';
@@ -21,10 +21,44 @@ describe('pipe generator', () => {
     await generatePipeWithDefaultOptions(tree, { skipFormat: false });
 
     // ASSERT
-    expect(tree.read('test/src/app/test.pipe.ts', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('test/src/app/test-pipe.ts', 'utf-8')).toMatchSnapshot();
     expect(
-      tree.read('test/src/app/test.pipe.spec.ts', 'utf-8')
+      tree.read('test/src/app/test-pipe.spec.ts', 'utf-8')
     ).toMatchSnapshot();
+  });
+
+  it('should generate files with the provided type separator', async () => {
+    await generatePipeWithDefaultOptions(tree, {
+      typeSeparator: '.',
+      skipFormat: false,
+    });
+
+    expect(tree.read('test/src/app/test.pipe.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { Pipe, PipeTransform } from '@angular/core';
+
+      @Pipe({
+        name: 'test',
+      })
+      export class TestPipe implements PipeTransform {
+        transform(value: unknown, ...args: unknown[]): unknown {
+          return null;
+        }
+      }
+      "
+    `);
+    expect(tree.read('test/src/app/test.pipe.spec.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { TestPipe } from './test.pipe';
+
+      describe('TestPipe', () => {
+        it('create an instance', () => {
+          const pipe = new TestPipe();
+          expect(pipe).toBeTruthy();
+        });
+      });
+      "
+    `);
   });
 
   it('should handle path with file extension', async () => {
@@ -61,7 +95,7 @@ describe('pipe generator', () => {
 
     // ASSERT
     expect(
-      tree.exists('test/src/app/my-pipes/test/test.pipe.spec.ts')
+      tree.exists('test/src/app/my-pipes/test/test-pipe.spec.ts')
     ).toBeFalsy();
   });
 
@@ -86,9 +120,9 @@ describe('pipe generator', () => {
       });
 
       // ASSERT
-      expect(tree.read('test/src/app/test.pipe.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('test/src/app/test-pipe.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read('test/src/app/test.pipe.spec.ts', 'utf-8')
+        tree.read('test/src/app/test-pipe.spec.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
         tree.read('test/src/app/test.module.ts', 'utf-8')
@@ -106,10 +140,10 @@ describe('pipe generator', () => {
 
       // ASSERT
       expect(
-        tree.read('test/src/app/test/test.pipe.ts', 'utf-8')
+        tree.read('test/src/app/test/test-pipe.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('test/src/app/test/test.pipe.spec.ts', 'utf-8')
+        tree.read('test/src/app/test/test-pipe.spec.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
         tree.read('test/src/app/test.module.ts', 'utf-8')
@@ -127,10 +161,10 @@ describe('pipe generator', () => {
 
       // ASSERT
       expect(
-        tree.read('test/src/app/my-pipes/test/test.pipe.ts', 'utf-8')
+        tree.read('test/src/app/my-pipes/test/test-pipe.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('test/src/app/my-pipes/test/test.pipe.spec.ts', 'utf-8')
+        tree.read('test/src/app/my-pipes/test/test-pipe.spec.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
         tree.read('test/src/app/test.module.ts', 'utf-8')
@@ -167,6 +201,47 @@ describe('pipe generator', () => {
       expect(tree.read('test/src/app/test.module.ts', 'utf-8')).not.toContain(
         'TestPipe'
       );
+    });
+  });
+
+  describe('compat', () => {
+    it('should generate the files with the "." type separator for versions below v20', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        json.dependencies = {
+          ...json.dependencies,
+          '@angular/core': '~19.2.0',
+        };
+        return json;
+      });
+
+      await generatePipeWithDefaultOptions(tree, { skipFormat: false });
+
+      expect(tree.read('test/src/app/test.pipe.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { Pipe, PipeTransform } from '@angular/core';
+
+        @Pipe({
+          name: 'test',
+        })
+        export class TestPipe implements PipeTransform {
+          transform(value: unknown, ...args: unknown[]): unknown {
+            return null;
+          }
+        }
+        "
+      `);
+      expect(tree.read('test/src/app/test.pipe.spec.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { TestPipe } from './test.pipe';
+
+        describe('TestPipe', () => {
+          it('create an instance', () => {
+            const pipe = new TestPipe();
+            expect(pipe).toBeTruthy();
+          });
+        });
+        "
+      `);
     });
   });
 });
