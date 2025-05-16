@@ -46,7 +46,7 @@ describe('Angular Module Federation', () => {
     let rspackConfigFileContents = readFile(join(hostApp, 'rspack.config.ts'));
     let updatedConfigFileContents = rspackConfigFileContents.replace(
       `maximumError: '1mb'`,
-      `maximumError: '3mb'`
+      `maximumError: '11mb'`
     );
     updateFile(join(hostApp, 'rspack.config.ts'), updatedConfigFileContents);
 
@@ -57,7 +57,7 @@ describe('Angular Module Federation', () => {
     rspackConfigFileContents = readFile(join(remoteApp1, 'rspack.config.ts'));
     updatedConfigFileContents = rspackConfigFileContents.replace(
       `maximumError: '1mb'`,
-      `maximumError: '3mb'`
+      `maximumError: '11mb'`
     );
     updateFile(join(remoteApp1, 'rspack.config.ts'), updatedConfigFileContents);
 

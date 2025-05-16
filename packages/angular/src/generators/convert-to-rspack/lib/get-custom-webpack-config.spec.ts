@@ -16,7 +16,7 @@ describe('convertconvertWebpackConfigToUseNxModuleFederationPlugin', () => {
     // ASSERT
     expect(newWebpackConfigContents).toMatchInlineSnapshot(`
       "
-            import { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } from '@nx/module-federation/rspack';
+            import { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } from '@nx/module-federation/angular';
             import config from './module-federation.config';
             
           

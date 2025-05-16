@@ -112,7 +112,8 @@ export async function host(tree: Tree, schema: Schema) {
     installTasks.push(ssrInstallTask);
   }
 
-  for (const remote of remotesToGenerate) {
+  for (let i = 0; i < remotesToGenerate.length; i++) {
+    const remote = remotesToGenerate[i];
     const remoteDirectory = options.directory
       ? joinPathFragments(options.directory, '..', remote)
       : appRoot === '.'
@@ -123,6 +124,7 @@ export async function host(tree: Tree, schema: Schema) {
       name: remote,
       directory: remoteDirectory,
       host: hostProjectName,
+      port: isRspack ? 4200 + i + 1 : undefined,
       skipFormat: true,
       standalone: options.standalone,
       typescriptConfiguration,

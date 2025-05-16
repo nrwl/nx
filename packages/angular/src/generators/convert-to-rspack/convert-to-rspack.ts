@@ -48,12 +48,7 @@ const RENAMED_OPTIONS = {
 
 const DEFAULT_PORT = 4200;
 
-const REMOVED_OPTIONS = [
-  'buildOptimizer',
-  'buildTarget',
-  'browserTarget',
-  'publicHost',
-];
+const REMOVED_OPTIONS = ['buildOptimizer', 'buildTarget', 'browserTarget'];
 
 function normalizeFromProjectRoot(
   tree: Tree,
