@@ -35,9 +35,19 @@ You can configure an access token in CI by setting the `NX_CLOUD_ACCESS_TOKEN` e
 We recommend setting up a `read-write` and `read-only` in your CI based on protected vs unprotected branches. You can leverage your CI providers.
 
 ### GitHub Actions
-### 
 
-The following example shows how to set the `NX_CLOUD_ACCESS_TOKEN` environment variable in a GitHub Actions workflow. You will need to add the `secrets.NX_CLOUD_ACCESS_TOKEN` secret to your repository based on instructions provided by your CI provider (see [GitHub Actions](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions) or [GitLab](https://docs.gitlab.com/ee/ci/variables/#define-a-cicd-variable-in-the-ui) instructions).
+GitHub allows specifying specific secrets for each environment, where an environment can be on a specific branch.
+You can read the [official GitHub Actions documentation](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-an-environment) for more details.
+
+1. In your repository, navigate to Settings tab
+2. Click on "Environments" and create an environment for you protected branches.
+   - Typically, organizations already have some kind of 'release' or 'protected' environments that can be leveraged.
+   - If you do not have any protected branches, it's recommended to make at least your _default_ branch a protected branch i.e. `main`/`master`
+3. Add a restriction for how the environment will be applied, and apply to all protected branches.
+4. Add the read-write access token with the name `NX_CLOUD_ACCESS_TOKEN` to your environment.
+5. Click the _Secrets and variables_ > _Actions_ tab in the sidebar.
+6. add the `read-only` access token with the name `NX_CLOUD_ACCESS_TOKEN` to the repository secrets.
+7. Now you should see 2 secrets where 1 is a part of the protected environment and the other is the default repository secrets
 
 ```yml {% fileName=".github/workflows/ci.yml" highlightLines=["29-32"] %}
 name: CI
@@ -50,6 +60,104 @@ jobs:
     runs-on: ubuntu-latest
     steps: ...
 ```
+
+### GitLab
+
+GitLab allows creating variables scoped to specific variables. You can read the [Official GitLab documentation](https://docs.gitlab.com/ci/environments/#limit-the-environment-scope-of-a-cicd-variable) for more details.
+
+1. In your project, navigate to _Operate_ > _Environments_ and create a new environment. You do not need to fill out the External Url or GitLab agent.
+   - Most projects already have a production/protected environments, so we recommend using this one if it's already defined.
+2. In your project, navigate to _Settings_ > _CI/CD_ tab and expand the _Variables_ section.
+3. Click on _Add variable_ and fill in the following information
+   - Type: _Variable_
+   - Environments: _All_
+   - Visibility: _Masked and hidden_
+   - Flags: uncheck _Protected variable_
+   - Description: "read-only token for nx-cloud"
+   - Key: `NX_CLOUD_ACCESS_TOKEN`
+   - Value: Your read only token from Nx Cloud
+4. Click _Add variable_
+5. Click on _Add variable_ again and fill in the following information:
+   - Type: _Variable_
+   - Environments: Your protected environment created in step 1
+   - Visibility: _Masked and hidden_
+   - Flags: check _Protected variable_
+   - Description: "read-write token for nx-cloud"
+   - Key: `NX_CLOUD_ACCESS_TOKEN`
+   - Value: Your read-write token from Nx Cloud
+6. Click _Add variable_
+7. Now you should see 2 secrets where 1 is a part of the protected & tagged to the environment and the other is not.
+8. Update your pipeline to include steps where you want to write to the nx cache with the
+
+```yaml {% fileName=".gitlab-ci.yml" highlightLines=["2-3"] %}
+<job-name>:
+  environment:
+    name: <environment-name>
+```
+
+{% callout type="check" title="Can't someone change the step environment?" %}
+You can of course edit the environment a step runs in the pipeline which would make you believe they can use the read-write, but because our read-write token is also marked with the _Protected variable_ flag, CI can only read the variable when running in a protected branch. As long as you perform code reviews and do not allow direct write access to protected branches, then cache integrity can be maintained.
+{%/callout %}
+
+### BitBucket Cloud
+
+BitBucket Cloud supports setting a environment variables per environment called _Deployment variables_. You can read the [official BitBucket Pipelines documentation](https://support.atlassian.com/bitbucket-cloud/docs/variables-and-secrets/#Deployment-variables) for more details.
+
+1. In your repository, navigate to the _Repository settings_ > _Deployment_
+2. Select an environment you have configured for protected branches, or create a new one and protect your primary branches.
+   - Note: selecting branch protection rules is a premium feature of BitBucket Cloud
+3. Set the environment variable `NX_CLOUD_ACCESS_TOKEN` with the read-write token from Nx Cloud.
+4. Navigate to the _Repository settings_ > _Repository variables_ tab and set the variable `NX_CLOUD_ACCESS_TOKEN` with the read-only token from Nx Cloud.
+5. Update the `bitbucket-pipelines.yml` file to include the deployment name mentioned in step 2
+
+```yaml {% fileName="bitbucket-pipelines.yml" highlightLines=[6] %}
+pipelines:
+  branches:
+    main:
+      - step:
+          name: 'main checks'
+          deployment: Production
+          ...
+```
+
+### Azure Pipelines
+
+### CircleCI
+
+Circle CI allows creating _contexts_ and restricting those based on various rules. You can read the [official CircleCI documentation](https://circleci.com/docs/contexts/#restrict-a-context) for more details.
+
+1. In your organization, navigate to _Organization settings_ > _Contexts_ and create a new context.
+   - If you already have a context for protected environments, we recommend reusing that context.
+2. Click on _Add Expression Restriction_ that restricts the context to protected branches only such as only the `main` branch.
+   - `pipeline.git.branch == "main"`
+3. Click on _Add Environment Variable_ and add the `NX_CLOUD_ACCESS_TOKEN` environment variable with the read-write token from Nx Cloud.
+4. Back on the organization home page, navigate to your projects, then view the pipeline settings
+5. Navigate to _Environment Variables_ and click _Add Environment Variable_ and add the `NX_CLOUD_ACCESS_TOKEN` environment variable with the read-only token from Nx Cloud.
+6. Update your pipeline to include steps where you want to write to the nx cache with the correct contexts
+
+```yaml {% fileName=".circleci/config.yml" highlightLines=["10-19"] %}
+jobs:
+  run-tests-protected:
+    - ...
+  run-tests-prs:
+    - ...
+
+workflows:
+  my-workflow:
+    jobs:
+      - run-tests-protected:
+          context:
+            - protected-branches
+          filters:
+            branches:
+              only: main
+      - run-tests-prs:
+          filters:
+            branches:
+              ignore: main
+```
+
+### Jenkins
 
 ### Legacy methods of setting CI Access Tokens
 
