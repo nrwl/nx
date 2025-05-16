@@ -6,7 +6,7 @@ import { convertDirectiveToScam } from './convert-directive-to-scam';
 describe('convertDirectiveToScam', () => {
   it('should create the scam directive inline correctly', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -26,18 +26,18 @@ describe('convertDirectiveToScam', () => {
     convertDirectiveToScam(tree, {
       path: 'apps/app1/src/app/example/example',
       directory: 'apps/app1/src/app/example',
-      fileName: 'example.directive',
-      filePath: 'apps/app1/src/app/example/example.directive.ts',
+      fileName: 'example',
+      filePath: 'apps/app1/src/app/example/example.ts',
       name: 'example',
       projectName: 'app1',
       export: false,
       inlineScam: true,
-      symbolName: 'ExampleDirective',
+      symbolName: 'Example',
     });
 
     // ASSERT
     const directiveSource = tree.read(
-      'apps/app1/src/app/example/example.directive.ts',
+      'apps/app1/src/app/example/example.ts',
       'utf-8'
     );
     expect(directiveSource).toMatchInlineSnapshot(`
@@ -48,23 +48,23 @@ describe('convertDirectiveToScam', () => {
         selector: '[example]',
         standalone: false
       })
-      export class ExampleDirective {
+      export class Example {
         constructor() {}
       }
 
       @NgModule({
         imports: [CommonModule],
-        declarations: [ExampleDirective],
-        exports: [ExampleDirective],
+        declarations: [Example],
+        exports: [Example],
       })
-      export class ExampleDirectiveModule {}
+      export class ExampleModule {}
       "
     `);
   });
 
   it('should create the scam directive separately correctly', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -84,13 +84,13 @@ describe('convertDirectiveToScam', () => {
     convertDirectiveToScam(tree, {
       path: 'apps/app1/src/app/example/example',
       directory: 'apps/app1/src/app/example',
-      fileName: 'example.directive',
-      filePath: 'apps/app1/src/app/example/example.directive.ts',
+      fileName: 'example',
+      filePath: 'apps/app1/src/app/example/example.ts',
       name: 'example',
       projectName: 'app1',
       export: false,
       inlineScam: false,
-      symbolName: 'ExampleDirective',
+      symbolName: 'Example',
     });
 
     // ASSERT
@@ -101,14 +101,14 @@ describe('convertDirectiveToScam', () => {
     expect(directiveModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
-      import { ExampleDirective } from './example.directive';
+      import { Example } from './example';
 
       @NgModule({
         imports: [CommonModule],
-        declarations: [ExampleDirective],
-        exports: [ExampleDirective],
+        declarations: [Example],
+        exports: [Example],
       })
-      export class ExampleDirectiveModule {}
+      export class ExampleModule {}
       "
     `);
   });
