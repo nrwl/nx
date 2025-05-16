@@ -2,6 +2,10 @@ import { Tree } from '../../generators/tree';
 import ignore from 'ignore';
 
 export default async function addGitignoreEntry(tree: Tree) {
+  if (!tree.exists('nx.json')) {
+    return;
+  }
+
   const GITIGNORE_ENTRIES = [
     '.cursor/rules/nx-rules.mdc',
     '.github/instructions/nx.instructions.md',
