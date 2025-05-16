@@ -42,39 +42,39 @@
           },
           {
             "name": "Tutorials",
-            "path": "/getting-started/tutorials",
+            "path": "/tutorials",
             "id": "tutorials",
             "isExternal": false,
             "children": [
               {
                 "name": "TypeScript Monorepo",
-                "path": "/getting-started/tutorials/typescript-packages-tutorial",
+                "path": "/tutorials/1-ts-packages/1t-introduction/1-welcome",
                 "id": "typescript-packages-tutorial",
-                "isExternal": false,
+                "isExternal": true,
                 "children": [],
                 "disableCollapsible": false
               },
               {
                 "name": "React Monorepo",
-                "path": "/getting-started/tutorials/react-monorepo-tutorial",
+                "path": "/tutorials/2-react-monorepo/1r-introduction/1-welcome",
                 "id": "react-monorepo-tutorial",
-                "isExternal": false,
+                "isExternal": true,
                 "children": [],
                 "disableCollapsible": false
               },
               {
                 "name": "Angular Monorepo",
-                "path": "/getting-started/tutorials/angular-monorepo-tutorial",
+                "path": "/tutorials/3-angular-monorepo/1a-introduction/1-welcome",
                 "id": "angular-monorepo-tutorial",
-                "isExternal": false,
+                "isExternal": true,
                 "children": [],
                 "disableCollapsible": false
               },
               {
                 "name": "Gradle Monorepo",
-                "path": "/getting-started/tutorials/gradle-tutorial",
+                "path": "/tutorials/4-gradle/1g-introduction/1-welcome",
                 "id": "gradle-tutorial",
-                "isExternal": false,
+                "isExternal": true,
                 "children": [],
                 "disableCollapsible": false
               }
@@ -118,39 +118,39 @@
       },
       {
         "name": "Tutorials",
-        "path": "/getting-started/tutorials",
+        "path": "/tutorials",
         "id": "tutorials",
         "isExternal": false,
         "children": [
           {
             "name": "TypeScript Monorepo",
-            "path": "/getting-started/tutorials/typescript-packages-tutorial",
+            "path": "/tutorials/1-ts-packages/1t-introduction/1-welcome",
             "id": "typescript-packages-tutorial",
-            "isExternal": false,
+            "isExternal": true,
             "children": [],
             "disableCollapsible": false
           },
           {
             "name": "React Monorepo",
-            "path": "/getting-started/tutorials/react-monorepo-tutorial",
+            "path": "/tutorials/2-react-monorepo/1r-introduction/1-welcome",
             "id": "react-monorepo-tutorial",
-            "isExternal": false,
+            "isExternal": true,
             "children": [],
             "disableCollapsible": false
           },
           {
             "name": "Angular Monorepo",
-            "path": "/getting-started/tutorials/angular-monorepo-tutorial",
+            "path": "/tutorials/3-angular-monorepo/1a-introduction/1-welcome",
             "id": "angular-monorepo-tutorial",
-            "isExternal": false,
+            "isExternal": true,
             "children": [],
             "disableCollapsible": false
           },
           {
             "name": "Gradle Monorepo",
-            "path": "/getting-started/tutorials/gradle-tutorial",
+            "path": "/tutorials/4-gradle/1g-introduction/1-welcome",
             "id": "gradle-tutorial",
-            "isExternal": false,
+            "isExternal": true,
             "children": [],
             "disableCollapsible": false
           }
@@ -159,33 +159,33 @@
       },
       {
         "name": "TypeScript Monorepo",
-        "path": "/getting-started/tutorials/typescript-packages-tutorial",
+        "path": "/tutorials/1-ts-packages/1t-introduction/1-welcome",
         "id": "typescript-packages-tutorial",
-        "isExternal": false,
+        "isExternal": true,
         "children": [],
         "disableCollapsible": false
       },
       {
         "name": "React Monorepo",
-        "path": "/getting-started/tutorials/react-monorepo-tutorial",
+        "path": "/tutorials/2-react-monorepo/1r-introduction/1-welcome",
         "id": "react-monorepo-tutorial",
-        "isExternal": false,
+        "isExternal": true,
         "children": [],
         "disableCollapsible": false
       },
       {
         "name": "Angular Monorepo",
-        "path": "/getting-started/tutorials/angular-monorepo-tutorial",
+        "path": "/tutorials/3-angular-monorepo/1a-introduction/1-welcome",
         "id": "angular-monorepo-tutorial",
-        "isExternal": false,
+        "isExternal": true,
         "children": [],
         "disableCollapsible": false
       },
       {
         "name": "Gradle Monorepo",
-        "path": "/getting-started/tutorials/gradle-tutorial",
+        "path": "/tutorials/4-gradle/1g-introduction/1-welcome",
         "id": "gradle-tutorial",
-        "isExternal": false,
+        "isExternal": true,
         "children": [],
         "disableCollapsible": false
       },

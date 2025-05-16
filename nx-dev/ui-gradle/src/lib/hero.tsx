@@ -31,7 +31,7 @@ export function Hero(): ReactElement {
 
         <div className="mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row">
           <ButtonLink
-            href="https://nx.dev/getting-started/tutorials/gradle-tutorial"
+            href="https://nx.dev/tutorials/4-gradle/1g-introduction/1-welcome"
             variant="primary"
             size="default"
             title="Get Started"

@@ -11,14 +11,14 @@ previews:
 
 {/* <VideoLink link="https://youtu.be/gc4N7kxiA50?t=530"></VideoLink> */}
 
-Nx automatically detects the dependencies between the various parts of your workspace and builds a [project graph](/features/explore-graph). This graph is used by Nx to perform various optimizations such as determining the correct order of execution when running tasks like `npx nx build`, identifying [affected projects](/features/run-tasks#run-tasks-on-projects-affected-by-a-pr) and more. Interestingly you can also visualize it.
+Nx automatically detects the dependencies between the various parts of your workspace and builds a [project graph](/features/explore-graph). This graph is used by Nx to perform various optimizations such as determining the correct order of execution when running tasks like `nx build`, identifying [affected projects](/features/run-tasks#run-tasks-on-projects-affected-by-a-pr) and more. Interestingly you can also visualize it.
 
 Just run:
 
 ```shell
-npx nx graph
+nx graph
 ```
 
 Notice how `ui` is not yet connected to anything because we didn't import it in any of our projects.
 
-Exercise for you: change the codebase such that `ui` is used by `orders` and `products`. Note: you need to restart the `npx nx graph` command to update the graph visualization.
+Exercise for you: change the codebase such that `ui` is used by `orders` and `products`. Note: you need to restart the `nx graph` command to update the graph visualization.

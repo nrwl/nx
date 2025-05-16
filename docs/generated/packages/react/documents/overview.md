@@ -19,7 +19,7 @@ It provides:
 To create a new workspace with React, run `npx create-nx-workspace@latest --preset=react-standalone`.
 
 {% callout type="note" title="React Tutorial" %}
-For a full tutorial experience, follow the [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
+For a full tutorial experience, follow the [React Monorepo Tutorial](/tutorials/2-react-monorepo/1r-introduction/1-welcome)
 {% /callout %}
 
 ### Installation
@@ -135,7 +135,7 @@ The library in `dist` is publishable to npm or a private registry.
 
 ## More Documentation
 
-- [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
+- [React Monorepo Tutorial](/tutorials/2-react-monorepo/1r-introduction/1-welcome)
 - [Using Cypress](/nx-api/cypress)
 - [Using Jest](/nx-api/jest)
 - [Using Storybook](/recipes/storybook/overview-react)

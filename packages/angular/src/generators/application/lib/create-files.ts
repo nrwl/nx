@@ -60,7 +60,7 @@ export async function createFiles(
     connectCloudUrl,
     tutorialUrl: options.standalone
       ? 'https://nx.dev/getting-started/tutorials/angular-standalone-tutorial?utm_source=nx-project'
-      : 'https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx-project',
+      : 'https://nx.dev/tutorials/3-angular-monorepo/1a-introduction/1-welcome?utm_source=nx-project',
     tpl: '',
   };
 
