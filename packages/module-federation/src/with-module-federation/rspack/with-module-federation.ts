@@ -24,6 +24,7 @@ export async function withModuleFederation(
       return config;
     };
   }
+  const isDevServer = process.env['WEBPACK_SERVE'];
 
   const { sharedDependencies, sharedLibraries, mappedRemotes } =
     getModuleFederationConfig(options);
@@ -42,6 +43,9 @@ export async function withModuleFederation(
 
     config.optimization = {
       ...(config.optimization ?? {}),
+      runtimeChunk: isDevServer
+        ? config.optimization?.runtimeChunk ?? undefined
+        : false,
     };
 
     if (
