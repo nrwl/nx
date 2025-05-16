@@ -19,6 +19,9 @@ import {
   LifebuoyIcon,
   BookOpenIcon,
   ShieldCheckIcon,
+  ServerStackIcon,
+  ArrowTrendingUpIcon,
+  CommandLineIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
 import { DiscordIcon } from '../discord-icon';
@@ -233,6 +236,44 @@ export const eventItems: MenuItem[] = [
   },
 ];
 
+export const solutionsItems: MenuItem[] = [
+  {
+    name: 'Developers',
+    description:
+      'Accelerate your CI with Nx: smart cache sharing, flaky-test auto‑retries, parallel runs & dynamic agents.',
+    href: '/solutions/engineering',
+    icon: CommandLineIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Engineering Managers',
+    description:
+      'Boost efficiency with powerful monorepos and intelligent CI. Build, test, and deploy faster, freeing teams to innovate.',
+    href: '/solutions/management',
+    icon: BoltIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Platform & DevOps Teams',
+    description:
+      'Get dependable, out-of-the-box CI that scales effortlessly. Cut costs and boost speed with smart caching, distribution, and enhanced security.',
+    icon: ServerStackIcon,
+    href: '/solutions/platform',
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'CTOs & VPs of Engineering',
+    description:
+      'Supercharge engineering ROI with faster delivery, lower CI costs, and fewer risks. Scale safely and future-proof your stack.',
+    icon: ArrowTrendingUpIcon,
+    href: '/solutions/leadership',
+    isNew: false,
+    isHighlight: false,
+  },
+];
 export const companyItems: MenuItem[] = [
   {
     name: 'About Us',
@@ -261,9 +302,9 @@ export const companyItems: MenuItem[] = [
 ];
 export const enterpriseItems: MenuItem[] = [
   {
-    name: 'Solutions',
+    name: 'Overview',
     description:
-      "Accelerate your organization's journey to tighter collaboration, better developer experience, and speed.",
+      "Accelerate your organization's journey to tighter collaboration, better developer experience, and speed…lots of speed.",
     href: '/enterprise',
     icon: BuildingOfficeIcon,
     isNew: false,
