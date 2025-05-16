@@ -1,6 +1,5 @@
 import * as yargsParser from 'yargs-parser';
 import { ExecutorContext } from '../../config/misc-interfaces';
-import { isTuiEnabled } from '../../tasks-runner/is-tui-enabled';
 import { PseudoTerminal } from '../../tasks-runner/pseudo-terminal';
 import {
   ParallelRunningTasks,
@@ -129,14 +128,12 @@ export async function runCommands(
     !normalized.commands[0].prefix &&
     normalized.usePty;
 
-  const tuiEnabled = isTuiEnabled();
-
   try {
     const runningTask = isSingleCommandAndCanUsePseudoTerminal
       ? await runSingleCommandWithPseudoTerminal(normalized, context)
       : options.parallel
       ? new ParallelRunningTasks(normalized, context)
-      : new SeriallyRunningTasks(normalized, context, tuiEnabled);
+      : new SeriallyRunningTasks(normalized, context);
     return runningTask;
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {

@@ -21,6 +21,13 @@ import {
   RunCommandsCommandOptions,
 } from './run-commands.impl';
 
+const cleanupFns: Array<() => void> = [];
+process.on('exit', () => {
+  for (const fn of cleanupFns) {
+    fn();
+  }
+});
+
 export class ParallelRunningTasks implements RunningTask {
   private readonly childProcesses: RunningNodeProcess[];
   private readyWhenStatus: { stringToMatch: string; found: boolean }[];
@@ -175,11 +182,7 @@ export class SeriallyRunningTasks implements RunningTask {
   private error: any;
   private outputCallbacks: Array<(terminalOutput: string) => void> = [];
 
-  constructor(
-    options: NormalizedRunCommandsOptions,
-    context: ExecutorContext,
-    private readonly tuiEnabled: boolean
-  ) {
+  constructor(options: NormalizedRunCommandsOptions, context: ExecutorContext) {
     this.run(options, context)
       .catch((e) => {
         this.error = e;
@@ -333,6 +336,7 @@ class RunningNodeProcess implements RunningTask {
       cwd,
       windowsHide: false,
     });
+    cleanupFns.push(() => this.kill());
 
     this.addListeners(commandConfig, streamOutput);
   }
@@ -472,12 +476,16 @@ async function createProcessWithPseudoTty(
   tty: boolean,
   envFile?: string
 ) {
-  return pseudoTerminal.runCommand(commandConfig.command, {
+  const pseudoTtyProcess = pseudoTerminal.runCommand(commandConfig.command, {
     cwd,
     jsEnv: processEnv(color, cwd, env, envFile),
     quiet: !streamOutput,
     tty,
   });
+
+  cleanupFns.push(() => pseudoTtyProcess.kill());
+
+  return pseudoTtyProcess;
 }
 
 function addColorAndPrefix(out: string, config: RunCommandsCommandOptions) {
