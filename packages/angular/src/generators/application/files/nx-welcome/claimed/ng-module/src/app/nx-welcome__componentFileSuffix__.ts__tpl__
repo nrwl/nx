@@ -680,15 +680,13 @@ import { Component, ViewEncapsulation } from '@angular/core';
                 </h2>
               </div>
                 <p>
-                  Your Nx Cloud remote cache setup is almost complete.
+                  Your workspace is connected to Nx Cloud.
                 </p>
-                
                 <a
-                  href="<%= connectCloudUrl %>"
+                  href="https://nx.dev/ci/intro/ci-with-nx#learn-about-nx-on-ci"
                   target="_blank"
                   rel="noreferrer"
-                >
-                Click here to finish
+                > Learn about Nx on CI
                 </a>
             </div>
           </div>
@@ -808,4 +806,4 @@ nx g &#64;nx/angular:component ui/src/lib/button</pre>
   styles: [],
   encapsulation: ViewEncapsulation.None,
 })
-export class NxWelcomeComponent {}
+export class NxWelcome<%= componentType %> {}

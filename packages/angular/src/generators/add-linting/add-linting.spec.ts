@@ -168,7 +168,9 @@ describe('addLinting generator', () => {
                           prefix: "my-org",
                           style: "kebab-case"
                       }
-                  ]
+                  ],
+                  "@angular-eslint/component-class-suffix": "off",
+                  "@angular-eslint/directive-class-suffix": "off"
               }
           },
           {

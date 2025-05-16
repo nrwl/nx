@@ -1,10 +1,8 @@
 import { Component, ViewEncapsulation } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: '<%= nxWelcomeSelector %>',<% if (setStandaloneTrue) { %>
-  standalone: true,<% } %>
-  imports: [CommonModule],
+  selector: '<%= nxWelcomeSelector %>',<% if (setStandaloneFalse) { %>
+  standalone: false,<% } %>
   template: `
     <!--
      * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -169,6 +167,7 @@ import { CommonModule } from '@angular/common';
         flex-direction: column;
         gap: 2rem;
       }
+
       #learning-materials {
         padding: 2.5rem 2rem;
       }
@@ -234,7 +233,6 @@ import { CommonModule } from '@angular/common';
         color: rgba(255, 255, 255, 1);
         background-color: hsla(162, 55%, 33%, 1);
       }
-
       .list-item-link:hover > span > span {
         color: rgba(243, 244, 246, 1);
       }
@@ -338,16 +336,16 @@ import { CommonModule } from '@angular/common';
         margin-top: 1rem;
       }
       #nx-cloud a {
-        border-radius: 0.75rem;
-        color: white;
-        background-color: hsla(214, 62%, 21%, 1);
-        display: inline-block;
+        color: rgba(107, 114, 128, 1);
+        display: block;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
         margin-top: 1.5rem;
-        padding: 0.5rem 1rem;
-        text-align:left;
-        text-decoration: inherit;
+        text-align: right;
       }
-
+      #nx-cloud a:hover {
+        text-decoration: underline;
+      }
       #commands {
         padding: 2.5rem 2rem;
         margin-top: 3.5rem;
@@ -423,7 +421,7 @@ import { CommonModule } from '@angular/common';
         }
         #middle-content {
           grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 4rem
+          gap: 4rem;
         }
       }
     </style>
@@ -507,7 +505,7 @@ import { CommonModule } from '@angular/common';
                 />
               </svg>
             </a>
-            <a href="https://nx.dev/blog?utm_source=nx-project" target="_blank" rel="noreferrer" class="list-item-link">
+            <a href="https://nx.dev/blog/?utm_source=nx-project" target="_blank" rel="noreferrer" class="list-item-link">
               <svg
                 fill="none"
                 stroke="currentColor"
@@ -601,7 +599,7 @@ import { CommonModule } from '@angular/common';
                 />
               </svg>
             </a>
-            </div>
+          </div>
             <a id="nx-repo" class="button-pill rounded shadow" href="https://github.com/nrwl/nx?utm_source=nx-project" target="_blank" rel="noreferrer">
               <svg
                 fill="currentColor"
@@ -681,20 +679,17 @@ import { CommonModule } from '@angular/common';
                   </span>
                 </h2>
               </div>
-                <p>
-                  Your workspace is connected to Nx Cloud.
-                </p>
-                <a
-                  href="https://nx.dev/ci/intro/ci-with-nx#learn-about-nx-on-ci"
-                  target="_blank"
-                  rel="noreferrer"
-                > Learn about Nx on CI
-                </a>
+              <p>
+                You can activate distributed tasks executions and caching by
+                running:
+              </p>
+              <pre>nx connect</pre>
+              <a href="https://nx.dev/nx-cloud?utm_source=nx-project" target="_blank" rel="noreferrer"> What is Nx Cloud? </a>
             </div>
           </div>
         </div>
         <!--  COMMANDS  -->
-                <div id="commands" class="rounded shadow">
+        <div id="commands" class="rounded shadow">
           <h2>Next steps</h2>
           <p>Here are some things you can do with Nx:</p>
           <details>
@@ -715,13 +710,13 @@ import { CommonModule } from '@angular/common';
               Build, test and lint your app
             </summary>
             <pre><span># Build</span>
-nx build 
+nx build <%= appName %>
 <span># Test</span>
-nx test 
+nx test <%= appName %>
 <span># Lint</span>
-nx lint 
+nx lint <%= appName %>
 <span># Run them together!</span>
-nx run-many -t build test lint</pre>
+nx run-many -p <%= appName %> -t build test lint</pre>
           </details>
           <details>
             <summary>
@@ -808,4 +803,4 @@ nx g &#64;nx/angular:component ui/src/lib/button</pre>
   styles: [],
   encapsulation: ViewEncapsulation.None,
 })
-export class NxWelcomeComponent {}
+export class NxWelcome<%= componentType %> {}

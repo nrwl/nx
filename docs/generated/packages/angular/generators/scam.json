@@ -94,8 +94,7 @@
       },
       "type": {
         "type": "string",
-        "description": "Adds a developer-defined type to the filename, in the format `name.type.ts`.",
-        "default": "component"
+        "description": "Append a custom type to the component's filename. It defaults to 'component' for Angular versions below v20. For Angular v20 and above, no type is appended unless specified."
       },
       "prefix": {
         "type": "string",

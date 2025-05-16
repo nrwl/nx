@@ -95,8 +95,7 @@
       },
       "type": {
         "type": "string",
-        "description": "Adds a developer-defined type to the filename, in the format `name.type.ts`.",
-        "default": "component"
+        "description": "Append a custom type to the component's filename. It defaults to 'component' for Angular versions below v20. For Angular v20 and above, no type is appended unless specified."
       },
       "export": {
         "type": "boolean",
@@ -122,7 +121,7 @@
       }
     },
     "required": ["path"],
-    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Component\" %}\n\nGenerate a component named `MyComponent` at `apps/my-app/src/lib/my-component/my-component.component.ts`:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/my-component/my-component.ts\n```\n\n{% /tab %}\n\n{% tab label=\"Without Providing the File Extension\" %}\n\nGenerate a component named `MyComponent` at `apps/my-app/src/lib/my-component/my-component.component.ts`:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/my-component/my-component\n```\n\n{% /tab %}\n\n{% tab label=\"With Different Symbol Name\" %}\n\nGenerate a component named `CustomComponent` at `apps/my-app/src/lib/my-component/my-component.component.ts`:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/my-component/my-component --name=custom\n```\n\n{% /tab %}\n\n{% tab label=\"Single File Component\" %}\n\nCreate a component named `my-component` with inline styles and inline template:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/my-component/my-component --inlineStyle --inlineTemplate\n```\n\n{% /tab %}\n\n{% tab label=\"Component with OnPush Change Detection Strategy\" %}\n\nCreate a component named `my-component` with OnPush Change Detection Strategy:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/my-component/my-component --changeDetection=OnPush\n```\n\n{% /tab %}\n",
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Component\" %}\n\nGenerate a component named `Card` at `apps/my-app/src/lib/card/card.ts`:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/card/card.ts\n```\n\n{% /tab %}\n\n{% tab label=\"Without Providing the File Extension\" %}\n\nGenerate a component named `Card` at `apps/my-app/src/lib/card/card.ts`:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/card/card\n```\n\n{% /tab %}\n\n{% tab label=\"With Different Symbol Name\" %}\n\nGenerate a component named `Custom` at `apps/my-app/src/lib/card/card.ts`:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/card/card --name=custom\n```\n\n{% /tab %}\n\n{% tab label=\"With a Component Type\" %}\n\nGenerate a component named `CardComponent` at `apps/my-app/src/lib/card/card.component.ts`:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/card/card --type=component\n```\n\n{% /tab %}\n\n{% tab label=\"Single File Component\" %}\n\nCreate a component named `Card` with inline styles and inline template:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/card/card --inlineStyle --inlineTemplate\n```\n\n{% /tab %}\n\n{% tab label=\"Component with OnPush Change Detection Strategy\" %}\n\nCreate a component named `Card` with `OnPush` Change Detection Strategy:\n\n```bash\nnx g @nx/angular:component apps/my-app/src/lib/card/card --changeDetection=OnPush\n```\n\n{% /tab %}\n",
     "presets": []
   },
   "aliases": ["c"],

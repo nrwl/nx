@@ -1,8 +1,10 @@
 import { Component, ViewEncapsulation } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: '<%= nxWelcomeSelector %>',<% if (setStandaloneFalse) { %>
-  standalone: false,<% } %>
+  selector: '<%= nxWelcomeSelector %>',<% if (setStandaloneTrue) { %>
+  standalone: true,<% } %>
+  imports: [CommonModule],
   template: `
     <!--
      * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -167,7 +169,6 @@ import { Component, ViewEncapsulation } from '@angular/core';
         flex-direction: column;
         gap: 2rem;
       }
-
       #learning-materials {
         padding: 2.5rem 2rem;
       }
@@ -233,6 +234,7 @@ import { Component, ViewEncapsulation } from '@angular/core';
         color: rgba(255, 255, 255, 1);
         background-color: hsla(162, 55%, 33%, 1);
       }
+
       .list-item-link:hover > span > span {
         color: rgba(243, 244, 246, 1);
       }
@@ -421,7 +423,7 @@ import { Component, ViewEncapsulation } from '@angular/core';
         }
         #middle-content {
           grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 4rem;
+          gap: 4rem
         }
       }
     </style>
@@ -505,7 +507,7 @@ import { Component, ViewEncapsulation } from '@angular/core';
                 />
               </svg>
             </a>
-            <a href="https://nx.dev/blog/?utm_source=nx-project" target="_blank" rel="noreferrer" class="list-item-link">
+            <a href="https://nx.dev/blog?utm_source=nx-project" target="_blank" rel="noreferrer" class="list-item-link">
               <svg
                 fill="none"
                 stroke="currentColor"
@@ -599,7 +601,7 @@ import { Component, ViewEncapsulation } from '@angular/core';
                 />
               </svg>
             </a>
-          </div>
+            </div>
             <a id="nx-repo" class="button-pill rounded shadow" href="https://github.com/nrwl/nx?utm_source=nx-project" target="_blank" rel="noreferrer">
               <svg
                 fill="currentColor"
@@ -689,7 +691,7 @@ import { Component, ViewEncapsulation } from '@angular/core';
           </div>
         </div>
         <!--  COMMANDS  -->
-        <div id="commands" class="rounded shadow">
+                <div id="commands" class="rounded shadow">
           <h2>Next steps</h2>
           <p>Here are some things you can do with Nx:</p>
           <details>
@@ -710,13 +712,13 @@ import { Component, ViewEncapsulation } from '@angular/core';
               Build, test and lint your app
             </summary>
             <pre><span># Build</span>
-nx build <%= appName %>
+nx build 
 <span># Test</span>
-nx test <%= appName %>
+nx test 
 <span># Lint</span>
-nx lint <%= appName %>
+nx lint 
 <span># Run them together!</span>
-nx run-many -p <%= appName %> -t build test lint</pre>
+nx run-many -t build test lint</pre>
           </details>
           <details>
             <summary>
@@ -803,4 +805,4 @@ nx g &#64;nx/angular:component ui/src/lib/button</pre>
   styles: [],
   encapsulation: ViewEncapsulation.None,
 })
-export class NxWelcomeComponent {}
+export class NxWelcome<%= componentType %> {}

@@ -48,14 +48,10 @@ describe('StorybookConfiguration generator', () => {
     expect(tree.exists('test-ui-lib/.storybook/main.ts')).toBeTruthy();
     expect(tree.exists('test-ui-lib/.storybook/tsconfig.json')).toBeTruthy();
     expect(
-      tree.exists(
-        'test-ui-lib/src/lib/test-button/test-button.component.stories.ts'
-      )
+      tree.exists('test-ui-lib/src/lib/test-button/test-button.stories.ts')
     ).toBeFalsy();
     expect(
-      tree.exists(
-        'test-ui-lib/src/lib/test-other/test-other.component.stories.ts'
-      )
+      tree.exists('test-ui-lib/src/lib/test-other/test-other.stories.ts')
     ).toBeFalsy();
   });
 
@@ -82,15 +78,12 @@ describe('StorybookConfiguration generator', () => {
     expect(tree.exists('test-ui-lib/.storybook/tsconfig.json')).toBeTruthy();
     expect(
       tree.read(
-        'test-ui-lib/src/lib/test-button/test-button.component.stories.ts',
+        'test-ui-lib/src/lib/test-button/test-button.stories.ts',
         'utf-8'
       )
     ).toMatchSnapshot();
     expect(
-      tree.read(
-        'test-ui-lib/src/lib/test-other/test-other.component.stories.ts',
-        'utf-8'
-      )
+      tree.read('test-ui-lib/src/lib/test-other/test-other.stories.ts', 'utf-8')
     ).toMatchSnapshot();
 
     const packageJson = JSON.parse(tree.read('package.json', 'utf-8'));

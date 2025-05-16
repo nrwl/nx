@@ -8,18 +8,18 @@ import {
   withEventReplay,
 } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
-import { AppComponent } from './app.component';
+import { App } from './app';
 import { appRoutes } from './app.routes';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { NxWelcome } from './nx-welcome';
 
 @NgModule({
-  declarations: [AppComponent, NxWelcomeComponent],
+  declarations: [App, NxWelcome],
   imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideClientHydration(withEventReplay()),
   ],
-  bootstrap: [AppComponent],
+  bootstrap: [App],
 })
 export class AppModule {}
 "
@@ -154,13 +154,13 @@ module.exports = withModuleFederationForSSR(config, { dts: false });
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 8`] = `
-"import { NxWelcomeComponent } from './nx-welcome.component';
+"import { NxWelcome } from './nx-welcome';
 import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
   {
     path: '',
-    component: NxWelcomeComponent,
+    component: NxWelcome,
   },
 ];
 "
@@ -216,20 +216,18 @@ exports[`Host App Generator --ssr should generate the correct files 10`] = `
 exports[`Host App Generator --ssr should generate the correct files for standalone 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
-import { AppComponent } from './app/app.component';
+import { App } from './app/app';
 
-bootstrapApplication(AppComponent, appConfig).catch((err) =>
-  console.error(err)
-);
+bootstrapApplication(App, appConfig).catch((err) => console.error(err));
 "
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 2`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
-import { AppComponent } from './app/app.component';
+import { App } from './app/app';
 import { config } from './app/app.config.server';
 
-const bootstrap = () => bootstrapApplication(AppComponent, config);
+const bootstrap = () => bootstrapApplication(App, config);
 
 export default bootstrap;
 "
@@ -347,13 +345,13 @@ module.exports = withModuleFederationForSSR(config, { dts: false });
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 7`] = `
-"import { NxWelcomeComponent } from './nx-welcome.component';
+"import { NxWelcome } from './nx-welcome';
 import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
   {
     path: '',
-    component: NxWelcomeComponent,
+    component: NxWelcome,
   },
 ];
 "
@@ -446,20 +444,18 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
-import { AppComponent } from './app/app.component';
+import { App } from './app/app';
 
-bootstrapApplication(AppComponent, appConfig).catch((err) =>
-  console.error(err)
-);
+bootstrapApplication(App, appConfig).catch((err) => console.error(err));
 "
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 2`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
-import { AppComponent } from './app/app.component';
+import { App } from './app/app';
 import { config } from './app/app.config.server';
 
-const bootstrap = () => bootstrapApplication(AppComponent, config);
+const bootstrap = () => bootstrapApplication(App, config);
 
 export default bootstrap;
 "
@@ -579,13 +575,13 @@ export default withModuleFederationForSSR(config, { dts: false });
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 7`] = `
-"import { NxWelcomeComponent } from './nx-welcome.component';
+"import { NxWelcome } from './nx-welcome';
 import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
     {
       path: '',
-      component: NxWelcomeComponent
+      component: NxWelcome
     },];
 "
 `;
@@ -682,18 +678,18 @@ import {
   withEventReplay,
 } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
-import { AppComponent } from './app.component';
+import { App } from './app';
 import { appRoutes } from './app.routes';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { NxWelcome } from './nx-welcome';
 
 @NgModule({
-  declarations: [AppComponent, NxWelcomeComponent],
+  declarations: [App, NxWelcome],
   imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideClientHydration(withEventReplay()),
   ],
-  bootstrap: [AppComponent],
+  bootstrap: [App],
 })
 export class AppModule {}
 "
@@ -830,13 +826,13 @@ export default withModuleFederationForSSR(config, { dts: false });
 `;
 
 exports[`Host App Generator --ssr should generate the correct files when --typescript=true 8`] = `
-"import { NxWelcomeComponent } from './nx-welcome.component';
+"import { NxWelcome } from './nx-welcome';
 import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
     {
       path: '',
-      component: NxWelcomeComponent
+      component: NxWelcome
     },];
 "
 `;
@@ -969,9 +965,9 @@ export default withModuleFederation(config, { dts: false });
 exports[`Host App Generator should generate a host with remotes using standalone components 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
-import { AppComponent } from './app/app.component';
+import { App } from './app/app';
 
-bootstrapApplication(AppComponent, appConfig).catch((err) =>
+bootstrapApplication(App, appConfig).catch((err) =>
   console.error(err)
 );
 "
@@ -980,15 +976,15 @@ bootstrapApplication(AppComponent, appConfig).catch((err) =>
 exports[`Host App Generator should generate a host with remotes using standalone components 2`] = `
 "import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { NxWelcome } from './nx-welcome';
 
 @Component({
-  imports: [NxWelcomeComponent, RouterModule],
+  imports: [NxWelcome, RouterModule],
   selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
 })
-export class AppComponent {
+export class App {
   title = 'host';
 }
 "
@@ -996,37 +992,37 @@ export class AppComponent {
 
 exports[`Host App Generator should generate the correct app component spec file 1`] = `
 "import { fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { AppComponent } from './app.component';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { App } from './app';
+import { NxWelcome } from './nx-welcome';
 import { Router, RouterModule } from '@angular/router';
 
-describe('AppComponent', () => {
+describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [
         RouterModule.forRoot([
-          { path: '', component: NxWelcomeComponent },
+          { path: '', component: NxWelcome },
         ]),
-        AppComponent,
-        NxWelcomeComponent,
+        App,
+        NxWelcome,
       ],
     }).compileComponents();
   });
 
   it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
+    const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
   });
 
   it(\`should have as title 'host'\`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
+    const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;
     expect(app.title).toEqual('host');
   });
 
   it('should render title', fakeAsync(() => {
-    const fixture = TestBed.createComponent(AppComponent);
+    const fixture = TestBed.createComponent(App);
     const router = TestBed.inject(Router);
     fixture.ngZone?.run(() => router.navigate(['']));
     tick();
@@ -1042,37 +1038,37 @@ describe('AppComponent', () => {
 
 exports[`Host App Generator should generate the correct app component spec file with a directory 1`] = `
 "import { fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { AppComponent } from './app.component';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { App } from './app';
+import { NxWelcome } from './nx-welcome';
 import { Router, RouterModule } from '@angular/router';
 
-describe('AppComponent', () => {
+describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [
         RouterModule.forRoot([
-          { path: '', component: NxWelcomeComponent },
+          { path: '', component: NxWelcome },
         ]),
-        AppComponent,
-        NxWelcomeComponent,
+        App,
+        NxWelcome,
       ],
     }).compileComponents();
   });
 
   it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
+    const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
   });
 
   it(\`should have as title 'dashboard'\`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
+    const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;
     expect(app.title).toEqual('dashboard');
   });
 
   it('should render title', fakeAsync(() => {
-    const fixture = TestBed.createComponent(AppComponent);
+    const fixture = TestBed.createComponent(App);
     const router = TestBed.inject(Router);
     fixture.ngZone?.run(() => router.navigate(['']));
     tick();

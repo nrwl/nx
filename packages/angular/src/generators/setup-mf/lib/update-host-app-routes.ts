@@ -5,13 +5,18 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
-import type { Schema } from '../schema';
+import type { NormalizedOptions } from '../schema';
 
-export function updateHostAppRoutes(tree: Tree, options: Schema) {
+export function updateHostAppRoutes(tree: Tree, options: NormalizedOptions) {
   const { sourceRoot } = readProjectConfiguration(tree, options.appName);
+  const { appComponentInfo, nxWelcomeComponentInfo } = options;
 
   tree.write(
-    joinPathFragments(sourceRoot, 'app/app.component.html'),
+    joinPathFragments(
+      sourceRoot,
+      'app',
+      `${appComponentInfo.extensionlessFileName}.html`
+    ),
     `<ul class="remote-menu">
 <li><a routerLink="/">Home</a></li>
 </ul>
@@ -39,13 +44,15 @@ export function updateHostAppRoutes(tree: Tree, options: Schema) {
     pathToHostRootRoutingFile,
     `{
       path: '',
-      component: NxWelcomeComponent
+      component: ${nxWelcomeComponentInfo.symbolName}
     }`
   );
 
   tree.write(
     pathToHostRootRoutingFile,
-    `import { NxWelcomeComponent } from './nx-welcome.component';
+    `import { ${nxWelcomeComponentInfo.symbolName} } from './${
+      nxWelcomeComponentInfo.extensionlessFileName
+    }';
 ${tree.read(pathToHostRootRoutingFile, 'utf-8')}`
   );
 
@@ -56,6 +63,10 @@ ${tree.read(pathToHostRootRoutingFile, 'utf-8')}`
     {
       appName: options.appName,
       standalone: options.standalone,
+      appFileName: appComponentInfo.extensionlessFileName,
+      appSymbolName: appComponentInfo.symbolName,
+      nxWelcomeFileName: nxWelcomeComponentInfo.extensionlessFileName,
+      nxWelcomeSymbolName: nxWelcomeComponentInfo.symbolName,
       tmpl: '',
     }
   );
