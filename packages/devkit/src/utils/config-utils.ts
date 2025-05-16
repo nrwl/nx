@@ -68,10 +68,11 @@ async function loadModuleByExtension(
     case '.cts':
     case '.cjs':
       return await loadCommonJS(path);
-    case '.mts':
     case '.mjs':
       return await loadESM(path);
     default:
+      // For both .ts and .mts files, try to load them as CommonJS first, then try ESM.
+      // It's possible that the file is written like ESM (e.g. using `import`) but uses CJS features like `__dirname` or `__filename`.
       return await load(path);
   }
 }
@@ -105,9 +106,6 @@ export function clearRequireCache(): void {
   }
 }
 
-/**
- * Load the module after ensuring that the require cache is cleared.
- */
 async function load(path: string): Promise<any> {
   try {
     // Try using `require` first, which works for CJS modules.
@@ -124,6 +122,9 @@ async function load(path: string): Promise<any> {
   }
 }
 
+/**
+ * Load the module after ensuring that the require cache is cleared.
+ */
 async function loadCommonJS(path: string): Promise<any> {
   // Clear cache if the path is in the cache
   if (require.cache[path]) {
