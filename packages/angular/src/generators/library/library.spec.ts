@@ -6,9 +6,11 @@ import {
   parseJson,
   ProjectGraph,
   readJson,
+  readNxJson,
   readProjectConfiguration,
   Tree,
   updateJson,
+  updateNxJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { createApp } from '../../utils/nx-devkit/testing';
@@ -364,7 +366,7 @@ describe('lib', () => {
       await runLibraryGeneratorWithOpts();
 
       // ASSERT
-      expect(tree.read('my-lib/src/lib/my-lib.component.spec.ts')).toBeFalsy();
+      expect(tree.read('my-lib/src/lib/my-lib.spec.ts')).toBeFalsy();
       expect(tree.read('my-lib/src/lib/my-lib.service.spec.ts')).toBeFalsy();
     });
 
@@ -436,10 +438,8 @@ describe('lib', () => {
       expect(tree.exists('my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists('my-lib/src/lib/my-lib.module.ts')).toBeTruthy();
 
-      expect(tree.exists('my-lib/src/lib/my-lib.component.ts')).toBeFalsy();
-      expect(
-        tree.exists('my-lib/src/lib/my-lib.component.spec.ts')
-      ).toBeFalsy();
+      expect(tree.exists('my-lib/src/lib/my-lib.ts')).toBeFalsy();
+      expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeFalsy();
       expect(tree.exists('my-lib/src/lib/my-lib.service.ts')).toBeFalsy();
       expect(tree.exists('my-lib/src/lib/my-lib.service.spec.ts')).toBeFalsy();
 
@@ -447,10 +447,8 @@ describe('lib', () => {
       expect(tree.exists('my-lib2/src/index.ts')).toBeTruthy();
       expect(tree.exists('my-lib2/src/lib/my-lib2.module.ts')).toBeTruthy();
 
-      expect(tree.exists('my-lib2/src/lib/my-lib2.component.ts')).toBeFalsy();
-      expect(
-        tree.exists('my-lib2/src/lib/my-lib2.component.spec.ts')
-      ).toBeFalsy();
+      expect(tree.exists('my-lib2/src/lib/my-lib2.ts')).toBeFalsy();
+      expect(tree.exists('my-lib2/src/lib/my-lib2.spec.ts')).toBeFalsy();
       expect(tree.exists('my-lib2/src/lib/my-lib2.service.ts')).toBeFalsy();
       expect(
         tree.exists('my-lib2/src/lib/my-lib2.service.spec.ts')
@@ -518,12 +516,8 @@ describe('lib', () => {
         tree.exists('my-dir/my-lib/src/lib/my-lib.module.ts')
       ).toBeTruthy();
 
-      expect(
-        tree.exists('my-dir/my-lib/src/lib/my-lib.component.ts')
-      ).toBeFalsy();
-      expect(
-        tree.exists('my-dir/my-lib/src/lib/my-lib.component.spec.ts')
-      ).toBeFalsy();
+      expect(tree.exists('my-dir/my-lib/src/lib/my-lib.ts')).toBeFalsy();
+      expect(tree.exists('my-dir/my-lib/src/lib/my-lib.spec.ts')).toBeFalsy();
       expect(
         tree.exists('my-dir/my-lib/src/lib/my-lib.service.ts')
       ).toBeFalsy();
@@ -537,12 +531,8 @@ describe('lib', () => {
         tree.exists('my-dir/my-lib2/src/lib/my-lib2.module.ts')
       ).toBeTruthy();
 
-      expect(
-        tree.exists('my-dir/my-lib2/src/lib/my-lib2.component.ts')
-      ).toBeFalsy();
-      expect(
-        tree.exists('my-dir/my-lib2/src/lib/my-lib2.component.spec.ts')
-      ).toBeFalsy();
+      expect(tree.exists('my-dir/my-lib2/src/lib/my-lib2.ts')).toBeFalsy();
+      expect(tree.exists('my-dir/my-lib2/src/lib/my-lib2.spec.ts')).toBeFalsy();
       expect(
         tree.exists('my-dir/my-lib2/src/lib/my-lib2.service.ts')
       ).toBeFalsy();
@@ -864,7 +854,7 @@ describe('lib', () => {
           "import { NgModule } from '@angular/core';
           import { BrowserModule } from '@angular/platform-browser';
           import { RouterModule } from '@angular/router';
-          import { AppComponent } from './app.component';
+          import { App } from './app';
           @NgModule({
             imports: [
               BrowserModule,
@@ -879,8 +869,8 @@ describe('lib', () => {
                 },
               ]),
             ],
-            declarations: [AppComponent],
-            bootstrap: [AppComponent],
+            declarations: [App],
+            bootstrap: [App],
           })
           export class AppModule {}
           "
@@ -912,14 +902,14 @@ describe('lib', () => {
           import { NgModule } from '@angular/core';
           import { BrowserModule } from '@angular/platform-browser';
           import { RouterModule } from '@angular/router';
-          import { AppComponent } from './app.component';
+          import { App } from './app';
 
           const routes = [];
 
           @NgModule({
             imports: [BrowserModule, RouterModule.forRoot(routes)],
-            declarations: [AppComponent],
-            bootstrap: [AppComponent]
+            declarations: [App],
+            bootstrap: [App]
           })
           export class AppModule {}
         `
@@ -1056,14 +1046,14 @@ describe('lib', () => {
           import { NgModule } from '@angular/core';
           import { BrowserModule } from '@angular/platform-browser';
           import { RouterModule } from '@angular/router';
-          import { AppComponent } from './app.component';
+          import { App } from './app';
 
           const routes = [];
 
           @NgModule({
             imports: [BrowserModule, RouterModule.forRoot(routes)],
-            declarations: [AppComponent],
-            bootstrap: [AppComponent]
+            declarations: [App],
+            bootstrap: [App]
           })
           export class AppModule {}
         `
@@ -1140,9 +1130,7 @@ describe('lib', () => {
           publishable: true,
           importPath: '@myorg/lib',
         })
-      ).rejects.toThrowError(
-        'You already have a library using the import path'
-      );
+      ).rejects.toThrow('You already have a library using the import path');
     });
 
     it('should fail if no importPath has been used', async () => {
@@ -1151,7 +1139,7 @@ describe('lib', () => {
         runLibraryGeneratorWithOpts({
           publishable: true,
         })
-      ).rejects.toThrowError(
+      ).rejects.toThrow(
         'For publishable libs you have to provide a proper "--importPath"'
       );
     });
@@ -1242,7 +1230,9 @@ describe('lib', () => {
                               prefix: "lib",
                               style: "kebab-case"
                           }
-                      ]
+                      ],
+                      "@angular-eslint/component-class-suffix": "off",
+                      "@angular-eslint/directive-class-suffix": "off"
                   }
               },
               {
@@ -1489,11 +1479,69 @@ describe('lib', () => {
 
       expect(tree.read('my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read('my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8')
+        tree.read('my-lib/src/lib/my-lib/my-lib.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('my-lib/src/lib/my-lib/my-lib.component.spec.ts', 'utf-8')
+        tree.read('my-lib/src/lib/my-lib/my-lib.spec.ts', 'utf-8')
       ).toMatchSnapshot();
+    });
+
+    it('should generate a library with a standalone component respecting the "type" option in the component generator defaults', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.generators = {
+        ...nxJson.generators,
+        '@nx/angular:component': {
+          ...nxJson.generators?.['@nx/angular:component'],
+          type: 'component',
+        },
+      };
+      updateNxJson(tree, nxJson);
+
+      await runLibraryGeneratorWithOpts({ standalone: true, skipFormat: true });
+
+      expect(tree.read('my-lib/src/index.ts', 'utf-8')).toMatchInlineSnapshot(
+        `"export * from './lib/my-lib/my-lib.component';"`
+      );
+      expect(tree.read('my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { Component } from '@angular/core';
+        import { CommonModule } from '@angular/common';
+
+        @Component({
+          selector: 'lib-my-lib',
+          imports: [CommonModule],
+          templateUrl: './my-lib.component.html',
+          styleUrl: './my-lib.component.css'
+        })
+        export class MyLibComponent {}
+        "
+      `);
+      expect(
+        tree.read('my-lib/src/lib/my-lib/my-lib.component.spec.ts', 'utf-8')
+      ).toMatchInlineSnapshot(`
+        "import { ComponentFixture, TestBed } from '@angular/core/testing';
+        import { MyLibComponent } from './my-lib.component';
+
+        describe('MyLibComponent', () => {
+          let component: MyLibComponent;
+          let fixture: ComponentFixture<MyLibComponent>;
+
+          beforeEach(async () => {
+            await TestBed.configureTestingModule({
+              imports: [MyLibComponent]
+            }).compileComponents();
+
+            fixture = TestBed.createComponent(MyLibComponent);
+            component = fixture.componentInstance;
+            fixture.detectChanges();
+          });
+
+          it('should create', () => {
+            expect(component).toBeTruthy();
+          });
+        });
+        "
+      `);
     });
 
     it('should generate a library with a valid selector for the standalone component when library name has a slash', async () => {
@@ -1504,10 +1552,7 @@ describe('lib', () => {
 
       expect(tree.read('my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read(
-          'my-lib/src/lib/auth/common/auth/common.component.ts',
-          'utf-8'
-        )
+        tree.read('my-lib/src/lib/auth/common/auth/common.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -1515,11 +1560,9 @@ describe('lib', () => {
       await runLibraryGeneratorWithOpts({ standalone: true, flat: true });
 
       expect(tree.read('my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('my-lib/src/lib/my-lib.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read('my-lib/src/lib/my-lib.component.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(
-        tree.read('my-lib/src/lib/my-lib.component.spec.ts', 'utf-8')
+        tree.read('my-lib/src/lib/my-lib.spec.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -1533,13 +1576,10 @@ describe('lib', () => {
         tree.read('my-dir/my-lib/src/index.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('my-dir/my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8')
+        tree.read('my-dir/my-lib/src/lib/my-lib/my-lib.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read(
-          'my-dir/my-lib/src/lib/my-lib/my-lib.component.spec.ts',
-          'utf-8'
-        )
+        tree.read('my-dir/my-lib/src/lib/my-lib/my-lib.spec.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -1554,13 +1594,10 @@ describe('lib', () => {
         tree.read('my-dir/my-lib/src/index.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('my-dir/my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8')
+        tree.read('my-dir/my-lib/src/lib/my-lib/my-lib.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read(
-          'my-dir/my-lib/src/lib/my-lib/my-lib.component.spec.ts',
-          'utf-8'
-        )
+        tree.read('my-dir/my-lib/src/lib/my-lib/my-lib.spec.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -1572,11 +1609,9 @@ describe('lib', () => {
       });
 
       expect(tree.read('my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('my-lib/src/lib/my-lib.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read('my-lib/src/lib/my-lib.component.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(
-        tree.read('my-lib/src/lib/my-lib.component.spec.ts', 'utf-8')
+        tree.read('my-lib/src/lib/my-lib.spec.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
         tree.read('my-lib/src/lib/lib.routes.ts', 'utf-8')
@@ -1584,10 +1619,10 @@ describe('lib', () => {
       expect(tree.children('my-lib/src/lib').sort()).toMatchInlineSnapshot(`
         [
           "lib.routes.ts",
-          "my-lib.component.css",
-          "my-lib.component.html",
-          "my-lib.component.spec.ts",
-          "my-lib.component.ts",
+          "my-lib.css",
+          "my-lib.html",
+          "my-lib.spec.ts",
+          "my-lib.ts",
         ]
       `);
       expect(tree.children('my-lib/src').sort()).toMatchInlineSnapshot(`
@@ -1607,10 +1642,10 @@ describe('lib', () => {
         tree.read('my-lib/src/lib/lib.routes.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8')
+        tree.read('my-lib/src/lib/my-lib/my-lib.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('my-lib/src/lib/my-lib/my-lib.component.spec.ts', 'utf-8')
+        tree.read('my-lib/src/lib/my-lib/my-lib.spec.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -1773,10 +1808,10 @@ describe('lib', () => {
 
       expect(tree.read('my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read('my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8')
+        tree.read('my-lib/src/lib/my-lib/my-lib.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('my-lib/src/lib/my-lib/my-lib.component.spec.ts', 'utf-8')
+        tree.read('my-lib/src/lib/my-lib/my-lib.spec.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -1790,11 +1825,9 @@ describe('lib', () => {
 
       expect(tree.read('my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read('my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8')
+        tree.read('my-lib/src/lib/my-lib/my-lib.ts', 'utf-8')
       ).toMatchSnapshot();
-      expect(
-        tree.exists('my-lib/src/lib/my-lib/my-lib.component.spec.ts')
-      ).toBeFalsy();
+      expect(tree.exists('my-lib/src/lib/my-lib/my-lib.spec.ts')).toBeFalsy();
     });
 
     it('should generate a library with a standalone component as entry point and set up view encapsulation and change detection', async () => {
@@ -1808,7 +1841,7 @@ describe('lib', () => {
 
       expect(tree.read('my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read('my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8')
+        tree.read('my-lib/src/lib/my-lib/my-lib.ts', 'utf-8')
       ).toMatchSnapshot();
     });
   });
@@ -1850,6 +1883,100 @@ describe('lib', () => {
           "strictInputAccessModifiers": true,
           "strictTemplates": true,
         }
+      `);
+    });
+
+    it('should generate components with the "component" type for versions lower than v20', async () => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.2.0',
+        },
+      }));
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        routing: true,
+        standalone: true,
+        skipFormat: true,
+      });
+
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        routing: true,
+        lazy: true,
+        parent: 'app1/src/app/app.routes.ts',
+        skipFormat: true,
+      });
+
+      expect(tree.read('my-lib/src/index.ts', 'utf-8')).toMatchInlineSnapshot(`
+        "export * from './lib/lib.routes';
+
+        export * from './lib/my-lib/my-lib.component';"
+      `);
+      expect(tree.read('my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { Component } from '@angular/core';
+        import { CommonModule } from '@angular/common';
+
+        @Component({
+          selector: 'lib-my-lib',
+          imports: [CommonModule],
+          templateUrl: './my-lib.component.html',
+          styleUrl: './my-lib.component.css'
+        })
+        export class MyLibComponent {}
+        "
+      `);
+      expect(tree.exists('my-lib/src/lib/my-lib/my-lib.component.html')).toBe(
+        true
+      );
+      expect(tree.exists('my-lib/src/lib/my-lib/my-lib.component.css')).toBe(
+        true
+      );
+      expect(
+        tree.read('my-lib/src/lib/my-lib/my-lib.component.spec.ts', 'utf-8')
+      ).toMatchInlineSnapshot(`
+        "import { ComponentFixture, TestBed } from '@angular/core/testing';
+        import { MyLibComponent } from './my-lib.component';
+
+        describe('MyLibComponent', () => {
+          let component: MyLibComponent;
+          let fixture: ComponentFixture<MyLibComponent>;
+
+          beforeEach(async () => {
+            await TestBed.configureTestingModule({
+              imports: [MyLibComponent]
+            }).compileComponents();
+
+            fixture = TestBed.createComponent(MyLibComponent);
+            component = fixture.componentInstance;
+            fixture.detectChanges();
+          });
+
+          it('should create', () => {
+            expect(component).toBeTruthy();
+          });
+        });
+        "
+      `);
+      expect(tree.read('my-lib/src/lib/lib.routes.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { Route } from '@angular/router';
+        import { MyLibComponent } from './my-lib/my-lib.component';
+
+        export const myLibRoutes: Route[] = [
+          { path: '', component: MyLibComponent }
+        ];
+        "
+      `);
+      expect(tree.read('app1/src/app/app.routes.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { Route } from '@angular/router';
+
+        export const appRoutes: Route[] = [
+            { path: 'my-lib', loadChildren: () => import('@proj/my-lib').then(m => m.myLibRoutes) },];
+        "
       `);
     });
   });

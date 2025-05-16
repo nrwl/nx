@@ -41,25 +41,20 @@ describe('Angular Projects', () => {
     );
     runCLI(`generate @nx/angular:lib ${lib1} --no-interactive`);
     app1DefaultModule = readFile(`${app1}/src/app/app.module.ts`);
-    app1DefaultComponentTemplate = readFile(
-      `${app1}/src/app/app.component.html`
-    );
+    app1DefaultComponentTemplate = readFile(`${app1}/src/app/app.html`);
     esbuildAppDefaultModule = readFile(`${esbuildApp}/src/app/app.module.ts`);
     esbuildAppDefaultComponentTemplate = readFile(
-      `${esbuildApp}/src/app/app.component.html`
+      `${esbuildApp}/src/app/app.html`
     );
     esbuildAppDefaultProjectConfig = readFile(`${esbuildApp}/project.json`);
   });
 
   afterEach(() => {
     updateFile(`${app1}/src/app/app.module.ts`, app1DefaultModule);
-    updateFile(
-      `${app1}/src/app/app.component.html`,
-      app1DefaultComponentTemplate
-    );
+    updateFile(`${app1}/src/app/app.html`, app1DefaultComponentTemplate);
     updateFile(`${esbuildApp}/src/app/app.module.ts`, esbuildAppDefaultModule);
     updateFile(
-      `${esbuildApp}/src/app/app.component.html`,
+      `${esbuildApp}/src/app/app.html`,
       esbuildAppDefaultComponentTemplate
     );
     updateFile(`${esbuildApp}/project.json`, esbuildAppDefaultProjectConfig);
@@ -84,19 +79,19 @@ describe('Angular Projects', () => {
         import { NgModule } from '@angular/core';
         import { BrowserModule } from '@angular/platform-browser';
         import { RouterModule } from '@angular/router';
-        import { AppComponent } from './app.component';
+        import { App } from './app';
         import { appRoutes } from './app.routes';
-        import { NxWelcomeComponent } from './nx-welcome.component';
-        import { ${names(lib1).className}Component } from '@${proj}/${lib1}';
+        import { NxWelcome } from './nx-welcome';
+        import { ${names(lib1).className} } from '@${proj}/${lib1}';
 
         @NgModule({
           imports: [
             BrowserModule,
             RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
-            ${names(lib1).className}Component
+            ${names(lib1).className}
           ],
-          declarations: [AppComponent, NxWelcomeComponent],
-          bootstrap: [AppComponent]
+          declarations: [App, NxWelcome],
+          bootstrap: [App]
         })
         export class AppModule {}
       `
@@ -193,7 +188,7 @@ describe('Angular Projects', () => {
     // External HTML template file
     const templateWhichFailsBananaInBoxLintCheck = `<div ([foo])="bar"></div>`;
     updateFile(
-      `${app1}/src/app/app.component.html`,
+      `${app1}/src/app/app.html`,
       templateWhichFailsBananaInBoxLintCheck
     );
     // Inline template within component.ts file
@@ -216,9 +211,7 @@ describe('Angular Projects', () => {
     const appLintStdOut = runCLI(`lint ${app1}`, {
       silenceError: true,
     });
-    expect(appLintStdOut).toContain(
-      normalize(`${app1}/src/app/app.component.html`)
-    );
+    expect(appLintStdOut).toContain(normalize(`${app1}/src/app/app.html`));
     expect(appLintStdOut).toContain(`1:6`);
     expect(appLintStdOut).toContain(`Invalid binding syntax`);
     expect(appLintStdOut).toContain(
@@ -254,22 +247,22 @@ describe('Angular Projects', () => {
         import { NgModule } from '@angular/core';
         import { BrowserModule } from '@angular/platform-browser';
         import { RouterModule } from '@angular/router';
-        import { AppComponent } from './app.component';
+        import { App } from './app';
         import { appRoutes } from './app.routes';
-        import { NxWelcomeComponent } from './nx-welcome.component';
+        import { NxWelcome } from './nx-welcome';
         import {${
           names(buildableLib).className
         }Module} from '@${proj}/${buildableLib}';
 
         @NgModule({
-          declarations: [AppComponent, NxWelcomeComponent],
+          declarations: [App, NxWelcome],
           imports: [
             BrowserModule,
             RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
             ${names(buildableLib).className}Module
           ],
           providers: [],
-          bootstrap: [AppComponent],
+          bootstrap: [App],
         })
         export class AppModule {}
     `
@@ -280,22 +273,22 @@ describe('Angular Projects', () => {
         import { NgModule } from '@angular/core';
         import { BrowserModule } from '@angular/platform-browser';
         import { RouterModule } from '@angular/router';
-        import { AppComponent } from './app.component';
+        import { App } from './app';
         import { appRoutes } from './app.routes';
-        import { NxWelcomeComponent } from './nx-welcome.component';
+        import { NxWelcome } from './nx-welcome';
         import {${
           names(buildableLib).className
         }Module} from '@${proj}/${buildableLib}';
 
         @NgModule({
-          declarations: [AppComponent, NxWelcomeComponent],
+          declarations: [App, NxWelcome],
           imports: [
             BrowserModule,
             RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
             ${names(buildableLib).className}Module
           ],
           providers: [],
-          bootstrap: [AppComponent],
+          bootstrap: [App],
         })
         export class AppModule {}
     `
@@ -398,7 +391,7 @@ describe('Angular Projects', () => {
       export default replaceTextPlugin;`
     );
     updateFile(
-      `${esbuildApp}/src/app/app.component.ts`,
+      `${esbuildApp}/src/app/app.ts`,
       `import { Component } from '@angular/core';
 
       declare const BUILD_DEFINED: string;
@@ -406,9 +399,9 @@ describe('Angular Projects', () => {
       @Component({
         selector: 'app-root',
         standalone: false,
-        templateUrl: './app.component.html',
+        templateUrl: './app.html',
       })
-      export class AppComponent {
+      export class App {
         title = 'esbuild-app';
         buildDefined = BUILD_DEFINED;
       }`
@@ -538,9 +531,7 @@ describe('Angular Projects', () => {
     // using the project name as the directory when no directory is provided
     checkFilesExist(
       `${libName}/src/index.ts`,
-      `${libName}/src/lib/${libName.split('/')[1]}/${
-        libName.split('/')[1]
-      }.component.ts`
+      `${libName}/src/lib/${libName.split('/')[1]}/${libName.split('/')[1]}.ts`
     );
     // check build works
     expect(() => runCLI(`build ${libName}`)).not.toThrow();

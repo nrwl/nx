@@ -88,7 +88,7 @@ describe('Angular Cypress Component Tests', () => {
       }
     );
     updateFile(
-      `${buildableLibName}/src/lib/input-standalone/input-standalone.component.cy.ts`,
+      `${buildableLibName}/src/lib/input-standalone/input-standalone.cy.ts`,
       (content) => {
         // text-green-500 should now apply
         return content.replace('rgb(0, 0, 0)', 'rgb(34, 197, 94)');
@@ -149,7 +149,7 @@ function createLib(projectName: string, appName: string, libName: string) {
     `generate @nx/angular:component ${libName}/src/lib/btn-standalone/btn-standalone --inlineTemplate --inlineStyle --export --standalone --no-interactive`
   );
   updateFile(
-    `${libName}/src/lib/btn/btn.component.ts`,
+    `${libName}/src/lib/btn/btn.ts`,
     `
 import { Component, Input } from '@angular/core';
 
@@ -158,13 +158,13 @@ import { Component, Input } from '@angular/core';
   template: '<button class="text-green-500">{{text}}</button>',
   styles: []
 })
-export class BtnComponent {
+export class Btn {
   @Input() text = 'something';
 }
 `
   );
   updateFile(
-    `${libName}/src/lib/btn-standalone/btn-standalone.component.ts`,
+    `${libName}/src/lib/btn-standalone/btn-standalone.ts`,
     `
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -175,7 +175,7 @@ import { CommonModule } from '@angular/common';
   template: '<button class="text-green-500">standlone-{{text}}</button>',
   styles: [],
 })
-export class BtnStandaloneComponent {
+export class BtnStandalone {
   @Input() text = 'something';
 }
 `
@@ -187,7 +187,7 @@ function createBuildableLib(projectName: string, libName: string) {
   runCLI(`generate @nx/angular:lib ${libName} --buildable --no-interactive`);
   // create cmp for lib
   runCLI(
-    `generate @nx/angular:component ${libName}/src/lib/input/input --inlineTemplate --inlineStyle --export --no-interactive`
+    `generate @nx/angular:component ${libName}/src/lib/input/input.component --inlineTemplate --inlineStyle --export --no-interactive`
   );
   // create standlone cmp for lib
   runCLI(
@@ -210,7 +210,7 @@ import {Component, Input} from '@angular/core';
   `
   );
   updateFile(
-    `${libName}/src/lib/input-standalone/input-standalone.component.ts`,
+    `${libName}/src/lib/input-standalone/input-standalone.ts`,
     `
 import {Component, Input} from '@angular/core';
 import {CommonModule} from '@angular/common';
@@ -221,7 +221,7 @@ import {CommonModule} from '@angular/common';
   template: \`<label class="text-green-500">Email: <input class="border-blue-500" type="email" [readOnly]="readOnly"></label>\`,
     styles  : []
   })
-  export class InputStandaloneComponent{
+  export class InputStandalone{
     @Input() readOnly = false;
   }
   `
@@ -230,7 +230,7 @@ import {CommonModule} from '@angular/common';
 
 function useLibInApp(projectName: string, appName: string, libName: string) {
   createFile(
-    `${appName}/src/app/app.component.html`,
+    `${appName}/src/app/app.html`,
     `
 <${projectName}-btn></${projectName}-btn>
 <${projectName}-btn-standalone></${projectName}-btn-standalone>
@@ -239,7 +239,7 @@ function useLibInApp(projectName: string, appName: string, libName: string) {
   );
   const btnModuleName = names(libName).className;
   updateFile(
-    `${appName}/src/app/app.component.scss`,
+    `${appName}/src/app/app.scss`,
     `
 @use 'styleguide' as *;
 
@@ -254,14 +254,14 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import {${btnModuleName}Module} from "@${projectName}/${libName}";
 
-import { AppComponent } from './app.component';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { App } from './app';
+import { NxWelcome } from './nx-welcome';
 
 @NgModule({
-  declarations: [AppComponent, NxWelcomeComponent],
+  declarations: [App, NxWelcome],
   imports: [BrowserModule, ${btnModuleName}Module],
   providers: [],
-  bootstrap: [AppComponent],
+  bootstrap: [App],
 })
 export class AppModule {}
 `
@@ -328,25 +328,25 @@ describe(InputComponent.name, () => {
   );
 
   createFile(
-    `${libName}/src/lib/input-standalone/input-standalone.component.cy.ts`,
+    `${libName}/src/lib/input-standalone/input-standalone.cy.ts`,
     `
 import { MountConfig } from 'cypress/angular';
-import { InputStandaloneComponent } from './input-standalone.component';
+import { InputStandalone } from './input-standalone';
 
-describe(InputStandaloneComponent.name, () => {
-  const config: MountConfig<InputStandaloneComponent> = {
+describe(InputStandalone.name, () => {
+  const config: MountConfig<InputStandalone> = {
     declarations: [],
     imports: [],
     providers: [],
   };
 
   it('renders', () => {
-    cy.mount(InputStandaloneComponent, config);
+    cy.mount(InputStandalone, config);
     // make sure tailwind isn't getting applied
     cy.get('label').should('have.css', 'color', 'rgb(0, 0, 0)');
   });
   it('should be readonly', () => {
-    cy.mount(InputStandaloneComponent, {
+    cy.mount(InputStandalone, {
       ...config,
       componentProperties: {
         readOnly: true,
@@ -367,19 +367,19 @@ function useBuildableLibInLib(
   const buildLibNames = names(buildableLibName);
   // use the buildable lib in lib so now buildableLib has an indirect dep on app
   updateFile(
-    `${libName}/src/lib/btn-standalone/btn-standalone.component.ts`,
+    `${libName}/src/lib/btn-standalone/btn-standalone.ts`,
     `
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { InputStandaloneComponent } from '@${projectName}/${buildLibNames.fileName}';
+import { InputStandalone } from '@${projectName}/${buildLibNames.fileName}';
 @Component({
   selector: '${projectName}-btn-standalone',
   standalone: true,
-  imports: [CommonModule, InputStandaloneComponent],
+  imports: [CommonModule, InputStandalone],
   template: '<button class="text-green-500">standlone-{{text}}</button>${projectName} <${projectName}-input-standalone></${projectName}-input-standalone>',
   styles: [],
 })
-export class BtnStandaloneComponent {
+export class BtnStandalone {
   @Input() text = 'something';
 }
 `
@@ -394,7 +394,7 @@ function updateBuilableLibTestsToAssertAppStyles(
 
   removeFile(`${buildableLibName}/src/lib/input/input.component.cy.ts`);
   updateFile(
-    `${buildableLibName}/src/lib/input-standalone/input-standalone.component.cy.ts`,
+    `${buildableLibName}/src/lib/input-standalone/input-standalone.cy.ts`,
     (content) => {
       // app styles should now apply
       return content.replace('rgb(34, 197, 94)', 'rgb(255, 192, 203)');

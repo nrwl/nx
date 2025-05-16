@@ -46,10 +46,8 @@ describe('Move Angular Project', () => {
     expect(moveOutput).toContain(`CREATE ${newPath}/src/main.ts`);
     expect(moveOutput).toContain(`CREATE ${newPath}/src/styles.css`);
     expect(moveOutput).toContain(`CREATE ${newPath}/src/test-setup.ts`);
-    expect(moveOutput).toContain(
-      `CREATE ${newPath}/src/app/app.component.html`
-    );
-    expect(moveOutput).toContain(`CREATE ${newPath}/src/app/app.component.ts`);
+    expect(moveOutput).toContain(`CREATE ${newPath}/src/app/app.html`);
+    expect(moveOutput).toContain(`CREATE ${newPath}/src/app/app.ts`);
     expect(moveOutput).toContain(`CREATE ${newPath}/src/app/app.config.ts`);
   });
 

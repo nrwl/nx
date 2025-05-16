@@ -1,18 +1,18 @@
 import { TestBed } from '@angular/core/testing';
-import { AppComponent } from './app.component';<% if(!minimal) { %>
-import { NxWelcomeComponent } from './nx-welcome.component';<% } %><% if(routing) { %>
+import { App<%= componentType %> } from './app<%= componentFileSuffix %>';<% if(!minimal) { %>
+import { NxWelcome<%= componentType %> } from './nx-welcome<%= componentFileSuffix %>';<% } %><% if(routing) { %>
 import { RouterModule } from '@angular/router';<% } %>
 
-describe('AppComponent', () => {
+describe('App<%= componentType %>', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [<% if(routing) { %>RouterModule.forRoot([])<% } %>],
-      declarations: [AppComponent<% if(!minimal) { %>, NxWelcomeComponent<% } %>]
+      declarations: [App<%= componentType %><% if(!minimal) { %>, NxWelcome<%= componentType %><% } %>]
     }).compileComponents();
   });
 
   it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
+    const fixture = TestBed.createComponent(App<%= componentType %>);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
@@ -21,7 +21,7 @@ describe('AppComponent', () => {
   });<% if(!minimal) { %>
 
   it(`should have as title '<%= appName %>'`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
+    const fixture = TestBed.createComponent(App<%= componentType %>);
     const app = fixture.componentInstance;
     expect(app.title).toEqual('<%= appName %>');
   });<% } %>

@@ -251,7 +251,7 @@ exports[`ngrx NgModule Syntax should add a root module with feature module when 
 "import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
-import { AppComponent } from './app.component';
+import { App } from './app';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import * as fromUsers from './+state/users.reducer';
@@ -265,8 +265,8 @@ import { StoreRouterConnectingModule } from '@ngrx/router-store';
         strictStateImmutability: true
       }
     }), EffectsModule.forRoot([UsersEffects]), StoreRouterConnectingModule.forRoot(), StoreModule.forFeature(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer)],
-  declarations: [AppComponent],
-  bootstrap: [AppComponent]
+  declarations: [App],
+  bootstrap: [App]
 })
 export class AppModule {}
 "
@@ -276,7 +276,7 @@ exports[`ngrx NgModule Syntax should add a root module with feature module when 
 "import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
-import { AppComponent } from './app.component';
+import { App } from './app';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import * as fromUsers from './+state/users.reducer';
@@ -290,8 +290,8 @@ import { StoreRouterConnectingModule } from '@ngrx/router-store';
         strictStateImmutability: true
       }
     }), EffectsModule.forRoot([UsersEffects]), StoreRouterConnectingModule.forRoot(), StoreModule.forFeature(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer)],
-  declarations: [AppComponent],
-  bootstrap: [AppComponent]
+  declarations: [App],
+  bootstrap: [App]
 })
 export class AppModule {}
 "
@@ -301,7 +301,7 @@ exports[`ngrx NgModule Syntax should add an empty root module when minimal and r
 "import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
-import { AppComponent } from './app.component';
+import { App } from './app';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreRouterConnectingModule } from '@ngrx/router-store';
@@ -313,8 +313,8 @@ import { StoreRouterConnectingModule } from '@ngrx/router-store';
         strictStateImmutability: true
       }
     }), EffectsModule.forRoot([]), StoreRouterConnectingModule.forRoot()],
-  declarations: [AppComponent],
-  bootstrap: [AppComponent]
+  declarations: [App],
+  bootstrap: [App]
 })
 export class AppModule {}
 "
@@ -324,7 +324,7 @@ exports[`ngrx NgModule Syntax should format files 1`] = `
 "import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
-import { AppComponent } from './app.component';
+import { App } from './app';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import * as fromUsers from './+state/users.reducer';
@@ -336,8 +336,8 @@ import { UsersEffects } from './+state/users.effects';
     StoreModule.forFeature(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
     EffectsModule.forFeature([UsersEffects]),
   ],
-  declarations: [AppComponent],
-  bootstrap: [AppComponent],
+  declarations: [App],
+  bootstrap: [App],
 })
 export class AppModule {}
 "
@@ -663,11 +663,11 @@ exports[`ngrx NgModule Syntax should not generate imports when skipImport is tru
 "import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
-import { AppComponent } from './app.component';
+import { App } from './app';
 @NgModule({
   imports: [BrowserModule, RouterModule.forRoot([])],
-  declarations: [AppComponent],
-  bootstrap: [AppComponent]
+  declarations: [App],
+  bootstrap: [App]
 })
 export class AppModule {}
 "
@@ -710,46 +710,46 @@ export * from './lib/flights.module';
 
 exports[`ngrx Standalone APIs should add a feature module when route is non-empty 1`] = `
 "import { Routes } from '@angular/router';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { NxWelcome } from './nx-welcome';
 import { provideStore, provideState } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 import * as fromUsers from './+state/users.reducer';
 import { UsersEffects } from './+state/users.effects';
 
-export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent , providers: [provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer), provideEffects(UsersEffects)]}];
+export const appRoutes: Routes = [{ path: 'home', component: NxWelcome , providers: [provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer), provideEffects(UsersEffects)]}];
 "
 `;
 
 exports[`ngrx Standalone APIs should add a feature module when route is set to default 1`] = `
 "import { Routes } from '@angular/router';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { NxWelcome } from './nx-welcome';
 import { provideStore, provideState } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 import * as fromUsers from './+state/users.reducer';
 import { UsersEffects } from './+state/users.effects';
 
-export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent , providers: [provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer), provideEffects(UsersEffects)]}];
+export const appRoutes: Routes = [{ path: '', component: NxWelcome , providers: [provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer), provideEffects(UsersEffects)]}];
 "
 `;
 
 exports[`ngrx Standalone APIs should add a feature module when route is undefined 1`] = `
 "import { Routes } from '@angular/router';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { NxWelcome } from './nx-welcome';
 import { provideStore, provideState } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 import * as fromUsers from './+state/users.reducer';
 import { UsersEffects } from './+state/users.effects';
 
-export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent , providers: [provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer), provideEffects(UsersEffects)]}];
+export const appRoutes: Routes = [{ path: '', component: NxWelcome , providers: [provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer), provideEffects(UsersEffects)]}];
 "
 `;
 
 exports[`ngrx Standalone APIs should add a root module with feature module when minimal is set to false 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
-import { AppComponent } from './app/app.component';
+import { App } from './app/app';
 
-bootstrapApplication(AppComponent, appConfig).catch((err) =>
+bootstrapApplication(App, appConfig).catch((err) =>
   console.error(err)
 );
 "
@@ -777,9 +777,9 @@ export const appConfig: ApplicationConfig = {
 exports[`ngrx Standalone APIs should add an empty provideStore when minimal and root are set to true 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
-import { AppComponent } from './app/app.component';
+import { App } from './app/app';
 
-bootstrapApplication(AppComponent, appConfig).catch((err) =>
+bootstrapApplication(App, appConfig).catch((err) =>
   console.error(err)
 );
 "
@@ -805,9 +805,9 @@ export const appConfig: ApplicationConfig = {
 exports[`ngrx Standalone APIs should add facade provider when facade is true 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
-import { AppComponent } from './app/app.component';
+import { App } from './app/app';
 
-bootstrapApplication(AppComponent, appConfig).catch((err) =>
+bootstrapApplication(App, appConfig).catch((err) =>
   console.error(err)
 );
 "
@@ -835,14 +835,14 @@ export const appConfig: ApplicationConfig = {
 
 exports[`ngrx Standalone APIs should add facade provider when facade is true and --root is false 1`] = `
 "import { Routes } from '@angular/router';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { NxWelcome } from './nx-welcome';
 import { provideStore, provideState } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 import * as fromUsers from './+state/users.reducer';
 import { UsersEffects } from './+state/users.effects';
 import { UsersFacade } from './+state/users.facade';
 
-export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent , providers: [UsersFacade, provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer), provideEffects(UsersEffects)]}];
+export const appRoutes: Routes = [{ path: '', component: NxWelcome , providers: [UsersFacade, provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer), provideEffects(UsersEffects)]}];
 "
 `;
 

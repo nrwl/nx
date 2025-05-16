@@ -2,17 +2,17 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';<% if(routing) { %>
 import { RouterModule } from '@angular/router';<% } %>
 
-import { RemoteEntryComponent } from './entry.component';
-import { NxWelcomeComponent } from './nx-welcome.component';<% if(routing) { %>
+import { RemoteEntry<%= componentType %> } from './entry<%= componentFileSuffix %>';
+import { <%= nxWelcomeSymbolName %> } from './<%= nxWelcomeFileName %>';<% if(routing) { %>
 import { remoteRoutes } from './entry.routes';<% } %>
 
 @NgModule({
-  declarations: [RemoteEntryComponent, NxWelcomeComponent],
+  declarations: [RemoteEntry<%= componentType %>, <%= nxWelcomeSymbolName %>],
   imports: [
     CommonModule,<% if(routing) { %>
     RouterModule.forChild(remoteRoutes),<% } %>
   ],
   providers: [],<% if(!routing) { %>
-  exports: [RemoteEntryComponent],<% } %>
+  exports: [RemoteEntry<%= componentType %>],<% } %>
 })
 export class RemoteEntryModule {}

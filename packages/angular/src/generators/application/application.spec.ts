@@ -8,6 +8,7 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
+  updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -130,9 +131,7 @@ describe('app', () => {
       });
       const { targets } = readProjectConfiguration(appTree, 'my-app');
       expect(targets.test).toBeFalsy();
-      expect(
-        appTree.exists('my-app/src/app/app.component.spec.ts')
-      ).toBeFalsy();
+      expect(appTree.exists('my-app/src/app/app.spec.ts')).toBeFalsy();
     });
 
     it('should remove the e2e target on the application', async () => {
@@ -172,7 +171,7 @@ describe('app', () => {
       expect(appTree.exists('my-app/jest.config.ts')).toBeTruthy();
       expect(appTree.exists('my-app/src/main.ts')).toBeTruthy();
       expect(appTree.exists('my-app/src/app/app.module.ts')).toBeTruthy();
-      expect(appTree.exists('my-app/src/app/app.component.ts')).toBeTruthy();
+      expect(appTree.exists('my-app/src/app/app.ts')).toBeTruthy();
       expect(appTree.read('my-app/src/app/app.module.ts', 'utf-8')).toContain(
         'class AppModule'
       );
@@ -326,7 +325,7 @@ describe('app', () => {
         `my-dir/my-app/jest.config.ts`,
         'my-dir/my-app/src/main.ts',
         'my-dir/my-app/src/app/app.module.ts',
-        'my-dir/my-app/src/app/app.component.ts',
+        'my-dir/my-app/src/app/app.ts',
         'my-dir/my-app-e2e/cypress.config.ts',
       ].forEach((path) => {
         expect(appTree.exists(path)).toBeTruthy();
@@ -414,7 +413,7 @@ describe('app', () => {
         'my-dir/my-app/jest.config.ts',
         'my-dir/my-app/src/main.ts',
         'my-dir/my-app/src/app/app.module.ts',
-        'my-dir/my-app/src/app/app.component.ts',
+        'my-dir/my-app/src/app/app.ts',
         'my-dir/my-app-e2e/cypress.config.ts',
       ].forEach((path) => {
         expect(appTree.exists(path)).toBeTruthy();
@@ -473,7 +472,7 @@ describe('app', () => {
         appTree.read('my-dir/my-app/src/app/app.module.ts', 'utf-8')
       ).toContain('RouterModule.forRoot');
       expect(
-        appTree.read('my-dir/my-app/src/app/app.component.spec.ts', 'utf-8')
+        appTree.read('my-dir/my-app/src/app/app.spec.ts', 'utf-8')
       ).toContain('imports: [RouterModule.forRoot([])]');
     });
 
@@ -482,34 +481,32 @@ describe('app', () => {
         name: 'myApp',
         skipTests: true,
       });
-      expect(
-        appTree.exists('my-dir/my-app/src/app/app.component.spec.ts')
-      ).toBeFalsy();
+      expect(appTree.exists('my-dir/my-app/src/app/app.spec.ts')).toBeFalsy();
     });
   });
 
   describe('template generation mode', () => {
-    it('should create Nx specific `app.component.html` template', async () => {
+    it('should create Nx specific `app.html` template', async () => {
       await generateApp(appTree, 'my-dir/my-app');
-      expect(
-        appTree.read('my-dir/my-app/src/app/app.component.html', 'utf-8')
-      ).toContain('<app-nx-welcome></app-nx-welcome>');
+      expect(appTree.read('my-dir/my-app/src/app/app.html', 'utf-8')).toContain(
+        '<app-nx-welcome></app-nx-welcome>'
+      );
     });
 
-    it("should update `template`'s property of AppComponent with Nx content", async () => {
+    it("should update `template`'s property of App component with Nx content", async () => {
       await generateApp(appTree, 'my-dir/my-app', {
         inlineTemplate: true,
       });
-      expect(
-        appTree.read('my-dir/my-app/src/app/app.component.ts', 'utf-8')
-      ).toContain('<app-nx-welcome></app-nx-welcome>');
+      expect(appTree.read('my-dir/my-app/src/app/app.ts', 'utf-8')).toContain(
+        '<app-nx-welcome></app-nx-welcome>'
+      );
     });
 
-    it('should create Nx specific `nx-welcome.component.ts` file', async () => {
+    it('should create Nx specific `nx-welcome.ts` file', async () => {
       await generateApp(appTree, 'my-dir/my-app');
 
       const nxWelcomeComponentText = appTree.read(
-        'my-dir/my-app/src/app/nx-welcome.component.ts',
+        'my-dir/my-app/src/app/nx-welcome.ts',
         'utf-8'
       );
       expect(nxWelcomeComponentText).not.toContain('standalone: true');
@@ -517,38 +514,70 @@ describe('app', () => {
       expect(nxWelcomeComponentText).toContain('Hello there');
     });
 
-    it('should update the AppComponent spec to target Nx content', async () => {
+    it('should update the App component spec to target Nx content', async () => {
       await generateApp(appTree, 'my-dir/my-app', {
         inlineTemplate: true,
       });
       const testFileContent = appTree.read(
-        'my-dir/my-app/src/app/app.component.spec.ts',
+        'my-dir/my-app/src/app/app.spec.ts',
         'utf-8'
       );
 
       expect(testFileContent).toContain(`querySelector('h1')`);
       expect(testFileContent).toContain('Welcome my-app');
     });
+
+    it('should respect the "type" configured in the component generator defaults', async () => {
+      const nxJson = readNxJson(appTree);
+      nxJson.generators = {
+        ...nxJson.generators,
+        '@nx/angular:component': { type: 'component' },
+      };
+      updateNxJson(appTree, nxJson);
+
+      await generateApp(appTree, 'myapp', { standalone: true });
+
+      expect(appTree.exists('myapp/src/app/app.component.ts')).toBe(true);
+      expect(
+        appTree.read('myapp/src/app/app.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(appTree.exists('myapp/src/app/app.component.html')).toBe(true);
+      expect(
+        appTree.read('myapp/src/app/app.component.html', 'utf-8')
+      ).toMatchSnapshot();
+      expect(appTree.exists('myapp/src/app/app.component.css')).toBe(true);
+      expect(appTree.exists('myapp/src/app/app.component.spec.ts')).toBe(true);
+      expect(
+        appTree.read('myapp/src/app/app.component.spec.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(appTree.exists('myapp/src/app/nx-welcome.component.ts')).toBe(
+        true
+      );
+      expect(
+        appTree.read('myapp/src/app/nx-welcome.component.ts', 'utf-8')
+      ).toContain('export class NxWelcomeComponent {}');
+      expect(appTree.read('myapp/src/main.ts', 'utf-8')).toMatchSnapshot();
+    });
   });
 
   describe('--style scss', () => {
     it('should generate scss styles', async () => {
       await generateApp(appTree, 'my-app', { style: 'scss' });
-      expect(appTree.exists('my-app/src/app/app.component.scss')).toEqual(true);
+      expect(appTree.exists('my-app/src/app/app.scss')).toEqual(true);
     });
   });
 
   describe('--style sass', () => {
     it('should generate sass styles', async () => {
       await generateApp(appTree, 'my-app', { style: 'sass' });
-      expect(appTree.exists('my-app/src/app/app.component.sass')).toEqual(true);
+      expect(appTree.exists('my-app/src/app/app.sass')).toEqual(true);
     });
   });
 
   describe('--style less', () => {
     it('should generate less styles', async () => {
       await generateApp(appTree, 'my-app', { style: 'less' });
-      expect(appTree.exists('my-app/src/app/app.component.less')).toEqual(true);
+      expect(appTree.exists('my-app/src/app/app.less')).toEqual(true);
     });
   });
 
@@ -562,11 +591,9 @@ describe('app', () => {
       expect(
         appTree.read('my-app/src/app/app.module.ts', 'utf-8')
       ).toMatchSnapshot();
+      expect(appTree.read('my-app/src/app/app.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        appTree.read('my-app/src/app/app.component.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(
-        appTree.read('my-app/src/app/app.component.spec.ts', 'utf-8')
+        appTree.read('my-app/src/app/app.spec.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
         appTree.read('my-app/src/app/app.routes.ts', 'utf-8')
@@ -814,9 +841,7 @@ describe('app', () => {
         expect(appTree.exists('my-app/tsconfig.spec.json')).toBeFalsy();
         expect(appTree.exists('my-app/jest.config.ts')).toBeFalsy();
         expect(appTree.exists('my-app/karma.config.js')).toBeFalsy();
-        expect(
-          appTree.exists('my-app/src/app/app.component.spec.ts')
-        ).toBeFalsy();
+        expect(appTree.exists('my-app/src/app/app.spec.ts')).toBeFalsy();
         expect(
           readProjectConfiguration(appTree, 'my-app').targets.test
         ).toBeUndefined();
@@ -971,14 +996,14 @@ describe('app', () => {
         appTree.read('standalone/src/app/app.routes.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        appTree.read('standalone/src/app/app.component.ts', 'utf-8')
+        appTree.read('standalone/src/app/app.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        appTree.read('standalone/src/app/app.component.spec.ts', 'utf-8')
+        appTree.read('standalone/src/app/app.spec.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(appTree.exists('standalone/src/app/app.module.ts')).toBeFalsy();
       const nxWelcomeComponentText = appTree.read(
-        'standalone/src/app/nx-welcome.component.ts',
+        'standalone/src/app/nx-welcome.ts',
         'utf-8'
       );
       expect(nxWelcomeComponentText).not.toContain('standalone: true');
@@ -998,14 +1023,14 @@ describe('app', () => {
         appTree.read('standalone/src/app/app.config.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        appTree.read('standalone/src/app/app.component.ts', 'utf-8')
+        appTree.read('standalone/src/app/app.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        appTree.read('standalone/src/app/app.component.spec.ts', 'utf-8')
+        appTree.read('standalone/src/app/app.spec.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(appTree.exists('standalone/src/app/app.module.ts')).toBeFalsy();
       const nxWelcomeComponentText = appTree.read(
-        'standalone/src/app/nx-welcome.component.ts',
+        'standalone/src/app/nx-welcome.ts',
         'utf-8'
       );
       expect(nxWelcomeComponentText).not.toContain('standalone: true');
@@ -1039,7 +1064,7 @@ describe('app', () => {
 
       expect(appTree.exists('src/main.ts')).toBe(true);
       expect(appTree.exists('src/app/app.module.ts')).toBe(true);
-      expect(appTree.exists('src/app/app.component.ts')).toBe(true);
+      expect(appTree.exists('src/app/app.ts')).toBe(true);
       expect(appTree.exists('e2e/cypress.config.ts')).toBe(true);
       expect(readJson(appTree, 'tsconfig.json').extends).toBeUndefined();
       const project = readProjectConfiguration(appTree, 'my-app');
@@ -1057,85 +1082,61 @@ describe('app', () => {
   });
 
   describe('--minimal', () => {
-    it('should skip "nx-welcome.component.ts" file and references for non-standalone apps without routing', async () => {
+    it('should skip "nx-welcome.ts" file and references for non-standalone apps without routing', async () => {
       await generateApp(appTree, 'plain', { minimal: true, routing: false });
 
-      expect(
-        appTree.exists('plain/src/app/nx-welcome.component.ts')
-      ).toBeFalsy();
+      expect(appTree.exists('plain/src/app/nx-welcome.ts')).toBeFalsy();
       expect(
         appTree.read('plain/src/app/app.module.ts', 'utf-8')
       ).toMatchSnapshot();
+      expect(appTree.read('plain/src/app/app.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        appTree.read('plain/src/app/app.component.ts', 'utf-8')
+        appTree.read('plain/src/app/app.spec.ts', 'utf-8')
       ).toMatchSnapshot();
-      expect(
-        appTree.read('plain/src/app/app.component.spec.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(
-        appTree.read('plain/src/app/app.component.html', 'utf-8')
-      ).toMatchSnapshot();
+      expect(appTree.read('plain/src/app/app.html', 'utf-8')).toMatchSnapshot();
     });
 
-    it('should skip "nx-welcome.component.ts" file and references for non-standalone apps with routing', async () => {
+    it('should skip "nx-welcome.ts" file and references for non-standalone apps with routing', async () => {
       await generateApp(appTree, 'plain', { minimal: true });
 
-      expect(
-        appTree.exists('plain/src/app/nx-welcome.component.ts')
-      ).toBeFalsy();
+      expect(appTree.exists('plain/src/app/nx-welcome.ts')).toBeFalsy();
       expect(
         appTree.read('plain/src/app/app.module.ts', 'utf-8')
       ).toMatchSnapshot();
+      expect(appTree.read('plain/src/app/app.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        appTree.read('plain/src/app/app.component.ts', 'utf-8')
+        appTree.read('plain/src/app/app.spec.ts', 'utf-8')
       ).toMatchSnapshot();
-      expect(
-        appTree.read('plain/src/app/app.component.spec.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(
-        appTree.read('plain/src/app/app.component.html', 'utf-8')
-      ).toMatchSnapshot();
+      expect(appTree.read('plain/src/app/app.html', 'utf-8')).toMatchSnapshot();
     });
 
-    it('should skip "nx-welcome.component.ts" file and references for standalone apps without routing', async () => {
+    it('should skip "nx-welcome.ts" file and references for standalone apps without routing', async () => {
       await generateApp(appTree, 'plain', {
         minimal: true,
         standalone: true,
         routing: false,
       });
 
+      expect(appTree.exists('plain/src/app/nx-welcome.ts')).toBeFalsy();
+      expect(appTree.read('plain/src/app/app.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        appTree.exists('plain/src/app/nx-welcome.component.ts')
-      ).toBeFalsy();
-      expect(
-        appTree.read('plain/src/app/app.component.ts', 'utf-8')
+        appTree.read('plain/src/app/app.spec.ts', 'utf-8')
       ).toMatchSnapshot();
-      expect(
-        appTree.read('plain/src/app/app.component.spec.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(
-        appTree.read('plain/src/app/app.component.html', 'utf-8')
-      ).toMatchSnapshot();
+      expect(appTree.read('plain/src/app/app.html', 'utf-8')).toMatchSnapshot();
     });
 
-    it('should skip "nx-welcome.component.ts" file and references for standalone apps with routing', async () => {
+    it('should skip "nx-welcome.ts" file and references for standalone apps with routing', async () => {
       await generateApp(appTree, 'plain', {
         minimal: true,
         standalone: true,
       });
 
+      expect(appTree.exists('plain/src/app/nx-welcome.ts')).toBeFalsy();
+      expect(appTree.read('plain/src/app/app.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        appTree.exists('plain/src/app/nx-welcome.component.ts')
-      ).toBeFalsy();
-      expect(
-        appTree.read('plain/src/app/app.component.ts', 'utf-8')
+        appTree.read('plain/src/app/app.spec.ts', 'utf-8')
       ).toMatchSnapshot();
-      expect(
-        appTree.read('plain/src/app/app.component.spec.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(
-        appTree.read('plain/src/app/app.component.html', 'utf-8')
-      ).toMatchSnapshot();
+      expect(appTree.read('plain/src/app/app.html', 'utf-8')).toMatchSnapshot();
     });
 
     it('should generate a correct build target for --bundler=esbuild', async () => {
@@ -1454,6 +1455,39 @@ describe('app', () => {
           .catch((err) => console.error(err));
         "
       `);
+    });
+
+    it('should generate components with the "component" type for versions lower than v20', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.2.0',
+        },
+      }));
+
+      await generateApp(appTree, 'myapp', { standalone: true });
+
+      expect(appTree.exists('myapp/src/app/app.component.ts')).toBe(true);
+      expect(
+        appTree.read('myapp/src/app/app.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(appTree.exists('myapp/src/app/app.component.html')).toBe(true);
+      expect(
+        appTree.read('myapp/src/app/app.component.html', 'utf-8')
+      ).toMatchSnapshot();
+      expect(appTree.exists('myapp/src/app/app.component.css')).toBe(true);
+      expect(appTree.exists('myapp/src/app/app.component.spec.ts')).toBe(true);
+      expect(
+        appTree.read('myapp/src/app/app.component.spec.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(appTree.exists('myapp/src/app/nx-welcome.component.ts')).toBe(
+        true
+      );
+      expect(
+        appTree.read('myapp/src/app/nx-welcome.component.ts', 'utf-8')
+      ).toContain('export class NxWelcomeComponent {}');
+      expect(appTree.read('myapp/src/main.ts', 'utf-8')).toMatchSnapshot();
     });
   });
 });

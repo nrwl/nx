@@ -54,7 +54,7 @@ describe('ngrx', () => {
   describe('NgModule Syntax', () => {
     beforeEach(() => {
       jest.clearAllMocks();
-      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      tree = createTreeWithEmptyWorkspace();
       createApp(tree, 'myapp');
       appConfig = getAppConfig();
       statePath = `${dirname(appConfig.appModule)}/+state`;
@@ -512,23 +512,20 @@ describe('ngrx', () => {
   describe('Standalone APIs', () => {
     beforeEach(async () => {
       jest.clearAllMocks();
-      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      tree = createTreeWithEmptyWorkspace();
       await generateTestApplication(tree, {
         directory: 'my-app',
         standalone: true,
         routing: true,
         skipFormat: true,
       });
-      tree.write(
-        'my-app/src/app/app.component.html',
-        '<router-outlet></router-outlet>'
-      );
+      tree.write('my-app/src/app/app.html', '<router-outlet></router-outlet>');
       tree.write(
         'my-app/src/app/app.routes.ts',
         `import { Routes } from '@angular/router';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { NxWelcome } from './nx-welcome';
 
-export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];
+export const appRoutes: Routes = [{ path: '', component: NxWelcome }];
 `
       );
     });
@@ -601,9 +598,9 @@ export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];
       tree.write(
         'my-app/src/app/app.routes.ts',
         `import { Routes } from '@angular/router';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { NxWelcome } from './nx-welcome';
 
-export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent }];
+export const appRoutes: Routes = [{ path: 'home', component: NxWelcome }];
 `
       );
 
@@ -664,7 +661,7 @@ export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent 
   describe('angular compat support', () => {
     beforeEach(async () => {
       jest.clearAllMocks();
-      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      tree = createTreeWithEmptyWorkspace();
       await generateTestApplication(tree, {
         directory: 'myapp',
         standalone: false,
@@ -710,7 +707,7 @@ export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent 
 
   describe('rxjs v6 support', () => {
     beforeEach(async () => {
-      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      tree = createTreeWithEmptyWorkspace();
       await generateTestApplication(tree, {
         directory: 'myapp',
         standalone: false,
