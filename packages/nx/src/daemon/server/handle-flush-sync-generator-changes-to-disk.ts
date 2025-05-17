@@ -7,7 +7,7 @@ export async function handleFlushSyncGeneratorChangesToDisk(
   const result = await flushSyncGeneratorChangesToDisk(generators);
 
   return {
-    response: JSON.stringify(result),
+    response: result,
     description: 'handleFlushSyncGeneratorChangesToDisk',
   };
 }
