@@ -64,8 +64,8 @@ export async function mergeCustomWebpackConfig(
 }
 
 export function resolveCustomWebpackConfig(path: string, tsConfig: string) {
-  const cleanupTranspiler = registerTsProject(tsConfig);
   const customWebpackConfig = require(path);
+  const cleanupTranspiler = registerTsProject(tsConfig);
   cleanupTranspiler();
   // If the user provides a configuration in TS file
   // then there are 2 cases for exporting an object. The first one is:
