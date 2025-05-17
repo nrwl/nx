@@ -64,6 +64,7 @@ function applyNxIndependentConfig(
 ): void {
   const isProd =
     process.env.NODE_ENV === 'production' || options.mode === 'production';
+  const isDevServer = process.env['WEBPACK_SERVE'];
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
   config.context = path.join(options.root, options.projectRoot);
   config.target ??= options.target as 'async-node' | 'node' | 'web';
@@ -178,6 +179,9 @@ function applyNxIndependentConfig(
           }),
         ],
         concatenateModules: true,
+        runtimeChunk: isDevServer
+          ? config.optimization?.runtimeChunk ?? undefined
+          : false,
       };
 
   config.stats = {
