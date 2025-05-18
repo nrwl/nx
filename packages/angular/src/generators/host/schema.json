@@ -37,6 +37,12 @@
       "x-priority": "important",
       "alias": "producers"
     },
+    "bundler": {
+      "type": "string",
+      "description": "The bundler to use for the host application.",
+      "default": "webpack",
+      "enum": ["webpack", "rspack"]
+    },
     "dynamic": {
       "type": "boolean",
       "description": "Should the host application use dynamic federation?",

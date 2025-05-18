@@ -56,7 +56,7 @@ export function convertWebpackConfigToUseNxModuleFederationPlugin(
     newWebpackConfigContents = `${webpackConfigContents.slice(
       0,
       withModuleFederationImportNode.getStart()
-    )}import { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } from '@nx/module-federation/rspack';${webpackConfigContents.slice(
+    )}import { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } from '@nx/module-federation/angular';${webpackConfigContents.slice(
       withModuleFederationImportNode.getEnd()
     )}`;
 

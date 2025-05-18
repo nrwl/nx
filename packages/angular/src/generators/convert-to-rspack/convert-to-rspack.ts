@@ -17,6 +17,7 @@ import {
   angularRspackVersion,
   nxVersion,
   tsNodeVersion,
+  webpackMergeVersion,
 } from '../../utils/versions';
 import { createConfig } from './lib/create-config';
 import { getCustomWebpackConfig } from './lib/get-custom-webpack-config';
@@ -47,12 +48,7 @@ const RENAMED_OPTIONS = {
 
 const DEFAULT_PORT = 4200;
 
-const REMOVED_OPTIONS = [
-  'buildOptimizer',
-  'buildTarget',
-  'browserTarget',
-  'publicHost',
-];
+const REMOVED_OPTIONS = ['buildOptimizer', 'buildTarget', 'browserTarget'];
 
 function normalizeFromProjectRoot(
   tree: Tree,
@@ -506,6 +502,7 @@ export async function convertToRspack(
       {},
       {
         '@nx/angular-rspack': angularRspackVersion,
+        'webpack-merge': webpackMergeVersion,
         'ts-node': tsNodeVersion,
       }
     );

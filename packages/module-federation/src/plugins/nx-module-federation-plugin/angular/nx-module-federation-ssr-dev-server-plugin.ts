@@ -12,7 +12,7 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { ModuleFederationConfig } from '../../../utils/models';
-import { extname, join } from 'path';
+import { dirname, extname, join } from 'path';
 import { existsSync } from 'fs';
 import {
   buildStaticRemotes,
@@ -24,10 +24,14 @@ import {
   startStaticRemotesFileServer,
 } from '../../utils';
 import { NxModuleFederationDevServerConfig } from '../../models';
+import { ChildProcess, fork } from 'node:child_process';
 
-const PLUGIN_NAME = 'NxModuleFederationDevServerPlugin';
+const PLUGIN_NAME = 'NxModuleFederationSSRDevServerPlugin';
 
-export class NxModuleFederationDevServerPlugin implements RspackPluginInstance {
+export class NxModuleFederationSSRDevServerPlugin
+  implements RspackPluginInstance
+{
+  private devServerProcess: ChildProcess | undefined;
   private nxBin = require.resolve('nx/bin/nx');
 
   constructor(
@@ -52,7 +56,7 @@ export class NxModuleFederationDevServerPlugin implements RspackPluginInstance {
         compiler.hooks.beforeCompile.tapAsync(
           PLUGIN_NAME,
           async (params, callback) => {
-            const staticRemotesConfig = await this.setup();
+            const staticRemotesConfig = await this.setup(compiler);
 
             logger.info(
               `NX Starting module federation dev-server for ${pc.bold(
@@ -70,14 +74,21 @@ export class NxModuleFederationDevServerPlugin implements RspackPluginInstance {
               workspaceRoot,
               this._options.devServerConfig.staticRemotesPort
             );
-            startRemoteProxies(staticRemotesConfig, mappedLocationOfRemotes, {
-              pathToCert: this._options.devServerConfig.sslCert,
-              pathToKey: this._options.devServerConfig.sslCert,
-            });
+            startRemoteProxies(
+              staticRemotesConfig,
+              mappedLocationOfRemotes,
+              {
+                pathToCert: this._options.devServerConfig.sslCert,
+                pathToKey: this._options.devServerConfig.sslCert,
+              },
+              true
+            );
 
             new DefinePlugin({
               'process.env.NX_MF_DEV_REMOTES': process.env.NX_MF_DEV_REMOTES,
             }).apply(compiler);
+
+            await this.startServer(compiler);
 
             callback();
           }
@@ -87,7 +98,46 @@ export class NxModuleFederationDevServerPlugin implements RspackPluginInstance {
     );
   }
 
-  private async setup() {
+  private async startServer(compiler: Compiler) {
+    compiler.hooks.done.tapAsync(PLUGIN_NAME, async (_, callback) => {
+      const serverPath = join(
+        compiler.options.output.path,
+        (compiler.options.output.filename as string) ?? 'server.js'
+      );
+      if (this.devServerProcess) {
+        await new Promise<void>((res) => {
+          this.devServerProcess.on('exit', () => {
+            res();
+          });
+          this.devServerProcess.kill('SIGKILL');
+          this.devServerProcess = undefined;
+        });
+      }
+
+      if (!existsSync(serverPath)) {
+        for (let retries = 0; retries < 10; retries++) {
+          await new Promise<void>((res) => setTimeout(res, 200));
+          if (existsSync(serverPath)) {
+            break;
+          }
+        }
+        if (!existsSync(serverPath)) {
+          throw new Error(`Could not find server bundle at ${serverPath}.`);
+        }
+      }
+
+      this.devServerProcess = fork(serverPath);
+      process.on('exit', () => {
+        this.devServerProcess?.kill('SIGKILL');
+      });
+      process.on('SIGINT', () => {
+        this.devServerProcess?.kill('SIGKILL');
+      });
+      callback();
+    });
+  }
+
+  private async setup(compiler: Compiler) {
     const projectGraph = readCachedProjectGraph();
     const { projects: workspaceProjects } =
       readProjectsConfigurationFromProjectGraph(projectGraph);
@@ -125,12 +175,11 @@ export class NxModuleFederationDevServerPlugin implements RspackPluginInstance {
     const remotesConfig = parseRemotesConfig(
       remotes,
       workspaceRoot,
-      projectGraph
+      projectGraph,
+      true
     );
     const staticRemotesConfig = await getStaticRemotes(
-      remotesConfig.config ?? {},
-      this._options.devServerConfig?.devRemoteFindOptions,
-      this._options.devServerConfig?.host
+      remotesConfig.config ?? {}
     );
     const devRemotes = remotes.filter((r) => !staticRemotesConfig[r]);
     process.env.NX_MF_DEV_REMOTES = JSON.stringify([
