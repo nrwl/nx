@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { provideServerRendering, withRoutes } from '@angular/ssr';
 import { <%= appSymbolName %> } from './<%= appFileName %>';
-import { AppModule } from './app.module';
+import { AppModule } from './app<%= moduleTypeSeparator %>module';
 import { serverRoutes } from './app.routes.server';
 
 @NgModule({

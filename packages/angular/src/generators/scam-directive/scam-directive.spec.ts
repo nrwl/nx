@@ -1,4 +1,10 @@
-import { addProjectConfiguration, updateJson, writeJson } from '@nx/devkit';
+import {
+  addProjectConfiguration,
+  readNxJson,
+  updateJson,
+  updateNxJson,
+  writeJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { scamDirectiveGenerator } from './scam-directive';
 
@@ -102,10 +108,47 @@ describe('SCAM Directive Generator', () => {
 
     // ASSERT
     const directiveModuleSource = tree.read(
-      'apps/app1/src/app/example.module.ts',
+      'apps/app1/src/app/example-module.ts',
       'utf-8'
     );
     expect(directiveModuleSource).toMatchInlineSnapshot(`
+      "import { NgModule } from '@angular/core';
+      import { CommonModule } from '@angular/common';
+      import { Example } from './example';
+
+      @NgModule({
+        imports: [CommonModule],
+        declarations: [Example],
+        exports: [Example],
+      })
+      export class ExampleModule {}
+      "
+    `);
+  });
+
+  it('should create the module respecting the "typeSeparator" generator default', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    const nxJson = readNxJson(tree);
+    nxJson.generators = {
+      ...nxJson.generators,
+      '@nx/angular:module': { typeSeparator: '.' },
+    };
+    updateNxJson(tree, nxJson);
+    addProjectConfiguration(tree, 'app1', {
+      projectType: 'application',
+      sourceRoot: 'apps/app1/src',
+      root: 'apps/app1',
+    });
+
+    await scamDirectiveGenerator(tree, {
+      name: 'example',
+      path: 'apps/app1/src/app/example',
+      inlineScam: false,
+      skipFormat: true,
+    });
+
+    expect(tree.read('apps/app1/src/app/example.module.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
       import { Example } from './example';
@@ -185,7 +228,7 @@ describe('SCAM Directive Generator', () => {
 
     // ASSERT
     const directiveModuleSource = tree.read(
-      'libs/lib1/feature/src/lib/example/example.module.ts',
+      'libs/lib1/feature/src/lib/example/example-module.ts',
       'utf-8'
     );
     expect(directiveModuleSource).toMatchInlineSnapshot(`
@@ -207,7 +250,7 @@ describe('SCAM Directive Generator', () => {
     );
     expect(secondaryEntryPointSource).toMatchInlineSnapshot(`
       "export * from './lib/example/example';
-      export * from './lib/example/example.module';"
+      export * from './lib/example/example-module';"
     `);
   });
 
@@ -374,6 +417,44 @@ describe('SCAM Directive Generator', () => {
         export class ExampleDirective {
           constructor() {}
         }
+
+        @NgModule({
+          imports: [CommonModule],
+          declarations: [ExampleDirective],
+          exports: [ExampleDirective],
+        })
+        export class ExampleDirectiveModule {}
+        "
+      `);
+    });
+
+    it('should generate the module with the "." type separator for versions lower than v20', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.dependencies = {
+          ...json.dependencies,
+          '@angular/core': '~19.2.0',
+        };
+        return json;
+      });
+      addProjectConfiguration(tree, 'app1', {
+        projectType: 'application',
+        sourceRoot: 'apps/app1/src',
+        root: 'apps/app1',
+      });
+
+      await scamDirectiveGenerator(tree, {
+        name: 'example',
+        path: 'apps/app1/src/app/example',
+        inlineScam: false,
+        skipFormat: true,
+      });
+
+      expect(tree.read('apps/app1/src/app/example.module.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { NgModule } from '@angular/core';
+        import { CommonModule } from '@angular/common';
+        import { ExampleDirective } from './example.directive';
 
         @NgModule({
           imports: [CommonModule],

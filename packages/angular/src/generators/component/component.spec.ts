@@ -20,7 +20,7 @@ describe('component Generator', () => {
       root: 'libs/lib1',
     });
     tree.write(
-      'libs/lib1/src/lib/lib.module.ts',
+      'libs/lib1/src/lib/lib-module.ts',
       `
     import { NgModule } from '@angular/core';
     
@@ -30,7 +30,7 @@ describe('component Generator', () => {
     })
     export class LibModule {}`
     );
-    tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
+    tree.write('libs/lib1/src/index.ts', `export * from './lib/lib-module';`);
 
     // ACT
     await componentGenerator(tree, {
@@ -216,7 +216,7 @@ describe('component Generator', () => {
       root: 'libs/lib1',
     });
     tree.write(
-      'libs/lib1/src/lib/lib.module.ts',
+      'libs/lib1/src/lib/lib-module.ts',
       `
     import { NgModule } from '@angular/core';
     
@@ -251,7 +251,7 @@ describe('component Generator', () => {
       root: 'libs/lib1',
     });
     tree.write(
-      'libs/lib1/src/lib/lib.module.ts',
+      'libs/lib1/src/lib/lib-module.ts',
       `
     import { NgModule } from '@angular/core';
     
@@ -287,7 +287,7 @@ describe('component Generator', () => {
       root: 'libs/lib1',
     });
     tree.write(
-      'libs/lib1/src/lib/lib.module.ts',
+      'libs/lib1/src/lib/lib-module.ts',
       `
     import { NgModule } from '@angular/core';
     
@@ -323,7 +323,7 @@ describe('component Generator', () => {
       root: 'libs/lib1',
     });
     tree.write(
-      'libs/lib1/src/lib/lib.module.ts',
+      'libs/lib1/src/lib/lib-module.ts',
       `
     import { NgModule } from '@angular/core';
     
@@ -368,7 +368,7 @@ describe('component Generator', () => {
       root: 'libs/lib1',
     });
     tree.write(
-      'libs/lib1/src/lib/lib.module.ts',
+      'libs/lib1/src/lib/lib-module.ts',
       `
     import { NgModule } from '@angular/core';
     
@@ -378,7 +378,7 @@ describe('component Generator', () => {
     })
     export class LibModule {}`
     );
-    tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
+    tree.write('libs/lib1/src/index.ts', `export * from './lib/lib-module';`);
 
     // ACT
     await componentGenerator(tree, {
@@ -408,7 +408,7 @@ describe('component Generator', () => {
       root: 'libs/lib1',
     });
     tree.write(
-      'libs/lib1/src/lib/lib.module.ts',
+      'libs/lib1/src/lib/lib-module.ts',
       `
     import { NgModule } from '@angular/core';
     
@@ -449,7 +449,7 @@ describe('component Generator', () => {
       root: 'libs/lib1',
     });
     tree.write(
-      'libs/lib1/src/lib/lib.module.ts',
+      'libs/lib1/src/lib/lib-module.ts',
       `
     import { NgModule } from '@angular/core';
     
@@ -459,7 +459,7 @@ describe('component Generator', () => {
     })
     export class LibModule {}`
     );
-    tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
+    tree.write('libs/lib1/src/index.ts', `export * from './lib/lib-module';`);
 
     // ACT
     await componentGenerator(tree, {
@@ -489,7 +489,7 @@ describe('component Generator', () => {
       root: 'libs/lib1',
     });
     tree.write(
-      'libs/lib1/src/lib/lib.module.ts',
+      'libs/lib1/src/lib/lib-module.ts',
       `
     import { NgModule } from '@angular/core';
     
@@ -499,7 +499,7 @@ describe('component Generator', () => {
     })
     export class LibModule {}`
     );
-    tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
+    tree.write('libs/lib1/src/index.ts', `export * from './lib/lib-module';`);
 
     // ACT
     await componentGenerator(tree, {
@@ -528,7 +528,7 @@ describe('component Generator', () => {
       root: 'libs/lib1',
     });
     tree.write(
-      'libs/lib1/src/lib/lib.module.ts',
+      'libs/lib1/src/lib/lib-module.ts',
       `
     import { NgModule } from '@angular/core';
     
@@ -538,7 +538,7 @@ describe('component Generator', () => {
     })
     export class LibModule {}`
     );
-    tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
+    tree.write('libs/lib1/src/index.ts', `export * from './lib/lib-module';`);
 
     // ACT
     await componentGenerator(tree, {
@@ -568,7 +568,7 @@ describe('component Generator', () => {
       root: 'libs/lib1',
     });
     tree.write(
-      'libs/lib1/src/lib/lib.module.ts',
+      'libs/lib1/src/lib/lib-module.ts',
       `
     import { NgModule } from '@angular/core';
     
@@ -607,7 +607,7 @@ describe('component Generator', () => {
       root: 'libs/lib1',
     });
     tree.write(
-      'libs/lib1/src/lib/lib.module.ts',
+      'libs/lib1/src/lib/lib-module.ts',
       `
     import { NgModule } from '@angular/core';
     
@@ -657,7 +657,7 @@ describe('component Generator', () => {
       './lib',
       'lib',
     ])(
-      'should export it in the entry point when "--module" is set to "%s"',
+      'should export it in the entry point when "--module" is set to "%s" and using the "." type separator',
       async (module) => {
         // ARRANGE
         const tree = createTreeWithEmptyWorkspace();
@@ -697,6 +697,54 @@ describe('component Generator', () => {
       }
     );
 
+    it.each([
+      './lib-module.ts',
+      'lib-module.ts',
+      './lib-module',
+      'lib-module',
+      './lib',
+      'lib',
+    ])(
+      'should export it in the entry point when "--module" is set to "%s" and using the "-" type separator',
+      async (module) => {
+        // ARRANGE
+        const tree = createTreeWithEmptyWorkspace();
+        addProjectConfiguration(tree, 'lib1', {
+          projectType: 'library',
+          sourceRoot: 'libs/lib1/src',
+          root: 'libs/lib1',
+        });
+        tree.write(
+          'libs/lib1/src/lib/lib-module.ts',
+          `
+    import { NgModule } from '@angular/core';
+    
+    @NgModule({
+      declarations: [],
+      exports: []
+    })
+    export class LibModule {}`
+        );
+        tree.write(
+          'libs/lib1/src/index.ts',
+          `export * from './lib/lib-module';`
+        );
+
+        // ACT
+        await componentGenerator(tree, {
+          path: 'libs/lib1/src/lib/example/example',
+          module,
+          export: true,
+          standalone: false,
+          skipFormat: true,
+        });
+
+        // ASSERT
+        const indexSource = tree.read('libs/lib1/src/index.ts', 'utf-8');
+        expect(indexSource).toContain(`export * from './lib/example/example';`);
+      }
+    );
+
     it('should import the component correctly to the module file when flat is false', async () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace();
@@ -706,7 +754,7 @@ describe('component Generator', () => {
         root: 'libs/shared/ui',
       });
       tree.write(
-        'libs/shared/ui/src/lib/lib.module.ts',
+        'libs/shared/ui/src/lib/lib-module.ts',
         `
 import { NgModule } from '@angular/core';
 
@@ -719,7 +767,7 @@ export class LibModule {}
       );
       tree.write(
         'libs/shared/ui/src/index.ts',
-        `export * from './lib/lib.module';`
+        `export * from './lib/lib-module';`
       );
 
       // ACT
@@ -732,7 +780,7 @@ export class LibModule {}
 
       // ASSERT
       const moduleSource = tree.read(
-        'libs/shared/ui/src/lib/lib.module.ts',
+        'libs/shared/ui/src/lib/lib-module.ts',
         'utf-8'
       );
       expect(moduleSource).toMatchSnapshot();
@@ -747,7 +795,7 @@ export class LibModule {}
         root: 'libs/lib1',
       });
       tree.write(
-        'libs/lib1/src/lib/lib.module.ts',
+        'libs/lib1/src/lib/lib-module.ts',
         `
     import { NgModule } from '@angular/core';
     
@@ -758,7 +806,7 @@ export class LibModule {}
     export class LibModule {}`
       );
       tree.write(
-        'libs/lib1/src/lib/not-exported.module.ts',
+        'libs/lib1/src/lib/not-exported-module.ts',
         `
     import { NgModule } from '@angular/core';
     
@@ -768,7 +816,7 @@ export class LibModule {}
     })
     export class NotExportedModule {}`
       );
-      tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
+      tree.write('libs/lib1/src/index.ts', `export * from './lib/lib-module';`);
 
       // ACT
       await componentGenerator(tree, {
@@ -782,7 +830,7 @@ export class LibModule {}
       // ASSERT
       const indexSource = tree.read('libs/lib1/src/index.ts', 'utf-8');
       expect(indexSource).toMatchInlineSnapshot(
-        `"export * from './lib/lib.module';"`
+        `"export * from './lib/lib-module';"`
       );
     });
 
@@ -795,7 +843,7 @@ export class LibModule {}
         root: 'libs/lib1',
       });
       tree.write(
-        'libs/lib1/src/lib/lib.module.ts',
+        'libs/lib1/src/lib/lib-module.ts',
         `
     import { NgModule } from '@angular/core';
     
@@ -826,7 +874,7 @@ export class LibModule {}
         root: 'libs/lib1',
       });
       tree.write(
-        'libs/lib1/src/lib/lib.module.ts',
+        'libs/lib1/src/lib/lib-module.ts',
         `
     import { NgModule } from '@angular/core';
     
@@ -837,7 +885,7 @@ export class LibModule {}
     export class LibModule {}`
       );
       tree.write(
-        'libs/lib1/src/lib/lib2.module.ts',
+        'libs/lib1/src/lib/lib2-module.ts',
         `
     import { NgModule } from '@angular/core';
     
@@ -950,7 +998,7 @@ export class LibModule {}
         root: 'libs/lib1',
       });
       tree.write(
-        'libs/lib1/src/lib/lib.module.ts',
+        'libs/lib1/src/lib/lib-module.ts',
         `
       import { NgModule } from '@angular/core';
       
@@ -960,7 +1008,7 @@ export class LibModule {}
       })
       export class LibModule {}`
       );
-      tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
+      tree.write('libs/lib1/src/index.ts', `export * from './lib/lib-module';`);
 
       // secondary entry point
       writeJson(tree, 'libs/lib1/secondary/ng-package.json', {
@@ -968,10 +1016,10 @@ export class LibModule {}
       });
       tree.write(
         'libs/lib1/secondary/src/index.ts',
-        `export * from './lib/secondary.module';`
+        `export * from './lib/secondary-module';`
       );
       tree.write(
-        'libs/lib1/secondary/src/lib/secondary.module.ts',
+        'libs/lib1/secondary/src/lib/secondary-module.ts',
         `
       import { NgModule } from '@angular/core';
       
@@ -1013,7 +1061,7 @@ export class LibModule {}
         root: 'libs/lib1',
       });
       tree.write(
-        'libs/lib1/src/lib/lib.module.ts',
+        'libs/lib1/src/lib/lib-module.ts',
         `
       import { NgModule } from '@angular/core';
       
@@ -1023,7 +1071,7 @@ export class LibModule {}
       })
       export class LibModule {}`
       );
-      tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
+      tree.write('libs/lib1/src/index.ts', `export * from './lib/lib-module';`);
 
       // secondary entry point
       writeJson(tree, 'libs/lib1/secondary/ng-package.json', {
@@ -1031,7 +1079,7 @@ export class LibModule {}
       });
       tree.write('libs/lib1/secondary/src/index.ts', '');
       tree.write(
-        'libs/lib1/secondary/src/lib/secondary.module.ts',
+        'libs/lib1/secondary/src/lib/secondary-module.ts',
         `
       import { NgModule } from '@angular/core';
       

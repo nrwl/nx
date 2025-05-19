@@ -30,6 +30,7 @@ describe('convertComponentToScam', () => {
       filePath: 'apps/app1/src/app/example/example.ts',
       name: 'example',
       projectName: 'app1',
+      modulePath: 'apps/app1/src/app/example/example-module.ts',
       export: false,
       inlineScam: true,
       symbolName: 'Example',
@@ -88,6 +89,7 @@ describe('convertComponentToScam', () => {
       filePath: 'apps/app1/src/app/example/example.ts',
       name: 'example',
       projectName: 'app1',
+      modulePath: 'apps/app1/src/app/example/example-module.ts',
       export: false,
       inlineScam: false,
       symbolName: 'Example',
@@ -95,7 +97,7 @@ describe('convertComponentToScam', () => {
 
     // ASSERT
     const componentModuleSource = tree.read(
-      'apps/app1/src/app/example/example.module.ts',
+      'apps/app1/src/app/example/example-module.ts',
       'utf-8'
     );
     expect(componentModuleSource).toMatchInlineSnapshot(`
@@ -140,6 +142,7 @@ describe('convertComponentToScam', () => {
       filePath: 'apps/app1/src/app/example.random.ts',
       name: 'example',
       projectName: 'app1',
+      modulePath: 'apps/app1/src/app/example-module.ts',
       export: false,
       inlineScam: true,
       type: 'random',
@@ -200,6 +203,7 @@ describe('convertComponentToScam', () => {
       filePath: 'apps/app1/src/app/example.random.ts',
       name: 'example',
       projectName: 'app1',
+      modulePath: 'apps/app1/src/app/example-module.ts',
       export: false,
       inlineScam: false,
       type: 'random',
@@ -208,7 +212,7 @@ describe('convertComponentToScam', () => {
 
     // ASSERT
     const componentModuleSource = tree.read(
-      'apps/app1/src/app/example.module.ts',
+      'apps/app1/src/app/example-module.ts',
       'utf-8'
     );
     expect(componentModuleSource).toMatchInlineSnapshot(`

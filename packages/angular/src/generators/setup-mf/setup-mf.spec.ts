@@ -240,7 +240,7 @@ describe('Init MF', () => {
       tree.read('remote1/src/app/remote-entry/entry.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('remote1/src/app/remote-entry/entry.module.ts', 'utf-8')
+      tree.read('remote1/src/app/remote-entry/entry-module.ts', 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -842,7 +842,7 @@ describe('Init MF', () => {
       export class RemoteEntryComponent {}
       "
     `);
-    expect(tree.read('remote1/src/app/remote-entry/entry.module.ts', 'utf-8'))
+    expect(tree.read('remote1/src/app/remote-entry/entry-module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
@@ -943,7 +943,7 @@ describe('Init MF', () => {
       export class RemoteEntryComponent {}
       "
     `);
-    expect(tree.read('remote1/src/app/remote-entry/entry.module.ts', 'utf-8'))
+    expect(tree.read('remote1/src/app/remote-entry/entry-module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';

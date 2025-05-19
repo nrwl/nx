@@ -3,7 +3,7 @@ import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 <%_ } else { _%>
 import { platformBrowser } from '@angular/platform-browser';
 <%_ } _%>
-import { AppModule } from './app/app.module';
+import { AppModule } from './app/app<%= moduleTypeSeparator %>module';
 
 <%_ if (usePlatformBrowserDynamic) { _%>
 platformBrowserDynamic()

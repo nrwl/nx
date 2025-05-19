@@ -27,7 +27,7 @@ export class AppModule {}
 
 exports[`Host App Generator --ssr should generate the correct files 2`] = `
 "import { platformBrowser } from '@angular/platform-browser';
-import { AppModule } from './app/app.module';
+import { AppModule } from './app/app-module';
 
 platformBrowser()
   .bootstrapModule(AppModule, {
@@ -697,7 +697,7 @@ export class AppModule {}
 
 exports[`Host App Generator --ssr should generate the correct files when --typescript=true 2`] = `
 "import { platformBrowser } from '@angular/platform-browser';
-import { AppModule } from './app/app.module';
+import { AppModule } from './app/app-module';
 
 platformBrowser()
   .bootstrapModule(AppModule, {

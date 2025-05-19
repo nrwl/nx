@@ -18,6 +18,7 @@ export function addRemoteEntry(
     componentType,
     componentFileSuffix,
     nxWelcomeComponentInfo,
+    entryModuleFileName,
   } = options;
 
   generateFiles(
@@ -39,6 +40,7 @@ export function addRemoteEntry(
       setStandaloneTrue: angularMajorVersion < 19,
       componentType,
       componentFileSuffix,
+      entryModuleFileName,
       nxWelcomeFileName: nxWelcomeComponentInfo.extensionlessFileName,
       nxWelcomeSymbolName: nxWelcomeComponentInfo.symbolName,
     }
@@ -54,7 +56,7 @@ export function addRemoteEntry(
     addRoute(
       tree,
       joinPathFragments(appRoot, 'src/app/app.routes.ts'),
-      `{ path: '', loadChildren: () => import('./remote-entry/entry.module').then(m => m.RemoteEntryModule) }`
+      `{ path: '', loadChildren: () => import('./remote-entry/${entryModuleFileName}').then(m => m.RemoteEntryModule) }`
     );
   }
 }

@@ -150,7 +150,7 @@ describe('Tailwind support', () => {
       );
 
       updateFile(
-        `${lib}/src/lib/${lib}.module.ts`,
+        `${lib}/src/lib/${lib}-module.ts`,
         `import { NgModule } from '@angular/core';
         import { CommonModule } from '@angular/common';
         import { Foo } from './foo';
@@ -167,7 +167,7 @@ describe('Tailwind support', () => {
       updateFile(
         `${lib}/src/index.ts`,
         `export * from './lib/foo';
-        export * from './lib/${lib}.module';
+        export * from './lib/${lib}-module';
         `
       );
     };
@@ -356,7 +356,7 @@ describe('Tailwind support', () => {
         spacing.projectVariant1
       );
       updateFile(
-        `${appName}/src/app/app.module.ts`,
+        `${appName}/src/app/app-module.ts`,
         `import { NgModule } from '@angular/core';
         import { BrowserModule } from '@angular/platform-browser';
         import { LibModule as LibModule1 } from '@${project}/${buildLibWithTailwind.name}';

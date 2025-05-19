@@ -170,9 +170,9 @@ describe('app', () => {
 
       expect(appTree.exists('my-app/jest.config.ts')).toBeTruthy();
       expect(appTree.exists('my-app/src/main.ts')).toBeTruthy();
-      expect(appTree.exists('my-app/src/app/app.module.ts')).toBeTruthy();
+      expect(appTree.exists('my-app/src/app/app-module.ts')).toBeTruthy();
       expect(appTree.exists('my-app/src/app/app.ts')).toBeTruthy();
-      expect(appTree.read('my-app/src/app/app.module.ts', 'utf-8')).toContain(
+      expect(appTree.read('my-app/src/app/app-module.ts', 'utf-8')).toContain(
         'class AppModule'
       );
 
@@ -195,6 +195,32 @@ describe('app', () => {
         appTree.read('my-app-e2e/tsconfig.json', 'utf-8')
       );
       expect(tsconfigE2E).toMatchSnapshot('e2e tsconfig.json');
+    });
+
+    it('should generate the module file respecting the "typeSeparator" generator default', async () => {
+      const nxJson = readNxJson(appTree);
+      nxJson.generators = {
+        '@nx/angular:module': {
+          typeSeparator: '.',
+        },
+      };
+      updateNxJson(appTree, nxJson);
+
+      await generateApp(appTree);
+
+      expect(appTree.exists('my-app/src/app/app.module.ts')).toBeTruthy();
+      expect(appTree.read('my-app/src/main.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { platformBrowser } from '@angular/platform-browser';
+        import { AppModule } from './app/app.module';
+
+        platformBrowser()
+          .bootstrapModule(AppModule, {
+            ngZoneEventCoalescing: true
+          })
+          .catch((err) => console.error(err));
+        "
+      `);
     });
 
     it('should setup playwright', async () => {
@@ -317,14 +343,14 @@ describe('app', () => {
       };
       await generateApp(appTree, 'my-dir/my-app');
 
-      const appModulePath = 'my-dir/my-app/src/app/app.module.ts';
+      const appModulePath = 'my-dir/my-app/src/app/app-module.ts';
       expect(appTree.read(appModulePath, 'utf-8')).toContain('class AppModule');
 
       // Make sure these exist
       [
         `my-dir/my-app/jest.config.ts`,
         'my-dir/my-app/src/main.ts',
-        'my-dir/my-app/src/app/app.module.ts',
+        'my-dir/my-app/src/app/app-module.ts',
         'my-dir/my-app/src/app/app.ts',
         'my-dir/my-app-e2e/cypress.config.ts',
       ].forEach((path) => {
@@ -405,14 +431,14 @@ describe('app', () => {
       };
       await generateApp(appTree, 'my-dir/my-app');
 
-      const appModulePath = 'my-dir/my-app/src/app/app.module.ts';
+      const appModulePath = 'my-dir/my-app/src/app/app-module.ts';
       expect(appTree.read(appModulePath, 'utf-8')).toContain('class AppModule');
 
       // Make sure these exist
       [
         'my-dir/my-app/jest.config.ts',
         'my-dir/my-app/src/main.ts',
-        'my-dir/my-app/src/app/app.module.ts',
+        'my-dir/my-app/src/app/app-module.ts',
         'my-dir/my-app/src/app/app.ts',
         'my-dir/my-app-e2e/cypress.config.ts',
       ].forEach((path) => {
@@ -469,7 +495,7 @@ describe('app', () => {
         name: 'myApp',
       });
       expect(
-        appTree.read('my-dir/my-app/src/app/app.module.ts', 'utf-8')
+        appTree.read('my-dir/my-app/src/app/app-module.ts', 'utf-8')
       ).toContain('RouterModule.forRoot');
       expect(
         appTree.read('my-dir/my-app/src/app/app.spec.ts', 'utf-8')
@@ -589,7 +615,7 @@ describe('app', () => {
 
       expect(formatFilesSpy).toHaveBeenCalled();
       expect(
-        appTree.read('my-app/src/app/app.module.ts', 'utf-8')
+        appTree.read('my-app/src/app/app-module.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(appTree.read('my-app/src/app/app.ts', 'utf-8')).toMatchSnapshot();
       expect(
@@ -1003,7 +1029,7 @@ describe('app', () => {
       expect(
         appTree.read('standalone/src/app/app.spec.ts', 'utf-8')
       ).toMatchSnapshot();
-      expect(appTree.exists('standalone/src/app/app.module.ts')).toBeFalsy();
+      expect(appTree.exists('standalone/src/app/app-module.ts')).toBeFalsy();
       const nxWelcomeComponentText = appTree.read(
         'standalone/src/app/nx-welcome.ts',
         'utf-8'
@@ -1030,7 +1056,7 @@ describe('app', () => {
       expect(
         appTree.read('standalone/src/app/app.spec.ts', 'utf-8')
       ).toMatchSnapshot();
-      expect(appTree.exists('standalone/src/app/app.module.ts')).toBeFalsy();
+      expect(appTree.exists('standalone/src/app/app-module.ts')).toBeFalsy();
       const nxWelcomeComponentText = appTree.read(
         'standalone/src/app/nx-welcome.ts',
         'utf-8'
@@ -1047,7 +1073,7 @@ describe('app', () => {
     // ASSERT
     expect(appTree.read('myapp/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { platformBrowser } from '@angular/platform-browser';
-      import { AppModule } from './app/app.module';
+      import { AppModule } from './app/app-module';
 
       platformBrowser()
         .bootstrapModule(AppModule, {
@@ -1065,7 +1091,7 @@ describe('app', () => {
       });
 
       expect(appTree.exists('src/main.ts')).toBe(true);
-      expect(appTree.exists('src/app/app.module.ts')).toBe(true);
+      expect(appTree.exists('src/app/app-module.ts')).toBe(true);
       expect(appTree.exists('src/app/app.ts')).toBe(true);
       expect(appTree.exists('e2e/cypress.config.ts')).toBe(true);
       expect(readJson(appTree, 'tsconfig.json').extends).toBeUndefined();
@@ -1089,7 +1115,7 @@ describe('app', () => {
 
       expect(appTree.exists('plain/src/app/nx-welcome.ts')).toBeFalsy();
       expect(
-        appTree.read('plain/src/app/app.module.ts', 'utf-8')
+        appTree.read('plain/src/app/app-module.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(appTree.read('plain/src/app/app.ts', 'utf-8')).toMatchSnapshot();
       expect(
@@ -1103,7 +1129,7 @@ describe('app', () => {
 
       expect(appTree.exists('plain/src/app/nx-welcome.ts')).toBeFalsy();
       expect(
-        appTree.read('plain/src/app/app.module.ts', 'utf-8')
+        appTree.read('plain/src/app/app-module.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(appTree.read('plain/src/app/app.ts', 'utf-8')).toMatchSnapshot();
       expect(
@@ -1490,6 +1516,31 @@ describe('app', () => {
         appTree.read('myapp/src/app/nx-welcome.component.ts', 'utf-8')
       ).toContain('export class NxWelcomeComponent {}');
       expect(appTree.read('myapp/src/main.ts', 'utf-8')).toMatchSnapshot();
+    });
+
+    it('should generate modules with the "." type separator for versions lower than v20', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.2.0',
+        },
+      }));
+
+      await generateApp(appTree, 'myapp', { standalone: false });
+
+      expect(appTree.exists('myapp/src/app/app.module.ts')).toBe(true);
+      expect(appTree.read('myapp/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
+        "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+        import { AppModule } from './app/app.module';
+
+        platformBrowserDynamic()
+          .bootstrapModule(AppModule, {
+            ngZoneEventCoalescing: true
+          })
+          .catch((err) => console.error(err));
+        "
+      `);
     });
   });
 });
