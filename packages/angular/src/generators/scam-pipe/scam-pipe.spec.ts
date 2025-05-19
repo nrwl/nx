@@ -1,4 +1,10 @@
-import { addProjectConfiguration, updateJson, writeJson } from '@nx/devkit';
+import {
+  addProjectConfiguration,
+  readNxJson,
+  updateJson,
+  updateNxJson,
+  writeJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { scamPipeGenerator } from './scam-pipe';
 
@@ -112,10 +118,47 @@ describe('SCAM Pipe Generator', () => {
 
     // ASSERT
     const pipeModuleSource = tree.read(
-      'apps/app1/src/app/example/example.module.ts',
+      'apps/app1/src/app/example/example-module.ts',
       'utf-8'
     );
     expect(pipeModuleSource).toMatchInlineSnapshot(`
+      "import { NgModule } from '@angular/core';
+      import { CommonModule } from '@angular/common';
+      import { ExamplePipe } from './example-pipe';
+
+      @NgModule({
+        imports: [CommonModule],
+        declarations: [ExamplePipe],
+        exports: [ExamplePipe],
+      })
+      export class ExamplePipeModule {}
+      "
+    `);
+  });
+
+  it('should create the module respecting the "typeSeparator" generator default', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    const nxJson = readNxJson(tree);
+    nxJson.generators = {
+      ...nxJson.generators,
+      '@nx/angular:module': { typeSeparator: '.' },
+    };
+    updateNxJson(tree, nxJson);
+    addProjectConfiguration(tree, 'app1', {
+      projectType: 'application',
+      sourceRoot: 'apps/app1/src',
+      root: 'apps/app1',
+    });
+
+    await scamPipeGenerator(tree, {
+      name: 'example',
+      path: 'apps/app1/src/app/example/example',
+      inlineScam: false,
+      skipFormat: true,
+    });
+
+    expect(tree.read('apps/app1/src/app/example/example.module.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
       import { ExamplePipe } from './example-pipe';
@@ -197,7 +240,7 @@ describe('SCAM Pipe Generator', () => {
 
     // ASSERT
     const pipeModuleSource = tree.read(
-      'libs/lib1/feature/src/lib/example/example.module.ts',
+      'libs/lib1/feature/src/lib/example/example-module.ts',
       'utf-8'
     );
     expect(pipeModuleSource).toMatchInlineSnapshot(`
@@ -219,7 +262,7 @@ describe('SCAM Pipe Generator', () => {
     );
     expect(secondaryEntryPointSource).toMatchInlineSnapshot(`
       "export * from './lib/example/example-pipe';
-      export * from './lib/example/example.module';"
+      export * from './lib/example/example-module';"
     `);
   });
 
@@ -392,6 +435,44 @@ describe('SCAM Pipe Generator', () => {
             return null;
           }
         }
+
+        @NgModule({
+          imports: [CommonModule],
+          declarations: [ExamplePipe],
+          exports: [ExamplePipe],
+        })
+        export class ExamplePipeModule {}
+        "
+      `);
+    });
+
+    it('should generate the module file with the "." type separator for versions lower than v20', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.dependencies = {
+          ...json.dependencies,
+          '@angular/core': '~19.2.0',
+        };
+        return json;
+      });
+      addProjectConfiguration(tree, 'app1', {
+        projectType: 'application',
+        sourceRoot: 'apps/app1/src',
+        root: 'apps/app1',
+      });
+
+      await scamPipeGenerator(tree, {
+        name: 'example',
+        path: 'apps/app1/src/app/example/example',
+        inlineScam: false,
+        skipFormat: true,
+      });
+
+      expect(tree.read('apps/app1/src/app/example/example.module.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { NgModule } from '@angular/core';
+        import { CommonModule } from '@angular/common';
+        import { ExamplePipe } from './example.pipe';
 
         @NgModule({
           imports: [CommonModule],

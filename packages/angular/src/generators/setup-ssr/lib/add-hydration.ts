@@ -24,9 +24,24 @@ export function addHydration(tree: Tree, options: NormalizedGeneratorOptions) {
     tsquery = require('@phenomnomnominal/tsquery').tsquery;
   }
 
-  const pathToClientConfigFile = options.standalone
-    ? joinPathFragments(projectConfig.sourceRoot, 'app/app.config.ts')
-    : joinPathFragments(projectConfig.sourceRoot, 'app/app.module.ts');
+  let pathToClientConfigFile: string;
+  if (options.standalone) {
+    pathToClientConfigFile = joinPathFragments(
+      projectConfig.sourceRoot,
+      'app/app.config.ts'
+    );
+  } else {
+    pathToClientConfigFile = joinPathFragments(
+      projectConfig.sourceRoot,
+      'app/app.module.ts'
+    );
+    if (!tree.exists(pathToClientConfigFile)) {
+      pathToClientConfigFile = joinPathFragments(
+        projectConfig.sourceRoot,
+        'app/app-module.ts'
+      );
+    }
+  }
 
   const sourceText = tree.read(pathToClientConfigFile, 'utf-8');
   let sourceFile = tsModule.createSourceFile(

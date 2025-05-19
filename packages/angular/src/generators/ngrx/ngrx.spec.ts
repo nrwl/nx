@@ -25,7 +25,7 @@ describe('ngrx', () => {
   const defaultOptions: NgRxGeneratorOptions = {
     directory: '+state',
     minimal: true,
-    parent: 'myapp/src/app/app.module.ts',
+    parent: 'myapp/src/app/app-module.ts',
     name: 'users',
     skipFormat: true,
   };
@@ -41,7 +41,7 @@ describe('ngrx', () => {
   const defaultModuleOptions: NgRxGeneratorOptions = {
     directory: '+state',
     minimal: true,
-    module: 'myapp/src/app/app.module.ts',
+    module: 'myapp/src/app/app-module.ts',
     name: 'users',
     skipFormat: true,
   };
@@ -61,7 +61,7 @@ describe('ngrx', () => {
     });
 
     it('should error when the module could not be found', async () => {
-      const modulePath = 'not-existing.module.ts';
+      const modulePath = 'not-existing-module.ts';
 
       await expect(
         ngrxGenerator(tree, {
@@ -72,7 +72,7 @@ describe('ngrx', () => {
     });
 
     it('should error when the module could not be found using --module', async () => {
-      const modulePath = 'not-existing.module.ts';
+      const modulePath = 'not-existing-module.ts';
 
       await expect(
         ngrxGenerator(tree, {
@@ -90,7 +90,7 @@ describe('ngrx', () => {
       });
 
       expect(
-        tree.read('myapp/src/app/app.module.ts', 'utf-8')
+        tree.read('myapp/src/app/app-module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -123,7 +123,7 @@ describe('ngrx', () => {
       });
 
       expect(
-        tree.read('myapp/src/app/app.module.ts', 'utf-8')
+        tree.read('myapp/src/app/app-module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -135,7 +135,7 @@ describe('ngrx', () => {
       });
 
       expect(
-        tree.read('myapp/src/app/app.module.ts', 'utf-8')
+        tree.read('myapp/src/app/app-module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -144,12 +144,12 @@ describe('ngrx', () => {
 
       await ngrxGenerator(tree, {
         ...defaultOptions,
-        module: 'no-router-app/src/app/app.module.ts',
+        module: 'no-router-app/src/app/app-module.ts',
         root: true,
       });
 
       const appModule = tree.read(
-        'no-router-app/src/app/app.module.ts',
+        'no-router-app/src/app/app-module.ts',
         'utf-8'
       );
       expect(appModule).not.toContain('StoreRouterConnectingModule.forRoot()');
@@ -163,7 +163,7 @@ describe('ngrx', () => {
         facade: true,
       });
 
-      expect(tree.read('myapp/src/app/app.module.ts', 'utf-8')).toContain(
+      expect(tree.read('myapp/src/app/app-module.ts', 'utf-8')).toContain(
         'providers: [UsersFacade]'
       );
     });
@@ -176,7 +176,7 @@ describe('ngrx', () => {
         facade: false,
       });
 
-      expect(tree.read('myapp/src/app/app.module.ts', 'utf-8')).not.toContain(
+      expect(tree.read('myapp/src/app/app-module.ts', 'utf-8')).not.toContain(
         'providers: [UsersFacade]'
       );
     });
@@ -189,7 +189,7 @@ describe('ngrx', () => {
         facade: true,
       });
 
-      expect(tree.read('myapp/src/app/app.module.ts', 'utf-8')).not.toContain(
+      expect(tree.read('myapp/src/app/app-module.ts', 'utf-8')).not.toContain(
         'providers: [UsersFacade]'
       );
     });
@@ -208,7 +208,7 @@ describe('ngrx', () => {
       expectFileToExist('myapp/src/app/+state/users.selectors.ts');
       expectFileToExist('myapp/src/app/+state/users.selectors.spec.ts');
       expect(
-        tree.read('myapp/src/app/app.module.ts', 'utf-8')
+        tree.read('myapp/src/app/app-module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -426,7 +426,7 @@ describe('ngrx', () => {
 
       expect(devkit.formatFiles).toHaveBeenCalled();
       expect(
-        tree.read('myapp/src/app/app.module.ts', 'utf-8')
+        tree.read('myapp/src/app/app-module.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
         tree.read('myapp/src/app/+state/users.actions.ts', 'utf-8')

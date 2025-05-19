@@ -30,6 +30,7 @@ describe('convertDirectiveToScam', () => {
       filePath: 'apps/app1/src/app/example/example.ts',
       name: 'example',
       projectName: 'app1',
+      modulePath: 'apps/app1/src/app/example/example-module.ts',
       export: false,
       inlineScam: true,
       symbolName: 'Example',
@@ -88,6 +89,7 @@ describe('convertDirectiveToScam', () => {
       filePath: 'apps/app1/src/app/example/example.ts',
       name: 'example',
       projectName: 'app1',
+      modulePath: 'apps/app1/src/app/example/example-module.ts',
       export: false,
       inlineScam: false,
       symbolName: 'Example',
@@ -95,7 +97,7 @@ describe('convertDirectiveToScam', () => {
 
     // ASSERT
     const directiveModuleSource = tree.read(
-      'apps/app1/src/app/example/example.module.ts',
+      'apps/app1/src/app/example/example-module.ts',
       'utf-8'
     );
     expect(directiveModuleSource).toMatchInlineSnapshot(`

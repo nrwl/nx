@@ -25,6 +25,7 @@ export interface NormalizedOptions extends Schema {
   prefix: string | undefined;
   componentType: string;
   componentFileSuffix: string;
+  entryModuleFileName: string;
   appComponentInfo: ComponentMetadata;
   nxWelcomeComponentInfo: ComponentMetadata;
 }

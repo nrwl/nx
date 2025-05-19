@@ -248,7 +248,7 @@ h1 {
 }`
   );
   updateFile(
-    `${appName}/src/app/app.module.ts`,
+    `${appName}/src/app/app-module.ts`,
     `
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';

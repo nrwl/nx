@@ -1,9 +1,10 @@
 import type { Tree } from '@nx/devkit';
-import { names } from '@nx/devkit';
+import { joinPathFragments, names } from '@nx/devkit';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { getModuleTypeSeparator } from '../../utils/artifact-types';
 import { validateClassName } from '../../utils/validations';
-import type { NormalizedSchema, Schema } from '../schema';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import type { NormalizedSchema, Schema } from '../schema';
 
 export async function normalizeOptions(
   tree: Tree,
@@ -32,6 +33,12 @@ export async function normalizeOptions(
   const symbolName = `${className}${suffixClassName}`;
   validateClassName(symbolName);
 
+  const moduleTypeSeparator = getModuleTypeSeparator(tree);
+  const modulePath = joinPathFragments(
+    directory,
+    `${name}${moduleTypeSeparator}module.ts`
+  );
+
   return {
     ...options,
     export: options.export ?? true,
@@ -42,5 +49,6 @@ export async function normalizeOptions(
     name,
     symbolName,
     projectName,
+    modulePath,
   };
 }

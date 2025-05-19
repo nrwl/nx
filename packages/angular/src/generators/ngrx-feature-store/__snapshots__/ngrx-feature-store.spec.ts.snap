@@ -6,7 +6,7 @@ export * from './lib/+state/users/users.models';
 export * from './lib/+state/users/users.selectors';
 export * from './lib/+state/users/users.reducer';
 export * from './lib/+state/users/users.actions';
-export * from './lib/feature-module.module';
+export * from './lib/feature-module-module';
 "
 `;
 
@@ -646,7 +646,7 @@ export * from './lib/+state/users.models';
 export * from './lib/+state/users.selectors';
 export * from './lib/+state/users.reducer';
 export * from './lib/+state/users.actions';
-export * from './lib/feature-module.module';
+export * from './lib/feature-module-module';
 "
 `;
 
@@ -662,7 +662,7 @@ export * from './lib/+state/users.facade';
 export * from './lib/+state/users.models';
 
 export { UsersActions, UsersFeature, UsersSelectors };
-export * from './lib/feature-module.module';
+export * from './lib/feature-module-module';
 "
 `;
 

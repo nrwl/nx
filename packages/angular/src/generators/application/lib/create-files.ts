@@ -6,7 +6,10 @@ import {
 } from 'nx/src/nx-cloud/utilities/onboarding';
 import { lt } from 'semver';
 import { UnitTestRunner } from '../../../utils/test-runners';
-import { getComponentType } from '../../utils/artifact-types';
+import {
+  getComponentType,
+  getModuleTypeSeparator,
+} from '../../utils/artifact-types';
 import { validateHtmlSelector } from '../../utils/selector';
 import { updateProjectRootTsConfig } from '../../utils/update-project-root-tsconfig';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
@@ -38,6 +41,7 @@ export async function createFiles(
 
   const componentType = getComponentType(tree);
   const componentFileSuffix = componentType ? `.${componentType}` : '';
+  const moduleTypeSeparator = getModuleTypeSeparator(tree);
 
   const substitutions = {
     rootSelector,
@@ -62,6 +66,7 @@ export async function createFiles(
     usePlatformBrowserDynamic: angularMajorVersion < 20,
     componentType: componentType ? names(componentType).className : '',
     componentFileSuffix,
+    moduleTypeSeparator,
     connectCloudUrl,
     tutorialUrl: options.standalone
       ? 'https://nx.dev/getting-started/tutorials/angular-standalone-tutorial?utm_source=nx-project'

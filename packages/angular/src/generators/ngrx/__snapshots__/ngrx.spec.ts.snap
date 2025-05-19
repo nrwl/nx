@@ -685,7 +685,7 @@ export * from './lib/+state/super-users.facade';
 export * from './lib/+state/super-users.models';
 
 export { SuperUsersActions, SuperUsersFeature, SuperUsersSelectors };
-export * from './lib/flights.module';
+export * from './lib/flights-module';
 "
 `;
 
@@ -694,7 +694,7 @@ exports[`ngrx NgModule Syntax should update the entry point file with no facade 
 export * from './lib/+state/super-users.selectors';
 export * from './lib/+state/super-users.reducer';
 export * from './lib/+state/super-users.actions';
-export * from './lib/flights.module';
+export * from './lib/flights-module';
 "
 `;
 
@@ -704,7 +704,7 @@ export * from './lib/+state/super-users.models';
 export * from './lib/+state/super-users.selectors';
 export * from './lib/+state/super-users.reducer';
 export * from './lib/+state/super-users.actions';
-export * from './lib/flights.module';
+export * from './lib/flights-module';
 "
 `;
 

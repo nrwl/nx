@@ -9,7 +9,8 @@ export function removeDeadCodeFromRemote(
   const projectName = options.appName;
   const project = readProjectConfiguration(tree, projectName);
 
-  const { appComponentInfo, nxWelcomeComponentInfo } = options;
+  const { appComponentInfo, nxWelcomeComponentInfo, entryModuleFileName } =
+    options;
 
   ['css', 'less', 'scss', 'sass'].forEach((style) => {
     const pathToComponentStyle = joinPathFragments(
@@ -55,8 +56,12 @@ export class ${appComponentInfo.symbolName} {}`;
 
     tree.write(appComponentInfo.path, component);
 
+    let modulePath = joinPathFragments(project.sourceRoot, 'app/app.module.ts');
+    if (!tree.exists(modulePath)) {
+      modulePath = joinPathFragments(project.sourceRoot, 'app/app-module.ts');
+    }
     tree.write(
-      joinPathFragments(project.sourceRoot, 'app/app.module.ts'),
+      modulePath,
       `import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
@@ -68,7 +73,7 @@ import { ${appComponentInfo.symbolName} } from './${appComponentInfo.extensionle
     BrowserModule,
     RouterModule.forRoot([{
       path: '',
-      loadChildren: () => import('./remote-entry/entry.module').then(m => m.RemoteEntryModule)
+      loadChildren: () => import('./remote-entry/${entryModuleFileName}').then(m => m.RemoteEntryModule)
     }], { initialNavigation: 'enabledBlocking' }),
   ],
   providers: [],

@@ -50,10 +50,10 @@ export function normalizeOptions(
    * --> If so, use that
    * --> If not, use main.ts
    */
-  const ngModulePath = joinPathFragments(
-    project.sourceRoot,
-    'app/app.module.ts'
-  );
+  let ngModulePath = joinPathFragments(project.sourceRoot, 'app/app.module.ts');
+  if (!tree.exists(ngModulePath)) {
+    ngModulePath = joinPathFragments(project.sourceRoot, 'app/app-module.ts');
+  }
   const parent =
     !isStandalone && tree.exists(ngModulePath)
       ? ngModulePath

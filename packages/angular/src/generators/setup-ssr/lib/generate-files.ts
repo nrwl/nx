@@ -5,14 +5,17 @@ import {
   readProjectConfiguration,
 } from '@nx/devkit';
 import { join } from 'path';
+import { clean, coerce, gte } from 'semver';
+import { getAppComponentInfo } from '../../utils/app-components-info';
+import {
+  getComponentType,
+  getModuleTypeSeparator,
+} from '../../utils/artifact-types';
 import {
   getInstalledAngularVersionInfo,
   getInstalledPackageVersion,
 } from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
-import { clean, coerce, gte } from 'semver';
-import { getAppComponentInfo } from '../../utils/app-components-info';
-import { getComponentType } from '../../utils/artifact-types';
 
 export function generateSSRFiles(
   tree: Tree,
@@ -72,6 +75,7 @@ export function generateSSRFiles(
     componentType ? `.${componentType}` : '',
     project
   );
+  const moduleTypeSeparator = getModuleTypeSeparator(tree);
 
   generateFiles(tree, pathToFiles, sourceRoot, {
     ...options,
@@ -81,6 +85,7 @@ export function generateSSRFiles(
         : 'provideServerRoutesConfig',
     appFileName: appComponentInfo.extensionlessFileName,
     appSymbolName: appComponentInfo.symbolName,
+    moduleTypeSeparator,
     tpl: '',
   });
 

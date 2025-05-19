@@ -30,6 +30,7 @@ describe('convertPipeToScam', () => {
       filePath: 'apps/app1/src/app/example/example-pipe.ts',
       name: 'example',
       projectName: 'app1',
+      modulePath: 'apps/app1/src/app/example/example-module.ts',
       export: false,
       inlineScam: true,
       symbolName: 'ExamplePipe',
@@ -89,6 +90,7 @@ describe('convertPipeToScam', () => {
       filePath: 'apps/app1/src/app/example/example-pipe.ts',
       name: 'example',
       projectName: 'app1',
+      modulePath: 'apps/app1/src/app/example/example-module.ts',
       export: false,
       inlineScam: false,
       symbolName: 'ExamplePipe',
@@ -96,7 +98,7 @@ describe('convertPipeToScam', () => {
 
     // ASSERT
     const pipeModuleSource = tree.read(
-      'apps/app1/src/app/example/example.module.ts',
+      'apps/app1/src/app/example/example-module.ts',
       'utf-8'
     );
     expect(pipeModuleSource).toMatchInlineSnapshot(`

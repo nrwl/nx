@@ -264,7 +264,7 @@ exports[`Init MF should create webpack and mf configs correctly 4`] = `
 module.exports = {
   name: 'remote1',
   exposes: {
-    './Module': 'remote1/src/app/remote-entry/entry.module.ts',
+    './Module': 'remote1/src/app/remote-entry/entry-module.ts',
   },
 };
 "
@@ -329,7 +329,7 @@ exports[`Init MF should create webpack and mf configs correctly when --typescrip
 const config: ModuleFederationConfig = {
   name: 'remote1',
   exposes: {
-    './Module': 'remote1/src/app/remote-entry/entry.module.ts',
+    './Module': 'remote1/src/app/remote-entry/entry-module.ts',
   },
 };
 
