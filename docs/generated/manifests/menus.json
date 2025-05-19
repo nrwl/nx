@@ -7715,6 +7715,40 @@
         "disableCollapsible": false
       },
       {
+        "id": "angular-rspack",
+        "path": "/nx-api/angular-rspack",
+        "name": "angular-rspack",
+        "children": [
+          {
+            "id": "documents",
+            "path": "/nx-api/angular-rspack/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "createConfig",
+                "path": "/nx-api/angular-rspack/documents/create-config",
+                "id": "create-config",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "createServer",
+                "path": "/nx-api/angular-rspack/documents/create-server",
+                "id": "create-server",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
         "id": "angular-rspack-compiler",
         "path": "/nx-api/angular-rspack-compiler",
         "name": "angular-rspack-compiler",

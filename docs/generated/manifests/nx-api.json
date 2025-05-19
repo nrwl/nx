@@ -1217,6 +1217,42 @@
     },
     "path": "/nx-api/angular"
   },
+  "angular-rspack": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "angular-rspack",
+    "packageName": "@nx/angular-rspack",
+    "description": "Rspack Plugin and Loaders for building Angular.",
+    "documents": {
+      "/nx-api/angular-rspack/documents/create-config": {
+        "id": "create-config",
+        "name": "createConfig",
+        "description": "Rspack Plugin and Loaders for building Angular.",
+        "file": "generated/packages/angular-rspack/documents/create-config",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/angular-rspack/documents/create-config",
+        "tags": [],
+        "originalFilePath": "shared/guides/angular-rspack/api/nx-angular-rspack/create-config"
+      },
+      "/nx-api/angular-rspack/documents/create-server": {
+        "id": "create-server",
+        "name": "createServer",
+        "description": "Rspack Plugin and Loaders for building Angular.",
+        "file": "generated/packages/angular-rspack/documents/create-server",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/angular-rspack/documents/create-server",
+        "tags": [],
+        "originalFilePath": "shared/guides/angular-rspack/api/nx-angular-rspack/create-server"
+      }
+    },
+    "root": "/packages/angular-rspack",
+    "source": "/packages/angular-rspack/src",
+    "executors": {},
+    "generators": {},
+    "migrations": {},
+    "path": "/nx-api/angular-rspack"
+  },
   "angular-rspack-compiler": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "angular-rspack-compiler",

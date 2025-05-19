@@ -1,5 +1,5 @@
 import type { DevServer } from '@rspack/core';
-import assert from 'node:assert';
+import * as assert from 'node:assert';
 import { existsSync, promises as fsPromises } from 'node:fs';
 import { extname, posix, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';

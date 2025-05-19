@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.dev/license
  */
 
-import ora from 'ora';
+import * as ora from 'ora';
 import { colors } from './color';
 import { isTTY } from './tty';
 

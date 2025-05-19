@@ -1,7 +1,7 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "./out-tsc/vitest",
+    "outDir": "../../out-tsc/vitest",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "types": [
@@ -28,10 +28,5 @@
     "mocks/**/*.ts",
     "mocks/**/*.json",
     "package.json"
-  ],
-  "references": [
-    {
-      "path": "./tsconfig.lib.json"
-    }
   ]
 }

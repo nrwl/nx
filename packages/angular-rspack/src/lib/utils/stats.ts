@@ -11,7 +11,7 @@ import {
   BundleStats,
   generateBuildStatsTable,
 } from '@angular/build/private';
-import assert from 'node:assert';
+import * as assert from 'node:assert';
 import * as path from 'node:path';
 import {
   Configuration,
@@ -143,7 +143,8 @@ function statsToString(
 
         rawSize += asset.size;
 
-        const assetInfo = stats.compilation.getAsset(asset.name)?.info;
+        const compilationAsset = stats.compilation.getAsset(asset.name);
+        const assetInfo = compilationAsset && compilationAsset?.info;
         if (assetInfo) {
           if (typeof assetInfo.estimatedTransferSize === 'number') {
             if (estimatedTransferSize === undefined) {

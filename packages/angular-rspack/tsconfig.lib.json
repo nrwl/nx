@@ -1,27 +1,14 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "baseUrl": ".",
-    "rootDir": "src",
-    "outDir": "dist",
-    "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
+    "outDir": "../../dist/out-tsc",
     "emitDeclarationOnly": false,
-    "types": ["node"],
     "module": "commonjs",
     "moduleResolution": "node",
     "noImplicitAny": false,
     "noUnusedLocals": false,
-    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["vitest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
-  "references": [
-    {
-      "path": "../angular-rspack-compiler/tsconfig.lib.json"
-    },
-    {
-      "path": "../../testing/setup/tsconfig.lib.json"
-    }
-  ]
+  "exclude": ["vitest.config.mts", "src/**/*.spec.ts", "src/**/*.test.ts"]
 }

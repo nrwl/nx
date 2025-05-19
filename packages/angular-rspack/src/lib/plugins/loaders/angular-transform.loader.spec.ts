@@ -1,4 +1,3 @@
-import { beforeEach, describe, expect, vi } from 'vitest';
 import { default as angularTransformLoader } from './angular-transform.loader';
 import { NG_RSPACK_SYMBOL_NAME, type NgRspackCompilation } from '../../models';
 import type { LoaderContext } from '@rspack/core';
@@ -20,8 +19,8 @@ class TemplateUrlsResolverMock {
 }
 
 describe('angular-transform.loader', () => {
-  const callback = vi.fn();
-  const addDependency = vi.fn();
+  const callback = jest.fn();
+  const addDependency = jest.fn();
   const typescriptFileCache = new Map<string, string | Buffer>();
   const _compilation = {
     [NG_RSPACK_SYMBOL_NAME]: () => ({
@@ -29,12 +28,12 @@ describe('angular-transform.loader', () => {
     }),
   } as unknown as NgRspackCompilation;
   const thisValue = {
-    async: vi.fn(() => callback),
+    async: jest.fn(() => callback),
     _compilation: {},
   } as unknown as LoaderContext<unknown>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('should return content when NG_RSPACK_SYMBOL_NAME is undefined', () => {

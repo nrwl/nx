@@ -1,12 +1,13 @@
 !dist
 dist/tsconfig.lib.tsbuildinfo
-eslint.config.*js
+.eslintrc.json
 project.json
 tsconfig.json
 tsconfig.lib.json
 tsconfig.spec.json
 vitest*.config.*ts
-src/**/*.ts
+src
+index.ts
 mocks
 **/*.tgz
 vitest.config.mts

@@ -1,6 +1,6 @@
 import type { Configuration } from '@rspack/core';
 import { merge as rspackMerge } from 'webpack-merge';
-import deepMerge from 'deepmerge';
+import * as deepMerge from 'deepmerge';
 import type { AngularRspackPluginOptions } from '../../models';
 
 export function handleConfigurations(

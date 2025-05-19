@@ -12,7 +12,7 @@ import type {
   renderModule,
   ɵSERVER_CONTEXT,
 } from '@angular/platform-server';
-import assert from 'node:assert';
+import * as assert from 'node:assert';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { workerData } from 'node:worker_threads';

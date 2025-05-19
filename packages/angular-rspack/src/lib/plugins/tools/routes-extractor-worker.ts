@@ -8,7 +8,7 @@
 
 import type { ApplicationRef, Type } from '@angular/core';
 import type { ɵgetRoutesFromAngularRouterConfig } from '@angular/ssr';
-import assert from 'node:assert';
+import * as assert from 'node:assert';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { workerData } from 'node:worker_threads';

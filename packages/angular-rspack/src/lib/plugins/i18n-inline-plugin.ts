@@ -10,7 +10,7 @@ import {
   type RspackPluginInstance,
   sources,
 } from '@rspack/core';
-import assert from 'node:assert';
+import * as assert from 'node:assert';
 import type {
   I18nOptions,
   NormalizedAngularRspackPluginOptions,
@@ -66,13 +66,16 @@ export class I18nInlinePlugin implements RspackPluginInstance {
       // Map of locales to Map of files to output
       const filesToOutput = new Map<
         string,
-        Map<string, { text: string | Buffer; map: sources.RawSourceMap | null }>
+        Map<
+          string,
+          { text: string | Buffer; map: sources.RawSourceMap | string | null }
+        >
       >();
       for (const localeKey of this.#i18n.inlineLocales) {
         const locale = this.#i18n.locales[localeKey];
         const localeFiles = new Map<
           string,
-          { text: string | Buffer; map: sources.RawSourceMap | null }
+          { text: string | Buffer; map: sources.RawSourceMap | string | null }
         >();
         for (const [filename, { text, map }] of filesToInline.entries()) {
           if (this.#checkAssetHasBeenProcessed(filename)) {
@@ -105,7 +108,7 @@ export class I18nInlinePlugin implements RspackPluginInstance {
         for (const [filename, { text, map }] of files.entries()) {
           const localeFileName = `${localeSubPath}/${filename}`;
           const asset = compilation.getAsset(filename);
-          const assetInfo = asset?.info;
+          const assetInfo = asset && asset?.info;
 
           if (map) {
             compilation.emitAsset(

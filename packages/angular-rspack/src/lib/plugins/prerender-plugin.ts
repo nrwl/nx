@@ -4,7 +4,7 @@ import { workspaceRoot } from '@nx/devkit';
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
-import assert from 'assert';
+import * as assert from 'assert';
 import {
   type I18nOptions,
   IndexExpandedDefinition,

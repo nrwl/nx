@@ -1,14 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
   "files": [],
   "include": [],
   "references": [
-    {
-      "path": "../angular-rspack-compiler"
-    },
-    {
-      "path": "../../testing/setup"
-    },
     {
       "path": "./tsconfig.lib.json"
     },

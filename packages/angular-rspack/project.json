@@ -1,0 +1,46 @@
+{
+  "sourceRoot": "packages/angular-rspack/src",
+  "projectType": "library",
+  "name": "angular-rspack",
+  "tags": ["publishable"],
+  "targets": {
+    "build-base": {
+      "dependsOn": ["^build-base", "angular-rspack-compiler:build"],
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "packages/angular-rspack/src/index.ts",
+        "assets": [
+          {
+            "input": "packages/angular-rspack",
+            "glob": ".npmignore",
+            "output": "/"
+          },
+          {
+            "input": "packages/angular-rspack",
+            "glob": "package.json",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/build/packages/angular-rspack/README.md",
+        "{workspaceRoot}/build/packages/angular-rspack/dist"
+      ],
+      "options": {
+        "commands": [
+          "node ./scripts/copy-readme.js angular-rspack",
+          "node ./scripts/cp-build-src-to-dist.js angular-rspack"
+        ],
+        "parallel": false
+      }
+    }
+  }
+}

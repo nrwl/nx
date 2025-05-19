@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { beforeEach, expect } from 'vitest';
 import { AngularRspackPluginOptions } from '../models';
 import * as postcssConfiguration from '../utils/postcss-configuration';
 import { handleConfigurations } from './config-utils/user-defined-config-helpers';
@@ -22,18 +21,20 @@ describe('createConfig', () => {
     aot: true,
     skipTypeChecking: false,
   };
+  let oldProcessEnv = { ...process.env };
 
   beforeEach(() => {
-    vi.stubEnv('NODE_ENV', '');
-    vi.stubEnv('NGRS_CONFIG', '');
+    process.env['NODE_ENV'] = '';
+    process.env['NGRS_CONFIG'] = '';
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    process.env['NODE_ENV'] = oldProcessEnv['NODE_ENV'];
+    process.env['NGRS_CONFIG'] = oldProcessEnv['NGRS_CONFIG'];
   });
 
   it('should create config for mode "production" if env variable NODE_ENV is "production"', async () => {
-    vi.stubEnv('NODE_ENV', 'production');
+    process.env['NODE_ENV'] = 'production';
     await expect(_createConfig(configBase)).resolves.toStrictEqual([
       expect.objectContaining({ mode: 'production' }),
     ]);
@@ -42,7 +43,7 @@ describe('createConfig', () => {
   it.each(['development', 'not-production'])(
     'should create config for mode "development" if env variable NODE_ENV is "%s"',
     async (nodeEnv) => {
-      vi.stubEnv('NODE_ENV', nodeEnv);
+      process.env['NODE_ENV'] = nodeEnv;
 
       await expect(_createConfig(configBase)).resolves.toStrictEqual([
         expect.objectContaining({ mode: 'development' }),
@@ -182,10 +183,9 @@ describe('createConfig', () => {
 
     it('should create config from options with a custom root', async () => {
       const customRoot = join(process.cwd(), 'custom-root');
-      vi.spyOn(
-        postcssConfiguration,
-        'generateSearchDirectories'
-      ).mockResolvedValue([]);
+      jest
+        .spyOn(postcssConfiguration, 'generateSearchDirectories')
+        .mockResolvedValue([]);
 
       await expect(
         createConfig({
@@ -315,7 +315,7 @@ describe('createConfig', () => {
     ])(
       'should create config for mode "development" if env variable NGRS_CONFIG is "%s"',
       async (configuration, fileNameSegment, skipTypeChecking) => {
-        vi.stubEnv('NGRS_CONFIG', configuration);
+        process.env['NGRS_CONFIG'] = configuration;
 
         const config = await runCreateConfig();
 
@@ -325,7 +325,6 @@ describe('createConfig', () => {
         );
         expect(NgRspackPlugin).toBeDefined();
         expect(
-          // @ts-expect-error - TS cannot index correctly because of multiple potential types
           NgRspackPlugin['pluginOptions'] as AngularRspackPluginOptions
         ).toEqual(
           expect.objectContaining({

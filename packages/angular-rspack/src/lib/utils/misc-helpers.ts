@@ -1,4 +1,4 @@
-import assert from 'node:assert';
+import * as assert from 'node:assert';
 
 let load: (<T>(modulePath: string | URL) => Promise<T>) | undefined;
 

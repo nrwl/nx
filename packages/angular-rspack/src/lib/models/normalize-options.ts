@@ -1,7 +1,7 @@
 import { BudgetEntry, getSupportedBrowsers } from '@angular/build/private';
 import type { FileReplacement } from '@nx/angular-rspack-compiler';
 import { workspaceRoot, type ProjectGraphProjectNode } from '@nx/devkit';
-import assert from 'node:assert';
+import * as assert from 'node:assert';
 import { existsSync, statSync } from 'node:fs';
 import {
   basename,

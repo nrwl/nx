@@ -39,6 +39,7 @@
     "@angular/build": "19.2.0",
     "sass-embedded": "^1.79.3",
     "tslib": "^2.3.0",
+    "ts-morph": "^24.0.0",
     "typescript": "5.7.3"
   },
   "devDependencies": {
@@ -49,13 +50,5 @@
     "@angular/compiler-cli": ">=19.0.0 <20.0.0",
     "@angular/build": ">=19.0.0 <20.0.0",
     "@rsbuild/core": ">=1.0.5 <2.0.0"
-  },
-  "nx": {
-    "sourceRoot": "packages/angular-rspack-compiler/src",
-    "projectType": "library",
-    "name": "angular-rspack-compiler",
-    "tags": [
-      "publishable"
-    ]
   }
 }
