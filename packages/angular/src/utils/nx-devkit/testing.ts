@@ -32,7 +32,7 @@ export function createApp(
   // save for getAppDir() lookup by external *.spec.ts tests
   appConfig = {
     appName,
-    appModule: `${appName}/src/app/app.module.ts`,
+    appModule: `${appName}/src/app/app-module.ts`,
   };
 
   tree.write(
@@ -53,7 +53,7 @@ export class AppModule {}
     `${appName}/src/main.ts`,
     `import { platformBrowser } from '@angular/platform-browser';
 
-import { AppModule } from './app/app.module';
+import { AppModule } from './app/app-module';
 
 platformBrowser()
   .bootstrapModule(AppModule)
@@ -94,7 +94,7 @@ export function createLib(tree: Tree, libName: string) {
 
   libConfig = {
     name,
-    module: `${propertyName}/src/lib/${fileName}.module.ts`,
+    module: `${propertyName}/src/lib/${fileName}-module.ts`,
     barrel: `${propertyName}/src/index.ts`,
   };
 
@@ -113,7 +113,7 @@ export class ${className}Module { }
   );
   tree.write(
     libConfig.barrel,
-    `export * from './lib/${fileName}.module';
+    `export * from './lib/${fileName}-module';
 `
   );
 }

@@ -96,7 +96,7 @@ export class TestButton {
     `<button [attr.type]="type" [ngClass]="style"></button>`
   );
 
-  const modulePath = `${libName}/src/lib/${libName}.module.ts`;
+  const modulePath = `${libName}/src/lib/${libName}-module.ts`;
   tree.write(
     modulePath,
     `import * as ButtonExports from './test-button/test-button';
@@ -123,7 +123,7 @@ export class TestButton {
   );
 
   tree.write(
-    `${libName}/src/lib/barrel/barrel.module.ts`,
+    `${libName}/src/lib/barrel/barrel-module.ts`,
     `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BarrelButton } from './barrel-button';
@@ -158,7 +158,7 @@ export class BarrelModule {}`
   });
 
   tree.write(
-    `${libName}/src/lib/variable-declare/variable-declare.module.ts`,
+    `${libName}/src/lib/variable-declare/variable-declare-module.ts`,
     `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VariableDeclareButton } from './variable-declare-button/variable-declare-button';
@@ -208,7 +208,7 @@ export class VariableDeclareModule {}`
   });
 
   tree.write(
-    `${libName}/src/lib/variable-spread-declare/variable-spread-declare.module.ts`,
+    `${libName}/src/lib/variable-spread-declare/variable-spread-declare-module.ts`,
     `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VariableSpreadDeclareButton } from './variable-spread-declare-button/variable-spread-declare-button';
@@ -250,7 +250,7 @@ export class VariableSpreadDeclareModule {}`
   });
 
   tree.write(
-    `${libName}/src/lib/static-member-declarations/static-member-declarations.module.ts`,
+    `${libName}/src/lib/static-member-declarations/static-member-declarations-module.ts`,
     `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Cmp1 } from './cmp1/cmp1';
@@ -305,7 +305,7 @@ function generateModule(
   }
 
   const moduleNames = names(options.name);
-  const moduleFilePath = `${options.path}/${moduleNames.fileName}/${moduleNames.fileName}.module.ts`;
+  const moduleFilePath = `${options.path}/${moduleNames.fileName}/${moduleNames.fileName}-module.ts`;
 
   tree.write(
     moduleFilePath,

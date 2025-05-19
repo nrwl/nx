@@ -27,7 +27,7 @@ export class Example {}
 `;
 
 exports[`component Generator secondary entry points should create the component correctly and export it in the entry point 2`] = `
-"export * from './lib/secondary.module';
+"export * from './lib/secondary-module';
 export * from './lib/example/example';"
 `;
 
@@ -70,7 +70,7 @@ describe('Example', () => {
 `;
 
 exports[`component Generator should create component files correctly: entry point file 1`] = `
-"export * from './lib/lib.module';
+"export * from './lib/lib-module';
 "
 `;
 
@@ -95,7 +95,7 @@ export class Example {}
 `;
 
 exports[`component Generator should create the component correctly and export it in the entry point when "export=true" 2`] = `
-"export * from './lib/lib.module';
+"export * from './lib/lib-module';
 export * from './lib/example/example';"
 `;
 

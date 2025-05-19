@@ -15,7 +15,7 @@ import { App } from './app';
         {
           path: '',
           loadChildren: () =>
-            import('./remote-entry/entry.module').then(
+            import('./remote-entry/entry-module').then(
               (m) => m.RemoteEntryModule
             ),
         },
@@ -32,7 +32,7 @@ export class AppModule {}
 
 exports[`MF Remote App Generator --ssr should generate the correct files 2`] = `
 "import { platformBrowser } from '@angular/platform-browser';
-import { AppModule } from './app/app.module';
+import { AppModule } from './app/app-module';
 
 platformBrowser()
   .bootstrapModule(AppModule, {
@@ -136,7 +136,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files 6`] = `
 module.exports = {
   name: 'test',
   exposes: {
-    './Module': 'test/src/app/remote-entry/entry.module.ts',
+    './Module': 'test/src/app/remote-entry/entry-module.ts',
   },
 };
 "
@@ -174,7 +174,7 @@ export const appRoutes: Route[] = [
   {
     path: '',
     loadChildren: () =>
-      import('./remote-entry/entry.module').then((m) => m.RemoteEntryModule),
+      import('./remote-entry/entry-module').then((m) => m.RemoteEntryModule),
   },
 ];
 "
@@ -250,7 +250,7 @@ import { App } from './app';
     BrowserModule,
     RouterModule.forRoot([{
       path: '',
-      loadChildren: () => import('./remote-entry/entry.module').then(m => m.RemoteEntryModule)
+      loadChildren: () => import('./remote-entry/entry-module').then(m => m.RemoteEntryModule)
     }], { initialNavigation: 'enabledBlocking' }),
   ],
   providers: [],
@@ -261,7 +261,7 @@ export class AppModule {}"
 
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 2`] = `
 "import { platformBrowser } from '@angular/platform-browser';
-import { AppModule } from './app/app.module';
+import { AppModule } from './app/app-module';
 
 platformBrowser()
   .bootstrapModule(AppModule, {
@@ -361,7 +361,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
 const config: ModuleFederationConfig = {
   name: 'test',
   exposes: {
-    './Module': 'test/src/app/remote-entry/entry.module.ts',
+    './Module': 'test/src/app/remote-entry/entry-module.ts',
   },
 };
 
@@ -401,7 +401,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
 "import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
-    { path: '', loadChildren: () => import('./remote-entry/entry.module').then(m => m.RemoteEntryModule) },];
+    { path: '', loadChildren: () => import('./remote-entry/entry-module').then(m => m.RemoteEntryModule) },];
 "
 `;
 

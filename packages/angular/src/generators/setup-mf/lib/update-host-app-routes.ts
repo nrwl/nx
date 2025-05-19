@@ -28,15 +28,17 @@ export function updateHostAppRoutes(tree: Tree, options: NormalizedOptions) {
     sourceRoot,
     'app/app.routes.ts'
   );
-
-  let hostRootRoutingFile = tree.read(pathToHostRootRoutingFile, 'utf-8');
-
-  if (!hostRootRoutingFile) {
+  if (!tree.exists(pathToHostRootRoutingFile)) {
     pathToHostRootRoutingFile = joinPathFragments(
       sourceRoot,
       'app/app-routing.module.ts'
     );
-    hostRootRoutingFile = tree.read(pathToHostRootRoutingFile, 'utf-8');
+  }
+  if (!tree.exists(pathToHostRootRoutingFile)) {
+    pathToHostRootRoutingFile = joinPathFragments(
+      sourceRoot,
+      'app/app-routing-module.ts'
+    );
   }
 
   addRoute(

@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import type { Schema } from '../schema';
+import type { NormalizedOptions } from '../schema';
 
 import {
   updateJson,
@@ -7,19 +7,19 @@ import {
   joinPathFragments,
 } from '@nx/devkit';
 
-export function updateTsConfig(tree: Tree, schema: Schema) {
-  const { root } = readProjectConfiguration(tree, schema.appName);
+export function updateTsConfig(tree: Tree, options: NormalizedOptions) {
+  const { root } = readProjectConfiguration(tree, options.appName);
 
   updateJson(tree, joinPathFragments(root, `tsconfig.app.json`), (json) => {
     json.compilerOptions ??= {};
     json.compilerOptions.target = 'ES2020';
 
-    if (schema.mfType === 'remote') {
+    if (options.mfType === 'remote') {
       json.files ??= [];
       json.files.push(
-        schema.standalone
+        options.standalone
           ? 'src/app/remote-entry/entry.routes.ts'
-          : 'src/app/remote-entry/entry.module.ts'
+          : `src/app/remote-entry/${options.entryModuleFileName}.ts`
       );
     }
 

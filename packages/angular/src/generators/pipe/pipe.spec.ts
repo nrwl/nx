@@ -81,7 +81,7 @@ describe('pipe generator', () => {
     await generatePipeWithDefaultOptions(tree, { standalone: true });
 
     // ASSERT
-    expect(tree.read('test/src/app/test.module.ts', 'utf-8')).not.toContain(
+    expect(tree.read('test/src/app/test-module.ts', 'utf-8')).not.toContain(
       'TestPipe'
     );
   });
@@ -125,7 +125,7 @@ describe('pipe generator', () => {
         tree.read('test/src/app/test-pipe.spec.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('test/src/app/test.module.ts', 'utf-8')
+        tree.read('test/src/app/test-module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -146,7 +146,7 @@ describe('pipe generator', () => {
         tree.read('test/src/app/test/test-pipe.spec.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('test/src/app/test.module.ts', 'utf-8')
+        tree.read('test/src/app/test-module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -167,7 +167,7 @@ describe('pipe generator', () => {
         tree.read('test/src/app/my-pipes/test/test-pipe.spec.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('test/src/app/test.module.ts', 'utf-8')
+        tree.read('test/src/app/test-module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -183,7 +183,7 @@ describe('pipe generator', () => {
 
       // ASSERT
       expect(
-        tree.read('test/src/app/test.module.ts', 'utf-8')
+        tree.read('test/src/app/test-module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -198,7 +198,7 @@ describe('pipe generator', () => {
       });
 
       // ASSERT
-      expect(tree.read('test/src/app/test.module.ts', 'utf-8')).not.toContain(
+      expect(tree.read('test/src/app/test-module.ts', 'utf-8')).not.toContain(
         'TestPipe'
       );
     });
@@ -248,7 +248,7 @@ describe('pipe generator', () => {
 
 function addModule(tree: Tree) {
   tree.write(
-    'test/src/app/test.module.ts',
+    'test/src/app/test-module.ts',
     `import { NgModule } from '@angular/core';
 @NgModule({
   imports: [],

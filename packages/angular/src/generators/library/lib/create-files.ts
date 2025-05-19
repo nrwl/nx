@@ -54,6 +54,7 @@ export function createFiles(
     disableModernClassFieldsBehavior,
     componentType,
     componentFileSuffix,
+    moduleTypeSeparator: options.libraryOptions.moduleTypeSeparator,
     tpl: '',
   };
 
@@ -80,12 +81,7 @@ export function createFiles(
     );
 
     if (options.libraryOptions.skipModule) {
-      tree.delete(
-        joinPathFragments(
-          project.sourceRoot,
-          `lib/${options.libraryOptions.fileName}.module.ts`
-        )
-      );
+      tree.delete(options.libraryOptions.modulePath);
     }
   }
 

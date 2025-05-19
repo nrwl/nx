@@ -49,8 +49,8 @@ describe('Angular Module Federation', () => {
 
     // check files are generated without the layout directory ("apps/")
     checkFilesExist(
-      `${hostApp}/src/app/app.module.ts`,
-      `${remoteApp1}/src/app/app.module.ts`
+      `${hostApp}/src/app/app-module.ts`,
+      `${remoteApp1}/src/app/app-module.ts`
     );
 
     // check default generated host is built successfully
@@ -80,14 +80,14 @@ describe('Angular Module Federation', () => {
 
     // update host & remote files to use shared library
     updateFile(
-      `${hostApp}/src/app/app.module.ts`,
+      `${hostApp}/src/app/app-module.ts`,
       `import { NgModule } from '@angular/core';
       import { BrowserModule } from '@angular/platform-browser';
       import { ${
         names(wildcardLib).className
       }Module } from '@${proj}/${wildcardLib}/${
         names(wildcardLib).fileName
-      }.module';
+      }-module';
       import { ${
         names(sharedLib).className
       }Module } from '@${proj}/${sharedLib}';
@@ -124,7 +124,7 @@ describe('Angular Module Federation', () => {
       `
     );
     updateFile(
-      `${remoteApp1}/src/app/remote-entry/entry.module.ts`,
+      `${remoteApp1}/src/app/remote-entry/entry-module.ts`,
       `import { NgModule } from '@angular/core';
     import { CommonModule } from '@angular/common';
     import { RouterModule } from '@angular/router';

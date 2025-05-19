@@ -9,7 +9,7 @@ import { ngrxVersion } from '../../utils/versions';
 
 describe('ngrx-feature-store', () => {
   describe('NgModule', () => {
-    const parent = 'feature-module/src/lib/feature-module.module.ts';
+    const parent = 'feature-module/src/lib/feature-module-module.ts';
     it('should error when parent cannot be found', async () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace();
@@ -24,7 +24,7 @@ describe('ngrx-feature-store', () => {
           skipFormat: true,
         })
       ).rejects.toThrow(
-        `Parent does not exist: feature-module/src/lib/feature-module.module.ts.`
+        `Parent does not exist: feature-module/src/lib/feature-module-module.ts.`
       );
     });
 

@@ -45,7 +45,7 @@ describe('setupSSR', () => {
       `);
       expect(tree.read('app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
         "import { platformBrowser } from '@angular/platform-browser';
-        import { AppModule } from './app/app.module';
+        import { AppModule } from './app/app-module';
 
         platformBrowser()
           .bootstrapModule(AppModule, {
@@ -65,7 +65,7 @@ describe('setupSSR', () => {
         "import { NgModule } from '@angular/core';
         import { provideServerRendering, withRoutes } from '@angular/ssr';
         import { App } from './app';
-        import { AppModule } from './app.module';
+        import { AppModule } from './app-module';
         import { serverRoutes } from './app.routes.server';
 
         @NgModule({
@@ -88,7 +88,7 @@ describe('setupSSR', () => {
         ];
         "
       `);
-      expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
+      expect(tree.read('app1/src/app/app-module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
         import {
@@ -319,7 +319,7 @@ describe('setupSSR', () => {
       `);
       expect(tree.read('app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
         "import { platformBrowser } from '@angular/platform-browser';
-        import { AppModule } from './app/app.module';
+        import { AppModule } from './app/app-module';
 
         platformBrowser()
           .bootstrapModule(AppModule, {
@@ -352,7 +352,7 @@ describe('setupSSR', () => {
         "import { NgModule } from '@angular/core';
         import { ServerModule } from '@angular/platform-server';
 
-        import { AppModule } from './app.module';
+        import { AppModule } from './app-module';
         import { App } from './app';
 
         @NgModule({
@@ -365,7 +365,7 @@ describe('setupSSR', () => {
         export class AppServerModule {}
         "
       `);
-      expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
+      expect(tree.read('app1/src/app/app-module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
         import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
@@ -541,7 +541,7 @@ describe('setupSSR', () => {
     });
 
     // ASSERT
-    expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
+    expect(tree.read('app1/src/app/app-module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
       import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
@@ -631,7 +631,7 @@ describe('setupSSR', () => {
       skipFormat: true,
     });
 
-    expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
+    expect(tree.read('app1/src/app/app-module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
       import { BrowserModule } from '@angular/platform-browser';

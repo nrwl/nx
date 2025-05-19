@@ -86,7 +86,7 @@ describe('directive generator', () => {
     await generateDirectiveWithDefaultOptions(tree);
 
     // ASSERT
-    expect(tree.read('test/src/app/test.module.ts', 'utf-8'))
+    expect(tree.read('test/src/app/test-module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       @NgModule({
@@ -138,7 +138,7 @@ describe('directive generator', () => {
       expect(tree.read('test/src/app/test.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('test/src/app/test.spec.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read('test/src/app/test.module.ts', 'utf-8')
+        tree.read('test/src/app/test-module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -156,7 +156,7 @@ describe('directive generator', () => {
         tree.read('test/src/app/test/test.spec.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('test/src/app/test.module.ts', 'utf-8')
+        tree.read('test/src/app/test-module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -177,7 +177,7 @@ describe('directive generator', () => {
         tree.read('test/src/app/my-directives/test/test.spec.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('test/src/app/test.module.ts', 'utf-8')
+        tree.read('test/src/app/test-module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -193,7 +193,7 @@ describe('directive generator', () => {
 
       // ASSERT
       expect(
-        tree.read('test/src/app/test.module.ts', 'utf-8')
+        tree.read('test/src/app/test-module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -208,7 +208,7 @@ describe('directive generator', () => {
       });
 
       // ASSERT
-      expect(tree.read('test/src/app/test.module.ts', 'utf-8')).not.toContain(
+      expect(tree.read('test/src/app/test-module.ts', 'utf-8')).not.toContain(
         'TestDirective'
       );
     });
@@ -312,7 +312,7 @@ describe('directive generator', () => {
 
 function addModule(tree: Tree) {
   tree.write(
-    'test/src/app/test.module.ts',
+    'test/src/app/test-module.ts',
     `import { NgModule } from '@angular/core';
 @NgModule({
   imports: [],

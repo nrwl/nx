@@ -70,11 +70,20 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
   }
 
   if (!options.skipImport && !options.standalone) {
-    const modulePath = findModuleFromOptions(
-      tree,
-      options,
-      options.projectRoot
-    );
+    let modulePath: string;
+    try {
+      modulePath = findModuleFromOptions(tree, options, options.projectRoot);
+    } catch (e) {
+      modulePath = findModuleFromOptions(
+        tree,
+        {
+          ...options,
+          moduleExt: '-module.ts',
+          routingModuleExt: '-routing-module.ts',
+        },
+        options.projectRoot
+      );
+    }
     addToNgModule(
       tree,
       options.directory,
