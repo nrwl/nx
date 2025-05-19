@@ -17,6 +17,16 @@
     "allowJs": true,
     "paths": {
       "@nx/angular": ["packages/angular"],
+      "@nx/angular-rspack-compiler": [
+        "packages/angular-rspack-compiler/src/index.ts"
+      ],
+      "@nx/angular-rspack": ["packages/angular-rspack/src/lib/index.ts"],
+      "@nx/angular-rspack/loaders/angular-loader": [
+        "packages/angular-rspack/src/lib/plugins/loaders/angular-transform.loader.ts"
+      ],
+      "@nx/angular-rspack/loaders/angular-partial-transform-loader": [
+        "packages/angular-rspack/src/lib/plugins/loaders/angular-partial-transform.loader.ts"
+      ],
       "@nx/angular/*": ["packages/angular/*"],
       "@nx/cypress": ["packages/cypress"],
       "@nx/cypress/*": ["packages/cypress/*"],

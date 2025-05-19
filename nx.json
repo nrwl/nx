@@ -121,6 +121,10 @@
         "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"]
       }
     },
+    "vite:test": {
+      "dependsOn": ["test-native", "build-native", "^build-native"],
+      "inputs": ["default", "^production"]
+    },
     "lint": {
       "dependsOn": ["build-native", "^build-native"]
     },
@@ -198,7 +202,11 @@
     },
     {
       "plugin": "@nx/eslint/plugin",
-      "exclude": ["packages/**/__fixtures__/**/*"],
+      "exclude": [
+        "packages/**/__fixtures__/**/*",
+        "packages/angular-rspack-compiler/eslint.config.js",
+        "packages/angular-rspack/eslint.config.js"
+      ],
       "options": {
         "targetName": "lint"
       }
@@ -256,8 +264,31 @@
         "testStorybookTargetName": "test-storybook",
         "staticStorybookTargetName": "static:storybook"
       }
+    },
+    {
+      "plugin": "@nx/rspack/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "serveTargetName": "serve",
+        "previewTargetName": "preview",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
+      }
+    },
+    {
+      "plugin": "@nx/vite/plugin",
+      "include": [
+        "packages/angular-rspack-compiler/**/*",
+        "packages/angular-rspack/**/*"
+      ],
+      "options": {
+        "testTargetName": "vite:test"
+      }
     }
   ],
+  "sync": {
+    "disabledTaskSyncGenerators": ["@nx/js:typescript-sync"]
+  },
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
