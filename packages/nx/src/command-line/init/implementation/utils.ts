@@ -222,6 +222,21 @@ export function updateGitIgnore(root: string) {
       }
       lines.push('.nx/workspace-data');
     }
+    if (!contents.includes('.cursor/rules/nx-rules.mdc')) {
+      if (!sepIncluded) {
+        lines.push('\n');
+        sepIncluded = true;
+      }
+      lines.push('.cursor/rules/nx-rules.mdc');
+    }
+    if (!contents.includes('.github/instructions/nx.instructions.md')) {
+      if (!sepIncluded) {
+        lines.push('\n');
+        sepIncluded = true;
+      }
+      lines.push('.github/instructions/nx.instructions.md');
+    }
+
     writeFileSync(ignorePath, lines.join('\n'), 'utf-8');
   } catch {}
 }
@@ -313,8 +328,10 @@ export function markPackageJsonAsNxProject(packageJsonPath: string) {
 
 export function printFinalMessage({
   learnMoreLink,
+  appendLines,
 }: {
   learnMoreLink?: string;
+  appendLines?: string[];
 }): void {
   const pmc = getPackageManagerCommand();
 
@@ -328,6 +345,7 @@ export function printFinalMessage({
         pmc
       )} graph" to see the graph of projects and tasks in your workspace. https://nx.dev/core-features/explore-graph`,
       learnMoreLink ? `- Learn more at ${learnMoreLink}.` : undefined,
+      ...(appendLines ?? []),
     ].filter(Boolean),
   });
 }

@@ -4,14 +4,11 @@ import {
   NxModuleFederationConfigOverride,
 } from '../../../utils/models';
 import { getModuleFederationConfig } from '../../../with-module-federation/rspack/utils';
-import { NxModuleFederationDevServerConfig } from '../../models';
-import { NxModuleFederationDevServerPlugin } from './nx-module-federation-dev-server-plugin';
 
 export class NxModuleFederationPlugin implements RspackPluginInstance {
   constructor(
     private _options: {
       config: ModuleFederationConfig;
-      devServerConfig?: NxModuleFederationDevServerConfig;
       isServer?: boolean;
     },
     private configOverride?: NxModuleFederationConfigOverride
@@ -23,8 +20,13 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
     }
 
     // This is required to ensure Module Federation will build the project correctly
+    compiler.options.optimization ??= {};
     compiler.options.optimization.runtimeChunk = false;
     compiler.options.output.uniqueName = this._options.config.name;
+    if (compiler.options.output.scriptType === 'module') {
+      compiler.options.output.scriptType = undefined;
+      compiler.options.output.module = undefined;
+    }
     if (this._options.isServer) {
       compiler.options.target = 'async-node';
       compiler.options.output.library ??= {

@@ -2,7 +2,7 @@
 title: 'Rspack — Getting up to speed with Nx'
 slug: 'rspack-getting-up-to-speed-with-nx'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2023-03-10/fWQ53mw2itEs3SGAOJVonQ.png'
+cover_image: '/blog/images/2023-03-10/fWQ53mw2itEs3SGAOJVonQ.avif'
 tags: [nx]
 description: Explore Nx's integration with Rspack, the Rust-based Webpack alternative that offers 5-10x faster compilation for React apps in your monorepo.
 ---

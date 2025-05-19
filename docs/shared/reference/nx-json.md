@@ -44,10 +44,7 @@ The following is an expanded example showing all options. Your `nx.json` will li
   },
   "release": {
     "version": {
-      "generatorOptions": {
-        "currentVersionResolver": "git-tag",
-        "specifierSource": "conventional-commits"
-      }
+      "conventionalCommits": true
     },
     "changelog": {
       "git": {
@@ -140,7 +137,7 @@ Target defaults provide ways to set common options for a particular target in yo
 - `` `${executor}` ``
 - `` `${targetName}` `` (if the configuration specifies the executor, this needs to match the target's executor as well)
 
-Additionally, if there is not a match for either of the above, we look for other keys that may match the target name via a glob pattern. For example, a key in the target defaults that looks like `e2e-ci--**/*` would match all of the targets created by a task atomizer plugin.
+Additionally, if there is not a match for either of the above, we look for other keys that may match the target name via a glob pattern. For example, a key in the target defaults that looks like `e2e-ci--**/**` would match all of the targets created by a task atomizer plugin.
 
 Target defaults matching the executor takes precedence over those matching the target name. If we find a target default for a given target, we use it as the base for that target's configuration.
 
@@ -397,29 +394,38 @@ The default `"releaseTagPattern"` for independent releases at the project level 
 
 The `version` property configures the versioning phase of the release process. It is used to determine the next version of your projects, and update any projects that depend on them to use the new version.
 
-Behind the scenes, the `version` logic is powered by an Nx generator. Out of the box Nx wires up the most widely applicable generator implementation for you, which is `@nx/js:release-version` provided by the `@nx/js` plugin.
+{% callout type="note" title="Breaking Changes in Nx v21" %}
+In Nx v21, the implementation details of versioning were rewritten to enhance flexibility and allow for better cross-ecosystem support. An automated migration was provided in Nx v21 to update your configuration to the new format when running `nx migrate`.
 
-It is therefore a common requirement to be able to tweak the options given to that generator. This can be done by configuring the `release.version.generatorOptions` property in `nx.json`:
+During the lifecycle of Nx v21, you can still opt into the old versioning by setting `release.version.useLegacyVersioning` to `true`, which will keep the original configuration structure and behavior. In Nx v22, the legacy versioning implementation will be removed entirely, so this should only be done temporarily to ease the transition.
+{% /callout %}
+
+Behind the scenes, ecosystem-specific `version` logic is powered by a `VersionActions` implementation. Out of the box Nx wires up the most widely applicable `VersionActions` implementation for you, which is `@nx/js/src/release/version-actions` provided by the `@nx/js` plugin.
+
+Core version options are therefore directly at the top level of the `version` property (as of Nx v21), while ecosystem-specific options are available through `versionActionsOptions`:
 
 ```jsonc {% fileName="nx.json" %}
 {
   "release": {
     "version": {
-      "generatorOptions": {
-        // Here we are configuring the generator to use git tags as the
-        // source of truth for a project's current version
-        "currentVersionResolver": "git-tag",
-        // Here we are configuring the generator to use conventional
-        // commits as the source of truth for how to determine the
-        // relevant version bump for the next version
-        "specifierSource": "conventional-commits"
+      // Core options
+      "conventionalCommits": true,
+      "manifestRootsToUpdate": ["dist/packages/{projectName}"],
+      // Ecosystem-specific options
+      "versionActionsOptions": {
+        "skipLockFileUpdate": true
       }
     }
   }
 }
 ```
 
-For a full reference of the available options for the `@nx/js:release-version` generator, see the [release version generator reference](/nx-api/js/generators/release-version).
+Some important changes in Nx 21:
+
+- The `release.version.generatorOptions` object has been removed, with its properties moved to the top level of `release.version`
+- `packageRoot` has been replaced by the more flexible `manifestRootsToUpdate` array
+- Ecosystem-specific options like `skipLockFileUpdate` are now under `versionActionsOptions`
+- `preserveLocalDependencyProtocols` (also now at the top level)now defaults to `true` (previously `false` when it was a generatorOption)
 
 ### Changelog
 
@@ -571,3 +577,32 @@ There are also options for [Nx Cloud](https://nx.app) that are set in the `nx.js
 ```
 
 For more details on configuring Nx Cloud, see the [Nx Cloud Configuration Options page](/ci/reference/config).
+
+## Max Cache Size
+
+The `maxCacheSize` property in `nx.json` allows you to set a limit on the size of the local cache. If it is not set, Nx defaults to a maximum size of 10% of the size of the disk where the cache is stored, up to a maximum of 10GB. This means that if your disk is 100GB, the maximum cache size will be 10GB. If the cache exceeds the specified size, Nx removes the least recently used cache entries until the total size is below 90% of the specified limit.
+
+This behavior can be opted out by setting `maxCacheSize` to `0`.
+
+Valid values for `maxCacheSize` can be specified in bytes, kilobytes (KB), megabytes (MB), or gigabytes (GB). For example, any of the following would be valid values:
+
+| Value    | Description                                                      |
+| -------- | ---------------------------------------------------------------- |
+| `819200` | 819200 bytes (800 KB)                                            |
+| `100MB`  | 100 megabytes (100 \* 1024 \* 1024 bytes)                        |
+| `1GB`    | 1 gigabyte (1024 \* 1024 \* 1024 bytes)                          |
+| `0`      | No limit on the local cache size (disables the cache size limit) |
+
+```json {% fileName="nx.json" %}
+{
+  "maxCacheSize": "0" // No limit on the local cache size
+}
+```
+
+```json {% fileName="nx.json" %}
+{
+  "maxCacheSize": "10GB" // Set the maximum cache size to 10 gigabytes
+}
+```
+
+Regardless of the `maxCacheSize` setting, Nx will remove cache entries that have not been accessed in the last 7 days.

@@ -30,6 +30,16 @@ import {
  */
 type NpmResolutionCache = Map<string, string | null>;
 
+type PathPattern = {
+  pattern: string;
+  prefix: string;
+  suffix: string;
+};
+type ParsedPatterns = {
+  matchableStrings: Set<string> | undefined;
+  patterns: PathPattern[] | undefined;
+};
+
 /**
  * Use a shared cache to avoid repeated npm package resolution work within the TargetProjectLocator.
  */
@@ -47,6 +57,7 @@ export class TargetProjectLocator {
   private npmProjects: Record<string, ProjectGraphExternalNode | null>;
   private tsConfig = this.getRootTsConfig();
   private paths = this.tsConfig.config?.compilerOptions?.paths;
+  private parsedPathPatterns: ParsedPatterns | undefined;
   private typescriptResolutionCache = new Map<string, string | null>();
   private packagesMetadata: {
     entryPointsToProjectMap: Record<string, ProjectGraphProjectNode>;
@@ -81,6 +92,10 @@ export class TargetProjectLocator {
       }
       return acc;
     }, {} as Record<string, ProjectGraphExternalNode>);
+
+    if (this.tsConfig.config?.compilerOptions?.paths) {
+      this.parsePaths(this.tsConfig.config.compilerOptions.paths);
+    }
   }
 
   /**
@@ -97,14 +112,19 @@ export class TargetProjectLocator {
     }
 
     // find project using tsconfig paths
-    const results = this.findPaths(importExpr);
+    const results = this.findMatchingPaths(importExpr);
     if (results) {
       const [path, paths] = results;
+      const matchedStar =
+        typeof path === 'string'
+          ? undefined
+          : importExpr.substring(
+              path.prefix.length,
+              importExpr.length - path.suffix.length
+            );
       for (let p of paths) {
-        const r = p.endsWith('/*')
-          ? join(dirname(p), relative(path.replace(/\*$/, ''), importExpr))
-          : p;
-        const maybeResolvedProject = this.findProjectOfResolvedModule(r);
+        const path = matchedStar ? p.replace('*', matchedStar) : p;
+        const maybeResolvedProject = this.findProjectOfResolvedModule(path);
         if (maybeResolvedProject) {
           return maybeResolvedProject;
         }
@@ -237,7 +257,7 @@ export class TargetProjectLocator {
   /**
    * Return file paths matching the import relative to the repo root
    * @param normalizedImportExpr
-   * @returns
+   * @deprecated Use `findMatchingPaths` instead. It will be removed in Nx v22.
    */
   findPaths(normalizedImportExpr: string): string[] | undefined {
     if (!this.paths) {
@@ -256,6 +276,37 @@ export class TargetProjectLocator {
       return [wildcardPath, this.paths[wildcardPath]];
     }
     return undefined;
+  }
+
+  findMatchingPaths(
+    importExpr: string
+  ): [pattern: string | PathPattern, paths: string[]] | undefined {
+    if (!this.parsedPathPatterns) {
+      return undefined;
+    }
+
+    const { matchableStrings, patterns } = this.parsedPathPatterns;
+    if (matchableStrings.has(importExpr)) {
+      return [importExpr, this.paths[importExpr]];
+    }
+
+    // https://github.com/microsoft/TypeScript/blob/29e6d6689dfb422e4f1395546c1917d07e1f664d/src/compiler/core.ts#L2410
+    let matchedValue: PathPattern | undefined;
+    let longestMatchPrefixLength = -1;
+    for (let i = 0; i < patterns.length; i++) {
+      const pattern = patterns[i];
+      if (
+        pattern.prefix.length > longestMatchPrefixLength &&
+        this.isPatternMatch(pattern, importExpr)
+      ) {
+        longestMatchPrefixLength = pattern.prefix.length;
+        matchedValue = pattern;
+      }
+    }
+
+    return matchedValue
+      ? [matchedValue, this.paths[matchedValue.pattern]]
+      : undefined;
   }
 
   findImportInWorkspaceProjects(importPath: string): string | null {
@@ -277,6 +328,40 @@ export class TargetProjectLocator {
     this.packagesMetadata ??= getWorkspacePackagesMetadata(this.nodes);
 
     return this.packagesMetadata.packageToProjectMap[dep]?.name;
+  }
+
+  private isPatternMatch(
+    { prefix, suffix }: PathPattern,
+    candidate: string
+  ): boolean {
+    return (
+      candidate.length >= prefix.length + suffix.length &&
+      candidate.startsWith(prefix) &&
+      candidate.endsWith(suffix)
+    );
+  }
+
+  private parsePaths(paths: Record<string, string>): void {
+    this.parsedPathPatterns = {
+      matchableStrings: new Set(),
+      patterns: [],
+    };
+
+    for (const key of Object.keys(paths)) {
+      const parts = key.split('*');
+      if (parts.length > 2) {
+        continue;
+      }
+      if (parts.length === 1) {
+        this.parsedPathPatterns.matchableStrings.add(key);
+        continue;
+      }
+      this.parsedPathPatterns.patterns.push({
+        pattern: key,
+        prefix: parts[0],
+        suffix: parts[1],
+      });
+    }
   }
 
   private resolveImportWithTypescript(
@@ -312,7 +397,7 @@ export class TargetProjectLocator {
     normalizedImportExpr: string,
     filePath: string
   ) {
-    return posix.relative(
+    return relative(
       workspaceRoot,
       require.resolve(normalizedImportExpr, {
         paths: [dirname(filePath)],

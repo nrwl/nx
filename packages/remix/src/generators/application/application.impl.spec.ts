@@ -3,7 +3,6 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 import {
   joinPathFragments,
   readJson,
-  readNxJson,
   readProjectConfiguration,
   type Tree,
   updateJson,
@@ -178,14 +177,6 @@ describe('Remix Application', () => {
         expectTargetsToBeCorrect(tree, '.');
 
         expect(tree.read('e2e/cypress.config.ts', 'utf-8')).toMatchSnapshot();
-        expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
-          .toMatchInlineSnapshot(`
-          {
-            "dependsOn": [
-              "^build",
-            ],
-          }
-        `);
       });
     });
 
@@ -206,14 +197,6 @@ describe('Remix Application', () => {
       expectTargetsToBeCorrect(tree, '.');
 
       expect(tree.read('e2e/playwright.config.ts', 'utf-8')).toMatchSnapshot();
-      expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
-        .toMatchInlineSnapshot(`
-          {
-            "dependsOn": [
-              "^build",
-            ],
-          }
-        `);
     });
   });
 
@@ -472,7 +455,6 @@ describe('Remix Application', () => {
           "private",
           "type",
           "scripts",
-          "engines",
           "sideEffects",
           "nx",
           "dependencies",
@@ -493,9 +475,6 @@ describe('Remix Application', () => {
             "@remix-run/dev": "^2.15.0",
             "@types/react": "^18.2.0",
             "@types/react-dom": "^18.2.0",
-          },
-          "engines": {
-            "node": ">=20",
           },
           "name": "@proj/myapp",
           "nx": {
@@ -678,7 +657,6 @@ describe('Remix Application', () => {
           "private",
           "type",
           "scripts",
-          "engines",
           "sideEffects",
           "nx",
           "dependencies",
@@ -710,9 +688,6 @@ describe('Remix Application', () => {
             "@remix-run/dev": "^2.15.0",
             "@types/react": "^18.2.0",
             "@types/react-dom": "^18.2.0",
-          },
-          "engines": {
-            "node": ">=20",
           },
           "name": "@proj/myapp",
           "private": true,

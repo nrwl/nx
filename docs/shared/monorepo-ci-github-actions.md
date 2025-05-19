@@ -28,6 +28,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
+
       - uses: actions/setup-node@v3
         with:
           node-version: 20

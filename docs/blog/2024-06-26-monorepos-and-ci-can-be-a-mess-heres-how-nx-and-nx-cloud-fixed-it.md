@@ -6,7 +6,7 @@ date: 2024-06-26
 slug: 'monorepos-and-ci-can-be-a-mess-heres-how-nx-and-nx-cloud-fixed-it'
 authors: ['Juri Strumpflohner']
 tags: [webinar]
-cover_image: /blog/images/2024-06-26/June-Webinar-card.png
+cover_image: /blog/images/2024-06-26/June-Webinar-card.avif
 status: Past - Gated
 registrationUrl: https://go.nx.dev/june-webinar
 ---

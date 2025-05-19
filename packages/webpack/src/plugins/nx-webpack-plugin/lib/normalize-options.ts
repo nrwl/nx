@@ -133,7 +133,8 @@ export function normalizeOptions(
     targetName,
     vendorChunk: combinedPluginAndMaybeExecutorOptions.vendorChunk ?? !isProd,
     sassImplementation:
-      combinedPluginAndMaybeExecutorOptions.sassImplementation ?? 'sass',
+      combinedPluginAndMaybeExecutorOptions.sassImplementation ??
+      'sass-embedded',
   };
 }
 

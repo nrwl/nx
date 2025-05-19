@@ -248,7 +248,7 @@ export function DocumentationHeader({
         <div className="hidden flex-shrink-0 xl:flex">
           <nav
             role="menu"
-            className="items-justified hidden justify-center space-x-2 text-sm lg:flex"
+            className="hidden items-center justify-center space-x-2 text-sm lg:flex"
           >
             <h2 className="sr-only">Main navigation</h2>
             <Link
@@ -301,6 +301,14 @@ export function DocumentationHeader({
             </Popover>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
             <Link
+              href="/remote-cache"
+              title="Nx Remote Cache"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
+            >
+              Remote Cache
+            </Link>
+            <Link
               href="/nx-cloud"
               title="Nx Cloud"
               className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
@@ -317,14 +325,6 @@ export function DocumentationHeader({
               Pricing
             </Link>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
-            <Link
-              href="/powerpack"
-              title="Nx Powerpack"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
-              prefetch={false}
-            >
-              Powerpack
-            </Link>
             <Link
               href="/enterprise"
               title="Nx Enterprise"

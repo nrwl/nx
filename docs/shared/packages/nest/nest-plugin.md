@@ -1,6 +1,7 @@
 ---
 title: Nest.js Plugin for Nx
 description: Learn how to use the @nx/nest plugin to create and manage Nest.js applications and libraries in your Nx workspace, including setup and generators.
+keywords: [nest, nestjs]
 ---
 
 Nest.js is a framework designed for building scalable server-side applications. In many ways, Nest is familiar to Angular developers:
@@ -36,26 +37,11 @@ Make sure to install the `@nx/nest` version that matches the version of `nx` in 
 
 In any Nx workspace, you can install `@nx/nest` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/nest
 ```
 
 This will install the correct version of `@nx/nest`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/nest` package with your package manager.
-
-```shell
-npm add -D @nx/nest
-```
-
-{% /tab %}
-{% /tabs %}
 
 ### Create Applications
 

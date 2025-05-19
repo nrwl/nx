@@ -33,6 +33,10 @@ import {
 import { CreateNodesResult } from '../plugins/public-api';
 import { isGlobPattern } from '../../utils/globs';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
+import {
+  getExecutorInformation,
+  parseExecutor,
+} from '../../command-line/run/executor-utils';
 
 export type SourceInformation = [file: string | null, plugin: string];
 export type ConfigurationSourceMaps = Record<
@@ -194,15 +198,30 @@ export function mergeProjectConfigurationIntoRootMap(
         ? target
         : resolveCommandSyntacticSugar(target, project.root);
 
-      const mergedTarget = mergeTargetConfigurations(
-        normalizedTarget,
-        matchingProject.targets?.[targetName],
-        sourceMap,
-        sourceInformation,
-        `targets.${targetName}`
-      );
+      let matchingTargets = [];
+      if (isGlobPattern(targetName)) {
+        // find all targets matching the glob pattern
+        // this will map atomized targets to the glob pattern same as it does for targetDefaults
+        matchingTargets = Object.keys(
+          updatedProjectConfiguration.targets
+        ).filter((key) => minimatch(key, targetName));
+      }
+      // If no matching targets were found, we can assume that the target name is not (meant to be) a glob pattern
+      if (!matchingTargets.length) {
+        matchingTargets = [targetName];
+      }
 
-      updatedProjectConfiguration.targets[targetName] = mergedTarget;
+      for (const matchingTargetName of matchingTargets) {
+        const mergedTarget = mergeTargetConfigurations(
+          normalizedTarget,
+          matchingProject.targets?.[matchingTargetName],
+          sourceMap,
+          sourceInformation,
+          `targets.${matchingTargetName}`
+        );
+
+        updatedProjectConfiguration.targets[matchingTargetName] = mergedTarget;
+      }
     }
   }
 
@@ -432,7 +451,7 @@ export async function createProjectConfigurationsWithPlugins(
     spinner?.cleanup();
 
     const { projectRootMap, externalNodes, rootMap, configurationSourceMaps } =
-      mergeCreateNodesResults(results, nxJson, errors);
+      mergeCreateNodesResults(results, nxJson, root, errors);
 
     performance.mark('build-project-configs:end');
     performance.measure(
@@ -469,6 +488,7 @@ function mergeCreateNodesResults(
     pluginIndex?: number
   ])[][],
   nxJsonConfiguration: NxJsonConfiguration,
+  workspaceRoot: string,
   errors: (
     | AggregateCreateNodesError
     | MergeNodesError
@@ -524,6 +544,7 @@ function mergeCreateNodesResults(
 
   try {
     validateAndNormalizeProjectRootMap(
+      workspaceRoot,
       projectRootMap,
       nxJsonConfiguration,
       configurationSourceMaps
@@ -628,6 +649,7 @@ export function readProjectConfigurationsFromRootMap(
 }
 
 function validateAndNormalizeProjectRootMap(
+  workspaceRoot: string,
   projectRootMap: Record<string, ProjectConfiguration>,
   nxJsonConfiguration: NxJsonConfiguration,
   sourceMaps: ConfigurationSourceMaps = {}
@@ -663,7 +685,13 @@ function validateAndNormalizeProjectRootMap(
       }
     }
 
-    normalizeTargets(project, sourceMaps, nxJsonConfiguration);
+    normalizeTargets(
+      project,
+      sourceMaps,
+      nxJsonConfiguration,
+      workspaceRoot,
+      projects
+    );
   }
 
   if (conflicts.size > 0) {
@@ -678,12 +706,19 @@ function validateAndNormalizeProjectRootMap(
 function normalizeTargets(
   project: ProjectConfiguration,
   sourceMaps: ConfigurationSourceMaps,
-  nxJsonConfiguration: NxJsonConfiguration<'*' | string[]>
+  nxJsonConfiguration: NxJsonConfiguration,
+  workspaceRoot: string,
+  /**
+   * Project configurations keyed by project name
+   */
+  projects: Record<string, ProjectConfiguration>
 ) {
   for (const targetName in project.targets) {
     project.targets[targetName] = normalizeTarget(
       project.targets[targetName],
-      project
+      project,
+      workspaceRoot,
+      projects
     );
 
     const projectSourceMaps = sourceMaps[project.root];
@@ -702,7 +737,7 @@ function normalizeTargets(
       project.targets[targetName] = mergeTargetDefaultWithTargetDefinition(
         targetName,
         project,
-        normalizeTarget(targetDefaults, project),
+        normalizeTarget(targetDefaults, project, workspaceRoot, projects),
         projectSourceMaps
       );
     }
@@ -1146,14 +1181,16 @@ function resolveCommandSyntacticSugar(
 }
 
 /**
- * Expand's `command` syntactic sugar and replaces tokens in options.
+ * Expand's `command` syntactic sugar, replaces tokens in options, and adds information from executor schema.
  * @param target The target to normalize
  * @param project The project that the target belongs to
  * @returns The normalized target configuration
  */
 export function normalizeTarget(
   target: TargetConfiguration,
-  project: ProjectConfiguration
+  project: ProjectConfiguration,
+  workspaceRoot: string,
+  projectsMap: Record<string, ProjectConfiguration>
 ) {
   target = {
     ...target,
@@ -1179,6 +1216,27 @@ export function normalizeTarget(
   }
 
   target.parallelism ??= true;
+
+  if (target.executor && !('continuous' in target)) {
+    try {
+      const [executorNodeModule, executorName] = parseExecutor(target.executor);
+
+      const { schema } = getExecutorInformation(
+        executorNodeModule,
+        executorName,
+        workspaceRoot,
+        projectsMap
+      );
+
+      if (schema.continuous) {
+        target.continuous ??= schema.continuous;
+      }
+    } catch (e) {
+      // If the executor is not found, we assume that it is not a valid executor.
+      // This means that we should not set the continuous property.
+      // We could throw an error here, but it would be better to just ignore it.
+    }
+  }
 
   return target;
 }

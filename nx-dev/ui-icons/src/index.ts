@@ -89,6 +89,14 @@ export * from './lib/others/linux';
 export * from './lib/others/min-io';
 export * from './lib/others/windows';
 
+// PARTNERS
+export * from './lib/partners/bitovi';
+export * from './lib/partners/callstack';
+export * from './lib/partners/hero-devs';
+export * from './lib/partners/push-based';
+export * from './lib/partners/e-square';
+export * from './lib/partners/briebug';
+
 // PODCASTS
 export * from './lib/podcasts/amazon-music';
 export * from './lib/podcasts/apple-podcasts';

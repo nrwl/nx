@@ -11,7 +11,7 @@ import { PackageJson } from '../../../utils/package-json';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 
-jest.mock('fs', () => {
+jest.mock('node:fs', () => {
   const memFs = require('memfs').fs;
   return {
     ...memFs,
@@ -2921,6 +2921,98 @@ __metadata:
           linkType: hard
         "
       `);
+    });
+  });
+
+  describe('resolutions and patches', () => {
+    it('should parse yarn.lock with resolutions and patches', () => {
+      const lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/resolutions-and-patches/yarn.lock'
+      )).default;
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/resolutions-and-patches/package.json'
+      ));
+      const appLockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/resolutions-and-patches/app/yarn.lock'
+      )).default;
+      const appPackageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/resolutions-and-patches/app/package.json'
+      ));
+
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
+        );
+      }
+      const graph = builder.getUpdatedProjectGraph();
+      const prunedGraph = pruneProjectGraph(graph, appPackageJson);
+      // @types/react is only used as peer dependency with `*` or `16 | 17 | 18` as a range
+      // so we should check if parsing version ranges works correctly
+      expect(prunedGraph.externalNodes['npm:@types/react'])
+        .toMatchInlineSnapshot(`
+        {
+          "data": {
+            "hash": "10/5f2f6091623f13375a5bbc7e5c222cd212b5d6366ead737b76c853f6f52b314db24af5ae3f688d2d49814c668c216858a75433f145311839d8989d46bb3cbecf",
+            "packageName": "@types/react",
+            "version": "18.2.60",
+          },
+          "name": "npm:@types/react",
+          "type": "npm",
+        }
+      `);
+      // react-dom has a patch, so this check helps us to see if patch has been properly parsed
+      expect(prunedGraph.externalNodes['npm:react-dom']).toMatchInlineSnapshot(`
+        {
+          "data": {
+            "hash": "10/ca5e7762ec8c17a472a3605b6f111895c9f87ac7d43a610ab7024f68cd833d08eda0625ce02ec7178cc1f3c957cf0b9273cdc17aa2cd02da87544331c43b1d21",
+            "packageName": "react-dom",
+            "version": "18.2.0",
+          },
+          "name": "npm:react-dom",
+          "type": "npm",
+        }
+      `);
+      const result = stringifyYarnLockfile(
+        prunedGraph,
+        lockFile,
+        appPackageJson
+      );
+      // resulting lockfile should contain flexible ranges and patches with modified paths applied
+      expect(result).toEqual(appLockFile);
+      expect(result).toContain('"@types/react@npm:18.2.60"');
+      expect(result).toContain(
+        '"react-dom@patch:react-dom@18.2.0#.yarn/patches/react-dom.patch::locator=demo-app%40workspace%3A."'
+      );
     });
   });
 });

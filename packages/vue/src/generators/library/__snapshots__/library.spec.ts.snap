@@ -157,7 +157,7 @@ export default defineConfig(() => ({
 exports[`library should add vue, vite and vitest to package.json 1`] = `
 {
   "dependencies": {
-    "vue": "^3.3.4",
+    "vue": "^3.5.13",
   },
   "devDependencies": {
     "@nx/cypress": "0.0.1",
@@ -174,12 +174,12 @@ exports[`library should add vue, vite and vitest to package.json 1`] = `
     "@types/node": "18.16.9",
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
-    "@vitejs/plugin-vue": "^4.5.0",
+    "@vitejs/plugin-vue": "^5.2.3",
     "@vitest/coverage-v8": "^3.0.5",
     "@vitest/ui": "^3.0.0",
     "@vue/eslint-config-prettier": "7.1.0",
     "@vue/eslint-config-typescript": "^11.0.3",
-    "@vue/test-utils": "^2.4.1",
+    "@vue/test-utils": "^2.4.6",
     "eslint": "~8.57.0",
     "eslint-config-prettier": "^10.0.0",
     "eslint-plugin-vue": "^9.16.1",
@@ -189,7 +189,7 @@ exports[`library should add vue, vite and vitest to package.json 1`] = `
     "typescript": "~5.7.2",
     "vite": "^6.0.0",
     "vitest": "^3.0.0",
-    "vue-tsc": "^2.0.0",
+    "vue-tsc": "^2.2.8",
   },
   "name": "@proj/source",
 }

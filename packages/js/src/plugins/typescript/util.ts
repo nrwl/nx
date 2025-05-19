@@ -5,11 +5,15 @@ import { type PackageManagerCommands } from 'nx/src/utils/package-manager';
 import { join } from 'path';
 import { type ParsedCommandLine } from 'typescript';
 
+export type ExtendedConfigFile = {
+  filePath: string;
+  externalPackage?: string;
+};
 export type ParsedTsconfigData = Pick<
   ParsedCommandLine,
   'options' | 'projectReferences' | 'raw'
 > & {
-  extendedConfigFile: { filePath: string; externalPackage?: string } | null;
+  extendedConfigFiles: ExtendedConfigFile[];
 };
 
 /**
@@ -43,6 +47,7 @@ export function addBuildAndWatchDepsTargets(
       dependsOn: ['^build'],
     };
     targets[options.watchDepsTargetName ?? 'watch-deps'] = {
+      continuous: true,
       dependsOn: [buildDepsTargetName],
       command: `${pmc.exec} nx watch --projects ${projectName} --includeDependentProjects -- ${pmc.exec} nx ${buildDepsTargetName} ${projectName}`,
     };

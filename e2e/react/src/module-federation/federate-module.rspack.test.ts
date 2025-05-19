@@ -103,7 +103,7 @@ describe('Federate Module', () => {
 
     if (runE2ETests()) {
       const hostE2eResults = await runCommandUntil(
-        `e2e ${host}-e2e --no-watch --verbose`,
+        `e2e ${host}-e2e --verbose`,
         (output) => output.includes('All specs passed!')
       );
       await killProcessAndPorts(
@@ -195,7 +195,7 @@ describe('Federate Module', () => {
 
     if (runE2ETests()) {
       const hostE2eResults = await runCommandUntil(
-        `e2e ${host}-e2e --no-watch --verbose`,
+        `e2e ${host}-e2e --verbose`,
         (output) => output.includes('All specs passed!')
       );
       await killProcessAndPorts(

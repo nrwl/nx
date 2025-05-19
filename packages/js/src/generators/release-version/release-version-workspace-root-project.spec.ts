@@ -102,8 +102,9 @@ describe('release-version-workspace-root-project', () => {
         });
       });
 
-      // TODO This will not pass until NXC-573 is resolved
-      // Until then, this test will error because the version generator is incorrectly
+      // NOTE: The ported version of this test passes in "versioning v2"
+      //
+      // NXC-573: this test will error because the version generator is incorrectly
       // looking for 'dist/libs/depends-on-my-lib/package.json' when it doesn't exist.
       it.skip('should not error when run with custom packageRoot containing {projectRoot}', async () => {
         projectGraph = createWorkspaceWithPackageDependencies(tree, {

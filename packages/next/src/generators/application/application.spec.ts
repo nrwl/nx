@@ -523,11 +523,9 @@ describe('app', () => {
        * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
        **/
       const nextConfig = {
-        nx: {
-          // Set this to true if you would like to use SVGR
-          // See: https://github.com/gregberge/svgr
-          svgr: false,
-        },
+        // Use this to set Nx-specific options
+        // See: https://nx.dev/recipes/next/next-config-setup
+        nx: {},
       };
 
       const plugins = [
@@ -563,48 +561,6 @@ describe('app', () => {
         e2eTestRunner: 'none',
       });
       expect(tree.exists(`${name}-e2e`)).toBeFalsy();
-    });
-  });
-
-  describe('--e2e-test-runner cypress', () => {
-    it('should generate e2e-ci targetDefaults', async () => {
-      const name = uniq();
-
-      await applicationGenerator(tree, {
-        directory: name,
-        style: 'css',
-        e2eTestRunner: 'cypress',
-        addPlugin: true,
-      });
-      expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
-        .toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^build",
-          ],
-        }
-      `);
-    });
-  });
-
-  describe('--e2e-test-runner playwright', () => {
-    it('should generate e2e-ci targetDefaults', async () => {
-      const name = uniq();
-
-      await applicationGenerator(tree, {
-        directory: name,
-        style: 'css',
-        e2eTestRunner: 'playwright',
-        addPlugin: true,
-      });
-      expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
-        .toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^build",
-          ],
-        }
-      `);
     });
   });
 

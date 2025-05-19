@@ -16,7 +16,12 @@ import {
   MicrophoneIcon,
   VideoCameraIcon,
   CheckBadgeIcon,
+  LifebuoyIcon,
   BookOpenIcon,
+  ShieldCheckIcon,
+  ServerStackIcon,
+  ArrowTrendingUpIcon,
+  CommandLineIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
 import { DiscordIcon } from '../discord-icon';
@@ -146,35 +151,6 @@ export const ossProducts: MenuItem[] = [
   },
 ];
 
-export const enterpriseProducts: MenuItem[] = [
-  {
-    name: 'Nx Cloud',
-    description:
-      'Nx Cloud is the end-to-end solution for smart, efficient and maintainable CI',
-    href: '/nx-cloud',
-    icon: null,
-    isNew: false,
-    isHighlight: false,
-  },
-  {
-    name: 'Nx Powerpack',
-    description:
-      'A suite of paid extensions for the Nx CLI specifically designed for enterprises.',
-    href: '/powerpack',
-    icon: null,
-    isNew: false,
-    isHighlight: false,
-  },
-  {
-    name: 'Nx Enterprise',
-    description:
-      "Accelerate your organization's journey to tighter collaboration, better developer experience, and speed…lots of speed.",
-    href: '/enterprise',
-    icon: null,
-    isNew: false,
-    isHighlight: false,
-  },
-];
 export const learnItems: MenuItem[] = [
   {
     name: 'Step by step tutorials',
@@ -243,10 +219,10 @@ export const learnItems: MenuItem[] = [
 ];
 export const eventItems: MenuItem[] = [
   {
-    name: 'Monorepo World',
+    name: 'Office Hours',
     description: null,
-    href: 'https://monorepo.world',
-    icon: GlobeAltIcon,
+    href: 'https://go.nx.dev/office-hours',
+    icon: DiscordIcon,
     isNew: false,
     isHighlight: false,
   },
@@ -260,6 +236,44 @@ export const eventItems: MenuItem[] = [
   },
 ];
 
+export const solutionsItems: MenuItem[] = [
+  {
+    name: 'Developers',
+    description:
+      'Accelerate your CI with Nx: smart cache sharing, flaky-test auto‑retries, parallel runs & dynamic agents.',
+    href: '/solutions/engineering',
+    icon: CommandLineIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Engineering Managers',
+    description:
+      'Boost efficiency with powerful monorepos and intelligent CI. Build, test, and deploy faster, freeing teams to innovate.',
+    href: '/solutions/management',
+    icon: BoltIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Platform & DevOps Teams',
+    description:
+      'Get dependable, out-of-the-box CI that scales effortlessly. Cut costs and boost speed with smart caching, distribution, and enhanced security.',
+    icon: ServerStackIcon,
+    href: '/solutions/platform',
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'CTOs & VPs of Engineering',
+    description:
+      'Supercharge engineering ROI with faster delivery, lower CI costs, and fewer risks. Scale safely and future-proof your stack.',
+    icon: ArrowTrendingUpIcon,
+    href: '/solutions/leadership',
+    isNew: false,
+    isHighlight: false,
+  },
+];
 export const companyItems: MenuItem[] = [
   {
     name: 'About Us',
@@ -274,6 +288,34 @@ export const companyItems: MenuItem[] = [
     description: null,
     icon: BuildingOfficeIcon,
     href: '/customers',
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Partners',
+    description: null,
+    icon: LifebuoyIcon,
+    href: '/partners',
+    isNew: false,
+    isHighlight: false,
+  },
+];
+export const enterpriseItems: MenuItem[] = [
+  {
+    name: 'Overview',
+    description:
+      "Accelerate your organization's journey to tighter collaboration, better developer experience, and speed…lots of speed.",
+    href: '/enterprise',
+    icon: BuildingOfficeIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Security',
+    description:
+      'Protect your codebase from artifact poisoning with infrastructure-first security.',
+    icon: ShieldCheckIcon,
+    href: '/enterprise/security',
     isNew: false,
     isHighlight: false,
   },

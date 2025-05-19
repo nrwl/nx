@@ -98,7 +98,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                     "options": {
                       "cwd": "proj",
                       "env": {
-                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","customConditions":null}",
+                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
                       },
                     },
                     "outputs": [
@@ -179,7 +179,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                     "options": {
                       "cwd": "proj",
                       "env": {
-                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","customConditions":null}",
+                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
                       },
                     },
                     "outputs": [
@@ -249,7 +249,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                     "options": {
                       "cwd": "proj",
                       "env": {
-                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","customConditions":null}",
+                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
                       },
                     },
                     "outputs": [
@@ -318,7 +318,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                     "options": {
                       "cwd": "proj",
                       "env": {
-                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","customConditions":null}",
+                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
                       },
                     },
                     "outputs": [
@@ -398,7 +398,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                     "options": {
                       "cwd": "proj",
                       "env": {
-                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","customConditions":null}",
+                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
                       },
                     },
                     "outputs": [
@@ -482,7 +482,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                       "options": {
                         "cwd": "proj",
                         "env": {
-                          "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","customConditions":null}",
+                          "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
                         },
                       },
                       "outputs": [
@@ -552,7 +552,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                       "options": {
                         "cwd": "proj",
                         "env": {
-                          "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","customConditions":null}",
+                          "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
                         },
                       },
                       "outputs": [
@@ -632,7 +632,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                       "options": {
                         "cwd": "proj",
                         "env": {
-                          "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","customConditions":null}",
+                          "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
                         },
                       },
                       "outputs": [
@@ -702,7 +702,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                       "options": {
                         "cwd": "proj",
                         "env": {
-                          "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","customConditions":null}",
+                          "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
                         },
                       },
                       "outputs": [
@@ -782,7 +782,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                       "options": {
                         "cwd": "proj",
                         "env": {
-                          "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","customConditions":null}",
+                          "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
                         },
                       },
                       "outputs": [
@@ -852,7 +852,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                       "options": {
                         "cwd": "proj",
                         "env": {
-                          "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","customConditions":null}",
+                          "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
                         },
                       },
                       "outputs": [

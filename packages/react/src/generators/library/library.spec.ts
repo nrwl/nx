@@ -1,6 +1,6 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
 import {
   getProjects,
   readJson,
@@ -10,7 +10,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { nxVersion } from '../../utils/versions';
 import applicationGenerator from '../application/application';
 import libraryGenerator from './library';
@@ -18,15 +17,18 @@ import { Schema } from './schema';
 const { load } = require('@zkochan/js-yaml');
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/versions', () => ({
+  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+  getInstalledCypressMajorVersion: jest.fn(),
+}));
 describe('lib', () => {
   let tree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
+    ReturnType<typeof getInstalledCypressMajorVersion>
+  > = getInstalledCypressMajorVersion as never;
   let defaultSchema: Schema = {
     directory: 'my-lib',
-    linter: Linter.EsLint,
+    linter: 'eslint',
     skipFormat: true,
     skipTsConfig: false,
     unitTestRunner: 'jest',
@@ -480,7 +482,7 @@ describe('lib', () => {
       await applicationGenerator(tree, {
         compiler: 'babel',
         e2eTestRunner: 'none',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         unitTestRunner: 'jest',
         directory: 'my-app',
@@ -507,7 +509,7 @@ describe('lib', () => {
     it('should initialize routes if none were set up then add new route', async () => {
       await applicationGenerator(tree, {
         e2eTestRunner: 'none',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         unitTestRunner: 'jest',
         directory: 'my-app',

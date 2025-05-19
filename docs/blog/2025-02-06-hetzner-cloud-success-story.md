@@ -6,7 +6,6 @@ tags: ['customer story']
 description: Discover how Hetzner Cloud uses Nx Enterprise to ship new features to market faster and with more reliability.
 youtubeUrl: https://www.youtube.com/watch?v=2BLqiNnBPuU
 cover_image: /blog/images/articles/hetzner-cloud-story-bg.jpg
-pinned: true
 metrics:
   - value: '116+'
     label: 'projects in modular architecture'
@@ -49,7 +48,7 @@ Hetzner Cloud needed a solution that would streamline their development process,
 After evaluating Nx and Turborepo, Hetzner Cloud selected Nx for its advanced monorepo management capabilities. They started a [Nx Enterprise](/enterprise) contract and closely collaborated with the Nx Developer Productivity Engineers to assess Hetzner's current software landscape and evaluate the best strategy. Their goal was not necessarily to create a monorepo in the first place, but to modularize their monolithic application. Nx provided the right tools to:
 
 - **Break down the monolith** into modular packages without affecting deployment.
-- **Define clear domain boundaries** using [module boundary rules](/features/enforce-module-boundaries) and [conformance rules](/nx-api/powerpack-conformance).
+- **Define clear domain boundaries** using [module boundary rules](/features/enforce-module-boundaries) and [conformance rules](/nx-api/conformance).
 - **Improve ownership management** by having a more modular structure with clear boundaries allowing for easier allocaton of owernship. Something that could further be improved in the future by using [CodeOwners](/nx-enterprise/powerpack/owners).
 
 Beyond modularization, Nx helped consolidate fragmented projects into a single, structured workspace. This reduced the overhead of maintaining multiple repositories and simplified dependency management. Using the [Nx Graph](/features/explore-graph), the team gained visibility into their project relationships, making it easier to coordinate work and optimize collaboration.

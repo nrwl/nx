@@ -39,11 +39,8 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/react-native"],
-      "options": {
-        "command": "node ./scripts/copy-readme.js react-native"
-      }
+      "outputs": ["{workspaceRoot}/build/packages/react-native/README.md"],
+      "command": "node ./scripts/copy-readme.js react-native"
     }
   }
 }

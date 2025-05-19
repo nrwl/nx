@@ -15,7 +15,11 @@ function readFileContents(path: string): string {
 }
 
 function isLinkInternal(linkPath: string): boolean {
-  return linkPath.startsWith('/') || linkPath.startsWith('https://nx.dev');
+  return (
+    linkPath.startsWith('/') ||
+    linkPath.startsWith('https://nx.dev') ||
+    linkPath.startsWith('https://nx-dev')
+  );
 }
 
 function isNotAsset(linkPath: string): boolean {
@@ -38,6 +42,10 @@ function removeAnchors(linkPath: string): string {
   return linkPath.split('#')[0];
 }
 
+function removeQueryParams(linkPath: string): string {
+  return linkPath.split('?')[0];
+}
+
 function extractAllLinks(basePath: string): Record<string, string[]> {
   return glob.sync(`${basePath}/*/**/*.md`).reduce((acc, path) => {
     const fileContents = readFileContents(path);
@@ -48,8 +56,8 @@ function extractAllLinks(basePath: string): Record<string, string[]> {
       .concat(cardLinks)
       .filter(isLinkInternal)
       .filter(isNotAsset)
-      .filter(isNotImage);
-    // .map(removeAnchors);
+      .filter(isNotImage)
+      .map(removeQueryParams);
     if (links.length) {
       acc[path.replace(basePath, '')] = links;
     }
@@ -171,7 +179,10 @@ for (let file in documentLinks) {
     ) {
       continue;
     }
-    if (link.startsWith('https://nx.dev')) {
+    if (
+      link.startsWith('https://nx.dev') ||
+      link.startsWith('https://nx-dev')
+    ) {
       localLinkErrors.push({ file, link });
     } else if (
       link.includes('#') &&

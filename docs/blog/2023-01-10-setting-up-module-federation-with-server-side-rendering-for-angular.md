@@ -2,7 +2,7 @@
 title: 'Setting up Module Federation with Server-Side Rendering for Angular'
 slug: 'setting-up-module-federation-with-server-side-rendering-for-angular'
 authors: ['Colum Ferry']
-cover_image: '/blog/images/2023-01-10/kyMChnJ-X6jK9sbuaOdOiw.png'
+cover_image: '/blog/images/2023-01-10/kyMChnJ-X6jK9sbuaOdOiw.avif'
 tags: [nx, tutorial]
 description: Learn how to implement Webpack Module Federation with Server-Side Rendering in Angular applications using Nx for improved performance and micro-frontend architecture.
 ---

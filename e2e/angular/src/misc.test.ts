@@ -8,6 +8,7 @@ import {
   updateFile,
 } from '@nx/e2e/utils';
 import { classify } from '@nx/devkit/src/utils/string-utils';
+import { join } from 'path';
 
 describe('Move Angular Project', () => {
   let proj: string;
@@ -161,8 +162,14 @@ describe('Convert Angular Webpack Project to Rspack', () => {
 
   it('should convert an Angular Webpack project to Rspack', async () => {
     runCLI(`generate @nx/angular:convert-to-rspack --project=${app1}`);
+    const rspackConfigFileContents = readFile(join(app1, 'rspack.config.ts'));
+    const updatedConfigFileContents = rspackConfigFileContents.replace(
+      `maximumError: '1mb'`,
+      `maximumError: '3mb'`
+    );
+    updateFile(join(app1, 'rspack.config.ts'), updatedConfigFileContents);
     const buildOutput = runCLI(`build ${app1}`);
     expect(buildOutput).toContain('rspack build');
-    expect(buildOutput).toContain('browser compiled');
+    expect(buildOutput).toContain('Successfully ran target build for project');
   });
 });

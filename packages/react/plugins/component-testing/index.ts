@@ -283,7 +283,7 @@ function buildTargetWebpack(
 
   return async () => {
     customWebpack = await customWebpack;
-    // TODO(v21): Component testing need to be agnostic of the underlying executor. With Crystal, we're not using `@nx/webpack:webpack` by default.
+    // TODO(v22): Component testing need to be agnostic of the underlying executor. With Crystal, we're not using `@nx/webpack:webpack` by default.
     // We need to decouple CT from the build target of the app, we just care about bundler config (e.g. webpack.config.js).
     // The generated setup should support both Webpack and Vite as documented here: https://docs.cypress.io/guides/component-testing/react/overview
     // Related issue: https://github.com/nrwl/nx/issues/21546

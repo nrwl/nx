@@ -2,7 +2,7 @@
 title: 'Evergreen Tooling — More than Just CodeMods'
 slug: 'evergreen-tooling-more-than-just-codemods'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2023-07-26/CPiI60mSguYXJzPfAHMbEQ.png'
+cover_image: '/blog/images/2023-07-26/CPiI60mSguYXJzPfAHMbEQ.avif'
 tags: [nx]
 description: Nx's evergreen tooling approach automates migrations, updates code like a database, and uses plugins for seamless JavaScript ecosystem upgrades with backward compatibility and reduced maintenance.
 ---

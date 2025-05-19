@@ -33,11 +33,6 @@ export interface RemixPluginOptions {
   typecheckTargetName?: string;
   buildDepsTargetName?: string;
   watchDepsTargetName?: string;
-
-  /**
-   * @deprecated Use serveStaticTargetName instead. This option will be removed in Nx 21.
-   */
-  staticServeTargetName?: string;
   serveStaticTargetName?: string;
 }
 
@@ -212,14 +207,6 @@ async function buildRemixTargets(
     remixCompiler,
     isUsingTsSolutionSetup
   );
-  // TODO(colum): Remove for Nx 21
-  targets[options.staticServeTargetName] = startTarget(
-    projectRoot,
-    serverBuildPath,
-    options.buildTargetName,
-    remixCompiler,
-    isUsingTsSolutionSetup
-  );
   targets[options.serveStaticTargetName] = startTarget(
     projectRoot,
     serverBuildPath,
@@ -305,6 +292,7 @@ function devTarget(
   isUsingTsSolutionSetup: boolean
 ): TargetConfiguration {
   const devTarget: TargetConfiguration = {
+    continuous: true,
     command:
       remixCompiler === RemixCompiler.IsVte
         ? 'remix vite:dev'
@@ -335,6 +323,7 @@ function startTarget(
 
   const startTarget: TargetConfiguration = {
     dependsOn: [buildTargetName],
+    continuous: true,
     command: `remix-serve ${serverPath}`,
     options: {
       cwd: projectRoot,
@@ -449,8 +438,6 @@ function normalizeOptions(options: RemixPluginOptions) {
   options.devTargetName ??= 'dev';
   options.startTargetName ??= 'start';
   options.typecheckTargetName ??= 'typecheck';
-  // TODO(colum): remove for Nx 21
-  options.staticServeTargetName ??= 'static-serve';
   options.serveStaticTargetName ??= 'serve-static';
 
   return options;

@@ -123,19 +123,6 @@ export const champions: Champion[] = [
     location: 'Atlanta, GA, USA',
   },
   {
-    name: 'Joshua VanAllen',
-    expertise:
-      'App migrations, large scale repository structures, Angular, Vue, Spring, onboarding, educating the masses',
-    imageUrl: '/images/champions/josh-vanallen.webp',
-    contact: [
-      {
-        label: '@joshvanallen.dev',
-        link: 'https://bsky.app/profile/joshvanallen.dev',
-      },
-    ],
-    location: 'Pennsylvania, USA',
-  },
-  {
     name: 'Thomas Laforge',
     expertise:
       'Teach users how to create a better developer experience (DX) with Nx and Angular through github challenges, blog posts, and conference talks',
@@ -432,8 +419,8 @@ export const champions: Champion[] = [
     imageUrl: '/images/champions/kevin-oliveira.webp',
     contact: [
       {
-        label: '@koliveira',
-        link: 'https://twitter.com/koliveira',
+        label: '@koliveira15',
+        link: 'https://twitter.com/koliveira15',
       },
     ],
     location: 'Rhode Island, USA',

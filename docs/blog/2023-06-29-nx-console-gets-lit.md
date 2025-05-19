@@ -2,7 +2,7 @@
 title: Nx Console gets Lit
 slug: 'nx-console-gets-lit'
 authors: [Max Kless]
-cover_image: '/blog/images/2023-06-29/featured_img.webp'
+cover_image: '/blog/images/2023-06-29/featured_img.avif'
 tags: [nx, nx-console]
 description: Nx Console's Generate UI rebuilt with Lit for a faster, more maintainable experience across VSCode and JetBrains IDEs.
 ---

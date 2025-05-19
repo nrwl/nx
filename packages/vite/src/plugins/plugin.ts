@@ -25,7 +25,7 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import { hashObject } from 'nx/src/hasher/file-hasher';
-import { minimatch } from 'minimatch';
+import picomatch = require('picomatch');
 import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
@@ -119,7 +119,7 @@ export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
 
           const tsConfigFiles =
             siblingFiles.filter((p) =>
-              minimatch(p, 'tsconfig*{.json,.*.json}')
+              picomatch('tsconfig*{.json,.*.json}')(p)
             ) ?? [];
 
           const hasReactRouterConfig = siblingFiles.some((configFile) => {
@@ -192,7 +192,7 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
     }
 
     const tsConfigFiles =
-      siblingFiles.filter((p) => minimatch(p, 'tsconfig*{.json,.*.json}')) ??
+      siblingFiles.filter((p) => picomatch('tsconfig*{.json,.*.json}')(p)) ??
       [];
 
     const hasReactRouterConfig = siblingFiles.some((configFile) => {
@@ -430,6 +430,7 @@ async function buildTarget(
 
 function serveTarget(projectRoot: string, isUsingTsSolutionSetup: boolean) {
   const targetConfig: TargetConfiguration = {
+    continuous: true,
     command: `vite`,
     options: {
       cwd: joinPathFragments(projectRoot),
@@ -457,6 +458,7 @@ function serveTarget(projectRoot: string, isUsingTsSolutionSetup: boolean) {
 
 function previewTarget(projectRoot: string, buildTargetName) {
   const targetConfig: TargetConfiguration = {
+    continuous: true,
     command: `vite preview`,
     dependsOn: [buildTargetName],
     options: {
@@ -521,6 +523,7 @@ function serveStaticTarget(
   isUsingTsSolutionSetup: boolean
 ) {
   const targetConfig: TargetConfiguration = {
+    continuous: true,
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.buildTargetName}`,

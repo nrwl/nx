@@ -32,8 +32,7 @@
     "./src/builders/*/schema.json": "./src/builders/*/schema.json",
     "./src/builders/*.impl": "./src/builders/*.impl.js",
     "./src/executors/*/schema.json": "./src/executors/*/schema.json",
-    "./src/executors/*.impl": "./src/executors/*.impl.js",
-    "./src/executors/*/compat": "./src/executors/*/compat.js"
+    "./src/executors/*.impl": "./src/executors/*.impl.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",

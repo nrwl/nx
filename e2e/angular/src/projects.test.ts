@@ -149,6 +149,30 @@ describe('Angular Projects', () => {
     await killProcessAndPorts(esbProcess.pid, appPort);
   }, 1000000);
 
+  it('should successfully work with rspack for build', async () => {
+    const app = uniq('app');
+    runCLI(
+      `generate @nx/angular:app my-dir/${app} --bundler=rspack --no-interactive`
+    );
+    const rspackConfigFileContents = readFile(
+      join('my-dir', app, 'rspack.config.ts')
+    );
+    const updatedConfigFileContents = rspackConfigFileContents.replace(
+      `maximumError: '1mb'`,
+      `maximumError: '3mb'`
+    );
+    updateFile(
+      join('my-dir', app, 'rspack.config.ts'),
+      updatedConfigFileContents
+    );
+    runCLI(`build ${app}`);
+
+    if (runE2ETests()) {
+      expect(() => runCLI(`e2e ${app}-e2e`)).not.toThrow();
+      expect(await killPort(4200)).toBeTruthy();
+    }
+  }, 1000000);
+
   it('should successfully work with playwright for e2e tests', async () => {
     const app = uniq('app');
 
