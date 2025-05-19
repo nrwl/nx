@@ -80,6 +80,7 @@ describe('@nx/eslint:workspace-rules-project', () => {
       "export default {
         displayName: 'eslint-rules',
         preset: '../../jest.preset.js',
+        testEnvironment: 'node',
         transform: {
           '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
         },
@@ -157,6 +158,7 @@ describe('@nx/eslint:workspace-rules-project', () => {
         export default {
           displayName: 'eslint-rules',
           preset: '../../jest.preset.js',
+          testEnvironment: 'node',
           transform: {
             '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
           },

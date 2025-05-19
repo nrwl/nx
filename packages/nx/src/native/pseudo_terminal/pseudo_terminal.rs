@@ -1,20 +1,21 @@
 use anyhow::anyhow;
-use crossbeam_channel::{bounded, unbounded, Receiver, Sender};
+use crossbeam_channel::{Receiver, Sender, bounded, unbounded};
 use crossterm::{
     terminal,
     terminal::{disable_raw_mode, enable_raw_mode},
     tty::IsTty,
 };
 use napi::bindgen_prelude::*;
+use parking_lot::Mutex;
 use portable_pty::{CommandBuilder, NativePtySystem, PtyPair, PtySize, PtySystem};
 use std::io::stdout;
-use std::sync::{Mutex, RwLock};
+use std::sync::RwLock;
 use std::{
     collections::HashMap,
     io::{Read, Write},
     sync::{
-        atomic::{AtomicBool, Ordering},
         Arc,
+        atomic::{AtomicBool, Ordering},
     },
     time::Instant,
 };

@@ -1,7 +1,8 @@
 use nix::{
-    sys::signal::{kill, Signal as NixSignal},
+    sys::signal::{Signal as NixSignal, kill},
     unistd::Pid,
 };
+use tracing::debug;
 
 pub struct ProcessKiller {
     pid: i32,
@@ -13,12 +14,12 @@ impl ProcessKiller {
     }
 
     pub fn kill(&self, signal: Option<&str>) -> anyhow::Result<()> {
+        let signal = signal.unwrap_or("SIGINT");
+        debug!("Killing process {} with {}", &self.pid, signal);
         let pid = Pid::from_raw(self.pid);
         match kill(
             pid,
-            NixSignal::from(
-                Signal::try_from(signal.unwrap_or("SIGINT")).map_err(|e| anyhow::anyhow!(e))?,
-            ),
+            NixSignal::from(Signal::try_from(signal).map_err(|e| anyhow::anyhow!(e))?),
         ) {
             Ok(_) => Ok(()),
             Err(e) => Err(anyhow::anyhow!("Failed to kill process: {}", e)),

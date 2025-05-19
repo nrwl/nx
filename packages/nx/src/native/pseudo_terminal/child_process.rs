@@ -1,16 +1,17 @@
 use super::process_killer::ProcessKiller;
 use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
 use crossbeam_channel::Sender;
-use crossbeam_channel::{bounded, select, Receiver};
+use crossbeam_channel::{Receiver, bounded, select};
 use napi::bindgen_prelude::External;
 use napi::{
+    Env, JsFunction,
     threadsafe_function::{
         ErrorStrategy::Fatal, ThreadsafeFunction, ThreadsafeFunctionCallMode::NonBlocking,
     },
-    Env, JsFunction,
 };
+use parking_lot::Mutex;
 use std::io::Write;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, RwLock};
 use tracing::warn;
 use vt100_ctt::Parser;
 

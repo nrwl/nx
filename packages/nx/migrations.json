@@ -1,5 +1,40 @@
 {
   "generators": {
+    "17.0.0-move-cache-directory": {
+      "cli": "nx",
+      "version": "17.0.0-beta.1",
+      "description": "Updates the default cache directory to .nx/cache",
+      "implementation": "./src/migrations/update-17-0-0/move-cache-directory"
+    },
+    "17.0.0-use-minimal-config-for-tasks-runner-options": {
+      "cli": "nx",
+      "version": "17.0.0-beta.3",
+      "description": "Use minimal config for tasksRunnerOptions",
+      "implementation": "./src/migrations/update-17-0-0/use-minimal-config-for-tasks-runner-options"
+    },
+    "rm-default-collection-npm-scope": {
+      "version": "17.0.0-rc.1",
+      "description": "Migration for v17.0.0-rc.1",
+      "implementation": "./src/migrations/update-17-0-0/rm-default-collection-npm-scope"
+    },
+    "17.3.0-update-nx-wrapper": {
+      "cli": "nx",
+      "version": "17.3.0-beta.6",
+      "description": "Updates the nx wrapper.",
+      "implementation": "./src/migrations/update-17-3-0/update-nxw"
+    },
+    "18.0.0-disable-adding-plugins-for-existing-workspaces": {
+      "cli": "nx",
+      "version": "18.0.0-beta.2",
+      "description": "Updates nx.json to disabled adding plugins when generating projects in an existing Nx workspace",
+      "implementation": "./src/migrations/update-18-0-0/disable-crystal-for-existing-workspaces",
+      "x-repair-skip": true
+    },
+    "move-default-base-to-nx-json-root": {
+      "version": "18.1.0-beta.3",
+      "description": "Moves affected.defaultBase to defaultBase in `nx.json`",
+      "implementation": "./src/migrations/update-17-2-0/move-default-base"
+    },
     "19-2-0-move-graph-cache-directory": {
       "cli": "nx",
       "version": "19.2.0-beta.2",
@@ -48,6 +83,11 @@
       "version": "21.0.0-beta.11",
       "description": "Updates release changelog config based on the breaking changes in Nx v21",
       "implementation": "./src/migrations/update-21-0-0/release-changelog-config-changes"
+    },
+    "21-1-0-add-ignore-entries-for-nx-rule-files": {
+      "version": "21.1.0-beta.2",
+      "description": "Adds **/nx-rules.mdc and **/nx.instructions.md to .gitignore if not present",
+      "implementation": "./src/migrations/update-21-1-0/add-gitignore-entry"
     }
   }
 }

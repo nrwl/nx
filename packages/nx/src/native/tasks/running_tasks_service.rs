@@ -32,7 +32,10 @@ impl RunningTasksService {
         let mut results = Vec::<String>::with_capacity(ids.len());
         for id in ids.into_iter() {
             if self.is_task_running(&id)? {
+                debug!("Task {} is running", &id);
                 results.push(id);
+            } else {
+                debug!("Task {} is not running", id);
             }
         }
         Ok(results)
@@ -99,6 +102,7 @@ impl RunningTasksService {
             "INSERT OR REPLACE INTO running_tasks (task_id, pid, command, cwd) VALUES (?, ?, ?, ?)",
         )?;
         stmt.execute([&task_id, &pid.to_string(), &command_str, &cwd])?;
+        debug!("Added {} to running tasks", &task_id);
         self.added_tasks.insert(task_id);
         Ok(())
     }
@@ -108,7 +112,8 @@ impl RunningTasksService {
         let mut stmt = self
             .db
             .prepare("DELETE FROM running_tasks WHERE task_id = ?")?;
-        stmt.execute([task_id])?;
+        stmt.execute([&task_id])?;
+        debug!("Removed {} from running tasks", task_id);
         Ok(())
     }
 
@@ -123,6 +128,7 @@ impl RunningTasksService {
             );
             ",
         )?;
+        debug!("Setup running tasks service");
         Ok(())
     }
 }

@@ -423,7 +423,7 @@ export class DaemonClient {
       type: RECORD_TASK_RUNS,
       taskRuns,
     };
-    return this.sendMessageToDaemon(message);
+    return this.sendToDaemonViaQueue(message);
   }
 
   getSyncGeneratorChanges(

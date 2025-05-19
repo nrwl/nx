@@ -116,9 +116,7 @@ Set the `rule` property to: `@nx/conformance/enforce-project-boundaries`
               // Optional
               "notDependOnProjectsWithTags": []
             }
-          ],
-          // Optional
-          "checkDynamicDependenciesExceptions": []
+          ]
         }
       }
     ]
@@ -131,7 +129,6 @@ Set the `rule` property to: `@nx/conformance/enforce-project-boundaries`
 | Property                                         | Type                      | Default | Description                                                                                                                                                                                                                                    |
 | ------------------------------------------------ | ------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ignoredCircularDependencies                      | _Array<[string, string]>_ | _[]_    | List of project pairs that should be skipped from `Circular dependencies` checks, including the self-circular dependency check. E.g. `['feature-project-a', 'myapp']`. Project name can be replaced by catch all `*` for more generic matches. |
-| checkDynamicDependenciesExceptions               | _Array<string>_           | _[]_    | List of imports that should be skipped for `Imports of lazy-loaded libraries forbidden` checks. E.g. `['@myorg/lazy-project/component/*', '@myorg/other-project']`                                                                             |
 | requireBuildableDependenciesForBuildableProjects | _boolean_                 | _false_ | Enable to restrict the buildable projects from importing non-buildable libraries                                                                                                                                                               |
 | depConstraints                                   | _Array<object>_           | _[]_    | List of dependency constraints between projects                                                                                                                                                                                                |
 

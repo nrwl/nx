@@ -440,6 +440,16 @@
     ],
     "migrations": [
       {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.1.0-package-updates.json",
+        "hidden": false,
+        "name": "21.1.0-package-updates",
+        "version": "21.1.0-beta.1",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/21.1.0-package-updates",
+        "type": "migration"
+      },
+      {
         "description": "Change the data persistence operator imports to '@ngrx/router-store/data-persistence'.",
         "file": "generated/packages/angular/migrations/change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence.json",
         "hidden": false,
@@ -3381,6 +3391,16 @@
     ],
     "migrations": [
       {
+        "description": "Adds **/nx-rules.mdc and **/nx.instructions.md to .gitignore if not present",
+        "file": "generated/packages/nx/migrations/21-1-0-add-ignore-entries-for-nx-rule-files.json",
+        "hidden": false,
+        "name": "21-1-0-add-ignore-entries-for-nx-rule-files",
+        "version": "21.1.0-beta.2",
+        "originalFilePath": "/packages/nx",
+        "path": "nx/migrations/21-1-0-add-ignore-entries-for-nx-rule-files",
+        "type": "migration"
+      },
+      {
         "description": "Updates release version config based on the breaking changes in Nx v21",
         "file": "generated/packages/nx/migrations/release-version-config-changes.json",
         "hidden": false,
@@ -3468,6 +3488,66 @@
         "version": "19.2.0-beta.2",
         "originalFilePath": "/packages/nx",
         "path": "nx/migrations/19-2-0-move-graph-cache-directory",
+        "type": "migration"
+      },
+      {
+        "description": "Moves affected.defaultBase to defaultBase in `nx.json`",
+        "file": "generated/packages/nx/migrations/move-default-base-to-nx-json-root.json",
+        "hidden": false,
+        "name": "move-default-base-to-nx-json-root",
+        "version": "18.1.0-beta.3",
+        "originalFilePath": "/packages/nx",
+        "path": "nx/migrations/move-default-base-to-nx-json-root",
+        "type": "migration"
+      },
+      {
+        "description": "Updates nx.json to disabled adding plugins when generating projects in an existing Nx workspace",
+        "file": "generated/packages/nx/migrations/18.0.0-disable-adding-plugins-for-existing-workspaces.json",
+        "hidden": false,
+        "name": "18.0.0-disable-adding-plugins-for-existing-workspaces",
+        "version": "18.0.0-beta.2",
+        "originalFilePath": "/packages/nx",
+        "path": "nx/migrations/18.0.0-disable-adding-plugins-for-existing-workspaces",
+        "type": "migration"
+      },
+      {
+        "description": "Updates the nx wrapper.",
+        "file": "generated/packages/nx/migrations/17.3.0-update-nx-wrapper.json",
+        "hidden": false,
+        "name": "17.3.0-update-nx-wrapper",
+        "version": "17.3.0-beta.6",
+        "originalFilePath": "/packages/nx",
+        "path": "nx/migrations/17.3.0-update-nx-wrapper",
+        "type": "migration"
+      },
+      {
+        "description": "Migration for v17.0.0-rc.1",
+        "file": "generated/packages/nx/migrations/rm-default-collection-npm-scope.json",
+        "hidden": false,
+        "name": "rm-default-collection-npm-scope",
+        "version": "17.0.0-rc.1",
+        "originalFilePath": "/packages/nx",
+        "path": "nx/migrations/rm-default-collection-npm-scope",
+        "type": "migration"
+      },
+      {
+        "description": "Use minimal config for tasksRunnerOptions",
+        "file": "generated/packages/nx/migrations/17.0.0-use-minimal-config-for-tasks-runner-options.json",
+        "hidden": false,
+        "name": "17.0.0-use-minimal-config-for-tasks-runner-options",
+        "version": "17.0.0-beta.3",
+        "originalFilePath": "/packages/nx",
+        "path": "nx/migrations/17.0.0-use-minimal-config-for-tasks-runner-options",
+        "type": "migration"
+      },
+      {
+        "description": "Updates the default cache directory to .nx/cache",
+        "file": "generated/packages/nx/migrations/17.0.0-move-cache-directory.json",
+        "hidden": false,
+        "name": "17.0.0-move-cache-directory",
+        "version": "17.0.0-beta.1",
+        "originalFilePath": "/packages/nx",
+        "path": "nx/migrations/17.0.0-move-cache-directory",
         "type": "migration"
       }
     ],

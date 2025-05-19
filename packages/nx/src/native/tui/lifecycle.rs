@@ -1,17 +1,21 @@
+use napi::JsObject;
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
-use napi::JsObject;
 use parking_lot::Mutex;
 use std::sync::Arc;
 use tracing::debug;
+
+use crate::native::logger::enable_logger;
+use crate::native::tasks::types::{Task, TaskResult};
+use crate::native::{
+    pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
+    tui::nx_console::messaging::NxConsoleMessageConnection,
+};
 
 use super::app::App;
 use super::components::tasks_list::TaskStatus;
 use super::config::{AutoExit, TuiCliArgs as RustTuiCliArgs, TuiConfig as RustTuiConfig};
 use super::tui::Tui;
-use crate::native::logger::enable_logger;
-use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
-use crate::native::tasks::types::{Task, TaskResult};
 
 #[napi(object)]
 #[derive(Clone)]
@@ -63,6 +67,7 @@ pub enum RunMode {
 #[derive(Clone)]
 pub struct AppLifeCycle {
     app: Arc<Mutex<App>>,
+    workspace_root: Arc<String>,
 }
 
 #[napi]
@@ -76,6 +81,7 @@ impl AppLifeCycle {
         tui_cli_args: TuiCliArgs,
         tui_config: TuiConfig,
         title_text: String,
+        workspace_root: String,
     ) -> Self {
         // Get the target names from nx_args.targets
         let rust_tui_cli_args = tui_cli_args.into();
@@ -97,6 +103,7 @@ impl AppLifeCycle {
                 )
                 .unwrap(),
             )),
+            workspace_root: Arc::new(workspace_root),
         }
     }
 
@@ -207,7 +214,14 @@ impl AppLifeCycle {
 
         debug!("Initialized Components");
 
+        let workspace_root = self.workspace_root.clone();
         napi::tokio::spawn(async move {
+            {
+                // set up Console Messenger in a async context
+                let connection = NxConsoleMessageConnection::new(&workspace_root).await;
+                app_mutex.lock().set_console_messenger(connection);
+            }
+
             loop {
                 // Handle events using our Tui abstraction
                 if let Some(event) = tui.next().await {
@@ -242,14 +256,14 @@ impl AppLifeCycle {
     ) {
         self.app
             .lock()
-            .register_running_task(task_id, parser_and_writer)
+            .register_running_interactive_task(task_id, parser_and_writer)
     }
 
     #[napi]
     pub fn register_running_task_with_empty_parser(&mut self, task_id: String) {
         self.app
             .lock()
-            .register_running_task_with_empty_parser(task_id)
+            .register_running_non_interactive_task(task_id)
     }
 
     #[napi]

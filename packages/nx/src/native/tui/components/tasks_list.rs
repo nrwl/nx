@@ -1,12 +1,13 @@
 use color_eyre::eyre::Result;
 use hashbrown::HashSet;
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style, Stylize},
     text::{Line, Span},
     widgets::{Block, Cell, Paragraph, Row, Table},
-    Frame,
 };
+use serde::{Deserialize, Serialize};
 use std::{
     any::Any,
     sync::{Arc, Mutex},
@@ -52,7 +53,7 @@ pub struct TaskItem {
     cache_status: String,
     // Public to aid with sorting utility and testing
     pub status: TaskStatus,
-    terminal_output: String,
+    pub terminal_output: String,
     pub continuous: bool,
     start_time: Option<i64>,
     // Public to aid with sorting utility and testing
@@ -115,7 +116,7 @@ impl TaskItem {
 }
 
 #[napi]
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TaskStatus {
     // Explicit statuses that can come from the task runner
     Success,
@@ -1845,8 +1846,8 @@ impl Component for TasksList {
 mod tests {
     use super::*;
     use crate::native::tasks::types::TaskTarget;
-    use ratatui::backend::TestBackend;
     use ratatui::Terminal;
+    use ratatui::backend::TestBackend;
 
     // Helper function to create a TasksList with test task data
     fn create_test_tasks_list() -> (TasksList, Vec<Task>) {

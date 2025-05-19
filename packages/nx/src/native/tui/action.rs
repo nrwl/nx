@@ -35,4 +35,6 @@ pub enum Action {
     StartTasks(Vec<Task>),
     EndTasks(Vec<TaskResult>),
     ToggleDebugMode,
+    SendConsoleMessage(String),
+    ConsoleMessengerAvailable(bool),
 }

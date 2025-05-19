@@ -181,6 +181,9 @@ async function main() {
       cover_image = `/blog/images/${
         webinar.Date.date.start
       }/${imageFiles[0].name.replaceAll(' ', '-')}`;
+      if (existsSync(imageFilePath.replace('.png', '.avif'))) {
+        cover_image = cover_image.replace('.png', '.avif');
+      }
     }
 
     const webinarMarkdown = `---

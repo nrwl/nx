@@ -1,5 +1,5 @@
 use color_eyre::eyre::Result;
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEventKind};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind};
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
@@ -9,13 +9,12 @@ use ratatui::style::Style;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph};
 use std::collections::HashMap;
-use std::io::{self, Write};
-use std::sync::{Arc, Mutex, RwLock};
+use std::io;
+use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::UnboundedSender;
 use tracing::{debug, trace};
 use tui_logger::{LevelFilter, TuiLoggerSmartWidget, TuiWidgetEvent, TuiWidgetState};
-use vt100_ctt::Parser;
 
 use crate::native::tui::tui::Tui;
 use crate::native::{
@@ -23,7 +22,7 @@ use crate::native::{
     tasks::types::{Task, TaskResult},
 };
 
-use super::action::Action;
+use super::components::Component;
 use super::components::countdown_popup::CountdownPopup;
 use super::components::help_popup::HelpPopup;
 use super::components::layout_manager::{
@@ -32,13 +31,13 @@ use super::components::layout_manager::{
 use super::components::task_selection_manager::{SelectionMode, TaskSelectionManager};
 use super::components::tasks_list::{TaskStatus, TasksList};
 use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
-use super::components::Component;
 use super::config::TuiConfig;
 use super::lifecycle::RunMode;
 use super::pty::PtyInstance;
 use super::theme::THEME;
 use super::tui;
 use super::utils::normalize_newlines;
+use super::{action::Action, nx_console::messaging::NxConsoleMessageConnection};
 
 pub struct App {
     pub components: Vec<Box<dyn Component>>,
@@ -68,6 +67,7 @@ pub struct App {
     tasks: Vec<Task>,
     debug_mode: bool,
     debug_state: TuiWidgetState,
+    console_messenger: Option<NxConsoleMessageConnection>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -134,6 +134,7 @@ impl App {
             tasks,
             debug_mode: false,
             debug_state: TuiWidgetState::default().set_default_display_level(LevelFilter::Debug),
+            console_messenger: None,
         })
     }
 
@@ -172,22 +173,30 @@ impl App {
 
     pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
         self.dispatch_action(Action::UpdateTaskStatus(task_id.clone(), status));
-        if status == TaskStatus::InProgress && self.tasks.len() == 1 {
+        if status == TaskStatus::InProgress && self.should_set_interactive_by_default(&task_id) {
             self.terminal_pane_data[0].set_interactive(true);
         }
+    }
+
+    fn should_set_interactive_by_default(&self, task_id: &str) -> bool {
+        self.tasks.len() == 1
+            && self
+                .pty_instances
+                .get(task_id)
+                .is_some_and(|pty| pty.can_be_interactive())
     }
 
     pub fn print_task_terminal_output(&mut self, task_id: String, output: String) {
         // Tasks run within a pseudo-terminal always have a pty instance and do not need a new one
         // Tasks not run within a pseudo-terminal need a new pty instance to print output
         if !self.pty_instances.contains_key(&task_id) {
-            let (parser, parser_and_writer) = Self::create_empty_parser_and_noop_writer();
+            let pty = PtyInstance::non_interactive();
 
             // Add ANSI escape sequence to hide cursor at the end of output, it would be confusing to have it visible when a task is a cache hit
             let output_with_hidden_cursor = format!("{}\x1b[?25l", output);
-            Self::write_output_to_parser(parser, output_with_hidden_cursor);
+            Self::write_output_to_parser(&pty, output_with_hidden_cursor);
 
-            self.create_and_register_pty_instance(&task_id, parser_and_writer);
+            self.register_pty_instance(&task_id, pty);
             // Ensure the pty instances get resized appropriately
             let _ = self.debounce_pty_resize();
             return;
@@ -209,19 +218,31 @@ impl App {
 
     // Show countdown popup for the configured duration (making sure the help popup is not open first)
     pub fn end_command(&mut self) {
+        self.console_messenger
+            .as_ref()
+            .and_then(|c| c.end_running_tasks());
+
         // If the user has interacted with the app, or auto-exit is disabled, do nothing
         if self.user_has_interacted || !self.tui_config.auto_exit.should_exit_automatically() {
             return;
         }
 
-        self.begin_exit_countdown()
+        if self.tasks.len() > 1 {
+            self.begin_exit_countdown()
+        } else {
+            self.quit();
+        }
+    }
+
+    fn quit(&mut self) {
+        self.quit_at = Some(std::time::Instant::now());
     }
 
     fn begin_exit_countdown(&mut self) {
         let countdown_duration = self.tui_config.auto_exit.countdown_seconds();
         // If countdown is disabled, exit immediately
         if countdown_duration.is_none() {
-            self.quit_at = Some(std::time::Instant::now());
+            self.quit();
             return;
         }
 
@@ -241,21 +262,29 @@ impl App {
     }
 
     // A pseudo-terminal running task will provide the parser and writer directly
-    pub fn register_running_task(
+    pub fn register_running_interactive_task(
         &mut self,
         task_id: String,
         parser_and_writer: External<(ParserArc, WriterArc)>,
     ) {
-        self.create_and_register_pty_instance(&task_id, parser_and_writer);
-        self.update_task_status(task_id.clone(), TaskStatus::InProgress);
+        debug!("Registering interactive task: {task_id}");
+        let pty =
+            PtyInstance::interactive(parser_and_writer.0.clone(), parser_and_writer.1.clone());
+        self.register_running_task(task_id, pty)
     }
 
-    pub fn register_running_task_with_empty_parser(&mut self, task_id: String) {
-        let (_, parser_and_writer) = Self::create_empty_parser_and_noop_writer();
-        self.create_and_register_pty_instance(&task_id, parser_and_writer);
+    pub fn register_running_non_interactive_task(&mut self, task_id: String) {
+        debug!("Registering non-interactive task: {task_id}");
+        let pty = PtyInstance::non_interactive();
+        self.register_pty_instance(&task_id, pty);
         self.update_task_status(task_id.clone(), TaskStatus::InProgress);
         // Ensure the pty instances get resized appropriately
         let _ = self.debounce_pty_resize();
+    }
+
+    fn register_running_task(&mut self, task_id: String, pty: PtyInstance) {
+        self.register_pty_instance(&task_id, pty);
+        self.update_task_status(task_id.clone(), TaskStatus::InProgress);
     }
 
     pub fn append_task_output(&mut self, task_id: String, output: String) {
@@ -313,6 +342,10 @@ impl App {
                     && !(matches!(self.focus, Focus::MultipleOutput(_))
                         && self.is_interactive_mode())
                 {
+                    self.console_messenger
+                        .as_ref()
+                        .and_then(|c| c.end_running_tasks());
+
                     self.is_forced_shutdown = true;
                     // Quit immediately
                     self.quit_at = Some(std::time::Instant::now());
@@ -708,27 +741,32 @@ impl App {
                     self.user_has_interacted = true;
                 }
 
+                if matches!(self.focus, Focus::MultipleOutput(_)) {
+                    self.handle_mouse_event(mouse).ok();
+                    return Ok(false);
+                }
+
                 match mouse.kind {
                     MouseEventKind::ScrollUp => {
-                        if matches!(self.focus, Focus::MultipleOutput(_)) {
+                        if matches!(self.focus, Focus::TaskList) {
+                            self.dispatch_action(Action::PreviousTask);
+                        } else {
                             self.handle_key_event(KeyEvent::new(
                                 KeyCode::Up,
                                 KeyModifiers::empty(),
                             ))
                             .ok();
-                        } else if matches!(self.focus, Focus::TaskList) {
-                            self.dispatch_action(Action::PreviousTask);
                         }
                     }
                     MouseEventKind::ScrollDown => {
-                        if matches!(self.focus, Focus::MultipleOutput(_)) {
+                        if matches!(self.focus, Focus::TaskList) {
+                            self.dispatch_action(Action::NextTask);
+                        } else {
                             self.handle_key_event(KeyEvent::new(
                                 KeyCode::Down,
                                 KeyModifiers::empty(),
                             ))
                             .ok();
-                        } else if matches!(self.focus, Focus::TaskList) {
-                            self.dispatch_action(Action::NextTask);
                         }
                     }
                     _ => {}
@@ -756,8 +794,25 @@ impl App {
             trace!("{action:?}");
         }
         match &action {
+            Action::StartCommand(_) => {
+                self.console_messenger
+                    .as_ref()
+                    .and_then(|c| c.start_running_tasks());
+            }
+            Action::Tick => {
+                self.console_messenger.as_ref().and_then(|messenger| {
+                    self.components
+                        .iter()
+                        .find_map(|c| c.as_any().downcast_ref::<TasksList>())
+                        .and_then(|tasks_list| {
+                            messenger.update_running_tasks(&tasks_list.tasks, &self.pty_instances)
+                        })
+                });
+            }
             // Quit immediately
-            Action::Quit => self.quit_at = Some(std::time::Instant::now()),
+            Action::Quit => {
+                self.quit_at = Some(std::time::Instant::now());
+            }
             // Cancel quitting
             Action::CancelQuit => {
                 self.quit_at = None;
@@ -790,6 +845,7 @@ impl App {
                     }
 
                     let frame_area = self.frame_area.unwrap();
+                    let tasks_list_hidden = self.is_task_list_hidden();
                     let layout_areas = self.layout_areas.as_mut().unwrap();
 
                     if self.debug_mode {
@@ -932,13 +988,14 @@ impl App {
                                 let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
                                 terminal_pane_data.is_continuous = task.continuous;
                                 let in_progress = task.status == TaskStatus::InProgress;
-                                terminal_pane_data.can_be_interactive = in_progress;
                                 if !in_progress {
                                     terminal_pane_data.set_interactive(false);
                                 }
 
                                 let mut has_pty = false;
                                 if let Some(pty) = self.pty_instances.get(&relevant_pane_task) {
+                                    terminal_pane_data.can_be_interactive =
+                                        in_progress && pty.can_be_interactive();
                                     terminal_pane_data.pty = Some(pty.clone());
                                     has_pty = true;
                                 }
@@ -967,9 +1024,11 @@ impl App {
                                     is_focused,
                                     has_pty,
                                     is_next_tab_target,
+                                    self.console_messenger.is_some(),
                                 );
 
                                 let terminal_pane = TerminalPane::new()
+                                    .minimal(tasks_list_hidden && self.tasks.len() == 1)
                                     .pty_data(terminal_pane_data)
                                     .continuous(task.continuous);
 
@@ -992,6 +1051,13 @@ impl App {
                     let _ = countdown_popup.draw(f, frame_area);
                 })
                 .ok();
+            }
+            Action::SendConsoleMessage(msg) => {
+                if let Some(connection) = &self.console_messenger {
+                    connection.send_terminal_string(msg);
+                } else {
+                    trace!("No console connection available");
+                }
             }
             _ => {}
         }
@@ -1330,11 +1396,23 @@ impl App {
         let _ = self.handle_pty_resize();
     }
 
+    fn handle_mouse_event(&mut self, mouse_event: MouseEvent) -> io::Result<()> {
+        if let Focus::MultipleOutput(pane_idx) = self.focus {
+            let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
+            terminal_pane_data.handle_mouse_event(mouse_event)
+        } else {
+            Ok(())
+        }
+    }
+
     /// Forward key events to the currently focused pane, if any.
     fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<()> {
         if let Focus::MultipleOutput(pane_idx) = self.focus {
             let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
-            terminal_pane_data.handle_key_event(key)
+            if let Some(action) = terminal_pane_data.handle_key_event(key)? {
+                self.dispatch_action(action);
+            }
+            Ok(())
         } else {
             Ok(())
         }
@@ -1425,41 +1503,17 @@ impl App {
         self.layout_manager.get_task_list_visibility() == TaskListVisibility::Hidden
     }
 
-    fn create_and_register_pty_instance(
-        &mut self,
-        task_id: &str,
-        parser_and_writer: External<(ParserArc, WriterArc)>,
-    ) {
+    fn register_pty_instance(&mut self, task_id: &str, pty: PtyInstance) {
         // Access the contents of the External
-        let pty = Arc::new(
-            PtyInstance::new(
-                task_id.to_string(),
-                parser_and_writer.0.clone(),
-                parser_and_writer.1.clone(),
-            )
-            .map_err(|e| napi::Error::from_reason(format!("Failed to create PTY: {}", e)))
-            .unwrap(),
-        );
+        let pty = Arc::new(pty);
 
         self.pty_instances.insert(task_id.to_string(), pty);
     }
 
-    fn create_empty_parser_and_noop_writer() -> (ParserArc, External<(ParserArc, WriterArc)>) {
-        // Use sane defaults for rows, cols and scrollback buffer size. The dimensions will be adjusted dynamically later.
-        let parser = Arc::new(RwLock::new(Parser::new(24, 80, 10000)));
-        let writer: Arc<Mutex<Box<dyn Write + Send>>> =
-            Arc::new(Mutex::new(Box::new(std::io::sink())));
-        (parser.clone(), External::new((parser, writer)))
-    }
-
     // Writes the given output to the given parser, used for the case where a task is a cache hit, or when it is run outside of the rust pseudo-terminal
-    fn write_output_to_parser(parser: ParserArc, output: String) {
+    fn write_output_to_parser(parser: &PtyInstance, output: String) {
         let normalized_output = normalize_newlines(output.as_bytes());
-        parser
-            .write()
-            .unwrap()
-            .write_all(&normalized_output)
-            .unwrap();
+        parser.process_output(&normalized_output);
     }
 
     fn display_and_focus_current_task_in_terminal_pane(&mut self, force_spacebar_mode: bool) {
@@ -1514,6 +1568,17 @@ impl App {
 
         if let Some(event) = debug_widget_event {
             self.debug_state.transition(event);
+        }
+    }
+
+    pub fn set_console_messenger(&mut self, messenger: NxConsoleMessageConnection) {
+        self.console_messenger = Some(messenger);
+        if self
+            .console_messenger
+            .as_ref()
+            .is_some_and(|c| c.is_connected())
+        {
+            self.dispatch_action(Action::ConsoleMessengerAvailable(true));
         }
     }
 }

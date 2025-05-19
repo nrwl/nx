@@ -222,6 +222,21 @@ export function updateGitIgnore(root: string) {
       }
       lines.push('.nx/workspace-data');
     }
+    if (!contents.includes('.cursor/rules/nx-rules.mdc')) {
+      if (!sepIncluded) {
+        lines.push('\n');
+        sepIncluded = true;
+      }
+      lines.push('.cursor/rules/nx-rules.mdc');
+    }
+    if (!contents.includes('.github/instructions/nx.instructions.md')) {
+      if (!sepIncluded) {
+        lines.push('\n');
+        sepIncluded = true;
+      }
+      lines.push('.github/instructions/nx.instructions.md');
+    }
+
     writeFileSync(ignorePath, lines.join('\n'), 'utf-8');
   } catch {}
 }

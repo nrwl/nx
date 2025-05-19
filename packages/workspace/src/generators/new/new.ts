@@ -28,7 +28,7 @@ interface Schema {
   nextAppDir?: boolean;
   nextSrcDir?: boolean;
   linter?: Linter | LinterType;
-  bundler?: 'vite' | 'webpack';
+  bundler?: 'vite' | 'webpack' | 'rspack';
   standaloneApi?: boolean;
   routing?: boolean;
   useReactRouter?: boolean;

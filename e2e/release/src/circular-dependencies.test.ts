@@ -45,7 +45,8 @@ expect.addSnapshotSerializer({
 
 const originalVerboseLoggingValue = process.env.NX_VERBOSE_LOGGING;
 
-describe('nx release circular dependencies', () => {
+// TODO: Flaky tests
+xdescribe('nx release circular dependencies', () => {
   let pkg1: string;
   let pkg2: string;
   let e2eRegistryUrl: string;

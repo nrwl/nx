@@ -76,6 +76,16 @@ export function calculateFileChanges(
             } catch (e) {
               return [new WholeFileChange()];
             }
+          case '.yml':
+          case '.yaml':
+            const { load } = require('@zkochan/js-yaml');
+            try {
+              const atBase = readFileAtRevision(f, nxArgs.base);
+              const atHead = readFileAtRevision(f, nxArgs.head);
+              return jsonDiff(load(atBase), load(atHead));
+            } catch (e) {
+              return [new WholeFileChange()];
+            }
           default:
             return [new WholeFileChange()];
         }

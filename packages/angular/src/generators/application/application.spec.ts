@@ -1257,6 +1257,7 @@ describe('app', () => {
       });
 
       const project = readProjectConfiguration(appTree, 'app2');
+
       expect(appTree.exists('app2/rspack.config.ts')).toBeTruthy();
       expect(appTree.read('app2/rspack.config.ts', 'utf-8')).toMatchSnapshot();
       expect(appTree.read('app2/src/server.ts', 'utf-8')).toMatchSnapshot();
