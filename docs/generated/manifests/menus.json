@@ -33,7 +33,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Editor Setup",
+            "name": "Editor Integration",
             "path": "/getting-started/editor-setup",
             "id": "editor-setup",
             "isExternal": false,
@@ -109,7 +109,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Editor Setup",
+        "name": "Editor Integration",
         "path": "/getting-started/editor-setup",
         "id": "editor-setup",
         "isExternal": false,

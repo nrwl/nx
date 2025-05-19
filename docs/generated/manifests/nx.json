@@ -41,8 +41,8 @@
       },
       {
         "id": "editor-setup",
-        "name": "Editor Setup",
-        "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
+        "name": "Editor Integration",
+        "description": "Learn about Nx Console, an extension for VS Code and WebStorm. (formerly Editor Setup)",
         "mediaImage": "",
         "file": "shared/getting-started/editor-setup",
         "itemList": [],
@@ -146,8 +146,8 @@
   },
   "/getting-started/editor-setup": {
     "id": "editor-setup",
-    "name": "Editor Setup",
-    "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
+    "name": "Editor Integration",
+    "description": "Learn about Nx Console, an extension for VS Code and WebStorm. (formerly Editor Setup)",
     "mediaImage": "",
     "file": "shared/getting-started/editor-setup",
     "itemList": [],

@@ -4,7 +4,7 @@
     - [Intro to Nx](/getting-started/intro)
     - [Installation](/getting-started/installation)
     - [Why Nx?](/getting-started/why-nx)
-    - [Editor Setup](/getting-started/editor-setup)
+    - [Editor Integration](/getting-started/editor-setup)
     - [Tutorials](/getting-started/tutorials)
       - [TypeScript Monorepo](/getting-started/tutorials/typescript-packages-tutorial)
       - [React Monorepo](/getting-started/tutorials/react-monorepo-tutorial)

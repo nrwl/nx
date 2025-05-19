@@ -1,10 +1,10 @@
 {
   "editor-setup": [
     {
-      "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
+      "description": "Learn about Nx Console, an extension for VS Code and WebStorm. (formerly Editor Setup)",
       "file": "shared/getting-started/editor-setup",
       "id": "editor-setup",
-      "name": "Editor Setup",
+      "name": "Editor Integration",
       "path": "/getting-started/editor-setup"
     },
     {
