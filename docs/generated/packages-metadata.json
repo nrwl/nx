@@ -1217,6 +1217,18 @@
     "source": "/packages/angular/src"
   },
   {
+    "description": "Compilation utilities for Angular with Rspack and Rsbuild.",
+    "documents": [],
+    "executors": [],
+    "generators": [],
+    "migrations": [],
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "angular-rspack-compiler",
+    "packageName": "@nx/angular-rspack-compiler",
+    "root": "/packages/angular-rspack-compiler",
+    "source": "/packages/angular-rspack-compiler/src"
+  },
+  {
     "description": "This package is used to scaffold a brand-new workspace used to develop an Nx plugin, and sets up a pre-configured plugin with the specified name. The new plugin is created with a default generator, executor, and e2e app.",
     "documents": [],
     "executors": [],

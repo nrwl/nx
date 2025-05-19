@@ -1217,6 +1217,19 @@
     },
     "path": "/nx-api/angular"
   },
+  "angular-rspack-compiler": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "angular-rspack-compiler",
+    "packageName": "@nx/angular-rspack-compiler",
+    "description": "Compilation utilities for Angular with Rspack and Rsbuild.",
+    "documents": {},
+    "root": "/packages/angular-rspack-compiler",
+    "source": "/packages/angular-rspack-compiler/src",
+    "executors": {},
+    "generators": {},
+    "migrations": {},
+    "path": "/nx-api/angular-rspack-compiler"
+  },
   "create-nx-plugin": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "create-nx-plugin",

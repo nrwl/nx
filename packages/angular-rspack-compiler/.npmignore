@@ -1,7 +1,5 @@
 !dist
 dist/tsconfig.lib.tsbuildinfo
-code-pushup.config.ts
-eslint.next.config.js
 eslint.config.*js
 project.json
 tsconfig.json
@@ -12,4 +10,3 @@ src/**/*.ts
 mocks
 **/*.tgz
 vitest.config.mts
-vitest.integration.config.mts

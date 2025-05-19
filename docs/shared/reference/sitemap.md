@@ -400,6 +400,7 @@
       - [cypress-component-configuration](/nx-api/angular/generators/cypress-component-configuration)
       - [web-worker](/nx-api/angular/generators/web-worker)
     - [migrations](/nx-api/angular/migrations)
+  - [angular-rspack-compiler](/nx-api/angular-rspack-compiler)
   - [create-nx-plugin](/nx-api/create-nx-plugin)
   - [create-nx-workspace](/nx-api/create-nx-workspace)
   - [cypress](/nx-api/cypress)

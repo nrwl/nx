@@ -21,6 +21,7 @@
     "prepare": "is-ci || husky",
     "echo": "echo 123458",
     "preinstall": "node ./scripts/preinstall.js",
+    "postinstall": "node ./packages/angular-rspack-compiler/patch/patch-angular-build.js",
     "test": "nx run-many -t test",
     "e2e": "nx run-many -t e2e --projects ./e2e/*",
     "build:wasm": "rustup override set nightly-2025-05-09 && rustup target add wasm32-wasip1-threads && WASI_SDK_PATH=\"$(pwd)/wasi-sdk-23.0-x86_64-linux\" CMAKE_BUILD_PARALLEL_LEVEL=2 LIBSQLITE3_FLAGS=\"-DLONGDOUBLE_TYPE=double\" pnpm exec nx run-many -t build-native-wasm && rustup override unset",

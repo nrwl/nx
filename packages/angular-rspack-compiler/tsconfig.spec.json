@@ -10,16 +10,12 @@
       "vite/client",
       "node",
       "vitest"
-    ],
-    "paths": {
-      "@ng-rspack/testing-utils": ["../../testing/utils/src/index.ts"]
-    }
+    ]
   },
   "include": [
     "vite.config.ts",
     "vite.config.mts",
     "vitest.config.ts",
-    "vitest.integration.config.mts",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
     "src/**/*.test.tsx",
@@ -36,15 +32,6 @@
   "references": [
     {
       "path": "./tsconfig.lib.json"
-    },
-    {
-      "path": "../../testing/utils/tsconfig.lib.json"
-    },
-    {
-      "path": "../../testing/vitest-setup/tsconfig.lib.json"
-    },
-    {
-      "path": "../../testing/setup/tsconfig.lib.json"
     }
   ]
 }

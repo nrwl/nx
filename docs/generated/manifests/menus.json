@@ -7715,6 +7715,14 @@
         "disableCollapsible": false
       },
       {
+        "id": "angular-rspack-compiler",
+        "path": "/nx-api/angular-rspack-compiler",
+        "name": "angular-rspack-compiler",
+        "children": [],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
         "id": "create-nx-plugin",
         "path": "/nx-api/create-nx-plugin",
         "name": "create-nx-plugin",

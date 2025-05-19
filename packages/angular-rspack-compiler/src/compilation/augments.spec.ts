@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, MockInstance } from 'vitest';
 import { augmentHostWithCaching, augmentHostWithResources } from './augments';
-import ts, { createCompilerHost } from 'typescript';
+import * as ts from 'typescript';
+import { createCompilerHost } from 'typescript';
 
 describe('augmentHostWithCaching', () => {
   const cache = new Map<string, ts.SourceFile>();

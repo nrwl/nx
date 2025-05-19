@@ -1,6 +1,7 @@
 import { describe, expect } from 'vitest';
 import * as setupModule from './setup-compilation.ts';
-import ts, { type SourceFile } from 'typescript';
+import * as ts from 'typescript';
+import { type SourceFile } from 'typescript';
 import { setupCompilationWithAngularCompilation } from './setup-with-angular-compilation.ts';
 import { type RsbuildConfig } from '@rsbuild/core';
 import * as aotCompilation from '@angular/build/src/tools/angular/compilation/aot-compilation';
