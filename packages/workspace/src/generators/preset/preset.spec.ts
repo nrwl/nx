@@ -44,9 +44,9 @@ describe('preset', () => {
     `);
     expect(tree.children(`apps/${name}/src/app`).sort()).toMatchInlineSnapshot(`
       [
+        "app-module.ts",
         "app.css",
         "app.html",
-        "app.module.ts",
         "app.spec.ts",
         "app.ts",
         "nx-welcome.ts",
