@@ -22,6 +22,7 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { gte } from 'semver';
+import type { ESLint as ESLintType } from 'eslint';
 import {
   baseEsLintConfigFile,
   BASE_ESLINT_CONFIG_FILENAMES,
@@ -186,6 +187,7 @@ const internalCreateNodes = async (
 };
 
 const internalCreateNodesV2 = async (
+  ESLint: typeof ESLintType,
   configFilePath: string,
   options: EslintPluginOptions,
   context: CreateNodesContextV2,
@@ -195,10 +197,6 @@ const internalCreateNodesV2 = async (
   hashByRoot: Map<string, string>
 ): Promise<CreateNodesResult> => {
   const configDir = dirname(configFilePath);
-
-  const ESLint = await resolveESLintClass({
-    useFlatConfigOverrideVal: isFlatConfig(configFilePath),
-  });
   const eslintVersion = ESLint.version;
 
   const projects: CreateNodesResult['projects'] = {};
@@ -212,15 +210,21 @@ const internalCreateNodesV2 = async (
         return;
       }
 
-      const eslint = new ESLint({
-        cwd: join(context.workspaceRoot, projectRoot),
-      });
       let hasNonIgnoredLintableFiles = false;
-      for (const file of lintableFilesPerProjectRoot.get(projectRoot) ?? []) {
-        if (!(await eslint.isPathIgnored(join(context.workspaceRoot, file)))) {
-          hasNonIgnoredLintableFiles = true;
-          break;
+      if (configDir !== projectRoot) {
+        const eslint = new ESLint({
+          cwd: join(context.workspaceRoot, projectRoot),
+        });
+        for (const file of lintableFilesPerProjectRoot.get(projectRoot) ?? []) {
+          if (
+            !(await eslint.isPathIgnored(join(context.workspaceRoot, file)))
+          ) {
+            hasNonIgnoredLintableFiles = true;
+            break;
+          }
         }
+      } else {
+        hasNonIgnoredLintableFiles = true;
       }
 
       if (!hasNonIgnoredLintableFiles) {
@@ -286,9 +290,13 @@ export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
       projectRoots.map((r, i) => [r, hashes[i]])
     );
     try {
+      const ESLint = await resolveESLintClass({
+        useFlatConfigOverrideVal: isFlatConfig(configFiles[0]),
+      });
       return await createNodesFromFiles(
         (configFile, options, context) =>
           internalCreateNodesV2(
+            ESLint,
             configFile,
             options,
             context,
