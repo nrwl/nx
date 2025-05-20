@@ -9,15 +9,23 @@ This file tracks the process of moving technology-specific recipes from the main
 - [x] Extract all items from Recipes > React and insert into Technologies > React > Core > Recipes
 - [x] Extract all items from Recipes > Angular and insert into Technologies > Angular > Core > Recipes
 - [x] Extract all items from Recipes > Angular Rspack and insert into Technologies > Angular > Angular Rspack > Recipes
-- [ ] Extract all items from Recipes > Node and insert into Technologies > Node.js > Core > Recipes
-- [ ] Extract all items from Recipes > Storybook and insert into Technologies > Testing Tools > Storybook > Recipes
-- [ ] Extract all items from Recipes > Cypress and insert into Technologies > Testing Tools > Cypress > Recipes
-- [ ] Extract all items from Recipes > Next and insert into Technologies > React > Next > Recipes
-- [ ] Extract all items from Recipes > Nuxt and insert into Technologies > Vue > Nuxt > Recipes
-- [ ] Extract all items from Recipes > Vite and insert into Technologies > Build Tools > Vite > Recipes
-- [ ] Extract all items from Recipes > Webpack and insert into Technologies > Build Tools > Webpack > Recipes
-- [ ] Remove now-empty technology-specific sub-sections from Recipes
-- [ ] List any recipes that could not be moved due to missing Recipes sub-sections in Technologies
+- [x] Extract all items from Recipes > Node and insert into Technologies > Node.js > Core > Recipes
+- [x] Extract all items from Recipes > Storybook and insert into Technologies > Testing Tools > Storybook > Recipes
+- [x] Extract all items from Recipes > Cypress and insert into Technologies > Testing Tools > Cypress > Recipes
+- [x] Extract all items from Recipes > Next and insert into Technologies > React > Next > Recipes
+- [x] Extract all items from Recipes > Nuxt and insert into Technologies > Vue > Nuxt > Recipes
+- [x] Extract all items from Recipes > Vite and insert into Technologies > Build Tools > Vite > Recipes
+- [x] Extract all items from Recipes > Webpack and insert into Technologies > Build Tools > Webpack > Recipes
+- [x] Remove now-empty technology-specific sub-sections from Recipes
+- [x] Extract TypeScript-related items from Tips and tricks and insert into Technologies > TypeScript > Recipes:
+  - "Switch to Workspaces and TS Project References"
+  - "Enable Typescript Batch Mode"
+  - "Define Secondary Entrypoints for Typescript Packages"
+  - "Compile Typescript Packages to Multiple Formats"
+  - "Use JavaScript instead TypeScript"
+- [x] Extract ESLint-related items from Tips and tricks and insert into appropriate ESLint sections:
+  - "Configuring ESLint with Typescript"
+  - "Switching to ESLint's flat config format"
 
 ## Future Tasks
 

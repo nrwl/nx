@@ -1,6 +1,6 @@
 ---
 description: 
-globs: docs/**,nx-dev/**
+globs: docs/**,nx-dev/**,docs/map.json
 alwaysApply: false
 ---
 - **Nx Documentation Structure**
