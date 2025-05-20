@@ -1,6 +1,7 @@
 import {
   checkFilesExist,
   cleanupProject,
+  listFiles,
   newProject,
   readFile,
   runCLI,
@@ -158,15 +159,18 @@ describe('Convert Angular Webpack Project to Rspack', () => {
 
   afterAll(() => cleanupProject());
 
-  it('should convert an Angular Webpack project to Rspack', async () => {
+  it('debugthis should convert an Angular Webpack project to Rspack', async () => {
     runCLI(`generate @nx/angular:convert-to-rspack --project=${app1}`);
     const rspackConfigFileContents = readFile(join(app1, 'rspack.config.ts'));
-    const updatedConfigFileContents = rspackConfigFileContents.replace(
-      `maximumError: '1mb'`,
-      `maximumError: '3mb'`
-    );
-    updateFile(join(app1, 'rspack.config.ts'), updatedConfigFileContents);
-    const buildOutput = runCLI(`build ${app1}`);
+    console.log(rspackConfigFileContents);
+    // const updatedConfigFileContents = rspackConfigFileContents.replace(
+    //   `maximumError: '1mb'`,
+    //   `maximumError: '5mb'`
+    // );
+    // updateFile(join(app1, 'rspack.config.ts'), updatedConfigFileContents);
+    const buildOutput = runCLI(`build ${app1}`, {
+      env: { NODE_ENV: 'production' },
+    });
     expect(buildOutput).toContain('rspack build');
     expect(buildOutput).toContain('Successfully ran target build for project');
   });
