@@ -673,55 +673,7 @@
               "name": "React",
               "id": "react",
               "description": "Advanced guides to adopt Nx in React.",
-              "itemList": [
-                {
-                  "name": "React Native with Nx",
-                  "id": "react-native",
-                  "file": "shared/guides/react-native"
-                },
-                {
-                  "name": "Remix with Nx",
-                  "id": "remix",
-                  "file": "shared/guides/remix"
-                },
-                {
-                  "name": "React Router with Nx",
-                  "id": "react-router",
-                  "file": "shared/guides/react-router"
-                },
-                {
-                  "name": "Use Environment Variables in React",
-                  "id": "use-environment-variables-in-react",
-                  "tags": ["environment-variables"],
-                  "file": "shared/guides/use-environment-variables-in-react"
-                },
-                {
-                  "name": "Using Tailwind CSS in React",
-                  "id": "using-tailwind-css-in-react",
-                  "file": "shared/guides/using-tailwind-css-in-react"
-                },
-                {
-                  "name": "Adding Images, Fonts, and Files",
-                  "id": "adding-assets-react",
-                  "file": "shared/guides/adding-assets"
-                },
-                {
-                  "name": "Setup Module Federation with SSR for React",
-                  "id": "module-federation-with-ssr",
-                  "tags": ["module-federation", "react"],
-                  "file": "shared/recipes/module-federation-with-ssr"
-                },
-                {
-                  "name": "Deploying Next.js applications to Vercel",
-                  "id": "deploy-nextjs-to-vercel",
-                  "file": "shared/recipes/deployment/deploy-nextjs-to-vercel"
-                },
-                {
-                  "name": "React Compiler with Nx",
-                  "id": "react-compiler",
-                  "file": "shared/guides/react-compiler"
-                }
-              ]
+              "itemList": []
             },
             {
               "name": "Angular",
@@ -733,34 +685,55 @@
                   "id": "rspack",
                   "itemList": [
                     {
-                      "name": "Introduction",
-                      "id": "introduction",
-                      "tags": ["introduction"],
-                      "file": "shared/guides/angular-rspack/introduction"
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": [
+                        {
+                          "name": "Introduction",
+                          "id": "introduction",
+                          "tags": ["introduction"],
+                          "file": "shared/guides/angular-rspack/introduction"
+                        },
+                        {
+                          "name": "Getting Started",
+                          "id": "getting-started",
+                          "tags": [
+                            "getting-started",
+                            "angular",
+                            "rspack",
+                            "setup"
+                          ],
+                          "file": "shared/guides/angular-rspack/getting-started"
+                        },
+                        {
+                          "name": "Migrate from Angular Webpack",
+                          "id": "migrate-from-webpack",
+                          "tags": ["migrate-from-webpack"],
+                          "file": "shared/guides/angular-rspack/migrate-from-webpack"
+                        },
+                        {
+                          "name": "Handling Configurations",
+                          "id": "handling-configurations",
+                          "tags": ["handling-configurations", "configurations"],
+                          "file": "shared/guides/angular-rspack/handling-configurations"
+                        },
+                        {
+                          "name": "Internationalization (i18n)",
+                          "id": "internationalization",
+                          "tags": ["internationalization", "i18n"],
+                          "file": "shared/guides/angular-rspack/internationalization"
+                        }
+                      ]
                     },
                     {
-                      "name": "Getting Started",
-                      "id": "getting-started",
-                      "tags": ["getting-started", "angular", "rspack", "setup"],
-                      "file": "shared/guides/angular-rspack/getting-started"
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
                     },
                     {
-                      "name": "Migrate from Angular Webpack",
-                      "id": "migrate-from-webpack",
-                      "tags": ["migrate-from-webpack"],
-                      "file": "shared/guides/angular-rspack/migrate-from-webpack"
-                    },
-                    {
-                      "name": "Handling Configurations",
-                      "id": "handling-configurations",
-                      "tags": ["handling-configurations", "configurations"],
-                      "file": "shared/guides/angular-rspack/handling-configurations"
-                    },
-                    {
-                      "name": "Internationalization (i18n)",
-                      "id": "internationalization",
-                      "tags": ["internationalization", "i18n"],
-                      "file": "shared/guides/angular-rspack/internationalization"
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-config"
                     }
                   ]
                 },
@@ -780,34 +753,6 @@
                       "file": "shared/migration/angular-multiple"
                     }
                   ]
-                },
-                {
-                  "name": "Use Environment Variables in Angular",
-                  "id": "use-environment-variables-in-angular",
-                  "tags": ["environment-variables"],
-                  "file": "shared/guides/use-environment-variables-in-angular"
-                },
-                {
-                  "name": "Using Tailwind CSS with Angular projects",
-                  "id": "using-tailwind-css-with-angular-projects",
-                  "file": "shared/guides/using-tailwind-css-with-angular-projects"
-                },
-                {
-                  "name": "Setup Module Federation with SSR for Angular",
-                  "id": "module-federation-with-ssr",
-                  "tags": ["module-federation", "angular"],
-                  "file": "shared/recipes/module-federation-with-ssr"
-                },
-                {
-                  "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-                  "id": "dynamic-module-federation-with-angular",
-                  "tags": ["module-federation", "angular"],
-                  "file": "shared/recipes/module-federation/dynamic-mfe-angular"
-                },
-                {
-                  "name": "Setup incremental builds for Angular applications",
-                  "id": "setup-incremental-builds-angular",
-                  "file": "shared/guides/setup-incremental-builds-angular"
                 }
               ]
             },
@@ -1206,7 +1151,36 @@
                     {
                       "name": "Recipes",
                       "id": "recipes",
-                      "itemList": []
+                      "itemList": [
+                        {
+                          "name": "Use Environment Variables in Angular",
+                          "id": "use-environment-variables-in-angular",
+                          "tags": ["environment-variables"],
+                          "file": "shared/guides/use-environment-variables-in-angular"
+                        },
+                        {
+                          "name": "Using Tailwind CSS with Angular projects",
+                          "id": "using-tailwind-css-with-angular-projects",
+                          "file": "shared/guides/using-tailwind-css-with-angular-projects"
+                        },
+                        {
+                          "name": "Setup Module Federation with SSR for Angular",
+                          "id": "module-federation-with-ssr",
+                          "tags": ["module-federation", "angular"],
+                          "file": "shared/recipes/module-federation-with-ssr"
+                        },
+                        {
+                          "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+                          "id": "dynamic-module-federation-with-angular",
+                          "tags": ["module-federation", "angular"],
+                          "file": "shared/recipes/module-federation/dynamic-mfe-angular"
+                        },
+                        {
+                          "name": "Setup incremental builds for Angular applications",
+                          "id": "setup-incremental-builds-angular",
+                          "file": "shared/guides/setup-incremental-builds-angular"
+                        }
+                      ]
                     },
                     {
                       "name": "API",
@@ -1227,7 +1201,37 @@
                     {
                       "name": "Recipes",
                       "id": "recipes",
-                      "itemList": []
+                      "itemList": [
+                        {
+                          "name": "Getting Started with Angular and Rspack",
+                          "id": "getting-started",
+                          "tags": [
+                            "getting-started",
+                            "angular",
+                            "rspack",
+                            "setup"
+                          ],
+                          "file": "shared/guides/angular-rspack/getting-started"
+                        },
+                        {
+                          "name": "Migrate from Angular Webpack",
+                          "id": "migrate-from-webpack",
+                          "tags": ["migrate-from-webpack"],
+                          "file": "shared/guides/angular-rspack/migrate-from-webpack"
+                        },
+                        {
+                          "name": "Handling Configurations",
+                          "id": "handling-configurations",
+                          "tags": ["handling-configurations", "configurations"],
+                          "file": "shared/guides/angular-rspack/handling-configurations"
+                        },
+                        {
+                          "name": "Internationalization (i18n)",
+                          "id": "internationalization",
+                          "tags": ["internationalization", "i18n"],
+                          "file": "shared/guides/angular-rspack/internationalization"
+                        }
+                      ]
                     },
                     {
                       "name": "API",
@@ -1240,16 +1244,6 @@
                   "name": "Angular Rsbuild",
                   "id": "angular-rsbuild",
                   "itemList": [
-                    {
-                      "name": "Introduction",
-                      "id": "introduction",
-                      "file": "shared/guides/angular-rspack/introduction"
-                    },
-                    {
-                      "name": "Recipes",
-                      "id": "recipes",
-                      "itemList": []
-                    },
                     {
                       "name": "API",
                       "id": "api",
@@ -1275,7 +1269,55 @@
                     {
                       "name": "Recipes",
                       "id": "recipes",
-                      "itemList": []
+                      "itemList": [
+                        {
+                          "name": "React Native with Nx",
+                          "id": "react-native",
+                          "file": "shared/guides/react-native"
+                        },
+                        {
+                          "name": "Remix with Nx",
+                          "id": "remix",
+                          "file": "shared/guides/remix"
+                        },
+                        {
+                          "name": "React Router with Nx",
+                          "id": "react-router",
+                          "file": "shared/guides/react-router"
+                        },
+                        {
+                          "name": "Use Environment Variables in React",
+                          "id": "use-environment-variables-in-react",
+                          "tags": ["environment-variables"],
+                          "file": "shared/guides/use-environment-variables-in-react"
+                        },
+                        {
+                          "name": "Using Tailwind CSS in React",
+                          "id": "using-tailwind-css-in-react",
+                          "file": "shared/guides/using-tailwind-css-in-react"
+                        },
+                        {
+                          "name": "Adding Images, Fonts, and Files",
+                          "id": "adding-assets-react",
+                          "file": "shared/guides/adding-assets"
+                        },
+                        {
+                          "name": "Setup Module Federation with SSR for React",
+                          "id": "module-federation-with-ssr",
+                          "tags": ["module-federation", "react"],
+                          "file": "shared/recipes/module-federation-with-ssr"
+                        },
+                        {
+                          "name": "Deploying Next.js applications to Vercel",
+                          "id": "deploy-nextjs-to-vercel",
+                          "file": "shared/recipes/deployment/deploy-nextjs-to-vercel"
+                        },
+                        {
+                          "name": "React Compiler with Nx",
+                          "id": "react-compiler",
+                          "file": "shared/guides/react-compiler"
+                        }
+                      ]
                     },
                     {
                       "name": "API",

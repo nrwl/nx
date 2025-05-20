@@ -1470,80 +1470,7 @@
             "path": "/recipes/react",
             "id": "react",
             "isExternal": false,
-            "children": [
-              {
-                "name": "React Native with Nx",
-                "path": "/recipes/react/react-native",
-                "id": "react-native",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Remix with Nx",
-                "path": "/recipes/react/remix",
-                "id": "remix",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "React Router with Nx",
-                "path": "/recipes/react/react-router",
-                "id": "react-router",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Use Environment Variables in React",
-                "path": "/recipes/react/use-environment-variables-in-react",
-                "id": "use-environment-variables-in-react",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Using Tailwind CSS in React",
-                "path": "/recipes/react/using-tailwind-css-in-react",
-                "id": "using-tailwind-css-in-react",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Adding Images, Fonts, and Files",
-                "path": "/recipes/react/adding-assets-react",
-                "id": "adding-assets-react",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Setup Module Federation with SSR for React",
-                "path": "/recipes/react/module-federation-with-ssr",
-                "id": "module-federation-with-ssr",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Deploying Next.js applications to Vercel",
-                "path": "/recipes/react/deploy-nextjs-to-vercel",
-                "id": "deploy-nextjs-to-vercel",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "React Compiler with Nx",
-                "path": "/recipes/react/react-compiler",
-                "id": "react-compiler",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
+            "children": [],
             "disableCollapsible": false
           },
           {
@@ -1559,41 +1486,66 @@
                 "isExternal": false,
                 "children": [
                   {
-                    "name": "Introduction",
-                    "path": "/recipes/angular/rspack/introduction",
-                    "id": "introduction",
+                    "name": "Recipes",
+                    "path": "/recipes/angular/rspack/recipes",
+                    "id": "recipes",
+                    "isExternal": false,
+                    "children": [
+                      {
+                        "name": "Introduction",
+                        "path": "/recipes/angular/rspack/recipes/introduction",
+                        "id": "introduction",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "Getting Started",
+                        "path": "/recipes/angular/rspack/recipes/getting-started",
+                        "id": "getting-started",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "Migrate from Angular Webpack",
+                        "path": "/recipes/angular/rspack/recipes/migrate-from-webpack",
+                        "id": "migrate-from-webpack",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "Handling Configurations",
+                        "path": "/recipes/angular/rspack/recipes/handling-configurations",
+                        "id": "handling-configurations",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "Internationalization (i18n)",
+                        "path": "/recipes/angular/rspack/recipes/internationalization",
+                        "id": "internationalization",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      }
+                    ],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Recipes",
+                    "path": "/recipes/angular/rspack/recipes",
+                    "id": "recipes",
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
                   },
                   {
-                    "name": "Getting Started",
-                    "path": "/recipes/angular/rspack/getting-started",
-                    "id": "getting-started",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "Migrate from Angular Webpack",
-                    "path": "/recipes/angular/rspack/migrate-from-webpack",
-                    "id": "migrate-from-webpack",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "Handling Configurations",
-                    "path": "/recipes/angular/rspack/handling-configurations",
-                    "id": "handling-configurations",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "Internationalization (i18n)",
-                    "path": "/recipes/angular/rspack/internationalization",
-                    "id": "internationalization",
+                    "name": "API",
+                    "path": "/recipes/angular/rspack/api",
+                    "id": "api",
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
@@ -1624,46 +1576,6 @@
                     "disableCollapsible": false
                   }
                 ],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Use Environment Variables in Angular",
-                "path": "/recipes/angular/use-environment-variables-in-angular",
-                "id": "use-environment-variables-in-angular",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Using Tailwind CSS with Angular projects",
-                "path": "/recipes/angular/using-tailwind-css-with-angular-projects",
-                "id": "using-tailwind-css-with-angular-projects",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Setup Module Federation with SSR for Angular",
-                "path": "/recipes/angular/module-federation-with-ssr",
-                "id": "module-federation-with-ssr",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-                "path": "/recipes/angular/dynamic-module-federation-with-angular",
-                "id": "dynamic-module-federation-with-angular",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Setup incremental builds for Angular applications",
-                "path": "/recipes/angular/setup-incremental-builds-angular",
-                "id": "setup-incremental-builds-angular",
-                "isExternal": false,
-                "children": [],
                 "disableCollapsible": false
               }
             ],
@@ -2940,151 +2852,6 @@
         "path": "/recipes/react",
         "id": "react",
         "isExternal": false,
-        "children": [
-          {
-            "name": "React Native with Nx",
-            "path": "/recipes/react/react-native",
-            "id": "react-native",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Remix with Nx",
-            "path": "/recipes/react/remix",
-            "id": "remix",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "React Router with Nx",
-            "path": "/recipes/react/react-router",
-            "id": "react-router",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Use Environment Variables in React",
-            "path": "/recipes/react/use-environment-variables-in-react",
-            "id": "use-environment-variables-in-react",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Using Tailwind CSS in React",
-            "path": "/recipes/react/using-tailwind-css-in-react",
-            "id": "using-tailwind-css-in-react",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Adding Images, Fonts, and Files",
-            "path": "/recipes/react/adding-assets-react",
-            "id": "adding-assets-react",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Setup Module Federation with SSR for React",
-            "path": "/recipes/react/module-federation-with-ssr",
-            "id": "module-federation-with-ssr",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Deploying Next.js applications to Vercel",
-            "path": "/recipes/react/deploy-nextjs-to-vercel",
-            "id": "deploy-nextjs-to-vercel",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "React Compiler with Nx",
-            "path": "/recipes/react/react-compiler",
-            "id": "react-compiler",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "React Native with Nx",
-        "path": "/recipes/react/react-native",
-        "id": "react-native",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Remix with Nx",
-        "path": "/recipes/react/remix",
-        "id": "remix",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "React Router with Nx",
-        "path": "/recipes/react/react-router",
-        "id": "react-router",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Use Environment Variables in React",
-        "path": "/recipes/react/use-environment-variables-in-react",
-        "id": "use-environment-variables-in-react",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Using Tailwind CSS in React",
-        "path": "/recipes/react/using-tailwind-css-in-react",
-        "id": "using-tailwind-css-in-react",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Adding Images, Fonts, and Files",
-        "path": "/recipes/react/adding-assets-react",
-        "id": "adding-assets-react",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Setup Module Federation with SSR for React",
-        "path": "/recipes/react/module-federation-with-ssr",
-        "id": "module-federation-with-ssr",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Deploying Next.js applications to Vercel",
-        "path": "/recipes/react/deploy-nextjs-to-vercel",
-        "id": "deploy-nextjs-to-vercel",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "React Compiler with Nx",
-        "path": "/recipes/react/react-compiler",
-        "id": "react-compiler",
-        "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
@@ -3101,41 +2868,66 @@
             "isExternal": false,
             "children": [
               {
-                "name": "Introduction",
-                "path": "/recipes/angular/rspack/introduction",
-                "id": "introduction",
+                "name": "Recipes",
+                "path": "/recipes/angular/rspack/recipes",
+                "id": "recipes",
+                "isExternal": false,
+                "children": [
+                  {
+                    "name": "Introduction",
+                    "path": "/recipes/angular/rspack/recipes/introduction",
+                    "id": "introduction",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Getting Started",
+                    "path": "/recipes/angular/rspack/recipes/getting-started",
+                    "id": "getting-started",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Migrate from Angular Webpack",
+                    "path": "/recipes/angular/rspack/recipes/migrate-from-webpack",
+                    "id": "migrate-from-webpack",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Handling Configurations",
+                    "path": "/recipes/angular/rspack/recipes/handling-configurations",
+                    "id": "handling-configurations",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Internationalization (i18n)",
+                    "path": "/recipes/angular/rspack/recipes/internationalization",
+                    "id": "internationalization",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Recipes",
+                "path": "/recipes/angular/rspack/recipes",
+                "id": "recipes",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
               },
               {
-                "name": "Getting Started",
-                "path": "/recipes/angular/rspack/getting-started",
-                "id": "getting-started",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Migrate from Angular Webpack",
-                "path": "/recipes/angular/rspack/migrate-from-webpack",
-                "id": "migrate-from-webpack",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Handling Configurations",
-                "path": "/recipes/angular/rspack/handling-configurations",
-                "id": "handling-configurations",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Internationalization (i18n)",
-                "path": "/recipes/angular/rspack/internationalization",
-                "id": "internationalization",
+                "name": "API",
+                "path": "/recipes/angular/rspack/api",
+                "id": "api",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3167,46 +2959,6 @@
               }
             ],
             "disableCollapsible": false
-          },
-          {
-            "name": "Use Environment Variables in Angular",
-            "path": "/recipes/angular/use-environment-variables-in-angular",
-            "id": "use-environment-variables-in-angular",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Using Tailwind CSS with Angular projects",
-            "path": "/recipes/angular/using-tailwind-css-with-angular-projects",
-            "id": "using-tailwind-css-with-angular-projects",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Setup Module Federation with SSR for Angular",
-            "path": "/recipes/angular/module-federation-with-ssr",
-            "id": "module-federation-with-ssr",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-            "path": "/recipes/angular/dynamic-module-federation-with-angular",
-            "id": "dynamic-module-federation-with-angular",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Setup incremental builds for Angular applications",
-            "path": "/recipes/angular/setup-incremental-builds-angular",
-            "id": "setup-incremental-builds-angular",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -3218,41 +2970,66 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Introduction",
-            "path": "/recipes/angular/rspack/introduction",
-            "id": "introduction",
+            "name": "Recipes",
+            "path": "/recipes/angular/rspack/recipes",
+            "id": "recipes",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Introduction",
+                "path": "/recipes/angular/rspack/recipes/introduction",
+                "id": "introduction",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Getting Started",
+                "path": "/recipes/angular/rspack/recipes/getting-started",
+                "id": "getting-started",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Migrate from Angular Webpack",
+                "path": "/recipes/angular/rspack/recipes/migrate-from-webpack",
+                "id": "migrate-from-webpack",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Handling Configurations",
+                "path": "/recipes/angular/rspack/recipes/handling-configurations",
+                "id": "handling-configurations",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Internationalization (i18n)",
+                "path": "/recipes/angular/rspack/recipes/internationalization",
+                "id": "internationalization",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Recipes",
+            "path": "/recipes/angular/rspack/recipes",
+            "id": "recipes",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Getting Started",
-            "path": "/recipes/angular/rspack/getting-started",
-            "id": "getting-started",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Migrate from Angular Webpack",
-            "path": "/recipes/angular/rspack/migrate-from-webpack",
-            "id": "migrate-from-webpack",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Handling Configurations",
-            "path": "/recipes/angular/rspack/handling-configurations",
-            "id": "handling-configurations",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Internationalization (i18n)",
-            "path": "/recipes/angular/rspack/internationalization",
-            "id": "internationalization",
+            "name": "API",
+            "path": "/recipes/angular/rspack/api",
+            "id": "api",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3261,8 +3038,16 @@
         "disableCollapsible": false
       },
       {
+        "name": "Recipes",
+        "path": "/recipes/angular/rspack/recipes",
+        "id": "recipes",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Introduction",
-        "path": "/recipes/angular/rspack/introduction",
+        "path": "/recipes/angular/rspack/recipes/introduction",
         "id": "introduction",
         "isExternal": false,
         "children": [],
@@ -3270,7 +3055,7 @@
       },
       {
         "name": "Getting Started",
-        "path": "/recipes/angular/rspack/getting-started",
+        "path": "/recipes/angular/rspack/recipes/getting-started",
         "id": "getting-started",
         "isExternal": false,
         "children": [],
@@ -3278,7 +3063,7 @@
       },
       {
         "name": "Migrate from Angular Webpack",
-        "path": "/recipes/angular/rspack/migrate-from-webpack",
+        "path": "/recipes/angular/rspack/recipes/migrate-from-webpack",
         "id": "migrate-from-webpack",
         "isExternal": false,
         "children": [],
@@ -3286,7 +3071,7 @@
       },
       {
         "name": "Handling Configurations",
-        "path": "/recipes/angular/rspack/handling-configurations",
+        "path": "/recipes/angular/rspack/recipes/handling-configurations",
         "id": "handling-configurations",
         "isExternal": false,
         "children": [],
@@ -3294,8 +3079,16 @@
       },
       {
         "name": "Internationalization (i18n)",
-        "path": "/recipes/angular/rspack/internationalization",
+        "path": "/recipes/angular/rspack/recipes/internationalization",
         "id": "internationalization",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "API",
+        "path": "/recipes/angular/rspack/api",
+        "id": "api",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3337,46 +3130,6 @@
         "name": "Migrating From Multiple Angular CLI Repos",
         "path": "/recipes/angular/migration/angular-multiple",
         "id": "angular-multiple",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Use Environment Variables in Angular",
-        "path": "/recipes/angular/use-environment-variables-in-angular",
-        "id": "use-environment-variables-in-angular",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Using Tailwind CSS with Angular projects",
-        "path": "/recipes/angular/using-tailwind-css-with-angular-projects",
-        "id": "using-tailwind-css-with-angular-projects",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Setup Module Federation with SSR for Angular",
-        "path": "/recipes/angular/module-federation-with-ssr",
-        "id": "module-federation-with-ssr",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-        "path": "/recipes/angular/dynamic-module-federation-with-angular",
-        "id": "dynamic-module-federation-with-angular",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Setup incremental builds for Angular applications",
-        "path": "/recipes/angular/setup-incremental-builds-angular",
-        "id": "setup-incremental-builds-angular",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4278,7 +4031,48 @@
                     "path": "/technologies/angular/core/recipes",
                     "id": "recipes",
                     "isExternal": false,
-                    "children": [],
+                    "children": [
+                      {
+                        "name": "Use Environment Variables in Angular",
+                        "path": "/technologies/angular/core/recipes/use-environment-variables-in-angular",
+                        "id": "use-environment-variables-in-angular",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "Using Tailwind CSS with Angular projects",
+                        "path": "/technologies/angular/core/recipes/using-tailwind-css-with-angular-projects",
+                        "id": "using-tailwind-css-with-angular-projects",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "Setup Module Federation with SSR for Angular",
+                        "path": "/technologies/angular/core/recipes/module-federation-with-ssr",
+                        "id": "module-federation-with-ssr",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+                        "path": "/technologies/angular/core/recipes/dynamic-module-federation-with-angular",
+                        "id": "dynamic-module-federation-with-angular",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "Setup incremental builds for Angular applications",
+                        "path": "/technologies/angular/core/recipes/setup-incremental-builds-angular",
+                        "id": "setup-incremental-builds-angular",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      }
+                    ],
                     "disableCollapsible": false
                   },
                   {
@@ -4311,7 +4105,40 @@
                     "path": "/technologies/angular/angular-rspack/recipes",
                     "id": "recipes",
                     "isExternal": false,
-                    "children": [],
+                    "children": [
+                      {
+                        "name": "Getting Started with Angular and Rspack",
+                        "path": "/technologies/angular/angular-rspack/recipes/getting-started",
+                        "id": "getting-started",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "Migrate from Angular Webpack",
+                        "path": "/technologies/angular/angular-rspack/recipes/migrate-from-webpack",
+                        "id": "migrate-from-webpack",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "Handling Configurations",
+                        "path": "/technologies/angular/angular-rspack/recipes/handling-configurations",
+                        "id": "handling-configurations",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "Internationalization (i18n)",
+                        "path": "/technologies/angular/angular-rspack/recipes/internationalization",
+                        "id": "internationalization",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      }
+                    ],
                     "disableCollapsible": false
                   },
                   {
@@ -4331,22 +4158,6 @@
                 "id": "angular-rsbuild",
                 "isExternal": false,
                 "children": [
-                  {
-                    "name": "Introduction",
-                    "path": "/technologies/angular/angular-rsbuild/introduction",
-                    "id": "introduction",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "Recipes",
-                    "path": "/technologies/angular/angular-rsbuild/recipes",
-                    "id": "recipes",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
                   {
                     "name": "API",
                     "path": "/technologies/angular/angular-rsbuild/api",
@@ -4386,7 +4197,80 @@
                     "path": "/technologies/react/core/recipes",
                     "id": "recipes",
                     "isExternal": false,
-                    "children": [],
+                    "children": [
+                      {
+                        "name": "React Native with Nx",
+                        "path": "/technologies/react/core/recipes/react-native",
+                        "id": "react-native",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "Remix with Nx",
+                        "path": "/technologies/react/core/recipes/remix",
+                        "id": "remix",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "React Router with Nx",
+                        "path": "/technologies/react/core/recipes/react-router",
+                        "id": "react-router",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "Use Environment Variables in React",
+                        "path": "/technologies/react/core/recipes/use-environment-variables-in-react",
+                        "id": "use-environment-variables-in-react",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "Using Tailwind CSS in React",
+                        "path": "/technologies/react/core/recipes/using-tailwind-css-in-react",
+                        "id": "using-tailwind-css-in-react",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "Adding Images, Fonts, and Files",
+                        "path": "/technologies/react/core/recipes/adding-assets-react",
+                        "id": "adding-assets-react",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "Setup Module Federation with SSR for React",
+                        "path": "/technologies/react/core/recipes/module-federation-with-ssr",
+                        "id": "module-federation-with-ssr",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "Deploying Next.js applications to Vercel",
+                        "path": "/technologies/react/core/recipes/deploy-nextjs-to-vercel",
+                        "id": "deploy-nextjs-to-vercel",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "React Compiler with Nx",
+                        "path": "/technologies/react/core/recipes/react-compiler",
+                        "id": "react-compiler",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      }
+                    ],
                     "disableCollapsible": false
                   },
                   {
@@ -5259,7 +5143,48 @@
                 "path": "/technologies/angular/core/recipes",
                 "id": "recipes",
                 "isExternal": false,
-                "children": [],
+                "children": [
+                  {
+                    "name": "Use Environment Variables in Angular",
+                    "path": "/technologies/angular/core/recipes/use-environment-variables-in-angular",
+                    "id": "use-environment-variables-in-angular",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Using Tailwind CSS with Angular projects",
+                    "path": "/technologies/angular/core/recipes/using-tailwind-css-with-angular-projects",
+                    "id": "using-tailwind-css-with-angular-projects",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Setup Module Federation with SSR for Angular",
+                    "path": "/technologies/angular/core/recipes/module-federation-with-ssr",
+                    "id": "module-federation-with-ssr",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+                    "path": "/technologies/angular/core/recipes/dynamic-module-federation-with-angular",
+                    "id": "dynamic-module-federation-with-angular",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Setup incremental builds for Angular applications",
+                    "path": "/technologies/angular/core/recipes/setup-incremental-builds-angular",
+                    "id": "setup-incremental-builds-angular",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
                 "disableCollapsible": false
               },
               {
@@ -5292,7 +5217,40 @@
                 "path": "/technologies/angular/angular-rspack/recipes",
                 "id": "recipes",
                 "isExternal": false,
-                "children": [],
+                "children": [
+                  {
+                    "name": "Getting Started with Angular and Rspack",
+                    "path": "/technologies/angular/angular-rspack/recipes/getting-started",
+                    "id": "getting-started",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Migrate from Angular Webpack",
+                    "path": "/technologies/angular/angular-rspack/recipes/migrate-from-webpack",
+                    "id": "migrate-from-webpack",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Handling Configurations",
+                    "path": "/technologies/angular/angular-rspack/recipes/handling-configurations",
+                    "id": "handling-configurations",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Internationalization (i18n)",
+                    "path": "/technologies/angular/angular-rspack/recipes/internationalization",
+                    "id": "internationalization",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
                 "disableCollapsible": false
               },
               {
@@ -5312,22 +5270,6 @@
             "id": "angular-rsbuild",
             "isExternal": false,
             "children": [
-              {
-                "name": "Introduction",
-                "path": "/technologies/angular/angular-rsbuild/introduction",
-                "id": "introduction",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Recipes",
-                "path": "/technologies/angular/angular-rsbuild/recipes",
-                "id": "recipes",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
               {
                 "name": "API",
                 "path": "/technologies/angular/angular-rsbuild/api",
@@ -5361,7 +5303,48 @@
             "path": "/technologies/angular/core/recipes",
             "id": "recipes",
             "isExternal": false,
-            "children": [],
+            "children": [
+              {
+                "name": "Use Environment Variables in Angular",
+                "path": "/technologies/angular/core/recipes/use-environment-variables-in-angular",
+                "id": "use-environment-variables-in-angular",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Using Tailwind CSS with Angular projects",
+                "path": "/technologies/angular/core/recipes/using-tailwind-css-with-angular-projects",
+                "id": "using-tailwind-css-with-angular-projects",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Setup Module Federation with SSR for Angular",
+                "path": "/technologies/angular/core/recipes/module-federation-with-ssr",
+                "id": "module-federation-with-ssr",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+                "path": "/technologies/angular/core/recipes/dynamic-module-federation-with-angular",
+                "id": "dynamic-module-federation-with-angular",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Setup incremental builds for Angular applications",
+                "path": "/technologies/angular/core/recipes/setup-incremental-builds-angular",
+                "id": "setup-incremental-builds-angular",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
             "disableCollapsible": false
           },
           {
@@ -5387,6 +5370,87 @@
         "name": "Recipes",
         "path": "/technologies/angular/core/recipes",
         "id": "recipes",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Use Environment Variables in Angular",
+            "path": "/technologies/angular/core/recipes/use-environment-variables-in-angular",
+            "id": "use-environment-variables-in-angular",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Using Tailwind CSS with Angular projects",
+            "path": "/technologies/angular/core/recipes/using-tailwind-css-with-angular-projects",
+            "id": "using-tailwind-css-with-angular-projects",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Setup Module Federation with SSR for Angular",
+            "path": "/technologies/angular/core/recipes/module-federation-with-ssr",
+            "id": "module-federation-with-ssr",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+            "path": "/technologies/angular/core/recipes/dynamic-module-federation-with-angular",
+            "id": "dynamic-module-federation-with-angular",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Setup incremental builds for Angular applications",
+            "path": "/technologies/angular/core/recipes/setup-incremental-builds-angular",
+            "id": "setup-incremental-builds-angular",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Use Environment Variables in Angular",
+        "path": "/technologies/angular/core/recipes/use-environment-variables-in-angular",
+        "id": "use-environment-variables-in-angular",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Using Tailwind CSS with Angular projects",
+        "path": "/technologies/angular/core/recipes/using-tailwind-css-with-angular-projects",
+        "id": "using-tailwind-css-with-angular-projects",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Setup Module Federation with SSR for Angular",
+        "path": "/technologies/angular/core/recipes/module-federation-with-ssr",
+        "id": "module-federation-with-ssr",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+        "path": "/technologies/angular/core/recipes/dynamic-module-federation-with-angular",
+        "id": "dynamic-module-federation-with-angular",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Setup incremental builds for Angular applications",
+        "path": "/technologies/angular/core/recipes/setup-incremental-builds-angular",
+        "id": "setup-incremental-builds-angular",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5418,7 +5482,40 @@
             "path": "/technologies/angular/angular-rspack/recipes",
             "id": "recipes",
             "isExternal": false,
-            "children": [],
+            "children": [
+              {
+                "name": "Getting Started with Angular and Rspack",
+                "path": "/technologies/angular/angular-rspack/recipes/getting-started",
+                "id": "getting-started",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Migrate from Angular Webpack",
+                "path": "/technologies/angular/angular-rspack/recipes/migrate-from-webpack",
+                "id": "migrate-from-webpack",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Handling Configurations",
+                "path": "/technologies/angular/angular-rspack/recipes/handling-configurations",
+                "id": "handling-configurations",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Internationalization (i18n)",
+                "path": "/technologies/angular/angular-rspack/recipes/internationalization",
+                "id": "internationalization",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
             "disableCollapsible": false
           },
           {
@@ -5445,6 +5542,71 @@
         "path": "/technologies/angular/angular-rspack/recipes",
         "id": "recipes",
         "isExternal": false,
+        "children": [
+          {
+            "name": "Getting Started with Angular and Rspack",
+            "path": "/technologies/angular/angular-rspack/recipes/getting-started",
+            "id": "getting-started",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Migrate from Angular Webpack",
+            "path": "/technologies/angular/angular-rspack/recipes/migrate-from-webpack",
+            "id": "migrate-from-webpack",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Handling Configurations",
+            "path": "/technologies/angular/angular-rspack/recipes/handling-configurations",
+            "id": "handling-configurations",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Internationalization (i18n)",
+            "path": "/technologies/angular/angular-rspack/recipes/internationalization",
+            "id": "internationalization",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Getting Started with Angular and Rspack",
+        "path": "/technologies/angular/angular-rspack/recipes/getting-started",
+        "id": "getting-started",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Migrate from Angular Webpack",
+        "path": "/technologies/angular/angular-rspack/recipes/migrate-from-webpack",
+        "id": "migrate-from-webpack",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Handling Configurations",
+        "path": "/technologies/angular/angular-rspack/recipes/handling-configurations",
+        "id": "handling-configurations",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Internationalization (i18n)",
+        "path": "/technologies/angular/angular-rspack/recipes/internationalization",
+        "id": "internationalization",
+        "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
@@ -5463,22 +5625,6 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Introduction",
-            "path": "/technologies/angular/angular-rsbuild/introduction",
-            "id": "introduction",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Recipes",
-            "path": "/technologies/angular/angular-rsbuild/recipes",
-            "id": "recipes",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "API",
             "path": "/technologies/angular/angular-rsbuild/api",
             "id": "api",
@@ -5487,22 +5633,6 @@
             "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Introduction",
-        "path": "/technologies/angular/angular-rsbuild/introduction",
-        "id": "introduction",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Recipes",
-        "path": "/technologies/angular/angular-rsbuild/recipes",
-        "id": "recipes",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {
@@ -5538,7 +5668,80 @@
                 "path": "/technologies/react/core/recipes",
                 "id": "recipes",
                 "isExternal": false,
-                "children": [],
+                "children": [
+                  {
+                    "name": "React Native with Nx",
+                    "path": "/technologies/react/core/recipes/react-native",
+                    "id": "react-native",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Remix with Nx",
+                    "path": "/technologies/react/core/recipes/remix",
+                    "id": "remix",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "React Router with Nx",
+                    "path": "/technologies/react/core/recipes/react-router",
+                    "id": "react-router",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Use Environment Variables in React",
+                    "path": "/technologies/react/core/recipes/use-environment-variables-in-react",
+                    "id": "use-environment-variables-in-react",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Using Tailwind CSS in React",
+                    "path": "/technologies/react/core/recipes/using-tailwind-css-in-react",
+                    "id": "using-tailwind-css-in-react",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Adding Images, Fonts, and Files",
+                    "path": "/technologies/react/core/recipes/adding-assets-react",
+                    "id": "adding-assets-react",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Setup Module Federation with SSR for React",
+                    "path": "/technologies/react/core/recipes/module-federation-with-ssr",
+                    "id": "module-federation-with-ssr",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Deploying Next.js applications to Vercel",
+                    "path": "/technologies/react/core/recipes/deploy-nextjs-to-vercel",
+                    "id": "deploy-nextjs-to-vercel",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "React Compiler with Nx",
+                    "path": "/technologies/react/core/recipes/react-compiler",
+                    "id": "react-compiler",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
                 "disableCollapsible": false
               },
               {
@@ -5640,7 +5843,80 @@
             "path": "/technologies/react/core/recipes",
             "id": "recipes",
             "isExternal": false,
-            "children": [],
+            "children": [
+              {
+                "name": "React Native with Nx",
+                "path": "/technologies/react/core/recipes/react-native",
+                "id": "react-native",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Remix with Nx",
+                "path": "/technologies/react/core/recipes/remix",
+                "id": "remix",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "React Router with Nx",
+                "path": "/technologies/react/core/recipes/react-router",
+                "id": "react-router",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Use Environment Variables in React",
+                "path": "/technologies/react/core/recipes/use-environment-variables-in-react",
+                "id": "use-environment-variables-in-react",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Using Tailwind CSS in React",
+                "path": "/technologies/react/core/recipes/using-tailwind-css-in-react",
+                "id": "using-tailwind-css-in-react",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Adding Images, Fonts, and Files",
+                "path": "/technologies/react/core/recipes/adding-assets-react",
+                "id": "adding-assets-react",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Setup Module Federation with SSR for React",
+                "path": "/technologies/react/core/recipes/module-federation-with-ssr",
+                "id": "module-federation-with-ssr",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Deploying Next.js applications to Vercel",
+                "path": "/technologies/react/core/recipes/deploy-nextjs-to-vercel",
+                "id": "deploy-nextjs-to-vercel",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "React Compiler with Nx",
+                "path": "/technologies/react/core/recipes/react-compiler",
+                "id": "react-compiler",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
             "disableCollapsible": false
           },
           {
@@ -5666,6 +5942,151 @@
         "name": "Recipes",
         "path": "/technologies/react/core/recipes",
         "id": "recipes",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "React Native with Nx",
+            "path": "/technologies/react/core/recipes/react-native",
+            "id": "react-native",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Remix with Nx",
+            "path": "/technologies/react/core/recipes/remix",
+            "id": "remix",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "React Router with Nx",
+            "path": "/technologies/react/core/recipes/react-router",
+            "id": "react-router",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Use Environment Variables in React",
+            "path": "/technologies/react/core/recipes/use-environment-variables-in-react",
+            "id": "use-environment-variables-in-react",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Using Tailwind CSS in React",
+            "path": "/technologies/react/core/recipes/using-tailwind-css-in-react",
+            "id": "using-tailwind-css-in-react",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Adding Images, Fonts, and Files",
+            "path": "/technologies/react/core/recipes/adding-assets-react",
+            "id": "adding-assets-react",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Setup Module Federation with SSR for React",
+            "path": "/technologies/react/core/recipes/module-federation-with-ssr",
+            "id": "module-federation-with-ssr",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Deploying Next.js applications to Vercel",
+            "path": "/technologies/react/core/recipes/deploy-nextjs-to-vercel",
+            "id": "deploy-nextjs-to-vercel",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "React Compiler with Nx",
+            "path": "/technologies/react/core/recipes/react-compiler",
+            "id": "react-compiler",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "React Native with Nx",
+        "path": "/technologies/react/core/recipes/react-native",
+        "id": "react-native",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Remix with Nx",
+        "path": "/technologies/react/core/recipes/remix",
+        "id": "remix",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "React Router with Nx",
+        "path": "/technologies/react/core/recipes/react-router",
+        "id": "react-router",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Use Environment Variables in React",
+        "path": "/technologies/react/core/recipes/use-environment-variables-in-react",
+        "id": "use-environment-variables-in-react",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Using Tailwind CSS in React",
+        "path": "/technologies/react/core/recipes/using-tailwind-css-in-react",
+        "id": "using-tailwind-css-in-react",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Adding Images, Fonts, and Files",
+        "path": "/technologies/react/core/recipes/adding-assets-react",
+        "id": "adding-assets-react",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Setup Module Federation with SSR for React",
+        "path": "/technologies/react/core/recipes/module-federation-with-ssr",
+        "id": "module-federation-with-ssr",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Deploying Next.js applications to Vercel",
+        "path": "/technologies/react/core/recipes/deploy-nextjs-to-vercel",
+        "id": "deploy-nextjs-to-vercel",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "React Compiler with Nx",
+        "path": "/technologies/react/core/recipes/react-compiler",
+        "id": "react-compiler",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

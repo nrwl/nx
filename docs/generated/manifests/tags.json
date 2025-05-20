@@ -862,22 +862,22 @@
       "description": "",
       "file": "shared/recipes/module-federation-with-ssr",
       "id": "module-federation-with-ssr",
-      "name": "Setup Module Federation with SSR for React",
-      "path": "/recipes/react/module-federation-with-ssr"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/module-federation-with-ssr",
-      "id": "module-federation-with-ssr",
       "name": "Setup Module Federation with SSR for Angular",
-      "path": "/recipes/angular/module-federation-with-ssr"
+      "path": "/technologies/angular/core/recipes/module-federation-with-ssr"
     },
     {
       "description": "",
       "file": "shared/recipes/module-federation/dynamic-mfe-angular",
       "id": "dynamic-module-federation-with-angular",
       "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-      "path": "/recipes/angular/dynamic-module-federation-with-angular"
+      "path": "/technologies/angular/core/recipes/dynamic-module-federation-with-angular"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/module-federation-with-ssr",
+      "id": "module-federation-with-ssr",
+      "name": "Setup Module Federation with SSR for React",
+      "path": "/technologies/react/core/recipes/module-federation-with-ssr"
     }
   ],
   "angular": [
@@ -907,21 +907,28 @@
       "file": "shared/guides/angular-rspack/getting-started",
       "id": "getting-started",
       "name": "Getting Started",
-      "path": "/recipes/angular/rspack/getting-started"
+      "path": "/recipes/angular/rspack/recipes/getting-started"
     },
     {
       "description": "",
       "file": "shared/recipes/module-federation-with-ssr",
       "id": "module-federation-with-ssr",
       "name": "Setup Module Federation with SSR for Angular",
-      "path": "/recipes/angular/module-federation-with-ssr"
+      "path": "/technologies/angular/core/recipes/module-federation-with-ssr"
     },
     {
       "description": "",
       "file": "shared/recipes/module-federation/dynamic-mfe-angular",
       "id": "dynamic-module-federation-with-angular",
       "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-      "path": "/recipes/angular/dynamic-module-federation-with-angular"
+      "path": "/technologies/angular/core/recipes/dynamic-module-federation-with-angular"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/getting-started",
+      "id": "getting-started",
+      "name": "Getting Started with Angular and Rspack",
+      "path": "/technologies/angular/angular-rspack/recipes/getting-started"
     }
   ],
   "react": [
@@ -951,7 +958,7 @@
       "file": "shared/recipes/module-federation-with-ssr",
       "id": "module-federation-with-ssr",
       "name": "Setup Module Federation with SSR for React",
-      "path": "/recipes/react/module-federation-with-ssr"
+      "path": "/technologies/react/core/recipes/module-federation-with-ssr"
     }
   ],
   "installation": [
@@ -1080,50 +1087,13 @@
       "path": "/nx-api/nx/documents/import"
     }
   ],
-  "environment-variables": [
-    {
-      "description": "",
-      "file": "shared/guides/use-environment-variables-in-react",
-      "id": "use-environment-variables-in-react",
-      "name": "Use Environment Variables in React",
-      "path": "/recipes/react/use-environment-variables-in-react"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/use-environment-variables-in-angular",
-      "id": "use-environment-variables-in-angular",
-      "name": "Use Environment Variables in Angular",
-      "path": "/recipes/angular/use-environment-variables-in-angular"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/define-environment-variables",
-      "id": "define-environment-variables",
-      "name": "Define Environment Variables",
-      "path": "/recipes/tips-n-tricks/define-environment-variables"
-    },
-    {
-      "description": "",
-      "file": "shared/reference/environment-variables",
-      "id": "environment-variables",
-      "name": "Environment Variables",
-      "path": "/reference/environment-variables"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/performance-profiling",
-      "id": "performance-profiling",
-      "name": "Profiling Build Performance",
-      "path": "/troubleshooting/performance-profiling"
-    }
-  ],
   "introduction": [
     {
       "description": "",
       "file": "shared/guides/angular-rspack/introduction",
       "id": "introduction",
       "name": "Introduction",
-      "path": "/recipes/angular/rspack/introduction"
+      "path": "/recipes/angular/rspack/recipes/introduction"
     }
   ],
   "getting-started": [
@@ -1132,7 +1102,14 @@
       "file": "shared/guides/angular-rspack/getting-started",
       "id": "getting-started",
       "name": "Getting Started",
-      "path": "/recipes/angular/rspack/getting-started"
+      "path": "/recipes/angular/rspack/recipes/getting-started"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/getting-started",
+      "id": "getting-started",
+      "name": "Getting Started with Angular and Rspack",
+      "path": "/technologies/angular/angular-rspack/recipes/getting-started"
     }
   ],
   "rspack": [
@@ -1141,7 +1118,14 @@
       "file": "shared/guides/angular-rspack/getting-started",
       "id": "getting-started",
       "name": "Getting Started",
-      "path": "/recipes/angular/rspack/getting-started"
+      "path": "/recipes/angular/rspack/recipes/getting-started"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/getting-started",
+      "id": "getting-started",
+      "name": "Getting Started with Angular and Rspack",
+      "path": "/technologies/angular/angular-rspack/recipes/getting-started"
     }
   ],
   "setup": [
@@ -1150,7 +1134,14 @@
       "file": "shared/guides/angular-rspack/getting-started",
       "id": "getting-started",
       "name": "Getting Started",
-      "path": "/recipes/angular/rspack/getting-started"
+      "path": "/recipes/angular/rspack/recipes/getting-started"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/getting-started",
+      "id": "getting-started",
+      "name": "Getting Started with Angular and Rspack",
+      "path": "/technologies/angular/angular-rspack/recipes/getting-started"
     }
   ],
   "migrate-from-webpack": [
@@ -1159,7 +1150,14 @@
       "file": "shared/guides/angular-rspack/migrate-from-webpack",
       "id": "migrate-from-webpack",
       "name": "Migrate from Angular Webpack",
-      "path": "/recipes/angular/rspack/migrate-from-webpack"
+      "path": "/recipes/angular/rspack/recipes/migrate-from-webpack"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/migrate-from-webpack",
+      "id": "migrate-from-webpack",
+      "name": "Migrate from Angular Webpack",
+      "path": "/technologies/angular/angular-rspack/recipes/migrate-from-webpack"
     }
   ],
   "handling-configurations": [
@@ -1168,7 +1166,14 @@
       "file": "shared/guides/angular-rspack/handling-configurations",
       "id": "handling-configurations",
       "name": "Handling Configurations",
-      "path": "/recipes/angular/rspack/handling-configurations"
+      "path": "/recipes/angular/rspack/recipes/handling-configurations"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/handling-configurations",
+      "id": "handling-configurations",
+      "name": "Handling Configurations",
+      "path": "/technologies/angular/angular-rspack/recipes/handling-configurations"
     }
   ],
   "configurations": [
@@ -1177,7 +1182,14 @@
       "file": "shared/guides/angular-rspack/handling-configurations",
       "id": "handling-configurations",
       "name": "Handling Configurations",
-      "path": "/recipes/angular/rspack/handling-configurations"
+      "path": "/recipes/angular/rspack/recipes/handling-configurations"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/handling-configurations",
+      "id": "handling-configurations",
+      "name": "Handling Configurations",
+      "path": "/technologies/angular/angular-rspack/recipes/handling-configurations"
     }
   ],
   "internationalization": [
@@ -1186,7 +1198,14 @@
       "file": "shared/guides/angular-rspack/internationalization",
       "id": "internationalization",
       "name": "Internationalization (i18n)",
-      "path": "/recipes/angular/rspack/internationalization"
+      "path": "/recipes/angular/rspack/recipes/internationalization"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/internationalization",
+      "id": "internationalization",
+      "name": "Internationalization (i18n)",
+      "path": "/technologies/angular/angular-rspack/recipes/internationalization"
     }
   ],
   "i18n": [
@@ -1195,7 +1214,14 @@
       "file": "shared/guides/angular-rspack/internationalization",
       "id": "internationalization",
       "name": "Internationalization (i18n)",
-      "path": "/recipes/angular/rspack/internationalization"
+      "path": "/recipes/angular/rspack/recipes/internationalization"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/internationalization",
+      "id": "internationalization",
+      "name": "Internationalization (i18n)",
+      "path": "/technologies/angular/angular-rspack/recipes/internationalization"
     }
   ],
   "deployment": [
@@ -1377,6 +1403,43 @@
       "id": "angular-configuring-styles",
       "name": "Angular: Configuring styles and preprocessor options",
       "path": "/recipes/storybook/angular-configuring-styles"
+    }
+  ],
+  "environment-variables": [
+    {
+      "description": "",
+      "file": "shared/guides/define-environment-variables",
+      "id": "define-environment-variables",
+      "name": "Define Environment Variables",
+      "path": "/recipes/tips-n-tricks/define-environment-variables"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/use-environment-variables-in-angular",
+      "id": "use-environment-variables-in-angular",
+      "name": "Use Environment Variables in Angular",
+      "path": "/technologies/angular/core/recipes/use-environment-variables-in-angular"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/use-environment-variables-in-react",
+      "id": "use-environment-variables-in-react",
+      "name": "Use Environment Variables in React",
+      "path": "/technologies/react/core/recipes/use-environment-variables-in-react"
+    },
+    {
+      "description": "",
+      "file": "shared/reference/environment-variables",
+      "id": "environment-variables",
+      "name": "Environment Variables",
+      "path": "/reference/environment-variables"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/performance-profiling",
+      "id": "performance-profiling",
+      "name": "Profiling Build Performance",
+      "path": "/troubleshooting/performance-profiling"
     }
   ],
   "yarn": [

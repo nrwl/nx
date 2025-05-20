@@ -2014,107 +2014,7 @@
         "description": "Advanced guides to adopt Nx in React.",
         "mediaImage": "",
         "file": "",
-        "itemList": [
-          {
-            "id": "react-native",
-            "name": "React Native with Nx",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/react-native",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/react-native",
-            "tags": []
-          },
-          {
-            "id": "remix",
-            "name": "Remix with Nx",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/remix",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/remix",
-            "tags": []
-          },
-          {
-            "id": "react-router",
-            "name": "React Router with Nx",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/react-router",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/react-router",
-            "tags": []
-          },
-          {
-            "id": "use-environment-variables-in-react",
-            "name": "Use Environment Variables in React",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/use-environment-variables-in-react",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/use-environment-variables-in-react",
-            "tags": ["environment-variables"]
-          },
-          {
-            "id": "using-tailwind-css-in-react",
-            "name": "Using Tailwind CSS in React",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/using-tailwind-css-in-react",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/using-tailwind-css-in-react",
-            "tags": []
-          },
-          {
-            "id": "adding-assets-react",
-            "name": "Adding Images, Fonts, and Files",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/adding-assets",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/adding-assets-react",
-            "tags": []
-          },
-          {
-            "id": "module-federation-with-ssr",
-            "name": "Setup Module Federation with SSR for React",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/module-federation-with-ssr",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/module-federation-with-ssr",
-            "tags": ["module-federation", "react"]
-          },
-          {
-            "id": "deploy-nextjs-to-vercel",
-            "name": "Deploying Next.js applications to Vercel",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/deployment/deploy-nextjs-to-vercel",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/deploy-nextjs-to-vercel",
-            "tags": []
-          },
-          {
-            "id": "react-compiler",
-            "name": "React Compiler with Nx",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/react-compiler",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/react-compiler",
-            "tags": []
-          }
-        ],
+        "itemList": [],
         "isExternal": false,
         "path": "/recipes/react",
         "tags": []
@@ -2134,59 +2034,93 @@
             "file": "",
             "itemList": [
               {
-                "id": "introduction",
-                "name": "Introduction",
+                "id": "recipes",
+                "name": "Recipes",
                 "description": "",
                 "mediaImage": "",
-                "file": "shared/guides/angular-rspack/introduction",
-                "itemList": [],
+                "file": "",
+                "itemList": [
+                  {
+                    "id": "introduction",
+                    "name": "Introduction",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/angular-rspack/introduction",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/recipes/angular/rspack/recipes/introduction",
+                    "tags": ["introduction"]
+                  },
+                  {
+                    "id": "getting-started",
+                    "name": "Getting Started",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/angular-rspack/getting-started",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/recipes/angular/rspack/recipes/getting-started",
+                    "tags": ["getting-started", "angular", "rspack", "setup"]
+                  },
+                  {
+                    "id": "migrate-from-webpack",
+                    "name": "Migrate from Angular Webpack",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/angular-rspack/migrate-from-webpack",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/recipes/angular/rspack/recipes/migrate-from-webpack",
+                    "tags": ["migrate-from-webpack"]
+                  },
+                  {
+                    "id": "handling-configurations",
+                    "name": "Handling Configurations",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/angular-rspack/handling-configurations",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/recipes/angular/rspack/recipes/handling-configurations",
+                    "tags": ["handling-configurations", "configurations"]
+                  },
+                  {
+                    "id": "internationalization",
+                    "name": "Internationalization (i18n)",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/angular-rspack/internationalization",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/recipes/angular/rspack/recipes/internationalization",
+                    "tags": ["internationalization", "i18n"]
+                  }
+                ],
                 "isExternal": false,
-                "path": "/recipes/angular/rspack/introduction",
-                "tags": ["introduction"]
+                "path": "/recipes/angular/rspack/recipes",
+                "tags": []
               },
               {
-                "id": "getting-started",
-                "name": "Getting Started",
+                "id": "recipes",
+                "name": "Recipes",
                 "description": "",
                 "mediaImage": "",
-                "file": "shared/guides/angular-rspack/getting-started",
+                "file": "",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/recipes/angular/rspack/getting-started",
-                "tags": ["getting-started", "angular", "rspack", "setup"]
+                "path": "/recipes/angular/rspack/recipes",
+                "tags": []
               },
               {
-                "id": "migrate-from-webpack",
-                "name": "Migrate from Angular Webpack",
+                "id": "api",
+                "name": "API",
                 "description": "",
                 "mediaImage": "",
-                "file": "shared/guides/angular-rspack/migrate-from-webpack",
+                "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-config",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/recipes/angular/rspack/migrate-from-webpack",
-                "tags": ["migrate-from-webpack"]
-              },
-              {
-                "id": "handling-configurations",
-                "name": "Handling Configurations",
-                "description": "",
-                "mediaImage": "",
-                "file": "shared/guides/angular-rspack/handling-configurations",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/recipes/angular/rspack/handling-configurations",
-                "tags": ["handling-configurations", "configurations"]
-              },
-              {
-                "id": "internationalization",
-                "name": "Internationalization (i18n)",
-                "description": "",
-                "mediaImage": "",
-                "file": "shared/guides/angular-rspack/internationalization",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/recipes/angular/rspack/internationalization",
-                "tags": ["internationalization", "i18n"]
+                "path": "/recipes/angular/rspack/api",
+                "tags": []
               }
             ],
             "isExternal": false,
@@ -2225,61 +2159,6 @@
             ],
             "isExternal": false,
             "path": "/recipes/angular/migration",
-            "tags": []
-          },
-          {
-            "id": "use-environment-variables-in-angular",
-            "name": "Use Environment Variables in Angular",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/use-environment-variables-in-angular",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/angular/use-environment-variables-in-angular",
-            "tags": ["environment-variables"]
-          },
-          {
-            "id": "using-tailwind-css-with-angular-projects",
-            "name": "Using Tailwind CSS with Angular projects",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/using-tailwind-css-with-angular-projects",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/angular/using-tailwind-css-with-angular-projects",
-            "tags": []
-          },
-          {
-            "id": "module-federation-with-ssr",
-            "name": "Setup Module Federation with SSR for Angular",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/module-federation-with-ssr",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/angular/module-federation-with-ssr",
-            "tags": ["module-federation", "angular"]
-          },
-          {
-            "id": "dynamic-module-federation-with-angular",
-            "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/module-federation/dynamic-mfe-angular",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/angular/dynamic-module-federation-with-angular",
-            "tags": ["module-federation", "angular"]
-          },
-          {
-            "id": "setup-incremental-builds-angular",
-            "name": "Setup incremental builds for Angular applications",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/setup-incremental-builds-angular",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/angular/setup-incremental-builds-angular",
             "tags": []
           }
         ],
@@ -4029,208 +3908,9 @@
     "description": "Advanced guides to adopt Nx in React.",
     "mediaImage": "",
     "file": "",
-    "itemList": [
-      {
-        "id": "react-native",
-        "name": "React Native with Nx",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/react-native",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/react-native",
-        "tags": []
-      },
-      {
-        "id": "remix",
-        "name": "Remix with Nx",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/remix",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/remix",
-        "tags": []
-      },
-      {
-        "id": "react-router",
-        "name": "React Router with Nx",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/react-router",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/react-router",
-        "tags": []
-      },
-      {
-        "id": "use-environment-variables-in-react",
-        "name": "Use Environment Variables in React",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/use-environment-variables-in-react",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/use-environment-variables-in-react",
-        "tags": ["environment-variables"]
-      },
-      {
-        "id": "using-tailwind-css-in-react",
-        "name": "Using Tailwind CSS in React",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/using-tailwind-css-in-react",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/using-tailwind-css-in-react",
-        "tags": []
-      },
-      {
-        "id": "adding-assets-react",
-        "name": "Adding Images, Fonts, and Files",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/adding-assets",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/adding-assets-react",
-        "tags": []
-      },
-      {
-        "id": "module-federation-with-ssr",
-        "name": "Setup Module Federation with SSR for React",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/module-federation-with-ssr",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/module-federation-with-ssr",
-        "tags": ["module-federation", "react"]
-      },
-      {
-        "id": "deploy-nextjs-to-vercel",
-        "name": "Deploying Next.js applications to Vercel",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/deployment/deploy-nextjs-to-vercel",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/deploy-nextjs-to-vercel",
-        "tags": []
-      },
-      {
-        "id": "react-compiler",
-        "name": "React Compiler with Nx",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/react-compiler",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/react-compiler",
-        "tags": []
-      }
-    ],
+    "itemList": [],
     "isExternal": false,
     "path": "/recipes/react",
-    "tags": []
-  },
-  "/recipes/react/react-native": {
-    "id": "react-native",
-    "name": "React Native with Nx",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/react-native",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/react-native",
-    "tags": []
-  },
-  "/recipes/react/remix": {
-    "id": "remix",
-    "name": "Remix with Nx",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/remix",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/remix",
-    "tags": []
-  },
-  "/recipes/react/react-router": {
-    "id": "react-router",
-    "name": "React Router with Nx",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/react-router",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/react-router",
-    "tags": []
-  },
-  "/recipes/react/use-environment-variables-in-react": {
-    "id": "use-environment-variables-in-react",
-    "name": "Use Environment Variables in React",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/use-environment-variables-in-react",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/use-environment-variables-in-react",
-    "tags": ["environment-variables"]
-  },
-  "/recipes/react/using-tailwind-css-in-react": {
-    "id": "using-tailwind-css-in-react",
-    "name": "Using Tailwind CSS in React",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/using-tailwind-css-in-react",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/using-tailwind-css-in-react",
-    "tags": []
-  },
-  "/recipes/react/adding-assets-react": {
-    "id": "adding-assets-react",
-    "name": "Adding Images, Fonts, and Files",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/adding-assets",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/adding-assets-react",
-    "tags": []
-  },
-  "/recipes/react/module-federation-with-ssr": {
-    "id": "module-federation-with-ssr",
-    "name": "Setup Module Federation with SSR for React",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/module-federation-with-ssr",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/module-federation-with-ssr",
-    "tags": ["module-federation", "react"]
-  },
-  "/recipes/react/deploy-nextjs-to-vercel": {
-    "id": "deploy-nextjs-to-vercel",
-    "name": "Deploying Next.js applications to Vercel",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/deployment/deploy-nextjs-to-vercel",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/deploy-nextjs-to-vercel",
-    "tags": []
-  },
-  "/recipes/react/react-compiler": {
-    "id": "react-compiler",
-    "name": "React Compiler with Nx",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/react-compiler",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/react-compiler",
     "tags": []
   },
   "/recipes/angular": {
@@ -4248,59 +3928,93 @@
         "file": "",
         "itemList": [
           {
-            "id": "introduction",
-            "name": "Introduction",
+            "id": "recipes",
+            "name": "Recipes",
             "description": "",
             "mediaImage": "",
-            "file": "shared/guides/angular-rspack/introduction",
-            "itemList": [],
+            "file": "",
+            "itemList": [
+              {
+                "id": "introduction",
+                "name": "Introduction",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/angular-rspack/introduction",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/recipes/angular/rspack/recipes/introduction",
+                "tags": ["introduction"]
+              },
+              {
+                "id": "getting-started",
+                "name": "Getting Started",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/angular-rspack/getting-started",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/recipes/angular/rspack/recipes/getting-started",
+                "tags": ["getting-started", "angular", "rspack", "setup"]
+              },
+              {
+                "id": "migrate-from-webpack",
+                "name": "Migrate from Angular Webpack",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/angular-rspack/migrate-from-webpack",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/recipes/angular/rspack/recipes/migrate-from-webpack",
+                "tags": ["migrate-from-webpack"]
+              },
+              {
+                "id": "handling-configurations",
+                "name": "Handling Configurations",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/angular-rspack/handling-configurations",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/recipes/angular/rspack/recipes/handling-configurations",
+                "tags": ["handling-configurations", "configurations"]
+              },
+              {
+                "id": "internationalization",
+                "name": "Internationalization (i18n)",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/angular-rspack/internationalization",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/recipes/angular/rspack/recipes/internationalization",
+                "tags": ["internationalization", "i18n"]
+              }
+            ],
             "isExternal": false,
-            "path": "/recipes/angular/rspack/introduction",
-            "tags": ["introduction"]
+            "path": "/recipes/angular/rspack/recipes",
+            "tags": []
           },
           {
-            "id": "getting-started",
-            "name": "Getting Started",
+            "id": "recipes",
+            "name": "Recipes",
             "description": "",
             "mediaImage": "",
-            "file": "shared/guides/angular-rspack/getting-started",
+            "file": "",
             "itemList": [],
             "isExternal": false,
-            "path": "/recipes/angular/rspack/getting-started",
-            "tags": ["getting-started", "angular", "rspack", "setup"]
+            "path": "/recipes/angular/rspack/recipes",
+            "tags": []
           },
           {
-            "id": "migrate-from-webpack",
-            "name": "Migrate from Angular Webpack",
+            "id": "api",
+            "name": "API",
             "description": "",
             "mediaImage": "",
-            "file": "shared/guides/angular-rspack/migrate-from-webpack",
+            "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-config",
             "itemList": [],
             "isExternal": false,
-            "path": "/recipes/angular/rspack/migrate-from-webpack",
-            "tags": ["migrate-from-webpack"]
-          },
-          {
-            "id": "handling-configurations",
-            "name": "Handling Configurations",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/angular-rspack/handling-configurations",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/angular/rspack/handling-configurations",
-            "tags": ["handling-configurations", "configurations"]
-          },
-          {
-            "id": "internationalization",
-            "name": "Internationalization (i18n)",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/angular-rspack/internationalization",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/angular/rspack/internationalization",
-            "tags": ["internationalization", "i18n"]
+            "path": "/recipes/angular/rspack/api",
+            "tags": []
           }
         ],
         "isExternal": false,
@@ -4340,61 +4054,6 @@
         "isExternal": false,
         "path": "/recipes/angular/migration",
         "tags": []
-      },
-      {
-        "id": "use-environment-variables-in-angular",
-        "name": "Use Environment Variables in Angular",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/use-environment-variables-in-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/angular/use-environment-variables-in-angular",
-        "tags": ["environment-variables"]
-      },
-      {
-        "id": "using-tailwind-css-with-angular-projects",
-        "name": "Using Tailwind CSS with Angular projects",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/using-tailwind-css-with-angular-projects",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/angular/using-tailwind-css-with-angular-projects",
-        "tags": []
-      },
-      {
-        "id": "module-federation-with-ssr",
-        "name": "Setup Module Federation with SSR for Angular",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/module-federation-with-ssr",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/angular/module-federation-with-ssr",
-        "tags": ["module-federation", "angular"]
-      },
-      {
-        "id": "dynamic-module-federation-with-angular",
-        "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/module-federation/dynamic-mfe-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/angular/dynamic-module-federation-with-angular",
-        "tags": ["module-federation", "angular"]
-      },
-      {
-        "id": "setup-incremental-builds-angular",
-        "name": "Setup incremental builds for Angular applications",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/setup-incremental-builds-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/angular/setup-incremental-builds-angular",
-        "tags": []
       }
     ],
     "isExternal": false,
@@ -4409,66 +4068,111 @@
     "file": "",
     "itemList": [
       {
-        "id": "introduction",
-        "name": "Introduction",
+        "id": "recipes",
+        "name": "Recipes",
         "description": "",
         "mediaImage": "",
-        "file": "shared/guides/angular-rspack/introduction",
-        "itemList": [],
+        "file": "",
+        "itemList": [
+          {
+            "id": "introduction",
+            "name": "Introduction",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/angular-rspack/introduction",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/rspack/recipes/introduction",
+            "tags": ["introduction"]
+          },
+          {
+            "id": "getting-started",
+            "name": "Getting Started",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/angular-rspack/getting-started",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/rspack/recipes/getting-started",
+            "tags": ["getting-started", "angular", "rspack", "setup"]
+          },
+          {
+            "id": "migrate-from-webpack",
+            "name": "Migrate from Angular Webpack",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/angular-rspack/migrate-from-webpack",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/rspack/recipes/migrate-from-webpack",
+            "tags": ["migrate-from-webpack"]
+          },
+          {
+            "id": "handling-configurations",
+            "name": "Handling Configurations",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/angular-rspack/handling-configurations",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/rspack/recipes/handling-configurations",
+            "tags": ["handling-configurations", "configurations"]
+          },
+          {
+            "id": "internationalization",
+            "name": "Internationalization (i18n)",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/angular-rspack/internationalization",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/rspack/recipes/internationalization",
+            "tags": ["internationalization", "i18n"]
+          }
+        ],
         "isExternal": false,
-        "path": "/recipes/angular/rspack/introduction",
-        "tags": ["introduction"]
+        "path": "/recipes/angular/rspack/recipes",
+        "tags": []
       },
       {
-        "id": "getting-started",
-        "name": "Getting Started",
+        "id": "recipes",
+        "name": "Recipes",
         "description": "",
         "mediaImage": "",
-        "file": "shared/guides/angular-rspack/getting-started",
+        "file": "",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/angular/rspack/getting-started",
-        "tags": ["getting-started", "angular", "rspack", "setup"]
+        "path": "/recipes/angular/rspack/recipes",
+        "tags": []
       },
       {
-        "id": "migrate-from-webpack",
-        "name": "Migrate from Angular Webpack",
+        "id": "api",
+        "name": "API",
         "description": "",
         "mediaImage": "",
-        "file": "shared/guides/angular-rspack/migrate-from-webpack",
+        "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-config",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/angular/rspack/migrate-from-webpack",
-        "tags": ["migrate-from-webpack"]
-      },
-      {
-        "id": "handling-configurations",
-        "name": "Handling Configurations",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/angular-rspack/handling-configurations",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/angular/rspack/handling-configurations",
-        "tags": ["handling-configurations", "configurations"]
-      },
-      {
-        "id": "internationalization",
-        "name": "Internationalization (i18n)",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/angular-rspack/internationalization",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/angular/rspack/internationalization",
-        "tags": ["internationalization", "i18n"]
+        "path": "/recipes/angular/rspack/api",
+        "tags": []
       }
     ],
     "isExternal": false,
     "path": "/recipes/angular/rspack",
     "tags": []
   },
-  "/recipes/angular/rspack/introduction": {
+  "/recipes/angular/rspack/recipes": {
+    "id": "recipes",
+    "name": "Recipes",
+    "description": "",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/rspack/recipes",
+    "tags": []
+  },
+  "/recipes/angular/rspack/recipes/introduction": {
     "id": "introduction",
     "name": "Introduction",
     "description": "",
@@ -4476,10 +4180,10 @@
     "file": "shared/guides/angular-rspack/introduction",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/angular/rspack/introduction",
+    "path": "/recipes/angular/rspack/recipes/introduction",
     "tags": ["introduction"]
   },
-  "/recipes/angular/rspack/getting-started": {
+  "/recipes/angular/rspack/recipes/getting-started": {
     "id": "getting-started",
     "name": "Getting Started",
     "description": "",
@@ -4487,10 +4191,10 @@
     "file": "shared/guides/angular-rspack/getting-started",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/angular/rspack/getting-started",
+    "path": "/recipes/angular/rspack/recipes/getting-started",
     "tags": ["getting-started", "angular", "rspack", "setup"]
   },
-  "/recipes/angular/rspack/migrate-from-webpack": {
+  "/recipes/angular/rspack/recipes/migrate-from-webpack": {
     "id": "migrate-from-webpack",
     "name": "Migrate from Angular Webpack",
     "description": "",
@@ -4498,10 +4202,10 @@
     "file": "shared/guides/angular-rspack/migrate-from-webpack",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/angular/rspack/migrate-from-webpack",
+    "path": "/recipes/angular/rspack/recipes/migrate-from-webpack",
     "tags": ["migrate-from-webpack"]
   },
-  "/recipes/angular/rspack/handling-configurations": {
+  "/recipes/angular/rspack/recipes/handling-configurations": {
     "id": "handling-configurations",
     "name": "Handling Configurations",
     "description": "",
@@ -4509,10 +4213,10 @@
     "file": "shared/guides/angular-rspack/handling-configurations",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/angular/rspack/handling-configurations",
+    "path": "/recipes/angular/rspack/recipes/handling-configurations",
     "tags": ["handling-configurations", "configurations"]
   },
-  "/recipes/angular/rspack/internationalization": {
+  "/recipes/angular/rspack/recipes/internationalization": {
     "id": "internationalization",
     "name": "Internationalization (i18n)",
     "description": "",
@@ -4520,8 +4224,19 @@
     "file": "shared/guides/angular-rspack/internationalization",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/angular/rspack/internationalization",
+    "path": "/recipes/angular/rspack/recipes/internationalization",
     "tags": ["internationalization", "i18n"]
+  },
+  "/recipes/angular/rspack/api": {
+    "id": "api",
+    "name": "API",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-config",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/rspack/api",
+    "tags": []
   },
   "/recipes/angular/migration": {
     "id": "migration",
@@ -4577,61 +4292,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/angular/migration/angular-multiple",
-    "tags": []
-  },
-  "/recipes/angular/use-environment-variables-in-angular": {
-    "id": "use-environment-variables-in-angular",
-    "name": "Use Environment Variables in Angular",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/use-environment-variables-in-angular",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/angular/use-environment-variables-in-angular",
-    "tags": ["environment-variables"]
-  },
-  "/recipes/angular/using-tailwind-css-with-angular-projects": {
-    "id": "using-tailwind-css-with-angular-projects",
-    "name": "Using Tailwind CSS with Angular projects",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/using-tailwind-css-with-angular-projects",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/angular/using-tailwind-css-with-angular-projects",
-    "tags": []
-  },
-  "/recipes/angular/module-federation-with-ssr": {
-    "id": "module-federation-with-ssr",
-    "name": "Setup Module Federation with SSR for Angular",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/module-federation-with-ssr",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/angular/module-federation-with-ssr",
-    "tags": ["module-federation", "angular"]
-  },
-  "/recipes/angular/dynamic-module-federation-with-angular": {
-    "id": "dynamic-module-federation-with-angular",
-    "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/module-federation/dynamic-mfe-angular",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/angular/dynamic-module-federation-with-angular",
-    "tags": ["module-federation", "angular"]
-  },
-  "/recipes/angular/setup-incremental-builds-angular": {
-    "id": "setup-incremental-builds-angular",
-    "name": "Setup incremental builds for Angular applications",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/setup-incremental-builds-angular",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/angular/setup-incremental-builds-angular",
     "tags": []
   },
   "/recipes/node": {
@@ -5859,7 +5519,63 @@
                 "description": "",
                 "mediaImage": "",
                 "file": "",
-                "itemList": [],
+                "itemList": [
+                  {
+                    "id": "use-environment-variables-in-angular",
+                    "name": "Use Environment Variables in Angular",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/use-environment-variables-in-angular",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/angular/core/recipes/use-environment-variables-in-angular",
+                    "tags": ["environment-variables"]
+                  },
+                  {
+                    "id": "using-tailwind-css-with-angular-projects",
+                    "name": "Using Tailwind CSS with Angular projects",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/using-tailwind-css-with-angular-projects",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/angular/core/recipes/using-tailwind-css-with-angular-projects",
+                    "tags": []
+                  },
+                  {
+                    "id": "module-federation-with-ssr",
+                    "name": "Setup Module Federation with SSR for Angular",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/recipes/module-federation-with-ssr",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/angular/core/recipes/module-federation-with-ssr",
+                    "tags": ["module-federation", "angular"]
+                  },
+                  {
+                    "id": "dynamic-module-federation-with-angular",
+                    "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/recipes/module-federation/dynamic-mfe-angular",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/angular/core/recipes/dynamic-module-federation-with-angular",
+                    "tags": ["module-federation", "angular"]
+                  },
+                  {
+                    "id": "setup-incremental-builds-angular",
+                    "name": "Setup incremental builds for Angular applications",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/setup-incremental-builds-angular",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/angular/core/recipes/setup-incremental-builds-angular",
+                    "tags": []
+                  }
+                ],
                 "isExternal": false,
                 "path": "/technologies/angular/core/recipes",
                 "tags": []
@@ -5904,7 +5620,52 @@
                 "description": "",
                 "mediaImage": "",
                 "file": "",
-                "itemList": [],
+                "itemList": [
+                  {
+                    "id": "getting-started",
+                    "name": "Getting Started with Angular and Rspack",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/angular-rspack/getting-started",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/angular/angular-rspack/recipes/getting-started",
+                    "tags": ["getting-started", "angular", "rspack", "setup"]
+                  },
+                  {
+                    "id": "migrate-from-webpack",
+                    "name": "Migrate from Angular Webpack",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/angular-rspack/migrate-from-webpack",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/angular/angular-rspack/recipes/migrate-from-webpack",
+                    "tags": ["migrate-from-webpack"]
+                  },
+                  {
+                    "id": "handling-configurations",
+                    "name": "Handling Configurations",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/angular-rspack/handling-configurations",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/angular/angular-rspack/recipes/handling-configurations",
+                    "tags": ["handling-configurations", "configurations"]
+                  },
+                  {
+                    "id": "internationalization",
+                    "name": "Internationalization (i18n)",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/angular-rspack/internationalization",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/angular/angular-rspack/recipes/internationalization",
+                    "tags": ["internationalization", "i18n"]
+                  }
+                ],
                 "isExternal": false,
                 "path": "/technologies/angular/angular-rspack/recipes",
                 "tags": []
@@ -5932,28 +5693,6 @@
             "mediaImage": "",
             "file": "",
             "itemList": [
-              {
-                "id": "introduction",
-                "name": "Introduction",
-                "description": "",
-                "mediaImage": "",
-                "file": "shared/guides/angular-rspack/introduction",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/technologies/angular/angular-rsbuild/introduction",
-                "tags": []
-              },
-              {
-                "id": "recipes",
-                "name": "Recipes",
-                "description": "",
-                "mediaImage": "",
-                "file": "",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/technologies/angular/angular-rsbuild/recipes",
-                "tags": []
-              },
               {
                 "id": "api",
                 "name": "API",
@@ -6006,7 +5745,107 @@
                 "description": "",
                 "mediaImage": "",
                 "file": "",
-                "itemList": [],
+                "itemList": [
+                  {
+                    "id": "react-native",
+                    "name": "React Native with Nx",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/react-native",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/react/core/recipes/react-native",
+                    "tags": []
+                  },
+                  {
+                    "id": "remix",
+                    "name": "Remix with Nx",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/remix",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/react/core/recipes/remix",
+                    "tags": []
+                  },
+                  {
+                    "id": "react-router",
+                    "name": "React Router with Nx",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/react-router",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/react/core/recipes/react-router",
+                    "tags": []
+                  },
+                  {
+                    "id": "use-environment-variables-in-react",
+                    "name": "Use Environment Variables in React",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/use-environment-variables-in-react",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/react/core/recipes/use-environment-variables-in-react",
+                    "tags": ["environment-variables"]
+                  },
+                  {
+                    "id": "using-tailwind-css-in-react",
+                    "name": "Using Tailwind CSS in React",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/using-tailwind-css-in-react",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/react/core/recipes/using-tailwind-css-in-react",
+                    "tags": []
+                  },
+                  {
+                    "id": "adding-assets-react",
+                    "name": "Adding Images, Fonts, and Files",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/adding-assets",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/react/core/recipes/adding-assets-react",
+                    "tags": []
+                  },
+                  {
+                    "id": "module-federation-with-ssr",
+                    "name": "Setup Module Federation with SSR for React",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/recipes/module-federation-with-ssr",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/react/core/recipes/module-federation-with-ssr",
+                    "tags": ["module-federation", "react"]
+                  },
+                  {
+                    "id": "deploy-nextjs-to-vercel",
+                    "name": "Deploying Next.js applications to Vercel",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/recipes/deployment/deploy-nextjs-to-vercel",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/react/core/recipes/deploy-nextjs-to-vercel",
+                    "tags": []
+                  },
+                  {
+                    "id": "react-compiler",
+                    "name": "React Compiler with Nx",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/react-compiler",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/react/core/recipes/react-compiler",
+                    "tags": []
+                  }
+                ],
                 "isExternal": false,
                 "path": "/technologies/react/core/recipes",
                 "tags": []
@@ -7196,7 +7035,63 @@
             "description": "",
             "mediaImage": "",
             "file": "",
-            "itemList": [],
+            "itemList": [
+              {
+                "id": "use-environment-variables-in-angular",
+                "name": "Use Environment Variables in Angular",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/use-environment-variables-in-angular",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/angular/core/recipes/use-environment-variables-in-angular",
+                "tags": ["environment-variables"]
+              },
+              {
+                "id": "using-tailwind-css-with-angular-projects",
+                "name": "Using Tailwind CSS with Angular projects",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/using-tailwind-css-with-angular-projects",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/angular/core/recipes/using-tailwind-css-with-angular-projects",
+                "tags": []
+              },
+              {
+                "id": "module-federation-with-ssr",
+                "name": "Setup Module Federation with SSR for Angular",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/recipes/module-federation-with-ssr",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/angular/core/recipes/module-federation-with-ssr",
+                "tags": ["module-federation", "angular"]
+              },
+              {
+                "id": "dynamic-module-federation-with-angular",
+                "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/recipes/module-federation/dynamic-mfe-angular",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/angular/core/recipes/dynamic-module-federation-with-angular",
+                "tags": ["module-federation", "angular"]
+              },
+              {
+                "id": "setup-incremental-builds-angular",
+                "name": "Setup incremental builds for Angular applications",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/setup-incremental-builds-angular",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/angular/core/recipes/setup-incremental-builds-angular",
+                "tags": []
+              }
+            ],
             "isExternal": false,
             "path": "/technologies/angular/core/recipes",
             "tags": []
@@ -7241,7 +7136,52 @@
             "description": "",
             "mediaImage": "",
             "file": "",
-            "itemList": [],
+            "itemList": [
+              {
+                "id": "getting-started",
+                "name": "Getting Started with Angular and Rspack",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/angular-rspack/getting-started",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/angular/angular-rspack/recipes/getting-started",
+                "tags": ["getting-started", "angular", "rspack", "setup"]
+              },
+              {
+                "id": "migrate-from-webpack",
+                "name": "Migrate from Angular Webpack",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/angular-rspack/migrate-from-webpack",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/angular/angular-rspack/recipes/migrate-from-webpack",
+                "tags": ["migrate-from-webpack"]
+              },
+              {
+                "id": "handling-configurations",
+                "name": "Handling Configurations",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/angular-rspack/handling-configurations",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/angular/angular-rspack/recipes/handling-configurations",
+                "tags": ["handling-configurations", "configurations"]
+              },
+              {
+                "id": "internationalization",
+                "name": "Internationalization (i18n)",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/angular-rspack/internationalization",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/angular/angular-rspack/recipes/internationalization",
+                "tags": ["internationalization", "i18n"]
+              }
+            ],
             "isExternal": false,
             "path": "/technologies/angular/angular-rspack/recipes",
             "tags": []
@@ -7269,28 +7209,6 @@
         "mediaImage": "",
         "file": "",
         "itemList": [
-          {
-            "id": "introduction",
-            "name": "Introduction",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/angular-rspack/introduction",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/technologies/angular/angular-rsbuild/introduction",
-            "tags": []
-          },
-          {
-            "id": "recipes",
-            "name": "Recipes",
-            "description": "",
-            "mediaImage": "",
-            "file": "",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/technologies/angular/angular-rsbuild/recipes",
-            "tags": []
-          },
           {
             "id": "api",
             "name": "API",
@@ -7336,7 +7254,63 @@
         "description": "",
         "mediaImage": "",
         "file": "",
-        "itemList": [],
+        "itemList": [
+          {
+            "id": "use-environment-variables-in-angular",
+            "name": "Use Environment Variables in Angular",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/use-environment-variables-in-angular",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/angular/core/recipes/use-environment-variables-in-angular",
+            "tags": ["environment-variables"]
+          },
+          {
+            "id": "using-tailwind-css-with-angular-projects",
+            "name": "Using Tailwind CSS with Angular projects",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/using-tailwind-css-with-angular-projects",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/angular/core/recipes/using-tailwind-css-with-angular-projects",
+            "tags": []
+          },
+          {
+            "id": "module-federation-with-ssr",
+            "name": "Setup Module Federation with SSR for Angular",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/module-federation-with-ssr",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/angular/core/recipes/module-federation-with-ssr",
+            "tags": ["module-federation", "angular"]
+          },
+          {
+            "id": "dynamic-module-federation-with-angular",
+            "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/module-federation/dynamic-mfe-angular",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/angular/core/recipes/dynamic-module-federation-with-angular",
+            "tags": ["module-federation", "angular"]
+          },
+          {
+            "id": "setup-incremental-builds-angular",
+            "name": "Setup incremental builds for Angular applications",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/setup-incremental-builds-angular",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/angular/core/recipes/setup-incremental-builds-angular",
+            "tags": []
+          }
+        ],
         "isExternal": false,
         "path": "/technologies/angular/core/recipes",
         "tags": []
@@ -7374,9 +7348,120 @@
     "description": "",
     "mediaImage": "",
     "file": "",
-    "itemList": [],
+    "itemList": [
+      {
+        "id": "use-environment-variables-in-angular",
+        "name": "Use Environment Variables in Angular",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/use-environment-variables-in-angular",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/angular/core/recipes/use-environment-variables-in-angular",
+        "tags": ["environment-variables"]
+      },
+      {
+        "id": "using-tailwind-css-with-angular-projects",
+        "name": "Using Tailwind CSS with Angular projects",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/using-tailwind-css-with-angular-projects",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/angular/core/recipes/using-tailwind-css-with-angular-projects",
+        "tags": []
+      },
+      {
+        "id": "module-federation-with-ssr",
+        "name": "Setup Module Federation with SSR for Angular",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/module-federation-with-ssr",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/angular/core/recipes/module-federation-with-ssr",
+        "tags": ["module-federation", "angular"]
+      },
+      {
+        "id": "dynamic-module-federation-with-angular",
+        "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/module-federation/dynamic-mfe-angular",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/angular/core/recipes/dynamic-module-federation-with-angular",
+        "tags": ["module-federation", "angular"]
+      },
+      {
+        "id": "setup-incremental-builds-angular",
+        "name": "Setup incremental builds for Angular applications",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/setup-incremental-builds-angular",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/angular/core/recipes/setup-incremental-builds-angular",
+        "tags": []
+      }
+    ],
     "isExternal": false,
     "path": "/technologies/angular/core/recipes",
+    "tags": []
+  },
+  "/technologies/angular/core/recipes/use-environment-variables-in-angular": {
+    "id": "use-environment-variables-in-angular",
+    "name": "Use Environment Variables in Angular",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/use-environment-variables-in-angular",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/angular/core/recipes/use-environment-variables-in-angular",
+    "tags": ["environment-variables"]
+  },
+  "/technologies/angular/core/recipes/using-tailwind-css-with-angular-projects": {
+    "id": "using-tailwind-css-with-angular-projects",
+    "name": "Using Tailwind CSS with Angular projects",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/using-tailwind-css-with-angular-projects",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/angular/core/recipes/using-tailwind-css-with-angular-projects",
+    "tags": []
+  },
+  "/technologies/angular/core/recipes/module-federation-with-ssr": {
+    "id": "module-federation-with-ssr",
+    "name": "Setup Module Federation with SSR for Angular",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/module-federation-with-ssr",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/angular/core/recipes/module-federation-with-ssr",
+    "tags": ["module-federation", "angular"]
+  },
+  "/technologies/angular/core/recipes/dynamic-module-federation-with-angular": {
+    "id": "dynamic-module-federation-with-angular",
+    "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/module-federation/dynamic-mfe-angular",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/angular/core/recipes/dynamic-module-federation-with-angular",
+    "tags": ["module-federation", "angular"]
+  },
+  "/technologies/angular/core/recipes/setup-incremental-builds-angular": {
+    "id": "setup-incremental-builds-angular",
+    "name": "Setup incremental builds for Angular applications",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/setup-incremental-builds-angular",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/angular/core/recipes/setup-incremental-builds-angular",
     "tags": []
   },
   "/technologies/angular/core/api": {
@@ -7414,7 +7499,52 @@
         "description": "",
         "mediaImage": "",
         "file": "",
-        "itemList": [],
+        "itemList": [
+          {
+            "id": "getting-started",
+            "name": "Getting Started with Angular and Rspack",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/angular-rspack/getting-started",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/angular/angular-rspack/recipes/getting-started",
+            "tags": ["getting-started", "angular", "rspack", "setup"]
+          },
+          {
+            "id": "migrate-from-webpack",
+            "name": "Migrate from Angular Webpack",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/angular-rspack/migrate-from-webpack",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/angular/angular-rspack/recipes/migrate-from-webpack",
+            "tags": ["migrate-from-webpack"]
+          },
+          {
+            "id": "handling-configurations",
+            "name": "Handling Configurations",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/angular-rspack/handling-configurations",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/angular/angular-rspack/recipes/handling-configurations",
+            "tags": ["handling-configurations", "configurations"]
+          },
+          {
+            "id": "internationalization",
+            "name": "Internationalization (i18n)",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/angular-rspack/internationalization",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/angular/angular-rspack/recipes/internationalization",
+            "tags": ["internationalization", "i18n"]
+          }
+        ],
         "isExternal": false,
         "path": "/technologies/angular/angular-rspack/recipes",
         "tags": []
@@ -7452,10 +7582,99 @@
     "description": "",
     "mediaImage": "",
     "file": "",
-    "itemList": [],
+    "itemList": [
+      {
+        "id": "getting-started",
+        "name": "Getting Started with Angular and Rspack",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/angular-rspack/getting-started",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/angular/angular-rspack/recipes/getting-started",
+        "tags": ["getting-started", "angular", "rspack", "setup"]
+      },
+      {
+        "id": "migrate-from-webpack",
+        "name": "Migrate from Angular Webpack",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/angular-rspack/migrate-from-webpack",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/angular/angular-rspack/recipes/migrate-from-webpack",
+        "tags": ["migrate-from-webpack"]
+      },
+      {
+        "id": "handling-configurations",
+        "name": "Handling Configurations",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/angular-rspack/handling-configurations",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/angular/angular-rspack/recipes/handling-configurations",
+        "tags": ["handling-configurations", "configurations"]
+      },
+      {
+        "id": "internationalization",
+        "name": "Internationalization (i18n)",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/angular-rspack/internationalization",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/angular/angular-rspack/recipes/internationalization",
+        "tags": ["internationalization", "i18n"]
+      }
+    ],
     "isExternal": false,
     "path": "/technologies/angular/angular-rspack/recipes",
     "tags": []
+  },
+  "/technologies/angular/angular-rspack/recipes/getting-started": {
+    "id": "getting-started",
+    "name": "Getting Started with Angular and Rspack",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/angular-rspack/getting-started",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/angular/angular-rspack/recipes/getting-started",
+    "tags": ["getting-started", "angular", "rspack", "setup"]
+  },
+  "/technologies/angular/angular-rspack/recipes/migrate-from-webpack": {
+    "id": "migrate-from-webpack",
+    "name": "Migrate from Angular Webpack",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/angular-rspack/migrate-from-webpack",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/angular/angular-rspack/recipes/migrate-from-webpack",
+    "tags": ["migrate-from-webpack"]
+  },
+  "/technologies/angular/angular-rspack/recipes/handling-configurations": {
+    "id": "handling-configurations",
+    "name": "Handling Configurations",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/angular-rspack/handling-configurations",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/angular/angular-rspack/recipes/handling-configurations",
+    "tags": ["handling-configurations", "configurations"]
+  },
+  "/technologies/angular/angular-rspack/recipes/internationalization": {
+    "id": "internationalization",
+    "name": "Internationalization (i18n)",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/angular-rspack/internationalization",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/angular/angular-rspack/recipes/internationalization",
+    "tags": ["internationalization", "i18n"]
   },
   "/technologies/angular/angular-rspack/api": {
     "id": "api",
@@ -7476,28 +7695,6 @@
     "file": "",
     "itemList": [
       {
-        "id": "introduction",
-        "name": "Introduction",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/angular-rspack/introduction",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/angular/angular-rsbuild/introduction",
-        "tags": []
-      },
-      {
-        "id": "recipes",
-        "name": "Recipes",
-        "description": "",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/angular/angular-rsbuild/recipes",
-        "tags": []
-      },
-      {
         "id": "api",
         "name": "API",
         "description": "",
@@ -7511,28 +7708,6 @@
     ],
     "isExternal": false,
     "path": "/technologies/angular/angular-rsbuild",
-    "tags": []
-  },
-  "/technologies/angular/angular-rsbuild/introduction": {
-    "id": "introduction",
-    "name": "Introduction",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/angular-rspack/introduction",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/technologies/angular/angular-rsbuild/introduction",
-    "tags": []
-  },
-  "/technologies/angular/angular-rsbuild/recipes": {
-    "id": "recipes",
-    "name": "Recipes",
-    "description": "",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/technologies/angular/angular-rsbuild/recipes",
     "tags": []
   },
   "/technologies/angular/angular-rsbuild/api": {
@@ -7577,7 +7752,107 @@
             "description": "",
             "mediaImage": "",
             "file": "",
-            "itemList": [],
+            "itemList": [
+              {
+                "id": "react-native",
+                "name": "React Native with Nx",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/react-native",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/react/core/recipes/react-native",
+                "tags": []
+              },
+              {
+                "id": "remix",
+                "name": "Remix with Nx",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/remix",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/react/core/recipes/remix",
+                "tags": []
+              },
+              {
+                "id": "react-router",
+                "name": "React Router with Nx",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/react-router",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/react/core/recipes/react-router",
+                "tags": []
+              },
+              {
+                "id": "use-environment-variables-in-react",
+                "name": "Use Environment Variables in React",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/use-environment-variables-in-react",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/react/core/recipes/use-environment-variables-in-react",
+                "tags": ["environment-variables"]
+              },
+              {
+                "id": "using-tailwind-css-in-react",
+                "name": "Using Tailwind CSS in React",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/using-tailwind-css-in-react",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/react/core/recipes/using-tailwind-css-in-react",
+                "tags": []
+              },
+              {
+                "id": "adding-assets-react",
+                "name": "Adding Images, Fonts, and Files",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/adding-assets",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/react/core/recipes/adding-assets-react",
+                "tags": []
+              },
+              {
+                "id": "module-federation-with-ssr",
+                "name": "Setup Module Federation with SSR for React",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/recipes/module-federation-with-ssr",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/react/core/recipes/module-federation-with-ssr",
+                "tags": ["module-federation", "react"]
+              },
+              {
+                "id": "deploy-nextjs-to-vercel",
+                "name": "Deploying Next.js applications to Vercel",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/recipes/deployment/deploy-nextjs-to-vercel",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/react/core/recipes/deploy-nextjs-to-vercel",
+                "tags": []
+              },
+              {
+                "id": "react-compiler",
+                "name": "React Compiler with Nx",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/react-compiler",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/react/core/recipes/react-compiler",
+                "tags": []
+              }
+            ],
             "isExternal": false,
             "path": "/technologies/react/core/recipes",
             "tags": []
@@ -7717,7 +7992,107 @@
         "description": "",
         "mediaImage": "",
         "file": "",
-        "itemList": [],
+        "itemList": [
+          {
+            "id": "react-native",
+            "name": "React Native with Nx",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/react-native",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/react/core/recipes/react-native",
+            "tags": []
+          },
+          {
+            "id": "remix",
+            "name": "Remix with Nx",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/remix",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/react/core/recipes/remix",
+            "tags": []
+          },
+          {
+            "id": "react-router",
+            "name": "React Router with Nx",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/react-router",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/react/core/recipes/react-router",
+            "tags": []
+          },
+          {
+            "id": "use-environment-variables-in-react",
+            "name": "Use Environment Variables in React",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/use-environment-variables-in-react",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/react/core/recipes/use-environment-variables-in-react",
+            "tags": ["environment-variables"]
+          },
+          {
+            "id": "using-tailwind-css-in-react",
+            "name": "Using Tailwind CSS in React",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/using-tailwind-css-in-react",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/react/core/recipes/using-tailwind-css-in-react",
+            "tags": []
+          },
+          {
+            "id": "adding-assets-react",
+            "name": "Adding Images, Fonts, and Files",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/adding-assets",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/react/core/recipes/adding-assets-react",
+            "tags": []
+          },
+          {
+            "id": "module-federation-with-ssr",
+            "name": "Setup Module Federation with SSR for React",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/module-federation-with-ssr",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/react/core/recipes/module-federation-with-ssr",
+            "tags": ["module-federation", "react"]
+          },
+          {
+            "id": "deploy-nextjs-to-vercel",
+            "name": "Deploying Next.js applications to Vercel",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/deployment/deploy-nextjs-to-vercel",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/react/core/recipes/deploy-nextjs-to-vercel",
+            "tags": []
+          },
+          {
+            "id": "react-compiler",
+            "name": "React Compiler with Nx",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/react-compiler",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/react/core/recipes/react-compiler",
+            "tags": []
+          }
+        ],
         "isExternal": false,
         "path": "/technologies/react/core/recipes",
         "tags": []
@@ -7755,9 +8130,208 @@
     "description": "",
     "mediaImage": "",
     "file": "",
-    "itemList": [],
+    "itemList": [
+      {
+        "id": "react-native",
+        "name": "React Native with Nx",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/react-native",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/react/core/recipes/react-native",
+        "tags": []
+      },
+      {
+        "id": "remix",
+        "name": "Remix with Nx",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/remix",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/react/core/recipes/remix",
+        "tags": []
+      },
+      {
+        "id": "react-router",
+        "name": "React Router with Nx",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/react-router",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/react/core/recipes/react-router",
+        "tags": []
+      },
+      {
+        "id": "use-environment-variables-in-react",
+        "name": "Use Environment Variables in React",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/use-environment-variables-in-react",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/react/core/recipes/use-environment-variables-in-react",
+        "tags": ["environment-variables"]
+      },
+      {
+        "id": "using-tailwind-css-in-react",
+        "name": "Using Tailwind CSS in React",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/using-tailwind-css-in-react",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/react/core/recipes/using-tailwind-css-in-react",
+        "tags": []
+      },
+      {
+        "id": "adding-assets-react",
+        "name": "Adding Images, Fonts, and Files",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/adding-assets",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/react/core/recipes/adding-assets-react",
+        "tags": []
+      },
+      {
+        "id": "module-federation-with-ssr",
+        "name": "Setup Module Federation with SSR for React",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/module-federation-with-ssr",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/react/core/recipes/module-federation-with-ssr",
+        "tags": ["module-federation", "react"]
+      },
+      {
+        "id": "deploy-nextjs-to-vercel",
+        "name": "Deploying Next.js applications to Vercel",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/deployment/deploy-nextjs-to-vercel",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/react/core/recipes/deploy-nextjs-to-vercel",
+        "tags": []
+      },
+      {
+        "id": "react-compiler",
+        "name": "React Compiler with Nx",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/react-compiler",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/react/core/recipes/react-compiler",
+        "tags": []
+      }
+    ],
     "isExternal": false,
     "path": "/technologies/react/core/recipes",
+    "tags": []
+  },
+  "/technologies/react/core/recipes/react-native": {
+    "id": "react-native",
+    "name": "React Native with Nx",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/react-native",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/react/core/recipes/react-native",
+    "tags": []
+  },
+  "/technologies/react/core/recipes/remix": {
+    "id": "remix",
+    "name": "Remix with Nx",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/remix",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/react/core/recipes/remix",
+    "tags": []
+  },
+  "/technologies/react/core/recipes/react-router": {
+    "id": "react-router",
+    "name": "React Router with Nx",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/react-router",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/react/core/recipes/react-router",
+    "tags": []
+  },
+  "/technologies/react/core/recipes/use-environment-variables-in-react": {
+    "id": "use-environment-variables-in-react",
+    "name": "Use Environment Variables in React",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/use-environment-variables-in-react",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/react/core/recipes/use-environment-variables-in-react",
+    "tags": ["environment-variables"]
+  },
+  "/technologies/react/core/recipes/using-tailwind-css-in-react": {
+    "id": "using-tailwind-css-in-react",
+    "name": "Using Tailwind CSS in React",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/using-tailwind-css-in-react",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/react/core/recipes/using-tailwind-css-in-react",
+    "tags": []
+  },
+  "/technologies/react/core/recipes/adding-assets-react": {
+    "id": "adding-assets-react",
+    "name": "Adding Images, Fonts, and Files",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/adding-assets",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/react/core/recipes/adding-assets-react",
+    "tags": []
+  },
+  "/technologies/react/core/recipes/module-federation-with-ssr": {
+    "id": "module-federation-with-ssr",
+    "name": "Setup Module Federation with SSR for React",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/module-federation-with-ssr",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/react/core/recipes/module-federation-with-ssr",
+    "tags": ["module-federation", "react"]
+  },
+  "/technologies/react/core/recipes/deploy-nextjs-to-vercel": {
+    "id": "deploy-nextjs-to-vercel",
+    "name": "Deploying Next.js applications to Vercel",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/deployment/deploy-nextjs-to-vercel",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/react/core/recipes/deploy-nextjs-to-vercel",
+    "tags": []
+  },
+  "/technologies/react/core/recipes/react-compiler": {
+    "id": "react-compiler",
+    "name": "React Compiler with Nx",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/react-compiler",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/react/core/recipes/react-compiler",
     "tags": []
   },
   "/technologies/react/core/api": {
