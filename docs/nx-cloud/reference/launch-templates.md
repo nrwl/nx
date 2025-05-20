@@ -578,12 +578,12 @@ If you're trying to install a package that isn't available on `apt`, check that 
 
 ## AWS CLI
 
-First, define the environment variables on your main agent, where you call [`nx-cloud start-ci-run`](/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun). And pass the same environment variables to your agents via the [`--with-env-vars` flag](/ci/reference/nx-cloud-cli#withenvvars-nx-agents-only).
+First, define the environment variables on your main agent, where you call [`nx-cloud start-ci-run`](/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun). Pass the same environment variables to your agents via the [`--with-env-vars` flag](/ci/reference/nx-cloud-cli#withenvvars-nx-agents-only).
 
 Minimally the `AWS_REGION` (or `AWS_DEFAULT_REGION`), `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY` environment variables are required.
 
 {% callout type="check" title="OIDC Provider" %}
-If using an [OIDC provider](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html), i.e. the [AWS GitHub Action recommended setup](https://github.com/aws-actions/configure-aws-credentials?tab=readme-ov-file#using-this-action), then the environment variables are automatically configured for you after authentication to AWS. Since the credentials created for with OIDC provider flow are temporary, you'll need to pass the `AWS_SESSION_TOKEN` environment variable to your agents.
+If using an [OIDC provider](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html), e.g. the [AWS GitHub Action recommended setup](https://github.com/aws-actions/configure-aws-credentials?tab=readme-ov-file#using-this-action), then the environment variables are automatically configured for you after authentication to AWS. Since the credentials created for with OIDC provider flow are temporary, you'll need to pass the `AWS_SESSION_TOKEN` environment variable to your agents.
 
 {% /callout %}
 
