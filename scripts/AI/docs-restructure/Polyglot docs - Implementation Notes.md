@@ -22,7 +22,7 @@ Should have the following structure:
 │   ├── Introduction
 │   ├── Quick Start
 │   ├── Installation
-│   ├── Editor Setup
+│   ├── Editor Integration
 │   └── How Nx works
 ```
 

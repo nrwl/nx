@@ -3,21 +3,40 @@ description:
 globs: 
 alwaysApply: true
 ---
-## Nx Documentation Overview
+- **Nx Monorepo Structure**
+  - This is the monorepo where Nx itself is developed.
+  - Key folders and files:
+    - `docs/`: Contains all documentation content in markdown format.
+      - Subfolders: `block/`, `changelog/`, `video-courses/`, `external-generated/`, `generated/`, `nx-cloud/`, `shared/`.
+      - These subfolders are where the documentation is actively developed as markdown files.
+    - `map.json`: Defines the navigation structure for the documentation. All documentation files are linked here and parsed by the main application.
+    - `nx-dev/`: Contains the main Next.js-based application that serves the Nx documentation.
+      - Inside `nx-dev/`, there is another `nx-dev/` folder which contains the Next.js app itself.
+      - The markdown files from `docs/` are copied into `nx-dev/nx-dev/public/documentation/` for serving.
 
-The main application is a Next.js based application living under `nx-dev/nx-dev`. Look at the `nx-dev/nx-dev/pages` folder in particular to understand the routing structure of the Next application. It leverages packages from other libraries in `nx-dev/` such as `nx-dev/data-access-documents` or `nx-dev/data-access-menu` etc.
+- **Documentation Content and Navigation**
+  - All markdown content is written in `docs/` and its subfolders.
+  - The [map.json](mdc:docs/map.json) file is the source of truth for the navigation structure; every documentation file must be linked here.
+  - The Next.js app parses [map.json](mdc:docs/map.json) to build the navigation and routing for the documentation site. You can find more info also in the [menu.utils.ts](mdc:nx-dev/data-access-menu/src/lib/menu.utils.ts) file.
+   - consult the [nx-docs-structure.mdc](mdc:.cursor/rules/nx-docs-structure.mdc) for more documentation and content related information
 
-### Navigation structure
 
-The navigation structure is given by the route-based navigation of the main Next.js app living in `nx.dev/nx-dev/pages` and `nx-dev/nx-dev/app`. In addition, paths that map to the documentation content file are defined in [map.json](mdc:docs/map.json).
 
-**When updating the navigation structure (e.g. changing `map.json` within the `nx-documentation` node), you must also update [redirect-rules.js](mdc:nx-dev/nx-dev/redirect-rules.js) and [menu.utils.ts](mdc:nx-dev/data-access-menu/src/lib/menu.utils.ts) as an integral part of the change.**
-- This ensures correct navigation, avoids broken links, and preserves SEO.
-- Updates to these files are not separate tasks, but must always be performed together with any navigation change in `map.json`.
-- See the implementation plan in [DOCS_RESTRUCTURE_TASKS.md](mdc:scripts/AI/docs-restructure/DOCS_RESTRUCTURE_TASKS.md) for more details.
+- **Next.js Application Structure**
+  - The main application lives in `nx-dev/nx-dev`.
+  - Routing is defined in the `pages/` folder (Next.js pages router) and the `app/` folder (Next.js app router).
+  - The app leverages internal packages from within `nx-dev/`, such as `ui-animations`, `data-access-courses`, `data-access-documents`, `data-access-menu`, etc., for reusable logic and UI components.
+  - All documentation markdown is copied to `nx-dev/nx-dev/public/documentation/` and served from there. You can see a `copy-docs` target in the [project.json](mdc:nx-dev/nx-dev/project.json) 
 
-### Documentation content
+- **Required Updates When Changing Navigation**
+  - When updating the navigation structure (e.g., changing `map.json`), you must also update:
+    - [redirect-rules.js](mdc:nx-dev/nx-dev/redirect-rules.js)
+    - [menu.utils.ts](mdc:nx-dev/data-access-menu/src/lib/menu.utils.ts)
+  - This ensures correct navigation, avoids broken links, and preserves SEO.
+  - Updates to these files are not separate tasks, but must always be performed together with any navigation change in `map.json`.
+  - See [DOCS_RESTRUCTURE_TASKS.md](mdc:scripts/AI/docs-restructure/DOCS_RESTRUCTURE_TASKS.md) for more details.
 
-The actual documentation is written in markdown in "docs/".
-
-It is being copied to `nx-dev/nx-dev/public/documentation` by the `copy-docs` task defined in [project.json](mdc:nx-dev/nx-dev/project.json).
+- **Best Practices**
+  - Reference actual code and folder structure when documenting or updating rules.
+  - Keep this rule up to date as the monorepo structure evolves.
+  - For special elements in documentation (tabs, callouts, buttons), consult [README.md](mdc:docs/README.md).

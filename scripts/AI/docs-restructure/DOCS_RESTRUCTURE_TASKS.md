@@ -10,6 +10,7 @@ This file tracks the progress of the MVP documentation restructure as described 
 
 ## Future Tasks
 
+- [ ] Refactor "Getting Started" section: Introduction, Quick Start, Installation, Editor Integration (rename from "Editor Setup" everywhere except URL), How Nx Works
 - [ ] Create "Technologies" section in sidebar and docs structure
 - [ ] Audit all technologies: Ensure every technology listed in the implementation plan is present in the sidebar and docs structure
 - [ ] Move technology-specific recipes from global "Recipes" to their respective technology section
@@ -24,7 +25,6 @@ This file tracks the progress of the MVP documentation restructure as described 
 - [ ] End-to-end QA: manual and automated tests for navigation, sidebar, and content
 - [ ] Update or create contributor documentation describing the new structure, how to add technologies/recipes, and sidebar maintenance
 - [ ] QA and release
-- [ ] Refactor "Getting Started" section: Introduction, Quick Start, Installation, Editor Setup (rename to "Editor Integration" everywhere except URL), How Nx Works
 
 ## Implementation Plan
 
@@ -50,7 +50,7 @@ This file tracks the progress of the MVP documentation restructure as described 
 - scripts/AI/docs-restructure/TASKS.md – This task list
 - docs/shared/getting-started/intro.md – "Getting Started" content
 - docs/shared/getting-started/installation.md – Installation content
-- docs/shared/getting-started/editor-setup.md – Editor setup content
+- docs/shared/getting-started/editor-setup.md – Editor integration content
 - docs/redirect-rules.js – Redirect rules for navigation
 - nx-dev/data-access-menu/src/lib/menu.utils.ts – Menu utility logic
 - CONTRIBUTING.md or similar – Contributor documentation
