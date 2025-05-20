@@ -10,6 +10,12 @@ export interface NxPlaywrightOptions {
    * @default './src'
    **/
   testDir?: string;
+
+  /**
+   * Open the html report after the test run.
+   * @default 'on-failure'
+   */
+  openHtmlReport?: 'always' | 'never' | 'on-failure';
 }
 
 /**
@@ -70,6 +76,7 @@ export function nxE2EPreset(
         'html',
         {
           outputFolder: reporterOutputDir,
+          open: options.openHtmlReport,
         },
       ],
     ],
