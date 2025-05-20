@@ -13,6 +13,7 @@ export function getBasicNxSection(items: MenuItem[]): MenuSection {
           m.id === 'getting-started' ||
           m.id === 'features' ||
           m.id === 'concepts' ||
+          m.id === 'technologies' ||
           m.id === 'recipes' ||
           m.id === 'nx-enterprise' ||
           m.id === 'showcase' ||

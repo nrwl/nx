@@ -1165,6 +1165,618 @@
           ]
         },
         {
+          "name": "Technologies",
+          "id": "technologies",
+          "description": "Guides and API references for all supported technologies.",
+          "itemList": [
+            {
+              "name": "TypeScript",
+              "id": "typescript",
+              "itemList": [
+                {
+                  "name": "Introduction",
+                  "id": "introduction",
+                  "file": "shared/packages/js/js-plugin"
+                },
+                {
+                  "name": "Recipes",
+                  "id": "recipes",
+                  "itemList": []
+                },
+                {
+                  "name": "API",
+                  "id": "api",
+                  "file": "shared/packages/js/js-plugin"
+                }
+              ]
+            },
+            {
+              "name": "Angular",
+              "id": "angular",
+              "itemList": [
+                {
+                  "name": "Core",
+                  "id": "core",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/angular/angular-plugin"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/angular/angular-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "Angular Rspack",
+                  "id": "angular-rspack",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/guides/angular-rspack/introduction"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-config"
+                    }
+                  ]
+                },
+                {
+                  "name": "Angular Rsbuild",
+                  "id": "angular-rsbuild",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/guides/angular-rspack/introduction"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-config"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "React",
+              "id": "react",
+              "itemList": [
+                {
+                  "name": "Core",
+                  "id": "core",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/react/react-plugin"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/react/react-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "Next",
+                  "id": "next",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/next/plugin-overview"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/next/plugin-overview"
+                    }
+                  ]
+                },
+                {
+                  "name": "Remix",
+                  "id": "remix",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/remix/remix-plugin"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/remix/remix-plugin"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Vue",
+              "id": "vue",
+              "itemList": [
+                {
+                  "name": "Core",
+                  "id": "core",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/vue/vue-plugin"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/vue/vue-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "Nuxt",
+                  "id": "nuxt",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/nuxt/nuxt-plugin"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/nuxt/nuxt-plugin"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Node.js",
+              "id": "nodejs",
+              "itemList": [
+                {
+                  "name": "Core",
+                  "id": "core",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/node/node-plugin"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/node/node-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "Express",
+                  "id": "express",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/express/express-plugin"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/express/express-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "Nest",
+                  "id": "nest",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/nest/nest-plugin"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/nest/nest-plugin"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Java",
+              "id": "java",
+              "itemList": [
+                {
+                  "name": "Introduction",
+                  "id": "introduction",
+                  "file": "shared/packages/gradle/gradle-plugin"
+                },
+                {
+                  "name": "Recipes",
+                  "id": "recipes",
+                  "itemList": []
+                },
+                {
+                  "name": "API",
+                  "id": "api",
+                  "file": "shared/packages/gradle/gradle-plugin"
+                }
+              ]
+            },
+            {
+              "name": "Build Tools",
+              "id": "build-tools",
+              "itemList": [
+                {
+                  "name": "Webpack",
+                  "id": "webpack",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/webpack/plugin-overview"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/webpack/plugin-overview"
+                    }
+                  ]
+                },
+                {
+                  "name": "Vite",
+                  "id": "vite",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/vite/vite-plugin"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/vite/vite-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "Rollup",
+                  "id": "rollup",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api"
+                    }
+                  ]
+                },
+                {
+                  "name": "ESBuild",
+                  "id": "esbuild",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/esbuild/esbuild-plugin"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/esbuild/esbuild-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "Rspack",
+                  "id": "rspack",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/rspack/rspack-plugin"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/rspack/rspack-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "Module Federation",
+                  "id": "module-federation",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/module-federation/nx-module-federation-plugin"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/module-federation/nx-module-federation-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "Rsbuild",
+                  "id": "rsbuild",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Testing Tools",
+              "id": "testing-tools",
+              "itemList": [
+                {
+                  "name": "Cypress",
+                  "id": "cypress",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/cypress/cypress-plugin"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/cypress/cypress-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "Jest",
+                  "id": "jest",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/jest/jest-plugin"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/jest/jest-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "Playwright",
+                  "id": "playwright",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/playwright/playwright-plugin"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/playwright/playwright-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "Storybook",
+                  "id": "storybook",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/storybook/plugin-overview"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/storybook/plugin-overview"
+                    }
+                  ]
+                },
+                {
+                  "name": "Detox",
+                  "id": "detox",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/detox/detox-plugin"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/detox/detox-plugin"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Mobile",
+              "id": "mobile",
+              "itemList": [
+                {
+                  "name": "React Native",
+                  "id": "react-native",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/react-native/react-native-plugin"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/react-native/react-native-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "Expo",
+                  "id": "expo",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "file": "shared/packages/expo/expo-plugin"
+                    },
+                    {
+                      "name": "Recipes",
+                      "id": "recipes",
+                      "itemList": []
+                    },
+                    {
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/expo/expo-plugin"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
           "name": "Enterprise",
           "id": "nx-enterprise",
           "description": "Enterprise solutions for the Nx CLI",
