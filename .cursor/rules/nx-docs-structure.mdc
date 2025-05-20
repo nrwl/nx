@@ -18,10 +18,43 @@ alwaysApply: false
     - See Also
   - Each section can contain nested `itemList` arrays for sub-navigation.
 
+- **Technology Documentation Structure Pattern**
+  - The Technologies section follows a consistent nested structure:
+    - Technology (e.g., React, Angular) → Framework (Core/Next/etc.) → Section (Introduction/Recipes/API)
+  - Each technology maintains this three-level pattern consistently
+  - Technologies section organization:
+    ```
+    Technologies/
+    ├── Technology Name (React, Angular, etc.)
+    │   ├── Framework Variant (Core, Next, Remix, etc.)
+    │   │   ├── Introduction
+    │   │   ├── Recipes
+    │   │   └── API
+    │   └── ...
+    └── ...
+    ```
+  - All technology subsections maintain Introduction → Recipes → API structure
+  - Empty sections (like `"itemList": []`) are placeholders for future content
+
+- **Recipe Organization Hierarchy**
+  - Recipes can exist in two places:
+    - Main Recipes section (top-level categorization by technology)
+    - Within each technology's dedicated section (more contextual placement)
+  - The main Recipes section is organized by technology and general categories
+  - Technology-specific recipes in the Technologies section provide more context-specific organization
+
 - **API References and Packages**
   - The `additional-api-references` section lists main Nx-related packages, each as a top-level entry:
     - nx, workspace, plugin, devkit, js, web, esbuild, vite, vue, nuxt, webpack, angular, angular-rspack, angular-rsbuild, react, jest, cypress, playwright, storybook, eslint, eslint-plugin, node, express, nest, next, remix, rspack, detox, react native, expo, owners, conformance, azure-cache, gcs-cache, s3-cache, shared-fs-cache, gradle, Module Federation
   - Each package can have its own nested documentation structure.
+
+- **File Path Patterns**
+  - Content files follow consistent path patterns:
+    - `shared/guides/*` - General guides and how-tos
+    - `shared/packages/*` - Package-specific documentation
+    - `shared/recipes/*` - Specific task-oriented recipes
+  - The same content file can be referenced from multiple places in the navigation
+  - This allows for strategic content placement without duplication
 
 - **Restructuring Guidance**
   - When restructuring ensure all navigation changes in [map.json](mdc:docs/map.json) are reflected in the Next.js app and related files as per [workspace-architecture](mdc:.cursor/rules/workspace-architecture.mdc).
