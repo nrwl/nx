@@ -290,8 +290,11 @@ export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
       projectRoots.map((r, i) => [r, hashes[i]])
     );
     try {
+      if (eslintConfigFiles.length === 0) {
+        return [];
+      }
       const ESLint = await resolveESLintClass({
-        useFlatConfigOverrideVal: isFlatConfig(configFiles[0]),
+        useFlatConfigOverrideVal: isFlatConfig(eslintConfigFiles[0]),
       });
       return await createNodesFromFiles(
         (configFile, options, context) =>
