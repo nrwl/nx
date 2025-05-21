@@ -4,7 +4,8 @@ import { DevRemoteFindOptions } from '../models';
 
 export async function getStaticRemotes(
   remotesConfig: Record<string, StaticRemoteConfig>,
-  devRemoteFindOptions?: DevRemoteFindOptions
+  devRemoteFindOptions?: DevRemoteFindOptions,
+  host: string = '127.0.0.1'
 ) {
   const remotes = Object.keys(remotesConfig);
   const findStaticRemotesPromises: Promise<string | undefined>[] = [];
@@ -14,6 +15,7 @@ export async function getStaticRemotes(
         waitForPortOpen(remotesConfig[remote].port, {
           retries: devRemoteFindOptions?.retries ?? 3,
           retryDelay: devRemoteFindOptions?.retryDelay ?? 1000,
+          host,
         }).then(
           (res) => {
             resolve(undefined);
