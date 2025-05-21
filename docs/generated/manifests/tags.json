@@ -963,7 +963,7 @@
       "file": "shared/migration/migration-angular",
       "id": "angular",
       "name": "Migrating from Angular CLI",
-      "path": "/technologies/angular/core/migration/angular"
+      "path": "/technologies/angular/migration/angular"
     },
     {
       "description": "",
@@ -1046,14 +1046,14 @@
       "file": "shared/guides/use-environment-variables-in-angular",
       "id": "use-environment-variables-in-angular",
       "name": "Use Environment Variables in Angular",
-      "path": "/technologies/angular/core/recipes/use-environment-variables-in-angular"
+      "path": "/technologies/angular/recipes/use-environment-variables-in-angular"
     },
     {
       "description": "",
       "file": "shared/guides/use-environment-variables-in-react",
       "id": "use-environment-variables-in-react",
       "name": "Use Environment Variables in React",
-      "path": "/technologies/react/core/recipes/use-environment-variables-in-react"
+      "path": "/technologies/react/recipes/use-environment-variables-in-react"
     },
     {
       "description": "",
@@ -1094,21 +1094,21 @@
       "file": "shared/recipes/module-federation-with-ssr",
       "id": "module-federation-with-ssr",
       "name": "Setup Module Federation with SSR for Angular",
-      "path": "/technologies/angular/core/recipes/module-federation-with-ssr"
+      "path": "/technologies/angular/recipes/module-federation-with-ssr"
     },
     {
       "description": "",
       "file": "shared/recipes/module-federation/dynamic-mfe-angular",
       "id": "dynamic-module-federation-with-angular",
       "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-      "path": "/technologies/angular/core/recipes/dynamic-module-federation-with-angular"
+      "path": "/technologies/angular/recipes/dynamic-module-federation-with-angular"
     },
     {
       "description": "",
       "file": "shared/recipes/module-federation-with-ssr",
       "id": "module-federation-with-ssr",
       "name": "Setup Module Federation with SSR for React",
-      "path": "/technologies/react/core/recipes/module-federation-with-ssr"
+      "path": "/technologies/react/recipes/module-federation-with-ssr"
     },
     {
       "description": "",
@@ -1138,14 +1138,14 @@
       "file": "shared/recipes/module-federation-with-ssr",
       "id": "module-federation-with-ssr",
       "name": "Setup Module Federation with SSR for Angular",
-      "path": "/technologies/angular/core/recipes/module-federation-with-ssr"
+      "path": "/technologies/angular/recipes/module-federation-with-ssr"
     },
     {
       "description": "",
       "file": "shared/recipes/module-federation/dynamic-mfe-angular",
       "id": "dynamic-module-federation-with-angular",
       "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-      "path": "/technologies/angular/core/recipes/dynamic-module-federation-with-angular"
+      "path": "/technologies/angular/recipes/dynamic-module-federation-with-angular"
     },
     {
       "description": "",
@@ -1254,7 +1254,7 @@
       "file": "shared/recipes/module-federation-with-ssr",
       "id": "module-federation-with-ssr",
       "name": "Setup Module Federation with SSR for React",
-      "path": "/technologies/react/core/recipes/module-federation-with-ssr"
+      "path": "/technologies/react/recipes/module-federation-with-ssr"
     },
     {
       "description": "",
@@ -1284,21 +1284,21 @@
       "file": "shared/recipes/deployment/node-server-fly-io",
       "id": "node-server-fly-io",
       "name": "Deploying a Node App to Fly.io",
-      "path": "/technologies/nodejs/core/recipes/node-server-fly-io"
+      "path": "/technologies/nodejs/recipes/node-server-fly-io"
     },
     {
       "description": "",
       "file": "shared/recipes/deployment/node-serverless-functions-netlify",
       "id": "node-serverless-functions-netlify",
       "name": "Add and Deploy Netlify Edge Functions with Node",
-      "path": "/technologies/nodejs/core/recipes/node-serverless-functions-netlify"
+      "path": "/technologies/nodejs/recipes/node-serverless-functions-netlify"
     },
     {
       "description": "",
       "file": "shared/recipes/deployment/node-aws-lambda",
       "id": "node-aws-lambda",
       "name": "Deploying AWS lambda in Node.js (deprecated)",
-      "path": "/technologies/nodejs/core/recipes/node-aws-lambda"
+      "path": "/technologies/nodejs/recipes/node-aws-lambda"
     }
   ],
   "node": [
@@ -1307,28 +1307,28 @@
       "file": "shared/recipes/deployment/node-server-fly-io",
       "id": "node-server-fly-io",
       "name": "Deploying a Node App to Fly.io",
-      "path": "/technologies/nodejs/core/recipes/node-server-fly-io"
+      "path": "/technologies/nodejs/recipes/node-server-fly-io"
     },
     {
       "description": "",
       "file": "shared/recipes/deployment/node-serverless-functions-netlify",
       "id": "node-serverless-functions-netlify",
       "name": "Add and Deploy Netlify Edge Functions with Node",
-      "path": "/technologies/nodejs/core/recipes/node-serverless-functions-netlify"
+      "path": "/technologies/nodejs/recipes/node-serverless-functions-netlify"
     },
     {
       "description": "",
       "file": "shared/recipes/deployment/node-aws-lambda",
       "id": "node-aws-lambda",
       "name": "Deploying AWS lambda in Node.js (deprecated)",
-      "path": "/technologies/nodejs/core/recipes/node-aws-lambda"
+      "path": "/technologies/nodejs/recipes/node-aws-lambda"
     },
     {
       "description": "",
       "file": "shared/recipes/node/application-proxies",
       "id": "application-proxies",
       "name": "Set Up Application Proxies",
-      "path": "/technologies/nodejs/core/recipes/application-proxies"
+      "path": "/technologies/nodejs/recipes/application-proxies"
     },
     {
       "description": "",

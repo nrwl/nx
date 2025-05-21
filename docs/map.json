@@ -640,71 +640,65 @@
               "id": "angular",
               "itemList": [
                 {
-                  "name": "Core",
-                  "id": "core",
+                  "name": "Introduction",
+                  "id": "introduction",
+                  "file": "shared/packages/angular/angular-plugin"
+                },
+                {
+                  "name": "Migration",
+                  "id": "migration",
                   "itemList": [
                     {
-                      "name": "Introduction",
-                      "id": "introduction",
-                      "file": "shared/packages/angular/angular-plugin"
+                      "name": "Migrating from Angular CLI",
+                      "id": "angular",
+                      "tags": ["init"],
+                      "file": "shared/migration/migration-angular"
                     },
                     {
-                      "name": "Migration",
-                      "id": "migration",
-                      "itemList": [
-                        {
-                          "name": "Migrating from Angular CLI",
-                          "id": "angular",
-                          "tags": ["init"],
-                          "file": "shared/migration/migration-angular"
-                        },
-                        {
-                          "name": "Migrating From Multiple Angular CLI Repos",
-                          "id": "angular-multiple",
-                          "file": "shared/migration/angular-multiple"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "Recipes",
-                      "id": "recipes",
-                      "itemList": [
-                        {
-                          "name": "Use Environment Variables in Angular",
-                          "id": "use-environment-variables-in-angular",
-                          "tags": ["environment-variables"],
-                          "file": "shared/guides/use-environment-variables-in-angular"
-                        },
-                        {
-                          "name": "Using Tailwind CSS with Angular projects",
-                          "id": "using-tailwind-css-with-angular-projects",
-                          "file": "shared/guides/using-tailwind-css-with-angular-projects"
-                        },
-                        {
-                          "name": "Setup Module Federation with SSR for Angular",
-                          "id": "module-federation-with-ssr",
-                          "tags": ["module-federation", "angular"],
-                          "file": "shared/recipes/module-federation-with-ssr"
-                        },
-                        {
-                          "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-                          "id": "dynamic-module-federation-with-angular",
-                          "tags": ["module-federation", "angular"],
-                          "file": "shared/recipes/module-federation/dynamic-mfe-angular"
-                        },
-                        {
-                          "name": "Setup incremental builds for Angular applications",
-                          "id": "setup-incremental-builds-angular",
-                          "file": "shared/guides/setup-incremental-builds-angular"
-                        }
-                      ]
-                    },
-                    {
-                      "name": "API",
-                      "id": "api",
-                      "file": "shared/packages/angular/angular-plugin"
+                      "name": "Migrating From Multiple Angular CLI Repos",
+                      "id": "angular-multiple",
+                      "file": "shared/migration/angular-multiple"
                     }
                   ]
+                },
+                {
+                  "name": "Recipes",
+                  "id": "recipes",
+                  "itemList": [
+                    {
+                      "name": "Use Environment Variables in Angular",
+                      "id": "use-environment-variables-in-angular",
+                      "tags": ["environment-variables"],
+                      "file": "shared/guides/use-environment-variables-in-angular"
+                    },
+                    {
+                      "name": "Using Tailwind CSS with Angular projects",
+                      "id": "using-tailwind-css-with-angular-projects",
+                      "file": "shared/guides/using-tailwind-css-with-angular-projects"
+                    },
+                    {
+                      "name": "Setup Module Federation with SSR for Angular",
+                      "id": "module-federation-with-ssr",
+                      "tags": ["module-federation", "angular"],
+                      "file": "shared/recipes/module-federation-with-ssr"
+                    },
+                    {
+                      "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+                      "id": "dynamic-module-federation-with-angular",
+                      "tags": ["module-federation", "angular"],
+                      "file": "shared/recipes/module-federation/dynamic-mfe-angular"
+                    },
+                    {
+                      "name": "Setup incremental builds for Angular applications",
+                      "id": "setup-incremental-builds-angular",
+                      "file": "shared/guides/setup-incremental-builds-angular"
+                    }
+                  ]
+                },
+                {
+                  "name": "API",
+                  "id": "api",
+                  "file": "shared/packages/angular/angular-plugin"
                 },
                 {
                   "name": "Angular Rspack",
@@ -775,73 +769,67 @@
               "id": "react",
               "itemList": [
                 {
-                  "name": "Core",
-                  "id": "core",
+                  "name": "Introduction",
+                  "id": "introduction",
+                  "file": "shared/packages/react/react-plugin"
+                },
+                {
+                  "name": "Recipes",
+                  "id": "recipes",
                   "itemList": [
                     {
-                      "name": "Introduction",
-                      "id": "introduction",
-                      "file": "shared/packages/react/react-plugin"
+                      "name": "React Native with Nx",
+                      "id": "react-native",
+                      "file": "shared/guides/react-native"
                     },
                     {
-                      "name": "Recipes",
-                      "id": "recipes",
-                      "itemList": [
-                        {
-                          "name": "React Native with Nx",
-                          "id": "react-native",
-                          "file": "shared/guides/react-native"
-                        },
-                        {
-                          "name": "Remix with Nx",
-                          "id": "remix",
-                          "file": "shared/guides/remix"
-                        },
-                        {
-                          "name": "React Router with Nx",
-                          "id": "react-router",
-                          "file": "shared/guides/react-router"
-                        },
-                        {
-                          "name": "Use Environment Variables in React",
-                          "id": "use-environment-variables-in-react",
-                          "tags": ["environment-variables"],
-                          "file": "shared/guides/use-environment-variables-in-react"
-                        },
-                        {
-                          "name": "Using Tailwind CSS in React",
-                          "id": "using-tailwind-css-in-react",
-                          "file": "shared/guides/using-tailwind-css-in-react"
-                        },
-                        {
-                          "name": "Adding Images, Fonts, and Files",
-                          "id": "adding-assets-react",
-                          "file": "shared/guides/adding-assets"
-                        },
-                        {
-                          "name": "Setup Module Federation with SSR for React",
-                          "id": "module-federation-with-ssr",
-                          "tags": ["module-federation", "react"],
-                          "file": "shared/recipes/module-federation-with-ssr"
-                        },
-                        {
-                          "name": "Deploying Next.js applications to Vercel",
-                          "id": "deploy-nextjs-to-vercel",
-                          "file": "shared/recipes/deployment/deploy-nextjs-to-vercel"
-                        },
-                        {
-                          "name": "React Compiler with Nx",
-                          "id": "react-compiler",
-                          "file": "shared/guides/react-compiler"
-                        }
-                      ]
+                      "name": "Remix with Nx",
+                      "id": "remix",
+                      "file": "shared/guides/remix"
                     },
                     {
-                      "name": "API",
-                      "id": "api",
-                      "file": "shared/packages/react/react-plugin"
+                      "name": "React Router with Nx",
+                      "id": "react-router",
+                      "file": "shared/guides/react-router"
+                    },
+                    {
+                      "name": "Use Environment Variables in React",
+                      "id": "use-environment-variables-in-react",
+                      "tags": ["environment-variables"],
+                      "file": "shared/guides/use-environment-variables-in-react"
+                    },
+                    {
+                      "name": "Using Tailwind CSS in React",
+                      "id": "using-tailwind-css-in-react",
+                      "file": "shared/guides/using-tailwind-css-in-react"
+                    },
+                    {
+                      "name": "Adding Images, Fonts, and Files",
+                      "id": "adding-assets-react",
+                      "file": "shared/guides/adding-assets"
+                    },
+                    {
+                      "name": "Setup Module Federation with SSR for React",
+                      "id": "module-federation-with-ssr",
+                      "tags": ["module-federation", "react"],
+                      "file": "shared/recipes/module-federation-with-ssr"
+                    },
+                    {
+                      "name": "Deploying Next.js applications to Vercel",
+                      "id": "deploy-nextjs-to-vercel",
+                      "file": "shared/recipes/deployment/deploy-nextjs-to-vercel"
+                    },
+                    {
+                      "name": "React Compiler with Nx",
+                      "id": "react-compiler",
+                      "file": "shared/guides/react-compiler"
                     }
                   ]
+                },
+                {
+                  "name": "API",
+                  "id": "api",
+                  "file": "shared/packages/react/react-plugin"
                 },
                 {
                   "name": "Next",
@@ -941,25 +929,19 @@
               "id": "vue",
               "itemList": [
                 {
-                  "name": "Core",
-                  "id": "core",
-                  "itemList": [
-                    {
-                      "name": "Introduction",
-                      "id": "introduction",
-                      "file": "shared/packages/vue/vue-plugin"
-                    },
-                    {
-                      "name": "Recipes",
-                      "id": "recipes",
-                      "itemList": []
-                    },
-                    {
-                      "name": "API",
-                      "id": "api",
-                      "file": "shared/packages/vue/vue-plugin"
-                    }
-                  ]
+                  "name": "Introduction",
+                  "id": "introduction",
+                  "file": "shared/packages/vue/vue-plugin"
+                },
+                {
+                  "name": "Recipes",
+                  "id": "recipes",
+                  "itemList": []
+                },
+                {
+                  "name": "API",
+                  "id": "api",
+                  "file": "shared/packages/vue/vue-plugin"
                 },
                 {
                   "name": "Nuxt",
@@ -996,56 +978,50 @@
               "id": "nodejs",
               "itemList": [
                 {
-                  "name": "Core",
-                  "id": "core",
+                  "name": "Introduction",
+                  "id": "introduction",
+                  "file": "shared/packages/node/node-plugin"
+                },
+                {
+                  "name": "Recipes",
+                  "id": "recipes",
                   "itemList": [
                     {
-                      "name": "Introduction",
-                      "id": "introduction",
-                      "file": "shared/packages/node/node-plugin"
+                      "name": "Deploying a Node App to Fly.io",
+                      "id": "node-server-fly-io",
+                      "tags": ["deployment", "node"],
+                      "file": "shared/recipes/deployment/node-server-fly-io"
                     },
                     {
-                      "name": "Recipes",
-                      "id": "recipes",
-                      "itemList": [
-                        {
-                          "name": "Deploying a Node App to Fly.io",
-                          "id": "node-server-fly-io",
-                          "tags": ["deployment", "node"],
-                          "file": "shared/recipes/deployment/node-server-fly-io"
-                        },
-                        {
-                          "name": "Add and Deploy Netlify Edge Functions with Node",
-                          "id": "node-serverless-functions-netlify",
-                          "tags": ["deployment", "node"],
-                          "file": "shared/recipes/deployment/node-serverless-functions-netlify"
-                        },
-                        {
-                          "name": "Deploying AWS lambda in Node.js (deprecated)",
-                          "id": "node-aws-lambda",
-                          "tags": ["deployment", "node"],
-                          "file": "shared/recipes/deployment/node-aws-lambda"
-                        },
-                        {
-                          "name": "Set Up Application Proxies",
-                          "id": "application-proxies",
-                          "tags": ["node"],
-                          "file": "shared/recipes/node/application-proxies"
-                        },
-                        {
-                          "name": "Wait for Tasks to Finish",
-                          "id": "wait-for-tasks",
-                          "tags": [],
-                          "file": "shared/recipes/node/wait-for-tasks"
-                        }
-                      ]
+                      "name": "Add and Deploy Netlify Edge Functions with Node",
+                      "id": "node-serverless-functions-netlify",
+                      "tags": ["deployment", "node"],
+                      "file": "shared/recipes/deployment/node-serverless-functions-netlify"
                     },
                     {
-                      "name": "API",
-                      "id": "api",
-                      "file": "shared/packages/node/node-plugin"
+                      "name": "Deploying AWS lambda in Node.js (deprecated)",
+                      "id": "node-aws-lambda",
+                      "tags": ["deployment", "node"],
+                      "file": "shared/recipes/deployment/node-aws-lambda"
+                    },
+                    {
+                      "name": "Set Up Application Proxies",
+                      "id": "application-proxies",
+                      "tags": ["node"],
+                      "file": "shared/recipes/node/application-proxies"
+                    },
+                    {
+                      "name": "Wait for Tasks to Finish",
+                      "id": "wait-for-tasks",
+                      "tags": [],
+                      "file": "shared/recipes/node/wait-for-tasks"
                     }
                   ]
+                },
+                {
+                  "name": "API",
+                  "id": "api",
+                  "file": "shared/packages/node/node-plugin"
                 },
                 {
                   "name": "Express",
