@@ -154,18 +154,9 @@ describe('Angular Projects', () => {
     runCLI(
       `generate @nx/angular:app my-dir/${app} --bundler=rspack --no-interactive`
     );
-    const rspackConfigFileContents = readFile(
-      join('my-dir', app, 'rspack.config.ts')
-    );
-    const updatedConfigFileContents = rspackConfigFileContents.replace(
-      `maximumError: '1mb'`,
-      `maximumError: '3mb'`
-    );
-    updateFile(
-      join('my-dir', app, 'rspack.config.ts'),
-      updatedConfigFileContents
-    );
-    runCLI(`build ${app}`);
+    runCLI(`build ${app}`, {
+      env: { NODE_ENV: 'production' },
+    });
 
     if (runE2ETests()) {
       expect(() => runCLI(`e2e ${app}-e2e`)).not.toThrow();
