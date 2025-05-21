@@ -211,7 +211,7 @@ const internalCreateNodesV2 = async (
       }
 
       let hasNonIgnoredLintableFiles = false;
-      if (configDir !== projectRoot) {
+      if (configDir !== projectRoot || projectRoot === '.') {
         const eslint = new ESLint({
           cwd: join(context.workspaceRoot, projectRoot),
         });
