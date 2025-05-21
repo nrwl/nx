@@ -51,6 +51,7 @@ export const backwardCompatibleVersions: VersionMap = {
     typesNodeVersion: '18.16.9',
     jasmineMarblesVersion: '^0.9.2',
     jsoncEslintParserVersion: '^2.1.0',
+    webpackMergeVersion: '^5.8.0',
   },
   angularV18: {
     angularVersion: '~18.2.0',
@@ -80,5 +81,6 @@ export const backwardCompatibleVersions: VersionMap = {
     typesNodeVersion: '18.16.9',
     jasmineMarblesVersion: '^0.9.2',
     jsoncEslintParserVersion: '^2.1.0',
+    webpackMergeVersion: '^5.8.0',
   },
 };
