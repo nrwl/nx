@@ -36,7 +36,7 @@ We recommend setting up a `read-write` and `read-only` in your CI based on prote
 
 ### Azure DevOps
 
-Azure DevOps provides various [mechanisms to limit access to secrets](https://learn.microsoft.com/en-us/azure/devops/pipelines/security/secrets?view=azure-devops#limit-access-to-secret-variables). We'll be using _Variable groups_ in this process, but you can achieve the same result leveraging [Azure KeyVault](https://learn.microsoft.com/en-us/azure/key-vault/general/overview).
+Azure DevOps provides various [mechanisms to limit access to secrets](https://learn.microsoft.com/en-us/azure/devops/pipelines/security/secrets?view=azure-devops#limit-access-to-secret-variables). We'll be using _Variable groups_ in this process, but you can achieve the same result leveraging [Azure Key Vault](https://learn.microsoft.com/en-us/azure/key-vault/general/overview).
 
 1. In your project, navigate to Pipelines > Library.
    ![Variable group settings page](/nx-cloud/recipes/ado-library-start.avif)
@@ -76,7 +76,7 @@ Take caution though, if you allow team members to have direct write access to a 
 
 ### BitBucket Cloud
 
-BitBucket Cloud supports setting a environment variables per environment called _Deployment variables_. You can read the [official BitBucket Pipelines documentation](https://support.atlassian.com/bitbucket-cloud/docs/variables-and-secrets/#Deployment-variables) for more details.
+BitBucket Cloud supports setting environment variables per environment called _Deployment variables_. You can read the [official BitBucket Pipelines documentation](https://support.atlassian.com/bitbucket-cloud/docs/variables-and-secrets/#Deployment-variables) for more details.
 
 1. In your repository, navigate to the _Repository settings_ > _Deployment_.
 2. Select an environment you have configured for protected branches, or create a new one and protect your primary branches.
@@ -140,7 +140,7 @@ workflows:
 
 ### GitHub Actions
 
-GitHub allows specifying specific secrets for each environment, where an environment can be on a specific branch.
+GitHub allows specifying different secrets for each environment, where an environment can be on a specific branch.
 You can read the [official GitHub Actions documentation](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-an-environment) for more details.
 
 1. In your repository, navigate to Settings tab.
@@ -171,7 +171,7 @@ jobs:
 
 ### GitLab
 
-GitLab allows creating variables scoped to specific variables. You can read the [Official GitLab documentation](https://docs.gitlab.com/ci/environments/#limit-the-environment-scope-of-a-cicd-variable) for more details.
+GitLab allows creating variables scoped to specific environments. You can read the [Official GitLab documentation](https://docs.gitlab.com/ci/environments/#limit-the-environment-scope-of-a-cicd-variable) for more details.
 
 1. In your project, navigate to _Operate_ > _Environments_ and create a new environment. You do not need to fill out the External Url or GitLab agent.
    - Most projects already have a production/protected environments, so we recommend using this one if it's already defined.
@@ -217,7 +217,7 @@ Take caution though, if you allow team members to have direct write access to a 
 
 ### Jenkins
 
-Jenkins configuration can be quite extensive make each Jenkins instance potentially different from each other. Because of this we can only provide a minimal viable approach, but there can be a multiple way to provide scoped access tokens to your pipelines. The goal is to create two areas within Jenkins, where one is the _protected_ and the other is the _unprotected_. These specifically map to how you deem your branches should have read/write vs read permissions. We recommend making branches that developers cannot directly push to and require a code review to merge to, as the _protected_ branches, and the rest being _unprotected_.
+Jenkins configuration can be quite extensive making each Jenkins instance unique. Because of this we can only provide a minimal viable approach, but there can be multiple ways to provide scoped access tokens to your pipelines. The goal is to create two areas within Jenkins, where one is the _protected_ and the other is the _unprotected_. These specifically map to how you deem your branches should have read/write vs read permissions. We recommend making branches that developers cannot directly push to and require a code review to merge to, as the _protected_ branches, and the rest being _unprotected_.
 
 1. Minimally, this can be achieved via the following Jenkins plugins:
    - [Folders](https://plugins.jenkins.io/cloudbees-folder/), [Credentials](https://plugins.jenkins.io/credentials/), [Credentials Binding](https://plugins.jenkins.io/credentials-binding/)
