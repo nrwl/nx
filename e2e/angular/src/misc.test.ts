@@ -162,13 +162,9 @@ describe('Convert Angular Webpack Project to Rspack', () => {
 
   it('should convert an Angular Webpack project to Rspack', async () => {
     runCLI(`generate @nx/angular:convert-to-rspack --project=${app1}`);
-    const rspackConfigFileContents = readFile(join(app1, 'rspack.config.ts'));
-    const updatedConfigFileContents = rspackConfigFileContents.replace(
-      `maximumError: '1mb'`,
-      `maximumError: '3mb'`
-    );
-    updateFile(join(app1, 'rspack.config.ts'), updatedConfigFileContents);
-    const buildOutput = runCLI(`build ${app1}`);
+    const buildOutput = runCLI(`build ${app1}`, {
+      env: { NODE_ENV: 'production' },
+    });
     expect(buildOutput).toContain('rspack build');
     expect(buildOutput).toContain('Successfully ran target build for project');
   });

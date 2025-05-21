@@ -46,7 +46,7 @@ describe('Angular Module Federation', () => {
     let rspackConfigFileContents = readFile(join(hostApp, 'rspack.config.ts'));
     let updatedConfigFileContents = rspackConfigFileContents.replace(
       `maximumError: '1mb'`,
-      `maximumError: '11mb'`
+      `maximumError: '3mb'`
     );
     updateFile(join(hostApp, 'rspack.config.ts'), updatedConfigFileContents);
 
@@ -57,7 +57,7 @@ describe('Angular Module Federation', () => {
     rspackConfigFileContents = readFile(join(remoteApp1, 'rspack.config.ts'));
     updatedConfigFileContents = rspackConfigFileContents.replace(
       `maximumError: '1mb'`,
-      `maximumError: '11mb'`
+      `maximumError: '3mb'`
     );
     updateFile(join(remoteApp1, 'rspack.config.ts'), updatedConfigFileContents);
 
@@ -68,7 +68,9 @@ describe('Angular Module Federation', () => {
     );
 
     // check default generated host is built successfully
-    const buildOutput = runCLI(`build ${hostApp}`);
+    const buildOutput = runCLI(`build ${hostApp}`, {
+      env: { NODE_ENV: 'production' },
+    });
     expect(buildOutput).toContain('Successfully ran target build');
 
     // generate a shared lib with a seconary entry point
