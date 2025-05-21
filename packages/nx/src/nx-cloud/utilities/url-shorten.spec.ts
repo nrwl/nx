@@ -24,20 +24,20 @@ jest.mock('./get-cloud-options', () => ({
 describe('URL shorten various functions', () => {
   describe('isOldNxCloudVersion', () => {
     it('should compare versions of the same format', () => {
-      expect(isOldNxCloudVersion('2407.11.5')).toBe(true);
-      expect(isOldNxCloudVersion('2406.12.5')).toBe(true);
-      expect(isOldNxCloudVersion('2406.11.6')).toBe(true);
-      expect(isOldNxCloudVersion('2406.11.5')).toBe(true);
-      expect(isOldNxCloudVersion('2406.11.4')).toBe(false);
+      expect(isOldNxCloudVersion('2407.11.5')).toBe(false);
+      expect(isOldNxCloudVersion('2406.12.5')).toBe(false);
+      expect(isOldNxCloudVersion('2406.11.6')).toBe(false);
+      expect(isOldNxCloudVersion('2406.11.5')).toBe(false);
+      expect(isOldNxCloudVersion('2406.11.4')).toBe(true);
 
-      expect(isOldNxCloudVersion('2307.13.12')).toBe(false);
-      expect(isOldNxCloudVersion('2406.10.55')).toBe(false);
-      expect(isOldNxCloudVersion('2406.11.1')).toBe(false);
+      expect(isOldNxCloudVersion('2307.13.12')).toBe(true);
+      expect(isOldNxCloudVersion('2406.10.55')).toBe(true);
+      expect(isOldNxCloudVersion('2406.11.1')).toBe(true);
     });
 
     it('should compare versions of different format', () => {
-      expect(isOldNxCloudVersion('2025.11.5')).toBe(true);
-      expect(isOldNxCloudVersion('2026.12.5')).toBe(true);
+      expect(isOldNxCloudVersion('2025.11.5')).toBe(false);
+      expect(isOldNxCloudVersion('2026.12.5')).toBe(false);
     });
   });
 
