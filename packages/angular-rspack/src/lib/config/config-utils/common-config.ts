@@ -23,7 +23,6 @@ export async function getCommonConfig(
   hashFormat: HashFormat
 ) {
   const isDevServer = process.env['WEBPACK_SERVE'];
-  const isProduction = process.env['NODE_ENV'] === 'production';
   const crossOriginLoading = getCrossOriginLoading(normalizedOptions);
   const sourceMapOptions = configureSourceMap(normalizedOptions.sourceMap);
   const stylesConfig = await getStylesConfig(
@@ -46,7 +45,11 @@ export async function getCommonConfig(
   const defaultConfig: Configuration = {
     context: normalizedOptions.root,
     profile: normalizedOptions.statsJson,
-    mode: isProduction ? 'production' : 'development',
+    mode:
+      normalizedOptions.optimization.scripts ||
+      normalizedOptions.optimization.styles.minify
+        ? 'production'
+        : 'development',
     devtool: normalizedOptions.sourceMap.scripts ? 'source-map' : false,
     infrastructureLogging: {
       appendOnly: false,
@@ -72,7 +75,6 @@ export async function getCommonConfig(
       extensions: ['.ts', '.tsx', '.mjs', '.js'],
       symlinks: !normalizedOptions.preserveSymlinks,
       modules: ['node_modules'],
-      mainFields: ['es2020', 'es2015', 'browser', 'module', 'main'],
       conditionNames: ['es2020', 'es2015', '...'],
       tsConfig: {
         configFile: normalizedOptions.tsConfig,

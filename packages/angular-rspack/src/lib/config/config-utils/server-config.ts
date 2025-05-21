@@ -23,7 +23,7 @@ export async function getServerConfig(
     ...defaultConfig,
     dependencies: ['browser'],
     name: 'server',
-    target: 'node',
+    target: ['node', 'es2015'],
     entry: {
       server: {
         import: [
@@ -43,6 +43,10 @@ export async function getServerConfig(
       filename: '[name].js',
       chunkFilename: '[name].js',
       library: { type: 'commonjs' },
+    },
+    resolve: {
+      ...defaultConfig.resolve,
+      mainFields: ['es2020', 'es2015', 'module', 'main'],
     },
     devServer: await getDevServerConfig(normalizedOptions, 'server'),
     externals: normalizedOptions.externalDependencies,
