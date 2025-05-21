@@ -25,7 +25,7 @@ export async function getBrowserConfig(
   return {
     ...defaultConfig,
     name: 'browser',
-    target: 'web',
+    target: ['web', 'es2015'],
     entry: {
       main: {
         import: [
@@ -53,6 +53,10 @@ export async function getBrowserConfig(
       filename: `[name]${hashFormat.chunk}.js`,
       chunkFilename: `[name]${hashFormat.chunk}.js`,
       ...(isDevServer ? {} : { scriptType: 'module', module: true }),
+    },
+    resolve: {
+      ...defaultConfig.resolve,
+      mainFields: ['es2020', 'es2015', 'browser', 'module', 'main'],
     },
     optimization: getOptimization(normalizedOptions, 'browser'),
     module: {

@@ -32,23 +32,19 @@ describe('createConfig', () => {
     vi.restoreAllMocks();
   });
 
-  it('should create config for mode "production" if env variable NODE_ENV is "production"', async () => {
-    vi.stubEnv('NODE_ENV', 'production');
+  it('should create config for mode "production" when optimization=true', async () => {
     await expect(_createConfig(configBase)).resolves.toStrictEqual([
       expect.objectContaining({ mode: 'production' }),
     ]);
   }, 10000);
 
-  it.each(['development', 'not-production'])(
-    'should create config for mode "development" if env variable NODE_ENV is "%s"',
-    async (nodeEnv) => {
-      vi.stubEnv('NODE_ENV', nodeEnv);
-
-      await expect(_createConfig(configBase)).resolves.toStrictEqual([
-        expect.objectContaining({ mode: 'development' }),
-      ]);
-    }
-  );
+  it('should create config for mode "development" when optimization=false', async () => {
+    await expect(
+      _createConfig({ ...configBase, optimization: false })
+    ).resolves.toStrictEqual([
+      expect.objectContaining({ mode: 'development' }),
+    ]);
+  });
 
   describe('createConfig', () => {
     const runCreateConfig = () => {
@@ -78,7 +74,7 @@ describe('createConfig', () => {
         createConfig({ options: configBase })
       ).resolves.toStrictEqual([
         expect.objectContaining({
-          mode: 'development',
+          mode: 'production',
           devServer: expect.objectContaining({
             port: 4200,
           }),
@@ -148,7 +144,7 @@ describe('createConfig', () => {
         })
       ).resolves.toStrictEqual([
         expect.objectContaining({
-          mode: 'development',
+          mode: 'production',
           devServer: expect.objectContaining({
             port: 4200,
           }),
@@ -193,7 +189,7 @@ describe('createConfig', () => {
         })
       ).resolves.toStrictEqual([
         expect.objectContaining({
-          mode: 'development',
+          mode: 'production',
           devServer: expect.objectContaining({
             port: 4200,
           }),
