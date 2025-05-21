@@ -150,6 +150,27 @@
       "path": "/concepts/common-tasks"
     },
     {
+      "description": "",
+      "file": "generated/cli/run",
+      "id": "run",
+      "name": "run",
+      "path": "/reference/nx-workspace-api/nx/run"
+    },
+    {
+      "description": "",
+      "file": "generated/cli/run-many",
+      "id": "run-many",
+      "name": "run-many",
+      "path": "/reference/nx-workspace-api/nx/run-many"
+    },
+    {
+      "description": "",
+      "file": "generated/cli/affected",
+      "id": "affected",
+      "name": "affected",
+      "path": "/reference/nx-workspace-api/nx/affected"
+    },
+    {
       "description": "This allows to only run tasks on projects that got changed in a given PR.",
       "file": "shared/using-nx/affected",
       "id": "affected",
@@ -220,6 +241,20 @@
       "id": "inputs",
       "name": "Inputs and Named Inputs",
       "path": "/reference/inputs"
+    },
+    {
+      "description": "",
+      "file": "generated/cli/connect",
+      "id": "connect-to-nx-cloud",
+      "name": "connect-to-nx-cloud",
+      "path": "/reference/nx-workspace-api/nx/connect-to-nx-cloud"
+    },
+    {
+      "description": "",
+      "file": "generated/cli/reset",
+      "id": "reset",
+      "name": "reset",
+      "path": "/reference/nx-workspace-api/nx/reset"
     },
     {
       "description": "",
@@ -304,6 +339,20 @@
     },
     {
       "description": "",
+      "file": "generated/cli/graph",
+      "id": "dep-graph",
+      "name": "graph",
+      "path": "/reference/nx-workspace-api/nx/dep-graph"
+    },
+    {
+      "description": "",
+      "file": "generated/cli/show",
+      "id": "show",
+      "name": "show",
+      "path": "/reference/nx-workspace-api/nx/show"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/resolve-circular-dependencies",
       "id": "resolve-circular-dependencies",
       "name": "Resolve Circular Dependencies",
@@ -345,6 +394,13 @@
       "id": "nx-plugins",
       "name": "What Are Nx Plugins",
       "path": "/concepts/nx-plugins"
+    },
+    {
+      "description": "",
+      "file": "generated/cli/generate",
+      "id": "generate",
+      "name": "generate",
+      "path": "/reference/nx-workspace-api/nx/generate"
     },
     {
       "description": "",
@@ -487,6 +543,20 @@
     },
     {
       "description": "",
+      "file": "generated/cli/sync",
+      "id": "sync",
+      "name": "sync",
+      "path": "/reference/nx-workspace-api/nx/sync"
+    },
+    {
+      "description": "",
+      "file": "generated/cli/sync-check",
+      "id": "sync-check",
+      "name": "sync:check",
+      "path": "/reference/nx-workspace-api/nx/sync-check"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/generators/create-sync-generator",
       "id": "create-sync-generator",
       "name": "Create a Sync Generator",
@@ -535,6 +605,13 @@
       "id": "advanced-update",
       "name": "Altering Migration Process",
       "path": "/nx-recipes/tips-n-tricks/advanced-update"
+    },
+    {
+      "description": "",
+      "file": "generated/cli/migrate",
+      "id": "migrate",
+      "name": "migrate",
+      "path": "/reference/nx-workspace-api/nx/migrate"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -607,6 +684,20 @@
       "id": "nxignore",
       "name": ".nxignore",
       "path": "/reference/nxignore"
+    },
+    {
+      "description": "",
+      "file": "generated/cli/format-check",
+      "id": "format-check",
+      "name": "format:check",
+      "path": "/reference/nx-workspace-api/nx/format-check"
+    },
+    {
+      "description": "",
+      "file": "generated/cli/format-write",
+      "id": "format-write",
+      "name": "format:write",
+      "path": "/reference/nx-workspace-api/nx/format-write"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -737,6 +828,13 @@
       "path": "/nx-recipes/nx-release/configuration-version-prefix"
     },
     {
+      "description": "",
+      "file": "generated/cli/release",
+      "id": "release",
+      "name": "release",
+      "path": "/reference/nx-workspace-api/nx/release"
+    },
+    {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/nx/documents/release",
       "id": "release",
@@ -767,6 +865,13 @@
       "path": "/nx-enterprise/activate-powerpack"
     },
     {
+      "description": "",
+      "file": "generated/cli/create-nx-workspace",
+      "id": "create-nx-workspace",
+      "name": "create-nx-workspace",
+      "path": "/reference/nx-workspace-api/nx/create-nx-workspace"
+    },
+    {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/nx/documents/create-nx-workspace",
       "id": "create-nx-workspace",
@@ -792,6 +897,13 @@
       "path": "/nx-recipes/running-tasks/root-level-scripts"
     },
     {
+      "description": "",
+      "file": "generated/cli/exec",
+      "id": "exec",
+      "name": "exec",
+      "path": "/reference/nx-workspace-api/nx/exec"
+    },
+    {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/nx/documents/exec",
       "id": "exec",
@@ -806,6 +918,13 @@
       "id": "workspace-watching",
       "name": "Workspace Watching",
       "path": "/nx-recipes/running-tasks/workspace-watching"
+    },
+    {
+      "description": "",
+      "file": "generated/cli/watch",
+      "id": "watch",
+      "name": "watch",
+      "path": "/reference/nx-workspace-api/nx/watch"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -847,6 +966,13 @@
       "path": "/technologies/angular/core/migration/angular"
     },
     {
+      "description": "",
+      "file": "generated/cli/init",
+      "id": "init",
+      "name": "init",
+      "path": "/reference/nx-workspace-api/nx/init"
+    },
+    {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/nx/documents/init",
       "id": "init",
@@ -861,6 +987,13 @@
       "id": "import-project",
       "name": "Import an Existing Project into an Nx Workspace",
       "path": "/nx-recipes/adopting-nx/import-project"
+    },
+    {
+      "description": "",
+      "file": "generated/cli/import",
+      "id": "import",
+      "name": "import",
+      "path": "/reference/nx-workspace-api/nx/import"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -884,6 +1017,13 @@
       "id": "nx-plugins",
       "name": "What Are Nx Plugins",
       "path": "/concepts/nx-plugins"
+    },
+    {
+      "description": "",
+      "file": "generated/cli/add",
+      "id": "add",
+      "name": "add",
+      "path": "/reference/nx-workspace-api/nx/add"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -1406,6 +1546,13 @@
       "path": "/concepts/nx-daemon"
     },
     {
+      "description": "",
+      "file": "generated/cli/daemon",
+      "id": "daemon",
+      "name": "daemon",
+      "path": "/reference/nx-workspace-api/nx/daemon"
+    },
+    {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/nx/documents/daemon",
       "id": "daemon",
@@ -1491,7 +1638,30 @@
       "path": "/showcase/example-repos/serverless-fastify-planetscale"
     }
   ],
+  "affected": [
+    {
+      "description": "",
+      "file": "generated/cli/affected",
+      "id": "affected",
+      "name": "affected",
+      "path": "/reference/nx-workspace-api/nx/affected"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/affected",
+      "id": "affected",
+      "name": "affected",
+      "path": "/nx-api/nx/documents/affected"
+    }
+  ],
   "distribute-task-execution": [
+    {
+      "description": "",
+      "file": "generated/cli/connect",
+      "id": "connect-to-nx-cloud",
+      "name": "connect-to-nx-cloud",
+      "path": "/reference/nx-workspace-api/nx/connect-to-nx-cloud"
+    },
     {
       "description": "",
       "file": "",
@@ -1521,25 +1691,21 @@
       "path": "/nx-api/nx/documents/connect-to-nx-cloud"
     }
   ],
-  "running-tasks": [
+  "login": [
     {
       "description": "",
-      "file": "shared/recipes/plugins/task-running-lifecycle",
-      "id": "task-running-lifecycle",
-      "name": "Hook into the Task Running Lifecycle",
-      "path": "/extending-nx/recipes/task-running-lifecycle"
-    }
-  ],
-  "remote-cache": [
+      "file": "generated/cli/login",
+      "id": "login",
+      "name": "login",
+      "path": "/reference/nx-workspace-api/nx/login"
+    },
     {
-      "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
-      "file": "shared/features/remote-cache",
-      "id": "remote-cache",
-      "name": "Use Remote Caching (Nx Replay)",
-      "path": "/ci/features/remote-cache"
-    }
-  ],
-  "login": [
+      "description": "",
+      "file": "generated/cli/logout",
+      "id": "logout",
+      "name": "logout",
+      "path": "/reference/nx-workspace-api/nx/logout"
+    },
     {
       "description": "",
       "file": "nx-cloud/recipes/personal-access-tokens",
@@ -1560,6 +1726,24 @@
       "id": "logout",
       "name": "logout",
       "path": "/nx-api/nx/documents/logout"
+    }
+  ],
+  "running-tasks": [
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/task-running-lifecycle",
+      "id": "task-running-lifecycle",
+      "name": "Hook into the Task Running Lifecycle",
+      "path": "/extending-nx/recipes/task-running-lifecycle"
+    }
+  ],
+  "remote-cache": [
+    {
+      "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
+      "file": "shared/features/remote-cache",
+      "id": "remote-cache",
+      "name": "Use Remote Caching (Nx Replay)",
+      "path": "/ci/features/remote-cache"
     }
   ],
   "single-tenant": [
@@ -1587,15 +1771,6 @@
       "id": "ci-deployment",
       "name": "Prepare applications for deployment via CI",
       "path": "/ci/recipes/other/ci-deployment"
-    }
-  ],
-  "affected": [
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/affected",
-      "id": "affected",
-      "name": "affected",
-      "path": "/nx-api/nx/documents/affected"
     }
   ]
 }

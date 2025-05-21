@@ -1961,6 +1961,199 @@
               "id": "releases",
               "tags": [],
               "file": "shared/reference/releases"
+            },
+            {
+              "name": "API",
+              "id": "nx-workspace-api",
+              "description": "API references for Nx Workspace",
+              "itemList": [
+                {
+                  "name": "nx",
+                  "id": "nx",
+                  "description": "Nx package",
+                  "itemList": [
+                    {
+                      "name": "create-nx-workspace",
+                      "id": "create-nx-workspace",
+                      "tags": ["installation"],
+                      "file": "generated/cli/create-nx-workspace"
+                    },
+                    {
+                      "name": "init",
+                      "id": "init",
+                      "tags": ["init"],
+                      "file": "generated/cli/init"
+                    },
+                    {
+                      "name": "generate",
+                      "id": "generate",
+                      "tags": ["generate-code"],
+                      "file": "generated/cli/generate"
+                    },
+                    {
+                      "name": "run",
+                      "tags": ["run-tasks"],
+                      "id": "run",
+                      "file": "generated/cli/run"
+                    },
+                    {
+                      "name": "daemon",
+                      "id": "daemon",
+                      "tags": ["daemon"],
+                      "file": "generated/cli/daemon"
+                    },
+                    {
+                      "name": "graph",
+                      "id": "dep-graph",
+                      "tags": ["explore-graph"],
+                      "file": "generated/cli/graph"
+                    },
+                    {
+                      "name": "run-many",
+                      "tags": ["run-tasks"],
+                      "id": "run-many",
+                      "file": "generated/cli/run-many"
+                    },
+                    {
+                      "name": "affected",
+                      "tags": ["run-tasks", "affected"],
+                      "id": "affected",
+                      "file": "generated/cli/affected"
+                    },
+                    {
+                      "name": "format:check",
+                      "id": "format-check",
+                      "tags": ["enforce-module-boundaries"],
+                      "file": "generated/cli/format-check"
+                    },
+                    {
+                      "name": "format:write",
+                      "id": "format-write",
+                      "tags": ["enforce-module-boundaries"],
+                      "file": "generated/cli/format-write"
+                    },
+                    {
+                      "name": "migrate",
+                      "id": "migrate",
+                      "tags": ["automate-updating-dependencies"],
+                      "file": "generated/cli/migrate"
+                    },
+                    {
+                      "name": "report",
+                      "id": "report",
+                      "file": "generated/cli/report"
+                    },
+                    {
+                      "name": "list",
+                      "id": "list",
+                      "file": "generated/cli/list"
+                    },
+                    {
+                      "name": "connect-to-nx-cloud",
+                      "id": "connect-to-nx-cloud",
+                      "tags": [
+                        "cache-task-results",
+                        "distribute-task-execution"
+                      ],
+                      "file": "generated/cli/connect"
+                    },
+                    {
+                      "name": "reset",
+                      "id": "reset",
+                      "tags": ["cache-task-results"],
+                      "file": "generated/cli/reset"
+                    },
+                    {
+                      "name": "repair",
+                      "id": "repair",
+                      "file": "generated/cli/repair"
+                    },
+                    {
+                      "name": "sync",
+                      "id": "sync",
+                      "tags": ["sync"],
+                      "file": "generated/cli/sync"
+                    },
+                    {
+                      "name": "sync:check",
+                      "id": "sync-check",
+                      "tags": ["sync"],
+                      "file": "generated/cli/sync-check"
+                    },
+                    {
+                      "name": "import",
+                      "id": "import",
+                      "tags": ["import"],
+                      "file": "generated/cli/import"
+                    },
+                    {
+                      "name": "exec",
+                      "id": "exec",
+                      "tags": ["exec"],
+                      "file": "generated/cli/exec"
+                    },
+                    {
+                      "name": "watch",
+                      "id": "watch",
+                      "tags": ["workspace-watching"],
+                      "file": "generated/cli/watch"
+                    },
+                    {
+                      "name": "show",
+                      "id": "show",
+                      "tags": ["explore-graph"],
+                      "file": "generated/cli/show"
+                    },
+                    {
+                      "name": "view-logs",
+                      "id": "view-logs",
+                      "file": "generated/cli/view-logs"
+                    },
+                    {
+                      "name": "release",
+                      "id": "release",
+                      "tags": ["nx-release"],
+                      "file": "generated/cli/release"
+                    },
+                    {
+                      "name": "add",
+                      "id": "add",
+                      "tags": ["add"],
+                      "file": "generated/cli/add"
+                    },
+                    {
+                      "name": "login",
+                      "id": "login",
+                      "tags": ["login"],
+                      "file": "generated/cli/login"
+                    },
+                    {
+                      "name": "logout",
+                      "id": "logout",
+                      "tags": ["login"],
+                      "file": "generated/cli/logout"
+                    }
+                  ]
+                },
+                {
+                  "name": "workspace",
+                  "id": "workspace",
+                  "description": "Workspace package.",
+                  "itemList": [
+                    {
+                      "name": "Overview",
+                      "id": "overview",
+                      "path": "/nx-api/workspace",
+                      "file": "shared/packages/workspace/workspace-plugin"
+                    },
+                    {
+                      "name": "Nx, NodeJS and Typescript Versions",
+                      "id": "nx-nodejs-typescript-version-matrix",
+                      "file": "shared/packages/workspace/nx-compatibility-matrix"
+                    }
+                  ]
+                }
+              ]
             }
           ]
         },
