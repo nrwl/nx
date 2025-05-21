@@ -408,5 +408,107 @@
     "isExternal": false,
     "path": "/extending-nx/recipes/task-running-lifecycle",
     "tags": ["running-tasks"]
+  },
+  "/extending-nx/api": {
+    "id": "api",
+    "name": "API",
+    "description": "API references for extending Nx",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "nx-devkit",
+        "name": "Devkit",
+        "description": "Core utilities for building Nx plugins",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "description": "",
+            "mediaImage": "",
+            "file": "generated/devkit/README",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/extending-nx/api/nx-devkit/overview",
+            "tags": []
+          },
+          {
+            "id": "ngcli-adapter",
+            "name": "Ng CLI Adapter",
+            "description": "",
+            "mediaImage": "",
+            "file": "generated/devkit/ngcli_adapter/README",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/extending-nx/api/nx-devkit/ngcli-adapter",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/extending-nx/api/nx-devkit",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/extending-nx/api",
+    "tags": []
+  },
+  "/extending-nx/api/nx-devkit": {
+    "id": "nx-devkit",
+    "name": "Devkit",
+    "description": "Core utilities for building Nx plugins",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "overview",
+        "name": "Overview",
+        "description": "",
+        "mediaImage": "",
+        "file": "generated/devkit/README",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/extending-nx/api/nx-devkit/overview",
+        "tags": []
+      },
+      {
+        "id": "ngcli-adapter",
+        "name": "Ng CLI Adapter",
+        "description": "",
+        "mediaImage": "",
+        "file": "generated/devkit/ngcli_adapter/README",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/extending-nx/api/nx-devkit/ngcli-adapter",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/extending-nx/api/nx-devkit",
+    "tags": []
+  },
+  "/extending-nx/api/nx-devkit/overview": {
+    "id": "overview",
+    "name": "Overview",
+    "description": "",
+    "mediaImage": "",
+    "file": "generated/devkit/README",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/extending-nx/api/nx-devkit/overview",
+    "tags": []
+  },
+  "/extending-nx/api/nx-devkit/ngcli-adapter": {
+    "id": "ngcli-adapter",
+    "name": "Ng CLI Adapter",
+    "description": "",
+    "mediaImage": "",
+    "file": "generated/devkit/ngcli_adapter/README",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/extending-nx/api/nx-devkit/ngcli-adapter",
+    "tags": []
   }
 }

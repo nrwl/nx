@@ -2299,6 +2299,30 @@
               "file": "shared/recipes/plugins/task-running-lifecycle"
             }
           ]
+        },
+        {
+          "name": "API",
+          "id": "api",
+          "description": "API references for extending Nx",
+          "itemList": [
+            {
+              "name": "Devkit",
+              "id": "nx-devkit",
+              "description": "Core utilities for building Nx plugins",
+              "itemList": [
+                {
+                  "name": "Overview",
+                  "id": "overview",
+                  "file": "generated/devkit/README"
+                },
+                {
+                  "name": "Ng CLI Adapter",
+                  "id": "ngcli-adapter",
+                  "file": "generated/devkit/ngcli_adapter/README"
+                }
+              ]
+            }
+          ]
         }
       ]
     },

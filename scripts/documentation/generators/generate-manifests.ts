@@ -298,12 +298,30 @@ function getDocumentMenus(manifests: DocumentManifest[]): {
   id: string;
   menu: MenuItem[];
 }[] {
-  return manifests.map((record) => ({
-    id: record.id,
-    menu: Object.values(record.records)
-      .map((item: any) => convertToDocumentMetadata(item))
-      .map((item: DocumentMetadata) => menuItemRecurseOperations(item)),
-  }));
+  return manifests.map((record) => {
+    // IMPORTANT: Only use top-level items to avoid duplicate menu entries
+    // The populateDictionary function adds all items (including nested children) to
+    // a flat dictionary. Without filtering, each nested item would appear both in
+    // its parent's children array AND as a separate top-level menu item. This was an issue
+    // for the extending-nx page, where the menu was showing the same item twice.
+    const topLevelItems = Object.values(record.records).filter((item) => {
+      // Determine top-level items by analyzing path segments:
+      // - For root items (no prefix): path will have 1 segment (just the id)
+      // - For prefixed sections: path will have 2 segments (prefix + id)
+      const pathSegments = item.path.split('/').filter(Boolean);
+      return (
+        pathSegments.length === 1 ||
+        (pathSegments.length === 2 && pathSegments[0] === record.id)
+      );
+    });
+
+    return {
+      id: record.id,
+      menu: topLevelItems
+        .map((item: any) => convertToDocumentMetadata(item))
+        .map((item: DocumentMetadata) => menuItemRecurseOperations(item)),
+    };
+  });
 }
 
 function createPackagesManifest(packages: PackageMetadata[]): {

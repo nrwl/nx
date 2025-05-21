@@ -377,6 +377,10 @@
     - [Infer Tasks or Projects](/extending-nx/recipes/project-graph-plugins)
     - [Publish a Plugin](/extending-nx/recipes/publish-plugin)
     - [Hook into the Task Running Lifecycle](/extending-nx/recipes/task-running-lifecycle)
+  - [API](/extending-nx/api)
+    - [Devkit](/extending-nx/api/nx-devkit)
+      - [Overview](/extending-nx/api/nx-devkit/overview)
+      - [Ng CLI Adapter](/extending-nx/api/nx-devkit/ngcli-adapter)
 
 - Ci
 
