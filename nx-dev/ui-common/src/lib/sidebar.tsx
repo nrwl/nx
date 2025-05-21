@@ -8,6 +8,7 @@ import {
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
 import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
+import { iconsMap } from '@nx/nx-dev/ui-references';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -31,16 +32,30 @@ export function Sidebar({ menu }: SidebarProps): JSX.Element {
         data-testid="navigation"
         className="pb-4 text-base lg:text-sm"
       >
-        {menu.sections.map((section, index) => (
-          <SidebarSection key={section.id + '-' + index} section={section} />
-        ))}
+        {menu.sections.map((section, index) => {
+          return (
+            <SidebarSection
+              key={section.id + '-' + index}
+              section={section}
+              isInTechnologiesPath={false}
+            />
+          );
+        })}
       </nav>
     </div>
   );
 }
 
-function SidebarSection({ section }: { section: MenuSection }): JSX.Element {
+function SidebarSection({
+  section,
+  isInTechnologiesPath,
+}: {
+  section: MenuSection;
+  isInTechnologiesPath: boolean;
+}): JSX.Element {
   const router = useRouter();
+
+  // Get all items with refs
   const itemList = section.itemList.map((i) => ({
     ...i,
     ref: createRef<HTMLDivElement>(),
@@ -56,12 +71,13 @@ function SidebarSection({ section }: { section: MenuSection }): JSX.Element {
       }, 0);
     });
   }, [currentItem]);
+
   return (
     <>
       {section.hideSectionHeader ? null : (
         <h4
           data-testid={`section-h4:${section.id}`}
-          className="mt-8 border-b border-solid border-slate-50 text-lg font-bold dark:border-slate-800 dark:text-slate-100"
+          className="mb-3 mt-8 border-b border-solid border-slate-200 pb-2 text-xl font-bold dark:border-slate-700 dark:text-slate-100"
         >
           {section.name}
         </h4>
@@ -70,59 +86,116 @@ function SidebarSection({ section }: { section: MenuSection }): JSX.Element {
         <li className="mt-2">
           {itemList
             .filter((i) => !!i.children?.length)
-            .map((item, index) => (
-              <div key={item.id + '-' + index} ref={item.ref}>
-                <SidebarSectionItems key={item.id + '-' + index} item={item} />
-              </div>
-            ))}
+            .map((item, index) => {
+              // Check if this specific item is the Technologies item
+              const isTechnologiesItem = item.id === 'technologies';
+
+              return (
+                <div key={item.id + '-' + index} ref={item.ref}>
+                  <SidebarSectionItems
+                    key={item.id + '-' + index}
+                    item={item}
+                    isNested={false}
+                    firstLevel={false} // Not needed at the top level
+                    isInTechnologiesPath={isTechnologiesItem}
+                  />
+                </div>
+              );
+            })}
         </li>
       </ul>
     </>
   );
 }
 
-function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
+function SidebarSectionItems({
+  item,
+  isNested = false,
+  isInTechnologiesPath = false,
+  firstLevel = false,
+}: {
+  item: MenuItem;
+  isNested?: boolean;
+  isInTechnologiesPath?: boolean;
+  firstLevel?: boolean;
+}): JSX.Element {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(!item.disableCollapsible);
+
+  // Check if this is the Technologies main item
+  const isTechnologiesItem = item.id === 'technologies';
+
+  // If this is direct child of the Technologies item, show an icon
+  const isDirectTechnologyChild =
+    isInTechnologiesPath && item.id !== 'technologies';
+
+  // Get the icon key for this technology
+  let iconKey = null;
+  if (isDirectTechnologyChild) {
+    iconKey = getIconKeyForTechnology(item.id);
+  }
 
   const handleCollapseToggle = useCallback(() => {
     if (!item.disableCollapsible) {
       setCollapsed(!collapsed);
     }
   }, [collapsed, setCollapsed, item]);
+
   function withoutAnchors(linkText: string): string {
     return linkText?.includes('#')
       ? linkText.substring(0, linkText.indexOf('#'))
       : linkText;
   }
 
+  // Update the children mapping to safely handle cases where item.children might be undefined
+  const children = item.children || [];
+
   return (
     <>
       <h5
         data-testid={`section-h5:${item.id}`}
         className={cx(
-          'flex py-2',
-          'text-sm font-semibold uppercase tracking-wide text-slate-800 lg:text-xs dark:text-slate-200',
+          'group flex items-center py-2',
+          isDirectTechnologyChild ? '-ml-1 px-1 ' : '',
+          !isNested
+            ? 'text-base font-semibold text-slate-800 lg:text-base dark:text-slate-200'
+            : 'text-sm font-semibold text-slate-800 lg:text-sm dark:text-slate-200',
           item.disableCollapsible ? 'cursor-text' : 'cursor-pointer'
         )}
         onClick={handleCollapseToggle}
       >
-        {item.disableCollapsible ? (
-          <Link
-            href={item.path as string}
-            className="hover:underline"
-            prefetch={false}
-          >
-            {item.name}
-          </Link>
-        ) : (
-          <>
-            {item.name} <CollapsibleIcon isCollapsed={collapsed} />
-          </>
+        {isDirectTechnologyChild && (
+          <div className="mr-2 flex h-6 w-6 flex-shrink-0 items-center justify-center">
+            <img
+              className="h-5 w-5 object-cover opacity-100 dark:invert"
+              loading="lazy"
+              src={iconsMap[iconKey || 'nx']}
+              alt={item.name + ' illustration'}
+              aria-hidden="true"
+            />
+          </div>
         )}
+        <div className={cx('flex flex-grow items-center justify-between')}>
+          {item.disableCollapsible ? (
+            <Link
+              href={item.path as string}
+              className="hover:underline"
+              prefetch={false}
+            >
+              {item.name}
+            </Link>
+          ) : (
+            <>
+              <span className={isDirectTechnologyChild ? 'flex-grow' : ''}>
+                {item.name}
+              </span>
+              <CollapsibleIcon isCollapsed={collapsed} />
+            </>
+          )}
+        </div>
       </h5>
-      <ul className={cx('mb-6 ml-3', collapsed ? 'hidden' : '')}>
-        {(item.children as MenuItem[]).map((subItem, index) => {
+      <ul className={cx('mb-6', collapsed ? 'hidden' : '')}>
+        {children.map((subItem, index) => {
           const isActiveLink = withoutAnchors(router.asPath).startsWith(
             subItem.path
           );
@@ -130,13 +203,31 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
             handleCollapseToggle();
           }
 
+          // Skip pl-3 for first level items, apply it to deeper nested levels
+          const shouldApplyPadding = isNested && !firstLevel;
+
           return (
             <li
               key={subItem.id + '-' + index}
               data-testid={`section-li:${subItem.id}`}
+              className={cx(
+                'relative',
+                shouldApplyPadding && 'pl-3', // Only apply padding for deeply nested items, not first level
+                !isNested && 'pl-2 transition-colors duration-150', // Add pl-2 for padding between vertical bar and text
+                !isNested && 'border-l-2',
+                !isNested &&
+                  (isActiveLink
+                    ? 'border-l-blue-500 hover:border-l-blue-600 dark:border-l-sky-500 dark:hover:border-l-sky-400'
+                    : 'border-l-transparent hover:border-blue-300 dark:border-l-transparent dark:hover:border-sky-400')
+              )}
             >
-              {subItem.children.length ? (
-                <SidebarSectionItems item={subItem} />
+              {(subItem.children || []).length ? (
+                <SidebarSectionItems
+                  item={subItem}
+                  isNested={true}
+                  firstLevel={!isNested} // Set firstLevel=true when coming from a top-level item
+                  isInTechnologiesPath={isTechnologiesItem}
+                />
               ) : (
                 <Link
                   href={subItem.path}
@@ -354,6 +445,7 @@ export function SidebarMobile({
                       <SidebarSection
                         key={section.id + '-' + index}
                         section={section}
+                        isInTechnologiesPath={false}
                       />
                     ))}
                   </nav>
@@ -365,4 +457,69 @@ export function SidebarMobile({
       </Dialog>
     </Transition>
   );
+}
+
+function getIconKeyForTechnology(idOrName: string): string {
+  // Normalize the input to lowercase for more reliable matching
+  const normalized = idOrName.toLowerCase();
+
+  // Technology icon mapping
+  const technologyIconMap: Record<string, string> = {
+    // JavaScript/TypeScript
+    typescript: 'js',
+    js: 'js',
+
+    // Angular
+    angular: 'angular',
+    'angular-rspack': 'angular-rspack',
+    'angular-rsbuild': 'angular-rsbuild',
+
+    // React
+    react: 'react',
+    'react-native': 'react-native',
+    remix: 'remix',
+    next: 'next',
+    expo: 'expo',
+
+    // Vue
+    vue: 'vue',
+    nuxt: 'nuxt',
+
+    // Node
+    nodejs: 'node',
+    'node.js': 'node',
+    node: 'node',
+
+    // Java
+    java: 'gradle',
+    gradle: 'gradle',
+
+    // Module Federation
+    'module-federation': 'module-federation',
+
+    // Linting
+    eslint: 'eslint',
+    'eslint-technology': 'eslint',
+
+    // Testing
+    'testing-tools': 'jest',
+    cypress: 'cypress',
+    jest: 'jest',
+    playwright: 'playwright',
+    storybook: 'storybook',
+    detox: 'detox',
+
+    // Build tools
+    'build-tools': 'webpack',
+    'build tools': 'webpack',
+    webpack: 'webpack',
+    vite: 'vite',
+    rollup: 'rollup',
+    esbuild: 'esbuild',
+    rspack: 'rspack',
+    rsbuild: 'rsbuild',
+  };
+
+  // Return the mapped icon or 'nx' as default
+  return technologyIconMap[normalized] || 'nx';
 }
