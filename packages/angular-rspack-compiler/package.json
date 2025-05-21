@@ -21,7 +21,7 @@
     "rsbuild",
     "compiler"
   ],
-  "version": "21.0.3",
+  "version": "21.0.4",
   "scripts": {
     "postinstall": "node ./patch/patch-angular-build.js"
   },
