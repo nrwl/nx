@@ -57,7 +57,8 @@ mod tests {
     fn test_socket_dir_name_basic() {
         let root = "/tmp/test_workspace";
         let dir = socket_dir_name(root, None);
-        assert_eq!(dir.to_string_lossy(), "/tmp/17684150229889955837");
+        let expected = std::env::temp_dir().join("17684150229889955837");
+        assert_eq!(dir, expected);
         assert!(dir.is_absolute());
     }
 
@@ -65,7 +66,8 @@ mod tests {
     fn test_socket_dir_name_with_unique_name() {
         let root = "/tmp/test_workspace";
         let dir = socket_dir_name(root, Some("unique"));
-        assert_eq!(dir.to_string_lossy(), "/tmp/10757852796479033769");
+        let expected = std::env::temp_dir().join("10757852796479033769");
+        assert_eq!(dir, expected);
         assert!(dir.is_absolute());
     }
 
@@ -75,21 +77,21 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("nx_test_socket_dir");
         unsafe { env::set_var("NX_SOCKET_DIR", &temp_dir) };
         let dir = get_socket_dir(root, None);
-        assert_eq!(dir.to_string_lossy(), "/tmp/nx_test_socket_dir");
+        assert_eq!(dir.to_string_lossy(), temp_dir.to_string_lossy());
         unsafe { env::remove_var("NX_SOCKET_DIR") };
     }
 
     #[test]
     fn test_get_full_os_socket_path() {
-        let root = "/tmp/test_workspace";
-        let path = get_full_os_socket_path(root);
+        let root = std::env::temp_dir().join("test_workspace");
+        let path = get_full_os_socket_path(root.to_str().unwrap());
         assert!(path.is_absolute() || path.starts_with("./nx/workspace-data/d"));
     }
 
     #[test]
     fn test_get_full_nx_console_socket_path() {
-        let root = "/tmp/test_workspace";
-        let path = get_full_nx_console_socket_path(root);
+        let root = std::env::temp_dir().join("test_workspace");
+        let path = get_full_nx_console_socket_path(root.to_str().unwrap());
         assert!(path.to_string_lossy().contains("nx-console.sock"));
     }
 }
