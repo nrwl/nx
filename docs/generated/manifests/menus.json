@@ -2989,6 +2989,116 @@
                   }
                 ],
                 "disableCollapsible": false
+              },
+              {
+                "name": "owners",
+                "path": "/reference/nx-workspace-api/owners",
+                "id": "owners",
+                "isExternal": false,
+                "children": [
+                  {
+                    "name": "Overview",
+                    "path": "/nx-api/owners",
+                    "id": "overview",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
+              },
+              {
+                "name": "conformance",
+                "path": "/reference/nx-workspace-api/conformance",
+                "id": "conformance",
+                "isExternal": false,
+                "children": [
+                  {
+                    "name": "Overview",
+                    "path": "/nx-api/conformance",
+                    "id": "overview",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Create a Conformance Rule",
+                    "path": "/nx-api/conformance",
+                    "id": "create-conformance-rule",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
+              },
+              {
+                "name": "azure-cache",
+                "path": "/reference/nx-workspace-api/azure-cache",
+                "id": "azure-cache",
+                "isExternal": false,
+                "children": [
+                  {
+                    "name": "Overview",
+                    "path": "/nx-api/azure-cache",
+                    "id": "overview",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
+              },
+              {
+                "name": "gcs-cache",
+                "path": "/reference/nx-workspace-api/gcs-cache",
+                "id": "gcs-cache",
+                "isExternal": false,
+                "children": [
+                  {
+                    "name": "Overview",
+                    "path": "/nx-api/gcs-cache",
+                    "id": "overview",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
+              },
+              {
+                "name": "s3-cache",
+                "path": "/reference/nx-workspace-api/s3-cache",
+                "id": "s3-cache",
+                "isExternal": false,
+                "children": [
+                  {
+                    "name": "Overview",
+                    "path": "/nx-api/s3-cache",
+                    "id": "overview",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
+              },
+              {
+                "name": "shared-fs-cache",
+                "path": "/reference/nx-workspace-api/shared-fs-cache",
+                "id": "shared-fs-cache",
+                "isExternal": false,
+                "children": [
+                  {
+                    "name": "Overview",
+                    "path": "/nx-api/shared-fs-cache",
+                    "id": "overview",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -3466,22 +3576,22 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
-              },
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Nx Plugin",
+            "path": "/extending-nx/api/plugin",
+            "id": "plugin",
+            "isExternal": false,
+            "children": [
               {
-                "name": "Nx Plugin",
-                "path": "/extending-nx/api/nx-devkit/plugin",
-                "id": "plugin",
+                "name": "Overview",
+                "path": "/extending-nx/api/plugin/overview",
+                "id": "overview",
                 "isExternal": false,
-                "children": [
-                  {
-                    "name": "Overview",
-                    "path": "/nx-api/plugin",
-                    "id": "overview",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  }
-                ],
+                "children": [],
                 "disableCollapsible": false
               }
             ],

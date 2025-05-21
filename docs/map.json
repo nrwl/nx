@@ -2152,6 +2152,90 @@
                       "file": "shared/packages/workspace/nx-compatibility-matrix"
                     }
                   ]
+                },
+                {
+                  "name": "owners",
+                  "id": "owners",
+                  "description": "powerpack-owners package.",
+                  "itemList": [
+                    {
+                      "name": "Overview",
+                      "id": "overview",
+                      "path": "/nx-api/owners",
+                      "file": "shared/packages/owners/owners-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "conformance",
+                  "id": "conformance",
+                  "description": "powerpack-conformance package.",
+                  "itemList": [
+                    {
+                      "name": "Overview",
+                      "id": "overview",
+                      "path": "/nx-api/conformance",
+                      "file": "shared/packages/conformance/conformance-plugin"
+                    },
+                    {
+                      "name": "Create a Conformance Rule",
+                      "id": "create-conformance-rule",
+                      "path": "/nx-api/conformance",
+                      "file": "shared/packages/conformance/create-conformance-rule"
+                    }
+                  ]
+                },
+                {
+                  "name": "azure-cache",
+                  "id": "azure-cache",
+                  "description": "powerpack-azure-cache package.",
+                  "itemList": [
+                    {
+                      "name": "Overview",
+                      "id": "overview",
+                      "path": "/nx-api/azure-cache",
+                      "file": "shared/packages/azure-cache/azure-cache-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "gcs-cache",
+                  "id": "gcs-cache",
+                  "description": "powerpack-gcs-cache package.",
+                  "itemList": [
+                    {
+                      "name": "Overview",
+                      "id": "overview",
+                      "path": "/nx-api/gcs-cache",
+                      "file": "shared/packages/gcs-cache/gcs-cache-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "s3-cache",
+                  "id": "s3-cache",
+                  "description": "powerpack-s3-cache package.",
+                  "itemList": [
+                    {
+                      "name": "Overview",
+                      "id": "overview",
+                      "path": "/nx-api/s3-cache",
+                      "file": "shared/packages/s3-cache/s3-cache-plugin"
+                    }
+                  ]
+                },
+                {
+                  "name": "shared-fs-cache",
+                  "id": "shared-fs-cache",
+                  "description": "powerpack-shared-fs-cache package.",
+                  "itemList": [
+                    {
+                      "name": "Overview",
+                      "id": "overview",
+                      "path": "/nx-api/shared-fs-cache",
+                      "file": "shared/packages/shared-fs-cache/shared-fs-cache-plugin"
+                    }
+                  ]
                 }
               ]
             }
@@ -2523,7 +2607,6 @@
                 {
                   "id": "overview",
                   "name": "Overview",
-                  "path": "/nx-api/plugin",
                   "file": "shared/packages/plugin/plugin"
                 }
               ]

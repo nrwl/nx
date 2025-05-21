@@ -444,33 +444,33 @@
             "isExternal": false,
             "path": "/extending-nx/api/nx-devkit/ngcli-adapter",
             "tags": []
-          },
-          {
-            "id": "plugin",
-            "name": "Nx Plugin",
-            "description": "Plugin package.",
-            "mediaImage": "",
-            "file": "",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "description": "",
-                "mediaImage": "",
-                "file": "shared/packages/plugin/plugin",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/nx-api/plugin",
-                "tags": []
-              }
-            ],
-            "isExternal": false,
-            "path": "/extending-nx/api/nx-devkit/plugin",
-            "tags": []
           }
         ],
         "isExternal": false,
         "path": "/extending-nx/api/nx-devkit",
+        "tags": []
+      },
+      {
+        "id": "plugin",
+        "name": "Nx Plugin",
+        "description": "Plugin package.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/packages/plugin/plugin",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/extending-nx/api/plugin/overview",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/extending-nx/api/plugin",
         "tags": []
       }
     ],
@@ -506,29 +506,6 @@
         "isExternal": false,
         "path": "/extending-nx/api/nx-devkit/ngcli-adapter",
         "tags": []
-      },
-      {
-        "id": "plugin",
-        "name": "Nx Plugin",
-        "description": "Plugin package.",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/packages/plugin/plugin",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/nx-api/plugin",
-            "tags": []
-          }
-        ],
-        "isExternal": false,
-        "path": "/extending-nx/api/nx-devkit/plugin",
-        "tags": []
       }
     ],
     "isExternal": false,
@@ -557,7 +534,7 @@
     "path": "/extending-nx/api/nx-devkit/ngcli-adapter",
     "tags": []
   },
-  "/extending-nx/api/nx-devkit/plugin": {
+  "/extending-nx/api/plugin": {
     "id": "plugin",
     "name": "Nx Plugin",
     "description": "Plugin package.",
@@ -572,15 +549,15 @@
         "file": "shared/packages/plugin/plugin",
         "itemList": [],
         "isExternal": false,
-        "path": "/nx-api/plugin",
+        "path": "/extending-nx/api/plugin/overview",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/extending-nx/api/nx-devkit/plugin",
+    "path": "/extending-nx/api/plugin",
     "tags": []
   },
-  "/nx-api/plugin": {
+  "/extending-nx/api/plugin/overview": {
     "id": "overview",
     "name": "Overview",
     "description": "",
@@ -588,7 +565,7 @@
     "file": "shared/packages/plugin/plugin",
     "itemList": [],
     "isExternal": false,
-    "path": "/nx-api/plugin",
+    "path": "/extending-nx/api/plugin/overview",
     "tags": []
   }
 }

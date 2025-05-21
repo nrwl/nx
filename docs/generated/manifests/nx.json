@@ -12589,6 +12589,155 @@
             "isExternal": false,
             "path": "/reference/nx-workspace-api/workspace",
             "tags": []
+          },
+          {
+            "id": "owners",
+            "name": "owners",
+            "description": "powerpack-owners package.",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/packages/owners/owners-plugin",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/nx-api/owners",
+                "tags": []
+              }
+            ],
+            "isExternal": false,
+            "path": "/reference/nx-workspace-api/owners",
+            "tags": []
+          },
+          {
+            "id": "conformance",
+            "name": "conformance",
+            "description": "powerpack-conformance package.",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/packages/conformance/conformance-plugin",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/nx-api/conformance",
+                "tags": []
+              },
+              {
+                "id": "create-conformance-rule",
+                "name": "Create a Conformance Rule",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/packages/conformance/create-conformance-rule",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/nx-api/conformance",
+                "tags": []
+              }
+            ],
+            "isExternal": false,
+            "path": "/reference/nx-workspace-api/conformance",
+            "tags": []
+          },
+          {
+            "id": "azure-cache",
+            "name": "azure-cache",
+            "description": "powerpack-azure-cache package.",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/packages/azure-cache/azure-cache-plugin",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/nx-api/azure-cache",
+                "tags": []
+              }
+            ],
+            "isExternal": false,
+            "path": "/reference/nx-workspace-api/azure-cache",
+            "tags": []
+          },
+          {
+            "id": "gcs-cache",
+            "name": "gcs-cache",
+            "description": "powerpack-gcs-cache package.",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/packages/gcs-cache/gcs-cache-plugin",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/nx-api/gcs-cache",
+                "tags": []
+              }
+            ],
+            "isExternal": false,
+            "path": "/reference/nx-workspace-api/gcs-cache",
+            "tags": []
+          },
+          {
+            "id": "s3-cache",
+            "name": "s3-cache",
+            "description": "powerpack-s3-cache package.",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/packages/s3-cache/s3-cache-plugin",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/nx-api/s3-cache",
+                "tags": []
+              }
+            ],
+            "isExternal": false,
+            "path": "/reference/nx-workspace-api/s3-cache",
+            "tags": []
+          },
+          {
+            "id": "shared-fs-cache",
+            "name": "shared-fs-cache",
+            "description": "powerpack-shared-fs-cache package.",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/packages/shared-fs-cache/shared-fs-cache-plugin",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/nx-api/shared-fs-cache",
+                "tags": []
+              }
+            ],
+            "isExternal": false,
+            "path": "/reference/nx-workspace-api/shared-fs-cache",
+            "tags": []
           }
         ],
         "isExternal": false,
@@ -13036,6 +13185,155 @@
         ],
         "isExternal": false,
         "path": "/reference/nx-workspace-api/workspace",
+        "tags": []
+      },
+      {
+        "id": "owners",
+        "name": "owners",
+        "description": "powerpack-owners package.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/packages/owners/owners-plugin",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-api/owners",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/reference/nx-workspace-api/owners",
+        "tags": []
+      },
+      {
+        "id": "conformance",
+        "name": "conformance",
+        "description": "powerpack-conformance package.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/packages/conformance/conformance-plugin",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-api/conformance",
+            "tags": []
+          },
+          {
+            "id": "create-conformance-rule",
+            "name": "Create a Conformance Rule",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/packages/conformance/create-conformance-rule",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-api/conformance",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/reference/nx-workspace-api/conformance",
+        "tags": []
+      },
+      {
+        "id": "azure-cache",
+        "name": "azure-cache",
+        "description": "powerpack-azure-cache package.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/packages/azure-cache/azure-cache-plugin",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-api/azure-cache",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/reference/nx-workspace-api/azure-cache",
+        "tags": []
+      },
+      {
+        "id": "gcs-cache",
+        "name": "gcs-cache",
+        "description": "powerpack-gcs-cache package.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/packages/gcs-cache/gcs-cache-plugin",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-api/gcs-cache",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/reference/nx-workspace-api/gcs-cache",
+        "tags": []
+      },
+      {
+        "id": "s3-cache",
+        "name": "s3-cache",
+        "description": "powerpack-s3-cache package.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/packages/s3-cache/s3-cache-plugin",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-api/s3-cache",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/reference/nx-workspace-api/s3-cache",
+        "tags": []
+      },
+      {
+        "id": "shared-fs-cache",
+        "name": "shared-fs-cache",
+        "description": "powerpack-shared-fs-cache package.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/packages/shared-fs-cache/shared-fs-cache-plugin",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-api/shared-fs-cache",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/reference/nx-workspace-api/shared-fs-cache",
         "tags": []
       }
     ],
@@ -13703,6 +14001,221 @@
     "itemList": [],
     "isExternal": false,
     "path": "/reference/nx-workspace-api/workspace/nx-nodejs-typescript-version-matrix",
+    "tags": []
+  },
+  "/reference/nx-workspace-api/owners": {
+    "id": "owners",
+    "name": "owners",
+    "description": "powerpack-owners package.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "overview",
+        "name": "Overview",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/packages/owners/owners-plugin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/owners",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/reference/nx-workspace-api/owners",
+    "tags": []
+  },
+  "/nx-api/owners": {
+    "id": "overview",
+    "name": "Overview",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/packages/owners/owners-plugin",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-api/owners",
+    "tags": []
+  },
+  "/reference/nx-workspace-api/conformance": {
+    "id": "conformance",
+    "name": "conformance",
+    "description": "powerpack-conformance package.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "overview",
+        "name": "Overview",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/packages/conformance/conformance-plugin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/conformance",
+        "tags": []
+      },
+      {
+        "id": "create-conformance-rule",
+        "name": "Create a Conformance Rule",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/packages/conformance/create-conformance-rule",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/conformance",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/reference/nx-workspace-api/conformance",
+    "tags": []
+  },
+  "/nx-api/conformance": {
+    "id": "create-conformance-rule",
+    "name": "Create a Conformance Rule",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/packages/conformance/create-conformance-rule",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-api/conformance",
+    "tags": []
+  },
+  "/reference/nx-workspace-api/azure-cache": {
+    "id": "azure-cache",
+    "name": "azure-cache",
+    "description": "powerpack-azure-cache package.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "overview",
+        "name": "Overview",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/packages/azure-cache/azure-cache-plugin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/azure-cache",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/reference/nx-workspace-api/azure-cache",
+    "tags": []
+  },
+  "/nx-api/azure-cache": {
+    "id": "overview",
+    "name": "Overview",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/packages/azure-cache/azure-cache-plugin",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-api/azure-cache",
+    "tags": []
+  },
+  "/reference/nx-workspace-api/gcs-cache": {
+    "id": "gcs-cache",
+    "name": "gcs-cache",
+    "description": "powerpack-gcs-cache package.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "overview",
+        "name": "Overview",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/packages/gcs-cache/gcs-cache-plugin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/gcs-cache",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/reference/nx-workspace-api/gcs-cache",
+    "tags": []
+  },
+  "/nx-api/gcs-cache": {
+    "id": "overview",
+    "name": "Overview",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/packages/gcs-cache/gcs-cache-plugin",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-api/gcs-cache",
+    "tags": []
+  },
+  "/reference/nx-workspace-api/s3-cache": {
+    "id": "s3-cache",
+    "name": "s3-cache",
+    "description": "powerpack-s3-cache package.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "overview",
+        "name": "Overview",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/packages/s3-cache/s3-cache-plugin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/s3-cache",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/reference/nx-workspace-api/s3-cache",
+    "tags": []
+  },
+  "/nx-api/s3-cache": {
+    "id": "overview",
+    "name": "Overview",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/packages/s3-cache/s3-cache-plugin",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-api/s3-cache",
+    "tags": []
+  },
+  "/reference/nx-workspace-api/shared-fs-cache": {
+    "id": "shared-fs-cache",
+    "name": "shared-fs-cache",
+    "description": "powerpack-shared-fs-cache package.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "overview",
+        "name": "Overview",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/packages/shared-fs-cache/shared-fs-cache-plugin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/shared-fs-cache",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/reference/nx-workspace-api/shared-fs-cache",
+    "tags": []
+  },
+  "/nx-api/shared-fs-cache": {
+    "id": "overview",
+    "name": "Overview",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/packages/shared-fs-cache/shared-fs-cache-plugin",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-api/shared-fs-cache",
     "tags": []
   },
   "/troubleshooting": {
