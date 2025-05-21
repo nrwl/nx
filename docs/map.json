@@ -2514,6 +2514,19 @@
                   "file": "generated/devkit/ngcli_adapter/README"
                 }
               ]
+            },
+            {
+              "name": "Nx Plugin",
+              "id": "plugin",
+              "description": "Plugin package.",
+              "itemList": [
+                {
+                  "id": "overview",
+                  "name": "Overview",
+                  "path": "/nx-api/plugin",
+                  "file": "shared/packages/plugin/plugin"
+                }
+              ]
             }
           ]
         }

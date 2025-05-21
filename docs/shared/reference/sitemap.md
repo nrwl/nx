@@ -413,6 +413,8 @@
     - [Devkit](/extending-nx/api/nx-devkit)
       - [Overview](/extending-nx/api/nx-devkit/overview)
       - [Ng CLI Adapter](/extending-nx/api/nx-devkit/ngcli-adapter)
+      - [Nx Plugin](/extending-nx/api/nx-devkit/plugin)
+  - [Overview](/nx-api/plugin)
 
 - Ci
 

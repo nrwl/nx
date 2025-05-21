@@ -3466,6 +3466,23 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Nx Plugin",
+                "path": "/extending-nx/api/nx-devkit/plugin",
+                "id": "plugin",
+                "isExternal": false,
+                "children": [
+                  {
+                    "name": "Overview",
+                    "path": "/nx-api/plugin",
+                    "id": "overview",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
