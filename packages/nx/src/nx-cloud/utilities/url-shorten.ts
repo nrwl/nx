@@ -178,8 +178,9 @@ export function isOldNxCloudVersion(version: string): boolean {
     .split('.')
     .map((part) => parseInt(part, 10));
 
-  // since 2025, we are using YYYY.MM.BuildNumber format
-  if (major >= 2025) {
+  // for on-prem images we are using YYYY.MM.BuildNumber format
+  // the first year is 2025
+  if (major >= 2025 && major < 2300) {
     return false;
   }
 
