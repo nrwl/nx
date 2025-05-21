@@ -47,7 +47,7 @@ export async function getCommonConfig(
     context: normalizedOptions.root,
     profile: normalizedOptions.statsJson,
     mode: isProduction ? 'production' : 'development',
-    devtool: normalizedOptions.sourceMap.scripts ? 'source-map' : undefined,
+    devtool: normalizedOptions.sourceMap.scripts ? 'source-map' : false,
     infrastructureLogging: {
       appendOnly: false,
       debug: normalizedOptions.verbose,
