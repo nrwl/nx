@@ -21,7 +21,7 @@ export async function createNxCloudOnboardingURL(
 
   try {
     const version = await getNxCloudVersion(apiUrl);
-    if ((version && isOldNxCloudVersion(version)) || !version) {
+    if (!version || isOldNxCloudVersion(version)) {
       return apiUrl;
     }
   } catch (e) {
