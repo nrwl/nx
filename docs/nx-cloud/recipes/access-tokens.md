@@ -32,7 +32,7 @@ You can configure an access token in CI by setting the `NX_CLOUD_ACCESS_TOKEN` e
 
 `NX_CLOUD_ACCESS_TOKEN` takes precedence over any authentication method in your `nx.json`.
 
-We recommend setting up a `read-write` and `read-only` in your CI based on protected vs unprotected branches. You can leverage your CI providers.
+We recommend setting up a `read-write` token for you protected branches in CI and a `read-only` token for unprotected branches and local development. You can leverage your CI provider's environment variables management to accomplish this.
 
 ### Azure DevOps
 
