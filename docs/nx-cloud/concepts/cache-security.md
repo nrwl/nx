@@ -34,10 +34,10 @@ While you can [specify a token](/ci/recipes/security/access-tokens) with the `nx
 
 ### Use Scoped Tokens in CI
 
-For all branches marked as protected, we recommend using a [read-write token](/ci/recipes/security/access-tokens#read-write-access).
-`read-write` access tokens allow reading and writing from the shared primary cache for your workspace.
+We recommend using a [read-write token](/ci/recipes/security/access-tokens#read-write-access) only for protected branches (branches that don't allow direct push).
+The `read-write` access tokens allow reading from and writing to the shared global cache of your workspace.
 
-In all other branches, we recommend using a [read-only token](/ci/recipes/security/access-tokens#read-only-access). A `read-only` token only allows reading from the shared primary cache, and writing to a branch specific isolated cache. This allows your CI pipelines to share computational work within the same CI pipeline, without opening up the possibility of cache poisoning in your trusted environments. Learn more about [access token architecture](/ci/recipes/security/access-tokens#setting-ci-access-tokens).
+In all other branches, we recommend using a [read-only token](/ci/recipes/security/access-tokens#read-only-access). A `read-only` token only allows reading from the shared global cache, while writing is limited to a branch-specific isolated cache. This allows your CI pipelines to share computational work within the same pull request branch and between the distributed agents, without opening up the possibility of cache poisoning in your trusted environments. Learn more about [access token architecture](/ci/recipes/security/access-tokens#setting-ci-access-tokens).
 
 ### No Need to Revoke Tokens After Employees Leave
 

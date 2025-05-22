@@ -9,7 +9,7 @@ The permissions and membership define what developers can access on nx.app but t
 ## Access Types
 
 {% callout type="warning" title="Use Caution With Read-Write Tokens" %}
-`read-write` tokens allow full write access to your remote cache. They should only be used in trusted environments.
+The `read-write` tokens allow full write access to your remote cache. They should only be used in trusted environments.
 {% /callout %}
 
 There are currently two (2) types of CI Access Token for Nx Cloud's runner that you can use with your workspace. Both support distributed task execution and allow Nx Cloud to store metadata about runs.
@@ -19,18 +19,18 @@ There are currently two (2) types of CI Access Token for Nx Cloud's runner that 
 
 ### Read Only Access
 
-The `read-only` access tokens will only read from the remote cache. New task results will be stored in the remote cache _only_ for that specific branch in a CI context, otherwise they will not be stored in the remote cache.  
-Cached results can be downloaded and replayed for other machines or CI pipelines to use. This option provides the benefit of remote cache hits while restricting machines without proper permissions from adding entries into the shared primary remote cache.
+The `read-only` access tokens can only read from the global remote cache. Task results produced with this type of access token will be stored in an isolated remote cache accessible _only_ by that specific branch in a CI context, and cannot influence the global shared cache.  
+The isolated remote cache produced with a `read-only` token is accessible to all machines or agents in the same CI execution, enabling cache sharing during distributed task execution.
 
 ### Read & Write Access
 
-The `read-write` access tokens allows task results to be stored in the remote cache for other machines or CI pipelines to download and replay. This access level should only be used for trusted environments, such as protected branches within your CI Pipeline.
+The `read-write` access tokens allow task results to be stored in the remote cache for other machines or CI pipelines to download and replay. This access level should only be used for trusted environments, such as protected branches within your CI Pipeline.
 
 ## Setting CI Access Tokens
 
 You can configure an access token in CI by setting the `NX_CLOUD_ACCESS_TOKEN` environment variable.
 
-`NX_CLOUD_ACCESS_TOKEN` takes precedence over any authentication method in your `nx.json`.
+The `NX_CLOUD_ACCESS_TOKEN` takes precedence over any authentication method in your `nx.json`.
 
 We recommend setting up a `read-write` token for you protected branches in CI and a `read-only` token for unprotected branches and local development. You can leverage your CI provider's environment variables management to accomplish this.
 
