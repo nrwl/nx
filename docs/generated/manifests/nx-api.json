@@ -2145,6 +2145,16 @@
       }
     },
     "migrations": {
+      "/nx-api/gradle/migrations/change-plugin-version-0-1-0": {
+        "description": "Change dev.nx.gradle.project-graph to version 0.1.0 in build file",
+        "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-0.json",
+        "hidden": false,
+        "name": "change-plugin-version-0-1-0",
+        "version": "21.1.2-beta.1",
+        "originalFilePath": "/packages/gradle",
+        "path": "/nx-api/gradle/migrations/change-plugin-version-0-1-0",
+        "type": "migration"
+      },
       "/nx-api/gradle/migrations/change-ciTargetName-to-ciTestTargetName": {
         "description": "Change @nx/gradle option from ciTargetName to ciTestTargetName",
         "file": "generated/packages/gradle/migrations/change-ciTargetName-to-ciTestTargetName.json",
