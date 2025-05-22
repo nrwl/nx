@@ -2,7 +2,8 @@
 
 {% youtube src="<https://youtu.be/vBokLJ_F8qs>" title="Configure CI access tokens" /%}
 
-The permissions and membership define what developers can access on nx.app but they don't affect what happens when you run Nx commands in CI. To manage that, you need to provision CI access tokens in your workspace settings, under the `Access Control` tab.
+The permissions and membership define what developers can access on [nx.app](https://cloud.nx.app?utm_source=nx.dev&utm_medium=docs&utm_campaign=nx-cloud-security), but they don't affect what happens when you run Nx commands in CI. To manage that, you need to provision CI access tokens in your workspace settings, under the `Access Control` tab.
+Learn more about [cache security best practices](/ci/concepts/cache-security).
 
 ![Access Control Settings Page](/nx-cloud/recipes/access-control-settings.avif)
 
@@ -24,7 +25,7 @@ The isolated remote cache produced with a `read-only` token is accessible to all
 
 ### Read & Write Access
 
-The `read-write` access tokens allow task results to be stored in the remote cache for other machines or CI pipelines to download and replay. This access level should only be used for trusted environments, such as protected branches within your CI Pipeline.
+The `read-write` access tokens allow task results to be stored in the remote cache for other machines or CI pipelines to download and replay. This access level should only be used for trusted environments such as protected branches within your CI Pipeline.
 
 ## Setting CI Access Tokens
 
@@ -32,7 +33,7 @@ You can configure an access token in CI by setting the `NX_CLOUD_ACCESS_TOKEN` e
 
 The `NX_CLOUD_ACCESS_TOKEN` takes precedence over any authentication method in your `nx.json`.
 
-We recommend setting up a `read-write` token for you protected branches in CI and a `read-only` token for unprotected branches and local development. You can leverage your CI provider's environment variables management to accomplish this.
+We recommend setting up a `read-write` token for you protected branches in CI and a `read-only` token for unprotected branches. You can leverage your CI provider's environment variables management to accomplish this.
 
 ### Azure DevOps
 
