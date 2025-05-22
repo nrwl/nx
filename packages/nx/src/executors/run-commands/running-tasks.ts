@@ -359,21 +359,15 @@ class RunningNodeProcess implements RunningTask {
 
   kill(signal?: NodeJS.Signals): Promise<void> {
     return new Promise<void>((res, rej) => {
-      if (process.platform === 'win32') {
-        if (this.childProcess.kill(signal)) {
-          res();
+      treeKill(this.childProcess.pid, signal, (err) => {
+        // On Windows, tree-kill (which uses taskkill) may fail when the process or its child process is already terminated.
+        // Ignore the errors, otherwise we will log them unnecessarily.
+        if (err && process.platform !== 'win32') {
+          rej(err);
         } else {
-          rej('Unable to kill process');
+          res();
         }
-      } else {
-        treeKill(this.childProcess.pid, signal, (err) => {
-          if (err) {
-            rej(err);
-          } else {
-            res();
-          }
-        });
-      }
+      });
     });
   }
 
