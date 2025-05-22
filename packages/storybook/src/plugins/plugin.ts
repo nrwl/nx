@@ -5,7 +5,6 @@ import {
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
-  getPackageManagerCommand,
   joinPathFragments,
   logger,
   parseJson,
@@ -22,6 +21,7 @@ import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import type { StorybookConfig } from '@storybook/types';
 import { hashObject } from 'nx/src/hasher/file-hasher';
+import { tsquery } from '@phenomnomnominal/tsquery';
 
 export interface StorybookPluginOptions {
   buildStorybookTargetName?: string;
@@ -163,10 +163,11 @@ async function buildStorybookTargets(
 
   const namedInputs = getNamedInputs(projectRoot, context);
 
-  const storybookFramework = await getStorybookFramework(
-    configFilePath,
-    context
-  );
+  // First attempt to do a very fast lookup for the framework
+  // If that fails, the framework might be inherited, so do a very heavyweight lookup
+  const storybookFramework =
+    (await getStorybookFramework(configFilePath, context)) ||
+    (await getStorybookFullyResolvedFramework(configFilePath, context));
 
   const frameworkIsAngular = storybookFramework === '@storybook/angular';
 
@@ -326,6 +327,63 @@ function serveStaticTarget(
 }
 
 async function getStorybookFramework(
+  configFilePath: string,
+  context: CreateNodesContext
+): Promise<string | undefined> {
+  const resolvedPath = join(context.workspaceRoot, configFilePath);
+  const mainTsJs = readFileSync(resolvedPath, 'utf-8');
+  const importDeclarations = tsquery.query(
+    mainTsJs,
+    'ImportDeclaration:has(ImportSpecifier:has([text="StorybookConfig"]))'
+  )?.[0];
+
+  if (!importDeclarations) {
+    return parseFrameworkName(mainTsJs);
+  }
+
+  const storybookConfigImportPackage = tsquery.query(
+    importDeclarations,
+    'StringLiteral'
+  )?.[0];
+
+  if (storybookConfigImportPackage?.getText() === `'@storybook/core-common'`) {
+    return parseFrameworkName(mainTsJs);
+  }
+
+  return storybookConfigImportPackage?.getText();
+}
+
+function parseFrameworkName(mainTsJs: string) {
+  const frameworkPropertyAssignment = tsquery.query(
+    mainTsJs,
+    `PropertyAssignment:has(Identifier:has([text="framework"]))`
+  )?.[0];
+
+  if (!frameworkPropertyAssignment) {
+    return undefined;
+  }
+
+  const propertyAssignments = tsquery.query(
+    frameworkPropertyAssignment,
+    `PropertyAssignment:has(Identifier:has([text="name"]))`
+  );
+
+  const namePropertyAssignment = propertyAssignments?.find((expression) => {
+    return expression.getText().startsWith('name');
+  });
+
+  if (!namePropertyAssignment) {
+    const storybookConfigImportPackage = tsquery.query(
+      frameworkPropertyAssignment,
+      'StringLiteral'
+    )?.[0];
+    return storybookConfigImportPackage?.getText();
+  }
+
+  return tsquery.query(namePropertyAssignment, `StringLiteral`)?.[0]?.getText();
+}
+
+async function getStorybookFullyResolvedFramework(
   configFilePath: string,
   context: CreateNodesContext
 ): Promise<string> {
