@@ -31,11 +31,9 @@ import {
   addUnitTestRunner,
   createFiles,
   createProject,
-  enableStrictTypeChecking,
   normalizeOptions,
-  setApplicationStrictDefault,
   setGeneratorDefaults,
-  updateEditorTsConfig,
+  updateTsconfigFiles,
 } from './lib';
 import type { Schema } from './schema';
 
@@ -88,7 +86,7 @@ export async function applicationGenerator(
     options,
     options.e2eTestRunner !== 'none' ? e2ePort : options.port
   );
-  updateEditorTsConfig(tree, options);
+  updateTsconfigFiles(tree, options);
   setGeneratorDefaults(tree, options);
 
   if (options.rootProject) {
@@ -99,12 +97,6 @@ export async function applicationGenerator(
 
   if (options.backendProject) {
     addProxyConfig(tree, options);
-  }
-
-  if (options.strict) {
-    enableStrictTypeChecking(tree, options);
-  } else {
-    setApplicationStrictDefault(tree, false);
   }
 
   if (options.ssr) {

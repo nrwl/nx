@@ -1,7 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`vitest generator angular should generate src/test-setup.ts 1`] = `
-"import '@analogjs/vitest-angular/setup-zone';
+"import '@angular/compiler';
+import '@analogjs/vitest-angular/setup-zone';
 
 import {
   BrowserTestingModule,

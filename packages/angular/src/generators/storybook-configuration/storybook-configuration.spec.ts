@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { readJson, writeJson } from '@nx/devkit';
+import { readJson, updateJson, writeJson } from '@nx/devkit';
 import { componentGenerator } from '../component/component';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
 import {
@@ -178,6 +178,14 @@ describe('StorybookConfiguration generator', () => {
   });
 
   it('should exclude Storybook-related files from tsconfig.editor.json for applications', async () => {
+    // the tsconfig.editor.json is only generated for versions lower than v20
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {
+        ...json.dependencies,
+        '@angular/core': '~19.2.0',
+      };
+      return json;
+    });
     await generateTestApplication(tree, { directory: 'test-app' });
 
     await storybookConfigurationGenerator(tree, {

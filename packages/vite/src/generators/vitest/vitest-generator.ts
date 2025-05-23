@@ -93,7 +93,8 @@ export async function vitestGeneratorInternal(
         if (isAngularV20(tree)) {
           tree.write(
             setupFile,
-            `import '@analogjs/vitest-angular/setup-zone';
+            `import '@angular/compiler';
+import '@analogjs/vitest-angular/setup-zone';
 
 import {
   BrowserTestingModule,

@@ -313,7 +313,10 @@ describe('lib', () => {
           typeCheckHostBindings: true,
         },
         compilerOptions: {
-          forceConsistentCasingInFileNames: true,
+          experimentalDecorators: true,
+          importHelpers: true,
+          module: 'preserve',
+          skipLibCheck: true,
           noFallthroughCasesInSwitch: true,
           noPropertyAccessFromIndexSignature: true,
           noImplicitOverride: true,
@@ -1179,7 +1182,6 @@ describe('lib', () => {
       const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
       // check that the TypeScript compiler options have been updated
-      expect(compilerOptions.forceConsistentCasingInFileNames).toBe(true);
       expect(compilerOptions.strict).toBe(true);
       expect(compilerOptions.noImplicitOverride).toBe(true);
       expect(compilerOptions.noPropertyAccessFromIndexSignature).toBe(true);

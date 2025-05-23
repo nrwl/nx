@@ -9,7 +9,6 @@ export function enableStrictTypeChecking(
 ): void {
   // This matches the settings defined by the Angular CLI https://angular.io/guide/strict-mode
   const compilerOptions = {
-    forceConsistentCasingInFileNames: true,
     strict: true,
     noImplicitOverride: true,
     noPropertyAccessFromIndexSignature: true,
@@ -24,7 +23,7 @@ export function enableStrictTypeChecking(
     updateJson(host, appTsConfigPath, (json) => {
       json.compilerOptions = { ...json.compilerOptions, ...compilerOptions };
       json.angularCompilerOptions = {
-        enableI18nLegacyMessageIdFormat: false,
+        ...json.angularCompilerOptions,
         strictInjectionParameters: true,
         strictInputAccessModifiers: true,
         typeCheckHostBindings: angularMajorVersion >= 20 ? true : undefined,

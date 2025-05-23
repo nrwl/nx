@@ -55,11 +55,19 @@ describe('setupSSR', () => {
         "
       `);
       expect(tree.exists('app1/tsconfig.server.json')).toBe(false);
-      expect(readJson(tree, 'app1/tsconfig.app.json').files).toStrictEqual([
-        'src/main.ts',
-        'src/main.server.ts',
-        'src/server.ts',
-      ]);
+      expect(tree.read('app1/tsconfig.app.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "extends": "./tsconfig.json",
+          "compilerOptions": {
+            "outDir": "../dist/out-tsc",
+            "types": ["node"]
+          },
+          "include": ["src/**/*.ts"],
+          "exclude": ["jest.config.ts", "src/**/*.test.ts", "src/**/*.spec.ts"]
+        }
+        "
+      `);
       expect(tree.read('app1/src/app/app.server.module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { NgModule } from '@angular/core';
@@ -145,11 +153,19 @@ describe('setupSSR', () => {
         "
       `);
       expect(tree.exists('app1/tsconfig.server.json')).toBe(false);
-      expect(readJson(tree, 'app1/tsconfig.app.json').files).toStrictEqual([
-        'src/main.ts',
-        'src/main.server.ts',
-        'src/server.ts',
-      ]);
+      expect(tree.read('app1/tsconfig.app.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "extends": "./tsconfig.json",
+          "compilerOptions": {
+            "outDir": "../dist/out-tsc",
+            "types": ["node"]
+          },
+          "include": ["src/**/*.ts"],
+          "exclude": ["jest.config.ts", "src/**/*.test.ts", "src/**/*.spec.ts"]
+        }
+        "
+      `);
       expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
@@ -998,6 +1014,30 @@ describe('setupSSR', () => {
         ];
         "
       `);
+    });
+
+    it('should add server files to the tsconfig.app.json files for versions lower than v20', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.dependencies = {
+          ...json.dependencies,
+          '@angular/core': '~19.2.0',
+        };
+        return json;
+      });
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        standalone: false,
+        skipFormat: true,
+      });
+
+      await setupSsr(tree, { project: 'app1' });
+
+      expect(readJson(tree, 'app1/tsconfig.app.json').files).toStrictEqual([
+        'src/main.ts',
+        'src/main.server.ts',
+        'src/server.ts',
+      ]);
     });
   });
 });

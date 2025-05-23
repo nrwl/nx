@@ -4,7 +4,6 @@ import {
   createNxCloudOnboardingURLForWelcomeApp,
   getNxCloudAppOnBoardingUrl,
 } from 'nx/src/nx-cloud/utilities/onboarding';
-import { lt } from 'semver';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import {
   getComponentType,
@@ -20,10 +19,7 @@ export async function createFiles(
   options: NormalizedSchema,
   rootOffset: string
 ) {
-  const { major: angularMajorVersion, version: angularVersion } =
-    getInstalledAngularVersionInfo(tree);
-  const isUsingApplicationBuilder = options.bundler === 'esbuild';
-  const disableModernClassFieldsBehavior = lt(angularVersion, '18.1.0-rc.0');
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
 
   const rootSelector = `${options.prefix}-root`;
   validateHtmlSelector(rootSelector);
@@ -57,8 +53,6 @@ export async function createFiles(
     rootTsConfig: joinPathFragments(rootOffset, getRootTsConfigFileName(tree)),
     angularMajorVersion,
     rootOffset,
-    isUsingApplicationBuilder,
-    disableModernClassFieldsBehavior,
     // Angular v19 or higher defaults to true, while lower versions default to false
     setStandaloneFalse: angularMajorVersion >= 19,
     setStandaloneTrue: angularMajorVersion < 19,
@@ -82,6 +76,12 @@ export async function createFiles(
     options.appProjectRoot,
     substitutions
   );
+
+  if (angularMajorVersion >= 20) {
+    tree.delete(
+      joinPathFragments(options.appProjectRoot, 'tsconfig.editor.json')
+    );
+  }
 
   if (options.standalone) {
     generateFiles(

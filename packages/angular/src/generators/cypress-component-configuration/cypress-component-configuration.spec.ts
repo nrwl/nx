@@ -6,6 +6,7 @@ import {
   readJson,
   readProjectConfiguration,
   Tree,
+  updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -420,6 +421,14 @@ describe('Cypress Component Testing Configuration', () => {
   });
 
   it('should exclude Cypress-related files from tsconfig.editor.json for applications', async () => {
+    // the tsconfig.editor.json is only generated for versions lower than v20
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {
+        ...json.dependencies,
+        '@angular/core': '~19.2.0',
+      };
+      return json;
+    });
     await generateTestApplication(tree, {
       directory: 'fancy-app',
       bundler: 'webpack',

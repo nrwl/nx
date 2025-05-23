@@ -55,7 +55,7 @@ describe('app', () => {
     enquirer.prompt = jest
       .fn()
       .mockReturnValue(Promise.resolve({ 'standalone-components': true }));
-    appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    appTree = createTreeWithEmptyWorkspace();
   });
 
   it('should add angular dependencies', async () => {
@@ -92,11 +92,10 @@ describe('app', () => {
     );
   });
 
-  it('should generate correct tsconfig.editor.json', async () => {
+  it('should not generate a tsconfig.editor.json', async () => {
     await generateApp(appTree);
 
-    const tsConfig = readJson(appTree, 'my-app/tsconfig.editor.json');
-    expect(tsConfig).toMatchSnapshot();
+    expect(appTree.exists('my-app/tsconfig.editor.json')).toBe(false);
   });
 
   it('should not touch the package.json when run with `--skipPackageJson`', async () => {
@@ -275,37 +274,6 @@ describe('app', () => {
       const { defaultProject } = readNxJson(appTree);
       expect(defaultProject).toBe('some-awesome-project');
     });
-
-    it('should set esModuleInterop when using the application builder', async () => {
-      await generateApp(appTree, 'my-app');
-
-      expect(
-        readJson(appTree, 'my-app/tsconfig.json').compilerOptions
-          .esModuleInterop
-      ).toBe(true);
-    });
-
-    it('should not set esModuleInterop when using the browser-esbuild builder', async () => {
-      await generateApp(appTree, 'my-app', { bundler: 'webpack' });
-      const project = readProjectConfiguration(appTree, 'my-app');
-      project.targets.build.executor =
-        '@angular-devkit/build-angular:browser-esbuild';
-      updateProjectConfiguration(appTree, 'my-app', project);
-
-      expect(
-        readJson(appTree, 'my-app/tsconfig.json').compilerOptions
-          .esModuleInterop
-      ).toBeUndefined();
-    });
-
-    it('should not set esModuleInterop when using the browser builder', async () => {
-      await generateApp(appTree, 'my-app', { bundler: 'webpack' });
-
-      expect(
-        readJson(appTree, 'my-app/tsconfig.json').compilerOptions
-          .esModuleInterop
-      ).toBeUndefined();
-    });
   });
 
   describe('nested', () => {
@@ -405,7 +373,7 @@ describe('app', () => {
 
   describe('at the root', () => {
     beforeEach(() => {
-      appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      appTree = createTreeWithEmptyWorkspace();
       updateJson(appTree, 'nx.json', (json) => ({
         ...json,
         workspaceLayout: { appsDir: '' },
@@ -467,25 +435,6 @@ describe('app', () => {
           expectedValue: ['../../.eslintrc.json'],
         },
       ].forEach(hasJsonValue);
-    });
-
-    it('should set esModuleInterop when using the application builder', async () => {
-      await generateApp(appTree, '.', { name: 'my-app' });
-
-      expect(
-        readJson(appTree, 'tsconfig.json').compilerOptions.esModuleInterop
-      ).toBe(true);
-    });
-
-    it('should not set esModuleInterop when using the browser builder', async () => {
-      await generateApp(appTree, '.', {
-        name: 'my-app',
-        bundler: 'webpack',
-      });
-
-      expect(
-        readJson(appTree, 'tsconfig.json').compilerOptions.esModuleInterop
-      ).toBeUndefined();
     });
   });
 
@@ -1319,7 +1268,7 @@ describe('app', () => {
 
   describe('angular compat support', () => {
     beforeEach(() => {
-      appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      appTree = createTreeWithEmptyWorkspace();
       updateJson(appTree, 'package.json', (json) => ({
         ...json,
         dependencies: {
@@ -1539,6 +1488,94 @@ describe('app', () => {
             ngZoneEventCoalescing: true
           })
           .catch((err) => console.error(err));
+        "
+      `);
+    });
+
+    it('should set esModuleInterop when using the application builder for versions lower than v20', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.2.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', { skipFormat: true });
+
+      expect(
+        readJson(appTree, 'my-app/tsconfig.json').compilerOptions
+          .esModuleInterop
+      ).toBe(true);
+    });
+
+    it('should not set esModuleInterop when using the browser builder for versions lower than v20', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.2.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', {
+        bundler: 'webpack',
+        skipFormat: true,
+      });
+
+      expect(
+        readJson(appTree, 'my-app/tsconfig.json').compilerOptions
+          .esModuleInterop
+      ).toBeUndefined();
+    });
+
+    it('should set "files" compiler option and not include all source files in tsconfig.app.json and generate a tsconfig.editor.json for versions lower than v20', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.2.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', { skipFormat: true });
+
+      expect(appTree.read('my-app/tsconfig.app.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "extends": "./tsconfig.json",
+          "compilerOptions": {
+            "outDir": "../dist/out-tsc",
+            "types": []
+          },
+          "files": [
+            "src/main.ts"
+          ],
+          "include": [
+            "src/**/*.d.ts"
+          ],
+          "exclude": [
+            "jest.config.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts"
+          ]
+        }
+        "
+      `);
+      expect(appTree.read('my-app/tsconfig.editor.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "extends": "./tsconfig.json",
+          "include": [
+            "src/**/*.ts"
+          ],
+          "compilerOptions": {},
+          "exclude": [
+            "jest.config.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts"
+          ]
+        }
         "
       `);
     });

@@ -6,7 +6,7 @@ import {
   offsetFromRoot,
 } from '@nx/devkit';
 import { getRootTsConfigFileName } from '@nx/js';
-import { lt, parse } from 'semver';
+import { parse } from 'semver';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import type { AngularProjectConfiguration } from '../../../utils/types';
 import { getInstalledAngularVersion } from '../../utils/version-utils';
@@ -28,7 +28,6 @@ export function createFiles(
 
   const version = getInstalledAngularVersion(tree);
   const { major, minor } = parse(version);
-  const disableModernClassFieldsBehavior = lt(version, '18.1.0-rc.0');
 
   const componentType = options.componentOptions.type
     ? names(options.componentOptions.type).className
@@ -51,7 +50,6 @@ export function createFiles(
     importPath: options.libraryOptions.importPath,
     rootOffset,
     angularPeerDepVersion: `^${major}.${minor}.0`,
-    disableModernClassFieldsBehavior,
     componentType,
     componentFileSuffix,
     moduleTypeSeparator: options.libraryOptions.moduleTypeSeparator,

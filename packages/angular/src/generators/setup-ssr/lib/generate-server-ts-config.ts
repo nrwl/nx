@@ -19,6 +19,16 @@ export function setServerTsConfigOptionsForApplicationBuilder(
   const tsConfigPath = targets.build.options.tsConfig;
 
   updateJson(tree, tsConfigPath, (json) => {
+    json.compilerOptions ??= {};
+    const types = new Set(json.compilerOptions.types ?? []);
+    types.add('node');
+    json.compilerOptions.types = Array.from(types);
+
+    if (json.include?.includes('src/**/*.ts')) {
+      // server file is already included, no need to add it
+      return json;
+    }
+
     const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
 
     const files = new Set(json.files ?? []);
@@ -29,11 +39,6 @@ export function setServerTsConfigOptionsForApplicationBuilder(
       files.add(joinPathFragments(options.serverFileName));
     }
     json.files = Array.from(files);
-
-    json.compilerOptions ??= {};
-    const types = new Set(json.compilerOptions.types ?? []);
-    types.add('node');
-    json.compilerOptions.types = Array.from(types);
 
     return json;
   });
