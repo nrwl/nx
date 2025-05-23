@@ -1037,7 +1037,7 @@ const coreFeatureAndConceptsRefactoring = {
  * For AI Chat to make sure old URLs are not broken (added 2023-09-14)
  */
 const aiChat = {
-  '/ai': '/ai-chat',
+  // '/ai': '/ai-chat',
 };
 
 // rename nx/linter to eslint
