@@ -1,7 +1,7 @@
 {
   "name": "replace-provide-server-routing",
   "version": "21.2.0-beta.0",
-  "requires": { "@angular/core": ">=20.0.0-rc.0" },
+  "requires": { "@angular/core": ">=20.0.0-rc.2" },
   "description": "Replace `provideServerRouting` with `provideServerRendering` using `withRoutes`.",
   "factory": "./src/migrations/update-21-2-0/replace-provide-server-routing",
   "implementation": "/packages/angular/src/migrations/update-21-2-0/replace-provide-server-routing.ts",
