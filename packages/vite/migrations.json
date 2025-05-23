@@ -62,6 +62,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "21.1.2": {
+      "version": "21.1.2-beta.0",
+      "packages": {
+        "@analogjs/vitest-angular": {
+          "version": "~1.16.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

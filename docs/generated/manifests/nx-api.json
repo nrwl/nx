@@ -5172,6 +5172,16 @@
       }
     },
     "migrations": {
+      "/nx-api/vite/migrations/21.1.2-package-updates": {
+        "description": "",
+        "file": "generated/packages/vite/migrations/21.1.2-package-updates.json",
+        "hidden": false,
+        "name": "21.1.2-package-updates",
+        "version": "21.1.2-beta.0",
+        "originalFilePath": "/packages/vite",
+        "path": "/nx-api/vite/migrations/21.1.2-package-updates",
+        "type": "migration"
+      },
       "/nx-api/vite/migrations/20.7.1-package-updates": {
         "description": "",
         "file": "generated/packages/vite/migrations/20.7.1-package-updates.json",
