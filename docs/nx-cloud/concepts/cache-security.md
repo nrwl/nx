@@ -39,7 +39,7 @@ A `read-write` access token allows reading from and writing to the shared global
 
 In all other branches, we recommend using a [read-only token](/ci/recipes/security/access-tokens#read-only-access). A `read-only` token only allows reading from the shared global cache, while writing is limited to an execution specific isolated cache.
 This allows your CI pipelines to share computational work between the [distributed agents](/ci/features/distribute-task-execution).
-When enabling a [source control integration with Nx Cloud](/ci/recipes/source-control-integration), we can securely scope the isolated cache to the pull request branch, without opening up the possibility of cache poisoning in your trusted environments. Learn more about [access token architecture](/ci/recipes/security/access-tokens#setting-ci-access-tokens).
+For workspaces with an enabled [source control integration with Nx Cloud](/ci/recipes/source-control-integration), we can securely scope the isolated cache to the pull request branch, without opening up the possibility of cache poisoning in your trusted environments. Learn more about [access token architecture](/ci/recipes/security/access-tokens#setting-ci-access-tokens).
 
 ### No Need to Revoke Tokens After Employees Leave
 
