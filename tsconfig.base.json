@@ -93,6 +93,7 @@
       "@nx/nx-dev/models-document": ["nx-dev/models-document/src/index.ts"],
       "@nx/nx-dev/models-menu": ["nx-dev/models-menu/src/index.ts"],
       "@nx/nx-dev/models-package": ["nx-dev/models-package/src/index.ts"],
+      "@nx/nx-dev/ui-angular": ["nx-dev/ui-angular/src/index.ts"],
       "@nx/nx-dev/ui-animations": ["nx-dev/ui-animations/src/index.ts"],
       "@nx/nx-dev/ui-blog": ["nx-dev/ui-blog/src/index.ts"],
       "@nx/nx-dev/ui-brands": ["nx-dev/ui-brands/src/index.ts"],

@@ -643,7 +643,6 @@ const packagesIndexes = {
   '/workspace': '/packages/workspace',
   '/devkit': '/packages/devkit',
   '/nx-plugin': '/packages/plugin',
-  '/angular': '/packages/angular',
   '/cypress': '/packages/cypress',
   '/detox': '/packages/detox',
   '/esbuild': '/packages/esbuild',
@@ -878,7 +877,7 @@ const missingAndCatchAllRedirects = {
   // catch all
   '/(l|latest|p|previous)/(a|angular|r|react|n|node)/:path*': '/:path*',
   '/(l|latest|p|previous)/:path*': '/:path*',
-  '/(a|angular|n|node)/:path*': '/:path*',
+  '/(n|node)/:path*': '/:path*',
   // Storybook
   '/(l|latest)/(r|react)/storybook/overview': '/storybook/overview-react',
   '/(l|latest)/(a|angular)/storybook/overview': '/storybook/overview-angular',

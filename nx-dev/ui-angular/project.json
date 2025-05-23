@@ -1,0 +1,9 @@
+{
+  "name": "ui-angular",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "nx-dev/ui-angular/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project ui-angular --web",
+  "targets": {}
+}
