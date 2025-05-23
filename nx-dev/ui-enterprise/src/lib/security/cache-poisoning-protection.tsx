@@ -59,11 +59,11 @@ export function CachePoisoningProtection(): ReactElement {
                     aria-hidden="true"
                     className="absolute left-1 top-1 h-5 w-5"
                   />
-                  Writes only from trusted CI{' '}
+                  Writes only from trusted CI branches{' '}
                 </span>
                 – By default, the cache artifacts are reused within each pull
-                request. Only artifacts from verified CI pipelines can enter the
-                shared cache used by everyone. PR environments can’t poison
+                request. Only artifacts from trusted CI pipelines should enter
+                the shared cache used by everyone. PR environments can't poison
                 main.
               </li>
               <li className="relative pl-9">
