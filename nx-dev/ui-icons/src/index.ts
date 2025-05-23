@@ -2,6 +2,7 @@
 export * from './lib/ai/cursor';
 export * from './lib/ai/github-copilot';
 export * from './lib/ai/intellij-ai';
+export * from './lib/ai/model-context-protocol';
 
 // CI PROVIDERS
 export * from './lib/ci-providers/azure-devops';

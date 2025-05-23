@@ -130,3 +130,19 @@ export const NxConsoleIcon: FC<SVGProps<SVGSVGElement>> = (props) => (
     />
   </svg>
 );
+
+export const NxConsoleSmallIcon: FC<SVGProps<SVGSVGElement>> = (props) => (
+  <svg
+    role="img"
+    xmlns="http://www.w3.org/2000/svg"
+    fill="currentColor"
+    viewBox="0 0 24 24"
+    {...props}
+  >
+    <path
+      fillRule="evenodd"
+      d="M5.2536 9H4v5h1.2536v-2.8855L7.23221 14h1.22024V9H7.23221v2.9515L5.2536 9Zm6.4819 0h-1.3251l1.7098 2.4731L10.3358 14h1.4019l1.7075-2.527L11.7355 9ZM19 13.0969h-3.6841V14H19v-.9031Z"
+      clipRule="evenodd"
+    />
+  </svg>
+);
