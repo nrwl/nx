@@ -25,7 +25,7 @@ fun processTask(
   val logger = task.logger
   logger.info("NxProjectReportTask: process $task for $projectRoot")
   val target = mutableMapOf<String, Any?>()
-  target["cache"] = true // set cache to be always true
+  target["cache"] = isCacheable(task) // set cache based on whether the task is cacheable
 
   val continuous = isContinuous(task)
   if (continuous) {
@@ -307,6 +307,14 @@ fun replaceRootInPath(p: String, projectRoot: String, workspaceRoot: String): St
   return null
 }
 
+val continuousTasks = setOf("bootRun")
+
 fun isContinuous(task: Task): Boolean {
-  return task.name == "bootRun"
+  return continuousTasks.contains(task.name)
+}
+
+val nonCacheableTasks = setOf("bootRun", "run")
+
+fun isCacheable(task: Task): Boolean {
+  return !nonCacheableTasks.contains(task.name)
 }
