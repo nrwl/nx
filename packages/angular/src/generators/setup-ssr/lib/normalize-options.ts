@@ -1,4 +1,8 @@
-import { readProjectConfiguration, type Tree } from '@nx/devkit';
+import {
+  joinPathFragments,
+  readProjectConfiguration,
+  type Tree,
+} from '@nx/devkit';
 import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { isNgStandaloneApp } from '../../../utils/nx-devkit/ast-utils';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
@@ -8,7 +12,7 @@ export async function normalizeOptions(
   tree: Tree,
   options: Schema
 ): Promise<NormalizedGeneratorOptions> {
-  const { targets } = readProjectConfiguration(tree, options.project);
+  const { targets, root } = readProjectConfiguration(tree, options.project);
   const isUsingApplicationBuilder =
     targets.build.executor === '@angular-devkit/build-angular:application' ||
     targets.build.executor === '@angular/build:application' ||
@@ -57,5 +61,8 @@ export async function normalizeOptions(
     hydration: options.hydration ?? true,
     serverRouting: options.serverRouting,
     isUsingApplicationBuilder,
+    buildTargetTsConfigPath:
+      targets.build.options?.tsConfig ??
+      joinPathFragments(root, 'tsconfig.app.json'),
   };
 }

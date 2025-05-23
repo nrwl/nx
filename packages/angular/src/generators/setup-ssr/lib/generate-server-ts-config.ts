@@ -73,4 +73,22 @@ export function generateTsConfigServerJsonForBrowserBuilder(
     hasLocalizePackage,
     tpl: '',
   });
+
+  updateJson(tree, joinPathFragments(project.root, 'tsconfig.json'), (json) => {
+    json.references ??= [];
+    json.references.push({
+      path: joinPathFragments(project.root, 'tsconfig.server.json'),
+    });
+    return json;
+  });
+
+  if (angularMajorVersion >= 20) {
+    updateJson(tree, options.buildTargetTsConfigPath, (json) => {
+      const exclude = new Set(json.exclude ?? []);
+      exclude.add('src/main.server.ts');
+      exclude.add('src/server.ts');
+      json.exclude = Array.from(exclude);
+      return json;
+    });
+  }
 }

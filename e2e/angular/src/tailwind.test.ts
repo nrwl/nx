@@ -365,8 +365,8 @@ describe('Tailwind support', () => {
         import { App } from './app';
 
         @NgModule({
-          declarations: [App],
-          imports: [BrowserModule, LibModule1, LibModule2],
+          declarations: [],
+          imports: [BrowserModule, App, LibModule1, LibModule2],
           providers: [],
           bootstrap: [App],
         })

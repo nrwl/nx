@@ -4,6 +4,8 @@
   "extends": "./tsconfig.app.json",
   "compilerOptions": {
     "outDir": "<%= rootOffset %>out-tsc/server",
+    "module": "commonjs",
+    "moduleResolution": "node10"
     "types": [
       "node"<% if (hasLocalizePackage) { %>,
       "@angular/localize"<% } %>

@@ -362,6 +362,8 @@ describe('setupSSR', () => {
           "extends": "./tsconfig.app.json",
           "compilerOptions": {
             "outDir": "../out-tsc/server",
+            "module": "commonjs",
+            "moduleResolution": "node10"
             "types": [
               "node"
             ]
@@ -452,6 +454,8 @@ describe('setupSSR', () => {
           "extends": "./tsconfig.app.json",
           "compilerOptions": {
             "outDir": "../out-tsc/server",
+            "module": "commonjs",
+            "moduleResolution": "node10"
             "types": [
               "node"
             ]
