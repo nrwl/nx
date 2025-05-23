@@ -56,16 +56,6 @@ export function PersonalAccess(): ReactElement {
               </li>
               <li className="relative pl-9">
                 <span className="inline font-semibold text-slate-950 dark:text-white">
-                  <GitHubIcon
-                    aria-hidden="true"
-                    className="absolute left-1 top-1 h-5 w-5"
-                  />
-                  Access is tied to your identity provider{' '}
-                </span>
-                — when SSO or GitHub access is revoked, cache access is too.
-              </li>
-              <li className="relative pl-9">
-                <span className="inline font-semibold text-slate-950 dark:text-white">
                   <LinkSlashIcon
                     aria-hidden="true"
                     className="absolute left-1 top-1 h-5 w-5"
