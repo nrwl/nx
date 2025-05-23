@@ -28,11 +28,11 @@ export default function CustomApp({
     <>
       <FrontendObservability />
       <DefaultSeo
-        title="Nx: Smart Monorepos · Fast CI"
+        title="Nx: Smart Repos · Fast Builds"
         description="Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'Nx: Smart Monorepos · Fast CI',
+          title: 'Nx: Smart Repos · Fast Builds',
           description:
             'Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.',
           images: [
@@ -40,7 +40,7 @@ export default function CustomApp({
               url: 'https://nx.dev/images/nx-media.jpg',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart Monorepos · Fast CI',
+              alt: 'Nx: Smart Repos · Fast Builds',
               type: 'image/jpeg',
             },
           ],

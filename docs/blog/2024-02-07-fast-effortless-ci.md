@@ -18,7 +18,7 @@ In 2014, the state of the art for running tests and builds in your repository we
 
 Nx was created in 2017 to address this problem. Nx is a build system that operates on a **higher level** where developers define the relationships between tasks and then Nx to decides the optimal way to run those tasks. In the same way, developers can define the inputs and outputs of tasks, then Nx automatically caches those task results. Developers tell Nx what a task does and then Nx can decide how best to run that task.
 
-With [Nx Agents](/ci/features/distribute-task-execution), Nx is applying this same mindset to the problem of slow and costly CI pipelines. Nx gives you both **Smart Monorepos** and **Fast CI**.
+With [Nx Agents](/ci/features/distribute-task-execution), Nx is applying this same mindset to the problem of slow and costly CI pipelines. Nx gives you both **Smart Repos** and **Fast Builds**.
 
 ## Why is CI So Hard?
 

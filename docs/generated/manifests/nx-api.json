@@ -1234,7 +1234,7 @@
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "create-nx-workspace",
     "packageName": "create-nx-workspace",
-    "description": "Smart Monorepos · Fast CI",
+    "description": "Smart Repos · Fast Builds",
     "documents": {},
     "root": "/packages/create-nx-workspace",
     "source": "/packages/create-nx-workspace/src",
