@@ -10,5 +10,10 @@
   <%_ } else { _%>
   "include": ["src/**/*.ts"],
   <%_ } _%>
-  "exclude": ["jest.config.ts", "src/**/*.test.ts", "src/**/*.spec.ts"]
+  "exclude": [
+    "jest.config.ts",
+    "src/test-setup.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts"
+  ]
 }

@@ -28,7 +28,6 @@ describe('preset', () => {
         "public",
         "src",
         "tsconfig.app.json",
-        "tsconfig.editor.json",
         "tsconfig.json",
         "tsconfig.spec.json",
       ]

@@ -114,6 +114,29 @@ describe('app', () => {
     expect(packageJson).toEqual(initialPackageJson);
   });
 
+  it('should set emitDecoratorMetadata to false when it is true in the root tsconfig', async () => {
+    updateJson(appTree, 'tsconfig.base.json', (json) => ({
+      ...json,
+      compilerOptions: {
+        ...json.compilerOptions,
+        emitDecoratorMetadata: true,
+        experimentalDecorators: true,
+      },
+    }));
+
+    await generateApp(appTree, 'my-app', { skipFormat: true });
+
+    const appTsConfig = readJson(appTree, 'my-app/tsconfig.json');
+    expect(appTsConfig.compilerOptions.emitDecoratorMetadata).toBe(false);
+  });
+
+  it('should not set emitDecoratorMetadata when it is not true in the root tsconfig', async () => {
+    await generateApp(appTree, 'my-app', { skipFormat: true });
+
+    const appTsConfig = readJson(appTree, 'my-app/tsconfig.json');
+    expect(appTsConfig.compilerOptions.emitDecoratorMetadata).toBeUndefined();
+  });
+
   describe('not nested', () => {
     it('should create project configs', async () => {
       // ACT
@@ -337,6 +360,7 @@ describe('app', () => {
           lookupFn: (json) => json.exclude,
           expectedValue: [
             'jest.config.ts',
+            'src/test-setup.ts',
             'src/**/*.test.ts',
             'src/**/*.spec.ts',
           ],
@@ -425,6 +449,7 @@ describe('app', () => {
           lookupFn: (json) => json.exclude,
           expectedValue: [
             'jest.config.ts',
+            'src/test-setup.ts',
             'src/**/*.test.ts',
             'src/**/*.spec.ts',
           ],
@@ -717,6 +742,15 @@ describe('app', () => {
         expect(
           references.find((r) => r.path.includes('tsconfig.spec.json'))
         ).toBeTruthy();
+      });
+
+      it('should exclude src/test-setup.ts in tsconfig.app.json', async () => {
+        await generateApp(appTree, 'my-app', {
+          unitTestRunner: UnitTestRunner.Jest,
+        });
+
+        const tsConfig = readJson(appTree, 'my-app/tsconfig.app.json');
+        expect(tsConfig.exclude).toContain('src/test-setup.ts');
       });
     });
 
@@ -1556,6 +1590,7 @@ describe('app', () => {
           ],
           "exclude": [
             "jest.config.ts",
+            "src/test-setup.ts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts"
           ]
@@ -1572,6 +1607,7 @@ describe('app', () => {
           "compilerOptions": {},
           "exclude": [
             "jest.config.ts",
+            "src/test-setup.ts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts"
           ]

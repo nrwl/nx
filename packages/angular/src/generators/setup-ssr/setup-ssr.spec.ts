@@ -64,7 +64,12 @@ describe('setupSSR', () => {
             "types": ["node"]
           },
           "include": ["src/**/*.ts"],
-          "exclude": ["jest.config.ts", "src/**/*.test.ts", "src/**/*.spec.ts"]
+          "exclude": [
+            "jest.config.ts",
+            "src/test-setup.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts"
+          ]
         }
         "
       `);
@@ -162,7 +167,12 @@ describe('setupSSR', () => {
             "types": ["node"]
           },
           "include": ["src/**/*.ts"],
-          "exclude": ["jest.config.ts", "src/**/*.test.ts", "src/**/*.spec.ts"]
+          "exclude": [
+            "jest.config.ts",
+            "src/test-setup.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts"
+          ]
         }
         "
       `);
