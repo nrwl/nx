@@ -1,0 +1,9 @@
+{
+  "name": "ui-php",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "nx-dev/ui-php/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project ui-php --web",
+  "targets": {}
+}

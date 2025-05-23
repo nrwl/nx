@@ -132,6 +132,7 @@ export * from './lib/technologies/nestjs';
 export * from './lib/technologies/nextjs';
 export * from './lib/technologies/nodejs';
 export * from './lib/technologies/nuxtjs';
+export * from './lib/technologies/php';
 export * from './lib/technologies/playwright';
 export * from './lib/technologies/pnpm';
 export * from './lib/technologies/prettier';

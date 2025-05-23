@@ -111,6 +111,7 @@
       "@nx/nx-dev/ui-fence": ["nx-dev/ui-fence/src/index.ts"],
       "@nx/nx-dev/ui-gradle": ["nx-dev/ui-gradle/src/lib/index.ts"],
       "@nx/nx-dev/ui-home": ["nx-dev/ui-home/src/index.ts"],
+      "@nx/nx-dev/ui-php": ["nx-dev/ui-php/src/lib/index.ts"],
       "@nx/nx-dev/ui-icons": ["nx-dev/ui-icons/src/index.ts"],
       "@nx/nx-dev/ui-markdoc": ["nx-dev/ui-markdoc/src/index.ts"],
       "@nx/nx-dev/ui-member-card": ["nx-dev/ui-member-card/src/index.ts"],
