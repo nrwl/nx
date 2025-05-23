@@ -985,7 +985,7 @@ import { NxWelcome } from './nx-welcome';
   styleUrl: './app.css',
 })
 export class App {
-  title = 'host';
+  protected title = 'host';
 }
 "
 `;

@@ -2,15 +2,15 @@
  * Adapted from the original ng-packagr source.
  *
  * Changes made:
+ * - Resolve `piscina` from the installed `ng-packagr` package.
  * - Additionally search for the TailwindCSS config in the workspace root.
  */
 
+import { workspaceRoot } from '@nx/devkit';
 import browserslist from 'browserslist';
 import { existsSync } from 'fs';
-import { dirname, join } from 'path';
-const Piscina = require('piscina');
 import { colors } from 'ng-packagr/src/lib/utils/color';
-import { workspaceRoot } from '@nx/devkit';
+import { dirname, join } from 'path';
 
 const maxWorkersVariable = process.env['NG_BUILD_MAX_WORKERS'];
 const maxThreads =
@@ -24,7 +24,7 @@ export enum CssUrl {
 }
 
 export class StylesheetProcessor {
-  private renderWorker: typeof Piscina | undefined;
+  private renderWorker: any | undefined;
 
   constructor(
     private readonly projectBasePath: string,
@@ -100,6 +100,8 @@ export class StylesheetProcessor {
     ]);
     const tailwindConfigPath = findTailwindConfiguration(searchDirs);
 
+    const Piscina = getPiscina();
+
     this.renderWorker = new Piscina({
       filename: require.resolve(
         'ng-packagr/lib/styles/stylesheet-processor-worker'
@@ -162,4 +164,35 @@ function transformSupportedBrowsersToTargets(
   }
 
   return transformed.length ? transformed : undefined;
+}
+
+/**
+ * Loads the `piscina` package from the installed `ng-packagr` package.
+ */
+function getPiscina() {
+  const ngPackagrPath = getInstalledNgPackagrPath();
+
+  try {
+    // Resolve the main piscina module entry point
+    const piscinaModulePath = require.resolve('piscina', {
+      paths: [ngPackagrPath],
+    });
+
+    return require(piscinaModulePath);
+  } catch (error) {
+    throw new Error(
+      `Failed to load the \`piscina\` package from \`ng-packagr\` dependencies: ${error.message}`
+    );
+  }
+}
+
+function getInstalledNgPackagrPath(): string {
+  try {
+    const ngPackagrPackageJsonPath = require.resolve('ng-packagr/package.json');
+    return dirname(ngPackagrPackageJsonPath);
+  } catch (e) {
+    throw new Error(
+      'The `ng-packagr` package is not installed. The package is required to use this executor. Please install it in your workspace.'
+    );
+  }
 }

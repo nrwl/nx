@@ -924,9 +924,6 @@ importers:
       picocolors:
         specifier: ^1.1.0
         version: 1.1.0
-      piscina:
-        specifier: ^4.4.0
-        version: 4.7.0
       postcss:
         specifier: 8.4.38
         version: 8.4.38
@@ -15899,9 +15896,6 @@ packages:
   pirates@4.0.6:
     resolution: {integrity: sha512-saLsH7WeYYPiD25LDuLRRY/i+6HaPYr6G1OUlN39otzkSTxKnubR9RTxS3/Kk50s1g2JTgFwWQDQyplC5/SHZg==}
     engines: {node: '>= 6'}
-
-  piscina@4.7.0:
-    resolution: {integrity: sha512-b8hvkpp9zS0zsfa939b/jXbe64Z2gZv0Ha7FYPNUiDIB1y2AtxcOZdfP8xN8HFjUaqQiT9gRlfjAsoL8vdJ1Iw==}
 
   piscina@4.8.0:
     resolution: {integrity: sha512-EZJb+ZxDrQf3dihsUL7p42pjNyrNIFJCrRHPMgxu/svsj+P3xS3fuEWp7k2+rfsavfl1N0G29b1HGs7J0m8rZA==}
@@ -41117,10 +41111,6 @@ snapshots:
       thread-stream: 3.1.0
 
   pirates@4.0.6: {}
-
-  piscina@4.7.0:
-    optionalDependencies:
-      '@napi-rs/nice': 1.0.1
 
   piscina@4.8.0:
     optionalDependencies:

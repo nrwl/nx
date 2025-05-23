@@ -18,7 +18,7 @@ describe('App<%= componentType %>', () => {
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome <%= appName %>'
     );
-  });<% if(!minimal) { %>
+  });<% if(!minimal && angularMajorVersion < 20) { %>
 
   it(`should have as title '<%= appName %>'`, () => {
     const fixture = TestBed.createComponent(App<%= componentType %>);

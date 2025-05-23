@@ -278,7 +278,6 @@
     "parse5": "4.0.0",
     "picocolors": "^1.1.0",
     "picomatch": "4.0.2",
-    "piscina": "^4.4.0",
     "postcss": "8.4.38",
     "postcss-import": "~14.1.0",
     "postcss-preset-env": "~7.5.0",

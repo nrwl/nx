@@ -10,5 +10,5 @@ import { Component<% if(viewEncapsulation) { %>, ViewEncapsulation<% } %> } from
   encapsulation: ViewEncapsulation.<%= viewEncapsulation %>,<% } %>
 })
 export class App<%= componentType %> {<% if(!minimal) { %>
-  title = '<%= appName %>';
+  <% if (angularMajorVersion >= 20) { %>protected <% } %>title = '<%= appName %>';
 <% } %>}

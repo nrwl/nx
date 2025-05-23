@@ -1579,6 +1579,66 @@ describe('app', () => {
         "
       `);
     });
+
+    it('should not set app component title to protected and should have a test case for the title property for versions lower than v20', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.2.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', { skipFormat: true });
+
+      expect(appTree.read('my-app/src/app/app.component.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { Component } from '@angular/core';
+
+        @Component({
+          selector: 'app-root',
+          standalone: false,
+          templateUrl: './app.component.html',
+          styleUrl: './app.component.css',
+        })
+        export class AppComponent {
+          title = 'my-app';
+        }
+        "
+      `);
+      expect(appTree.read('my-app/src/app/app.component.spec.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { TestBed } from '@angular/core/testing';
+        import { AppComponent } from './app.component';
+        import { NxWelcomeComponent } from './nx-welcome.component';
+        import { RouterModule } from '@angular/router';
+
+        describe('AppComponent', () => {
+          beforeEach(async () => {
+            await TestBed.configureTestingModule({
+              imports: [RouterModule.forRoot([])],
+              declarations: [AppComponent, NxWelcomeComponent]
+            }).compileComponents();
+          });
+
+          it('should render title', () => {
+            const fixture = TestBed.createComponent(AppComponent);
+            fixture.detectChanges();
+            const compiled = fixture.nativeElement as HTMLElement;
+            expect(compiled.querySelector('h1')?.textContent).toContain(
+              'Welcome my-app'
+            );
+          });
+
+          it(\`should have as title 'my-app'\`, () => {
+            const fixture = TestBed.createComponent(AppComponent);
+            const app = fixture.componentInstance;
+            expect(app.title).toEqual('my-app');
+          });
+        });
+        "
+      `);
+    });
   });
 });
 

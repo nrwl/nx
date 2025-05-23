@@ -479,7 +479,7 @@ import { NxWelcome } from './nx-welcome';
   styleUrl: './app.css',
 })
 export class App {
-  title = 'standalone';
+  protected title = 'standalone';
 }
 "
 `;
@@ -504,12 +504,6 @@ describe('App', () => {
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome standalone'
     );
-  });
-
-  it(\`should have as title 'standalone'\`, () => {
-    const fixture = TestBed.createComponent(App);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('standalone');
   });
 });
 "
@@ -549,7 +543,7 @@ import { NxWelcome } from './nx-welcome';
   styleUrl: './app.css',
 })
 export class App {
-  title = 'standalone';
+  protected title = 'standalone';
 }
 "
 `;
@@ -573,12 +567,6 @@ describe('App', () => {
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome standalone'
     );
-  });
-
-  it(\`should have as title 'standalone'\`, () => {
-    const fixture = TestBed.createComponent(App);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('standalone');
   });
 });
 "
@@ -828,7 +816,7 @@ exports[`app format files should format files 2`] = `
   styleUrl: './app.css',
 })
 export class App {
-  title = 'my-app';
+  protected title = 'my-app';
 }
 "
 `;
@@ -854,12 +842,6 @@ describe('App', () => {
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome my-app'
     );
-  });
-
-  it(\`should have as title 'my-app'\`, () => {
-    const fixture = TestBed.createComponent(App);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('my-app');
   });
 });
 "
@@ -1202,7 +1184,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
   styleUrl: './app.component.css',
 })
 export class AppComponent {
-  title = 'myapp';
+  protected title = 'myapp';
 }
 "
 `;
@@ -1233,12 +1215,6 @@ describe('AppComponent', () => {
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome myapp'
     );
-  });
-
-  it(\`should have as title 'myapp'\`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('myapp');
   });
 });
 "
