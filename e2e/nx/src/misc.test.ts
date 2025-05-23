@@ -339,7 +339,7 @@ describe('Nx Commands', () => {
 
   it('should show help if no command provided', () => {
     const output = runCLI('', { silenceError: true });
-    expect(output).toContain('Smart Monorepos · Fast CI');
+    expect(output).toContain('Smart Repos · Fast Builds');
     expect(output).toContain('Commands:');
   });
 });
