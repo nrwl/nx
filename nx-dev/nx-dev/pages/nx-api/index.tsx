@@ -61,7 +61,7 @@ export default function Packages({
               url: 'https://nx.dev/socials/nx-media.png',
               width: 1200,
               height: 600,
-              alt: 'Nx: Smart Monorepos · Fast CI',
+              alt: 'Nx: Smart Repos · Fast Builds',
               type: 'image/png',
             },
           ],

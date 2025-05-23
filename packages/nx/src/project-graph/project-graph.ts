@@ -56,7 +56,7 @@ export function readCachedProjectGraph(
       ? stripIndents`
       Make sure invoke 'node ./decorate-angular-cli.js' in your postinstall script.
       The decorated CLI will compute the project graph.
-      'ng --help' should say 'Smart Monorepos · Fast CI'.
+      'ng --help' should say 'Smart Repos · Fast Builds'.
       `
       : '';
 
