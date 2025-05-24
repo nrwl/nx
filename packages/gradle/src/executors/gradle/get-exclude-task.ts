@@ -1,4 +1,7 @@
-import { ProjectGraph } from 'nx/src/config/project-graph';
+import {
+  ProjectGraph,
+  ProjectGraphProjectNode,
+} from 'nx/src/config/project-graph';
 
 /**
  * Returns Gradle CLI arguments to exclude dependent tasks
@@ -8,28 +11,22 @@ import { ProjectGraph } from 'nx/src/config/project-graph';
  * and only `test` is running, this will return: ['lint']
  */
 export function getExcludeTasks(
-  projectGraph: ProjectGraph,
-  targets: { project: string; target: string; excludeDependsOn: boolean }[],
+  taskIds: Set<string>,
+  nodes: Record<string, ProjectGraphProjectNode>,
   runningTaskIds: Set<string> = new Set()
 ): Set<string> {
   const excludes = new Set<string>();
 
-  for (const { project, target, excludeDependsOn } of targets) {
-    if (!excludeDependsOn) {
-      continue;
-    }
-    const taskDeps =
-      projectGraph.nodes[project]?.data?.targets?.[target]?.dependsOn ?? [];
+  for (const taskId of taskIds) {
+    const [project, target] = taskId.split(':');
+    const taskDeps = nodes[project]?.data?.targets?.[target]?.dependsOn ?? [];
 
     for (const dep of taskDeps) {
       const taskId = typeof dep === 'string' ? dep : dep?.target;
       if (taskId && !runningTaskIds.has(taskId)) {
-        const [projectName, targetName] = taskId.split(':');
-        const taskName =
-          projectGraph.nodes[projectName]?.data?.targets?.[targetName]?.options
-            ?.taskName;
-        if (taskName) {
-          excludes.add(taskName);
+        const gradleTaskName = getGradleTaskNameWithNxTaskId(taskId, nodes);
+        if (gradleTaskName) {
+          excludes.add(gradleTaskName);
         }
       }
     }
@@ -38,30 +35,43 @@ export function getExcludeTasks(
   return excludes;
 }
 
+export function getGradleTaskNameWithNxTaskId(
+  nxTaskId: string,
+  nodes: Record<string, ProjectGraphProjectNode>
+): string | null {
+  const [projectName, targetName] = nxTaskId.split(':');
+  const gradleTaskName =
+    nodes[projectName]?.data?.targets?.[targetName]?.options?.taskName;
+  return gradleTaskName;
+}
+
 export function getAllDependsOn(
-  projectGraph: ProjectGraph,
+  nodes: Record<string, ProjectGraphProjectNode>,
   projectName: string,
-  targetName: string,
-  visited: Set<string> = new Set()
-): string[] {
-  const dependsOn =
-    projectGraph[projectName]?.data?.targets?.[targetName]?.dependsOn ?? [];
+  targetName: string
+): Set<string> {
+  const allDependsOn = new Set<string>();
+  const stack: string[] = [`${projectName}:${targetName}`];
 
-  const allDependsOn: string[] = [];
+  while (stack.length > 0) {
+    const currentTaskId = stack.pop();
+    if (currentTaskId && !allDependsOn.has(currentTaskId)) {
+      allDependsOn.add(currentTaskId);
 
-  for (const dependency of dependsOn) {
-    if (!visited.has(dependency)) {
-      visited.add(dependency);
+      const [currentProjectName, currentTargetName] = currentTaskId.split(':');
+      const directDependencies =
+        nodes[currentProjectName]?.data?.targets?.[currentTargetName]
+          ?.dependsOn ?? [];
 
-      const [depProjectName, depTargetName] = dependency.split(':');
-      allDependsOn.push(dependency);
-
-      // Recursively get dependencies of the current dependency
-      allDependsOn.push(
-        ...getAllDependsOn(projectGraph, depProjectName, depTargetName, visited)
-      );
+      for (const dep of directDependencies) {
+        const depTaskId = typeof dep === 'string' ? dep : dep?.target;
+        if (depTaskId && !allDependsOn.has(depTaskId)) {
+          stack.push(depTaskId);
+        }
+      }
     }
   }
+  allDependsOn.delete(`${projectName}:${targetName}`); // Exclude the starting task itself
 
   return allDependsOn;
 }
