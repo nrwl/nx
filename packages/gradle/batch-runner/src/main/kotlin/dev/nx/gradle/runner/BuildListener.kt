@@ -3,8 +3,6 @@ package dev.nx.gradle.runner
 import dev.nx.gradle.data.GradleTask
 import dev.nx.gradle.data.TaskResult
 import dev.nx.gradle.util.logger
-import kotlin.math.max
-import kotlin.math.min
 import org.gradle.tooling.events.ProgressEvent
 import org.gradle.tooling.events.task.TaskFailureResult
 import org.gradle.tooling.events.task.TaskFinishEvent
@@ -21,36 +19,36 @@ fun buildListener(
       tasks.entries
           .find { it.value.taskName == event.descriptor.taskPath }
           ?.key
-          ?.let { nxTaskId ->
-            taskStartTimes[nxTaskId] = min(System.currentTimeMillis(), event.eventTime)
-          }
+          ?.let { nxTaskId -> taskStartTimes[nxTaskId] = event.eventTime }
     }
 
     is TaskFinishEvent -> {
       val taskPath = event.descriptor.taskPath
-      val success =
-          when (event.result) {
-            is TaskSuccessResult -> {
-              logger.info("✅ Task finished successfully: $taskPath")
-              true
-            }
-
-            is TaskFailureResult -> {
-              logger.warning("❌ Task failed: $taskPath")
-              false
-            }
-
-            else -> true
-          }
-
+      val success = getTaskFinishEventSucces(event, taskPath)
       tasks.entries
           .find { it.value.taskName == taskPath }
           ?.key
           ?.let { nxTaskId ->
-            val endTime = max(System.currentTimeMillis(), event.eventTime)
+            val endTime = event.result.endTime
             val startTime = taskStartTimes[nxTaskId] ?: event.result.startTime
             taskResults[nxTaskId] = TaskResult(success, startTime, endTime, "")
           }
     }
+  }
+}
+
+fun getTaskFinishEventSucces(event: TaskFinishEvent, taskPath: String): Boolean {
+  return when (event.result) {
+    is TaskSuccessResult -> {
+      logger.info("✅ Task finished successfully: $taskPath")
+      true
+    }
+
+    is TaskFailureResult -> {
+      logger.warning("❌ Task failed: $taskPath")
+      false
+    }
+
+    else -> true
   }
 }
