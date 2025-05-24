@@ -58,6 +58,10 @@ export function getFramesBaseStyles(
       display: none;
     }
 
+    html.unsupported & {
+      display: none;
+    }
+
     /* RTL support: Code is always LTR, so the inline code block button
        must match this to avoid overlapping the start of lines */
     direction: ltr;

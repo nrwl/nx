@@ -417,7 +417,8 @@
   "packageManager": "pnpm@9.8.0",
   "pnpm": {
     "patchedDependencies": {
-      "@tutorialkit/react": "patches/@tutorialkit__react.patch"
+      "@tutorialkit/react": "patches/@tutorialkit__react.patch",
+      "@tutorialkit/runtime": "patches/@tutorialkit__runtime.patch"
     }
   }
 }

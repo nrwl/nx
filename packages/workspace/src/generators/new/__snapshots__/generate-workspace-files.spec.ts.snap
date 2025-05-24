@@ -7,7 +7,7 @@ exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should
 
 ✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or run \`npx nx graph\` to visually explore what was created. Now, let's get you up to speed!
+[Learn more about this workspace setup and its capabilities](https://nx.dev/tutorials/3-angular-monorepo/1a-introduction/1-welcome?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or run \`npx nx graph\` to visually explore what was created. Now, let's get you up to speed!
 
 ## Finish your CI setup
 
@@ -71,7 +71,7 @@ Nx Console is an editor extension that enriches your developer experience. It le
 
 Learn more:
 
-- [Learn more about this workspace setup](https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- [Learn more about this workspace setup](https://nx.dev/tutorials/3-angular-monorepo/1a-introduction/1-welcome?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
@@ -1108,7 +1108,7 @@ exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should
 
 ✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/tutorials/react-monorepo-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or run \`npx nx graph\` to visually explore what was created. Now, let's get you up to speed!
+[Learn more about this workspace setup and its capabilities](https://nx.dev/tutorials/2-react-monorepo/1r-introduction/1-welcome?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or run \`npx nx graph\` to visually explore what was created. Now, let's get you up to speed!
 
 ## Finish your CI setup
 
@@ -1172,7 +1172,7 @@ Nx Console is an editor extension that enriches your developer experience. It le
 
 Learn more:
 
-- [Learn more about this workspace setup](https://nx.dev/getting-started/tutorials/react-monorepo-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- [Learn more about this workspace setup](https://nx.dev/tutorials/2-react-monorepo/1r-introduction/1-welcome?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
@@ -1758,7 +1758,7 @@ exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should b
 
 ✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or run \`npx nx graph\` to visually explore what was created. Now, let's get you up to speed!
+[Learn more about this workspace setup and its capabilities](https://nx.dev/tutorials/3-angular-monorepo/1a-introduction/1-welcome?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or run \`npx nx graph\` to visually explore what was created. Now, let's get you up to speed!
 
 ## Run tasks
 
@@ -1843,7 +1843,7 @@ Nx Console is an editor extension that enriches your developer experience. It le
 
 Learn more:
 
-- [Learn more about this workspace setup](https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- [Learn more about this workspace setup](https://nx.dev/tutorials/3-angular-monorepo/1a-introduction/1-welcome?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
@@ -3132,7 +3132,7 @@ exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should b
 
 ✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/tutorials/react-monorepo-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or run \`npx nx graph\` to visually explore what was created. Now, let's get you up to speed!
+[Learn more about this workspace setup and its capabilities](https://nx.dev/tutorials/2-react-monorepo/1r-introduction/1-welcome?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or run \`npx nx graph\` to visually explore what was created. Now, let's get you up to speed!
 
 ## Run tasks
 
@@ -3217,7 +3217,7 @@ Nx Console is an editor extension that enriches your developer experience. It le
 
 Learn more:
 
-- [Learn more about this workspace setup](https://nx.dev/getting-started/tutorials/react-monorepo-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- [Learn more about this workspace setup](https://nx.dev/tutorials/2-react-monorepo/1r-introduction/1-welcome?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
@@ -3950,7 +3950,7 @@ exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be
 
 ✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or run \`npx nx graph\` to visually explore what was created. Now, let's get you up to speed!
+[Learn more about this workspace setup and its capabilities](https://nx.dev/tutorials/3-angular-monorepo/1a-introduction/1-welcome?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or run \`npx nx graph\` to visually explore what was created. Now, let's get you up to speed!
 
 ## Finish your remote caching setup
 
@@ -4014,7 +4014,7 @@ Nx Console is an editor extension that enriches your developer experience. It le
 
 Learn more:
 
-- [Learn more about this workspace setup](https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- [Learn more about this workspace setup](https://nx.dev/tutorials/3-angular-monorepo/1a-introduction/1-welcome?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
@@ -5051,7 +5051,7 @@ exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be
 
 ✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/tutorials/react-monorepo-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or run \`npx nx graph\` to visually explore what was created. Now, let's get you up to speed!
+[Learn more about this workspace setup and its capabilities](https://nx.dev/tutorials/2-react-monorepo/1r-introduction/1-welcome?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or run \`npx nx graph\` to visually explore what was created. Now, let's get you up to speed!
 
 ## Finish your remote caching setup
 
@@ -5115,7 +5115,7 @@ Nx Console is an editor extension that enriches your developer experience. It le
 
 Learn more:
 
-- [Learn more about this workspace setup](https://nx.dev/getting-started/tutorials/react-monorepo-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- [Learn more about this workspace setup](https://nx.dev/tutorials/2-react-monorepo/1r-introduction/1-welcome?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)

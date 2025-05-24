@@ -6,7 +6,32 @@ import tutorialStore from 'tutorialkit:store';
 export function GlobalCustomizations() {
   useEffect(() => {
     // These actions run on every page load
+    // Disable for unsupported browsers
+    if (navigator.userAgent.includes('Gecko/')) {
+      const lesson = tutorialStore.lesson;
+      if (lesson) {
+        tutorialStore.setLesson({
+          ...lesson,
+          data: {
+            ...lesson.data,
+            editor: false,
+            terminal: false,
+            previews: false,
+          },
+        });
+      }
+      const htmlEl = document.querySelector('html');
+      htmlEl?.classList.add('unsupported');
+    } else {
+      const htmlEl = document.querySelector('html');
+      htmlEl?.classList.add('supported');
+    }
 
+    // Force reload of the page when navigating between lessons
+    document.addEventListener('astro:before-preparation', (e) => {
+      document.location.href = e.to.href;
+      e.preventDefault();
+    });
     // Disable previous and next buttons if this is the first or last lesson of a tutorial
     function waitForTopBar() {
       if (!document.querySelector('#top-bar')) {
@@ -60,8 +85,12 @@ export function GlobalCustomizations() {
         callOnce(() => {
           setTimeout(() => {
             terminal.input('export PATH="$PATH:/home/tutorial"\n');
-            setTimeout(() => {
+            setTimeout(async () => {
               terminal.input('clear\n');
+              const packageJson = await wc.fs.readFile('package.json');
+              if (packageJson) {
+                terminal.input('npm install\n');
+              }
             }, 10);
           }, 10);
         })
@@ -78,7 +107,7 @@ export function GlobalCustomizations() {
     // Apply file changes
     async function applyFileChanges(e: any) {
       const { filepath } = e.detail;
-      if (!filepath) {
+      if (!filepath || !(tutorialStore as any)._lessonSolution[filepath]) {
         return;
       }
       tutorialStore.updateFile(
