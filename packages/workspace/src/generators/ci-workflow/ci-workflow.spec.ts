@@ -8,8 +8,8 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { ciWorkflowGenerator } from './ci-workflow';
 import { vol } from 'memfs';
+import { ciWorkflowGenerator } from './ci-workflow';
 
 jest.mock('child_process', () => {
   const cp = jest.requireActual('child_process');
@@ -487,7 +487,7 @@ describe('CI Workflow generator', () => {
                 displayName: 'Set default Azure DevOps organization and project'
               # Get last successfull commit from Azure Devops CLI
               - bash: |
-                  LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\\"ci.sourceSha\\"")
+                  LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\\"ci.sourceSha\\"" | sed 's/"//g')
                   if [ -z "$LAST_SHA" ]
                   then
                     echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"

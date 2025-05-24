@@ -41,7 +41,7 @@ jobs:
         displayName: 'Set default Azure DevOps organization and project'
       # Get last successfull commit from Azure Devops CLI
       - bash: |
-          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\"ci.sourceSha\"")
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\"ci.sourceSha\"" | sed 's/"//g')
           if [ -z "$LAST_SHA" ]
           then
             echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
@@ -86,7 +86,7 @@ Then we can query the pipelines API (providing the auth token)
 ```yaml
 # Get last successfull commit from Azure Devops CLI
 - bash: |
-    LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\"ci.sourceSha\"")
+    LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\"ci.sourceSha\"" | sed 's/"//g')
     if [ -z "$LAST_SHA" ]
     then
       echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
