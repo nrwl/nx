@@ -96,6 +96,8 @@ node_modules/
 *.njsproj
 *.sln
 *.sw?
+.specstory/**
+.cursorindexingignore
 # OS specific
 # Task files
 tasks.json
