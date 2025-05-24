@@ -19,12 +19,15 @@ fun buildListener(
       tasks.entries
           .find { it.value.taskName == event.descriptor.taskPath }
           ?.key
-          ?.let { nxTaskId -> taskStartTimes[nxTaskId] = event.eventTime }
+          ?.let { nxTaskId ->
+            taskStartTimes[nxTaskId] = event.eventTime
+            logger.info("🏁 Task start: $nxTaskId ${event.descriptor.taskPath}")
+          }
     }
 
     is TaskFinishEvent -> {
       val taskPath = event.descriptor.taskPath
-      val success = getTaskFinishEventSucces(event, taskPath)
+      val success = getTaskFinishEventSuccess(event, taskPath)
       tasks.entries
           .find { it.value.taskName == taskPath }
           ?.key
@@ -37,7 +40,7 @@ fun buildListener(
   }
 }
 
-fun getTaskFinishEventSucces(event: TaskFinishEvent, taskPath: String): Boolean {
+fun getTaskFinishEventSuccess(event: TaskFinishEvent, taskPath: String): Boolean {
   return when (event.result) {
     is TaskSuccessResult -> {
       logger.info("✅ Task finished successfully: $taskPath")

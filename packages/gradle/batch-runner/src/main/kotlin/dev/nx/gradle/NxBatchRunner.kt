@@ -7,7 +7,6 @@ import dev.nx.gradle.util.configureSingleLineLogger
 import dev.nx.gradle.util.logger
 import java.io.File
 import kotlin.system.exitProcess
-import kotlinx.coroutines.runBlocking
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.ProjectConnection
 
@@ -32,18 +31,17 @@ fun main(args: Array<String>) {
     val connector = GradleConnector.newConnector().forProjectDirectory(File(options.workspaceRoot))
 
     buildConnection = connector.connect()
+    logger.info("🏁 Gradle connection open.")
 
-    val results = runBlocking {
-      runTasksInParallel(
-          buildConnection,
-          options.tasks,
-          options.args,
-          options.excludeTasks,
-          options.excludeTestTasks)
-    }
+    val results =
+        runTasksInParallel(
+            buildConnection,
+            options.tasks,
+            options.args,
+            options.excludeTasks,
+            options.excludeTestTasks)
 
     val reportJson = Gson().toJson(results)
-    // logger.info("$reportJson")
     println(reportJson)
 
     val summary = results.values.groupBy { it.success }

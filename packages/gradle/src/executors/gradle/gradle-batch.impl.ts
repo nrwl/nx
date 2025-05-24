@@ -144,7 +144,9 @@ export function getGradlewTasksToRun(
   const excludeTestTasks = new Set<string>();
   for (let taskId of allTestsDependsOn) {
     const gradleTaskName = getGradleTaskNameWithNxTaskId(taskId, nodes);
-    excludeTestTasks.add(gradleTaskName);
+    if (gradleTaskName) {
+      excludeTestTasks.add(gradleTaskName);
+    }
   }
 
   return {

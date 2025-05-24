@@ -17,7 +17,7 @@ fun testListener(
     when (event) {
       is TaskFinishEvent -> {
         val taskPath = event.descriptor.taskPath
-        val success = getTaskFinishEventSucces(event, taskPath)
+        val success = getTaskFinishEventSuccess(event, taskPath)
 
         tasks.entries
             .filter {

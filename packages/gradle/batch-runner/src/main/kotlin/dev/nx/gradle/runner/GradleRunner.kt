@@ -6,19 +6,17 @@ import dev.nx.gradle.runner.OutputProcessor.buildTerminalOutput
 import dev.nx.gradle.runner.OutputProcessor.finalizeTaskResults
 import dev.nx.gradle.util.logger
 import java.io.ByteArrayOutputStream
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import org.gradle.tooling.BuildCancelledException
 import org.gradle.tooling.ProjectConnection
 import org.gradle.tooling.events.OperationType
 
-suspend fun runTasksInParallel(
+fun runTasksInParallel(
     connection: ProjectConnection,
     tasks: Map<String, GradleTask>,
     additionalArgs: String,
     excludeTasks: List<String>,
     excludeTestTasks: List<String>
-): Map<String, TaskResult> = coroutineScope {
+): Map<String, TaskResult> {
   logger.info("▶️ Running all tasks in a single Gradle run: ${tasks.keys.joinToString(", ")}")
 
   val (testClassTasks, buildTasks) = tasks.entries.partition { it.value.testClassName != null }
@@ -34,7 +32,7 @@ suspend fun runTasksInParallel(
   // --info is for terminal per task
   // --continue is for continue running tasks if one failed in a batch
   // --parallel is for performance
-  // -Dorg.gradle.daemon.idletimeout=10000 is to kill daemon after 0 ms
+  // -Dorg.gradle.daemon.idletimeout=0 is to kill daemon after 0 ms
   val cpuCores = Runtime.getRuntime().availableProcessors()
   val workersMax = (cpuCores * 0.5).toInt().coerceAtLeast(1)
   val args =
@@ -53,35 +51,33 @@ suspend fun runTasksInParallel(
 
   logger.info("🏳️ Args: ${args.joinToString(", ")}")
 
-  val buildJob = async {
-    if (buildTasks.isNotEmpty()) {
-      runBuildLauncher(
-          connection,
-          buildTasks.associate { it.key to it.value },
-          args,
-          excludeTasks,
-          outputStream1,
-          errorStream1)
-    } else emptyMap()
-  }
-
-  val testJob = async {
-    if (testClassTasks.isNotEmpty()) {
-      runTestLauncher(
-          connection,
-          testClassTasks.associate { it.key to it.value },
-          args,
-          excludeTestTasks,
-          outputStream2,
-          errorStream2)
-    } else emptyMap()
-  }
-
   val allResults = mutableMapOf<String, TaskResult>()
-  allResults.putAll(buildJob.await())
-  allResults.putAll(testJob.await())
 
-  return@coroutineScope allResults
+  if (buildTasks.isNotEmpty()) {
+    val buildResults =
+        runBuildLauncher(
+            connection,
+            buildTasks.associate { it.key to it.value },
+            args,
+            excludeTasks,
+            outputStream1,
+            errorStream1)
+    allResults.putAll(buildResults)
+  }
+
+  if (testClassTasks.isNotEmpty()) {
+    val testResults =
+        runTestLauncher(
+            connection,
+            testClassTasks.associate { it.key to it.value },
+            args,
+            excludeTestTasks,
+            outputStream2,
+            errorStream2)
+    allResults.putAll(testResults)
+  }
+
+  return allResults
 }
 
 fun runBuildLauncher(
@@ -127,8 +123,11 @@ fun runBuildLauncher(
 
   val globalEnd = System.currentTimeMillis()
   val maxEndTime = taskResults.values.map { it.endTime }.maxOrNull() ?: globalEnd
-  val delta = globalEnd - maxEndTime
-  logger.info("build delta $delta")
+  val minStartTime = taskResults.values.map { it.startTime }.minOrNull() ?: globalStart
+  logger.info(
+      "⏱️ Build start timing gap: ${minStartTime - globalStart}ms (time between first task start and build launcher start) ")
+  logger.info(
+      "⏱️ Build completion timing gap: ${globalEnd - maxEndTime}ms (time between last task finish and build end)")
 
   finalizeTaskResults(
       tasks = tasks,
@@ -199,8 +198,11 @@ fun runTestLauncher(
 
   val globalEnd = System.currentTimeMillis()
   val maxEndTime = testEndTimes.values.maxOrNull() ?: globalEnd
-  val delta = globalEnd - maxEndTime
-  logger.info("test delta $delta")
+  val minStartTime = testStartTimes.values.minOrNull() ?: globalStart
+  logger.info(
+      "⏱️ Test start timing gap: ${minStartTime - globalStart}ms (time between first test start and test launcher start) ")
+  logger.info(
+      "⏱️ Test completion timing gap: ${globalEnd - maxEndTime}ms (time between last test finish and test launcher end)")
 
   val taskResults = mutableMapOf<String, TaskResult>()
   tasks.forEach { (nxTaskId, taskConfig) ->
