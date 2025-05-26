@@ -242,5 +242,32 @@ describe('URL Helper Functions', () => {
         processRemoteLocation('http://localhost:4201?v=1.0#main', 'js')
       ).toBe('http://localhost:4201/remoteEntry.js?v=1.0#main');
     });
+    it('should map string remotes using aliases for scoped names', () => {
+      expect(
+        mapRemotes(
+          ['@nx-mf/remote'],
+          'js',
+          (remote) => {
+            return `http://localhost:3001/remoteEntry.js`;
+          },
+          true
+        )
+      ).toEqual({
+        '@nx-mf/remote': '_nx_mf_remote@http://localhost:3001/remoteEntry.js',
+      });
+    });
+
+    it('should map array remotes using aliases for scoped names', () => {
+      expect(
+        mapRemotes(
+          [['@nx-mf/remote', 'http://localhost:4201/remoteEntry.js']],
+          'js',
+          (remote) => remote,
+          true
+        )
+      ).toEqual({
+        '@nx-mf/remote': '_nx_mf_remote@http://localhost:4201/remoteEntry.js',
+      });
+    });
   });
 });
