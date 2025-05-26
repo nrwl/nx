@@ -119,11 +119,47 @@ export class DocumentsApi {
   }
 
   getSlugsStaticDocumentPaths(): string[] {
-    if (this.options.prefix)
-      return Object.keys(this.manifest).map(
+    let paths = [];
+    
+    // Add regular document paths
+    if (this.options.prefix) {
+      paths = Object.keys(this.manifest).map(
         (path) => `/${this.options.prefix}` + path
       );
-    return Object.keys(this.manifest);
+    } else {
+      paths = Object.keys(this.manifest);
+    }
+
+    // Add API docs paths (executors, generators, migrations) if packagesManifest is available
+    if (this.packagesManifest) {
+      const packages = Object.values(this.packagesManifest);
+      
+      // For each package, add executors, generators, and migrations paths
+      packages.forEach((pkg) => {
+        // Transform path from '/nx-api/react' to '/technologies/react'
+        const packagePathBase = pkg.path.replace('/nx-api/', '/technologies/');
+        
+        // Add executors
+        Object.keys(pkg.executors).forEach((path) => {
+          const newPath = path.replace('/nx-api/', '/technologies/');
+          paths.push(newPath);
+        });
+        
+        // Add generators
+        Object.keys(pkg.generators).forEach((path) => {
+          const newPath = path.replace('/nx-api/', '/technologies/');
+          paths.push(newPath);
+        });
+        
+        // Add migrations
+        Object.keys(pkg.migrations).forEach((path) => {
+          const newPath = path.replace('/nx-api/', '/technologies/');
+          paths.push(newPath);
+        });
+      });
+    }
+    
+    return paths;
   }
 
   getDocument(path: string[]): ProcessedDocument {
