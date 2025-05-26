@@ -105,7 +105,7 @@ const aiFeatures: AIFeature[] = [
   },
   {
     id: 'ci-fixes',
-    title: 'AI-Powered CI Failure Analysis',
+    title: 'CI integration and AI-powered fixes',
     description:
       'Your LLM automatically diagnoses CI failures and suggests targeted fixes.',
     icon: ({ className, ...props }: React.ComponentProps<'svg'>) => (
@@ -146,7 +146,7 @@ const aiFeatures: AIFeature[] = [
   },
   {
     id: 'terminal-integration',
-    title: 'Active Terminal Task and Log Awareness',
+    title: 'Active terminal task and log awareness',
     description:
       'Give your LLM real-time visibility into running tasks and build outputs.',
     icon: CommandLineIcon,
@@ -157,7 +157,7 @@ const aiFeatures: AIFeature[] = [
   },
   {
     id: 'code-generation',
-    title: 'Predictable Code Generation That Works',
+    title: 'Predictable code generation that works',
     description:
       'Generate workspace-aware code that follows your patterns and architecture.',
     icon: ({ className, ...props }: React.ComponentProps<'svg'>) => (
@@ -422,9 +422,12 @@ export function Hero(): JSX.Element {
                     onClick={() => setSelectedFeature(feature)}
                     className={cx(
                       'group flex w-full gap-4 rounded-lg p-4 text-left transition-all duration-200',
-                      isSelected
-                        ? 'bg-blue-50 ring-2 ring-blue-500 dark:bg-blue-950/50 dark:ring-blue-400'
-                        : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                      {
+                        'bg-blue-50 ring-2 ring-blue-500 dark:bg-blue-950/50 dark:ring-blue-400':
+                          isSelected,
+                        'hover:bg-slate-100 dark:hover:bg-slate-800':
+                          !isSelected,
+                      }
                     )}
                   >
                     <motion.div
