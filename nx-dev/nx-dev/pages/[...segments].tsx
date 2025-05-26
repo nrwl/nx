@@ -57,7 +57,7 @@ export default function NxDocumentation({
 }
 
 export const getStaticPaths: GetStaticPaths = () => {
-  const reservedPaths = ['/ci', '/nx-api', '/changelog'];
+  const reservedPaths = ['/ci', '/changelog'];
   return {
     paths: nxDocumentationApi
       .getSlugsStaticDocumentPaths()
