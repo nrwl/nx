@@ -2691,7 +2691,7 @@
           ]
         },
         {
-          "name": "Core Concepts",
+          "name": "Concepts",
           "id": "concepts",
           "description": "Learn how to manage Nx Cloud subscriptions and other options.",
           "itemList": [

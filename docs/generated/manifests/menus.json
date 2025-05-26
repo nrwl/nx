@@ -2230,7 +2230,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Concepts",
+        "name": "Core Concepts",
         "path": "/concepts",
         "id": "concepts",
         "isExternal": false,
@@ -3701,7 +3701,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Core Concepts",
+        "name": "Concepts",
         "path": "/ci/concepts",
         "id": "concepts",
         "isExternal": false,
