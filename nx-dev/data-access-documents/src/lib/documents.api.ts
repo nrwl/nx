@@ -57,14 +57,6 @@ export class DocumentsApi {
   private getManifestKey(path: string): string {
     return '/' + path;
   }
-  
-  /**
-   * Transform API paths from nx-api format to technologies format
-   * e.g., '/nx-api/react/generators/library' to '/technologies/react/generators/library'
-   */
-  private transformApiPath(path: string): string {
-    return path.replace('/nx-api/', '/technologies/');
-  }
 
   // TODO(colum): Remove this once we move angular rspack into main repo (when stable).
   getAngularRspackPackage(): Record<string, DocumentMetadata> {
@@ -144,39 +136,35 @@ export class DocumentsApi {
       
       // For each package, add executors, generators, and migrations paths
       packages.forEach((pkg) => {
-        // Transform path from '/nx-api/react' to '/technologies/react'
-        const packagePathBase = this.transformApiPath(pkg.path);
+        const packageName = pkg.name;
         
         // Add executors
         Object.keys(pkg.executors).forEach((path) => {
-          const newPath = this.transformApiPath(path);
-          paths.push(newPath);
-          
-          // For debugging
-          if (pkg.name === 'react') {
-            console.log(`Transformed executor path: ${path} -> ${newPath}`);
+          const segments = path.split('/').filter(Boolean);
+          if (segments[0] === 'nx-api') {
+            // Create a path like /technologies/react/executors/library
+            const newPath = `/technologies/${packageName}/executors/${segments.slice(3).join('/')}`;
+            paths.push(newPath);
           }
         });
         
         // Add generators
         Object.keys(pkg.generators).forEach((path) => {
-          const newPath = this.transformApiPath(path);
-          paths.push(newPath);
-          
-          // For debugging
-          if (pkg.name === 'react') {
-            console.log(`Transformed generator path: ${path} -> ${newPath}`);
+          const segments = path.split('/').filter(Boolean);
+          if (segments[0] === 'nx-api') {
+            // Create a path like /technologies/react/generators/library
+            const newPath = `/technologies/${packageName}/generators/${segments.slice(3).join('/')}`;
+            paths.push(newPath);
           }
         });
         
         // Add migrations
         Object.keys(pkg.migrations).forEach((path) => {
-          const newPath = this.transformApiPath(path);
-          paths.push(newPath);
-          
-          // For debugging
-          if (pkg.name === 'react') {
-            console.log(`Transformed migration path: ${path} -> ${newPath}`);
+          const segments = path.split('/').filter(Boolean);
+          if (segments[0] === 'nx-api') {
+            // Create a path like /technologies/react/migrations/14-0-0
+            const newPath = `/technologies/${packageName}/migrations/${segments.slice(3).join('/')}`;
+            paths.push(newPath);
           }
         });
       });
@@ -190,13 +178,10 @@ export class DocumentsApi {
       this.manifest[this.getManifestKey(path.join('/'))] || null;
 
     if (!document) {
-      // Handle API docs paths now at /technologies/{pkg}/api/...
+      // Handle API docs paths now at /technologies/{pkg}/{category}/...
       if (path[0] === 'technologies' && this.packagesManifest) {
         const packageName = path[1];
         const category = path[2]; // 'executors', 'generators', or 'migrations'
-        
-        console.log(`Looking for document at path: ${path.join('/')}`);
-        console.log(`Package: ${packageName}, Category: ${category}`);
         
         // Try to find the package in packagesManifest
         const pkg = Object.values(this.packagesManifest).find(
@@ -204,43 +189,36 @@ export class DocumentsApi {
         );
         
         if (pkg) {
-          console.log(`Found package: ${pkg.name}`);
-          
           // Check if the category exists
           if (category === 'executors' || category === 'generators' || category === 'migrations') {
-            // Recreate the original nx-api path
-            const originalSegments = ['nx-api', ...path.slice(1)];
-            const originalPath = `/${originalSegments.join('/')}`;
-            
-            console.log(`Looking for ${category} at original path: ${originalPath}`);
-            console.log(`Available ${category} keys:`, Object.keys(pkg[category]));
+            // Create the original nx-api path
+            const targetSegment = path.slice(3).join('/');
+            const originalPath = `/nx-api/${packageName}/${category}/${targetSegment}`;
             
             // Get the file metadata from the package
             const fileMetadata = pkg[category][originalPath];
             
             if (fileMetadata) {
-              console.log(`Found file metadata: ${fileMetadata.name}`);
-              
-              // Read the schema file
-              const schemaContent = JSON.parse(
-                readFileSync(this.getFilePath(fileMetadata.file), 'utf-8')
-              );
-              
-              return {
-                content: fileMetadata.description || schemaContent.description || '',
-                description: fileMetadata.description || schemaContent.description || '',
-                filePath: this.getFilePath(fileMetadata.file),
-                id: fileMetadata.name,
-                name: fileMetadata.name,
-                relatedDocuments: {},
-                tags: [],
-              };
-            } else {
-              console.log(`No file metadata found at path: ${originalPath}`);
+              try {
+                // Read the schema file
+                const schemaContent = JSON.parse(
+                  readFileSync(this.getFilePath(fileMetadata.file), 'utf-8')
+                );
+                
+                return {
+                  content: fileMetadata.description || schemaContent.description || '',
+                  description: fileMetadata.description || schemaContent.description || '',
+                  filePath: this.getFilePath(fileMetadata.file),
+                  id: fileMetadata.name,
+                  name: fileMetadata.name,
+                  relatedDocuments: {},
+                  tags: [],
+                };
+              } catch (e) {
+                throw new Error(`Error reading schema file: ${e.message}`);
+              }
             }
           }
-        } else {
-          console.log(`Package not found: ${packageName}`);
         }
       }
       
