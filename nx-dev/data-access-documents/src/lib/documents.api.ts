@@ -175,6 +175,46 @@ export class DocumentsApi {
       this.manifest[this.getManifestKey(path.join('/'))] || null;
 
     if (!document) {
+      // Handle API docs paths now at /technologies/{pkg}/api/...
+      if (path[0] === 'technologies' && this.packagesManifest) {
+        const packageName = path[1];
+        const category = path[2]; // 'executors', 'generators', or 'migrations'
+        
+        // Try to find the package in packagesManifest
+        const pkg = Object.values(this.packagesManifest).find(
+          (p) => p.name === packageName
+        );
+        
+        if (pkg) {
+          // Check if the category exists
+          if (category === 'executors' || category === 'generators' || category === 'migrations') {
+            // Recreate the original nx-api path
+            const originalSegments = ['nx-api', ...path.slice(1)];
+            
+            // Get the file metadata from the package
+            const fileMetadata = pkg[category][`/${originalSegments.join('/')}`];
+            
+            if (fileMetadata) {
+              // Read the schema file
+              const schemaContent = JSON.parse(
+                readFileSync(this.getFilePath(fileMetadata.file), 'utf-8')
+              );
+              
+              return {
+                content: fileMetadata.description || schemaContent.description || '',
+                description: fileMetadata.description || schemaContent.description || '',
+                filePath: this.getFilePath(fileMetadata.file),
+                id: fileMetadata.name,
+                name: fileMetadata.name,
+                relatedDocuments: {},
+                tags: [],
+              };
+            }
+          }
+        }
+      }
+      
+      // Legacy handler for devkit docs
       if (
         path[0] === 'nx-api' &&
         path[1] === 'devkit' &&
