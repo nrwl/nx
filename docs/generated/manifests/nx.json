@@ -689,7 +689,7 @@
   },
   "/nx-recipes": {
     "id": "nx-recipes",
-    "name": "Core Recipes",
+    "name": "Core Guides",
     "description": "In depth recipes for common tasks",
     "mediaImage": "",
     "file": "",
@@ -4367,8 +4367,8 @@
         "tags": []
       },
       {
-        "id": "testing-tools",
-        "name": "Testing Tools",
+        "id": "test-tools",
+        "name": "Test Tools",
         "description": "",
         "mediaImage": "",
         "file": "",
@@ -4388,7 +4388,7 @@
                 "file": "shared/packages/cypress/cypress-plugin",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/cypress/introduction",
+                "path": "/technologies/test-tools/cypress/introduction",
                 "tags": []
               },
               {
@@ -4406,7 +4406,7 @@
                     "file": "shared/packages/cypress/cypress-component-testing",
                     "itemList": [],
                     "isExternal": false,
-                    "path": "/technologies/testing-tools/cypress/recipes/cypress-component-testing",
+                    "path": "/technologies/test-tools/cypress/recipes/cypress-component-testing",
                     "tags": []
                   },
                   {
@@ -4417,7 +4417,7 @@
                     "file": "shared/packages/cypress/cypress-setup-node-events",
                     "itemList": [],
                     "isExternal": false,
-                    "path": "/technologies/testing-tools/cypress/recipes/cypress-setup-node-events",
+                    "path": "/technologies/test-tools/cypress/recipes/cypress-setup-node-events",
                     "tags": []
                   },
                   {
@@ -4428,12 +4428,12 @@
                     "file": "shared/packages/cypress/cypress-v11-migration",
                     "itemList": [],
                     "isExternal": false,
-                    "path": "/technologies/testing-tools/cypress/recipes/cypress-v11-migration",
+                    "path": "/technologies/test-tools/cypress/recipes/cypress-v11-migration",
                     "tags": []
                   }
                 ],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/cypress/recipes",
+                "path": "/technologies/test-tools/cypress/recipes",
                 "tags": []
               },
               {
@@ -4444,12 +4444,12 @@
                 "file": "shared/packages/cypress/cypress-plugin",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/cypress/api",
+                "path": "/technologies/test-tools/cypress/api",
                 "tags": []
               }
             ],
             "isExternal": false,
-            "path": "/technologies/testing-tools/cypress",
+            "path": "/technologies/test-tools/cypress",
             "tags": []
           },
           {
@@ -4467,7 +4467,7 @@
                 "file": "shared/packages/jest/jest-plugin",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/jest/introduction",
+                "path": "/technologies/test-tools/jest/introduction",
                 "tags": []
               },
               {
@@ -4478,7 +4478,7 @@
                 "file": "",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/jest/recipes",
+                "path": "/technologies/test-tools/jest/recipes",
                 "tags": []
               },
               {
@@ -4489,12 +4489,12 @@
                 "file": "shared/packages/jest/jest-plugin",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/jest/api",
+                "path": "/technologies/test-tools/jest/api",
                 "tags": []
               }
             ],
             "isExternal": false,
-            "path": "/technologies/testing-tools/jest",
+            "path": "/technologies/test-tools/jest",
             "tags": []
           },
           {
@@ -4512,7 +4512,7 @@
                 "file": "shared/packages/playwright/playwright-plugin",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/playwright/introduction",
+                "path": "/technologies/test-tools/playwright/introduction",
                 "tags": []
               },
               {
@@ -4523,7 +4523,7 @@
                 "file": "",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/playwright/recipes",
+                "path": "/technologies/test-tools/playwright/recipes",
                 "tags": []
               },
               {
@@ -4534,12 +4534,12 @@
                 "file": "shared/packages/playwright/playwright-plugin",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/playwright/api",
+                "path": "/technologies/test-tools/playwright/api",
                 "tags": []
               }
             ],
             "isExternal": false,
-            "path": "/technologies/testing-tools/playwright",
+            "path": "/technologies/test-tools/playwright",
             "tags": []
           },
           {
@@ -4557,7 +4557,7 @@
                 "file": "shared/packages/storybook/plugin-overview",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/storybook/introduction",
+                "path": "/technologies/test-tools/storybook/introduction",
                 "tags": []
               },
               {
@@ -4575,7 +4575,7 @@
                     "file": "shared/recipes/storybook/plugin-react",
                     "itemList": [],
                     "isExternal": false,
-                    "path": "/technologies/testing-tools/storybook/recipes/overview-react",
+                    "path": "/technologies/test-tools/storybook/recipes/overview-react",
                     "tags": ["storybook"]
                   },
                   {
@@ -4586,7 +4586,7 @@
                     "file": "shared/recipes/storybook/plugin-angular",
                     "itemList": [],
                     "isExternal": false,
-                    "path": "/technologies/testing-tools/storybook/recipes/overview-angular",
+                    "path": "/technologies/test-tools/storybook/recipes/overview-angular",
                     "tags": ["storybook"]
                   },
                   {
@@ -4597,7 +4597,7 @@
                     "file": "shared/recipes/storybook/plugin-vue",
                     "itemList": [],
                     "isExternal": false,
-                    "path": "/technologies/testing-tools/storybook/recipes/overview-vue",
+                    "path": "/technologies/test-tools/storybook/recipes/overview-vue",
                     "tags": ["storybook"]
                   },
                   {
@@ -4608,7 +4608,7 @@
                     "file": "shared/recipes/storybook/configuring-storybook",
                     "itemList": [],
                     "isExternal": false,
-                    "path": "/technologies/testing-tools/storybook/recipes/configuring-storybook",
+                    "path": "/technologies/test-tools/storybook/recipes/configuring-storybook",
                     "tags": ["storybook"]
                   },
                   {
@@ -4619,7 +4619,7 @@
                     "file": "shared/recipes/storybook/one-storybook-for-all",
                     "itemList": [],
                     "isExternal": false,
-                    "path": "/technologies/testing-tools/storybook/recipes/one-storybook-for-all",
+                    "path": "/technologies/test-tools/storybook/recipes/one-storybook-for-all",
                     "tags": ["storybook"]
                   },
                   {
@@ -4630,7 +4630,7 @@
                     "file": "shared/recipes/storybook/one-storybook-per-scope",
                     "itemList": [],
                     "isExternal": false,
-                    "path": "/technologies/testing-tools/storybook/recipes/one-storybook-per-scope",
+                    "path": "/technologies/test-tools/storybook/recipes/one-storybook-per-scope",
                     "tags": ["storybook"]
                   },
                   {
@@ -4641,7 +4641,7 @@
                     "file": "shared/recipes/storybook/one-storybook-with-composition",
                     "itemList": [],
                     "isExternal": false,
-                    "path": "/technologies/testing-tools/storybook/recipes/one-storybook-with-composition",
+                    "path": "/technologies/test-tools/storybook/recipes/one-storybook-with-composition",
                     "tags": ["storybook"]
                   },
                   {
@@ -4652,7 +4652,7 @@
                     "file": "shared/recipes/storybook/custom-builder-configs",
                     "itemList": [],
                     "isExternal": false,
-                    "path": "/technologies/testing-tools/storybook/recipes/custom-builder-configs",
+                    "path": "/technologies/test-tools/storybook/recipes/custom-builder-configs",
                     "tags": ["storybook"]
                   },
                   {
@@ -4663,7 +4663,7 @@
                     "file": "shared/recipes/storybook/interaction-tests",
                     "itemList": [],
                     "isExternal": false,
-                    "path": "/technologies/testing-tools/storybook/recipes/storybook-interaction-tests",
+                    "path": "/technologies/test-tools/storybook/recipes/storybook-interaction-tests",
                     "tags": ["storybook"]
                   },
                   {
@@ -4674,7 +4674,7 @@
                     "file": "shared/recipes/storybook/upgrading-storybook",
                     "itemList": [],
                     "isExternal": false,
-                    "path": "/technologies/testing-tools/storybook/recipes/upgrading-storybook",
+                    "path": "/technologies/test-tools/storybook/recipes/upgrading-storybook",
                     "tags": ["storybook"]
                   },
                   {
@@ -4685,7 +4685,7 @@
                     "file": "shared/recipes/storybook/storybook-composition-setup",
                     "itemList": [],
                     "isExternal": false,
-                    "path": "/technologies/testing-tools/storybook/recipes/storybook-composition-setup",
+                    "path": "/technologies/test-tools/storybook/recipes/storybook-composition-setup",
                     "tags": ["storybook"]
                   },
                   {
@@ -4696,7 +4696,7 @@
                     "file": "shared/recipes/storybook/angular-storybook-compodoc",
                     "itemList": [],
                     "isExternal": false,
-                    "path": "/technologies/testing-tools/storybook/recipes/angular-storybook-compodoc",
+                    "path": "/technologies/test-tools/storybook/recipes/angular-storybook-compodoc",
                     "tags": ["storybook"]
                   },
                   {
@@ -4707,12 +4707,12 @@
                     "file": "shared/recipes/storybook/angular-configuring-styles",
                     "itemList": [],
                     "isExternal": false,
-                    "path": "/technologies/testing-tools/storybook/recipes/angular-configuring-styles",
+                    "path": "/technologies/test-tools/storybook/recipes/angular-configuring-styles",
                     "tags": ["storybook"]
                   }
                 ],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/storybook/recipes",
+                "path": "/technologies/test-tools/storybook/recipes",
                 "tags": []
               },
               {
@@ -4723,12 +4723,12 @@
                 "file": "shared/packages/storybook/plugin-overview",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/storybook/api",
+                "path": "/technologies/test-tools/storybook/api",
                 "tags": []
               }
             ],
             "isExternal": false,
-            "path": "/technologies/testing-tools/storybook",
+            "path": "/technologies/test-tools/storybook",
             "tags": []
           },
           {
@@ -4746,7 +4746,7 @@
                 "file": "shared/packages/detox/detox-plugin",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/detox/introduction",
+                "path": "/technologies/test-tools/detox/introduction",
                 "tags": []
               },
               {
@@ -4757,7 +4757,7 @@
                 "file": "",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/detox/recipes",
+                "path": "/technologies/test-tools/detox/recipes",
                 "tags": []
               },
               {
@@ -4768,17 +4768,17 @@
                 "file": "shared/packages/detox/detox-plugin",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/detox/api",
+                "path": "/technologies/test-tools/detox/api",
                 "tags": []
               }
             ],
             "isExternal": false,
-            "path": "/technologies/testing-tools/detox",
+            "path": "/technologies/test-tools/detox",
             "tags": []
           }
         ],
         "isExternal": false,
-        "path": "/technologies/testing-tools",
+        "path": "/technologies/test-tools",
         "tags": []
       }
     ],
@@ -8906,9 +8906,9 @@
     "path": "/technologies/build-tools/rsbuild/api",
     "tags": []
   },
-  "/technologies/testing-tools": {
-    "id": "testing-tools",
-    "name": "Testing Tools",
+  "/technologies/test-tools": {
+    "id": "test-tools",
+    "name": "Test Tools",
     "description": "",
     "mediaImage": "",
     "file": "",
@@ -8928,7 +8928,7 @@
             "file": "shared/packages/cypress/cypress-plugin",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/cypress/introduction",
+            "path": "/technologies/test-tools/cypress/introduction",
             "tags": []
           },
           {
@@ -8946,7 +8946,7 @@
                 "file": "shared/packages/cypress/cypress-component-testing",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/cypress/recipes/cypress-component-testing",
+                "path": "/technologies/test-tools/cypress/recipes/cypress-component-testing",
                 "tags": []
               },
               {
@@ -8957,7 +8957,7 @@
                 "file": "shared/packages/cypress/cypress-setup-node-events",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/cypress/recipes/cypress-setup-node-events",
+                "path": "/technologies/test-tools/cypress/recipes/cypress-setup-node-events",
                 "tags": []
               },
               {
@@ -8968,12 +8968,12 @@
                 "file": "shared/packages/cypress/cypress-v11-migration",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/cypress/recipes/cypress-v11-migration",
+                "path": "/technologies/test-tools/cypress/recipes/cypress-v11-migration",
                 "tags": []
               }
             ],
             "isExternal": false,
-            "path": "/technologies/testing-tools/cypress/recipes",
+            "path": "/technologies/test-tools/cypress/recipes",
             "tags": []
           },
           {
@@ -8984,12 +8984,12 @@
             "file": "shared/packages/cypress/cypress-plugin",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/cypress/api",
+            "path": "/technologies/test-tools/cypress/api",
             "tags": []
           }
         ],
         "isExternal": false,
-        "path": "/technologies/testing-tools/cypress",
+        "path": "/technologies/test-tools/cypress",
         "tags": []
       },
       {
@@ -9007,7 +9007,7 @@
             "file": "shared/packages/jest/jest-plugin",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/jest/introduction",
+            "path": "/technologies/test-tools/jest/introduction",
             "tags": []
           },
           {
@@ -9018,7 +9018,7 @@
             "file": "",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/jest/recipes",
+            "path": "/technologies/test-tools/jest/recipes",
             "tags": []
           },
           {
@@ -9029,12 +9029,12 @@
             "file": "shared/packages/jest/jest-plugin",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/jest/api",
+            "path": "/technologies/test-tools/jest/api",
             "tags": []
           }
         ],
         "isExternal": false,
-        "path": "/technologies/testing-tools/jest",
+        "path": "/technologies/test-tools/jest",
         "tags": []
       },
       {
@@ -9052,7 +9052,7 @@
             "file": "shared/packages/playwright/playwright-plugin",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/playwright/introduction",
+            "path": "/technologies/test-tools/playwright/introduction",
             "tags": []
           },
           {
@@ -9063,7 +9063,7 @@
             "file": "",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/playwright/recipes",
+            "path": "/technologies/test-tools/playwright/recipes",
             "tags": []
           },
           {
@@ -9074,12 +9074,12 @@
             "file": "shared/packages/playwright/playwright-plugin",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/playwright/api",
+            "path": "/technologies/test-tools/playwright/api",
             "tags": []
           }
         ],
         "isExternal": false,
-        "path": "/technologies/testing-tools/playwright",
+        "path": "/technologies/test-tools/playwright",
         "tags": []
       },
       {
@@ -9097,7 +9097,7 @@
             "file": "shared/packages/storybook/plugin-overview",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/storybook/introduction",
+            "path": "/technologies/test-tools/storybook/introduction",
             "tags": []
           },
           {
@@ -9115,7 +9115,7 @@
                 "file": "shared/recipes/storybook/plugin-react",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/storybook/recipes/overview-react",
+                "path": "/technologies/test-tools/storybook/recipes/overview-react",
                 "tags": ["storybook"]
               },
               {
@@ -9126,7 +9126,7 @@
                 "file": "shared/recipes/storybook/plugin-angular",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/storybook/recipes/overview-angular",
+                "path": "/technologies/test-tools/storybook/recipes/overview-angular",
                 "tags": ["storybook"]
               },
               {
@@ -9137,7 +9137,7 @@
                 "file": "shared/recipes/storybook/plugin-vue",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/storybook/recipes/overview-vue",
+                "path": "/technologies/test-tools/storybook/recipes/overview-vue",
                 "tags": ["storybook"]
               },
               {
@@ -9148,7 +9148,7 @@
                 "file": "shared/recipes/storybook/configuring-storybook",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/storybook/recipes/configuring-storybook",
+                "path": "/technologies/test-tools/storybook/recipes/configuring-storybook",
                 "tags": ["storybook"]
               },
               {
@@ -9159,7 +9159,7 @@
                 "file": "shared/recipes/storybook/one-storybook-for-all",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/storybook/recipes/one-storybook-for-all",
+                "path": "/technologies/test-tools/storybook/recipes/one-storybook-for-all",
                 "tags": ["storybook"]
               },
               {
@@ -9170,7 +9170,7 @@
                 "file": "shared/recipes/storybook/one-storybook-per-scope",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/storybook/recipes/one-storybook-per-scope",
+                "path": "/technologies/test-tools/storybook/recipes/one-storybook-per-scope",
                 "tags": ["storybook"]
               },
               {
@@ -9181,7 +9181,7 @@
                 "file": "shared/recipes/storybook/one-storybook-with-composition",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/storybook/recipes/one-storybook-with-composition",
+                "path": "/technologies/test-tools/storybook/recipes/one-storybook-with-composition",
                 "tags": ["storybook"]
               },
               {
@@ -9192,7 +9192,7 @@
                 "file": "shared/recipes/storybook/custom-builder-configs",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/storybook/recipes/custom-builder-configs",
+                "path": "/technologies/test-tools/storybook/recipes/custom-builder-configs",
                 "tags": ["storybook"]
               },
               {
@@ -9203,7 +9203,7 @@
                 "file": "shared/recipes/storybook/interaction-tests",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/storybook/recipes/storybook-interaction-tests",
+                "path": "/technologies/test-tools/storybook/recipes/storybook-interaction-tests",
                 "tags": ["storybook"]
               },
               {
@@ -9214,7 +9214,7 @@
                 "file": "shared/recipes/storybook/upgrading-storybook",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/storybook/recipes/upgrading-storybook",
+                "path": "/technologies/test-tools/storybook/recipes/upgrading-storybook",
                 "tags": ["storybook"]
               },
               {
@@ -9225,7 +9225,7 @@
                 "file": "shared/recipes/storybook/storybook-composition-setup",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/storybook/recipes/storybook-composition-setup",
+                "path": "/technologies/test-tools/storybook/recipes/storybook-composition-setup",
                 "tags": ["storybook"]
               },
               {
@@ -9236,7 +9236,7 @@
                 "file": "shared/recipes/storybook/angular-storybook-compodoc",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/storybook/recipes/angular-storybook-compodoc",
+                "path": "/technologies/test-tools/storybook/recipes/angular-storybook-compodoc",
                 "tags": ["storybook"]
               },
               {
@@ -9247,12 +9247,12 @@
                 "file": "shared/recipes/storybook/angular-configuring-styles",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/testing-tools/storybook/recipes/angular-configuring-styles",
+                "path": "/technologies/test-tools/storybook/recipes/angular-configuring-styles",
                 "tags": ["storybook"]
               }
             ],
             "isExternal": false,
-            "path": "/technologies/testing-tools/storybook/recipes",
+            "path": "/technologies/test-tools/storybook/recipes",
             "tags": []
           },
           {
@@ -9263,12 +9263,12 @@
             "file": "shared/packages/storybook/plugin-overview",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/storybook/api",
+            "path": "/technologies/test-tools/storybook/api",
             "tags": []
           }
         ],
         "isExternal": false,
-        "path": "/technologies/testing-tools/storybook",
+        "path": "/technologies/test-tools/storybook",
         "tags": []
       },
       {
@@ -9286,7 +9286,7 @@
             "file": "shared/packages/detox/detox-plugin",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/detox/introduction",
+            "path": "/technologies/test-tools/detox/introduction",
             "tags": []
           },
           {
@@ -9297,7 +9297,7 @@
             "file": "",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/detox/recipes",
+            "path": "/technologies/test-tools/detox/recipes",
             "tags": []
           },
           {
@@ -9308,20 +9308,20 @@
             "file": "shared/packages/detox/detox-plugin",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/detox/api",
+            "path": "/technologies/test-tools/detox/api",
             "tags": []
           }
         ],
         "isExternal": false,
-        "path": "/technologies/testing-tools/detox",
+        "path": "/technologies/test-tools/detox",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/technologies/testing-tools",
+    "path": "/technologies/test-tools",
     "tags": []
   },
-  "/technologies/testing-tools/cypress": {
+  "/technologies/test-tools/cypress": {
     "id": "cypress",
     "name": "Cypress",
     "description": "",
@@ -9336,7 +9336,7 @@
         "file": "shared/packages/cypress/cypress-plugin",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/cypress/introduction",
+        "path": "/technologies/test-tools/cypress/introduction",
         "tags": []
       },
       {
@@ -9354,7 +9354,7 @@
             "file": "shared/packages/cypress/cypress-component-testing",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/cypress/recipes/cypress-component-testing",
+            "path": "/technologies/test-tools/cypress/recipes/cypress-component-testing",
             "tags": []
           },
           {
@@ -9365,7 +9365,7 @@
             "file": "shared/packages/cypress/cypress-setup-node-events",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/cypress/recipes/cypress-setup-node-events",
+            "path": "/technologies/test-tools/cypress/recipes/cypress-setup-node-events",
             "tags": []
           },
           {
@@ -9376,12 +9376,12 @@
             "file": "shared/packages/cypress/cypress-v11-migration",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/cypress/recipes/cypress-v11-migration",
+            "path": "/technologies/test-tools/cypress/recipes/cypress-v11-migration",
             "tags": []
           }
         ],
         "isExternal": false,
-        "path": "/technologies/testing-tools/cypress/recipes",
+        "path": "/technologies/test-tools/cypress/recipes",
         "tags": []
       },
       {
@@ -9392,15 +9392,15 @@
         "file": "shared/packages/cypress/cypress-plugin",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/cypress/api",
+        "path": "/technologies/test-tools/cypress/api",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/technologies/testing-tools/cypress",
+    "path": "/technologies/test-tools/cypress",
     "tags": []
   },
-  "/technologies/testing-tools/cypress/introduction": {
+  "/technologies/test-tools/cypress/introduction": {
     "id": "introduction",
     "name": "Introduction",
     "description": "",
@@ -9408,10 +9408,10 @@
     "file": "shared/packages/cypress/cypress-plugin",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/cypress/introduction",
+    "path": "/technologies/test-tools/cypress/introduction",
     "tags": []
   },
-  "/technologies/testing-tools/cypress/recipes": {
+  "/technologies/test-tools/cypress/recipes": {
     "id": "recipes",
     "name": "Recipes",
     "description": "",
@@ -9426,7 +9426,7 @@
         "file": "shared/packages/cypress/cypress-component-testing",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/cypress/recipes/cypress-component-testing",
+        "path": "/technologies/test-tools/cypress/recipes/cypress-component-testing",
         "tags": []
       },
       {
@@ -9437,7 +9437,7 @@
         "file": "shared/packages/cypress/cypress-setup-node-events",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/cypress/recipes/cypress-setup-node-events",
+        "path": "/technologies/test-tools/cypress/recipes/cypress-setup-node-events",
         "tags": []
       },
       {
@@ -9448,15 +9448,15 @@
         "file": "shared/packages/cypress/cypress-v11-migration",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/cypress/recipes/cypress-v11-migration",
+        "path": "/technologies/test-tools/cypress/recipes/cypress-v11-migration",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/technologies/testing-tools/cypress/recipes",
+    "path": "/technologies/test-tools/cypress/recipes",
     "tags": []
   },
-  "/technologies/testing-tools/cypress/recipes/cypress-component-testing": {
+  "/technologies/test-tools/cypress/recipes/cypress-component-testing": {
     "id": "cypress-component-testing",
     "name": "Component Testing",
     "description": "Component Testing",
@@ -9464,10 +9464,10 @@
     "file": "shared/packages/cypress/cypress-component-testing",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/cypress/recipes/cypress-component-testing",
+    "path": "/technologies/test-tools/cypress/recipes/cypress-component-testing",
     "tags": []
   },
-  "/technologies/testing-tools/cypress/recipes/cypress-setup-node-events": {
+  "/technologies/test-tools/cypress/recipes/cypress-setup-node-events": {
     "id": "cypress-setup-node-events",
     "name": "Using setupNodeEvents with Cypress preset",
     "description": "A guide on using the setupNodeEvents function with @nx/cypress/plugins/cypress-preset",
@@ -9475,10 +9475,10 @@
     "file": "shared/packages/cypress/cypress-setup-node-events",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/cypress/recipes/cypress-setup-node-events",
+    "path": "/technologies/test-tools/cypress/recipes/cypress-setup-node-events",
     "tags": []
   },
-  "/technologies/testing-tools/cypress/recipes/cypress-v11-migration": {
+  "/technologies/test-tools/cypress/recipes/cypress-v11-migration": {
     "id": "cypress-v11-migration",
     "name": "Cypress v11 Migration Guide",
     "description": "Cypress v11 Migration Guide",
@@ -9486,10 +9486,10 @@
     "file": "shared/packages/cypress/cypress-v11-migration",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/cypress/recipes/cypress-v11-migration",
+    "path": "/technologies/test-tools/cypress/recipes/cypress-v11-migration",
     "tags": []
   },
-  "/technologies/testing-tools/cypress/api": {
+  "/technologies/test-tools/cypress/api": {
     "id": "api",
     "name": "API",
     "description": "",
@@ -9497,10 +9497,10 @@
     "file": "shared/packages/cypress/cypress-plugin",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/cypress/api",
+    "path": "/technologies/test-tools/cypress/api",
     "tags": []
   },
-  "/technologies/testing-tools/jest": {
+  "/technologies/test-tools/jest": {
     "id": "jest",
     "name": "Jest",
     "description": "",
@@ -9515,7 +9515,7 @@
         "file": "shared/packages/jest/jest-plugin",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/jest/introduction",
+        "path": "/technologies/test-tools/jest/introduction",
         "tags": []
       },
       {
@@ -9526,7 +9526,7 @@
         "file": "",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/jest/recipes",
+        "path": "/technologies/test-tools/jest/recipes",
         "tags": []
       },
       {
@@ -9537,15 +9537,15 @@
         "file": "shared/packages/jest/jest-plugin",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/jest/api",
+        "path": "/technologies/test-tools/jest/api",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/technologies/testing-tools/jest",
+    "path": "/technologies/test-tools/jest",
     "tags": []
   },
-  "/technologies/testing-tools/jest/introduction": {
+  "/technologies/test-tools/jest/introduction": {
     "id": "introduction",
     "name": "Introduction",
     "description": "",
@@ -9553,10 +9553,10 @@
     "file": "shared/packages/jest/jest-plugin",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/jest/introduction",
+    "path": "/technologies/test-tools/jest/introduction",
     "tags": []
   },
-  "/technologies/testing-tools/jest/recipes": {
+  "/technologies/test-tools/jest/recipes": {
     "id": "recipes",
     "name": "Recipes",
     "description": "",
@@ -9564,10 +9564,10 @@
     "file": "",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/jest/recipes",
+    "path": "/technologies/test-tools/jest/recipes",
     "tags": []
   },
-  "/technologies/testing-tools/jest/api": {
+  "/technologies/test-tools/jest/api": {
     "id": "api",
     "name": "API",
     "description": "",
@@ -9575,10 +9575,10 @@
     "file": "shared/packages/jest/jest-plugin",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/jest/api",
+    "path": "/technologies/test-tools/jest/api",
     "tags": []
   },
-  "/technologies/testing-tools/playwright": {
+  "/technologies/test-tools/playwright": {
     "id": "playwright",
     "name": "Playwright",
     "description": "",
@@ -9593,7 +9593,7 @@
         "file": "shared/packages/playwright/playwright-plugin",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/playwright/introduction",
+        "path": "/technologies/test-tools/playwright/introduction",
         "tags": []
       },
       {
@@ -9604,7 +9604,7 @@
         "file": "",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/playwright/recipes",
+        "path": "/technologies/test-tools/playwright/recipes",
         "tags": []
       },
       {
@@ -9615,15 +9615,15 @@
         "file": "shared/packages/playwright/playwright-plugin",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/playwright/api",
+        "path": "/technologies/test-tools/playwright/api",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/technologies/testing-tools/playwright",
+    "path": "/technologies/test-tools/playwright",
     "tags": []
   },
-  "/technologies/testing-tools/playwright/introduction": {
+  "/technologies/test-tools/playwright/introduction": {
     "id": "introduction",
     "name": "Introduction",
     "description": "",
@@ -9631,10 +9631,10 @@
     "file": "shared/packages/playwright/playwright-plugin",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/playwright/introduction",
+    "path": "/technologies/test-tools/playwright/introduction",
     "tags": []
   },
-  "/technologies/testing-tools/playwright/recipes": {
+  "/technologies/test-tools/playwright/recipes": {
     "id": "recipes",
     "name": "Recipes",
     "description": "",
@@ -9642,10 +9642,10 @@
     "file": "",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/playwright/recipes",
+    "path": "/technologies/test-tools/playwright/recipes",
     "tags": []
   },
-  "/technologies/testing-tools/playwright/api": {
+  "/technologies/test-tools/playwright/api": {
     "id": "api",
     "name": "API",
     "description": "",
@@ -9653,10 +9653,10 @@
     "file": "shared/packages/playwright/playwright-plugin",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/playwright/api",
+    "path": "/technologies/test-tools/playwright/api",
     "tags": []
   },
-  "/technologies/testing-tools/storybook": {
+  "/technologies/test-tools/storybook": {
     "id": "storybook",
     "name": "Storybook",
     "description": "",
@@ -9671,7 +9671,7 @@
         "file": "shared/packages/storybook/plugin-overview",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/storybook/introduction",
+        "path": "/technologies/test-tools/storybook/introduction",
         "tags": []
       },
       {
@@ -9689,7 +9689,7 @@
             "file": "shared/recipes/storybook/plugin-react",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/storybook/recipes/overview-react",
+            "path": "/technologies/test-tools/storybook/recipes/overview-react",
             "tags": ["storybook"]
           },
           {
@@ -9700,7 +9700,7 @@
             "file": "shared/recipes/storybook/plugin-angular",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/storybook/recipes/overview-angular",
+            "path": "/technologies/test-tools/storybook/recipes/overview-angular",
             "tags": ["storybook"]
           },
           {
@@ -9711,7 +9711,7 @@
             "file": "shared/recipes/storybook/plugin-vue",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/storybook/recipes/overview-vue",
+            "path": "/technologies/test-tools/storybook/recipes/overview-vue",
             "tags": ["storybook"]
           },
           {
@@ -9722,7 +9722,7 @@
             "file": "shared/recipes/storybook/configuring-storybook",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/storybook/recipes/configuring-storybook",
+            "path": "/technologies/test-tools/storybook/recipes/configuring-storybook",
             "tags": ["storybook"]
           },
           {
@@ -9733,7 +9733,7 @@
             "file": "shared/recipes/storybook/one-storybook-for-all",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/storybook/recipes/one-storybook-for-all",
+            "path": "/technologies/test-tools/storybook/recipes/one-storybook-for-all",
             "tags": ["storybook"]
           },
           {
@@ -9744,7 +9744,7 @@
             "file": "shared/recipes/storybook/one-storybook-per-scope",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/storybook/recipes/one-storybook-per-scope",
+            "path": "/technologies/test-tools/storybook/recipes/one-storybook-per-scope",
             "tags": ["storybook"]
           },
           {
@@ -9755,7 +9755,7 @@
             "file": "shared/recipes/storybook/one-storybook-with-composition",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/storybook/recipes/one-storybook-with-composition",
+            "path": "/technologies/test-tools/storybook/recipes/one-storybook-with-composition",
             "tags": ["storybook"]
           },
           {
@@ -9766,7 +9766,7 @@
             "file": "shared/recipes/storybook/custom-builder-configs",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/storybook/recipes/custom-builder-configs",
+            "path": "/technologies/test-tools/storybook/recipes/custom-builder-configs",
             "tags": ["storybook"]
           },
           {
@@ -9777,7 +9777,7 @@
             "file": "shared/recipes/storybook/interaction-tests",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/storybook/recipes/storybook-interaction-tests",
+            "path": "/technologies/test-tools/storybook/recipes/storybook-interaction-tests",
             "tags": ["storybook"]
           },
           {
@@ -9788,7 +9788,7 @@
             "file": "shared/recipes/storybook/upgrading-storybook",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/storybook/recipes/upgrading-storybook",
+            "path": "/technologies/test-tools/storybook/recipes/upgrading-storybook",
             "tags": ["storybook"]
           },
           {
@@ -9799,7 +9799,7 @@
             "file": "shared/recipes/storybook/storybook-composition-setup",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/storybook/recipes/storybook-composition-setup",
+            "path": "/technologies/test-tools/storybook/recipes/storybook-composition-setup",
             "tags": ["storybook"]
           },
           {
@@ -9810,7 +9810,7 @@
             "file": "shared/recipes/storybook/angular-storybook-compodoc",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/storybook/recipes/angular-storybook-compodoc",
+            "path": "/technologies/test-tools/storybook/recipes/angular-storybook-compodoc",
             "tags": ["storybook"]
           },
           {
@@ -9821,12 +9821,12 @@
             "file": "shared/recipes/storybook/angular-configuring-styles",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/testing-tools/storybook/recipes/angular-configuring-styles",
+            "path": "/technologies/test-tools/storybook/recipes/angular-configuring-styles",
             "tags": ["storybook"]
           }
         ],
         "isExternal": false,
-        "path": "/technologies/testing-tools/storybook/recipes",
+        "path": "/technologies/test-tools/storybook/recipes",
         "tags": []
       },
       {
@@ -9837,15 +9837,15 @@
         "file": "shared/packages/storybook/plugin-overview",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/storybook/api",
+        "path": "/technologies/test-tools/storybook/api",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/technologies/testing-tools/storybook",
+    "path": "/technologies/test-tools/storybook",
     "tags": []
   },
-  "/technologies/testing-tools/storybook/introduction": {
+  "/technologies/test-tools/storybook/introduction": {
     "id": "introduction",
     "name": "Introduction",
     "description": "",
@@ -9853,10 +9853,10 @@
     "file": "shared/packages/storybook/plugin-overview",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/storybook/introduction",
+    "path": "/technologies/test-tools/storybook/introduction",
     "tags": []
   },
-  "/technologies/testing-tools/storybook/recipes": {
+  "/technologies/test-tools/storybook/recipes": {
     "id": "recipes",
     "name": "Recipes",
     "description": "",
@@ -9871,7 +9871,7 @@
         "file": "shared/recipes/storybook/plugin-react",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/storybook/recipes/overview-react",
+        "path": "/technologies/test-tools/storybook/recipes/overview-react",
         "tags": ["storybook"]
       },
       {
@@ -9882,7 +9882,7 @@
         "file": "shared/recipes/storybook/plugin-angular",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/storybook/recipes/overview-angular",
+        "path": "/technologies/test-tools/storybook/recipes/overview-angular",
         "tags": ["storybook"]
       },
       {
@@ -9893,7 +9893,7 @@
         "file": "shared/recipes/storybook/plugin-vue",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/storybook/recipes/overview-vue",
+        "path": "/technologies/test-tools/storybook/recipes/overview-vue",
         "tags": ["storybook"]
       },
       {
@@ -9904,7 +9904,7 @@
         "file": "shared/recipes/storybook/configuring-storybook",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/storybook/recipes/configuring-storybook",
+        "path": "/technologies/test-tools/storybook/recipes/configuring-storybook",
         "tags": ["storybook"]
       },
       {
@@ -9915,7 +9915,7 @@
         "file": "shared/recipes/storybook/one-storybook-for-all",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/storybook/recipes/one-storybook-for-all",
+        "path": "/technologies/test-tools/storybook/recipes/one-storybook-for-all",
         "tags": ["storybook"]
       },
       {
@@ -9926,7 +9926,7 @@
         "file": "shared/recipes/storybook/one-storybook-per-scope",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/storybook/recipes/one-storybook-per-scope",
+        "path": "/technologies/test-tools/storybook/recipes/one-storybook-per-scope",
         "tags": ["storybook"]
       },
       {
@@ -9937,7 +9937,7 @@
         "file": "shared/recipes/storybook/one-storybook-with-composition",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/storybook/recipes/one-storybook-with-composition",
+        "path": "/technologies/test-tools/storybook/recipes/one-storybook-with-composition",
         "tags": ["storybook"]
       },
       {
@@ -9948,7 +9948,7 @@
         "file": "shared/recipes/storybook/custom-builder-configs",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/storybook/recipes/custom-builder-configs",
+        "path": "/technologies/test-tools/storybook/recipes/custom-builder-configs",
         "tags": ["storybook"]
       },
       {
@@ -9959,7 +9959,7 @@
         "file": "shared/recipes/storybook/interaction-tests",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/storybook/recipes/storybook-interaction-tests",
+        "path": "/technologies/test-tools/storybook/recipes/storybook-interaction-tests",
         "tags": ["storybook"]
       },
       {
@@ -9970,7 +9970,7 @@
         "file": "shared/recipes/storybook/upgrading-storybook",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/storybook/recipes/upgrading-storybook",
+        "path": "/technologies/test-tools/storybook/recipes/upgrading-storybook",
         "tags": ["storybook"]
       },
       {
@@ -9981,7 +9981,7 @@
         "file": "shared/recipes/storybook/storybook-composition-setup",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/storybook/recipes/storybook-composition-setup",
+        "path": "/technologies/test-tools/storybook/recipes/storybook-composition-setup",
         "tags": ["storybook"]
       },
       {
@@ -9992,7 +9992,7 @@
         "file": "shared/recipes/storybook/angular-storybook-compodoc",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/storybook/recipes/angular-storybook-compodoc",
+        "path": "/technologies/test-tools/storybook/recipes/angular-storybook-compodoc",
         "tags": ["storybook"]
       },
       {
@@ -10003,15 +10003,15 @@
         "file": "shared/recipes/storybook/angular-configuring-styles",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/storybook/recipes/angular-configuring-styles",
+        "path": "/technologies/test-tools/storybook/recipes/angular-configuring-styles",
         "tags": ["storybook"]
       }
     ],
     "isExternal": false,
-    "path": "/technologies/testing-tools/storybook/recipes",
+    "path": "/technologies/test-tools/storybook/recipes",
     "tags": []
   },
-  "/technologies/testing-tools/storybook/recipes/overview-react": {
+  "/technologies/test-tools/storybook/recipes/overview-react": {
     "id": "overview-react",
     "name": "Set up Storybook for React Projects",
     "description": "This guide explains how to set up Storybook for React projects in your Nx workspace.",
@@ -10019,10 +10019,10 @@
     "file": "shared/recipes/storybook/plugin-react",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/storybook/recipes/overview-react",
+    "path": "/technologies/test-tools/storybook/recipes/overview-react",
     "tags": ["storybook"]
   },
-  "/technologies/testing-tools/storybook/recipes/overview-angular": {
+  "/technologies/test-tools/storybook/recipes/overview-angular": {
     "id": "overview-angular",
     "name": "Set up Storybook for Angular Projects",
     "description": "This guide explains how to set up Storybook for Angular projects in your Nx workspace.",
@@ -10030,10 +10030,10 @@
     "file": "shared/recipes/storybook/plugin-angular",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/storybook/recipes/overview-angular",
+    "path": "/technologies/test-tools/storybook/recipes/overview-angular",
     "tags": ["storybook"]
   },
-  "/technologies/testing-tools/storybook/recipes/overview-vue": {
+  "/technologies/test-tools/storybook/recipes/overview-vue": {
     "id": "overview-vue",
     "name": "Set up Storybook for Vue Projects",
     "description": "This guide explains how to set up Storybook for Vue projects in your Nx workspace.",
@@ -10041,10 +10041,10 @@
     "file": "shared/recipes/storybook/plugin-vue",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/storybook/recipes/overview-vue",
+    "path": "/technologies/test-tools/storybook/recipes/overview-vue",
     "tags": ["storybook"]
   },
-  "/technologies/testing-tools/storybook/recipes/configuring-storybook": {
+  "/technologies/test-tools/storybook/recipes/configuring-storybook": {
     "id": "configuring-storybook",
     "name": "Configuring Storybook on Nx",
     "description": "This guide explains how Storybook is configured on your Nx workspace.",
@@ -10052,10 +10052,10 @@
     "file": "shared/recipes/storybook/configuring-storybook",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/storybook/recipes/configuring-storybook",
+    "path": "/technologies/test-tools/storybook/recipes/configuring-storybook",
     "tags": ["storybook"]
   },
-  "/technologies/testing-tools/storybook/recipes/one-storybook-for-all": {
+  "/technologies/test-tools/storybook/recipes/one-storybook-for-all": {
     "id": "one-storybook-for-all",
     "name": "One main Storybook instance for all projects",
     "description": "This guide explains how to consolidate all your Storybook stories from different projects into one unified Storybook instance. Ideal for Nx workspaces leveraging a single framework.",
@@ -10063,10 +10063,10 @@
     "file": "shared/recipes/storybook/one-storybook-for-all",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/storybook/recipes/one-storybook-for-all",
+    "path": "/technologies/test-tools/storybook/recipes/one-storybook-for-all",
     "tags": ["storybook"]
   },
-  "/technologies/testing-tools/storybook/recipes/one-storybook-per-scope": {
+  "/technologies/test-tools/storybook/recipes/one-storybook-per-scope": {
     "id": "one-storybook-per-scope",
     "name": "One Storybook instance per scope",
     "description": "This guide explains how to set up individual Storybook instances for each scope within an Nx workspace. It provides a structured approach, emphasizing folder organization and thematic scope separation.",
@@ -10074,10 +10074,10 @@
     "file": "shared/recipes/storybook/one-storybook-per-scope",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/storybook/recipes/one-storybook-per-scope",
+    "path": "/technologies/test-tools/storybook/recipes/one-storybook-per-scope",
     "tags": ["storybook"]
   },
-  "/technologies/testing-tools/storybook/recipes/one-storybook-with-composition": {
+  "/technologies/test-tools/storybook/recipes/one-storybook-with-composition": {
     "id": "one-storybook-with-composition",
     "name": "One main Storybook instance using Storybook Composition",
     "description": "This guide explains how to publish a unified Storybook instance from multiple frameworks within an Nx workspace using Storybook Composition.",
@@ -10085,10 +10085,10 @@
     "file": "shared/recipes/storybook/one-storybook-with-composition",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/storybook/recipes/one-storybook-with-composition",
+    "path": "/technologies/test-tools/storybook/recipes/one-storybook-with-composition",
     "tags": ["storybook"]
   },
-  "/technologies/testing-tools/storybook/recipes/custom-builder-configs": {
+  "/technologies/test-tools/storybook/recipes/custom-builder-configs": {
     "id": "custom-builder-configs",
     "name": "How to configure Webpack and Vite for Storybook",
     "description": "This guide explains how to customize the webpack configuration and your vite configuration for Storybook.",
@@ -10096,10 +10096,10 @@
     "file": "shared/recipes/storybook/custom-builder-configs",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/storybook/recipes/custom-builder-configs",
+    "path": "/technologies/test-tools/storybook/recipes/custom-builder-configs",
     "tags": ["storybook"]
   },
-  "/technologies/testing-tools/storybook/recipes/storybook-interaction-tests": {
+  "/technologies/test-tools/storybook/recipes/storybook-interaction-tests": {
     "id": "storybook-interaction-tests",
     "name": "Setting up Storybook Interaction Tests with Nx",
     "description": "This guide explains how you can set up Storybook interaction tests on your Nx workspace.",
@@ -10107,10 +10107,10 @@
     "file": "shared/recipes/storybook/interaction-tests",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/storybook/recipes/storybook-interaction-tests",
+    "path": "/technologies/test-tools/storybook/recipes/storybook-interaction-tests",
     "tags": ["storybook"]
   },
-  "/technologies/testing-tools/storybook/recipes/upgrading-storybook": {
+  "/technologies/test-tools/storybook/recipes/upgrading-storybook": {
     "id": "upgrading-storybook",
     "name": "Upgrading Storybook using the Storybook CLI",
     "description": "This guide explains how you can upgrade Storybook using the Storybook CLI upgrade and automigrate commands.",
@@ -10118,10 +10118,10 @@
     "file": "shared/recipes/storybook/upgrading-storybook",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/storybook/recipes/upgrading-storybook",
+    "path": "/technologies/test-tools/storybook/recipes/upgrading-storybook",
     "tags": ["storybook"]
   },
-  "/technologies/testing-tools/storybook/recipes/storybook-composition-setup": {
+  "/technologies/test-tools/storybook/recipes/storybook-composition-setup": {
     "id": "storybook-composition-setup",
     "name": "Setting up Storybook Composition with Nx",
     "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
@@ -10129,10 +10129,10 @@
     "file": "shared/recipes/storybook/storybook-composition-setup",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/storybook/recipes/storybook-composition-setup",
+    "path": "/technologies/test-tools/storybook/recipes/storybook-composition-setup",
     "tags": ["storybook"]
   },
-  "/technologies/testing-tools/storybook/recipes/angular-storybook-compodoc": {
+  "/technologies/test-tools/storybook/recipes/angular-storybook-compodoc": {
     "id": "angular-storybook-compodoc",
     "name": "Angular: Set up Compodoc for Storybook on Nx",
     "description": "This guide explains how to set up Compodoc for Storybook on Angular projects in a Nx workspace.",
@@ -10140,10 +10140,10 @@
     "file": "shared/recipes/storybook/angular-storybook-compodoc",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/storybook/recipes/angular-storybook-compodoc",
+    "path": "/technologies/test-tools/storybook/recipes/angular-storybook-compodoc",
     "tags": ["storybook"]
   },
-  "/technologies/testing-tools/storybook/recipes/angular-configuring-styles": {
+  "/technologies/test-tools/storybook/recipes/angular-configuring-styles": {
     "id": "angular-configuring-styles",
     "name": "Angular: Configuring styles and preprocessor options",
     "description": "This document explains how to configure styles and preprocessor options in Angular projects with a Storybook configuration.",
@@ -10151,10 +10151,10 @@
     "file": "shared/recipes/storybook/angular-configuring-styles",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/storybook/recipes/angular-configuring-styles",
+    "path": "/technologies/test-tools/storybook/recipes/angular-configuring-styles",
     "tags": ["storybook"]
   },
-  "/technologies/testing-tools/storybook/api": {
+  "/technologies/test-tools/storybook/api": {
     "id": "api",
     "name": "API",
     "description": "",
@@ -10162,10 +10162,10 @@
     "file": "shared/packages/storybook/plugin-overview",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/storybook/api",
+    "path": "/technologies/test-tools/storybook/api",
     "tags": []
   },
-  "/technologies/testing-tools/detox": {
+  "/technologies/test-tools/detox": {
     "id": "detox",
     "name": "Detox",
     "description": "",
@@ -10180,7 +10180,7 @@
         "file": "shared/packages/detox/detox-plugin",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/detox/introduction",
+        "path": "/technologies/test-tools/detox/introduction",
         "tags": []
       },
       {
@@ -10191,7 +10191,7 @@
         "file": "",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/detox/recipes",
+        "path": "/technologies/test-tools/detox/recipes",
         "tags": []
       },
       {
@@ -10202,15 +10202,15 @@
         "file": "shared/packages/detox/detox-plugin",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/testing-tools/detox/api",
+        "path": "/technologies/test-tools/detox/api",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/technologies/testing-tools/detox",
+    "path": "/technologies/test-tools/detox",
     "tags": []
   },
-  "/technologies/testing-tools/detox/introduction": {
+  "/technologies/test-tools/detox/introduction": {
     "id": "introduction",
     "name": "Introduction",
     "description": "",
@@ -10218,10 +10218,10 @@
     "file": "shared/packages/detox/detox-plugin",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/detox/introduction",
+    "path": "/technologies/test-tools/detox/introduction",
     "tags": []
   },
-  "/technologies/testing-tools/detox/recipes": {
+  "/technologies/test-tools/detox/recipes": {
     "id": "recipes",
     "name": "Recipes",
     "description": "",
@@ -10229,10 +10229,10 @@
     "file": "",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/detox/recipes",
+    "path": "/technologies/test-tools/detox/recipes",
     "tags": []
   },
-  "/technologies/testing-tools/detox/api": {
+  "/technologies/test-tools/detox/api": {
     "id": "api",
     "name": "API",
     "description": "",
@@ -10240,12 +10240,12 @@
     "file": "shared/packages/detox/detox-plugin",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/testing-tools/detox/api",
+    "path": "/technologies/test-tools/detox/api",
     "tags": []
   },
   "/concepts": {
     "id": "concepts",
-    "name": "Concepts",
+    "name": "Core Concepts",
     "description": "Learn about all the different concepts Nx uses to manage your tasks and enhance your productivity.",
     "mediaImage": "",
     "file": "",

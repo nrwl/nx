@@ -357,7 +357,7 @@
   },
   "/ci/concepts": {
     "id": "concepts",
-    "name": "Concepts",
+    "name": "Core Concepts",
     "description": "Learn how to manage Nx Cloud subscriptions and other options.",
     "mediaImage": "",
     "file": "",

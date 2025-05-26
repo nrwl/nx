@@ -1923,20 +1923,20 @@
             "disableCollapsible": false
           },
           {
-            "name": "Testing Tools",
-            "path": "/technologies/testing-tools",
-            "id": "testing-tools",
+            "name": "Test Tools",
+            "path": "/technologies/test-tools",
+            "id": "test-tools",
             "isExternal": false,
             "children": [
               {
                 "name": "Cypress",
-                "path": "/technologies/testing-tools/cypress",
+                "path": "/technologies/test-tools/cypress",
                 "id": "cypress",
                 "isExternal": false,
                 "children": [
                   {
                     "name": "Introduction",
-                    "path": "/technologies/testing-tools/cypress/introduction",
+                    "path": "/technologies/test-tools/cypress/introduction",
                     "id": "introduction",
                     "isExternal": false,
                     "children": [],
@@ -1944,13 +1944,13 @@
                   },
                   {
                     "name": "Recipes",
-                    "path": "/technologies/testing-tools/cypress/recipes",
+                    "path": "/technologies/test-tools/cypress/recipes",
                     "id": "recipes",
                     "isExternal": false,
                     "children": [
                       {
                         "name": "Component Testing",
-                        "path": "/technologies/testing-tools/cypress/recipes/cypress-component-testing",
+                        "path": "/technologies/test-tools/cypress/recipes/cypress-component-testing",
                         "id": "cypress-component-testing",
                         "isExternal": false,
                         "children": [],
@@ -1958,7 +1958,7 @@
                       },
                       {
                         "name": "Using setupNodeEvents with Cypress preset",
-                        "path": "/technologies/testing-tools/cypress/recipes/cypress-setup-node-events",
+                        "path": "/technologies/test-tools/cypress/recipes/cypress-setup-node-events",
                         "id": "cypress-setup-node-events",
                         "isExternal": false,
                         "children": [],
@@ -1966,7 +1966,7 @@
                       },
                       {
                         "name": "Cypress v11 Migration Guide",
-                        "path": "/technologies/testing-tools/cypress/recipes/cypress-v11-migration",
+                        "path": "/technologies/test-tools/cypress/recipes/cypress-v11-migration",
                         "id": "cypress-v11-migration",
                         "isExternal": false,
                         "children": [],
@@ -1977,7 +1977,7 @@
                   },
                   {
                     "name": "API",
-                    "path": "/technologies/testing-tools/cypress/api",
+                    "path": "/technologies/test-tools/cypress/api",
                     "id": "api",
                     "isExternal": false,
                     "children": [],
@@ -1988,13 +1988,13 @@
               },
               {
                 "name": "Jest",
-                "path": "/technologies/testing-tools/jest",
+                "path": "/technologies/test-tools/jest",
                 "id": "jest",
                 "isExternal": false,
                 "children": [
                   {
                     "name": "Introduction",
-                    "path": "/technologies/testing-tools/jest/introduction",
+                    "path": "/technologies/test-tools/jest/introduction",
                     "id": "introduction",
                     "isExternal": false,
                     "children": [],
@@ -2002,7 +2002,7 @@
                   },
                   {
                     "name": "Recipes",
-                    "path": "/technologies/testing-tools/jest/recipes",
+                    "path": "/technologies/test-tools/jest/recipes",
                     "id": "recipes",
                     "isExternal": false,
                     "children": [],
@@ -2010,7 +2010,7 @@
                   },
                   {
                     "name": "API",
-                    "path": "/technologies/testing-tools/jest/api",
+                    "path": "/technologies/test-tools/jest/api",
                     "id": "api",
                     "isExternal": false,
                     "children": [],
@@ -2021,13 +2021,13 @@
               },
               {
                 "name": "Playwright",
-                "path": "/technologies/testing-tools/playwright",
+                "path": "/technologies/test-tools/playwright",
                 "id": "playwright",
                 "isExternal": false,
                 "children": [
                   {
                     "name": "Introduction",
-                    "path": "/technologies/testing-tools/playwright/introduction",
+                    "path": "/technologies/test-tools/playwright/introduction",
                     "id": "introduction",
                     "isExternal": false,
                     "children": [],
@@ -2035,7 +2035,7 @@
                   },
                   {
                     "name": "Recipes",
-                    "path": "/technologies/testing-tools/playwright/recipes",
+                    "path": "/technologies/test-tools/playwright/recipes",
                     "id": "recipes",
                     "isExternal": false,
                     "children": [],
@@ -2043,7 +2043,7 @@
                   },
                   {
                     "name": "API",
-                    "path": "/technologies/testing-tools/playwright/api",
+                    "path": "/technologies/test-tools/playwright/api",
                     "id": "api",
                     "isExternal": false,
                     "children": [],
@@ -2054,13 +2054,13 @@
               },
               {
                 "name": "Storybook",
-                "path": "/technologies/testing-tools/storybook",
+                "path": "/technologies/test-tools/storybook",
                 "id": "storybook",
                 "isExternal": false,
                 "children": [
                   {
                     "name": "Introduction",
-                    "path": "/technologies/testing-tools/storybook/introduction",
+                    "path": "/technologies/test-tools/storybook/introduction",
                     "id": "introduction",
                     "isExternal": false,
                     "children": [],
@@ -2068,13 +2068,13 @@
                   },
                   {
                     "name": "Recipes",
-                    "path": "/technologies/testing-tools/storybook/recipes",
+                    "path": "/technologies/test-tools/storybook/recipes",
                     "id": "recipes",
                     "isExternal": false,
                     "children": [
                       {
                         "name": "Set up Storybook for React Projects",
-                        "path": "/technologies/testing-tools/storybook/recipes/overview-react",
+                        "path": "/technologies/test-tools/storybook/recipes/overview-react",
                         "id": "overview-react",
                         "isExternal": false,
                         "children": [],
@@ -2082,7 +2082,7 @@
                       },
                       {
                         "name": "Set up Storybook for Angular Projects",
-                        "path": "/technologies/testing-tools/storybook/recipes/overview-angular",
+                        "path": "/technologies/test-tools/storybook/recipes/overview-angular",
                         "id": "overview-angular",
                         "isExternal": false,
                         "children": [],
@@ -2090,7 +2090,7 @@
                       },
                       {
                         "name": "Set up Storybook for Vue Projects",
-                        "path": "/technologies/testing-tools/storybook/recipes/overview-vue",
+                        "path": "/technologies/test-tools/storybook/recipes/overview-vue",
                         "id": "overview-vue",
                         "isExternal": false,
                         "children": [],
@@ -2098,7 +2098,7 @@
                       },
                       {
                         "name": "Configuring Storybook on Nx",
-                        "path": "/technologies/testing-tools/storybook/recipes/configuring-storybook",
+                        "path": "/technologies/test-tools/storybook/recipes/configuring-storybook",
                         "id": "configuring-storybook",
                         "isExternal": false,
                         "children": [],
@@ -2106,7 +2106,7 @@
                       },
                       {
                         "name": "One main Storybook instance for all projects",
-                        "path": "/technologies/testing-tools/storybook/recipes/one-storybook-for-all",
+                        "path": "/technologies/test-tools/storybook/recipes/one-storybook-for-all",
                         "id": "one-storybook-for-all",
                         "isExternal": false,
                         "children": [],
@@ -2114,7 +2114,7 @@
                       },
                       {
                         "name": "One Storybook instance per scope",
-                        "path": "/technologies/testing-tools/storybook/recipes/one-storybook-per-scope",
+                        "path": "/technologies/test-tools/storybook/recipes/one-storybook-per-scope",
                         "id": "one-storybook-per-scope",
                         "isExternal": false,
                         "children": [],
@@ -2122,7 +2122,7 @@
                       },
                       {
                         "name": "One main Storybook instance using Storybook Composition",
-                        "path": "/technologies/testing-tools/storybook/recipes/one-storybook-with-composition",
+                        "path": "/technologies/test-tools/storybook/recipes/one-storybook-with-composition",
                         "id": "one-storybook-with-composition",
                         "isExternal": false,
                         "children": [],
@@ -2130,7 +2130,7 @@
                       },
                       {
                         "name": "How to configure Webpack and Vite for Storybook",
-                        "path": "/technologies/testing-tools/storybook/recipes/custom-builder-configs",
+                        "path": "/technologies/test-tools/storybook/recipes/custom-builder-configs",
                         "id": "custom-builder-configs",
                         "isExternal": false,
                         "children": [],
@@ -2138,7 +2138,7 @@
                       },
                       {
                         "name": "Setting up Storybook Interaction Tests with Nx",
-                        "path": "/technologies/testing-tools/storybook/recipes/storybook-interaction-tests",
+                        "path": "/technologies/test-tools/storybook/recipes/storybook-interaction-tests",
                         "id": "storybook-interaction-tests",
                         "isExternal": false,
                         "children": [],
@@ -2146,7 +2146,7 @@
                       },
                       {
                         "name": "Upgrading Storybook using the Storybook CLI",
-                        "path": "/technologies/testing-tools/storybook/recipes/upgrading-storybook",
+                        "path": "/technologies/test-tools/storybook/recipes/upgrading-storybook",
                         "id": "upgrading-storybook",
                         "isExternal": false,
                         "children": [],
@@ -2154,7 +2154,7 @@
                       },
                       {
                         "name": "Setting up Storybook Composition with Nx",
-                        "path": "/technologies/testing-tools/storybook/recipes/storybook-composition-setup",
+                        "path": "/technologies/test-tools/storybook/recipes/storybook-composition-setup",
                         "id": "storybook-composition-setup",
                         "isExternal": false,
                         "children": [],
@@ -2162,7 +2162,7 @@
                       },
                       {
                         "name": "Angular: Set up Compodoc for Storybook on Nx",
-                        "path": "/technologies/testing-tools/storybook/recipes/angular-storybook-compodoc",
+                        "path": "/technologies/test-tools/storybook/recipes/angular-storybook-compodoc",
                         "id": "angular-storybook-compodoc",
                         "isExternal": false,
                         "children": [],
@@ -2170,7 +2170,7 @@
                       },
                       {
                         "name": "Angular: Configuring styles and preprocessor options",
-                        "path": "/technologies/testing-tools/storybook/recipes/angular-configuring-styles",
+                        "path": "/technologies/test-tools/storybook/recipes/angular-configuring-styles",
                         "id": "angular-configuring-styles",
                         "isExternal": false,
                         "children": [],
@@ -2181,7 +2181,7 @@
                   },
                   {
                     "name": "API",
-                    "path": "/technologies/testing-tools/storybook/api",
+                    "path": "/technologies/test-tools/storybook/api",
                     "id": "api",
                     "isExternal": false,
                     "children": [],
@@ -2192,13 +2192,13 @@
               },
               {
                 "name": "Detox",
-                "path": "/technologies/testing-tools/detox",
+                "path": "/technologies/test-tools/detox",
                 "id": "detox",
                 "isExternal": false,
                 "children": [
                   {
                     "name": "Introduction",
-                    "path": "/technologies/testing-tools/detox/introduction",
+                    "path": "/technologies/test-tools/detox/introduction",
                     "id": "introduction",
                     "isExternal": false,
                     "children": [],
@@ -2206,7 +2206,7 @@
                   },
                   {
                     "name": "Recipes",
-                    "path": "/technologies/testing-tools/detox/recipes",
+                    "path": "/technologies/test-tools/detox/recipes",
                     "id": "recipes",
                     "isExternal": false,
                     "children": [],
@@ -2214,7 +2214,7 @@
                   },
                   {
                     "name": "API",
-                    "path": "/technologies/testing-tools/detox/api",
+                    "path": "/technologies/test-tools/detox/api",
                     "id": "api",
                     "isExternal": false,
                     "children": [],

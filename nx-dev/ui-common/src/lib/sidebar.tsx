@@ -463,16 +463,14 @@ const technologyIconMap: Record<string, string> = {
   'eslint-technology': 'eslint',
 
   // Testing
-  'testing-tools': 'jest',
+  'test-tools': 'testtools',
   cypress: 'cypress',
   jest: 'jest',
   playwright: 'playwright',
   storybook: 'storybook',
   detox: 'detox',
 
-  // Build tools
-  'build-tools': 'webpack',
-  'build tools': 'webpack',
+  'build-tools': 'buildtools',
   webpack: 'webpack',
   vite: 'vite',
   rollup: 'rollup',

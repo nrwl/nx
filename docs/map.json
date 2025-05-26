@@ -1365,8 +1365,8 @@
               ]
             },
             {
-              "name": "Testing Tools",
-              "id": "testing-tools",
+              "name": "Test Tools",
+              "id": "test-tools",
               "itemList": [
                 {
                   "name": "Cypress",
@@ -1589,7 +1589,7 @@
           ]
         },
         {
-          "name": "Concepts",
+          "name": "Core Concepts",
           "id": "concepts",
           "description": "Learn about all the different concepts Nx uses to manage your tasks and enhance your productivity.",
           "itemList": [

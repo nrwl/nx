@@ -1390,91 +1390,91 @@
       "file": "shared/recipes/storybook/plugin-react",
       "id": "overview-react",
       "name": "Set up Storybook for React Projects",
-      "path": "/technologies/testing-tools/storybook/recipes/overview-react"
+      "path": "/technologies/test-tools/storybook/recipes/overview-react"
     },
     {
       "description": "This guide explains how to set up Storybook for Angular projects in your Nx workspace.",
       "file": "shared/recipes/storybook/plugin-angular",
       "id": "overview-angular",
       "name": "Set up Storybook for Angular Projects",
-      "path": "/technologies/testing-tools/storybook/recipes/overview-angular"
+      "path": "/technologies/test-tools/storybook/recipes/overview-angular"
     },
     {
       "description": "This guide explains how to set up Storybook for Vue projects in your Nx workspace.",
       "file": "shared/recipes/storybook/plugin-vue",
       "id": "overview-vue",
       "name": "Set up Storybook for Vue Projects",
-      "path": "/technologies/testing-tools/storybook/recipes/overview-vue"
+      "path": "/technologies/test-tools/storybook/recipes/overview-vue"
     },
     {
       "description": "This guide explains how Storybook is configured on your Nx workspace.",
       "file": "shared/recipes/storybook/configuring-storybook",
       "id": "configuring-storybook",
       "name": "Configuring Storybook on Nx",
-      "path": "/technologies/testing-tools/storybook/recipes/configuring-storybook"
+      "path": "/technologies/test-tools/storybook/recipes/configuring-storybook"
     },
     {
       "description": "This guide explains how to consolidate all your Storybook stories from different projects into one unified Storybook instance. Ideal for Nx workspaces leveraging a single framework.",
       "file": "shared/recipes/storybook/one-storybook-for-all",
       "id": "one-storybook-for-all",
       "name": "One main Storybook instance for all projects",
-      "path": "/technologies/testing-tools/storybook/recipes/one-storybook-for-all"
+      "path": "/technologies/test-tools/storybook/recipes/one-storybook-for-all"
     },
     {
       "description": "This guide explains how to set up individual Storybook instances for each scope within an Nx workspace. It provides a structured approach, emphasizing folder organization and thematic scope separation.",
       "file": "shared/recipes/storybook/one-storybook-per-scope",
       "id": "one-storybook-per-scope",
       "name": "One Storybook instance per scope",
-      "path": "/technologies/testing-tools/storybook/recipes/one-storybook-per-scope"
+      "path": "/technologies/test-tools/storybook/recipes/one-storybook-per-scope"
     },
     {
       "description": "This guide explains how to publish a unified Storybook instance from multiple frameworks within an Nx workspace using Storybook Composition.",
       "file": "shared/recipes/storybook/one-storybook-with-composition",
       "id": "one-storybook-with-composition",
       "name": "One main Storybook instance using Storybook Composition",
-      "path": "/technologies/testing-tools/storybook/recipes/one-storybook-with-composition"
+      "path": "/technologies/test-tools/storybook/recipes/one-storybook-with-composition"
     },
     {
       "description": "This guide explains how to customize the webpack configuration and your vite configuration for Storybook.",
       "file": "shared/recipes/storybook/custom-builder-configs",
       "id": "custom-builder-configs",
       "name": "How to configure Webpack and Vite for Storybook",
-      "path": "/technologies/testing-tools/storybook/recipes/custom-builder-configs"
+      "path": "/technologies/test-tools/storybook/recipes/custom-builder-configs"
     },
     {
       "description": "This guide explains how you can set up Storybook interaction tests on your Nx workspace.",
       "file": "shared/recipes/storybook/interaction-tests",
       "id": "storybook-interaction-tests",
       "name": "Setting up Storybook Interaction Tests with Nx",
-      "path": "/technologies/testing-tools/storybook/recipes/storybook-interaction-tests"
+      "path": "/technologies/test-tools/storybook/recipes/storybook-interaction-tests"
     },
     {
       "description": "This guide explains how you can upgrade Storybook using the Storybook CLI upgrade and automigrate commands.",
       "file": "shared/recipes/storybook/upgrading-storybook",
       "id": "upgrading-storybook",
       "name": "Upgrading Storybook using the Storybook CLI",
-      "path": "/technologies/testing-tools/storybook/recipes/upgrading-storybook"
+      "path": "/technologies/test-tools/storybook/recipes/upgrading-storybook"
     },
     {
       "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
       "file": "shared/recipes/storybook/storybook-composition-setup",
       "id": "storybook-composition-setup",
       "name": "Setting up Storybook Composition with Nx",
-      "path": "/technologies/testing-tools/storybook/recipes/storybook-composition-setup"
+      "path": "/technologies/test-tools/storybook/recipes/storybook-composition-setup"
     },
     {
       "description": "This guide explains how to set up Compodoc for Storybook on Angular projects in a Nx workspace.",
       "file": "shared/recipes/storybook/angular-storybook-compodoc",
       "id": "angular-storybook-compodoc",
       "name": "Angular: Set up Compodoc for Storybook on Nx",
-      "path": "/technologies/testing-tools/storybook/recipes/angular-storybook-compodoc"
+      "path": "/technologies/test-tools/storybook/recipes/angular-storybook-compodoc"
     },
     {
       "description": "This document explains how to configure styles and preprocessor options in Angular projects with a Storybook configuration.",
       "file": "shared/recipes/storybook/angular-configuring-styles",
       "id": "angular-configuring-styles",
       "name": "Angular: Configuring styles and preprocessor options",
-      "path": "/technologies/testing-tools/storybook/recipes/angular-configuring-styles"
+      "path": "/technologies/test-tools/storybook/recipes/angular-configuring-styles"
     }
   ],
   "intro": [
