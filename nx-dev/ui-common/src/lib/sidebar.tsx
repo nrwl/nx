@@ -53,24 +53,11 @@ function SidebarSection({
   section: MenuSection;
   isInTechnologiesPath: boolean;
 }): JSX.Element {
-  const router = useRouter();
-
   // Get all items with refs
   const itemList = section.itemList.map((i) => ({
     ...i,
     ref: createRef<HTMLDivElement>(),
   }));
-
-  const currentItem = itemList.find((s) => router.asPath.includes(s.path));
-
-  useEffect(() => {
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        if (currentItem && currentItem.ref.current)
-          currentItem.ref.current.scrollIntoView({ behavior: 'smooth' });
-      }, 0);
-    });
-  }, [currentItem]);
 
   return (
     <>
@@ -96,7 +83,7 @@ function SidebarSection({
                     key={item.id + '-' + index}
                     item={item}
                     isNested={false}
-                    firstLevel={false} // Not needed at the top level
+                    firstLevel={true}
                     isInTechnologiesPath={isTechnologiesItem}
                   />
                 </div>
@@ -112,7 +99,7 @@ function SidebarSectionItems({
   item,
   isNested = false,
   isInTechnologiesPath = false,
-  firstLevel = false,
+  firstLevel,
 }: {
   item: MenuItem;
   isNested?: boolean;
@@ -158,8 +145,9 @@ function SidebarSectionItems({
           'group flex items-center py-2',
           isDirectTechnologyChild ? '-ml-1 px-1 ' : '',
           !isNested
-            ? 'text-base font-semibold text-slate-800 lg:text-base dark:text-slate-200'
-            : 'text-sm font-semibold text-slate-800 lg:text-sm dark:text-slate-200',
+            ? 'text-base text-slate-800 lg:text-base dark:text-slate-200'
+            : 'text-sm text-slate-800 lg:text-sm dark:text-slate-200',
+          firstLevel ? 'font-semibold' : '',
           item.disableCollapsible ? 'cursor-text' : 'cursor-pointer'
         )}
         onClick={handleCollapseToggle}
@@ -203,29 +191,22 @@ function SidebarSectionItems({
             handleCollapseToggle();
           }
 
-          // Skip pl-3 for first level items, apply it to deeper nested levels
-          const shouldApplyPadding = isNested && !firstLevel;
-
           return (
             <li
               key={subItem.id + '-' + index}
               data-testid={`section-li:${subItem.id}`}
               className={cx(
                 'relative',
-                shouldApplyPadding && 'pl-3', // Only apply padding for deeply nested items, not first level
-                !isNested && 'pl-2 transition-colors duration-150', // Add pl-2 for padding between vertical bar and text
-                !isNested && 'border-l-2',
-                !isNested &&
-                  (isActiveLink
-                    ? 'border-l-blue-500 hover:border-l-blue-600 dark:border-l-sky-500 dark:hover:border-l-sky-400'
-                    : 'border-l-transparent hover:border-blue-300 dark:border-l-transparent dark:hover:border-sky-400')
+                isDirectTechnologyChild
+                  ? ''
+                  : 'border-l border-slate-300 pl-2 pl-3 transition-colors duration-150 dark:border-slate-600'
               )}
             >
               {(subItem.children || []).length ? (
                 <SidebarSectionItems
                   item={subItem}
                   isNested={true}
-                  firstLevel={!isNested} // Set firstLevel=true when coming from a top-level item
+                  firstLevel={false}
                   isInTechnologiesPath={isTechnologiesItem}
                 />
               ) : (
