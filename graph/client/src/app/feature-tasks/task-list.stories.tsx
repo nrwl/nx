@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import { TaskList, TaskListProps } from './task-list';
 
 const meta: Meta<typeof TaskList> = {

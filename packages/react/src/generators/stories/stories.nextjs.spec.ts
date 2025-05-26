@@ -42,13 +42,6 @@ describe('nextjs:stories for applications', () => {
     ).toMatchSnapshot();
 
     const packageJson = JSON.parse(tree.read('package.json', 'utf-8'));
-    expect(
-      packageJson.devDependencies['@storybook/addon-interactions']
-    ).toBeDefined();
-    expect(packageJson.devDependencies['@storybook/test-runner']).toBeDefined();
-    expect(
-      packageJson.devDependencies['@storybook/testing-library']
-    ).toBeDefined();
   });
 
   it('should create the stories without interaction tests', async () => {

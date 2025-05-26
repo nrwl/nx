@@ -90,7 +90,7 @@ describe('react:stories for applications', () => {
   it('should not update existing stories', async () => {
     appTree.write(
       'test-ui-app/src/app/nx-welcome.stories.tsx',
-      `import { ComponentStory, ComponentMeta } from '@storybook/react'`
+      `import { ComponentStory, ComponentMeta } from '@storybook/react-webpack5'`
     );
 
     await storiesGenerator(appTree, {

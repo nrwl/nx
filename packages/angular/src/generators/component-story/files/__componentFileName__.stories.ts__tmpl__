@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/angular';
 import { <%=componentName%> } from './<%=componentFileName%>';
 <%_ if ( interactionTests ) { _%>
-import { within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { expect } from 'storybook/jest';
 <%_ } _%>
 
 const meta: Meta<<%= componentName %>> = {
@@ -23,9 +22,8 @@ export const Heading: Story = {
   args: {<% for (let prop of props) { %>
     <%= prop.name %>: <%- prop.defaultValue %>,<% } %>
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    expect(canvas.getByText(/<%=componentNameSimple%> works!/gi)).toBeTruthy();
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/<%=componentNameSimple%> works!/gi)).toBeTruthy();
   },
 };
 <%_ } _%>

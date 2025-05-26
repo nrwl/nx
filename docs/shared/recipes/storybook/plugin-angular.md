@@ -187,5 +187,5 @@ For more on using Storybook, see the [official Storybook documentation](https://
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 
-- [Set up Storybook version 7](/nx-api/storybook/documents/storybook-7-setup)
-- [Migrate to Storybook version 7](/nx-api/storybook/generators/migrate-7)
+- [Set up Storybook version 9](/nx-api/storybook/documents/storybook-9-setup)
+- [Migrate to Storybook version 9](/nx-api/storybook/generators/migrate-9)

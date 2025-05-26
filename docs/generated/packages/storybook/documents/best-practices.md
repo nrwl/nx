@@ -53,8 +53,6 @@ If your project is [already configured](/nx-api/storybook), you can use the `sto
 
 - [Vue stories generator](/nx-api/vue/generators/stories)
 
-- [React Native stories generator](/nx-api/react-native/generators/stories)
-
 The stories generator will read your inputs (if you’re using Angular), or your props (if you're using React), and will generate stories with the corresponding arguments/controls already prefilled.
 
 #### Storybook interaction tests

@@ -94,34 +94,21 @@ nx g @nx/vue:storybook-configuration my-vue-project
 ```
 
 {% /tab %}
-{% tab label="React Native" %}
-
-```shell
-nx g @nx/react-native:storybook-configuration my-react-native-project
-```
-
-{% /tab %}
 {% /tabs %}
 
 These framework-specific generators will also **generate stories** and interaction tests for you.
 
-If you are NOT using a framework-specific generator (for [Angular](/nx-api/angular/generators/storybook-configuration), [React](/nx-api/react/generators/storybook-configuration), [React Native](/nx-api/react-native/generators/storybook-configuration), [Vue](/nx-api/vue/generators/storybook-configuration)), in the field `uiFramework` you must choose one of the following Storybook frameworks:
+If you are NOT using a framework-specific generator (for [Angular](/nx-api/angular/generators/storybook-configuration), [React](/nx-api/react/generators/storybook-configuration), [Vue](/nx-api/vue/generators/storybook-configuration)), in the field `uiFramework` you must choose one of the following Storybook frameworks:
 
 - `@storybook/angular`
-- `@storybook/html-webpack5`
 - `@storybook/nextjs`
-- `@storybook/preact-webpack5`
 - `@storybook/react-webpack5`
 - `@storybook/react-vite`
 - `@storybook/server-webpack5`
-- `@storybook/svelte-webpack5`
 - `@storybook/svelte-vite`
 - `@storybook/sveltekit`
-- `@storybook/vue-webpack5`
 - `@storybook/vue-vite`
-- `@storybook/vue3-webpack5`
 - `@storybook/vue3-vite`
-- `@storybook/web-components-webpack5`
 - `@storybook/web-components-vite`
 
 Choosing one of these frameworks will have the following effects on your workspace:
@@ -132,7 +119,7 @@ Choosing one of these frameworks will have the following effects on your workspa
 
 3. Nx will create new `targets` in your project's `project.json`, called `storybook`, `test-storybook` and `build-storybook`, containing all the necessary configuration to serve, test and build Storybook.
 
-Make sure to **use the framework-specific generators** if your project is using Angular, React, Next.js, Vue, Nuxt, or React Native: [`@nx/angular:storybook-configuration`](/nx-api/angular/generators/storybook-configuration), [`@nx/react:storybook-configuration`](/nx-api/react/generators/storybook-configuration), [`@nx/react-native:storybook-configuration`](/nx-api/react-native/generators/storybook-configuration), [`@nx/vue:storybook-configuration`](/nx-api/vue/generators/storybook-configuration) as shown above.
+Make sure to **use the framework-specific generators** if your project is using Angular, React, Next.js, Vue, Nuxt, or React Native: [`@nx/angular:storybook-configuration`](/nx-api/angular/generators/storybook-configuration), [`@nx/react:storybook-configuration`](/nx-api/react/generators/storybook-configuration), [`@nx/vue:storybook-configuration`](/nx-api/vue/generators/storybook-configuration) as shown above.
 
 ### Running Storybook
 
@@ -241,5 +228,5 @@ For more on using Storybook, see the [official Storybook documentation](https://
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 
-- [Storybook 7 migration generator](/nx-api/storybook/generators/migrate-7)
-- [Storybook 7 setup guide](/nx-api/storybook/documents/storybook-7-setup)
+- [Storybook 9 migration generator](/nx-api/storybook/generators/migrate-9)
+- [Storybook 9 setup guide](/nx-api/storybook/documents/storybook-9-setup)

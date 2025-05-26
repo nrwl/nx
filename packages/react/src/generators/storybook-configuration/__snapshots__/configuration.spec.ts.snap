@@ -9,7 +9,7 @@ import react from '@vitejs/plugin-react';
 
 const config: StorybookConfig = {
   stories: ['../src/lib/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
-  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
+  addons: [],
   framework: {
     name: '@storybook/react-vite',
     options: {},
@@ -32,8 +32,7 @@ export default config;
 exports[`react:storybook-configuration should generate stories for components 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react';
 import { MyComponent } from './my-component';
-import { within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { expect } from 'storybook/jest';
 
 const meta: Meta<typeof MyComponent> = {
   component: MyComponent,
@@ -48,9 +47,8 @@ export const Primary = {
 
 export const Heading: Story = {
   args: {},
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    expect(canvas.getByText(/Welcome to MyComponent!/gi)).toBeTruthy();
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/Welcome to MyComponent!/gi)).toBeTruthy();
   },
 };
 "
@@ -58,8 +56,7 @@ export const Heading: Story = {
 
 exports[`react:storybook-configuration should generate stories for components written in plain JS 1`] = `
 "import componentName from './test-ui-libplain';
-import { within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { expect } from 'storybook/jest';
 
 export default {
   component: Test,
@@ -71,9 +68,8 @@ export const Primary = {
 };
 
 export const Heading: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
   },
 };
 "

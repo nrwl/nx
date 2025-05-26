@@ -40,13 +40,6 @@ describe('react:storybook-configuration', () => {
 
     const packageJson = JSON.parse(appTree.read('package.json', 'utf-8'));
     expect(packageJson.devDependencies['@storybook/react-vite']).toBeDefined();
-    expect(
-      packageJson.devDependencies['@storybook/addon-interactions']
-    ).toBeDefined();
-    expect(packageJson.devDependencies['@storybook/test-runner']).toBeDefined();
-    expect(
-      packageJson.devDependencies['@storybook/testing-library']
-    ).toBeDefined();
   });
 
   it('should generate stories for components', async () => {
