@@ -119,8 +119,8 @@ export class DocumentsApi {
   }
 
   getSlugsStaticDocumentPaths(): string[] {
-    let paths = [];
-    
+    let paths: string[] = [];
+
     // Add regular document paths
     if (this.options.prefix) {
       paths = Object.keys(this.manifest).map(
@@ -133,43 +133,49 @@ export class DocumentsApi {
     // Add API docs paths (executors, generators, migrations) if packagesManifest is available
     if (this.packagesManifest) {
       const packages = Object.values(this.packagesManifest);
-      
+
       // For each package, add executors, generators, and migrations paths
       packages.forEach((pkg) => {
         const packageName = pkg.name;
-        
+
         // Add executors
         Object.keys(pkg.executors).forEach((path) => {
           const segments = path.split('/').filter(Boolean);
           if (segments[0] === 'nx-api') {
             // Create a path like /technologies/react/executors/library
-            const newPath = `/technologies/${packageName}/executors/${segments.slice(3).join('/')}`;
+            const newPath = `/technologies/${packageName}/api/executors/${segments
+              .slice(3)
+              .join('/')}`;
             paths.push(newPath);
           }
         });
-        
+
         // Add generators
         Object.keys(pkg.generators).forEach((path) => {
           const segments = path.split('/').filter(Boolean);
           if (segments[0] === 'nx-api') {
             // Create a path like /technologies/react/generators/library
-            const newPath = `/technologies/${packageName}/generators/${segments.slice(3).join('/')}`;
+            const newPath = `/technologies/${packageName}/api/generators/${segments
+              .slice(3)
+              .join('/')}`;
             paths.push(newPath);
           }
         });
-        
+
         // Add migrations
         Object.keys(pkg.migrations).forEach((path) => {
           const segments = path.split('/').filter(Boolean);
           if (segments[0] === 'nx-api') {
             // Create a path like /technologies/react/migrations/14-0-0
-            const newPath = `/technologies/${packageName}/migrations/${segments.slice(3).join('/')}`;
+            const newPath = `/technologies/${packageName}/api/migrations/${segments
+              .slice(3)
+              .join('/')}`;
             paths.push(newPath);
           }
         });
       });
     }
-    
+
     return paths;
   }
 
@@ -182,32 +188,38 @@ export class DocumentsApi {
       if (path[0] === 'technologies' && this.packagesManifest) {
         const packageName = path[1];
         const category = path[2]; // 'executors', 'generators', or 'migrations'
-        
+
         // Try to find the package in packagesManifest
         const pkg = Object.values(this.packagesManifest).find(
           (p) => p.name === packageName
         );
-        
+
         if (pkg) {
           // Check if the category exists
-          if (category === 'executors' || category === 'generators' || category === 'migrations') {
+          if (
+            category === 'executors' ||
+            category === 'generators' ||
+            category === 'migrations'
+          ) {
             // Create the original nx-api path
             const targetSegment = path.slice(3).join('/');
             const originalPath = `/nx-api/${packageName}/${category}/${targetSegment}`;
-            
+
             // Get the file metadata from the package
             const fileMetadata = pkg[category][originalPath];
-            
+
             if (fileMetadata) {
               try {
                 // Read the schema file
                 const schemaContent = JSON.parse(
                   readFileSync(this.getFilePath(fileMetadata.file), 'utf-8')
                 );
-                
+
                 return {
-                  content: fileMetadata.description || schemaContent.description || '',
-                  description: fileMetadata.description || schemaContent.description || '',
+                  content:
+                    fileMetadata.description || schemaContent.description || '',
+                  description:
+                    fileMetadata.description || schemaContent.description || '',
                   filePath: this.getFilePath(fileMetadata.file),
                   id: fileMetadata.name,
                   name: fileMetadata.name,
@@ -221,7 +233,7 @@ export class DocumentsApi {
           }
         }
       }
-      
+
       // Legacy handler for devkit docs
       if (
         path[0] === 'nx-api' &&

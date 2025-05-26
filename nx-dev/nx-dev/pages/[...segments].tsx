@@ -11,22 +11,32 @@ import { nxPackagesApi } from '../lib/packages.api';
 import { tagsApi } from '../lib/tags.api';
 import { fetchGithubStarCount } from '../lib/githubStars.api';
 import { ScrollableContent } from '@nx/ui-scrollable-content';
+import { PackageSchemaViewer } from '@nx/nx-dev/feature-package-schema-viewer';
+import {
+  type SchemaMetadata,
+  type ProcessedPackageMetadata,
+} from '@nx/nx-dev/models-package';
 
-export default function NxDocumentation({
-  document,
-  menu,
-  relatedDocuments,
-  widgetData,
-}: {
-  document: ProcessedDocument;
-  menu: MenuItem[];
-  relatedDocuments: RelatedDocument[];
-  widgetData: { githubStarsCount: number };
-}) {
+type NxDocumentationProps =
+  | {
+      isApiDoc: false;
+      menu: MenuItem[];
+      document: ProcessedDocument;
+      relatedDocuments: RelatedDocument[];
+      widgetData: { githubStarsCount: number };
+    }
+  | {
+      isApiDoc: true;
+      menu: MenuItem[];
+      pkg: ProcessedPackageMetadata;
+      schema: SchemaMetadata;
+    };
+
+export default function NxDocumentation(props: NxDocumentationProps) {
   const { toggleNav, navIsOpen } = useNavToggle();
 
   const menuWithSections = {
-    sections: [getBasicNxSection(menu)],
+    sections: [getBasicNxSection(props.menu)],
   };
 
   return (
@@ -45,11 +55,15 @@ export default function NxDocumentation({
           navIsOpen={navIsOpen}
         />
         <ScrollableContent resetScrollOnNavigation={true}>
-          <DocViewer
-            document={document}
-            relatedDocuments={relatedDocuments}
-            widgetData={widgetData}
-          />
+          {props.isApiDoc === false ? (
+            <DocViewer
+              document={props.document}
+              relatedDocuments={props.relatedDocuments}
+              widgetData={props.widgetData}
+            />
+          ) : (
+            <PackageSchemaViewer pkg={props.pkg} schema={props.schema} />
+          )}
         </ScrollableContent>
       </main>
     </div>
@@ -71,27 +85,51 @@ export const getStaticProps: GetStaticProps = async ({
   params,
 }: {
   params: { segments: string[] };
-}) => {
+}): Promise<any> => {
   try {
-    const document = nxDocumentationApi.getDocument(params.segments);
-    return {
-      props: {
-        document,
-        widgetData: {
-          githubStarsCount: await fetchGithubStarCount(),
+    if (params.segments[0] === 'technologies' && params.segments[2] === 'api') {
+      const [, packageName, , type, ...segments] = params.segments;
+      if (
+        type === 'generators' ||
+        type === 'executors' ||
+        type === 'migrations'
+      ) {
+        return {
+          props: {
+            isApiDoc: true,
+            pkg: nxPackagesApi.getPackage([packageName]),
+            schema: nxPackagesApi.getSchemaMetadata(
+              nxPackagesApi.getPackageFileMetadatas(packageName, type)[
+                '/' + ['nx-api', packageName, type, ...segments].join('/')
+              ]
+            ),
+            menu: menusApi.getMenu('nx', ''),
+          },
+        };
+      }
+    } else {
+      const document = nxDocumentationApi.getDocument(params.segments);
+      return {
+        props: {
+          isApiDoc: false,
+          document,
+          widgetData: {
+            githubStarsCount: await fetchGithubStarCount(),
+          },
+          relatedDocuments: tagsApi
+            .getAssociatedItemsFromTags(document.tags)
+            .filter((item) => item.path !== '/' + params.segments.join('/')), // Remove currently displayed item
+          menu: menusApi.getMenu('nx', ''),
         },
-        relatedDocuments: tagsApi
-          .getAssociatedItemsFromTags(document.tags)
-          .filter((item) => item.path !== '/' + params.segments.join('/')), // Remove currently displayed item
-        menu: menusApi.getMenu('nx', ''),
-      },
-    };
+      };
+    }
   } catch (e) {
-    return {
-      notFound: true,
-      props: {
-        statusCode: 404,
-      },
-    };
+    // nothing
   }
+  return {
+    notFound: true,
+    props: {
+      statusCode: 404,
+    },
+  };
 };
