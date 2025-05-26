@@ -7,6 +7,7 @@ import { GetStaticPaths, GetStaticProps } from 'next';
 import { menusApi } from '../lib/menus.api';
 import { useNavToggle } from '../lib/navigation-toggle.effect';
 import { nxDocumentationApi } from '../lib/nx.api';
+import { nxPackagesApi } from '../lib/packages.api';
 import { tagsApi } from '../lib/tags.api';
 import { fetchGithubStarCount } from '../lib/githubStars.api';
 import { ScrollableContent } from '@nx/ui-scrollable-content';
