@@ -57,6 +57,14 @@ export class DocumentsApi {
   private getManifestKey(path: string): string {
     return '/' + path;
   }
+  
+  /**
+   * Transform API paths from nx-api format to technologies format
+   * e.g., '/nx-api/react/generators/library' to '/technologies/react/generators/library'
+   */
+  private transformApiPath(path: string): string {
+    return path.replace('/nx-api/', '/technologies/');
+  }
 
   // TODO(colum): Remove this once we move angular rspack into main repo (when stable).
   getAngularRspackPackage(): Record<string, DocumentMetadata> {
@@ -137,23 +145,23 @@ export class DocumentsApi {
       // For each package, add executors, generators, and migrations paths
       packages.forEach((pkg) => {
         // Transform path from '/nx-api/react' to '/technologies/react'
-        const packagePathBase = pkg.path.replace('/nx-api/', '/technologies/');
+        const packagePathBase = this.transformApiPath(pkg.path);
         
         // Add executors
         Object.keys(pkg.executors).forEach((path) => {
-          const newPath = path.replace('/nx-api/', '/technologies/');
+          const newPath = this.transformApiPath(path);
           paths.push(newPath);
         });
         
         // Add generators
         Object.keys(pkg.generators).forEach((path) => {
-          const newPath = path.replace('/nx-api/', '/technologies/');
+          const newPath = this.transformApiPath(path);
           paths.push(newPath);
         });
         
         // Add migrations
         Object.keys(pkg.migrations).forEach((path) => {
-          const newPath = path.replace('/nx-api/', '/technologies/');
+          const newPath = this.transformApiPath(path);
           paths.push(newPath);
         });
       });
