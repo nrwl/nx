@@ -151,18 +151,33 @@ export class DocumentsApi {
         Object.keys(pkg.executors).forEach((path) => {
           const newPath = this.transformApiPath(path);
           paths.push(newPath);
+          
+          // For debugging
+          if (pkg.name === 'react') {
+            console.log(`Transformed executor path: ${path} -> ${newPath}`);
+          }
         });
         
         // Add generators
         Object.keys(pkg.generators).forEach((path) => {
           const newPath = this.transformApiPath(path);
           paths.push(newPath);
+          
+          // For debugging
+          if (pkg.name === 'react') {
+            console.log(`Transformed generator path: ${path} -> ${newPath}`);
+          }
         });
         
         // Add migrations
         Object.keys(pkg.migrations).forEach((path) => {
           const newPath = this.transformApiPath(path);
           paths.push(newPath);
+          
+          // For debugging
+          if (pkg.name === 'react') {
+            console.log(`Transformed migration path: ${path} -> ${newPath}`);
+          }
         });
       });
     }
@@ -180,21 +195,32 @@ export class DocumentsApi {
         const packageName = path[1];
         const category = path[2]; // 'executors', 'generators', or 'migrations'
         
+        console.log(`Looking for document at path: ${path.join('/')}`);
+        console.log(`Package: ${packageName}, Category: ${category}`);
+        
         // Try to find the package in packagesManifest
         const pkg = Object.values(this.packagesManifest).find(
           (p) => p.name === packageName
         );
         
         if (pkg) {
+          console.log(`Found package: ${pkg.name}`);
+          
           // Check if the category exists
           if (category === 'executors' || category === 'generators' || category === 'migrations') {
             // Recreate the original nx-api path
             const originalSegments = ['nx-api', ...path.slice(1)];
+            const originalPath = `/${originalSegments.join('/')}`;
+            
+            console.log(`Looking for ${category} at original path: ${originalPath}`);
+            console.log(`Available ${category} keys:`, Object.keys(pkg[category]));
             
             // Get the file metadata from the package
-            const fileMetadata = pkg[category][`/${originalSegments.join('/')}`];
+            const fileMetadata = pkg[category][originalPath];
             
             if (fileMetadata) {
+              console.log(`Found file metadata: ${fileMetadata.name}`);
+              
               // Read the schema file
               const schemaContent = JSON.parse(
                 readFileSync(this.getFilePath(fileMetadata.file), 'utf-8')
@@ -209,8 +235,12 @@ export class DocumentsApi {
                 relatedDocuments: {},
                 tags: [],
               };
+            } else {
+              console.log(`No file metadata found at path: ${originalPath}`);
             }
           }
+        } else {
+          console.log(`Package not found: ${packageName}`);
         }
       }
       
