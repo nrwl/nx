@@ -197,15 +197,25 @@ async function convertProjectTargets(
     const browserTsConfigJson = readJson(tree, browserTsConfigPath);
     const serverTsConfigJson = readJson(tree, serverTsConfigPath);
 
+    const serverFiles = ['src/main.server.ts', 'src/server.ts'];
+    if (tree.exists(join(project.root, 'src/app/app.config.server.ts'))) {
+      serverFiles.push('src/app/app.config.server.ts');
+    }
+
     const files = new Set([
       ...(browserTsConfigJson.files ?? []),
       ...(serverTsConfigJson.files ?? []),
     ]);
-
-    // Server file will be added later by the setup-ssr generator
+    // Server files will be added later if needed by the setup-ssr generator
     files.delete('server.ts');
+    files.delete('src/server.ts');
+    files.delete('src/main.server.ts');
 
-    browserTsConfigJson.files = Array.from(files);
+    if (files.size) {
+      browserTsConfigJson.files = Array.from(files);
+    } else if (browserTsConfigJson.files) {
+      delete browserTsConfigJson.files;
+    }
     browserTsConfigJson.compilerOptions ?? {};
     browserTsConfigJson.compilerOptions.types = Array.from(
       new Set([
@@ -213,6 +223,16 @@ async function convertProjectTargets(
         ...(serverTsConfigJson.compilerOptions?.types ?? []),
       ])
     );
+
+    if (browserTsConfigJson.exclude?.length) {
+      const normalizeExclude = (exclude: string) =>
+        exclude.startsWith('./') ? exclude.slice(2) : exclude;
+      browserTsConfigJson.exclude = browserTsConfigJson.exclude.filter(
+        (exclude: string) => !serverFiles.includes(normalizeExclude(exclude))
+      );
+    }
+
+    writeJson(tree, browserTsConfigPath, browserTsConfigJson);
 
     // Delete server tsconfig
     tree.delete(serverTsConfigPath);
