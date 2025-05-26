@@ -12,7 +12,14 @@ import { iconsMap } from '@nx/nx-dev/ui-references';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { createRef, Fragment, useCallback, useState } from 'react';
+import {
+  createRef,
+  Fragment,
+  useCallback,
+  useState,
+  type JSX,
+  useRef,
+} from 'react';
 import { NxIcon } from '@nx/nx-dev/ui-icons';
 
 export interface SidebarProps {
@@ -94,6 +101,7 @@ function SidebarSectionItems({
   firstLevel?: boolean;
 }): JSX.Element {
   const router = useRouter();
+  const initialRender = useRef(true);
   const [collapsed, setCollapsed] = useState(!item.disableCollapsible);
 
   const handleCollapseToggle = useCallback(() => {
@@ -159,9 +167,11 @@ function SidebarSectionItems({
           const isActiveLink = withoutAnchors(router.asPath).startsWith(
             subItem.path
           );
-          if (isActiveLink && collapsed) {
+          if (isActiveLink && collapsed && initialRender.current) {
             handleCollapseToggle();
           }
+
+          initialRender.current = false;
 
           return (
             <li

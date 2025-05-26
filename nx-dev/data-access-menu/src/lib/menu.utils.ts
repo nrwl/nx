@@ -31,22 +31,6 @@ export function getBasicNxSection(items: MenuItem[]): MenuSection {
   };
 }
 
-export function getBasicRecipesSection(items: MenuItem[]): MenuSection {
-  return {
-    id: 'basic',
-    name: 'Basic',
-    hideSectionHeader: true,
-    itemList: items
-      // .filter((m) => m.id === 'getting-started')
-      .map((m) => {
-        return {
-          ...m,
-          disableCollapsible: true,
-        };
-      }),
-  };
-}
-
 export function getBasicPluginsSection(items: MenuItem[]): MenuSection {
   return {
     id: 'basic',
@@ -112,23 +96,5 @@ export function getBasicNxCloudSection(items: MenuItem[]): MenuSection {
             !m.id.endsWith('tutorial') && !m.id.endsWith('concepts'),
         };
       }),
-  };
-}
-
-export function getDeepDiveNxCloudSection(items: MenuItem[]): MenuSection {
-  return {
-    id: 'deep-dive',
-    name: 'Deep Dive',
-    hideSectionHeader: false,
-    itemList: items
-      .filter((m) => m.id === 'private-cloud')
-      .map((m) => ({
-        ...m,
-        disableCollapsible: true,
-        itemList: m.children?.map((item) => ({
-          ...item,
-          disableCollapsible: true,
-        })),
-      })),
   };
 }
