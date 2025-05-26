@@ -9,11 +9,11 @@ export function Features(): ReactElement {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mb-12 text-left">
           <SectionHeading as="h2" variant="title">
-            Make your AI workspace-aware
+            Make your AI assistant workspace-aware
           </SectionHeading>
 
           <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">
-            Transform your AI from context-blind to architecture-aware with
+            Transform your LLM from context-blind to architecture-aware with
             complete workspace intelligence.
           </p>
         </div>
@@ -108,7 +108,7 @@ export function Features(): ReactElement {
             }
           />
           <FeatureCard
-            title="Terminal integration"
+            title="Terminal awareness"
             description="Your AI assistant sees what you see in the terminal with real-time output awareness and contextual error analysis."
             href="#"
             icon={<CommandLineIcon className="h-6 w-6" />}

@@ -12,7 +12,7 @@ export function ProblemStatement({
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mb-12 text-left">
           <SectionHeading as="h2" variant="title">
-            Your AI is blind to your workspace architecture
+            Your AI assistant is blind to your workspace architecture
           </SectionHeading>
 
           <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">
