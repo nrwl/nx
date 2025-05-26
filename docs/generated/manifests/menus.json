@@ -223,7 +223,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Core Recipes",
+        "name": "Core Guides",
         "path": "/nx-recipes",
         "id": "nx-recipes",
         "isExternal": false,
@@ -3701,7 +3701,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Concepts",
+        "name": "Core Concepts",
         "path": "/ci/concepts",
         "id": "concepts",
         "isExternal": false,

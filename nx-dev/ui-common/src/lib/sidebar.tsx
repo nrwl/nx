@@ -12,7 +12,7 @@ import { iconsMap } from '@nx/nx-dev/ui-references';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { createRef, Fragment, useCallback, useEffect, useState } from 'react';
+import { createRef, Fragment, useCallback, useState } from 'react';
 import { NxIcon } from '@nx/nx-dev/ui-icons';
 
 export interface SidebarProps {
@@ -34,11 +34,7 @@ export function Sidebar({ menu }: SidebarProps): JSX.Element {
       >
         {menu.sections.map((section, index) => {
           return (
-            <SidebarSection
-              key={section.id + '-' + index}
-              section={section}
-              isInTechnologiesPath={false}
-            />
+            <SidebarSection key={section.id + '-' + index} section={section} />
           );
         })}
       </nav>
@@ -46,13 +42,7 @@ export function Sidebar({ menu }: SidebarProps): JSX.Element {
   );
 }
 
-function SidebarSection({
-  section,
-  isInTechnologiesPath,
-}: {
-  section: MenuSection;
-  isInTechnologiesPath: boolean;
-}): JSX.Element {
+function SidebarSection({ section }: { section: MenuSection }): JSX.Element {
   // Get all items with refs
   const itemList = section.itemList.map((i) => ({
     ...i,
@@ -75,8 +65,6 @@ function SidebarSection({
             .filter((i) => !!i.children?.length)
             .map((item, index) => {
               // Check if this specific item is the Technologies item
-              const isTechnologiesItem = item.id === 'technologies';
-
               return (
                 <div key={item.id + '-' + index} ref={item.ref}>
                   <SidebarSectionItems
@@ -84,7 +72,6 @@ function SidebarSection({
                     item={item}
                     isNested={false}
                     firstLevel={true}
-                    isInTechnologiesPath={isTechnologiesItem}
                   />
                 </div>
               );
@@ -97,30 +84,17 @@ function SidebarSection({
 
 function SidebarSectionItems({
   item,
-  isNested = false,
-  isInTechnologiesPath = false,
+  isNested,
+  icon,
   firstLevel,
 }: {
   item: MenuItem;
   isNested?: boolean;
-  isInTechnologiesPath?: boolean;
+  icon?: string;
   firstLevel?: boolean;
 }): JSX.Element {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(!item.disableCollapsible);
-
-  // Check if this is the Technologies main item
-  const isTechnologiesItem = item.id === 'technologies';
-
-  // If this is direct child of the Technologies item, show an icon
-  const isDirectTechnologyChild =
-    isInTechnologiesPath && item.id !== 'technologies';
-
-  // Get the icon key for this technology
-  let iconKey = null;
-  if (isDirectTechnologyChild) {
-    iconKey = getIconKeyForTechnology(item.id);
-  }
 
   const handleCollapseToggle = useCallback(() => {
     if (!item.disableCollapsible) {
@@ -143,7 +117,7 @@ function SidebarSectionItems({
         data-testid={`section-h5:${item.id}`}
         className={cx(
           'group flex items-center py-2',
-          isDirectTechnologyChild ? '-ml-1 px-1 ' : '',
+          '-ml-1 px-1 ',
           !isNested
             ? 'text-base text-slate-800 lg:text-base dark:text-slate-200'
             : 'text-sm text-slate-800 lg:text-sm dark:text-slate-200',
@@ -152,12 +126,12 @@ function SidebarSectionItems({
         )}
         onClick={handleCollapseToggle}
       >
-        {isDirectTechnologyChild && (
-          <div className="mr-2 flex h-6 w-6 flex-shrink-0 items-center justify-center">
+        {icon && (
+          <div className="mr-1 flex h-5 w-5 flex-shrink-0 items-center justify-center">
             <img
-              className="h-5 w-5 object-cover opacity-100 dark:invert"
+              className="h-4 w-4 object-cover opacity-100 dark:invert"
               loading="lazy"
-              src={iconsMap[iconKey || 'nx']}
+              src={iconsMap[icon || 'nx']}
               alt={item.name + ' illustration'}
               aria-hidden="true"
             />
@@ -174,15 +148,13 @@ function SidebarSectionItems({
             </Link>
           ) : (
             <>
-              <span className={isDirectTechnologyChild ? 'flex-grow' : ''}>
-                {item.name}
-              </span>
+              <span className={icon ? 'flex-grow' : ''}>{item.name}</span>
               <CollapsibleIcon isCollapsed={collapsed} />
             </>
           )}
         </div>
       </h5>
-      <ul className={cx('mb-6', collapsed ? 'hidden' : '')}>
+      <ul className={collapsed ? 'hidden' : ''}>
         {children.map((subItem, index) => {
           const isActiveLink = withoutAnchors(router.asPath).startsWith(
             subItem.path
@@ -197,17 +169,21 @@ function SidebarSectionItems({
               data-testid={`section-li:${subItem.id}`}
               className={cx(
                 'relative',
-                isDirectTechnologyChild
-                  ? ''
-                  : 'border-l border-slate-300 pl-2 pl-3 transition-colors duration-150 dark:border-slate-600'
+                isNested
+                  ? 'border-l border-slate-300 pl-2 pl-3 transition-colors duration-150 dark:border-slate-600'
+                  : ''
               )}
             >
               {(subItem.children || []).length ? (
                 <SidebarSectionItems
                   item={subItem}
-                  isNested={true}
                   firstLevel={false}
-                  isInTechnologiesPath={isTechnologiesItem}
+                  isNested={true}
+                  icon={
+                    item.id === 'technologies'
+                      ? getIconKeyForTechnology(subItem.id)
+                      : undefined
+                  }
                 />
               ) : (
                 <Link
@@ -426,7 +402,6 @@ export function SidebarMobile({
                       <SidebarSection
                         key={section.id + '-' + index}
                         section={section}
-                        isInTechnologiesPath={false}
                       />
                     ))}
                   </nav>
@@ -440,67 +415,63 @@ export function SidebarMobile({
   );
 }
 
+const technologyIconMap: Record<string, string> = {
+  // JavaScript/TypeScript
+  typescript: 'ts',
+  js: 'js',
+
+  // Angular
+  angular: 'angular',
+  'angular-rspack': 'angular-rspack',
+  'angular-rsbuild': 'angular-rsbuild',
+
+  // React
+  react: 'react',
+  'react-native': 'react-native',
+  remix: 'remix',
+  next: 'next',
+  expo: 'expo',
+
+  // Vue
+  vue: 'vue',
+  nuxt: 'nuxt',
+
+  // Node
+  nodejs: 'node',
+  'node.js': 'node',
+  node: 'node',
+
+  // Java
+  java: 'java',
+  gradle: 'gradle',
+
+  // Module Federation
+  'module-federation': 'module-federation',
+
+  // Linting
+  eslint: 'eslint',
+  'eslint-technology': 'eslint',
+
+  // Testing
+  'testing-tools': 'jest',
+  cypress: 'cypress',
+  jest: 'jest',
+  playwright: 'playwright',
+  storybook: 'storybook',
+  detox: 'detox',
+
+  // Build tools
+  'build-tools': 'webpack',
+  'build tools': 'webpack',
+  webpack: 'webpack',
+  vite: 'vite',
+  rollup: 'rollup',
+  esbuild: 'esbuild',
+  rspack: 'rspack',
+  rsbuild: 'rsbuild',
+};
+
 function getIconKeyForTechnology(idOrName: string): string {
-  // Normalize the input to lowercase for more reliable matching
   const normalized = idOrName.toLowerCase();
-
-  // Technology icon mapping
-  const technologyIconMap: Record<string, string> = {
-    // JavaScript/TypeScript
-    typescript: 'js',
-    js: 'js',
-
-    // Angular
-    angular: 'angular',
-    'angular-rspack': 'angular-rspack',
-    'angular-rsbuild': 'angular-rsbuild',
-
-    // React
-    react: 'react',
-    'react-native': 'react-native',
-    remix: 'remix',
-    next: 'next',
-    expo: 'expo',
-
-    // Vue
-    vue: 'vue',
-    nuxt: 'nuxt',
-
-    // Node
-    nodejs: 'node',
-    'node.js': 'node',
-    node: 'node',
-
-    // Java
-    java: 'gradle',
-    gradle: 'gradle',
-
-    // Module Federation
-    'module-federation': 'module-federation',
-
-    // Linting
-    eslint: 'eslint',
-    'eslint-technology': 'eslint',
-
-    // Testing
-    'testing-tools': 'jest',
-    cypress: 'cypress',
-    jest: 'jest',
-    playwright: 'playwright',
-    storybook: 'storybook',
-    detox: 'detox',
-
-    // Build tools
-    'build-tools': 'webpack',
-    'build tools': 'webpack',
-    webpack: 'webpack',
-    vite: 'vite',
-    rollup: 'rollup',
-    esbuild: 'esbuild',
-    rspack: 'rspack',
-    rsbuild: 'rsbuild',
-  };
-
-  // Return the mapped icon or 'nx' as default
   return technologyIconMap[normalized] || 'nx';
 }

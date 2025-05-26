@@ -183,7 +183,7 @@
         },
 
         {
-          "name": "Core Recipes",
+          "name": "Core Guides",
           "id": "nx-recipes",
           "description": "In depth recipes for common tasks",
           "itemList": [
@@ -2691,7 +2691,7 @@
           ]
         },
         {
-          "name": "Concepts",
+          "name": "Core Concepts",
           "id": "concepts",
           "description": "Learn how to manage Nx Cloud subscriptions and other options.",
           "itemList": [
