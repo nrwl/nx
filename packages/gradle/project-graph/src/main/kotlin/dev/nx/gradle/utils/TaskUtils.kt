@@ -180,12 +180,7 @@ fun getDependsOnForTask(
 
       // Check if this task name needs to be overridden
       val taskName = targetNameOverrides.getOrDefault(depTask.name + "TargetName", depTask.name)
-      val overriddenTaskName =
-          if (depProject == taskProject) {
-            taskName
-          } else {
-            "${depProject.name}:${taskName}"
-          }
+      val overriddenTaskName = "${depProject.name}:${taskName}"
 
       overriddenTaskName
     }

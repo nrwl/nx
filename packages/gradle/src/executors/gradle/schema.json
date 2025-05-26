@@ -27,6 +27,12 @@
       ],
       "description": "The arguments to pass to the Gradle task.",
       "examples": [["--warning-mode", "all"], "--stracktrace"]
+    },
+    "excludeDependsOn": {
+      "type": "boolean",
+      "description": "If true, the tasks will not execute its dependsOn tasks (e.g. pass --exclude-task args to gradle command). If false, the task will execute its dependsOn tasks.",
+      "default": true,
+      "x-priority": "internal"
     }
   },
   "required": ["taskName"]
