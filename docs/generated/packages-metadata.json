@@ -440,6 +440,66 @@
     ],
     "migrations": [
       {
+        "description": "Update the @angular/cli package version to 20.0.0-rc.3.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-0-0-rc-3.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-20-0-0-rc-3",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/update-angular-cli-version-20-0-0-rc-3",
+        "type": "migration"
+      },
+      {
+        "description": "Migrate imports of `provideServerRendering` from `@angular/platform-server` to `@angular/ssr`.",
+        "file": "generated/packages/angular/migrations/migrate-provide-server-rendering-import.json",
+        "hidden": false,
+        "name": "migrate-provide-server-rendering-import",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/migrate-provide-server-rendering-import",
+        "type": "migration"
+      },
+      {
+        "description": "Replace `provideServerRouting` with `provideServerRendering` using `withRoutes`.",
+        "file": "generated/packages/angular/migrations/replace-provide-server-routing.json",
+        "hidden": false,
+        "name": "replace-provide-server-routing",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/replace-provide-server-routing",
+        "type": "migration"
+      },
+      {
+        "description": "Update the generator defaults to maintain the previous style guide behavior.",
+        "file": "generated/packages/angular/migrations/set-generator-defaults-for-previous-style-guide.json",
+        "hidden": false,
+        "name": "set-generator-defaults-for-previous-style-guide",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/set-generator-defaults-for-previous-style-guide",
+        "type": "migration"
+      },
+      {
+        "description": "Update 'moduleResolution' to 'bundler' in TypeScript configurations. You can read more about this here: https://www.typescriptlang.org/tsconfig/#moduleResolution.",
+        "file": "generated/packages/angular/migrations/update-module-resolution.json",
+        "hidden": false,
+        "name": "update-module-resolution",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/update-module-resolution",
+        "type": "migration"
+      },
+      {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.2.0-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-package-updates",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/21.2.0-package-updates",
+        "type": "migration"
+      },
+      {
         "description": "",
         "file": "generated/packages/angular/migrations/21.1.0-package-updates.json",
         "hidden": false,
@@ -1677,6 +1737,26 @@
     "migrations": [
       {
         "description": "",
+        "file": "generated/packages/eslint/migrations/21.2.0-typescript-eslint-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-typescript-eslint-package-updates",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/eslint",
+        "path": "eslint/migrations/21.2.0-typescript-eslint-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
+        "file": "generated/packages/eslint/migrations/21.2.0-@typescript-eslint-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-@typescript-eslint-package-updates",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/eslint",
+        "path": "eslint/migrations/21.2.0-@typescript-eslint-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
         "file": "generated/packages/eslint/migrations/20.7.0-package-updates.json",
         "hidden": false,
         "name": "20.7.0-package-updates",
@@ -2436,6 +2516,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "",
+        "file": "generated/packages/js/migrations/21.2.0-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-package-updates",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/js",
+        "path": "js/migrations/21.2.0-package-updates",
+        "type": "migration"
+      },
       {
         "description": "",
         "file": "generated/packages/js/migrations/20.7.1-beta.0-package-updates.json",
@@ -5686,6 +5776,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "",
+        "file": "generated/packages/workspace/migrations/21.2.0-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-package-updates",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/workspace",
+        "path": "workspace/migrations/21.2.0-package-updates",
+        "type": "migration"
+      },
       {
         "description": "",
         "file": "generated/packages/workspace/migrations/20.4.0-package-updates.json",

@@ -13,6 +13,7 @@ import { getDependencyConfigs } from 'nx/src/tasks-runner/utils';
 import { relative } from 'path';
 import { from, Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { assertBuilderPackageIsInstalled } from '../../executors/utilities/builder-package';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import {
   mergeCustomWebpackConfig,
@@ -98,6 +99,7 @@ export function executeWebpackBrowserBuilder(
     );
   }
 
+  assertBuilderPackageIsInstalled('@angular-devkit/build-angular');
   return from(import('@angular-devkit/build-angular')).pipe(
     switchMap(({ executeBrowserBuilder }) =>
       executeBrowserBuilder(delegateBuilderOptions, context as any, {

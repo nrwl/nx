@@ -13,11 +13,15 @@
         "command": "nx g @nx/angular:scam-directive mylib/src/lib/foo.directive.ts"
       },
       {
-        "description": "Generate a directive without providing the file extension. It results in the directive `FooDirective` at `mylib/src/lib/foo.directive.ts`",
+        "description": "Generate a directive without providing the file extension. It results in the directive `Foo` at `mylib/src/lib/foo.ts`",
         "command": "nx g @nx/angular:scam-directive mylib/src/lib/foo"
       },
       {
-        "description": "Generate a directive with the exported symbol different from the file name. It results in the directive `CustomDirective` at `mylib/src/lib/foo.directive.ts`",
+        "description": "Generate a directive with a given type/suffix. It results in the directive `FooDirective` at `mylib/src/lib/foo.directive.ts`",
+        "command": "nx g @nx/angular:scam-directive mylib/src/lib/foo --type=directive"
+      },
+      {
+        "description": "Generate a directive with the exported symbol different from the file name. It results in the directive `Custom` at `mylib/src/lib/foo.ts`",
         "command": "nx g @nx/angular:scam-directive mylib/src/lib/foo --name=custom"
       }
     ],
@@ -64,6 +68,10 @@
         "description": "Specifies if the SCAM should be exported from the project's entry point (normally `index.ts`). It only applies to libraries.",
         "default": true,
         "x-priority": "important"
+      },
+      "type": {
+        "type": "string",
+        "description": "Append a custom type to the directive's filename. It defaults to 'directive' for Angular versions below v20. For Angular v20 and above, no type is appended unless specified."
       },
       "skipFormat": {
         "description": "Skip formatting files.",

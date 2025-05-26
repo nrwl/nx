@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { readJson, writeJson } from '@nx/devkit';
+import { readJson, updateJson, writeJson } from '@nx/devkit';
 import { componentGenerator } from '../component/component';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
 import {
@@ -48,14 +48,10 @@ describe('StorybookConfiguration generator', () => {
     expect(tree.exists('test-ui-lib/.storybook/main.ts')).toBeTruthy();
     expect(tree.exists('test-ui-lib/.storybook/tsconfig.json')).toBeTruthy();
     expect(
-      tree.exists(
-        'test-ui-lib/src/lib/test-button/test-button.component.stories.ts'
-      )
+      tree.exists('test-ui-lib/src/lib/test-button/test-button.stories.ts')
     ).toBeFalsy();
     expect(
-      tree.exists(
-        'test-ui-lib/src/lib/test-other/test-other.component.stories.ts'
-      )
+      tree.exists('test-ui-lib/src/lib/test-other/test-other.stories.ts')
     ).toBeFalsy();
   });
 
@@ -82,15 +78,12 @@ describe('StorybookConfiguration generator', () => {
     expect(tree.exists('test-ui-lib/.storybook/tsconfig.json')).toBeTruthy();
     expect(
       tree.read(
-        'test-ui-lib/src/lib/test-button/test-button.component.stories.ts',
+        'test-ui-lib/src/lib/test-button/test-button.stories.ts',
         'utf-8'
       )
     ).toMatchSnapshot();
     expect(
-      tree.read(
-        'test-ui-lib/src/lib/test-other/test-other.component.stories.ts',
-        'utf-8'
-      )
+      tree.read('test-ui-lib/src/lib/test-other/test-other.stories.ts', 'utf-8')
     ).toMatchSnapshot();
 
     const packageJson = JSON.parse(tree.read('package.json', 'utf-8'));
@@ -185,6 +178,14 @@ describe('StorybookConfiguration generator', () => {
   });
 
   it('should exclude Storybook-related files from tsconfig.editor.json for applications', async () => {
+    // the tsconfig.editor.json is only generated for versions lower than v20
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {
+        ...json.dependencies,
+        '@angular/core': '~19.2.0',
+      };
+      return json;
+    });
     await generateTestApplication(tree, { directory: 'test-app' });
 
     await storybookConfigurationGenerator(tree, {

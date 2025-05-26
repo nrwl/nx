@@ -4,13 +4,18 @@ import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generat
 import type { AngularProjectConfiguration } from '../../../utils/types';
 import { buildSelector, validateHtmlSelector } from '../../utils/selector';
 import { validateClassName } from '../../utils/validations';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema, Schema } from '../schema';
 
 export async function normalizeOptions(
   tree: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  options.type ??= 'component';
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  if (angularMajorVersion < 20) {
+    options.type ??= 'component';
+  }
+
   const {
     artifactName: name,
     directory,
@@ -20,7 +25,7 @@ export async function normalizeOptions(
   } = await determineArtifactNameAndDirectoryOptions(tree, {
     name: options.name,
     path: options.path,
-    suffix: options.type ?? 'component',
+    suffix: options.type,
     allowedFileExtensions: ['ts'],
     fileExtension: 'ts',
   });
@@ -31,7 +36,7 @@ export async function normalizeOptions(
   }
 
   const { className } = names(name);
-  const { className: suffixClassName } = names(options.type);
+  const suffixClassName = options.type ? names(options.type).className : '';
   const symbolName = `${className}${suffixClassName}`;
   validateClassName(symbolName);
 

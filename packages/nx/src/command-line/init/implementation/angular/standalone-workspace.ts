@@ -1,5 +1,5 @@
 import { unlinkSync } from 'fs';
-import { dirname, join, relative, resolve } from 'path';
+import { dirname, join, posix, relative, resolve } from 'node:path';
 import { toNewFormat } from '../../../../adapter/angular-json';
 import type { NxJsonConfiguration } from '../../../../config/nx-json';
 import type { ProjectConfiguration } from '../../../../config/workspace-json-project-json';
@@ -48,7 +48,7 @@ export async function setupStandaloneWorkspace(
   // update its targets outputs and delete angular.json
   const projects = toNewFormat(angularJson).projects;
   for (const [projectName, project] of Object.entries(projects ?? {})) {
-    updateProjectOutputs(repoRoot, project);
+    updateProjectOutputs(repoRoot, projectName, project, cacheableOperations);
     writeJsonFile(join(project.root, 'project.json'), {
       $schema: normalizePath(
         relative(
@@ -143,11 +143,30 @@ function createNxJson(
 
 function updateProjectOutputs(
   repoRoot: string,
-  project: ProjectConfiguration
+  projectName: string,
+  project: ProjectConfiguration,
+  cacheableOperations: string[]
 ): void {
-  Object.values(project.targets ?? {}).forEach((target) => {
+  Object.entries(project.targets ?? {}).forEach(([targetName, target]) => {
     if (
+      target.executor === '@angular/build:application' ||
+      target.executor === '@angular-devkit/build-angular:application'
+    ) {
+      if (target.options.outputPath) {
+        if (typeof target.options.outputPath === 'string') {
+          target.outputs = ['{options.outputPath}'];
+        } else if (target.options.outputPath.base) {
+          target.outputs = ['{options.outputPath.base}'];
+        } else if (cacheableOperations.includes(targetName)) {
+          target.cache = false;
+        }
+      } else {
+        target.options.outputPath = posix.join('dist', projectName);
+        target.outputs = ['{options.outputPath}'];
+      }
+    } else if (
       [
+        '@angular-devkit/build-angular:browser-esbuild',
         '@angular-devkit/build-angular:browser',
         '@angular-builders/custom-webpack:browser',
         'ngx-build-plus:browser',
@@ -156,7 +175,11 @@ function updateProjectOutputs(
         'ngx-build-plus:server',
       ].includes(target.executor)
     ) {
-      target.outputs = ['{options.outputPath}'];
+      if (target.options.outputPath) {
+        target.outputs = ['{options.outputPath}'];
+      } else if (cacheableOperations.includes(targetName)) {
+        target.cache = false;
+      }
     } else if (target.executor === '@angular-eslint/builder:lint') {
       target.outputs = ['{options.outputFile}'];
     } else if (
@@ -164,7 +187,9 @@ function updateProjectOutputs(
       target.executor === '@angular/build:ng-packagr'
     ) {
       try {
-        const ngPackageJsonPath = join(repoRoot, target.options.project);
+        const ngPackagrProject =
+          target.options.project ?? posix.join(project.root, 'ng-package.json');
+        const ngPackageJsonPath = join(repoRoot, ngPackagrProject);
         const ngPackageJson = readJsonFile(ngPackageJsonPath);
         const outputPath = relative(
           repoRoot,
@@ -218,7 +243,9 @@ function projectUsesKarmaBuilder(
   project: AngularJsonProjectConfiguration
 ): boolean {
   return Object.values(project.architect ?? {}).some(
-    (target) => target.builder === '@angular-devkit/build-angular:karma'
+    (target) =>
+      target.builder === '@angular/build:karma' ||
+      target.builder === '@angular-devkit/build-angular:karma'
   );
 }
 

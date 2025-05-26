@@ -80,7 +80,6 @@
               "@storybook/angular",
               "@module-federation/node",
               "@nguniversal/builders",
-              "ng-packagr",
               "injection-js",
               "browserslist",
               "cacache",
@@ -96,7 +95,8 @@
               "stylus",
               "tailwindcss",
               "cypress",
-              "esbuild"
+              "esbuild",
+              "piscina"
             ]
           }
         ]

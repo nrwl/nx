@@ -1,5 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { updateJson } from '@nx/devkit';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
 
 export function enableStrictTypeChecking(
@@ -8,7 +9,6 @@ export function enableStrictTypeChecking(
 ): void {
   // This matches the settings defined by the Angular CLI https://angular.io/guide/strict-mode
   const compilerOptions = {
-    forceConsistentCasingInFileNames: true,
     strict: true,
     noImplicitOverride: true,
     noPropertyAccessFromIndexSignature: true,
@@ -18,12 +18,15 @@ export function enableStrictTypeChecking(
 
   const appTsConfigPath = `${options.appProjectRoot}/tsconfig.json`;
   if (host.exists(appTsConfigPath)) {
+    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(host);
+
     updateJson(host, appTsConfigPath, (json) => {
       json.compilerOptions = { ...json.compilerOptions, ...compilerOptions };
       json.angularCompilerOptions = {
-        enableI18nLegacyMessageIdFormat: false,
+        ...json.angularCompilerOptions,
         strictInjectionParameters: true,
         strictInputAccessModifiers: true,
+        typeCheckHostBindings: angularMajorVersion >= 20 ? true : undefined,
         strictTemplates: true,
       };
       return json;

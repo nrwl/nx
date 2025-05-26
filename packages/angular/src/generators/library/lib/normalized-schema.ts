@@ -37,6 +37,7 @@ export interface NormalizedSchema {
     parsedTags: string[];
     ngCliSchematicLibRoot: string;
     standaloneComponentName: string;
+    moduleTypeSeparator: '-' | '.';
   };
   componentOptions: {
     name: string;
@@ -51,5 +52,6 @@ export interface NormalizedSchema {
     selector?: string;
     skipSelector?: boolean;
     flat?: boolean;
+    type?: string;
   };
 }
