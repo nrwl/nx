@@ -1,6 +1,7 @@
 import { addDependenciesToPackageJson, type Tree } from '@nx/devkit';
 import {
   getInstalledAngularDevkitVersion,
+  getInstalledAngularVersionInfo,
   getInstalledPackageVersion,
   versions,
 } from '../../utils/version-utils';
@@ -21,10 +22,17 @@ export function addDependencies(
     '@types/express': pkgVersions.typesExpressVersion,
   };
 
-  dependencies['@angular/ssr'] =
+  const angularDevkitVersion =
     getInstalledAngularDevkitVersion(tree) ?? pkgVersions.angularDevkitVersion;
+  dependencies['@angular/ssr'] = angularDevkitVersion;
+
   if (!isUsingApplicationBuilder) {
     devDependencies['browser-sync'] = pkgVersions.browserSyncVersion;
+  } else {
+    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+    if (angularMajorVersion >= 20) {
+      dependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
+    }
   }
 
   addDependenciesToPackageJson(tree, dependencies, devDependencies);

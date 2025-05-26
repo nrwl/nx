@@ -1,7 +1,7 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import * as devkit from '@nx/devkit';
-import { ProjectGraph, readJson, Tree } from '@nx/devkit';
+import { type ProjectGraph, readJson, type Tree, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
@@ -30,7 +30,7 @@ describe('@nx/angular:move', () => {
   }
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
 
     await generateTestLibrary(tree, {
       directory: 'my-lib',
@@ -363,6 +363,114 @@ describe('@nx/angular:move', () => {
         'utf-8'
       );
       expect(moduleFile).toContain(`export class MyLibDemoModule {}`);
+    });
+  });
+
+  describe('legacy "." module type separator', () => {
+    beforeEach(async () => {
+      tree = createTreeWithEmptyWorkspace();
+    });
+
+    it('should move project that uses "." module type separator', async () => {
+      updateJson(tree, 'nx.json', (json) => {
+        json.generators = {
+          ...json.generators,
+          '@nx/angular:module': {
+            typeSeparator: '.',
+          },
+        };
+        return json;
+      });
+      addProjectToGraph('my-lib');
+      await generateTestLibrary(tree, {
+        directory: 'my-lib',
+        buildable: true,
+        standalone: false,
+        skipFormat: true,
+      });
+
+      await angularMoveGenerator(tree, {
+        projectName: 'my-lib',
+        destination: 'my-new-lib',
+        newProjectName: 'my-new-lib',
+        updateImportPath: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('my-lib/src/lib/my-lib.module.ts')).toBe(false);
+      expect(tree.read('my-new-lib/src/lib/my-new-lib.module.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { NgModule } from '@angular/core';
+        import { CommonModule } from '@angular/common';
+
+        @NgModule({
+          imports: [CommonModule],
+        })
+        export class MyNewLibModule {}
+        "
+      `);
+      expect(tree.exists('my-lib/ng-package.json')).toBe(false);
+      expect(tree.read('my-new-lib/ng-package.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "$schema": "../node_modules/ng-packagr/ng-package.schema.json",
+          "dest": "../dist/my-new-lib",
+          "lib": {
+            "entryFile": "src/index.ts"
+          }
+        }
+        "
+      `);
+    });
+
+    it('should move project when angular version is lower than v20', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        json.dependencies = {
+          ...json.dependencies,
+          '@angular/core': '~19.2.0',
+        };
+        return json;
+      });
+      addProjectToGraph('my-lib');
+      await generateTestLibrary(tree, {
+        directory: 'my-lib',
+        buildable: true,
+        standalone: false,
+        skipFormat: true,
+      });
+
+      await angularMoveGenerator(tree, {
+        projectName: 'my-lib',
+        destination: 'my-new-lib',
+        newProjectName: 'my-new-lib',
+        updateImportPath: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('my-lib/src/lib/my-lib.module.ts')).toBe(false);
+      expect(tree.read('my-new-lib/src/lib/my-new-lib.module.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { NgModule } from '@angular/core';
+        import { CommonModule } from '@angular/common';
+
+        @NgModule({
+          imports: [CommonModule],
+        })
+        export class MyNewLibModule {}
+        "
+      `);
+      expect(tree.exists('my-lib/ng-package.json')).toBe(false);
+      expect(tree.read('my-new-lib/ng-package.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "$schema": "../node_modules/ng-packagr/ng-package.schema.json",
+          "dest": "../dist/my-new-lib",
+          "lib": {
+            "entryFile": "src/index.ts"
+          }
+        }
+        "
+      `);
     });
   });
 });

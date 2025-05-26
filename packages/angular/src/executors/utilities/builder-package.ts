@@ -1,9 +1,9 @@
 export function assertBuilderPackageIsInstalled(packageName: string): void {
   try {
-    require(packageName);
+    require.resolve(packageName);
   } catch {
     throw new Error(
-      `The required package ${packageName} is not installed. Please make sure it is installed and try again.`
+      `This executor requires the package ${packageName} to be installed. Please make sure it is installed and try again.`
     );
   }
 }
