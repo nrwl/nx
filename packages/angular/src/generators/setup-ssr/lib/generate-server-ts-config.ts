@@ -85,8 +85,11 @@ export function generateTsConfigServerJsonForBrowserBuilder(
   if (angularMajorVersion >= 20) {
     updateJson(tree, options.buildTargetTsConfigPath, (json) => {
       const exclude = new Set(json.exclude ?? []);
-      exclude.add('src/main.server.ts');
-      exclude.add('src/server.ts');
+      exclude.add(`src/${options.main}`);
+      exclude.add(`src/${options.serverFileName}`);
+      if (options.standalone) {
+        exclude.add('src/app/app.config.server.ts');
+      }
       json.exclude = Array.from(exclude);
       return json;
     });

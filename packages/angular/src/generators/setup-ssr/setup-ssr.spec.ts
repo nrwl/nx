@@ -363,7 +363,7 @@ describe('setupSSR', () => {
           "compilerOptions": {
             "outDir": "../out-tsc/server",
             "module": "commonjs",
-            "moduleResolution": "node10"
+            "moduleResolution": "node10",
             "types": [
               "node"
             ]
@@ -455,7 +455,7 @@ describe('setupSSR', () => {
           "compilerOptions": {
             "outDir": "../out-tsc/server",
             "module": "commonjs",
-            "moduleResolution": "node10"
+            "moduleResolution": "node10",
             "types": [
               "node"
             ]
