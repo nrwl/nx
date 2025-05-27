@@ -12,7 +12,7 @@ export const happyDomVersion = '~9.20.3';
 export const edgeRuntimeVmVersion = '~3.0.2';
 export const jitiVersion = '2.4.2';
 
-export const analogVitestAngular = '~1.14.1';
+export const analogVitestAngular = '~1.16.1';
 
 // Coverage providers
 export const vitestCoverageV8Version = '^3.0.5';
