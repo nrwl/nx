@@ -9,8 +9,8 @@ description: 'Learn how to effectively use AI coding assistants beyond simple pr
 
 > _"Tools amplify your talent. The better your skills, the better the tools serve you."_ — Andrew Hunt, The Pragmatic Programmer
 
-*This is the first post in the series. Much of it aggregates the insights of colleagues at Nx (Juri Strumpflohner, James Henry, and others)
- and other developers I frequently discuss this topic with (special thanks to Matt Briggs, who is a de-facto co-author of this post).*
+_This is the first post in the series. Much of it aggregates the insights of colleagues at Nx (Juri Strumpflohner, James Henry, and others)
+and other developers I frequently discuss this topic with (special thanks to Matt Briggs, who is a de-facto co-author of this post)._
 
 **The main takeaway from this guide**: Being intentional and investing in workflows instead of just "using Cursor" or "chatting with GPT" is what separates effective AI-assisted development from impressive demos that don't translate to real productivity gains.
 
@@ -146,7 +146,6 @@ This primarily affects real organizations, not demo projects, as demos don't nee
 
 Agents excel at being almost right but struggle with executing exactly what's required. Good interactions should include requesting user input for high-impact operations that are difficult to adjust later (like creating a new package). For instance, when using Nx, an Agent would open a UI with pre-filled generator options that users can modify and confirm. The Agent then continues the work from that point. Have a look at our [latest blog post for a deeper dive into what this looks like](/blog/nx-generators-ai-integration).
 
-
 If things go sideways, don't hesitate to reset: dump context, revert changes, and start fresh. These tools drastically reduce "grunt work" costs, making restarts practical.
 
 ### Review
@@ -157,13 +156,13 @@ Even though I try to keep a document where I note things that will require a fol
 
 ### Repeat
 
-The process is rarely linear and often varies, but follows this general pattern. 
+The process is rarely linear and often varies, but follows this general pattern.
 
 **Common mistakes**: skipping either "Plan" or "Repeat" - both are essential. Do not skip them when working on real projects.
 
 ## Using Rules and Persistent Context
 
-Every AI coding assistant offers automatic prompt inclusion: Cursor rules, Windsurf rules etc. These are essential for consistent output. 
+Every AI coding assistant offers automatic prompt inclusion: Cursor rules, Windsurf rules etc. These are essential for consistent output.
 
 Keep it manageable - a few hundred lines work well. Your rules should document coding style, recurring patterns, and architecture. If you repeat yourself during development, encode it in rules.
 
