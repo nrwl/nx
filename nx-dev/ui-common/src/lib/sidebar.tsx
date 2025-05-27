@@ -162,7 +162,7 @@ function SidebarSectionItems({
           )}
         </div>
       </h5>
-      <ul className={collapsed ? 'hidden' : 'mb-2'}>
+      <ul className={collapsed ? 'hidden' : ''}>
         {children.map((subItem, index) => {
           const isActiveLink = withoutAnchors(router.asPath).startsWith(
             subItem.path

@@ -1,4 +1,5 @@
 import {
+  pkgToGeneratedApiDocs,
   type DocumentMetadata,
   type ProcessedDocument,
   type RelatedDocument,
@@ -135,18 +136,18 @@ export class DocumentsApi {
       const packages = Object.values(this.packagesManifest);
 
       packages.forEach((pkg) => {
-        paths.push(`/technologies/${pkg.name}/api`);
-
-        const packageName = pkg.name;
+        const apiPagePath = pkgToGeneratedApiDocs[pkg.name]?.pagePath;
+        if (!apiPagePath) return;
+        paths.push(apiPagePath);
 
         if (Object.keys(pkg.executors).length > 0) {
-          paths.push(`/technologies/${packageName}/api/executors`);
+          paths.push(`${apiPagePath}/executors`);
         }
         Object.keys(pkg.executors).forEach((path) => {
           const segments = path.split('/').filter(Boolean);
           if (segments[0] === 'nx-api') {
             // Create a path like /technologies/react/executors/library
-            const newPath = `/technologies/${packageName}/api/executors/${segments
+            const newPath = `${apiPagePath}/executors/${segments
               .slice(3)
               .join('/')}`;
             paths.push(newPath);
@@ -154,13 +155,13 @@ export class DocumentsApi {
         });
 
         if (Object.keys(pkg.generators).length > 0) {
-          paths.push(`/technologies/${packageName}/api/generators`);
+          paths.push(`${apiPagePath}/generators`);
         }
         Object.keys(pkg.generators).forEach((path) => {
           const segments = path.split('/').filter(Boolean);
           if (segments[0] === 'nx-api') {
             // Create a path like /technologies/react/generators/library
-            const newPath = `/technologies/${packageName}/api/generators/${segments
+            const newPath = `${apiPagePath}/generators/${segments
               .slice(3)
               .join('/')}`;
             paths.push(newPath);
@@ -168,11 +169,10 @@ export class DocumentsApi {
         });
 
         if (Object.keys(pkg.migrations).length > 0) {
-          paths.push(`/technologies/${packageName}/api/migrations`);
+          paths.push(`${apiPagePath}/migrations`);
         }
       });
     }
-
     return paths;
   }
 

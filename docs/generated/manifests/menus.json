@@ -759,6 +759,176 @@
         "disableCollapsible": false
       },
       {
+        "name": "Core Concepts",
+        "path": "/concepts",
+        "id": "concepts",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Mental Model",
+            "path": "/concepts/mental-model",
+            "id": "mental-model",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "How Caching Works",
+            "path": "/concepts/how-caching-works",
+            "id": "how-caching-works",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "What is a Task Pipeline",
+            "path": "/concepts/task-pipeline-configuration",
+            "id": "task-pipeline-configuration",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "What Are Nx Plugins",
+            "path": "/concepts/nx-plugins",
+            "id": "nx-plugins",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Inferred Tasks",
+            "path": "/concepts/inferred-tasks",
+            "id": "inferred-tasks",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Types of Configuration",
+            "path": "/concepts/types-of-configuration",
+            "id": "types-of-configuration",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Executors and Configurations",
+            "path": "/concepts/executors-and-configurations",
+            "id": "executors-and-configurations",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Common Tasks",
+            "path": "/concepts/common-tasks",
+            "id": "common-tasks",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Nx Daemon",
+            "path": "/concepts/nx-daemon",
+            "id": "nx-daemon",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Sync Generators",
+            "path": "/concepts/sync-generators",
+            "id": "sync-generators",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "TypeScript Project Linking",
+            "path": "/concepts/typescript-project-linking",
+            "id": "typescript-project-linking",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Buildable and Publishable Libraries",
+            "path": "/concepts/buildable-and-publishable-libraries",
+            "id": "buildable-and-publishable-libraries",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Organizational Decisions",
+            "path": "/concepts/decisions",
+            "id": "decisions",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Overview",
+                "path": "/concepts/decisions/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Monorepos",
+                "path": "/concepts/decisions/why-monorepos",
+                "id": "why-monorepos",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Dependency Management",
+                "path": "/concepts/decisions/dependency-management",
+                "id": "dependency-management",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Code Ownership",
+                "path": "/concepts/decisions/code-ownership",
+                "id": "code-ownership",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Project Size",
+                "path": "/concepts/decisions/project-size",
+                "id": "project-size",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Project Dependency Rules",
+                "path": "/concepts/decisions/project-dependency-rules",
+                "id": "project-dependency-rules",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Folder Structure",
+                "path": "/concepts/decisions/folder-structure",
+                "id": "folder-structure",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
         "name": "Technologies",
         "path": "/technologies",
         "id": "technologies",
@@ -779,7 +949,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Recipes",
+                "name": "Guides",
                 "path": "/technologies/typescript/recipes",
                 "id": "recipes",
                 "isExternal": false,
@@ -1009,7 +1179,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Recipes",
+                "name": "Guides",
                 "path": "/technologies/angular/recipes",
                 "id": "recipes",
                 "isExternal": false,
@@ -1451,7 +1621,7 @@
                     "disableCollapsible": false
                   },
                   {
-                    "name": "Recipes",
+                    "name": "Guides",
                     "path": "/technologies/angular/angular-rspack/recipes",
                     "id": "recipes",
                     "isExternal": false,
@@ -1537,7 +1707,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Recipes",
+                "name": "Guides",
                 "path": "/technologies/react/recipes",
                 "id": "recipes",
                 "isExternal": false,
@@ -1819,7 +1989,7 @@
                     "disableCollapsible": false
                   },
                   {
-                    "name": "Recipes",
+                    "name": "Guides",
                     "path": "/technologies/react/next/recipes",
                     "id": "recipes",
                     "isExternal": false,
@@ -1843,12 +2013,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/react/next/api/executors",
+                        "path": "/technologies/next/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "build",
-                            "path": "/technologies/react/next/api/executors/build",
+                            "path": "/technologies/next/api/executors/build",
                             "name": "build",
                             "children": [],
                             "isExternal": false,
@@ -1856,7 +2026,7 @@
                           },
                           {
                             "id": "server",
-                            "path": "/technologies/react/next/api/executors/server",
+                            "path": "/technologies/next/api/executors/server",
                             "name": "server",
                             "children": [],
                             "isExternal": false,
@@ -1868,12 +2038,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/react/next/api/generators",
+                        "path": "/technologies/next/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/react/next/api/generators/init",
+                            "path": "/technologies/next/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -1881,7 +2051,7 @@
                           },
                           {
                             "id": "application",
-                            "path": "/technologies/react/next/api/generators/application",
+                            "path": "/technologies/next/api/generators/application",
                             "name": "application",
                             "children": [],
                             "isExternal": false,
@@ -1889,7 +2059,7 @@
                           },
                           {
                             "id": "page",
-                            "path": "/technologies/react/next/api/generators/page",
+                            "path": "/technologies/next/api/generators/page",
                             "name": "page",
                             "children": [],
                             "isExternal": false,
@@ -1897,7 +2067,7 @@
                           },
                           {
                             "id": "component",
-                            "path": "/technologies/react/next/api/generators/component",
+                            "path": "/technologies/next/api/generators/component",
                             "name": "component",
                             "children": [],
                             "isExternal": false,
@@ -1905,7 +2075,7 @@
                           },
                           {
                             "id": "library",
-                            "path": "/technologies/react/next/api/generators/library",
+                            "path": "/technologies/next/api/generators/library",
                             "name": "library",
                             "children": [],
                             "isExternal": false,
@@ -1913,7 +2083,7 @@
                           },
                           {
                             "id": "custom-server",
-                            "path": "/technologies/react/next/api/generators/custom-server",
+                            "path": "/technologies/next/api/generators/custom-server",
                             "name": "custom-server",
                             "children": [],
                             "isExternal": false,
@@ -1921,7 +2091,7 @@
                           },
                           {
                             "id": "cypress-component-configuration",
-                            "path": "/technologies/react/next/api/generators/cypress-component-configuration",
+                            "path": "/technologies/next/api/generators/cypress-component-configuration",
                             "name": "cypress-component-configuration",
                             "children": [],
                             "isExternal": false,
@@ -1929,7 +2099,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/react/next/api/generators/convert-to-inferred",
+                            "path": "/technologies/next/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -1941,7 +2111,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/react/next/api/migrations",
+                        "path": "/technologies/next/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -1968,7 +2138,7 @@
                     "disableCollapsible": false
                   },
                   {
-                    "name": "Recipes",
+                    "name": "Guides",
                     "path": "/technologies/react/remix/recipes",
                     "id": "recipes",
                     "isExternal": false,
@@ -1983,12 +2153,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/react/remix/api/executors",
+                        "path": "/technologies/remix/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "serve",
-                            "path": "/technologies/react/remix/api/executors/serve",
+                            "path": "/technologies/remix/api/executors/serve",
                             "name": "serve",
                             "children": [],
                             "isExternal": false,
@@ -1996,7 +2166,7 @@
                           },
                           {
                             "id": "build",
-                            "path": "/technologies/react/remix/api/executors/build",
+                            "path": "/technologies/remix/api/executors/build",
                             "name": "build",
                             "children": [],
                             "isExternal": false,
@@ -2008,12 +2178,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/react/remix/api/generators",
+                        "path": "/technologies/remix/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "preset",
-                            "path": "/technologies/react/remix/api/generators/preset",
+                            "path": "/technologies/remix/api/generators/preset",
                             "name": "preset",
                             "children": [],
                             "isExternal": false,
@@ -2021,7 +2191,7 @@
                           },
                           {
                             "id": "setup",
-                            "path": "/technologies/react/remix/api/generators/setup",
+                            "path": "/technologies/remix/api/generators/setup",
                             "name": "setup",
                             "children": [],
                             "isExternal": false,
@@ -2029,7 +2199,7 @@
                           },
                           {
                             "id": "application",
-                            "path": "/technologies/react/remix/api/generators/application",
+                            "path": "/technologies/remix/api/generators/application",
                             "name": "application",
                             "children": [],
                             "isExternal": false,
@@ -2037,7 +2207,7 @@
                           },
                           {
                             "id": "cypress-component-configuration",
-                            "path": "/technologies/react/remix/api/generators/cypress-component-configuration",
+                            "path": "/technologies/remix/api/generators/cypress-component-configuration",
                             "name": "cypress-component-configuration",
                             "children": [],
                             "isExternal": false,
@@ -2045,7 +2215,7 @@
                           },
                           {
                             "id": "library",
-                            "path": "/technologies/react/remix/api/generators/library",
+                            "path": "/technologies/remix/api/generators/library",
                             "name": "library",
                             "children": [],
                             "isExternal": false,
@@ -2053,7 +2223,7 @@
                           },
                           {
                             "id": "init",
-                            "path": "/technologies/react/remix/api/generators/init",
+                            "path": "/technologies/remix/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -2061,7 +2231,7 @@
                           },
                           {
                             "id": "route",
-                            "path": "/technologies/react/remix/api/generators/route",
+                            "path": "/technologies/remix/api/generators/route",
                             "name": "route",
                             "children": [],
                             "isExternal": false,
@@ -2069,7 +2239,7 @@
                           },
                           {
                             "id": "resource-route",
-                            "path": "/technologies/react/remix/api/generators/resource-route",
+                            "path": "/technologies/remix/api/generators/resource-route",
                             "name": "resource-route",
                             "children": [],
                             "isExternal": false,
@@ -2077,7 +2247,7 @@
                           },
                           {
                             "id": "action",
-                            "path": "/technologies/react/remix/api/generators/action",
+                            "path": "/technologies/remix/api/generators/action",
                             "name": "action",
                             "children": [],
                             "isExternal": false,
@@ -2085,7 +2255,7 @@
                           },
                           {
                             "id": "loader",
-                            "path": "/technologies/react/remix/api/generators/loader",
+                            "path": "/technologies/remix/api/generators/loader",
                             "name": "loader",
                             "children": [],
                             "isExternal": false,
@@ -2093,7 +2263,7 @@
                           },
                           {
                             "id": "style",
-                            "path": "/technologies/react/remix/api/generators/style",
+                            "path": "/technologies/remix/api/generators/style",
                             "name": "style",
                             "children": [],
                             "isExternal": false,
@@ -2101,7 +2271,7 @@
                           },
                           {
                             "id": "setup-tailwind",
-                            "path": "/technologies/react/remix/api/generators/setup-tailwind",
+                            "path": "/technologies/remix/api/generators/setup-tailwind",
                             "name": "setup-tailwind",
                             "children": [],
                             "isExternal": false,
@@ -2109,7 +2279,7 @@
                           },
                           {
                             "id": "storybook-configuration",
-                            "path": "/technologies/react/remix/api/generators/storybook-configuration",
+                            "path": "/technologies/remix/api/generators/storybook-configuration",
                             "name": "storybook-configuration",
                             "children": [],
                             "isExternal": false,
@@ -2117,7 +2287,7 @@
                           },
                           {
                             "id": "meta",
-                            "path": "/technologies/react/remix/api/generators/meta",
+                            "path": "/technologies/remix/api/generators/meta",
                             "name": "meta",
                             "children": [],
                             "isExternal": false,
@@ -2125,7 +2295,7 @@
                           },
                           {
                             "id": "error-boundary",
-                            "path": "/technologies/react/remix/api/generators/error-boundary",
+                            "path": "/technologies/remix/api/generators/error-boundary",
                             "name": "error-boundary",
                             "children": [],
                             "isExternal": false,
@@ -2133,7 +2303,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/react/remix/api/generators/convert-to-inferred",
+                            "path": "/technologies/remix/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -2145,7 +2315,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/react/remix/api/migrations",
+                        "path": "/technologies/remix/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -2172,7 +2342,7 @@
                     "disableCollapsible": false
                   },
                   {
-                    "name": "Recipes",
+                    "name": "Guides",
                     "path": "/technologies/react/react-native/recipes",
                     "id": "recipes",
                     "isExternal": false,
@@ -2187,12 +2357,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/react/react-native/api/executors",
+                        "path": "/technologies/react-native/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "run-android",
-                            "path": "/technologies/react/react-native/api/executors/run-android",
+                            "path": "/technologies/react-native/api/executors/run-android",
                             "name": "run-android",
                             "children": [],
                             "isExternal": false,
@@ -2200,7 +2370,7 @@
                           },
                           {
                             "id": "run-ios",
-                            "path": "/technologies/react/react-native/api/executors/run-ios",
+                            "path": "/technologies/react-native/api/executors/run-ios",
                             "name": "run-ios",
                             "children": [],
                             "isExternal": false,
@@ -2208,7 +2378,7 @@
                           },
                           {
                             "id": "bundle",
-                            "path": "/technologies/react/react-native/api/executors/bundle",
+                            "path": "/technologies/react-native/api/executors/bundle",
                             "name": "bundle",
                             "children": [],
                             "isExternal": false,
@@ -2216,7 +2386,7 @@
                           },
                           {
                             "id": "build-android",
-                            "path": "/technologies/react/react-native/api/executors/build-android",
+                            "path": "/technologies/react-native/api/executors/build-android",
                             "name": "build-android",
                             "children": [],
                             "isExternal": false,
@@ -2224,7 +2394,7 @@
                           },
                           {
                             "id": "build-ios",
-                            "path": "/technologies/react/react-native/api/executors/build-ios",
+                            "path": "/technologies/react-native/api/executors/build-ios",
                             "name": "build-ios",
                             "children": [],
                             "isExternal": false,
@@ -2232,7 +2402,7 @@
                           },
                           {
                             "id": "start",
-                            "path": "/technologies/react/react-native/api/executors/start",
+                            "path": "/technologies/react-native/api/executors/start",
                             "name": "start",
                             "children": [],
                             "isExternal": false,
@@ -2240,7 +2410,7 @@
                           },
                           {
                             "id": "sync-deps",
-                            "path": "/technologies/react/react-native/api/executors/sync-deps",
+                            "path": "/technologies/react-native/api/executors/sync-deps",
                             "name": "sync-deps",
                             "children": [],
                             "isExternal": false,
@@ -2248,7 +2418,7 @@
                           },
                           {
                             "id": "ensure-symlink",
-                            "path": "/technologies/react/react-native/api/executors/ensure-symlink",
+                            "path": "/technologies/react-native/api/executors/ensure-symlink",
                             "name": "ensure-symlink",
                             "children": [],
                             "isExternal": false,
@@ -2256,7 +2426,7 @@
                           },
                           {
                             "id": "storybook",
-                            "path": "/technologies/react/react-native/api/executors/storybook",
+                            "path": "/technologies/react-native/api/executors/storybook",
                             "name": "storybook",
                             "children": [],
                             "isExternal": false,
@@ -2264,7 +2434,7 @@
                           },
                           {
                             "id": "pod-install",
-                            "path": "/technologies/react/react-native/api/executors/pod-install",
+                            "path": "/technologies/react-native/api/executors/pod-install",
                             "name": "pod-install",
                             "children": [],
                             "isExternal": false,
@@ -2272,7 +2442,7 @@
                           },
                           {
                             "id": "upgrade",
-                            "path": "/technologies/react/react-native/api/executors/upgrade",
+                            "path": "/technologies/react-native/api/executors/upgrade",
                             "name": "upgrade",
                             "children": [],
                             "isExternal": false,
@@ -2284,12 +2454,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/react/react-native/api/generators",
+                        "path": "/technologies/react-native/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/react/react-native/api/generators/init",
+                            "path": "/technologies/react-native/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -2297,7 +2467,7 @@
                           },
                           {
                             "id": "application",
-                            "path": "/technologies/react/react-native/api/generators/application",
+                            "path": "/technologies/react-native/api/generators/application",
                             "name": "application",
                             "children": [],
                             "isExternal": false,
@@ -2305,7 +2475,7 @@
                           },
                           {
                             "id": "library",
-                            "path": "/technologies/react/react-native/api/generators/library",
+                            "path": "/technologies/react-native/api/generators/library",
                             "name": "library",
                             "children": [],
                             "isExternal": false,
@@ -2313,7 +2483,7 @@
                           },
                           {
                             "id": "component",
-                            "path": "/technologies/react/react-native/api/generators/component",
+                            "path": "/technologies/react-native/api/generators/component",
                             "name": "component",
                             "children": [],
                             "isExternal": false,
@@ -2321,7 +2491,7 @@
                           },
                           {
                             "id": "storybook-configuration",
-                            "path": "/technologies/react/react-native/api/generators/storybook-configuration",
+                            "path": "/technologies/react-native/api/generators/storybook-configuration",
                             "name": "storybook-configuration",
                             "children": [],
                             "isExternal": false,
@@ -2329,7 +2499,7 @@
                           },
                           {
                             "id": "component-story",
-                            "path": "/technologies/react/react-native/api/generators/component-story",
+                            "path": "/technologies/react-native/api/generators/component-story",
                             "name": "component-story",
                             "children": [],
                             "isExternal": false,
@@ -2337,7 +2507,7 @@
                           },
                           {
                             "id": "stories",
-                            "path": "/technologies/react/react-native/api/generators/stories",
+                            "path": "/technologies/react-native/api/generators/stories",
                             "name": "stories",
                             "children": [],
                             "isExternal": false,
@@ -2345,7 +2515,7 @@
                           },
                           {
                             "id": "upgrade-native",
-                            "path": "/technologies/react/react-native/api/generators/upgrade-native",
+                            "path": "/technologies/react-native/api/generators/upgrade-native",
                             "name": "upgrade-native",
                             "children": [],
                             "isExternal": false,
@@ -2353,7 +2523,7 @@
                           },
                           {
                             "id": "web-configuration",
-                            "path": "/technologies/react/react-native/api/generators/web-configuration",
+                            "path": "/technologies/react-native/api/generators/web-configuration",
                             "name": "web-configuration",
                             "children": [],
                             "isExternal": false,
@@ -2361,7 +2531,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/react/react-native/api/generators/convert-to-inferred",
+                            "path": "/technologies/react-native/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -2373,7 +2543,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/react/react-native/api/migrations",
+                        "path": "/technologies/react-native/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -2400,7 +2570,7 @@
                     "disableCollapsible": false
                   },
                   {
-                    "name": "Recipes",
+                    "name": "Guides",
                     "path": "/technologies/react/expo/recipes",
                     "id": "recipes",
                     "isExternal": false,
@@ -2415,12 +2585,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/react/expo/api/executors",
+                        "path": "/technologies/expo/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "update",
-                            "path": "/technologies/react/expo/api/executors/update",
+                            "path": "/technologies/expo/api/executors/update",
                             "name": "update",
                             "children": [],
                             "isExternal": false,
@@ -2428,7 +2598,7 @@
                           },
                           {
                             "id": "build",
-                            "path": "/technologies/react/expo/api/executors/build",
+                            "path": "/technologies/expo/api/executors/build",
                             "name": "build",
                             "children": [],
                             "isExternal": false,
@@ -2436,7 +2606,7 @@
                           },
                           {
                             "id": "build-list",
-                            "path": "/technologies/react/expo/api/executors/build-list",
+                            "path": "/technologies/expo/api/executors/build-list",
                             "name": "build-list",
                             "children": [],
                             "isExternal": false,
@@ -2444,7 +2614,7 @@
                           },
                           {
                             "id": "run",
-                            "path": "/technologies/react/expo/api/executors/run",
+                            "path": "/technologies/expo/api/executors/run",
                             "name": "run",
                             "children": [],
                             "isExternal": false,
@@ -2452,7 +2622,7 @@
                           },
                           {
                             "id": "start",
-                            "path": "/technologies/react/expo/api/executors/start",
+                            "path": "/technologies/expo/api/executors/start",
                             "name": "start",
                             "children": [],
                             "isExternal": false,
@@ -2460,7 +2630,7 @@
                           },
                           {
                             "id": "sync-deps",
-                            "path": "/technologies/react/expo/api/executors/sync-deps",
+                            "path": "/technologies/expo/api/executors/sync-deps",
                             "name": "sync-deps",
                             "children": [],
                             "isExternal": false,
@@ -2468,7 +2638,7 @@
                           },
                           {
                             "id": "ensure-symlink",
-                            "path": "/technologies/react/expo/api/executors/ensure-symlink",
+                            "path": "/technologies/expo/api/executors/ensure-symlink",
                             "name": "ensure-symlink",
                             "children": [],
                             "isExternal": false,
@@ -2476,7 +2646,7 @@
                           },
                           {
                             "id": "prebuild",
-                            "path": "/technologies/react/expo/api/executors/prebuild",
+                            "path": "/technologies/expo/api/executors/prebuild",
                             "name": "prebuild",
                             "children": [],
                             "isExternal": false,
@@ -2484,7 +2654,7 @@
                           },
                           {
                             "id": "install",
-                            "path": "/technologies/react/expo/api/executors/install",
+                            "path": "/technologies/expo/api/executors/install",
                             "name": "install",
                             "children": [],
                             "isExternal": false,
@@ -2492,7 +2662,7 @@
                           },
                           {
                             "id": "export",
-                            "path": "/technologies/react/expo/api/executors/export",
+                            "path": "/technologies/expo/api/executors/export",
                             "name": "export",
                             "children": [],
                             "isExternal": false,
@@ -2500,7 +2670,7 @@
                           },
                           {
                             "id": "submit",
-                            "path": "/technologies/react/expo/api/executors/submit",
+                            "path": "/technologies/expo/api/executors/submit",
                             "name": "submit",
                             "children": [],
                             "isExternal": false,
@@ -2508,7 +2678,7 @@
                           },
                           {
                             "id": "serve",
-                            "path": "/technologies/react/expo/api/executors/serve",
+                            "path": "/technologies/expo/api/executors/serve",
                             "name": "serve",
                             "children": [],
                             "isExternal": false,
@@ -2520,12 +2690,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/react/expo/api/generators",
+                        "path": "/technologies/expo/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/react/expo/api/generators/init",
+                            "path": "/technologies/expo/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -2533,7 +2703,7 @@
                           },
                           {
                             "id": "application",
-                            "path": "/technologies/react/expo/api/generators/application",
+                            "path": "/technologies/expo/api/generators/application",
                             "name": "application",
                             "children": [],
                             "isExternal": false,
@@ -2541,7 +2711,7 @@
                           },
                           {
                             "id": "library",
-                            "path": "/technologies/react/expo/api/generators/library",
+                            "path": "/technologies/expo/api/generators/library",
                             "name": "library",
                             "children": [],
                             "isExternal": false,
@@ -2549,7 +2719,7 @@
                           },
                           {
                             "id": "component",
-                            "path": "/technologies/react/expo/api/generators/component",
+                            "path": "/technologies/expo/api/generators/component",
                             "name": "component",
                             "children": [],
                             "isExternal": false,
@@ -2557,7 +2727,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/react/expo/api/generators/convert-to-inferred",
+                            "path": "/technologies/expo/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -2569,7 +2739,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/react/expo/api/migrations",
+                        "path": "/technologies/expo/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -2599,7 +2769,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Recipes",
+                "name": "Guides",
                 "path": "/technologies/vue/recipes",
                 "id": "recipes",
                 "isExternal": false,
@@ -2703,7 +2873,7 @@
                     "disableCollapsible": false
                   },
                   {
-                    "name": "Recipes",
+                    "name": "Guides",
                     "path": "/technologies/vue/nuxt/recipes",
                     "id": "recipes",
                     "isExternal": false,
@@ -2727,12 +2897,12 @@
                     "children": [
                       {
                         "id": "generators",
-                        "path": "/technologies/vue/nuxt/api/generators",
+                        "path": "/technologies/nuxt/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/vue/nuxt/api/generators/init",
+                            "path": "/technologies/nuxt/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -2740,7 +2910,7 @@
                           },
                           {
                             "id": "application",
-                            "path": "/technologies/vue/nuxt/api/generators/application",
+                            "path": "/technologies/nuxt/api/generators/application",
                             "name": "application",
                             "children": [],
                             "isExternal": false,
@@ -2748,7 +2918,7 @@
                           },
                           {
                             "id": "storybook-configuration",
-                            "path": "/technologies/vue/nuxt/api/generators/storybook-configuration",
+                            "path": "/technologies/nuxt/api/generators/storybook-configuration",
                             "name": "storybook-configuration",
                             "children": [],
                             "isExternal": false,
@@ -2760,7 +2930,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/vue/nuxt/api/migrations",
+                        "path": "/technologies/nuxt/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -2790,7 +2960,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Recipes",
+                "name": "Guides",
                 "path": "/technologies/node/recipes",
                 "id": "recipes",
                 "isExternal": false,
@@ -2918,12 +3088,12 @@
                     "children": [
                       {
                         "id": "generators",
-                        "path": "/technologies/node/express/api/generators",
+                        "path": "/technologies/express/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/node/express/api/generators/init",
+                            "path": "/technologies/express/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -2931,7 +3101,7 @@
                           },
                           {
                             "id": "application",
-                            "path": "/technologies/node/express/api/generators/application",
+                            "path": "/technologies/express/api/generators/application",
                             "name": "application",
                             "children": [],
                             "isExternal": false,
@@ -2969,12 +3139,12 @@
                     "children": [
                       {
                         "id": "generators",
-                        "path": "/technologies/node/nest/api/generators",
+                        "path": "/technologies/nest/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "application",
-                            "path": "/technologies/node/nest/api/generators/application",
+                            "path": "/technologies/nest/api/generators/application",
                             "name": "application",
                             "children": [],
                             "isExternal": false,
@@ -2982,7 +3152,7 @@
                           },
                           {
                             "id": "init",
-                            "path": "/technologies/node/nest/api/generators/init",
+                            "path": "/technologies/nest/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -2990,7 +3160,7 @@
                           },
                           {
                             "id": "library",
-                            "path": "/technologies/node/nest/api/generators/library",
+                            "path": "/technologies/nest/api/generators/library",
                             "name": "library",
                             "children": [],
                             "isExternal": false,
@@ -2998,7 +3168,7 @@
                           },
                           {
                             "id": "class",
-                            "path": "/technologies/node/nest/api/generators/class",
+                            "path": "/technologies/nest/api/generators/class",
                             "name": "class",
                             "children": [],
                             "isExternal": false,
@@ -3006,7 +3176,7 @@
                           },
                           {
                             "id": "controller",
-                            "path": "/technologies/node/nest/api/generators/controller",
+                            "path": "/technologies/nest/api/generators/controller",
                             "name": "controller",
                             "children": [],
                             "isExternal": false,
@@ -3014,7 +3184,7 @@
                           },
                           {
                             "id": "decorator",
-                            "path": "/technologies/node/nest/api/generators/decorator",
+                            "path": "/technologies/nest/api/generators/decorator",
                             "name": "decorator",
                             "children": [],
                             "isExternal": false,
@@ -3022,7 +3192,7 @@
                           },
                           {
                             "id": "filter",
-                            "path": "/technologies/node/nest/api/generators/filter",
+                            "path": "/technologies/nest/api/generators/filter",
                             "name": "filter",
                             "children": [],
                             "isExternal": false,
@@ -3030,7 +3200,7 @@
                           },
                           {
                             "id": "gateway",
-                            "path": "/technologies/node/nest/api/generators/gateway",
+                            "path": "/technologies/nest/api/generators/gateway",
                             "name": "gateway",
                             "children": [],
                             "isExternal": false,
@@ -3038,7 +3208,7 @@
                           },
                           {
                             "id": "guard",
-                            "path": "/technologies/node/nest/api/generators/guard",
+                            "path": "/technologies/nest/api/generators/guard",
                             "name": "guard",
                             "children": [],
                             "isExternal": false,
@@ -3046,7 +3216,7 @@
                           },
                           {
                             "id": "interceptor",
-                            "path": "/technologies/node/nest/api/generators/interceptor",
+                            "path": "/technologies/nest/api/generators/interceptor",
                             "name": "interceptor",
                             "children": [],
                             "isExternal": false,
@@ -3054,7 +3224,7 @@
                           },
                           {
                             "id": "interface",
-                            "path": "/technologies/node/nest/api/generators/interface",
+                            "path": "/technologies/nest/api/generators/interface",
                             "name": "interface",
                             "children": [],
                             "isExternal": false,
@@ -3062,7 +3232,7 @@
                           },
                           {
                             "id": "middleware",
-                            "path": "/technologies/node/nest/api/generators/middleware",
+                            "path": "/technologies/nest/api/generators/middleware",
                             "name": "middleware",
                             "children": [],
                             "isExternal": false,
@@ -3070,7 +3240,7 @@
                           },
                           {
                             "id": "module",
-                            "path": "/technologies/node/nest/api/generators/module",
+                            "path": "/technologies/nest/api/generators/module",
                             "name": "module",
                             "children": [],
                             "isExternal": false,
@@ -3078,7 +3248,7 @@
                           },
                           {
                             "id": "pipe",
-                            "path": "/technologies/node/nest/api/generators/pipe",
+                            "path": "/technologies/nest/api/generators/pipe",
                             "name": "pipe",
                             "children": [],
                             "isExternal": false,
@@ -3086,7 +3256,7 @@
                           },
                           {
                             "id": "provider",
-                            "path": "/technologies/node/nest/api/generators/provider",
+                            "path": "/technologies/nest/api/generators/provider",
                             "name": "provider",
                             "children": [],
                             "isExternal": false,
@@ -3094,7 +3264,7 @@
                           },
                           {
                             "id": "resolver",
-                            "path": "/technologies/node/nest/api/generators/resolver",
+                            "path": "/technologies/nest/api/generators/resolver",
                             "name": "resolver",
                             "children": [],
                             "isExternal": false,
@@ -3102,7 +3272,7 @@
                           },
                           {
                             "id": "resource",
-                            "path": "/technologies/node/nest/api/generators/resource",
+                            "path": "/technologies/nest/api/generators/resource",
                             "name": "resource",
                             "children": [],
                             "isExternal": false,
@@ -3110,7 +3280,7 @@
                           },
                           {
                             "id": "service",
-                            "path": "/technologies/node/nest/api/generators/service",
+                            "path": "/technologies/nest/api/generators/service",
                             "name": "service",
                             "children": [],
                             "isExternal": false,
@@ -3144,7 +3314,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Recipes",
+                "name": "Guides",
                 "path": "/technologies/java/recipes",
                 "id": "recipes",
                 "isExternal": false,
@@ -3277,7 +3447,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Recipes",
+                "name": "Guides",
                 "path": "/technologies/module-federation/recipes",
                 "id": "recipes",
                 "isExternal": false,
@@ -3344,7 +3514,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Recipes",
+                "name": "Guides",
                 "path": "/technologies/eslint/recipes",
                 "id": "recipes",
                 "isExternal": false,
@@ -3465,7 +3635,7 @@
                     "children": [
                       {
                         "id": "migrations",
-                        "path": "/technologies/eslint/eslint-plugin/api/migrations",
+                        "path": "/technologies/eslint-plugin/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -3501,7 +3671,7 @@
                     "disableCollapsible": false
                   },
                   {
-                    "name": "Recipes",
+                    "name": "Guides",
                     "path": "/technologies/build-tools/webpack/recipes",
                     "id": "recipes",
                     "isExternal": false,
@@ -3533,12 +3703,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/build-tools/webpack/api/executors",
+                        "path": "/technologies/webpack/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "webpack",
-                            "path": "/technologies/build-tools/webpack/api/executors/webpack",
+                            "path": "/technologies/webpack/api/executors/webpack",
                             "name": "webpack",
                             "children": [],
                             "isExternal": false,
@@ -3546,7 +3716,7 @@
                           },
                           {
                             "id": "dev-server",
-                            "path": "/technologies/build-tools/webpack/api/executors/dev-server",
+                            "path": "/technologies/webpack/api/executors/dev-server",
                             "name": "dev-server",
                             "children": [],
                             "isExternal": false,
@@ -3554,7 +3724,7 @@
                           },
                           {
                             "id": "ssr-dev-server",
-                            "path": "/technologies/build-tools/webpack/api/executors/ssr-dev-server",
+                            "path": "/technologies/webpack/api/executors/ssr-dev-server",
                             "name": "ssr-dev-server",
                             "children": [],
                             "isExternal": false,
@@ -3566,12 +3736,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/build-tools/webpack/api/generators",
+                        "path": "/technologies/webpack/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/build-tools/webpack/api/generators/init",
+                            "path": "/technologies/webpack/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -3579,7 +3749,7 @@
                           },
                           {
                             "id": "configuration",
-                            "path": "/technologies/build-tools/webpack/api/generators/configuration",
+                            "path": "/technologies/webpack/api/generators/configuration",
                             "name": "configuration",
                             "children": [],
                             "isExternal": false,
@@ -3587,7 +3757,7 @@
                           },
                           {
                             "id": "convert-config-to-webpack-plugin",
-                            "path": "/technologies/build-tools/webpack/api/generators/convert-config-to-webpack-plugin",
+                            "path": "/technologies/webpack/api/generators/convert-config-to-webpack-plugin",
                             "name": "convert-config-to-webpack-plugin",
                             "children": [],
                             "isExternal": false,
@@ -3595,7 +3765,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/build-tools/webpack/api/generators/convert-to-inferred",
+                            "path": "/technologies/webpack/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -3607,7 +3777,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/build-tools/webpack/api/migrations",
+                        "path": "/technologies/webpack/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -3634,7 +3804,7 @@
                     "disableCollapsible": false
                   },
                   {
-                    "name": "Recipes",
+                    "name": "Guides",
                     "path": "/technologies/build-tools/vite/recipes",
                     "id": "recipes",
                     "isExternal": false,
@@ -3658,12 +3828,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/build-tools/vite/api/executors",
+                        "path": "/technologies/vite/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "dev-server",
-                            "path": "/technologies/build-tools/vite/api/executors/dev-server",
+                            "path": "/technologies/vite/api/executors/dev-server",
                             "name": "dev-server",
                             "children": [],
                             "isExternal": false,
@@ -3671,7 +3841,7 @@
                           },
                           {
                             "id": "build",
-                            "path": "/technologies/build-tools/vite/api/executors/build",
+                            "path": "/technologies/vite/api/executors/build",
                             "name": "build",
                             "children": [],
                             "isExternal": false,
@@ -3679,7 +3849,7 @@
                           },
                           {
                             "id": "test",
-                            "path": "/technologies/build-tools/vite/api/executors/test",
+                            "path": "/technologies/vite/api/executors/test",
                             "name": "test",
                             "children": [],
                             "isExternal": false,
@@ -3687,7 +3857,7 @@
                           },
                           {
                             "id": "preview-server",
-                            "path": "/technologies/build-tools/vite/api/executors/preview-server",
+                            "path": "/technologies/vite/api/executors/preview-server",
                             "name": "preview-server",
                             "children": [],
                             "isExternal": false,
@@ -3699,12 +3869,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/build-tools/vite/api/generators",
+                        "path": "/technologies/vite/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/build-tools/vite/api/generators/init",
+                            "path": "/technologies/vite/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -3712,7 +3882,7 @@
                           },
                           {
                             "id": "configuration",
-                            "path": "/technologies/build-tools/vite/api/generators/configuration",
+                            "path": "/technologies/vite/api/generators/configuration",
                             "name": "configuration",
                             "children": [],
                             "isExternal": false,
@@ -3720,7 +3890,7 @@
                           },
                           {
                             "id": "setup-paths-plugin",
-                            "path": "/technologies/build-tools/vite/api/generators/setup-paths-plugin",
+                            "path": "/technologies/vite/api/generators/setup-paths-plugin",
                             "name": "setup-paths-plugin",
                             "children": [],
                             "isExternal": false,
@@ -3728,7 +3898,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/build-tools/vite/api/generators/convert-to-inferred",
+                            "path": "/technologies/vite/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -3736,7 +3906,7 @@
                           },
                           {
                             "id": "vitest",
-                            "path": "/technologies/build-tools/vite/api/generators/vitest",
+                            "path": "/technologies/vite/api/generators/vitest",
                             "name": "vitest",
                             "children": [],
                             "isExternal": false,
@@ -3748,7 +3918,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/build-tools/vite/api/migrations",
+                        "path": "/technologies/vite/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -3775,7 +3945,7 @@
                     "disableCollapsible": false
                   },
                   {
-                    "name": "Recipes",
+                    "name": "Guides",
                     "path": "/technologies/build-tools/rollup/recipes",
                     "id": "recipes",
                     "isExternal": false,
@@ -3787,7 +3957,66 @@
                     "path": "/technologies/build-tools/rollup/api",
                     "id": "api",
                     "isExternal": false,
-                    "children": [],
+                    "children": [
+                      {
+                        "id": "executors",
+                        "path": "/technologies/rollup/api/executors",
+                        "name": "executors",
+                        "children": [
+                          {
+                            "id": "rollup",
+                            "path": "/technologies/rollup/api/executors/rollup",
+                            "name": "rollup",
+                            "children": [],
+                            "isExternal": false,
+                            "disableCollapsible": false
+                          }
+                        ],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "generators",
+                        "path": "/technologies/rollup/api/generators",
+                        "name": "generators",
+                        "children": [
+                          {
+                            "id": "init",
+                            "path": "/technologies/rollup/api/generators/init",
+                            "name": "init",
+                            "children": [],
+                            "isExternal": false,
+                            "disableCollapsible": false
+                          },
+                          {
+                            "id": "configuration",
+                            "path": "/technologies/rollup/api/generators/configuration",
+                            "name": "configuration",
+                            "children": [],
+                            "isExternal": false,
+                            "disableCollapsible": false
+                          },
+                          {
+                            "id": "convert-to-inferred",
+                            "path": "/technologies/rollup/api/generators/convert-to-inferred",
+                            "name": "convert-to-inferred",
+                            "children": [],
+                            "isExternal": false,
+                            "disableCollapsible": false
+                          }
+                        ],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "migrations",
+                        "path": "/technologies/rollup/api/migrations",
+                        "name": "migrations",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      }
+                    ],
                     "disableCollapsible": false
                   }
                 ],
@@ -3808,7 +4037,7 @@
                     "disableCollapsible": false
                   },
                   {
-                    "name": "Recipes",
+                    "name": "Guides",
                     "path": "/technologies/build-tools/esbuild/recipes",
                     "id": "recipes",
                     "isExternal": false,
@@ -3823,12 +4052,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/build-tools/esbuild/api/executors",
+                        "path": "/technologies/esbuild/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "esbuild",
-                            "path": "/technologies/build-tools/esbuild/api/executors/esbuild",
+                            "path": "/technologies/esbuild/api/executors/esbuild",
                             "name": "esbuild",
                             "children": [],
                             "isExternal": false,
@@ -3840,12 +4069,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/build-tools/esbuild/api/generators",
+                        "path": "/technologies/esbuild/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/build-tools/esbuild/api/generators/init",
+                            "path": "/technologies/esbuild/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -3853,7 +4082,7 @@
                           },
                           {
                             "id": "configuration",
-                            "path": "/technologies/build-tools/esbuild/api/generators/configuration",
+                            "path": "/technologies/esbuild/api/generators/configuration",
                             "name": "configuration",
                             "children": [],
                             "isExternal": false,
@@ -3884,7 +4113,7 @@
                     "disableCollapsible": false
                   },
                   {
-                    "name": "Recipes",
+                    "name": "Guides",
                     "path": "/technologies/build-tools/rspack/recipes",
                     "id": "recipes",
                     "isExternal": false,
@@ -3899,12 +4128,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/build-tools/rspack/api/executors",
+                        "path": "/technologies/rspack/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "rspack",
-                            "path": "/technologies/build-tools/rspack/api/executors/rspack",
+                            "path": "/technologies/rspack/api/executors/rspack",
                             "name": "rspack",
                             "children": [],
                             "isExternal": false,
@@ -3912,7 +4141,7 @@
                           },
                           {
                             "id": "dev-server",
-                            "path": "/technologies/build-tools/rspack/api/executors/dev-server",
+                            "path": "/technologies/rspack/api/executors/dev-server",
                             "name": "dev-server",
                             "children": [],
                             "isExternal": false,
@@ -3920,7 +4149,7 @@
                           },
                           {
                             "id": "ssr-dev-server",
-                            "path": "/technologies/build-tools/rspack/api/executors/ssr-dev-server",
+                            "path": "/technologies/rspack/api/executors/ssr-dev-server",
                             "name": "ssr-dev-server",
                             "children": [],
                             "isExternal": false,
@@ -3928,7 +4157,7 @@
                           },
                           {
                             "id": "module-federation-dev-server",
-                            "path": "/technologies/build-tools/rspack/api/executors/module-federation-dev-server",
+                            "path": "/technologies/rspack/api/executors/module-federation-dev-server",
                             "name": "module-federation-dev-server",
                             "children": [],
                             "isExternal": false,
@@ -3936,7 +4165,7 @@
                           },
                           {
                             "id": "module-federation-ssr-dev-server",
-                            "path": "/technologies/build-tools/rspack/api/executors/module-federation-ssr-dev-server",
+                            "path": "/technologies/rspack/api/executors/module-federation-ssr-dev-server",
                             "name": "module-federation-ssr-dev-server",
                             "children": [],
                             "isExternal": false,
@@ -3944,7 +4173,7 @@
                           },
                           {
                             "id": "module-federation-static-server",
-                            "path": "/technologies/build-tools/rspack/api/executors/module-federation-static-server",
+                            "path": "/technologies/rspack/api/executors/module-federation-static-server",
                             "name": "module-federation-static-server",
                             "children": [],
                             "isExternal": false,
@@ -3956,12 +4185,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/build-tools/rspack/api/generators",
+                        "path": "/technologies/rspack/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "configuration",
-                            "path": "/technologies/build-tools/rspack/api/generators/configuration",
+                            "path": "/technologies/rspack/api/generators/configuration",
                             "name": "configuration",
                             "children": [],
                             "isExternal": false,
@@ -3969,7 +4198,7 @@
                           },
                           {
                             "id": "init",
-                            "path": "/technologies/build-tools/rspack/api/generators/init",
+                            "path": "/technologies/rspack/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -3977,7 +4206,7 @@
                           },
                           {
                             "id": "preset",
-                            "path": "/technologies/build-tools/rspack/api/generators/preset",
+                            "path": "/technologies/rspack/api/generators/preset",
                             "name": "preset",
                             "children": [],
                             "isExternal": false,
@@ -3985,7 +4214,7 @@
                           },
                           {
                             "id": "application",
-                            "path": "/technologies/build-tools/rspack/api/generators/application",
+                            "path": "/technologies/rspack/api/generators/application",
                             "name": "application",
                             "children": [],
                             "isExternal": false,
@@ -3993,7 +4222,7 @@
                           },
                           {
                             "id": "convert-webpack",
-                            "path": "/technologies/build-tools/rspack/api/generators/convert-webpack",
+                            "path": "/technologies/rspack/api/generators/convert-webpack",
                             "name": "convert-webpack",
                             "children": [],
                             "isExternal": false,
@@ -4001,7 +4230,7 @@
                           },
                           {
                             "id": "convert-config-to-rspack-plugin",
-                            "path": "/technologies/build-tools/rspack/api/generators/convert-config-to-rspack-plugin",
+                            "path": "/technologies/rspack/api/generators/convert-config-to-rspack-plugin",
                             "name": "convert-config-to-rspack-plugin",
                             "children": [],
                             "isExternal": false,
@@ -4009,7 +4238,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/build-tools/rspack/api/generators/convert-to-inferred",
+                            "path": "/technologies/rspack/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -4021,7 +4250,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/build-tools/rspack/api/migrations",
+                        "path": "/technologies/rspack/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -4048,7 +4277,7 @@
                     "disableCollapsible": false
                   },
                   {
-                    "name": "Recipes",
+                    "name": "Guides",
                     "path": "/technologies/build-tools/rsbuild/recipes",
                     "id": "recipes",
                     "isExternal": false,
@@ -4060,7 +4289,33 @@
                     "path": "/technologies/build-tools/rsbuild/api",
                     "id": "api",
                     "isExternal": false,
-                    "children": [],
+                    "children": [
+                      {
+                        "id": "generators",
+                        "path": "/technologies/rsbuild/api/generators",
+                        "name": "generators",
+                        "children": [
+                          {
+                            "id": "init",
+                            "path": "/technologies/rsbuild/api/generators/init",
+                            "name": "init",
+                            "children": [],
+                            "isExternal": false,
+                            "disableCollapsible": false
+                          },
+                          {
+                            "id": "configuration",
+                            "path": "/technologies/rsbuild/api/generators/configuration",
+                            "name": "configuration",
+                            "children": [],
+                            "isExternal": false,
+                            "disableCollapsible": false
+                          }
+                        ],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      }
+                    ],
                     "disableCollapsible": false
                   }
                 ],
@@ -4090,7 +4345,7 @@
                     "disableCollapsible": false
                   },
                   {
-                    "name": "Recipes",
+                    "name": "Guides",
                     "path": "/technologies/test-tools/cypress/recipes",
                     "id": "recipes",
                     "isExternal": false,
@@ -4130,12 +4385,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/test-tools/cypress/api/executors",
+                        "path": "/technologies/cypress/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "cypress",
-                            "path": "/technologies/test-tools/cypress/api/executors/cypress",
+                            "path": "/technologies/cypress/api/executors/cypress",
                             "name": "cypress",
                             "children": [],
                             "isExternal": false,
@@ -4147,12 +4402,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/test-tools/cypress/api/generators",
+                        "path": "/technologies/cypress/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/test-tools/cypress/api/generators/init",
+                            "path": "/technologies/cypress/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -4160,7 +4415,7 @@
                           },
                           {
                             "id": "configuration",
-                            "path": "/technologies/test-tools/cypress/api/generators/configuration",
+                            "path": "/technologies/cypress/api/generators/configuration",
                             "name": "configuration",
                             "children": [],
                             "isExternal": false,
@@ -4168,7 +4423,7 @@
                           },
                           {
                             "id": "component-configuration",
-                            "path": "/technologies/test-tools/cypress/api/generators/component-configuration",
+                            "path": "/technologies/cypress/api/generators/component-configuration",
                             "name": "component-configuration",
                             "children": [],
                             "isExternal": false,
@@ -4176,7 +4431,7 @@
                           },
                           {
                             "id": "migrate-to-cypress-11",
-                            "path": "/technologies/test-tools/cypress/api/generators/migrate-to-cypress-11",
+                            "path": "/technologies/cypress/api/generators/migrate-to-cypress-11",
                             "name": "migrate-to-cypress-11",
                             "children": [],
                             "isExternal": false,
@@ -4184,7 +4439,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/test-tools/cypress/api/generators/convert-to-inferred",
+                            "path": "/technologies/cypress/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -4196,7 +4451,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/test-tools/cypress/api/migrations",
+                        "path": "/technologies/cypress/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -4223,7 +4478,7 @@
                     "disableCollapsible": false
                   },
                   {
-                    "name": "Recipes",
+                    "name": "Guides",
                     "path": "/technologies/test-tools/jest/recipes",
                     "id": "recipes",
                     "isExternal": false,
@@ -4238,12 +4493,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/test-tools/jest/api/executors",
+                        "path": "/technologies/jest/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "jest",
-                            "path": "/technologies/test-tools/jest/api/executors/jest",
+                            "path": "/technologies/jest/api/executors/jest",
                             "name": "jest",
                             "children": [],
                             "isExternal": false,
@@ -4255,12 +4510,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/test-tools/jest/api/generators",
+                        "path": "/technologies/jest/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/test-tools/jest/api/generators/init",
+                            "path": "/technologies/jest/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -4268,7 +4523,7 @@
                           },
                           {
                             "id": "configuration",
-                            "path": "/technologies/test-tools/jest/api/generators/configuration",
+                            "path": "/technologies/jest/api/generators/configuration",
                             "name": "configuration",
                             "children": [],
                             "isExternal": false,
@@ -4276,7 +4531,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/test-tools/jest/api/generators/convert-to-inferred",
+                            "path": "/technologies/jest/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -4288,7 +4543,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/test-tools/jest/api/migrations",
+                        "path": "/technologies/jest/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -4315,7 +4570,7 @@
                     "disableCollapsible": false
                   },
                   {
-                    "name": "Recipes",
+                    "name": "Guides",
                     "path": "/technologies/test-tools/playwright/recipes",
                     "id": "recipes",
                     "isExternal": false,
@@ -4330,12 +4585,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/test-tools/playwright/api/executors",
+                        "path": "/technologies/playwright/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "playwright",
-                            "path": "/technologies/test-tools/playwright/api/executors/playwright",
+                            "path": "/technologies/playwright/api/executors/playwright",
                             "name": "playwright",
                             "children": [],
                             "isExternal": false,
@@ -4347,12 +4602,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/test-tools/playwright/api/generators",
+                        "path": "/technologies/playwright/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "configuration",
-                            "path": "/technologies/test-tools/playwright/api/generators/configuration",
+                            "path": "/technologies/playwright/api/generators/configuration",
                             "name": "configuration",
                             "children": [],
                             "isExternal": false,
@@ -4360,7 +4615,7 @@
                           },
                           {
                             "id": "init",
-                            "path": "/technologies/test-tools/playwright/api/generators/init",
+                            "path": "/technologies/playwright/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -4368,7 +4623,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/test-tools/playwright/api/generators/convert-to-inferred",
+                            "path": "/technologies/playwright/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -4380,7 +4635,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/test-tools/playwright/api/migrations",
+                        "path": "/technologies/playwright/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -4407,7 +4662,7 @@
                     "disableCollapsible": false
                   },
                   {
-                    "name": "Recipes",
+                    "name": "Guides",
                     "path": "/technologies/test-tools/storybook/recipes",
                     "id": "recipes",
                     "isExternal": false,
@@ -4527,12 +4782,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/test-tools/storybook/api/executors",
+                        "path": "/technologies/storybook/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "storybook",
-                            "path": "/technologies/test-tools/storybook/api/executors/storybook",
+                            "path": "/technologies/storybook/api/executors/storybook",
                             "name": "storybook",
                             "children": [],
                             "isExternal": false,
@@ -4540,7 +4795,7 @@
                           },
                           {
                             "id": "build",
-                            "path": "/technologies/test-tools/storybook/api/executors/build",
+                            "path": "/technologies/storybook/api/executors/build",
                             "name": "build",
                             "children": [],
                             "isExternal": false,
@@ -4552,12 +4807,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/test-tools/storybook/api/generators",
+                        "path": "/technologies/storybook/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/test-tools/storybook/api/generators/init",
+                            "path": "/technologies/storybook/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -4565,7 +4820,7 @@
                           },
                           {
                             "id": "configuration",
-                            "path": "/technologies/test-tools/storybook/api/generators/configuration",
+                            "path": "/technologies/storybook/api/generators/configuration",
                             "name": "configuration",
                             "children": [],
                             "isExternal": false,
@@ -4573,7 +4828,7 @@
                           },
                           {
                             "id": "cypress-project",
-                            "path": "/technologies/test-tools/storybook/api/generators/cypress-project",
+                            "path": "/technologies/storybook/api/generators/cypress-project",
                             "name": "cypress-project",
                             "children": [],
                             "isExternal": false,
@@ -4581,7 +4836,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/test-tools/storybook/api/generators/convert-to-inferred",
+                            "path": "/technologies/storybook/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -4589,7 +4844,7 @@
                           },
                           {
                             "id": "migrate-7",
-                            "path": "/technologies/test-tools/storybook/api/generators/migrate-7",
+                            "path": "/technologies/storybook/api/generators/migrate-7",
                             "name": "migrate-7",
                             "children": [],
                             "isExternal": false,
@@ -4597,7 +4852,7 @@
                           },
                           {
                             "id": "migrate-8",
-                            "path": "/technologies/test-tools/storybook/api/generators/migrate-8",
+                            "path": "/technologies/storybook/api/generators/migrate-8",
                             "name": "migrate-8",
                             "children": [],
                             "isExternal": false,
@@ -4609,7 +4864,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/test-tools/storybook/api/migrations",
+                        "path": "/technologies/storybook/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -4636,7 +4891,7 @@
                     "disableCollapsible": false
                   },
                   {
-                    "name": "Recipes",
+                    "name": "Guides",
                     "path": "/technologies/test-tools/detox/recipes",
                     "id": "recipes",
                     "isExternal": false,
@@ -4651,12 +4906,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/test-tools/detox/api/executors",
+                        "path": "/technologies/detox/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "build",
-                            "path": "/technologies/test-tools/detox/api/executors/build",
+                            "path": "/technologies/detox/api/executors/build",
                             "name": "build",
                             "children": [],
                             "isExternal": false,
@@ -4664,7 +4919,7 @@
                           },
                           {
                             "id": "test",
-                            "path": "/technologies/test-tools/detox/api/executors/test",
+                            "path": "/technologies/detox/api/executors/test",
                             "name": "test",
                             "children": [],
                             "isExternal": false,
@@ -4676,12 +4931,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/test-tools/detox/api/generators",
+                        "path": "/technologies/detox/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/test-tools/detox/api/generators/init",
+                            "path": "/technologies/detox/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -4689,7 +4944,7 @@
                           },
                           {
                             "id": "application",
-                            "path": "/technologies/test-tools/detox/api/generators/application",
+                            "path": "/technologies/detox/api/generators/application",
                             "name": "application",
                             "children": [],
                             "isExternal": false,
@@ -4697,7 +4952,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/test-tools/detox/api/generators/convert-to-inferred",
+                            "path": "/technologies/detox/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -4709,7 +4964,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/test-tools/detox/api/migrations",
+                        "path": "/technologies/detox/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -4719,176 +4974,6 @@
                     "disableCollapsible": false
                   }
                 ],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Core Concepts",
-        "path": "/concepts",
-        "id": "concepts",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Mental Model",
-            "path": "/concepts/mental-model",
-            "id": "mental-model",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "How Caching Works",
-            "path": "/concepts/how-caching-works",
-            "id": "how-caching-works",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "What is a Task Pipeline",
-            "path": "/concepts/task-pipeline-configuration",
-            "id": "task-pipeline-configuration",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "What Are Nx Plugins",
-            "path": "/concepts/nx-plugins",
-            "id": "nx-plugins",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Inferred Tasks",
-            "path": "/concepts/inferred-tasks",
-            "id": "inferred-tasks",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Types of Configuration",
-            "path": "/concepts/types-of-configuration",
-            "id": "types-of-configuration",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Executors and Configurations",
-            "path": "/concepts/executors-and-configurations",
-            "id": "executors-and-configurations",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Common Tasks",
-            "path": "/concepts/common-tasks",
-            "id": "common-tasks",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Nx Daemon",
-            "path": "/concepts/nx-daemon",
-            "id": "nx-daemon",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Sync Generators",
-            "path": "/concepts/sync-generators",
-            "id": "sync-generators",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "TypeScript Project Linking",
-            "path": "/concepts/typescript-project-linking",
-            "id": "typescript-project-linking",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Buildable and Publishable Libraries",
-            "path": "/concepts/buildable-and-publishable-libraries",
-            "id": "buildable-and-publishable-libraries",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Organizational Decisions",
-            "path": "/concepts/decisions",
-            "id": "decisions",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/concepts/decisions/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Monorepos",
-                "path": "/concepts/decisions/why-monorepos",
-                "id": "why-monorepos",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Dependency Management",
-                "path": "/concepts/decisions/dependency-management",
-                "id": "dependency-management",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Code Ownership",
-                "path": "/concepts/decisions/code-ownership",
-                "id": "code-ownership",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Project Size",
-                "path": "/concepts/decisions/project-size",
-                "id": "project-size",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Project Dependency Rules",
-                "path": "/concepts/decisions/project-dependency-rules",
-                "id": "project-dependency-rules",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Folder Structure",
-                "path": "/concepts/decisions/folder-structure",
-                "id": "folder-structure",
-                "isExternal": false,
-                "children": [],
                 "disableCollapsible": false
               }
             ],
@@ -5198,230 +5283,297 @@
           },
           {
             "name": "API",
-            "path": "/reference/nx-workspace-api",
-            "id": "nx-workspace-api",
+            "path": "/reference/core-api",
+            "id": "core-api",
             "isExternal": false,
             "children": [
               {
                 "name": "nx",
-                "path": "/reference/nx-workspace-api/nx",
+                "path": "/reference/core-api/nx",
                 "id": "nx",
                 "isExternal": false,
                 "children": [
                   {
-                    "name": "create-nx-workspace",
-                    "path": "/reference/nx-workspace-api/nx/create-nx-workspace",
-                    "id": "create-nx-workspace",
+                    "id": "documents",
+                    "path": "/reference/core-api/nx/documents",
+                    "name": "documents",
+                    "children": [
+                      {
+                        "id": "create-nx-workspace",
+                        "path": "/reference/core-api/nx/documents/create-nx-workspace",
+                        "name": "create-nx-workspace",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "init",
+                        "path": "/reference/core-api/nx/documents/init",
+                        "name": "init",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "generate",
+                        "path": "/reference/core-api/nx/documents/generate",
+                        "name": "generate",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "run",
+                        "path": "/reference/core-api/nx/documents/run",
+                        "name": "run",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "daemon",
+                        "path": "/reference/core-api/nx/documents/daemon",
+                        "name": "daemon",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "graph",
+                        "path": "/reference/core-api/nx/documents/graph",
+                        "name": "graph",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "run-many",
+                        "path": "/reference/core-api/nx/documents/run-many",
+                        "name": "run-many",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "affected",
+                        "path": "/reference/core-api/nx/documents/affected",
+                        "name": "affected",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "format:check",
+                        "path": "/reference/core-api/nx/documents/format:check",
+                        "name": "format:check",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "format:write",
+                        "path": "/reference/core-api/nx/documents/format:write",
+                        "name": "format:write",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "migrate",
+                        "path": "/reference/core-api/nx/documents/migrate",
+                        "name": "migrate",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "report",
+                        "path": "/reference/core-api/nx/documents/report",
+                        "name": "report",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "list",
+                        "path": "/reference/core-api/nx/documents/list",
+                        "name": "list",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "connect-to-nx-cloud",
+                        "path": "/reference/core-api/nx/documents/connect-to-nx-cloud",
+                        "name": "connect-to-nx-cloud",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "reset",
+                        "path": "/reference/core-api/nx/documents/reset",
+                        "name": "reset",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "repair",
+                        "path": "/reference/core-api/nx/documents/repair",
+                        "name": "repair",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "sync",
+                        "path": "/reference/core-api/nx/documents/sync",
+                        "name": "sync",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "sync:check",
+                        "path": "/reference/core-api/nx/documents/sync:check",
+                        "name": "sync:check",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "import",
+                        "path": "/reference/core-api/nx/documents/import",
+                        "name": "import",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "exec",
+                        "path": "/reference/core-api/nx/documents/exec",
+                        "name": "exec",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "watch",
+                        "path": "/reference/core-api/nx/documents/watch",
+                        "name": "watch",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "show",
+                        "path": "/reference/core-api/nx/documents/show",
+                        "name": "show",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "view-logs",
+                        "path": "/reference/core-api/nx/documents/view-logs",
+                        "name": "view-logs",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "release",
+                        "path": "/reference/core-api/nx/documents/release",
+                        "name": "release",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "add",
+                        "path": "/reference/core-api/nx/documents/add",
+                        "name": "add",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "login",
+                        "path": "/reference/core-api/nx/documents/login",
+                        "name": "login",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "logout",
+                        "path": "/reference/core-api/nx/documents/logout",
+                        "name": "logout",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      }
+                    ],
                     "isExternal": false,
-                    "children": [],
                     "disableCollapsible": false
                   },
                   {
-                    "name": "init",
-                    "path": "/reference/nx-workspace-api/nx/init",
-                    "id": "init",
+                    "id": "executors",
+                    "path": "/reference/core-api/nx/executors",
+                    "name": "executors",
+                    "children": [
+                      {
+                        "id": "noop",
+                        "path": "/reference/core-api/nx/executors/noop",
+                        "name": "noop",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "run-commands",
+                        "path": "/reference/core-api/nx/executors/run-commands",
+                        "name": "run-commands",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "run-script",
+                        "path": "/reference/core-api/nx/executors/run-script",
+                        "name": "run-script",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      }
+                    ],
                     "isExternal": false,
-                    "children": [],
                     "disableCollapsible": false
                   },
                   {
-                    "name": "generate",
-                    "path": "/reference/nx-workspace-api/nx/generate",
-                    "id": "generate",
+                    "id": "generators",
+                    "path": "/reference/core-api/nx/generators",
+                    "name": "generators",
+                    "children": [
+                      {
+                        "id": "connect-to-nx-cloud",
+                        "path": "/reference/core-api/nx/generators/connect-to-nx-cloud",
+                        "name": "connect-to-nx-cloud",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      }
+                    ],
                     "isExternal": false,
-                    "children": [],
                     "disableCollapsible": false
                   },
                   {
-                    "name": "run",
-                    "path": "/reference/nx-workspace-api/nx/run",
-                    "id": "run",
-                    "isExternal": false,
+                    "id": "migrations",
+                    "path": "/reference/core-api/nx/migrations",
+                    "name": "migrations",
                     "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "daemon",
-                    "path": "/reference/nx-workspace-api/nx/daemon",
-                    "id": "daemon",
                     "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "graph",
-                    "path": "/reference/nx-workspace-api/nx/dep-graph",
-                    "id": "dep-graph",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "run-many",
-                    "path": "/reference/nx-workspace-api/nx/run-many",
-                    "id": "run-many",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "affected",
-                    "path": "/reference/nx-workspace-api/nx/affected",
-                    "id": "affected",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "format:check",
-                    "path": "/reference/nx-workspace-api/nx/format-check",
-                    "id": "format-check",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "format:write",
-                    "path": "/reference/nx-workspace-api/nx/format-write",
-                    "id": "format-write",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "migrate",
-                    "path": "/reference/nx-workspace-api/nx/migrate",
-                    "id": "migrate",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "report",
-                    "path": "/reference/nx-workspace-api/nx/report",
-                    "id": "report",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "list",
-                    "path": "/reference/nx-workspace-api/nx/list",
-                    "id": "list",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "connect-to-nx-cloud",
-                    "path": "/reference/nx-workspace-api/nx/connect-to-nx-cloud",
-                    "id": "connect-to-nx-cloud",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "reset",
-                    "path": "/reference/nx-workspace-api/nx/reset",
-                    "id": "reset",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "repair",
-                    "path": "/reference/nx-workspace-api/nx/repair",
-                    "id": "repair",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "sync",
-                    "path": "/reference/nx-workspace-api/nx/sync",
-                    "id": "sync",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "sync:check",
-                    "path": "/reference/nx-workspace-api/nx/sync-check",
-                    "id": "sync-check",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "import",
-                    "path": "/reference/nx-workspace-api/nx/import",
-                    "id": "import",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "exec",
-                    "path": "/reference/nx-workspace-api/nx/exec",
-                    "id": "exec",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "watch",
-                    "path": "/reference/nx-workspace-api/nx/watch",
-                    "id": "watch",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "show",
-                    "path": "/reference/nx-workspace-api/nx/show",
-                    "id": "show",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "view-logs",
-                    "path": "/reference/nx-workspace-api/nx/view-logs",
-                    "id": "view-logs",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "release",
-                    "path": "/reference/nx-workspace-api/nx/release",
-                    "id": "release",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "add",
-                    "path": "/reference/nx-workspace-api/nx/add",
-                    "id": "add",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "login",
-                    "path": "/reference/nx-workspace-api/nx/login",
-                    "id": "login",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "logout",
-                    "path": "/reference/nx-workspace-api/nx/logout",
-                    "id": "logout",
-                    "isExternal": false,
-                    "children": [],
                     "disableCollapsible": false
                   }
                 ],
@@ -5429,24 +5581,122 @@
               },
               {
                 "name": "workspace",
-                "path": "/reference/nx-workspace-api/workspace",
+                "path": "/reference/core-api/workspace",
                 "id": "workspace",
                 "isExternal": false,
                 "children": [
                   {
-                    "name": "Overview",
-                    "path": "/nx-api/workspace",
-                    "id": "overview",
+                    "id": "executors",
+                    "path": "/reference/core-api/workspace/executors",
+                    "name": "executors",
+                    "children": [
+                      {
+                        "id": "counter",
+                        "path": "/reference/core-api/workspace/executors/counter",
+                        "name": "counter",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      }
+                    ],
                     "isExternal": false,
-                    "children": [],
                     "disableCollapsible": false
                   },
                   {
-                    "name": "Nx, NodeJS and Typescript Versions",
-                    "path": "/reference/nx-workspace-api/workspace/nx-nodejs-typescript-version-matrix",
-                    "id": "nx-nodejs-typescript-version-matrix",
+                    "id": "generators",
+                    "path": "/reference/core-api/workspace/generators",
+                    "name": "generators",
+                    "children": [
+                      {
+                        "id": "preset",
+                        "path": "/reference/core-api/workspace/generators/preset",
+                        "name": "preset",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "move",
+                        "path": "/reference/core-api/workspace/generators/move",
+                        "name": "move",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "remove",
+                        "path": "/reference/core-api/workspace/generators/remove",
+                        "name": "remove",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "convert-to-monorepo",
+                        "path": "/reference/core-api/workspace/generators/convert-to-monorepo",
+                        "name": "convert-to-monorepo",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "new",
+                        "path": "/reference/core-api/workspace/generators/new",
+                        "name": "new",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "run-commands",
+                        "path": "/reference/core-api/workspace/generators/run-commands",
+                        "name": "run-commands",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "fix-configuration",
+                        "path": "/reference/core-api/workspace/generators/fix-configuration",
+                        "name": "fix-configuration",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "npm-package",
+                        "path": "/reference/core-api/workspace/generators/npm-package",
+                        "name": "npm-package",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "ci-workflow",
+                        "path": "/reference/core-api/workspace/generators/ci-workflow",
+                        "name": "ci-workflow",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "infer-targets",
+                        "path": "/reference/core-api/workspace/generators/infer-targets",
+                        "name": "infer-targets",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      }
+                    ],
                     "isExternal": false,
+                    "disableCollapsible": false
+                  },
+                  {
+                    "id": "migrations",
+                    "path": "/reference/core-api/workspace/migrations",
+                    "name": "migrations",
                     "children": [],
+                    "isExternal": false,
                     "disableCollapsible": false
                   }
                 ],
@@ -5454,16 +5704,41 @@
               },
               {
                 "name": "owners",
-                "path": "/reference/nx-workspace-api/owners",
+                "path": "/reference/core-api/owners",
                 "id": "owners",
                 "isExternal": false,
                 "children": [
                   {
                     "name": "Overview",
-                    "path": "/nx-api/owners",
+                    "path": "/reference/core-api/owners/overview",
                     "id": "overview",
                     "isExternal": false,
                     "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "id": "generators",
+                    "path": "/reference/core-api/owners/generators",
+                    "name": "generators",
+                    "children": [
+                      {
+                        "id": "init",
+                        "path": "/reference/core-api/owners/generators/init",
+                        "name": "init",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "sync-codeowners-file",
+                        "path": "/reference/core-api/owners/generators/sync-codeowners-file",
+                        "name": "sync-codeowners-file",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      }
+                    ],
+                    "isExternal": false,
                     "disableCollapsible": false
                   }
                 ],
@@ -5471,13 +5746,13 @@
               },
               {
                 "name": "conformance",
-                "path": "/reference/nx-workspace-api/conformance",
+                "path": "/reference/core-api/conformance",
                 "id": "conformance",
                 "isExternal": false,
                 "children": [
                   {
                     "name": "Overview",
-                    "path": "/nx-api/conformance",
+                    "path": "/reference/core-api/conformance/overview",
                     "id": "overview",
                     "isExternal": false,
                     "children": [],
@@ -5485,10 +5760,44 @@
                   },
                   {
                     "name": "Create a Conformance Rule",
-                    "path": "/nx-api/conformance",
+                    "path": "/reference/core-api/conformance/create-conformance-rule",
                     "id": "create-conformance-rule",
                     "isExternal": false,
                     "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "id": "executors",
+                    "path": "/reference/core-api/conformance/executors",
+                    "name": "executors",
+                    "children": [
+                      {
+                        "id": "bundle-rules",
+                        "path": "/reference/core-api/conformance/executors/bundle-rules",
+                        "name": "bundle-rules",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      }
+                    ],
+                    "isExternal": false,
+                    "disableCollapsible": false
+                  },
+                  {
+                    "id": "generators",
+                    "path": "/reference/core-api/conformance/generators",
+                    "name": "generators",
+                    "children": [
+                      {
+                        "id": "create-rule",
+                        "path": "/reference/core-api/conformance/generators/create-rule",
+                        "name": "create-rule",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      }
+                    ],
+                    "isExternal": false,
                     "disableCollapsible": false
                   }
                 ],
@@ -5496,13 +5805,13 @@
               },
               {
                 "name": "azure-cache",
-                "path": "/reference/nx-workspace-api/azure-cache",
+                "path": "/reference/core-api/azure-cache",
                 "id": "azure-cache",
                 "isExternal": false,
                 "children": [
                   {
                     "name": "Overview",
-                    "path": "/nx-api/azure-cache",
+                    "path": "/reference/core-api/azure-cache/overview",
                     "id": "overview",
                     "isExternal": false,
                     "children": [],
@@ -5513,13 +5822,13 @@
               },
               {
                 "name": "gcs-cache",
-                "path": "/reference/nx-workspace-api/gcs-cache",
+                "path": "/reference/core-api/gcs-cache",
                 "id": "gcs-cache",
                 "isExternal": false,
                 "children": [
                   {
                     "name": "Overview",
-                    "path": "/nx-api/gcs-cache",
+                    "path": "/reference/core-api/gcs-cache/overview",
                     "id": "overview",
                     "isExternal": false,
                     "children": [],
@@ -5530,13 +5839,13 @@
               },
               {
                 "name": "s3-cache",
-                "path": "/reference/nx-workspace-api/s3-cache",
+                "path": "/reference/core-api/s3-cache",
                 "id": "s3-cache",
                 "isExternal": false,
                 "children": [
                   {
                     "name": "Overview",
-                    "path": "/nx-api/s3-cache",
+                    "path": "/reference/core-api/s3-cache/overview",
                     "id": "overview",
                     "isExternal": false,
                     "children": [],
@@ -5547,16 +5856,33 @@
               },
               {
                 "name": "shared-fs-cache",
-                "path": "/reference/nx-workspace-api/shared-fs-cache",
+                "path": "/reference/core-api/shared-fs-cache",
                 "id": "shared-fs-cache",
                 "isExternal": false,
                 "children": [
                   {
                     "name": "Overview",
-                    "path": "/nx-api/shared-fs-cache",
+                    "path": "/reference/core-api/shared-fs-cache/overview",
                     "id": "overview",
                     "isExternal": false,
                     "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "id": "generators",
+                    "path": "/reference/core-api/shared-fs-cache/generators",
+                    "name": "generators",
+                    "children": [
+                      {
+                        "id": "init",
+                        "path": "/reference/core-api/shared-fs-cache/generators/init",
+                        "name": "init",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      }
+                    ],
+                    "isExternal": false,
                     "disableCollapsible": false
                   }
                 ],
@@ -5891,7 +6217,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Recipes",
+        "name": "Guides",
         "path": "/extending-nx/recipes",
         "id": "recipes",
         "isExternal": false,
@@ -6248,7 +6574,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Recipes",
+        "name": "Guides",
         "path": "/ci/recipes",
         "id": "recipes",
         "isExternal": false,

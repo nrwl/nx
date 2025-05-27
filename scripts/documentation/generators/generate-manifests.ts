@@ -5,6 +5,7 @@ import {
   convertToDocumentMetadata,
   createDocumentMetadata,
   DocumentMetadata,
+  pkgToGeneratedApiDocs,
 } from '@nx/nx-dev/models-document';
 import { MenuItem } from '@nx/nx-dev/models-menu';
 import {
@@ -108,10 +109,7 @@ export function generateManifests(workspace: string): Promise<void[]> {
    */
   menus.forEach((menu) => {
     if (menu.id !== 'nx') return;
-    const tech = menu.menu.find((x) => x.id === 'technologies');
-    if (!tech)
-      throw new Error(`Technologies menu not found. Is it in map.json?`);
-    insertApiDocs(tech, packagesManifest);
+    insertApiDocs(menu.menu, packagesManifest);
   });
 
   /**
@@ -428,126 +426,109 @@ function getDocumentManifests(sections: DocumentSection[]): Manifest[] {
   });
 }
 
-// We present a different grouping or naming for the API docs compared to their package names.
-export const pkgToApiPath = {
-  // ts/js
-  js: 'typescript/api',
-
-  // angular
-  angular: 'angular/api',
-
-  // react
-  react: 'react/api',
-  'react-native': 'react/react-native/api',
-  expo: 'react/expo/api',
-  next: 'react/next/api',
-  remix: 'react/remix/api',
-
-  // vue
-  vue: 'vue/api',
-  nuxt: 'vue/nuxt/api',
-
-  // node
-  node: 'node/api',
-  express: 'node/express/api',
-  nest: 'node/nest/api',
-
-  // java
-  gradle: 'java/api',
-
-  // build tools
-  webpack: 'build-tools/webpack/api',
-  vite: 'build-tools/vite/api',
-  rollup: 'build-tools/rollup/api',
-  esbuild: 'build-tools/esbuild/api',
-  rspack: 'build-tools/rspack/api',
-  rsbuild: 'build-tools/rsbuild/api',
-  // test tools
-  jest: 'test-tools/jest/api',
-  storybook: 'test-tools/storybook/api',
-  playwright: 'test-tools/playwright/api',
-  cypress: 'test-tools/cypress/api',
-  detox: 'test-tools/detox/api',
-
-  // misc
-  'module-federation': 'module-federation/api',
-  eslint: 'eslint/api',
-  'eslint-plugin': 'eslint/eslint-plugin/api',
-};
-
-function findMenuItemByPath(menu: MenuItem, path: string): MenuItem | null {
+function findMenuItemByPath(menus: MenuItem[], path: string): MenuItem | null {
   const parts = path.split('/').filter(Boolean);
-  let curr: MenuItem | null = menu;
+  const id = parts.shift();
 
-  for (const part of parts) {
-    if (!curr?.children) break;
-    curr = curr.children.find((child) => child.id === part);
+  let curr: MenuItem | null = null;
+
+  for (const menu of menus) {
+    if (menu.id !== id) continue;
+    curr = menu;
+    for (const part of parts) {
+      if (!curr?.children) break;
+      curr = curr.children.find((child) => child.id === part);
+    }
+    break;
   }
 
-  return curr === menu ? null : curr;
+  return curr;
 }
 
-function insertApiDocs(menu: MenuItem, packages: PackageManifest): void {
+function insertApiDocs(menus: MenuItem[], packages: PackageManifest): void {
   Object.values(packages.records).forEach((p) => {
-    const apiPath = pkgToApiPath[p.name];
-    if (!apiPath) {
+    const apiDocsData = pkgToGeneratedApiDocs[p.name];
+    if (!apiDocsData) {
       console.warn(
         `No API path found for package ${p.name}. Skipping API docs insertion.`
       );
       return;
     }
 
-    const apiItem = findMenuItemByPath(menu, apiPath);
+    const apiItem = findMenuItemByPath(
+      menus,
+      apiDocsData.menuPath ?? apiDocsData.pagePath
+    );
+    if (!apiItem)
+      throw new Error(
+        `Cannot find where to put ${apiDocsData.menuPath}. Does it exist in map.json?`
+      );
 
-    if (!!Object.values(p.documents).length) {
-      if (!!Object.values(p.executors).length) {
-        apiItem.children.push({
-          id: 'executors',
-          path: `/technologies/${apiPath}/executors`,
-          name: 'executors',
-          children: Object.values(p.executors).map((x) => ({
-            id: x.name,
-            path: `/technologies/${apiPath}/executors/${x.name}`,
-            name: x.name,
-            children: [],
-            isExternal: false,
-            disableCollapsible: false,
-          })),
-          isExternal: false,
-          disableCollapsible: false,
-        });
-      }
-
-      if (!!Object.values(p.generators).length) {
-        apiItem.children.push({
-          id: 'generators',
-          path: `/technologies/${apiPath}/generators`,
-          name: 'generators',
-          children: Object.values(p.generators).map((x) => ({
-            id: x.name,
-            path: `/technologies/${apiPath}/generators/${x.name}`,
-            name: x.name,
-            children: [],
-            isExternal: false,
-            disableCollapsible: false,
-          })),
-          isExternal: false,
-          disableCollapsible: false,
-        });
-      }
-
-      if (!!Object.values(p.migrations).length) {
-        apiItem.children.push({
-          id: 'migrations',
-          path: `/technologies/${apiPath}/migrations`,
-          name: 'migrations',
+    if (apiDocsData.includeDocuments && !!Object.values(p.documents).length) {
+      apiItem.children.push({
+        id: 'documents',
+        path: `${apiDocsData.pagePath}/documents`,
+        name: 'documents',
+        children: Object.values(p.documents).map((x) => ({
+          id: x.name,
+          path: `${apiDocsData.pagePath}/documents/${x.name}`,
+          name: x.name,
           children: [],
           isExternal: false,
           disableCollapsible: false,
-        });
-      }
-      return apiItem;
+        })),
+        isExternal: false,
+        disableCollapsible: false,
+      });
     }
+
+    if (!!Object.values(p.executors).length) {
+      apiItem.children.push({
+        id: 'executors',
+        path: `${apiDocsData.pagePath}/executors`,
+        name: 'executors',
+        children: Object.values(p.executors).map((x) => ({
+          id: x.name,
+          path: `${apiDocsData.pagePath}/executors/${x.name}`,
+          name: x.name,
+          children: [],
+          isExternal: false,
+          disableCollapsible: false,
+        })),
+        isExternal: false,
+        disableCollapsible: false,
+      });
+    }
+
+    if (!!Object.values(p.generators).length) {
+      apiItem.children.push({
+        id: 'generators',
+        path: `${apiDocsData.pagePath}/generators`,
+        name: 'generators',
+        children: Object.values(p.generators).map((x) => ({
+          id: x.name,
+          path: `${apiDocsData.pagePath}/generators/${x.name}`,
+          name: x.name,
+          children: [],
+          isExternal: false,
+          disableCollapsible: false,
+        })),
+        isExternal: false,
+        disableCollapsible: false,
+      });
+    }
+
+    if (!!Object.values(p.migrations).length) {
+      apiItem.children.push({
+        id: 'migrations',
+        path: `${apiDocsData.pagePath}/migrations`,
+        name: 'migrations',
+        children: [],
+        isExternal: false,
+        disableCollapsible: false,
+      });
+    }
+    return apiItem;
   });
 }
 

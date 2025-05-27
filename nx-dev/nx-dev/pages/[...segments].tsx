@@ -1,7 +1,11 @@
 import { getBasicNxSection } from '@nx/nx-dev/data-access-menu';
 import { DocViewer } from '@nx/nx-dev/feature-doc-viewer';
 import { PackageSchemaSubList } from '@nx/nx-dev/feature-package-schema-viewer/src/lib/package-schema-sub-list';
-import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev/models-document';
+import {
+  pkgToGeneratedApiDocs,
+  ProcessedDocument,
+  RelatedDocument,
+} from '@nx/nx-dev/models-document';
 import { MenuItem } from '@nx/nx-dev/models-menu';
 import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
 import { GetStaticPaths, GetStaticProps } from 'next';
@@ -21,6 +25,7 @@ import {
   type ProcessedPackageMetadata,
   type SchemaMetadata,
 } from '@nx/nx-dev/models-package';
+import { DocumentsApi } from '@nx/nx-dev/data-access-documents/node-only';
 
 type NxDocumentationProps =
   | {
@@ -51,6 +56,14 @@ type NxDocumentationProps =
       menu: MenuItem[];
       pkg: ProcessedPackageMetadata;
       schema?: SchemaMetadata;
+    }
+  | {
+      pageType: 'legacy-documents';
+      document: ProcessedDocument;
+      menu: MenuItem[];
+      pkg: ProcessedPackageMetadata;
+      relatedDocuments: RelatedDocument[];
+      widgetData: { githubStarsCount: number };
     };
 
 export default function NxDocumentation(props: NxDocumentationProps) {
@@ -98,6 +111,12 @@ export default function NxDocumentation(props: NxDocumentationProps) {
             <PackageSchemaSubList pkg={props.pkg} type="generator" />
           ) : props.pageType === 'executors-index' ? (
             <PackageSchemaSubList pkg={props.pkg} type="executor" />
+          ) : props.pageType === 'legacy-documents' ? (
+            <DocViewer
+              document={props.document}
+              relatedDocuments={props.relatedDocuments}
+              widgetData={props.widgetData}
+            />
           ) : (
             <PackageSchemaViewer pkg={props.pkg} schema={props.schema} />
           )}
@@ -119,14 +138,33 @@ export const getStaticPaths: GetStaticPaths = () => {
   };
 };
 
+// reverse key-value pair so we can map URL segments back to package names
+const apiPagePathToPkg = Object.entries(pkgToGeneratedApiDocs).reduce(
+  (acc, [k, v]) => {
+    acc[v.pagePath] = k;
+    return acc;
+  },
+  {} as Record<string, string>
+);
+
+function findPackage(path: string): string | null {
+  for (const [k, v] of Object.entries(apiPagePathToPkg)) {
+    if (`/${path}`.startsWith(k)) return v;
+  }
+  return null;
+}
+
 export const getStaticProps: GetStaticProps = async ({
   params,
 }: {
   params: { segments: string[] };
 }): Promise<any> => {
   try {
-    if (params.segments[0] === 'technologies' && params.segments[2] === 'api') {
-      const [, packageName, , type, ...segments] = params.segments;
+    const menu = menusApi.getMenu('nx', '');
+    const path = params.segments.join('/');
+    const packageName = findPackage(path);
+    if (packageName) {
+      const [, , , type, ...segments] = params.segments;
       if (!type) {
         // API index
         // Example: /technologies/typescript/api
@@ -135,7 +173,7 @@ export const getStaticProps: GetStaticProps = async ({
           props: {
             pageType: 'api-index',
             pkg,
-            menu: menusApi.getMenu('nx', ''),
+            menu,
             migrations: Object.keys(pkg.migrations).map((migration) => {
               return nxPackagesApi.getSchemaMetadata(
                 nxPackagesApi.getPackageFileMetadatas(pkg.name, 'migrations')[
@@ -155,7 +193,7 @@ export const getStaticProps: GetStaticProps = async ({
           // e.g. generators vs generators-list
           pageType: isList ? `${type}-index` : type,
           pkg: nxPackagesApi.getPackage([packageName]),
-          menu: menusApi.getMenu('nx', ''),
+          menu,
         };
         if (!isList) {
           props.schema = nxPackagesApi.getSchemaMetadata(
@@ -165,6 +203,30 @@ export const getStaticProps: GetStaticProps = async ({
           );
         }
         return { props };
+      } else if (type === 'documents') {
+        const _segments = ['nx-api', packageName, 'documents', ...segments];
+        const documents = new DocumentsApi({
+          id: [packageName, 'documents'].join('-'),
+          manifest: nxPackagesApi.getPackageDocuments(packageName),
+          prefix: '',
+          publicDocsRoot: 'public/documentation',
+          tagsApi,
+        });
+        const document = documents.getDocument(_segments);
+        return {
+          props: {
+            pageType: 'legacy-documents',
+            pkg: nxPackagesApi.getPackage([packageName]),
+            document,
+            widgetData: {
+              githubStarsCount: await fetchGithubStarCount(),
+            },
+            relatedDocuments: tagsApi
+              .getAssociatedItemsFromTags(document.tags)
+              .filter((item) => item.path !== '/' + _segments.join('/')), // Remove currently displayed item
+            menu,
+          },
+        };
       } else if (type === 'migrations') {
         // API migrations
         // Example: /technologies/typescript/api/migrations
@@ -186,25 +248,21 @@ export const getStaticProps: GetStaticProps = async ({
           },
         };
       }
-    } else {
-      // Other documentation pages (e.g. markdown files in the docs folder)
-      // Example: /features/run-tasks
-      const document = nxDocumentationApi.getDocument(params.segments);
-      return {
-        props: {
-          pageType: 'document',
-          document,
-          widgetData: {
-            githubStarsCount: await fetchGithubStarCount(),
-          },
-          relatedDocuments: tagsApi
-            .getAssociatedItemsFromTags(document.tags)
-            .filter((item) => item.path !== '/' + params.segments.join('/')), // Remove currently displayed item
-          menu: menusApi.getMenu('nx', ''),
-        },
-      };
     }
-  } catch {
+    // Fallback to other documentation pages (e.g. markdown files in the docs folder)
+    // Example: /features/run-tasks
+    const document = nxDocumentationApi.getDocument(params.segments);
+    return {
+      props: {
+        pageType: 'document',
+        document,
+        widgetData: {
+          githubStarsCount: await fetchGithubStarCount(),
+        },
+        menu,
+      },
+    };
+  } catch (e) {
     // nothing
   }
   return {
