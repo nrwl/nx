@@ -1,20 +1,37 @@
 import type { Tree } from '@nx/devkit';
 import { joinPathFragments, normalizePath } from '@nx/devkit';
 import { basename, dirname } from 'path';
-import type { NormalizedSchema } from '../schema';
+
+export type ModuleOptions = {
+  directory: string;
+  module?: string;
+  moduleExt?: string;
+  routingModuleExt?: string;
+};
 
 // Adapted from https://github.com/angular/angular-cli/blob/732aab5fa7e63618c89dfbbb6f78753f706d7014/packages/schematics/angular/utility/find-module.ts#L29
 // to match the logic from the Angular CLI component schematic.
-const moduleExt = '.module.ts';
-const routingModuleExt = '-routing.module.ts';
+const MODULE_EXT = '.module.ts';
+const ROUTING_MODULE_EXT = '-routing.module.ts';
 
 export function findModuleFromOptions(
   tree: Tree,
-  options: NormalizedSchema,
+  options: ModuleOptions,
   projectRoot: string
 ): string {
+  const moduleExt = options.moduleExt || MODULE_EXT;
+  const routingModuleExt = options.routingModuleExt || ROUTING_MODULE_EXT;
+
   if (!options.module) {
-    return normalizePath(findModule(tree, options.directory, projectRoot));
+    return normalizePath(
+      findModule(
+        tree,
+        options.directory,
+        projectRoot,
+        moduleExt,
+        routingModuleExt
+      )
+    );
   } else {
     const modulePath = joinPathFragments(options.directory, options.module);
     const componentPath = options.directory;
@@ -42,7 +59,7 @@ export function findModuleFromOptions(
       ].map((x) => joinPathFragments(c, x));
 
       for (const sc of candidateFiles) {
-        if (tree.isFile(sc)) {
+        if (tree.isFile(sc) && tree.read(sc, 'utf-8').includes('@NgModule')) {
           return normalizePath(sc);
         }
       }
@@ -60,7 +77,9 @@ export function findModuleFromOptions(
 function findModule(
   tree: Tree,
   generateDir: string,
-  projectRoot: string
+  projectRoot: string,
+  moduleExt = MODULE_EXT,
+  routingModuleExt = ROUTING_MODULE_EXT
 ): string {
   let dir = generateDir;
   const projectRootParent = dirname(projectRoot);

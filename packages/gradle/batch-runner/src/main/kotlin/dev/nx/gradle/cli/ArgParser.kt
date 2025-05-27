@@ -29,11 +29,16 @@ fun parseArgs(args: Array<String>): NxBatchOptions {
         gson.fromJson(tasksJson, taskType)
       } else emptyMap()
 
+  val excludeTasks =
+      argMap["--excludeTasks"]?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }
+          ?: emptyList()
+
   return NxBatchOptions(
       workspaceRoot = argMap["--workspaceRoot"] ?: "",
       tasks = tasksMap,
       args = argMap["--args"] ?: "",
-      quiet = argMap["--quiet"]?.toBoolean() ?: false)
+      quiet = argMap["--quiet"]?.toBoolean() ?: false,
+      excludeTasks = excludeTasks)
 }
 
 fun configureLogger(quiet: Boolean) {

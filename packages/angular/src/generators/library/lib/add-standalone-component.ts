@@ -21,6 +21,7 @@ export async function addStandaloneComponent(
     ),
     standalone: true,
     export: true,
+    type: componentOptions.type,
     skipFormat: true,
   });
 

@@ -139,7 +139,7 @@ describe('app migrator', () => {
         `The "build" target is using a builder "@not/supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:application", "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:browser-esbuild", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:prerender", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:ssr-dev-server", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
+        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular/build:application", "@angular-devkit/build-angular:application", "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:browser-esbuild", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular/build:extract-i18n", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:prerender", "@angular/build:dev-server", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:ssr-dev-server", "@angular/build:karma", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
 
@@ -162,7 +162,7 @@ describe('app migrator', () => {
         `The "test" target is using a builder "@other/not-supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:application", "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:browser-esbuild", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:prerender", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:ssr-dev-server", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
+        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular/build:application", "@angular-devkit/build-angular:application", "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:browser-esbuild", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular/build:extract-i18n", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:prerender", "@angular/build:dev-server", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:ssr-dev-server", "@angular/build:karma", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
 
@@ -181,7 +181,7 @@ describe('app migrator', () => {
         `The "my-build" target is using a builder "@not/supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:application", "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:browser-esbuild", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:prerender", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:ssr-dev-server", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
+        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular/build:application", "@angular-devkit/build-angular:application", "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:browser-esbuild", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular/build:extract-i18n", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:prerender", "@angular/build:dev-server", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:ssr-dev-server", "@angular/build:karma", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
 
@@ -710,6 +710,7 @@ describe('app migrator', () => {
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.build).toStrictEqual({
         executor: '@angular-devkit/build-angular:browser',
+        outputs: ['{options.outputPath}'],
         options: {
           outputPath: 'dist/apps/app1',
           index: 'apps/app1/src/index.html',
@@ -785,6 +786,7 @@ describe('app migrator', () => {
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.build).toStrictEqual({
         executor: '@angular-devkit/build-angular:application',
+        outputs: ['{options.outputPath}'],
         options: {
           outputPath: 'dist/apps/app1',
           index: 'apps/app1/src/index.html',
@@ -853,6 +855,7 @@ describe('app migrator', () => {
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.build).toStrictEqual({
         executor: '@angular-devkit/build-angular:browser',
+        outputs: ['{options.outputPath}'],
         options: {
           outputPath: 'dist/apps/app1',
           index: 'apps/app1/src/index.html',
@@ -910,6 +913,7 @@ describe('app migrator', () => {
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.myCustomBuildTarget).toStrictEqual({
         executor: '@angular-devkit/build-angular:browser',
+        outputs: ['{options.outputPath}'],
         options: {
           outputPath: 'dist/apps/app1',
           index: 'apps/app1/src/index.html',
@@ -954,6 +958,7 @@ describe('app migrator', () => {
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.build).toStrictEqual({
         executor: '@angular-devkit/build-angular:browser',
+        outputs: ['{options.outputPath}'],
         options: { outputPath: 'dist/apps/app1/browser' },
       });
     });

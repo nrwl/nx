@@ -444,6 +444,66 @@
       }
     },
     "migrations": {
+      "/nx-api/angular/migrations/update-angular-cli-version-20-0-0-rc-3": {
+        "description": "Update the @angular/cli package version to 20.0.0-rc.3.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-0-0-rc-3.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-20-0-0-rc-3",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-angular-cli-version-20-0-0-rc-3",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/migrate-provide-server-rendering-import": {
+        "description": "Migrate imports of `provideServerRendering` from `@angular/platform-server` to `@angular/ssr`.",
+        "file": "generated/packages/angular/migrations/migrate-provide-server-rendering-import.json",
+        "hidden": false,
+        "name": "migrate-provide-server-rendering-import",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/migrate-provide-server-rendering-import",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/replace-provide-server-routing": {
+        "description": "Replace `provideServerRouting` with `provideServerRendering` using `withRoutes`.",
+        "file": "generated/packages/angular/migrations/replace-provide-server-routing.json",
+        "hidden": false,
+        "name": "replace-provide-server-routing",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/replace-provide-server-routing",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/set-generator-defaults-for-previous-style-guide": {
+        "description": "Update the generator defaults to maintain the previous style guide behavior.",
+        "file": "generated/packages/angular/migrations/set-generator-defaults-for-previous-style-guide.json",
+        "hidden": false,
+        "name": "set-generator-defaults-for-previous-style-guide",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/set-generator-defaults-for-previous-style-guide",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/update-module-resolution": {
+        "description": "Update 'moduleResolution' to 'bundler' in TypeScript configurations. You can read more about this here: https://www.typescriptlang.org/tsconfig/#moduleResolution.",
+        "file": "generated/packages/angular/migrations/update-module-resolution.json",
+        "hidden": false,
+        "name": "update-module-resolution",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-module-resolution",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/21.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.2.0-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-package-updates",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/21.2.0-package-updates",
+        "type": "migration"
+      },
       "/nx-api/angular/migrations/21.1.0-package-updates": {
         "description": "",
         "file": "generated/packages/angular/migrations/21.1.0-package-updates.json",
@@ -1234,7 +1294,7 @@
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "create-nx-workspace",
     "packageName": "create-nx-workspace",
-    "description": "Smart Monorepos · Fast CI",
+    "description": "Smart Repos · Fast Builds",
     "documents": {},
     "root": "/packages/create-nx-workspace",
     "source": "/packages/create-nx-workspace/src",
@@ -1687,6 +1747,26 @@
       }
     },
     "migrations": {
+      "/nx-api/eslint/migrations/21.2.0-typescript-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/eslint/migrations/21.2.0-typescript-eslint-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-typescript-eslint-package-updates",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/eslint",
+        "path": "/nx-api/eslint/migrations/21.2.0-typescript-eslint-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/eslint/migrations/21.2.0-@typescript-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/eslint/migrations/21.2.0-@typescript-eslint-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-@typescript-eslint-package-updates",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/eslint",
+        "path": "/nx-api/eslint/migrations/21.2.0-@typescript-eslint-package-updates",
+        "type": "migration"
+      },
       "/nx-api/eslint/migrations/20.7.0-package-updates": {
         "description": "",
         "file": "generated/packages/eslint/migrations/20.7.0-package-updates.json",
@@ -2145,6 +2225,16 @@
       }
     },
     "migrations": {
+      "/nx-api/gradle/migrations/change-plugin-version-0-1-0": {
+        "description": "Change dev.nx.gradle.project-graph to version 0.1.0 in build file",
+        "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-0.json",
+        "hidden": false,
+        "name": "change-plugin-version-0-1-0",
+        "version": "21.1.2-beta.1",
+        "originalFilePath": "/packages/gradle",
+        "path": "/nx-api/gradle/migrations/change-plugin-version-0-1-0",
+        "type": "migration"
+      },
       "/nx-api/gradle/migrations/change-ciTargetName-to-ciTestTargetName": {
         "description": "Change @nx/gradle option from ciTargetName to ciTestTargetName",
         "file": "generated/packages/gradle/migrations/change-ciTargetName-to-ciTestTargetName.json",
@@ -2454,6 +2544,16 @@
       }
     },
     "migrations": {
+      "/nx-api/js/migrations/21.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/js/migrations/21.2.0-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-package-updates",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/js",
+        "path": "/nx-api/js/migrations/21.2.0-package-updates",
+        "type": "migration"
+      },
       "/nx-api/js/migrations/20.7.1-beta.0-package-updates": {
         "description": "",
         "file": "generated/packages/js/migrations/20.7.1-beta.0-package-updates.json",
@@ -5734,6 +5834,16 @@
       }
     },
     "migrations": {
+      "/nx-api/workspace/migrations/21.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/workspace/migrations/21.2.0-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-package-updates",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/workspace",
+        "path": "/nx-api/workspace/migrations/21.2.0-package-updates",
+        "type": "migration"
+      },
       "/nx-api/workspace/migrations/20.4.0-package-updates": {
         "description": "",
         "file": "generated/packages/workspace/migrations/20.4.0-package-updates.json",

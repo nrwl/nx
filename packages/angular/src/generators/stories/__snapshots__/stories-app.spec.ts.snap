@@ -2,16 +2,16 @@
 
 exports[`angularStories generator: applications should generate stories file for inline scam component 1`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
-import { MyScamComponent } from './my-scam.component';
+import { MyScam } from './my-scam';
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
-const meta: Meta<MyScamComponent> = {
-  component: MyScamComponent,
-  title: 'MyScamComponent',
+const meta: Meta<MyScam> = {
+  component: MyScam,
+  title: 'MyScam',
 };
 export default meta;
-type Story = StoryObj<MyScamComponent>;
+type Story = StoryObj<MyScam>;
 
 export const Primary: Story = {
   args: {
@@ -31,16 +31,16 @@ export const Heading: Story = {
 
 exports[`angularStories generator: applications should generate stories file with interaction tests 1`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
-import { AppComponent } from './app.component';
+import { App } from './app';
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
-const meta: Meta<AppComponent> = {
-  component: AppComponent,
-  title: 'AppComponent',
+const meta: Meta<App> = {
+  component: App,
+  title: 'App',
 };
 export default meta;
-type Story = StoryObj<AppComponent>;
+type Story = StoryObj<App>;
 
 export const Primary: Story = {
   args: {},
@@ -58,16 +58,16 @@ export const Heading: Story = {
 
 exports[`angularStories generator: applications should ignore a path that has a nested component, but still generate nested component stories 1`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
-import { ComponentBComponent } from './component-b.component';
+import { ComponentB } from './component-b';
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
-const meta: Meta<ComponentBComponent> = {
-  component: ComponentBComponent,
-  title: 'ComponentBComponent',
+const meta: Meta<ComponentB> = {
+  component: ComponentB,
+  title: 'ComponentB',
 };
 export default meta;
-type Story = StoryObj<ComponentBComponent>;
+type Story = StoryObj<ComponentB>;
 
 export const Primary: Story = {
   args: {
@@ -87,16 +87,16 @@ export const Heading: Story = {
 
 exports[`angularStories generator: applications should ignore a path when using a routing module 1`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
-import { ComponentComponent } from './component.component';
+import { Component } from './component';
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
-const meta: Meta<ComponentComponent> = {
-  component: ComponentComponent,
-  title: 'ComponentComponent',
+const meta: Meta<Component> = {
+  component: Component,
+  title: 'Component',
 };
 export default meta;
-type Story = StoryObj<ComponentComponent>;
+type Story = StoryObj<Component>;
 
 export const Primary: Story = {
   args: {

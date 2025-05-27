@@ -128,7 +128,9 @@ function addPluginDependencies(): void {
     packageJson.devDependencies['@angular/cli'] ??
     packageJson.dependencies?.['@angular/cli'] ??
     packageJson.devDependencies['@angular-devkit/build-angular'] ??
-    packageJson.dependencies?.['@angular-devkit/build-angular'];
+    packageJson.dependencies?.['@angular-devkit/build-angular'] ??
+    packageJson.devDependencies['@angular/build'] ??
+    packageJson.dependencies?.['@angular/build'];
 
   for (const dep of peerDepsToInstall) {
     if (!packageJson.devDependencies[dep] && !packageJson.dependencies?.[dep]) {

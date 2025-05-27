@@ -19,13 +19,37 @@ describe('convert-to-application-executor generator', () => {
 
   it.each`
     executor                                           | expected
-    ${'@angular-devkit/build-angular:browser'}         | ${'@angular-devkit/build-angular:application'}
-    ${'@angular-devkit/build-angular:browser-esbuild'} | ${'@angular-devkit/build-angular:application'}
+    ${'@angular-devkit/build-angular:browser'}         | ${'@angular/build:application'}
+    ${'@angular-devkit/build-angular:browser-esbuild'} | ${'@angular/build:application'}
     ${'@nx/angular:webpack-browser'}                   | ${'@nx/angular:application'}
     ${'@nx/angular:browser-esbuild'}                   | ${'@nx/angular:application'}
   `(
     'should replace "$executor" with "$expected"',
     async ({ executor, expected }) => {
+      addProjectConfiguration(tree, 'app1', {
+        root: 'app1',
+        projectType: 'application',
+        targets: { build: { executor } },
+      });
+
+      await convertToApplicationExecutor(tree, {});
+
+      const project = readProjectConfiguration(tree, 'app1');
+      expect(project.targets.build.executor).toBe(expected);
+    }
+  );
+
+  it.each`
+    executor                                           | expected
+    ${'@angular-devkit/build-angular:browser'}         | ${'@angular-devkit/build-angular:application'}
+    ${'@angular-devkit/build-angular:browser-esbuild'} | ${'@angular-devkit/build-angular:application'}
+  `(
+    'should replace "$executor" with "$expected" when using an Angular version lower than 20',
+    async ({ executor, expected }) => {
+      updateJson(tree, 'package.json', (json) => {
+        json.dependencies['@angular/core'] = '19.0.0';
+        return json;
+      });
       addProjectConfiguration(tree, 'app1', {
         root: 'app1',
         projectType: 'application',
@@ -253,63 +277,5 @@ describe('convert-to-application-executor generator', () => {
     expect(
       project.targets.build.configurations.development.commonChunk
     ).toBeUndefined();
-  });
-
-  describe('compat', () => {
-    it('should not convert outputs to the object notation when angular version is lower that 17.1.0', async () => {
-      updateJson(tree, 'package.json', (json) => {
-        json.dependencies['@angular/core'] = '17.0.0';
-        return json;
-      });
-      addProjectConfiguration(tree, 'app1', {
-        root: 'app1',
-        projectType: 'application',
-        targets: {
-          build: {
-            executor: '@angular-devkit/build-angular:browser',
-            outputs: ['{options.outputPath}'],
-            options: {
-              outputPath: 'dist/app1',
-            },
-          },
-        },
-      });
-
-      await convertToApplicationExecutor(tree, {});
-
-      const project = readProjectConfiguration(tree, 'app1');
-      expect(project.targets.build.outputs).toStrictEqual([
-        '{options.outputPath}',
-      ]);
-      expect(project.targets.build.options.outputPath).toBe('dist/app1');
-    });
-
-    it('should remove trailing "/browser" from output path when angular version is lower that 17.1.0', async () => {
-      updateJson(tree, 'package.json', (json) => {
-        json.dependencies['@angular/core'] = '17.0.0';
-        return json;
-      });
-      addProjectConfiguration(tree, 'app1', {
-        root: 'app1',
-        projectType: 'application',
-        targets: {
-          build: {
-            executor: '@angular-devkit/build-angular:browser',
-            outputs: ['{options.outputPath}'],
-            options: {
-              outputPath: 'dist/app1/browser',
-            },
-          },
-        },
-      });
-
-      await convertToApplicationExecutor(tree, {});
-
-      const project = readProjectConfiguration(tree, 'app1');
-      expect(project.targets.build.outputs).toStrictEqual([
-        '{options.outputPath}',
-      ]);
-      expect(project.targets.build.options.outputPath).toBe('dist/app1');
-    });
   });
 });

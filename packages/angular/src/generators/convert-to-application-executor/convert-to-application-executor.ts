@@ -11,7 +11,6 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { dirname, join } from 'node:path/posix';
-import { gte, lt } from 'semver';
 import { allTargetOptions } from '../../utils/targets';
 import { setupSsr } from '../setup-ssr/setup-ssr';
 import { validateProject } from '../utils/validations';
@@ -40,26 +39,15 @@ export async function convertToApplicationExecutor(
   tree: Tree,
   options: GeneratorOptions
 ) {
-  const { version: angularVersion } = getInstalledAngularVersionInfo(tree);
-
   let didAnySucceed = false;
   if (options.project) {
     validateProject(tree, options.project);
-    didAnySucceed = await convertProjectTargets(
-      tree,
-      options.project,
-      angularVersion,
-      true
-    );
+    didAnySucceed = await convertProjectTargets(tree, options.project, true);
   } else {
     const projects = getProjects(tree);
     for (const [projectName] of projects) {
       logger.info(`Converting project "${projectName}"...`);
-      const success = await convertProjectTargets(
-        tree,
-        projectName,
-        angularVersion
-      );
+      const success = await convertProjectTargets(tree, projectName);
 
       if (success) {
         logger.info(`Project "${projectName}" converted successfully.`);
@@ -83,7 +71,6 @@ export async function convertToApplicationExecutor(
 async function convertProjectTargets(
   tree: Tree,
   projectName: string,
-  angularVersion: string,
   isProvidedProject = false
 ): Promise<boolean> {
   function warnIfProvided(message: string): void {
@@ -101,8 +88,7 @@ async function convertProjectTargets(
   }
 
   const { buildTargetName, serverTargetName } = getTargetsToConvert(
-    project.targets,
-    angularVersion
+    project.targets
   );
   if (!buildTargetName) {
     warnIfProvided(
@@ -115,14 +101,21 @@ async function convertProjectTargets(
 
   const useNxExecutor =
     project.targets[buildTargetName].executor.startsWith('@nx/angular:');
-  const newExecutor = useNxExecutor
-    ? '@nx/angular:application'
-    : '@angular-devkit/build-angular:application';
+  let newExecutor: string;
+  if (useNxExecutor) {
+    newExecutor = '@nx/angular:application';
+  } else {
+    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+    newExecutor =
+      angularMajorVersion >= 20
+        ? '@angular/build:application'
+        : '@angular-devkit/build-angular:application';
+  }
 
   const buildTarget = project.targets[buildTargetName];
   buildTarget.executor = newExecutor;
 
-  if (gte(angularVersion, '17.1.0') && buildTarget.outputs) {
+  if (buildTarget.outputs) {
     buildTarget.outputs = buildTarget.outputs.map((output) =>
       output === '{options.outputPath}' ? '{options.outputPath.base}' : output
     );
@@ -146,9 +139,7 @@ async function convertProjectTargets(
     }
 
     let outputPath = options['outputPath'];
-    if (lt(angularVersion, '17.1.0')) {
-      options['outputPath'] = outputPath?.replace(/\/browser\/?$/, '');
-    } else if (typeof outputPath === 'string') {
+    if (typeof outputPath === 'string') {
       if (!/\/browser\/?$/.test(outputPath)) {
         logger.warn(
           `The output location of the browser build has been updated from "${outputPath}" to ` +
@@ -176,9 +167,6 @@ async function convertProjectTargets(
     }
 
     // Delete removed options
-    if (lt(angularVersion, '17.3.0')) {
-      delete options['deployUrl'];
-    }
     delete options['vendorChunk'];
     delete options['commonChunk'];
     delete options['resourcesOutputPath'];
@@ -209,15 +197,25 @@ async function convertProjectTargets(
     const browserTsConfigJson = readJson(tree, browserTsConfigPath);
     const serverTsConfigJson = readJson(tree, serverTsConfigPath);
 
+    const serverFiles = ['src/main.server.ts', 'src/server.ts'];
+    if (tree.exists(join(project.root, 'src/app/app.config.server.ts'))) {
+      serverFiles.push('src/app/app.config.server.ts');
+    }
+
     const files = new Set([
       ...(browserTsConfigJson.files ?? []),
       ...(serverTsConfigJson.files ?? []),
     ]);
-
-    // Server file will be added later by the setup-ssr generator
+    // Server files will be added later if needed by the setup-ssr generator
     files.delete('server.ts');
+    files.delete('src/server.ts');
+    files.delete('src/main.server.ts');
 
-    browserTsConfigJson.files = Array.from(files);
+    if (files.size) {
+      browserTsConfigJson.files = Array.from(files);
+    } else if (browserTsConfigJson.files) {
+      delete browserTsConfigJson.files;
+    }
     browserTsConfigJson.compilerOptions ?? {};
     browserTsConfigJson.compilerOptions.types = Array.from(
       new Set([
@@ -225,6 +223,16 @@ async function convertProjectTargets(
         ...(serverTsConfigJson.compilerOptions?.types ?? []),
       ])
     );
+
+    if (browserTsConfigJson.exclude?.length) {
+      const normalizeExclude = (exclude: string) =>
+        exclude.startsWith('./') ? exclude.slice(2) : exclude;
+      browserTsConfigJson.exclude = browserTsConfigJson.exclude.filter(
+        (exclude: string) => !serverFiles.includes(normalizeExclude(exclude))
+      );
+    }
+
+    writeJson(tree, browserTsConfigPath, browserTsConfigJson);
 
     // Delete server tsconfig
     tree.delete(serverTsConfigPath);
@@ -263,10 +271,7 @@ async function convertProjectTargets(
   return true;
 }
 
-function getTargetsToConvert(
-  targets: Record<string, TargetConfiguration>,
-  angularVersion: string
-): {
+function getTargetsToConvert(targets: Record<string, TargetConfiguration>): {
   buildTargetName?: string;
   serverTargetName?: string;
 } {
@@ -275,6 +280,7 @@ function getTargetsToConvert(
   for (const target of Object.keys(targets)) {
     if (
       targets[target].executor === '@nx/angular:application' ||
+      targets[target].executor === '@angular/build:application' ||
       targets[target].executor === '@angular-devkit/build-angular:application'
     ) {
       logger.warn(
@@ -286,12 +292,6 @@ function getTargetsToConvert(
     // build target
     if (executorsToConvert.has(targets[target].executor)) {
       for (const [, options] of allTargetOptions(targets[target])) {
-        if (lt(angularVersion, '17.3.0') && options.deployUrl) {
-          logger.warn(
-            `The project is using the "deployUrl" option which is not available in the application builder. Skipping conversion.`
-          );
-          return {};
-        }
         if (options.customWebpackConfig) {
           logger.warn(
             `The project is using a custom webpack configuration which is not supported by the esbuild-based application executor. Skipping conversion.`
