@@ -154,14 +154,60 @@ function findPackage(path: string): string | null {
   return null;
 }
 
+const menuPageToApiPage = Object.values(pkgToGeneratedApiDocs).reduce(
+  (acc, v) => {
+    if (v.menuPath) {
+      acc[v.menuPath] = v.pagePath;
+    }
+    return acc;
+  },
+  {} as Record<string, string>
+);
+const apiIndexPageToMenuIndexPage = Object.values(pkgToGeneratedApiDocs).reduce(
+  (acc, v) => {
+    if (v.menuPath) {
+      acc[v.pagePath.replace(/\/api$/, '')] = v.menuPath.replace(/\/api$/, '');
+    }
+    return acc;
+  },
+  {} as Record<string, string>
+);
+
 export const getStaticProps: GetStaticProps = async ({
   params,
 }: {
   params: { segments: string[] };
 }): Promise<any> => {
+  const menu = menusApi.getMenu('nx', '');
+  const path = params.segments.join('/');
+
+  // Redirect remapped API docs paths and ensure the index page points back to the correct intro page (even if nested).
+  for (const [menuPath, pagePath] of Object.entries(menuPageToApiPage)) {
+    if (`/${path}`.startsWith(menuPath)) {
+      return {
+        redirect: {
+          destination: `/${path}`.replace(menuPath, pagePath),
+          permanent: true,
+        },
+      };
+    }
+  }
+  // Redirect index API pages to their intro page (e.g. /technologies/next to /technologies/react/next)
+  // This is needed since we don't have an overview page for the API.
+  for (const [pagePath, menuPath] of Object.entries(
+    apiIndexPageToMenuIndexPage
+  )) {
+    if (`/${path}` === pagePath) {
+      return {
+        redirect: {
+          destination: menuPath,
+          permanent: true,
+        },
+      };
+    }
+  }
+
   try {
-    const menu = menusApi.getMenu('nx', '');
-    const path = params.segments.join('/');
     const packageName = findPackage(path);
     if (packageName) {
       const [, , , type, ...segments] = params.segments;
