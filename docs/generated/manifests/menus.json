@@ -3399,13 +3399,13 @@
               },
               {
                 "name": "Concepts",
-                "path": "/technologies/module-federation/module-federation-concepts",
-                "id": "module-federation-concepts",
+                "path": "/technologies/module-federation/concepts",
+                "id": "concepts",
                 "isExternal": false,
                 "children": [
                   {
                     "name": "Module Federation and Nx",
-                    "path": "/technologies/module-federation/module-federation-concepts/module-federation-and-nx",
+                    "path": "/technologies/module-federation/concepts/module-federation-and-nx",
                     "id": "module-federation-and-nx",
                     "isExternal": false,
                     "children": [],
@@ -3413,7 +3413,7 @@
                   },
                   {
                     "name": "Nx Module Federation Technical Overview",
-                    "path": "/technologies/module-federation/module-federation-concepts/nx-module-federation-technical-overview",
+                    "path": "/technologies/module-federation/concepts/nx-module-federation-technical-overview",
                     "id": "nx-module-federation-technical-overview",
                     "isExternal": false,
                     "children": [],
@@ -3421,7 +3421,7 @@
                   },
                   {
                     "name": "Faster Builds with Module Federation",
-                    "path": "/technologies/module-federation/module-federation-concepts/faster-builds-with-module-federation",
+                    "path": "/technologies/module-federation/concepts/faster-builds-with-module-federation",
                     "id": "faster-builds-with-module-federation",
                     "isExternal": false,
                     "children": [],
@@ -3429,7 +3429,7 @@
                   },
                   {
                     "name": "Micro Frontend Architecture",
-                    "path": "/technologies/module-federation/module-federation-concepts/micro-frontend-architecture",
+                    "path": "/technologies/module-federation/concepts/micro-frontend-architecture",
                     "id": "micro-frontend-architecture",
                     "isExternal": false,
                     "children": [],
@@ -3437,7 +3437,7 @@
                   },
                   {
                     "name": "Manage Library Versions with Module Federation",
-                    "path": "/technologies/module-federation/module-federation-concepts/manage-library-versions-with-module-federation",
+                    "path": "/technologies/module-federation/concepts/manage-library-versions-with-module-federation",
                     "id": "manage-library-versions-with-module-federation",
                     "isExternal": false,
                     "children": [],

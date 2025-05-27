@@ -1,11 +1,11 @@
-- Nx
+``- Nx
 
   - [Getting Started](/getting-started)
     - [Intro to Nx](/getting-started/intro)
     - [Installation](/getting-started/installation)
     - [Why Nx?](/getting-started/why-nx)
     - [Editor Integration](/getting-started/editor-setup)
-    - [Tutorials](/getting-started/tutorials)
+``    - [Tutorials](/getting-started/tutorials)
       - [TypeScript Monorepo](/getting-started/tutorials/typescript-packages-tutorial)
       - [React Monorepo](/getting-started/tutorials/react-monorepo-tutorial)
       - [Angular Monorepo](/getting-started/tutorials/angular-monorepo-tutorial)
@@ -410,12 +410,12 @@
         - [migrations](/technologies/java/api/migrations)
     - [Module Federation](/technologies/module-federation)
       - [Introduction](/technologies/module-federation/introduction)
-      - [Concepts](/technologies/module-federation/module-federation-concepts)
-        - [Module Federation and Nx](/technologies/module-federation/module-federation-concepts/module-federation-and-nx)
-        - [Nx Module Federation Technical Overview](/technologies/module-federation/module-federation-concepts/nx-module-federation-technical-overview)
-        - [Faster Builds with Module Federation](/technologies/module-federation/module-federation-concepts/faster-builds-with-module-federation)
-        - [Micro Frontend Architecture](/technologies/module-federation/module-federation-concepts/micro-frontend-architecture)
-        - [Manage Library Versions with Module Federation](/technologies/module-federation/module-federation-concepts/manage-library-versions-with-module-federation)
+      - [Concepts](/technologies/module-federation/concepts)
+        - [Module Federation and Nx](/technologies/module-federation/concepts/module-federation-and-nx)
+        - [Nx Module Federation Technical Overview](/technologies/module-federation/concepts/nx-module-federation-technical-overview)
+        - [Faster Builds with Module Federation](/technologies/module-federation/concepts/faster-builds-with-module-federation)
+        - [Micro Frontend Architecture](/technologies/module-federation/concepts/micro-frontend-architecture)
+        - [Manage Library Versions with Module Federation](/technologies/module-federation/concepts/manage-library-versions-with-module-federation)
       - [Guides](/technologies/module-federation/recipes)
         - [How to create a Module Federation Host Application](/technologies/module-federation/recipes/create-a-host)
         - [How to create a Module Federation Remote Application](/technologies/module-federation/recipes/create-a-remote)
@@ -1355,3 +1355,4 @@
       - [Overview](/nx-api/shared-fs-cache/documents/overview)
     - [generators](/nx-api/shared-fs-cache/generators)
       - [init](/nx-api/shared-fs-cache/generators/init)
+``

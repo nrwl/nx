@@ -4345,7 +4345,7 @@
             "tags": []
           },
           {
-            "id": "module-federation-concepts",
+            "id": "concepts",
             "name": "Concepts",
             "description": "Understand more about Module Federation with NX",
             "mediaImage": "",
@@ -4359,7 +4359,7 @@
                 "file": "shared/concepts/module-federation/module-federation-and-nx",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/module-federation/module-federation-concepts/module-federation-and-nx",
+                "path": "/technologies/module-federation/concepts/module-federation-and-nx",
                 "tags": ["module-federation", "angular", "react"]
               },
               {
@@ -4370,7 +4370,7 @@
                 "file": "shared/concepts/module-federation/nx-module-federation-technical-overview",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/module-federation/module-federation-concepts/nx-module-federation-technical-overview",
+                "path": "/technologies/module-federation/concepts/nx-module-federation-technical-overview",
                 "tags": ["module-federation", "angular", "react"]
               },
               {
@@ -4381,7 +4381,7 @@
                 "file": "shared/concepts/module-federation/faster-builds",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/module-federation/module-federation-concepts/faster-builds-with-module-federation",
+                "path": "/technologies/module-federation/concepts/faster-builds-with-module-federation",
                 "tags": ["module-federation", "angular", "react"]
               },
               {
@@ -4392,7 +4392,7 @@
                 "file": "shared/concepts/module-federation/micro-frontend-architecture",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/module-federation/module-federation-concepts/micro-frontend-architecture",
+                "path": "/technologies/module-federation/concepts/micro-frontend-architecture",
                 "tags": []
               },
               {
@@ -4403,12 +4403,12 @@
                 "file": "shared/concepts/module-federation/manage-library-versions-with-module-federation",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/module-federation/module-federation-concepts/manage-library-versions-with-module-federation",
+                "path": "/technologies/module-federation/concepts/manage-library-versions-with-module-federation",
                 "tags": []
               }
             ],
             "isExternal": false,
-            "path": "/technologies/module-federation/module-federation-concepts",
+            "path": "/technologies/module-federation/concepts",
             "tags": []
           },
           {
@@ -7925,7 +7925,7 @@
         "tags": []
       },
       {
-        "id": "module-federation-concepts",
+        "id": "concepts",
         "name": "Concepts",
         "description": "Understand more about Module Federation with NX",
         "mediaImage": "",
@@ -7939,7 +7939,7 @@
             "file": "shared/concepts/module-federation/module-federation-and-nx",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/module-federation/module-federation-concepts/module-federation-and-nx",
+            "path": "/technologies/module-federation/concepts/module-federation-and-nx",
             "tags": ["module-federation", "angular", "react"]
           },
           {
@@ -7950,7 +7950,7 @@
             "file": "shared/concepts/module-federation/nx-module-federation-technical-overview",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/module-federation/module-federation-concepts/nx-module-federation-technical-overview",
+            "path": "/technologies/module-federation/concepts/nx-module-federation-technical-overview",
             "tags": ["module-federation", "angular", "react"]
           },
           {
@@ -7961,7 +7961,7 @@
             "file": "shared/concepts/module-federation/faster-builds",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/module-federation/module-federation-concepts/faster-builds-with-module-federation",
+            "path": "/technologies/module-federation/concepts/faster-builds-with-module-federation",
             "tags": ["module-federation", "angular", "react"]
           },
           {
@@ -7972,7 +7972,7 @@
             "file": "shared/concepts/module-federation/micro-frontend-architecture",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/module-federation/module-federation-concepts/micro-frontend-architecture",
+            "path": "/technologies/module-federation/concepts/micro-frontend-architecture",
             "tags": []
           },
           {
@@ -7983,12 +7983,12 @@
             "file": "shared/concepts/module-federation/manage-library-versions-with-module-federation",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/module-federation/module-federation-concepts/manage-library-versions-with-module-federation",
+            "path": "/technologies/module-federation/concepts/manage-library-versions-with-module-federation",
             "tags": []
           }
         ],
         "isExternal": false,
-        "path": "/technologies/module-federation/module-federation-concepts",
+        "path": "/technologies/module-federation/concepts",
         "tags": []
       },
       {
@@ -8063,8 +8063,8 @@
     "path": "/technologies/module-federation/introduction",
     "tags": []
   },
-  "/technologies/module-federation/module-federation-concepts": {
-    "id": "module-federation-concepts",
+  "/technologies/module-federation/concepts": {
+    "id": "concepts",
     "name": "Concepts",
     "description": "Understand more about Module Federation with NX",
     "mediaImage": "",
@@ -8078,7 +8078,7 @@
         "file": "shared/concepts/module-federation/module-federation-and-nx",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/module-federation/module-federation-concepts/module-federation-and-nx",
+        "path": "/technologies/module-federation/concepts/module-federation-and-nx",
         "tags": ["module-federation", "angular", "react"]
       },
       {
@@ -8089,7 +8089,7 @@
         "file": "shared/concepts/module-federation/nx-module-federation-technical-overview",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/module-federation/module-federation-concepts/nx-module-federation-technical-overview",
+        "path": "/technologies/module-federation/concepts/nx-module-federation-technical-overview",
         "tags": ["module-federation", "angular", "react"]
       },
       {
@@ -8100,7 +8100,7 @@
         "file": "shared/concepts/module-federation/faster-builds",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/module-federation/module-federation-concepts/faster-builds-with-module-federation",
+        "path": "/technologies/module-federation/concepts/faster-builds-with-module-federation",
         "tags": ["module-federation", "angular", "react"]
       },
       {
@@ -8111,7 +8111,7 @@
         "file": "shared/concepts/module-federation/micro-frontend-architecture",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/module-federation/module-federation-concepts/micro-frontend-architecture",
+        "path": "/technologies/module-federation/concepts/micro-frontend-architecture",
         "tags": []
       },
       {
@@ -8122,15 +8122,15 @@
         "file": "shared/concepts/module-federation/manage-library-versions-with-module-federation",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/module-federation/module-federation-concepts/manage-library-versions-with-module-federation",
+        "path": "/technologies/module-federation/concepts/manage-library-versions-with-module-federation",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/technologies/module-federation/module-federation-concepts",
+    "path": "/technologies/module-federation/concepts",
     "tags": []
   },
-  "/technologies/module-federation/module-federation-concepts/module-federation-and-nx": {
+  "/technologies/module-federation/concepts/module-federation-and-nx": {
     "id": "module-federation-and-nx",
     "name": "Module Federation and Nx",
     "description": "",
@@ -8138,10 +8138,10 @@
     "file": "shared/concepts/module-federation/module-federation-and-nx",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/module-federation/module-federation-concepts/module-federation-and-nx",
+    "path": "/technologies/module-federation/concepts/module-federation-and-nx",
     "tags": ["module-federation", "angular", "react"]
   },
-  "/technologies/module-federation/module-federation-concepts/nx-module-federation-technical-overview": {
+  "/technologies/module-federation/concepts/nx-module-federation-technical-overview": {
     "id": "nx-module-federation-technical-overview",
     "name": "Nx Module Federation Technical Overview",
     "description": "",
@@ -8149,10 +8149,10 @@
     "file": "shared/concepts/module-federation/nx-module-federation-technical-overview",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/module-federation/module-federation-concepts/nx-module-federation-technical-overview",
+    "path": "/technologies/module-federation/concepts/nx-module-federation-technical-overview",
     "tags": ["module-federation", "angular", "react"]
   },
-  "/technologies/module-federation/module-federation-concepts/faster-builds-with-module-federation": {
+  "/technologies/module-federation/concepts/faster-builds-with-module-federation": {
     "id": "faster-builds-with-module-federation",
     "name": "Faster Builds with Module Federation",
     "description": "",
@@ -8160,10 +8160,10 @@
     "file": "shared/concepts/module-federation/faster-builds",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/module-federation/module-federation-concepts/faster-builds-with-module-federation",
+    "path": "/technologies/module-federation/concepts/faster-builds-with-module-federation",
     "tags": ["module-federation", "angular", "react"]
   },
-  "/technologies/module-federation/module-federation-concepts/micro-frontend-architecture": {
+  "/technologies/module-federation/concepts/micro-frontend-architecture": {
     "id": "micro-frontend-architecture",
     "name": "Micro Frontend Architecture",
     "description": "",
@@ -8171,10 +8171,10 @@
     "file": "shared/concepts/module-federation/micro-frontend-architecture",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/module-federation/module-federation-concepts/micro-frontend-architecture",
+    "path": "/technologies/module-federation/concepts/micro-frontend-architecture",
     "tags": []
   },
-  "/technologies/module-federation/module-federation-concepts/manage-library-versions-with-module-federation": {
+  "/technologies/module-federation/concepts/manage-library-versions-with-module-federation": {
     "id": "manage-library-versions-with-module-federation",
     "name": "Manage Library Versions with Module Federation",
     "description": "",
@@ -8182,7 +8182,7 @@
     "file": "shared/concepts/module-federation/manage-library-versions-with-module-federation",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/module-federation/module-federation-concepts/manage-library-versions-with-module-federation",
+    "path": "/technologies/module-federation/concepts/manage-library-versions-with-module-federation",
     "tags": []
   },
   "/technologies/module-federation/recipes": {

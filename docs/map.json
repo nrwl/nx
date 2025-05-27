@@ -1217,7 +1217,7 @@
                 },
                 {
                   "name": "Concepts",
-                  "id": "module-federation-concepts",
+                  "id": "concepts",
                   "description": "Understand more about Module Federation with NX",
                   "itemList": [
                     {

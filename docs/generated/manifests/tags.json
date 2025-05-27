@@ -1044,21 +1044,21 @@
       "file": "shared/concepts/module-federation/module-federation-and-nx",
       "id": "module-federation-and-nx",
       "name": "Module Federation and Nx",
-      "path": "/technologies/module-federation/module-federation-concepts/module-federation-and-nx"
+      "path": "/technologies/module-federation/concepts/module-federation-and-nx"
     },
     {
       "description": "",
       "file": "shared/concepts/module-federation/nx-module-federation-technical-overview",
       "id": "nx-module-federation-technical-overview",
       "name": "Nx Module Federation Technical Overview",
-      "path": "/technologies/module-federation/module-federation-concepts/nx-module-federation-technical-overview"
+      "path": "/technologies/module-federation/concepts/nx-module-federation-technical-overview"
     },
     {
       "description": "",
       "file": "shared/concepts/module-federation/faster-builds",
       "id": "faster-builds-with-module-federation",
       "name": "Faster Builds with Module Federation",
-      "path": "/technologies/module-federation/module-federation-concepts/faster-builds-with-module-federation"
+      "path": "/technologies/module-federation/concepts/faster-builds-with-module-federation"
     }
   ],
   "angular": [
@@ -1088,21 +1088,21 @@
       "file": "shared/concepts/module-federation/module-federation-and-nx",
       "id": "module-federation-and-nx",
       "name": "Module Federation and Nx",
-      "path": "/technologies/module-federation/module-federation-concepts/module-federation-and-nx"
+      "path": "/technologies/module-federation/concepts/module-federation-and-nx"
     },
     {
       "description": "",
       "file": "shared/concepts/module-federation/nx-module-federation-technical-overview",
       "id": "nx-module-federation-technical-overview",
       "name": "Nx Module Federation Technical Overview",
-      "path": "/technologies/module-federation/module-federation-concepts/nx-module-federation-technical-overview"
+      "path": "/technologies/module-federation/concepts/nx-module-federation-technical-overview"
     },
     {
       "description": "",
       "file": "shared/concepts/module-federation/faster-builds",
       "id": "faster-builds-with-module-federation",
       "name": "Faster Builds with Module Federation",
-      "path": "/technologies/module-federation/module-federation-concepts/faster-builds-with-module-federation"
+      "path": "/technologies/module-federation/concepts/faster-builds-with-module-federation"
     }
   ],
   "getting-started": [
@@ -1190,21 +1190,21 @@
       "file": "shared/concepts/module-federation/module-federation-and-nx",
       "id": "module-federation-and-nx",
       "name": "Module Federation and Nx",
-      "path": "/technologies/module-federation/module-federation-concepts/module-federation-and-nx"
+      "path": "/technologies/module-federation/concepts/module-federation-and-nx"
     },
     {
       "description": "",
       "file": "shared/concepts/module-federation/nx-module-federation-technical-overview",
       "id": "nx-module-federation-technical-overview",
       "name": "Nx Module Federation Technical Overview",
-      "path": "/technologies/module-federation/module-federation-concepts/nx-module-federation-technical-overview"
+      "path": "/technologies/module-federation/concepts/nx-module-federation-technical-overview"
     },
     {
       "description": "",
       "file": "shared/concepts/module-federation/faster-builds",
       "id": "faster-builds-with-module-federation",
       "name": "Faster Builds with Module Federation",
-      "path": "/technologies/module-federation/module-federation-concepts/faster-builds-with-module-federation"
+      "path": "/technologies/module-federation/concepts/faster-builds-with-module-federation"
     }
   ],
   "deployment": [
