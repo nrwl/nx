@@ -215,6 +215,7 @@ function generateTags(manifests: Manifest[]) {
   return tags;
 }
 
+// TODO(docs): Once we move API docs and set up redirect rules, we no longer need this menu
 function createPackagesMenu(packages: PackageManifest): {
   id: string;
   menu: MenuItem[];
@@ -354,6 +355,11 @@ function createPackagesManifest(packages: PackageMetadata[]): {
         p.executors.map((e) => ({
           ...e,
           path: generatePath({ id: e.name, path: e.path }, 'nx-api'),
+          newPath: generatePath(
+            // package name is now in the prefix
+            { id: e.name, path: e.path.split('/').slice(1).join('/') },
+            `technologies/${p.name}/api`
+          ),
         })),
         'path'
       ),
@@ -361,6 +367,11 @@ function createPackagesManifest(packages: PackageMetadata[]): {
         p.generators.map((g) => ({
           ...g,
           path: generatePath({ id: g.name, path: g.path }, 'nx-api'),
+          newPath: generatePath(
+            // package name is now in the prefix
+            { id: g.name, path: g.path.split('/').slice(1).join('/') },
+            `technologies/${p.name}/api`
+          ),
         })),
         'path'
       ),
@@ -368,10 +379,16 @@ function createPackagesManifest(packages: PackageMetadata[]): {
         p.migrations.map((g) => ({
           ...g,
           path: generatePath({ id: g.name, path: g.path }, 'nx-api'),
+          newPath: generatePath(
+            // package name is now in the prefix
+            { id: g.name, path: g.path.split('/').slice(1).join('/') },
+            `technologies/${p.name}/api`
+          ),
         })),
         'path'
       ),
       path: generatePath({ id: p.name, path: '' }, 'nx-api'),
+      newPath: generatePath({ id: p.name, path: '' }, `technologies/${p.name}`),
     };
   });
 

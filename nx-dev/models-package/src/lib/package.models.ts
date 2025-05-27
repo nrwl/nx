@@ -66,6 +66,8 @@ export interface ProcessedPackageMetadata {
   name: string;
   packageName: string;
   path: string;
+  // Migration to new structure under /technologies
+  newPath?: string;
   root: string;
   source: string;
 }

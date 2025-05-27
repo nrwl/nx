@@ -130,15 +130,16 @@ export class DocumentsApi {
       paths = Object.keys(this.manifest);
     }
 
-    // Add API docs paths (executors, generators, migrations) if packagesManifest is available
+    // API Docs
     if (this.packagesManifest) {
       const packages = Object.values(this.packagesManifest);
 
-      // For each package, add executors, generators, and migrations paths
       packages.forEach((pkg) => {
         const packageName = pkg.name;
 
-        // Add executors
+        if (Object.keys(pkg.executors).length > 0) {
+          paths.push(`/technologies/${packageName}/api/executors`);
+        }
         Object.keys(pkg.executors).forEach((path) => {
           const segments = path.split('/').filter(Boolean);
           if (segments[0] === 'nx-api') {
@@ -150,7 +151,9 @@ export class DocumentsApi {
           }
         });
 
-        // Add generators
+        if (Object.keys(pkg.generators).length > 0) {
+          paths.push(`/technologies/${packageName}/api/generators`);
+        }
         Object.keys(pkg.generators).forEach((path) => {
           const segments = path.split('/').filter(Boolean);
           if (segments[0] === 'nx-api') {
@@ -162,17 +165,9 @@ export class DocumentsApi {
           }
         });
 
-        // Add migrations
-        Object.keys(pkg.migrations).forEach((path) => {
-          const segments = path.split('/').filter(Boolean);
-          if (segments[0] === 'nx-api') {
-            // Create a path like /technologies/react/migrations/14-0-0
-            const newPath = `/technologies/${packageName}/api/migrations/${segments
-              .slice(3)
-              .join('/')}`;
-            paths.push(newPath);
-          }
-        });
+        if (Object.keys(pkg.migrations).length > 0) {
+          paths.push(`/technologies/${packageName}/api/migrations`);
+        }
       });
     }
 

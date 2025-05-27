@@ -1,5 +1,6 @@
 import { getBasicNxSection } from '@nx/nx-dev/data-access-menu';
 import { DocViewer } from '@nx/nx-dev/feature-doc-viewer';
+import { PackageSchemaSubList } from '@nx/nx-dev/feature-package-schema-viewer/src/lib/package-schema-sub-list';
 import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev/models-document';
 import { MenuItem } from '@nx/nx-dev/models-menu';
 import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
@@ -13,23 +14,34 @@ import { fetchGithubStarCount } from '../lib/githubStars.api';
 import { ScrollableContent } from '@nx/ui-scrollable-content';
 import { PackageSchemaViewer } from '@nx/nx-dev/feature-package-schema-viewer';
 import {
-  type SchemaMetadata,
+  type MigrationMetadata,
   type ProcessedPackageMetadata,
+  type SchemaMetadata,
 } from '@nx/nx-dev/models-package';
 
 type NxDocumentationProps =
   | {
-      isApiDoc: false;
+      pageType: 'document';
       menu: MenuItem[];
       document: ProcessedDocument;
       relatedDocuments: RelatedDocument[];
       widgetData: { githubStarsCount: number };
     }
   | {
-      isApiDoc: true;
+      pageType: 'migrations';
       menu: MenuItem[];
       pkg: ProcessedPackageMetadata;
-      schema: SchemaMetadata;
+      migrations: MigrationMetadata[];
+    }
+  | {
+      pageType:
+        | 'generators-list'
+        | 'executors-list'
+        | 'generators'
+        | 'executors';
+      menu: MenuItem[];
+      pkg: ProcessedPackageMetadata;
+      schema?: SchemaMetadata;
     };
 
 export default function NxDocumentation(props: NxDocumentationProps) {
@@ -55,12 +67,22 @@ export default function NxDocumentation(props: NxDocumentationProps) {
           navIsOpen={navIsOpen}
         />
         <ScrollableContent resetScrollOnNavigation={true}>
-          {props.isApiDoc === false ? (
+          {props.pageType === 'document' ? (
             <DocViewer
               document={props.document}
               relatedDocuments={props.relatedDocuments}
               widgetData={props.widgetData}
             />
+          ) : props.pageType === 'migrations' ? (
+            <PackageSchemaSubList
+              pkg={props.pkg}
+              migrations={props.migrations}
+              type={'migration'}
+            />
+          ) : props.pageType === 'generators-list' ? (
+            <PackageSchemaSubList pkg={props.pkg} type="generator" />
+          ) : props.pageType === 'executors-list' ? (
+            <PackageSchemaSubList pkg={props.pkg} type="executor" />
           ) : (
             <PackageSchemaViewer pkg={props.pkg} schema={props.schema} />
           )}
@@ -89,21 +111,38 @@ export const getStaticProps: GetStaticProps = async ({
   try {
     if (params.segments[0] === 'technologies' && params.segments[2] === 'api') {
       const [, packageName, , type, ...segments] = params.segments;
-      if (
-        type === 'generators' ||
-        type === 'executors' ||
-        type === 'migrations'
-      ) {
+      if (type === 'generators' || type === 'executors') {
+        const isList = segments.length === 0;
+        const props: NxDocumentationProps = {
+          // e.g. generators vs generators-list
+          pageType: isList ? `${type}-list` : type,
+          pkg: nxPackagesApi.getPackage([packageName]),
+          menu: menusApi.getMenu('nx', ''),
+        };
+        if (!isList) {
+          props.schema = nxPackagesApi.getSchemaMetadata(
+            nxPackagesApi.getPackageFileMetadatas(packageName, type)[
+              '/' + ['nx-api', packageName, type, ...segments].join('/')
+            ]
+          );
+        }
+        return { props };
+      } else if (type === 'migrations') {
         return {
           props: {
-            isApiDoc: true,
+            pageType: type,
+            menu: menusApi.getMenu('nx-api', 'nx-api'),
             pkg: nxPackagesApi.getPackage([packageName]),
-            schema: nxPackagesApi.getSchemaMetadata(
-              nxPackagesApi.getPackageFileMetadatas(packageName, type)[
-                '/' + ['nx-api', packageName, type, ...segments].join('/')
-              ]
-            ),
-            menu: menusApi.getMenu('nx', ''),
+            migrations: Object.keys(
+              nxPackagesApi.getPackage([packageName]).migrations
+            ).map((migration) => {
+              return nxPackagesApi.getSchemaMetadata(
+                nxPackagesApi.getPackageFileMetadatas(
+                  nxPackagesApi.getPackage([packageName]).name,
+                  'migrations'
+                )[migration]
+              ) as MigrationMetadata;
+            }),
           },
         };
       }
@@ -111,7 +150,7 @@ export const getStaticProps: GetStaticProps = async ({
       const document = nxDocumentationApi.getDocument(params.segments);
       return {
         props: {
-          isApiDoc: false,
+          pageType: 'document',
           document,
           widgetData: {
             githubStarsCount: await fetchGithubStarCount(),
@@ -123,7 +162,7 @@ export const getStaticProps: GetStaticProps = async ({
         },
       };
     }
-  } catch (e) {
+  } catch {
     // nothing
   }
   return {
