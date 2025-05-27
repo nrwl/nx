@@ -1284,21 +1284,21 @@
       "file": "shared/recipes/deployment/node-server-fly-io",
       "id": "node-server-fly-io",
       "name": "Deploying a Node App to Fly.io",
-      "path": "/technologies/nodejs/recipes/node-server-fly-io"
+      "path": "/technologies/node/recipes/node-server-fly-io"
     },
     {
       "description": "",
       "file": "shared/recipes/deployment/node-serverless-functions-netlify",
       "id": "node-serverless-functions-netlify",
       "name": "Add and Deploy Netlify Edge Functions with Node",
-      "path": "/technologies/nodejs/recipes/node-serverless-functions-netlify"
+      "path": "/technologies/node/recipes/node-serverless-functions-netlify"
     },
     {
       "description": "",
       "file": "shared/recipes/deployment/node-aws-lambda",
       "id": "node-aws-lambda",
       "name": "Deploying AWS lambda in Node.js (deprecated)",
-      "path": "/technologies/nodejs/recipes/node-aws-lambda"
+      "path": "/technologies/node/recipes/node-aws-lambda"
     }
   ],
   "node": [
@@ -1307,28 +1307,28 @@
       "file": "shared/recipes/deployment/node-server-fly-io",
       "id": "node-server-fly-io",
       "name": "Deploying a Node App to Fly.io",
-      "path": "/technologies/nodejs/recipes/node-server-fly-io"
+      "path": "/technologies/node/recipes/node-server-fly-io"
     },
     {
       "description": "",
       "file": "shared/recipes/deployment/node-serverless-functions-netlify",
       "id": "node-serverless-functions-netlify",
       "name": "Add and Deploy Netlify Edge Functions with Node",
-      "path": "/technologies/nodejs/recipes/node-serverless-functions-netlify"
+      "path": "/technologies/node/recipes/node-serverless-functions-netlify"
     },
     {
       "description": "",
       "file": "shared/recipes/deployment/node-aws-lambda",
       "id": "node-aws-lambda",
       "name": "Deploying AWS lambda in Node.js (deprecated)",
-      "path": "/technologies/nodejs/recipes/node-aws-lambda"
+      "path": "/technologies/node/recipes/node-aws-lambda"
     },
     {
       "description": "",
       "file": "shared/recipes/node/application-proxies",
       "id": "application-proxies",
       "name": "Set Up Application Proxies",
-      "path": "/technologies/nodejs/recipes/application-proxies"
+      "path": "/technologies/node/recipes/application-proxies"
     },
     {
       "description": "",
@@ -1372,7 +1372,7 @@
       "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
       "id": "flat-config",
       "name": "Switching to ESLint's flat config format",
-      "path": "/technologies/eslint-technology/recipes/flat-config"
+      "path": "/technologies/eslint/recipes/flat-config"
     }
   ],
   "flat config": [
@@ -1381,7 +1381,7 @@
       "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
       "id": "flat-config",
       "name": "Switching to ESLint's flat config format",
-      "path": "/technologies/eslint-technology/recipes/flat-config"
+      "path": "/technologies/eslint/recipes/flat-config"
     }
   ],
   "storybook": [

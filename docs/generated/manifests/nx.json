@@ -3577,7 +3577,7 @@
         "tags": []
       },
       {
-        "id": "nodejs",
+        "id": "node",
         "name": "Node.js",
         "description": "",
         "mediaImage": "",
@@ -3591,7 +3591,7 @@
             "file": "shared/packages/node/node-plugin",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/nodejs/introduction",
+            "path": "/technologies/node/introduction",
             "tags": []
           },
           {
@@ -3609,7 +3609,7 @@
                 "file": "shared/recipes/deployment/node-server-fly-io",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/nodejs/recipes/node-server-fly-io",
+                "path": "/technologies/node/recipes/node-server-fly-io",
                 "tags": ["deployment", "node"]
               },
               {
@@ -3620,7 +3620,7 @@
                 "file": "shared/recipes/deployment/node-serverless-functions-netlify",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/nodejs/recipes/node-serverless-functions-netlify",
+                "path": "/technologies/node/recipes/node-serverless-functions-netlify",
                 "tags": ["deployment", "node"]
               },
               {
@@ -3631,7 +3631,7 @@
                 "file": "shared/recipes/deployment/node-aws-lambda",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/nodejs/recipes/node-aws-lambda",
+                "path": "/technologies/node/recipes/node-aws-lambda",
                 "tags": ["deployment", "node"]
               },
               {
@@ -3642,7 +3642,7 @@
                 "file": "shared/recipes/node/application-proxies",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/nodejs/recipes/application-proxies",
+                "path": "/technologies/node/recipes/application-proxies",
                 "tags": ["node"]
               },
               {
@@ -3653,12 +3653,12 @@
                 "file": "shared/recipes/node/wait-for-tasks",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/nodejs/recipes/wait-for-tasks",
+                "path": "/technologies/node/recipes/wait-for-tasks",
                 "tags": []
               }
             ],
             "isExternal": false,
-            "path": "/technologies/nodejs/recipes",
+            "path": "/technologies/node/recipes",
             "tags": []
           },
           {
@@ -3669,7 +3669,7 @@
             "file": "shared/packages/node/node-plugin",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/nodejs/api",
+            "path": "/technologies/node/api",
             "tags": []
           },
           {
@@ -3687,7 +3687,7 @@
                 "file": "shared/packages/express/express-plugin",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/nodejs/express/introduction",
+                "path": "/technologies/node/express/introduction",
                 "tags": []
               },
               {
@@ -3698,12 +3698,12 @@
                 "file": "shared/packages/express/express-plugin",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/nodejs/express/api",
+                "path": "/technologies/node/express/api",
                 "tags": []
               }
             ],
             "isExternal": false,
-            "path": "/technologies/nodejs/express",
+            "path": "/technologies/node/express",
             "tags": []
           },
           {
@@ -3721,7 +3721,7 @@
                 "file": "shared/packages/nest/nest-plugin",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/nodejs/nest/introduction",
+                "path": "/technologies/node/nest/introduction",
                 "tags": []
               },
               {
@@ -3732,17 +3732,17 @@
                 "file": "shared/packages/nest/nest-plugin",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/nodejs/nest/api",
+                "path": "/technologies/node/nest/api",
                 "tags": []
               }
             ],
             "isExternal": false,
-            "path": "/technologies/nodejs/nest",
+            "path": "/technologies/node/nest",
             "tags": []
           }
         ],
         "isExternal": false,
-        "path": "/technologies/nodejs",
+        "path": "/technologies/node",
         "tags": []
       },
       {
@@ -3937,7 +3937,7 @@
         "tags": []
       },
       {
-        "id": "eslint-technology",
+        "id": "eslint",
         "name": "ESLint",
         "description": "Guides and API references for ESLint in Nx.",
         "mediaImage": "",
@@ -3951,7 +3951,7 @@
             "file": "shared/packages/eslint/eslint",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/eslint-technology/introduction",
+            "path": "/technologies/eslint/introduction",
             "tags": []
           },
           {
@@ -3969,7 +3969,7 @@
                 "file": "shared/eslint",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/eslint-technology/recipes/eslint",
+                "path": "/technologies/eslint/recipes/eslint",
                 "tags": []
               },
               {
@@ -3980,12 +3980,12 @@
                 "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/eslint-technology/recipes/flat-config",
+                "path": "/technologies/eslint/recipes/flat-config",
                 "tags": ["eslint", "flat config"]
               }
             ],
             "isExternal": false,
-            "path": "/technologies/eslint-technology/recipes",
+            "path": "/technologies/eslint/recipes",
             "tags": []
           },
           {
@@ -3994,59 +3994,37 @@
             "description": "",
             "mediaImage": "",
             "file": "",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/eslint/api",
+            "tags": []
+          },
+          {
+            "id": "eslint-plugin",
+            "name": "ESLint Plugin",
+            "description": "",
+            "mediaImage": "",
+            "file": "",
             "itemList": [
               {
-                "id": "eslint-package",
-                "name": "ESLint Package",
-                "description": "ESLint package reference",
-                "mediaImage": "",
-                "file": "shared/packages/eslint/eslint",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/nx-api/eslint",
-                "tags": []
-              },
-              {
-                "id": "eslint-plugin-package",
-                "name": "ESLint Plugin Package",
-                "description": "ESLint plugin package reference",
-                "mediaImage": "",
-                "file": "shared/packages/eslint/eslint-plugin",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/nx-api/eslint-plugin",
-                "tags": []
-              },
-              {
-                "id": "enforce-module-boundaries-rule",
-                "name": "The enforce-module-boundaries rule",
+                "id": "api",
+                "name": "API",
                 "description": "",
                 "mediaImage": "",
-                "file": "shared/packages/eslint/enforce-module-boundaries",
+                "file": "shared/packages/eslint/eslint-plugin.md",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/nx-api/eslint-plugin",
-                "tags": []
-              },
-              {
-                "id": "dependency-checks-rule",
-                "name": "The dependency-checks rule",
-                "description": "",
-                "mediaImage": "",
-                "file": "shared/packages/eslint/dependency-checks",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/nx-api/eslint-plugin",
+                "path": "/technologies/eslint/eslint-plugin/api",
                 "tags": []
               }
             ],
             "isExternal": false,
-            "path": "/technologies/eslint-technology/api",
+            "path": "/technologies/eslint/eslint-plugin",
             "tags": []
           }
         ],
         "isExternal": false,
-        "path": "/technologies/eslint-technology",
+        "path": "/technologies/eslint",
         "tags": []
       },
       {
@@ -6889,8 +6867,8 @@
     "path": "/technologies/vue/nuxt/api",
     "tags": []
   },
-  "/technologies/nodejs": {
-    "id": "nodejs",
+  "/technologies/node": {
+    "id": "node",
     "name": "Node.js",
     "description": "",
     "mediaImage": "",
@@ -6904,7 +6882,7 @@
         "file": "shared/packages/node/node-plugin",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/nodejs/introduction",
+        "path": "/technologies/node/introduction",
         "tags": []
       },
       {
@@ -6922,7 +6900,7 @@
             "file": "shared/recipes/deployment/node-server-fly-io",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/nodejs/recipes/node-server-fly-io",
+            "path": "/technologies/node/recipes/node-server-fly-io",
             "tags": ["deployment", "node"]
           },
           {
@@ -6933,7 +6911,7 @@
             "file": "shared/recipes/deployment/node-serverless-functions-netlify",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/nodejs/recipes/node-serverless-functions-netlify",
+            "path": "/technologies/node/recipes/node-serverless-functions-netlify",
             "tags": ["deployment", "node"]
           },
           {
@@ -6944,7 +6922,7 @@
             "file": "shared/recipes/deployment/node-aws-lambda",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/nodejs/recipes/node-aws-lambda",
+            "path": "/technologies/node/recipes/node-aws-lambda",
             "tags": ["deployment", "node"]
           },
           {
@@ -6955,7 +6933,7 @@
             "file": "shared/recipes/node/application-proxies",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/nodejs/recipes/application-proxies",
+            "path": "/technologies/node/recipes/application-proxies",
             "tags": ["node"]
           },
           {
@@ -6966,12 +6944,12 @@
             "file": "shared/recipes/node/wait-for-tasks",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/nodejs/recipes/wait-for-tasks",
+            "path": "/technologies/node/recipes/wait-for-tasks",
             "tags": []
           }
         ],
         "isExternal": false,
-        "path": "/technologies/nodejs/recipes",
+        "path": "/technologies/node/recipes",
         "tags": []
       },
       {
@@ -6982,7 +6960,7 @@
         "file": "shared/packages/node/node-plugin",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/nodejs/api",
+        "path": "/technologies/node/api",
         "tags": []
       },
       {
@@ -7000,7 +6978,7 @@
             "file": "shared/packages/express/express-plugin",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/nodejs/express/introduction",
+            "path": "/technologies/node/express/introduction",
             "tags": []
           },
           {
@@ -7011,12 +6989,12 @@
             "file": "shared/packages/express/express-plugin",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/nodejs/express/api",
+            "path": "/technologies/node/express/api",
             "tags": []
           }
         ],
         "isExternal": false,
-        "path": "/technologies/nodejs/express",
+        "path": "/technologies/node/express",
         "tags": []
       },
       {
@@ -7034,7 +7012,7 @@
             "file": "shared/packages/nest/nest-plugin",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/nodejs/nest/introduction",
+            "path": "/technologies/node/nest/introduction",
             "tags": []
           },
           {
@@ -7045,20 +7023,20 @@
             "file": "shared/packages/nest/nest-plugin",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/nodejs/nest/api",
+            "path": "/technologies/node/nest/api",
             "tags": []
           }
         ],
         "isExternal": false,
-        "path": "/technologies/nodejs/nest",
+        "path": "/technologies/node/nest",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/technologies/nodejs",
+    "path": "/technologies/node",
     "tags": []
   },
-  "/technologies/nodejs/introduction": {
+  "/technologies/node/introduction": {
     "id": "introduction",
     "name": "Introduction",
     "description": "",
@@ -7066,10 +7044,10 @@
     "file": "shared/packages/node/node-plugin",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/nodejs/introduction",
+    "path": "/technologies/node/introduction",
     "tags": []
   },
-  "/technologies/nodejs/recipes": {
+  "/technologies/node/recipes": {
     "id": "recipes",
     "name": "Recipes",
     "description": "",
@@ -7084,7 +7062,7 @@
         "file": "shared/recipes/deployment/node-server-fly-io",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/nodejs/recipes/node-server-fly-io",
+        "path": "/technologies/node/recipes/node-server-fly-io",
         "tags": ["deployment", "node"]
       },
       {
@@ -7095,7 +7073,7 @@
         "file": "shared/recipes/deployment/node-serverless-functions-netlify",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/nodejs/recipes/node-serverless-functions-netlify",
+        "path": "/technologies/node/recipes/node-serverless-functions-netlify",
         "tags": ["deployment", "node"]
       },
       {
@@ -7106,7 +7084,7 @@
         "file": "shared/recipes/deployment/node-aws-lambda",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/nodejs/recipes/node-aws-lambda",
+        "path": "/technologies/node/recipes/node-aws-lambda",
         "tags": ["deployment", "node"]
       },
       {
@@ -7117,7 +7095,7 @@
         "file": "shared/recipes/node/application-proxies",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/nodejs/recipes/application-proxies",
+        "path": "/technologies/node/recipes/application-proxies",
         "tags": ["node"]
       },
       {
@@ -7128,15 +7106,15 @@
         "file": "shared/recipes/node/wait-for-tasks",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/nodejs/recipes/wait-for-tasks",
+        "path": "/technologies/node/recipes/wait-for-tasks",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/technologies/nodejs/recipes",
+    "path": "/technologies/node/recipes",
     "tags": []
   },
-  "/technologies/nodejs/recipes/node-server-fly-io": {
+  "/technologies/node/recipes/node-server-fly-io": {
     "id": "node-server-fly-io",
     "name": "Deploying a Node App to Fly.io",
     "description": "",
@@ -7144,10 +7122,10 @@
     "file": "shared/recipes/deployment/node-server-fly-io",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/nodejs/recipes/node-server-fly-io",
+    "path": "/technologies/node/recipes/node-server-fly-io",
     "tags": ["deployment", "node"]
   },
-  "/technologies/nodejs/recipes/node-serverless-functions-netlify": {
+  "/technologies/node/recipes/node-serverless-functions-netlify": {
     "id": "node-serverless-functions-netlify",
     "name": "Add and Deploy Netlify Edge Functions with Node",
     "description": "",
@@ -7155,10 +7133,10 @@
     "file": "shared/recipes/deployment/node-serverless-functions-netlify",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/nodejs/recipes/node-serverless-functions-netlify",
+    "path": "/technologies/node/recipes/node-serverless-functions-netlify",
     "tags": ["deployment", "node"]
   },
-  "/technologies/nodejs/recipes/node-aws-lambda": {
+  "/technologies/node/recipes/node-aws-lambda": {
     "id": "node-aws-lambda",
     "name": "Deploying AWS lambda in Node.js (deprecated)",
     "description": "",
@@ -7166,10 +7144,10 @@
     "file": "shared/recipes/deployment/node-aws-lambda",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/nodejs/recipes/node-aws-lambda",
+    "path": "/technologies/node/recipes/node-aws-lambda",
     "tags": ["deployment", "node"]
   },
-  "/technologies/nodejs/recipes/application-proxies": {
+  "/technologies/node/recipes/application-proxies": {
     "id": "application-proxies",
     "name": "Set Up Application Proxies",
     "description": "",
@@ -7177,10 +7155,10 @@
     "file": "shared/recipes/node/application-proxies",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/nodejs/recipes/application-proxies",
+    "path": "/technologies/node/recipes/application-proxies",
     "tags": ["node"]
   },
-  "/technologies/nodejs/recipes/wait-for-tasks": {
+  "/technologies/node/recipes/wait-for-tasks": {
     "id": "wait-for-tasks",
     "name": "Wait for Tasks to Finish",
     "description": "",
@@ -7188,10 +7166,10 @@
     "file": "shared/recipes/node/wait-for-tasks",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/nodejs/recipes/wait-for-tasks",
+    "path": "/technologies/node/recipes/wait-for-tasks",
     "tags": []
   },
-  "/technologies/nodejs/api": {
+  "/technologies/node/api": {
     "id": "api",
     "name": "API",
     "description": "",
@@ -7199,10 +7177,10 @@
     "file": "shared/packages/node/node-plugin",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/nodejs/api",
+    "path": "/technologies/node/api",
     "tags": []
   },
-  "/technologies/nodejs/express": {
+  "/technologies/node/express": {
     "id": "express",
     "name": "Express",
     "description": "",
@@ -7217,7 +7195,7 @@
         "file": "shared/packages/express/express-plugin",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/nodejs/express/introduction",
+        "path": "/technologies/node/express/introduction",
         "tags": []
       },
       {
@@ -7228,15 +7206,15 @@
         "file": "shared/packages/express/express-plugin",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/nodejs/express/api",
+        "path": "/technologies/node/express/api",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/technologies/nodejs/express",
+    "path": "/technologies/node/express",
     "tags": []
   },
-  "/technologies/nodejs/express/introduction": {
+  "/technologies/node/express/introduction": {
     "id": "introduction",
     "name": "Introduction",
     "description": "",
@@ -7244,10 +7222,10 @@
     "file": "shared/packages/express/express-plugin",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/nodejs/express/introduction",
+    "path": "/technologies/node/express/introduction",
     "tags": []
   },
-  "/technologies/nodejs/express/api": {
+  "/technologies/node/express/api": {
     "id": "api",
     "name": "API",
     "description": "",
@@ -7255,10 +7233,10 @@
     "file": "shared/packages/express/express-plugin",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/nodejs/express/api",
+    "path": "/technologies/node/express/api",
     "tags": []
   },
-  "/technologies/nodejs/nest": {
+  "/technologies/node/nest": {
     "id": "nest",
     "name": "Nest",
     "description": "",
@@ -7273,7 +7251,7 @@
         "file": "shared/packages/nest/nest-plugin",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/nodejs/nest/introduction",
+        "path": "/technologies/node/nest/introduction",
         "tags": []
       },
       {
@@ -7284,15 +7262,15 @@
         "file": "shared/packages/nest/nest-plugin",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/nodejs/nest/api",
+        "path": "/technologies/node/nest/api",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/technologies/nodejs/nest",
+    "path": "/technologies/node/nest",
     "tags": []
   },
-  "/technologies/nodejs/nest/introduction": {
+  "/technologies/node/nest/introduction": {
     "id": "introduction",
     "name": "Introduction",
     "description": "",
@@ -7300,10 +7278,10 @@
     "file": "shared/packages/nest/nest-plugin",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/nodejs/nest/introduction",
+    "path": "/technologies/node/nest/introduction",
     "tags": []
   },
-  "/technologies/nodejs/nest/api": {
+  "/technologies/node/nest/api": {
     "id": "api",
     "name": "API",
     "description": "",
@@ -7311,7 +7289,7 @@
     "file": "shared/packages/nest/nest-plugin",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/nodejs/nest/api",
+    "path": "/technologies/node/nest/api",
     "tags": []
   },
   "/technologies/java": {
@@ -7760,8 +7738,8 @@
     "path": "/technologies/module-federation/api",
     "tags": []
   },
-  "/technologies/eslint-technology": {
-    "id": "eslint-technology",
+  "/technologies/eslint": {
+    "id": "eslint",
     "name": "ESLint",
     "description": "Guides and API references for ESLint in Nx.",
     "mediaImage": "",
@@ -7775,7 +7753,7 @@
         "file": "shared/packages/eslint/eslint",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/eslint-technology/introduction",
+        "path": "/technologies/eslint/introduction",
         "tags": []
       },
       {
@@ -7793,7 +7771,7 @@
             "file": "shared/eslint",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/eslint-technology/recipes/eslint",
+            "path": "/technologies/eslint/recipes/eslint",
             "tags": []
           },
           {
@@ -7804,12 +7782,12 @@
             "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/eslint-technology/recipes/flat-config",
+            "path": "/technologies/eslint/recipes/flat-config",
             "tags": ["eslint", "flat config"]
           }
         ],
         "isExternal": false,
-        "path": "/technologies/eslint-technology/recipes",
+        "path": "/technologies/eslint/recipes",
         "tags": []
       },
       {
@@ -7818,62 +7796,40 @@
         "description": "",
         "mediaImage": "",
         "file": "",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/eslint/api",
+        "tags": []
+      },
+      {
+        "id": "eslint-plugin",
+        "name": "ESLint Plugin",
+        "description": "",
+        "mediaImage": "",
+        "file": "",
         "itemList": [
           {
-            "id": "eslint-package",
-            "name": "ESLint Package",
-            "description": "ESLint package reference",
-            "mediaImage": "",
-            "file": "shared/packages/eslint/eslint",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/nx-api/eslint",
-            "tags": []
-          },
-          {
-            "id": "eslint-plugin-package",
-            "name": "ESLint Plugin Package",
-            "description": "ESLint plugin package reference",
-            "mediaImage": "",
-            "file": "shared/packages/eslint/eslint-plugin",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/nx-api/eslint-plugin",
-            "tags": []
-          },
-          {
-            "id": "enforce-module-boundaries-rule",
-            "name": "The enforce-module-boundaries rule",
+            "id": "api",
+            "name": "API",
             "description": "",
             "mediaImage": "",
-            "file": "shared/packages/eslint/enforce-module-boundaries",
+            "file": "shared/packages/eslint/eslint-plugin.md",
             "itemList": [],
             "isExternal": false,
-            "path": "/nx-api/eslint-plugin",
-            "tags": []
-          },
-          {
-            "id": "dependency-checks-rule",
-            "name": "The dependency-checks rule",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/packages/eslint/dependency-checks",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/nx-api/eslint-plugin",
+            "path": "/technologies/eslint/eslint-plugin/api",
             "tags": []
           }
         ],
         "isExternal": false,
-        "path": "/technologies/eslint-technology/api",
+        "path": "/technologies/eslint/eslint-plugin",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/technologies/eslint-technology",
+    "path": "/technologies/eslint",
     "tags": []
   },
-  "/technologies/eslint-technology/introduction": {
+  "/technologies/eslint/introduction": {
     "id": "introduction",
     "name": "Introduction",
     "description": "",
@@ -7881,10 +7837,10 @@
     "file": "shared/packages/eslint/eslint",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/eslint-technology/introduction",
+    "path": "/technologies/eslint/introduction",
     "tags": []
   },
-  "/technologies/eslint-technology/recipes": {
+  "/technologies/eslint/recipes": {
     "id": "recipes",
     "name": "Recipes",
     "description": "",
@@ -7899,7 +7855,7 @@
         "file": "shared/eslint",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/eslint-technology/recipes/eslint",
+        "path": "/technologies/eslint/recipes/eslint",
         "tags": []
       },
       {
@@ -7910,15 +7866,15 @@
         "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/eslint-technology/recipes/flat-config",
+        "path": "/technologies/eslint/recipes/flat-config",
         "tags": ["eslint", "flat config"]
       }
     ],
     "isExternal": false,
-    "path": "/technologies/eslint-technology/recipes",
+    "path": "/technologies/eslint/recipes",
     "tags": []
   },
-  "/technologies/eslint-technology/recipes/eslint": {
+  "/technologies/eslint/recipes/eslint": {
     "id": "eslint",
     "name": "Configuring ESLint with Typescript",
     "description": "",
@@ -7926,10 +7882,10 @@
     "file": "shared/eslint",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/eslint-technology/recipes/eslint",
+    "path": "/technologies/eslint/recipes/eslint",
     "tags": []
   },
-  "/technologies/eslint-technology/recipes/flat-config": {
+  "/technologies/eslint/recipes/flat-config": {
     "id": "flat-config",
     "name": "Switching to ESLint's flat config format",
     "description": "",
@@ -7937,85 +7893,52 @@
     "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/eslint-technology/recipes/flat-config",
+    "path": "/technologies/eslint/recipes/flat-config",
     "tags": ["eslint", "flat config"]
   },
-  "/technologies/eslint-technology/api": {
+  "/technologies/eslint/api": {
     "id": "api",
     "name": "API",
     "description": "",
     "mediaImage": "",
     "file": "",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/eslint/api",
+    "tags": []
+  },
+  "/technologies/eslint/eslint-plugin": {
+    "id": "eslint-plugin",
+    "name": "ESLint Plugin",
+    "description": "",
+    "mediaImage": "",
+    "file": "",
     "itemList": [
       {
-        "id": "eslint-package",
-        "name": "ESLint Package",
-        "description": "ESLint package reference",
-        "mediaImage": "",
-        "file": "shared/packages/eslint/eslint",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-api/eslint",
-        "tags": []
-      },
-      {
-        "id": "eslint-plugin-package",
-        "name": "ESLint Plugin Package",
-        "description": "ESLint plugin package reference",
-        "mediaImage": "",
-        "file": "shared/packages/eslint/eslint-plugin",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-api/eslint-plugin",
-        "tags": []
-      },
-      {
-        "id": "enforce-module-boundaries-rule",
-        "name": "The enforce-module-boundaries rule",
+        "id": "api",
+        "name": "API",
         "description": "",
         "mediaImage": "",
-        "file": "shared/packages/eslint/enforce-module-boundaries",
+        "file": "shared/packages/eslint/eslint-plugin.md",
         "itemList": [],
         "isExternal": false,
-        "path": "/nx-api/eslint-plugin",
-        "tags": []
-      },
-      {
-        "id": "dependency-checks-rule",
-        "name": "The dependency-checks rule",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/packages/eslint/dependency-checks",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-api/eslint-plugin",
+        "path": "/technologies/eslint/eslint-plugin/api",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/technologies/eslint-technology/api",
+    "path": "/technologies/eslint/eslint-plugin",
     "tags": []
   },
-  "/nx-api/eslint": {
-    "id": "eslint-package",
-    "name": "ESLint Package",
-    "description": "ESLint package reference",
-    "mediaImage": "",
-    "file": "shared/packages/eslint/eslint",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/nx-api/eslint",
-    "tags": []
-  },
-  "/nx-api/eslint-plugin": {
-    "id": "dependency-checks-rule",
-    "name": "The dependency-checks rule",
+  "/technologies/eslint/eslint-plugin/api": {
+    "id": "api",
+    "name": "API",
     "description": "",
     "mediaImage": "",
-    "file": "shared/packages/eslint/dependency-checks",
+    "file": "shared/packages/eslint/eslint-plugin.md",
     "itemList": [],
     "isExternal": false,
-    "path": "/nx-api/eslint-plugin",
+    "path": "/technologies/eslint/eslint-plugin/api",
     "tags": []
   },
   "/technologies/build-tools": {

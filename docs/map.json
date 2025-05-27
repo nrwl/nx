@@ -634,7 +634,6 @@
                 }
               ]
             },
-
             {
               "name": "Angular",
               "id": "angular",
@@ -975,7 +974,7 @@
             },
             {
               "name": "Node.js",
-              "id": "nodejs",
+              "id": "node",
               "itemList": [
                 {
                   "name": "Introduction",
@@ -1156,7 +1155,7 @@
             },
             {
               "name": "ESLint",
-              "id": "eslint-technology",
+              "id": "eslint",
               "description": "Guides and API references for ESLint in Nx.",
               "itemList": [
                 {
@@ -1184,32 +1183,16 @@
                 {
                   "name": "API",
                   "id": "api",
+                  "itemList": []
+                },
+                {
+                  "name": "ESLint Plugin",
+                  "id": "eslint-plugin",
                   "itemList": [
                     {
-                      "name": "ESLint Package",
-                      "id": "eslint-package",
-                      "description": "ESLint package reference",
-                      "path": "/nx-api/eslint",
-                      "file": "shared/packages/eslint/eslint"
-                    },
-                    {
-                      "name": "ESLint Plugin Package",
-                      "id": "eslint-plugin-package",
-                      "description": "ESLint plugin package reference",
-                      "path": "/nx-api/eslint-plugin",
-                      "file": "shared/packages/eslint/eslint-plugin"
-                    },
-                    {
-                      "name": "The enforce-module-boundaries rule",
-                      "id": "enforce-module-boundaries-rule",
-                      "path": "/nx-api/eslint-plugin",
-                      "file": "shared/packages/eslint/enforce-module-boundaries"
-                    },
-                    {
-                      "name": "The dependency-checks rule",
-                      "id": "dependency-checks-rule",
-                      "path": "/nx-api/eslint-plugin",
-                      "file": "shared/packages/eslint/dependency-checks"
+                      "name": "API",
+                      "id": "api",
+                      "file": "shared/packages/eslint/eslint-plugin.md"
                     }
                   ]
                 }

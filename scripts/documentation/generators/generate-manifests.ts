@@ -103,6 +103,17 @@ export function generateManifests(workspace: string): Promise<void[]> {
     )
   );
 
+  /*
+   * Map API docs to /technologies section in the nx menu.
+   */
+  menus.forEach((menu) => {
+    if (menu.id !== 'nx') return;
+    const tech = menu.menu.find((x) => x.id === 'technologies');
+    if (!tech)
+      throw new Error(`Technologies menu not found. Is it in map.json?`);
+    insertApiDocs(tech, packagesManifest);
+  });
+
   /**
    * Creating packages menu with custom package logic.
    * @type {{id: string, menu: MenuItem[]}}
@@ -414,6 +425,129 @@ function getDocumentManifests(sections: DocumentSection[]): Manifest[] {
       id: section.name,
       records,
     };
+  });
+}
+
+// We present a different grouping or naming for the API docs compared to their package names.
+export const pkgToApiPath = {
+  // ts/js
+  js: 'typescript/api',
+
+  // angular
+  angular: 'angular/api',
+
+  // react
+  react: 'react/api',
+  'react-native': 'react/react-native/api',
+  expo: 'react/expo/api',
+  next: 'react/next/api',
+  remix: 'react/remix/api',
+
+  // vue
+  vue: 'vue/api',
+  nuxt: 'vue/nuxt/api',
+
+  // node
+  node: 'node/api',
+  express: 'node/express/api',
+  nest: 'node/nest/api',
+
+  // java
+  gradle: 'java/api',
+
+  // build tools
+  webpack: 'build-tools/webpack/api',
+  vite: 'build-tools/vite/api',
+  rollup: 'build-tools/rollup/api',
+  esbuild: 'build-tools/esbuild/api',
+  rspack: 'build-tools/rspack/api',
+  rsbuild: 'build-tools/rsbuild/api',
+  // test tools
+  jest: 'test-tools/jest/api',
+  storybook: 'test-tools/storybook/api',
+  playwright: 'test-tools/playwright/api',
+  cypress: 'test-tools/cypress/api',
+  detox: 'test-tools/detox/api',
+
+  // misc
+  'module-federation': 'module-federation/api',
+  eslint: 'eslint/api',
+  'eslint-plugin': 'eslint/eslint-plugin/api',
+};
+
+function findMenuItemByPath(menu: MenuItem, path: string): MenuItem | null {
+  const parts = path.split('/').filter(Boolean);
+  let curr: MenuItem | null = menu;
+
+  for (const part of parts) {
+    if (!curr?.children) break;
+    curr = curr.children.find((child) => child.id === part);
+  }
+
+  return curr === menu ? null : curr;
+}
+
+function insertApiDocs(menu: MenuItem, packages: PackageManifest): void {
+  Object.values(packages.records).forEach((p) => {
+    const apiPath = pkgToApiPath[p.name];
+    if (!apiPath) {
+      console.warn(
+        `No API path found for package ${p.name}. Skipping API docs insertion.`
+      );
+      return;
+    }
+
+    const apiItem = findMenuItemByPath(menu, apiPath);
+
+    if (!!Object.values(p.documents).length) {
+      if (!!Object.values(p.executors).length) {
+        apiItem.children.push({
+          id: 'executors',
+          path: `/technologies/${apiPath}/executors`,
+          name: 'executors',
+          children: Object.values(p.executors).map((x) => ({
+            id: x.name,
+            path: `/technologies/${apiPath}/executors/${x.name}`,
+            name: x.name,
+            children: [],
+            isExternal: false,
+            disableCollapsible: false,
+          })),
+          isExternal: false,
+          disableCollapsible: false,
+        });
+      }
+
+      if (!!Object.values(p.generators).length) {
+        apiItem.children.push({
+          id: 'generators',
+          path: `/technologies/${apiPath}/generators`,
+          name: 'generators',
+          children: Object.values(p.generators).map((x) => ({
+            id: x.name,
+            path: `/technologies/${apiPath}/generators/${x.name}`,
+            name: x.name,
+            children: [],
+            isExternal: false,
+            disableCollapsible: false,
+          })),
+          isExternal: false,
+          disableCollapsible: false,
+        });
+      }
+
+      if (!!Object.values(p.migrations).length) {
+        apiItem.children.push({
+          id: 'migrations',
+          path: `/technologies/${apiPath}/migrations`,
+          name: 'migrations',
+          children: [],
+          isExternal: false,
+          disableCollapsible: false,
+        });
+      }
+      return apiItem;
+    }
   });
 }
 
