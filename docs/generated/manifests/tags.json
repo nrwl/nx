@@ -6,48 +6,6 @@
       "id": "editor-setup",
       "name": "Editor Integration",
       "path": "/getting-started/editor-setup"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-telemetry",
-      "id": "console-telemetry",
-      "name": "Telemetry",
-      "path": "/recipes/nx-console/console-telemetry"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-project-details",
-      "id": "console-project-details",
-      "name": "Project Details View",
-      "path": "/recipes/nx-console/console-project-details"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-generate-command",
-      "id": "console-generate-command",
-      "name": "Generate Command",
-      "path": "/recipes/nx-console/console-generate-command"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-run-command",
-      "id": "console-run-command",
-      "name": "Run Command",
-      "path": "/recipes/nx-console/console-run-command"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-nx-cloud",
-      "id": "console-nx-cloud",
-      "name": "Nx Cloud Integration",
-      "path": "/recipes/nx-console/console-nx-cloud"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-migrate-ui",
-      "id": "console-migrate-ui",
-      "name": "Migrate UI",
-      "path": "/recipes/nx-console/console-migrate-ui"
     }
   ],
   "run-tasks": [
@@ -57,69 +15,6 @@
       "id": "run-tasks",
       "name": "Run Tasks",
       "path": "/features/run-tasks"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/configure-inputs",
-      "id": "configure-inputs",
-      "name": "Configure Inputs for Task Caching",
-      "path": "/recipes/running-tasks/configure-inputs"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/configure-outputs",
-      "id": "configure-outputs",
-      "name": "Configure Outputs for Task Caching",
-      "path": "/recipes/running-tasks/configure-outputs"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/defining-task-pipeline",
-      "id": "defining-task-pipeline",
-      "name": "Define a Task Pipeline",
-      "path": "/recipes/running-tasks/defining-task-pipeline"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/terminal-ui",
-      "id": "terminal-ui",
-      "name": "Use the Terminal UI",
-      "path": "/recipes/running-tasks/terminal-ui"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/running-custom-commands",
-      "id": "run-commands-executor",
-      "name": "Run Custom Commands",
-      "path": "/recipes/running-tasks/run-commands-executor"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/pass-args-to-commands",
-      "id": "pass-args-to-commands",
-      "name": "Pass Args to Commands",
-      "path": "/recipes/running-tasks/pass-args-to-commands"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/run-tasks-in-parallel",
-      "id": "run-tasks-in-parallel",
-      "name": "Run Tasks in Parallel",
-      "path": "/recipes/running-tasks/run-tasks-in-parallel"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/root-level-scripts",
-      "id": "root-level-scripts",
-      "name": "Run Root-Level NPM Scripts with Nx",
-      "path": "/recipes/running-tasks/root-level-scripts"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/workspace-watching",
-      "id": "workspace-watching",
-      "name": "Workspace Watching",
-      "path": "/recipes/running-tasks/workspace-watching"
     },
     {
       "description": "",
@@ -185,20 +80,6 @@
       "id": "cache-task-results",
       "name": "Cache Task Results",
       "path": "/features/cache-task-results"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/configure-inputs",
-      "id": "configure-inputs",
-      "name": "Configure Inputs for Task Caching",
-      "path": "/recipes/running-tasks/configure-inputs"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/configure-outputs",
-      "id": "configure-outputs",
-      "name": "Configure Outputs for Task Caching",
-      "path": "/recipes/running-tasks/configure-outputs"
     },
     {
       "description": "",
@@ -287,13 +168,6 @@
       "id": "explore-graph",
       "name": "Explore Your Workspace",
       "path": "/features/explore-graph"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/analyze-source-files",
-      "id": "analyze-source-files",
-      "name": "Disable Graph Links Created from Analyzing Source Files",
-      "path": "/recipes/tips-n-tricks/analyze-source-files"
     },
     {
       "description": "",
@@ -406,13 +280,6 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/running-tasks/convert-to-inferred",
-      "id": "convert-to-inferred",
-      "name": "Migrate to Inferred Tasks (Project Crystal)",
-      "path": "/recipes/running-tasks/convert-to-inferred"
-    },
-    {
-      "description": "",
       "file": "shared/concepts/mental-model",
       "id": "mental-model",
       "name": "Mental Model",
@@ -509,27 +376,6 @@
       "path": "/features/automate-updating-dependencies"
     },
     {
-      "description": "",
-      "file": "shared/recipes/running-tasks/convert-to-inferred",
-      "id": "convert-to-inferred",
-      "name": "Migrate to Inferred Tasks (Project Crystal)",
-      "path": "/recipes/running-tasks/convert-to-inferred"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/tips-n-tricks/keep-nx-versions-in-sync",
-      "id": "keep-nx-versions-in-sync",
-      "name": "Keep Nx Versions in Sync",
-      "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/advanced-update",
-      "id": "advanced-update",
-      "name": "Altering Migration Process",
-      "path": "/recipes/tips-n-tricks/advanced-update"
-    },
-    {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/nx/documents/migrate",
       "id": "migrate",
@@ -544,34 +390,6 @@
       "id": "enforce-module-boundaries",
       "name": "Enforce Module Boundaries",
       "path": "/features/enforce-module-boundaries"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/ban-dependencies-with-tags",
-      "id": "ban-dependencies-with-tags",
-      "name": "Ban Dependencies with Certain Tags",
-      "path": "/recipes/enforce-module-boundaries/ban-dependencies-with-tags"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/tag-multiple-dimensions",
-      "id": "tag-multiple-dimensions",
-      "name": "Tag in Multiple Dimensions",
-      "path": "/recipes/enforce-module-boundaries/tag-multiple-dimensions"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/ban-external-imports",
-      "id": "ban-external-imports",
-      "name": "Ban External Imports",
-      "path": "/recipes/enforce-module-boundaries/ban-external-imports"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/tags-allow-list",
-      "id": "tags-allow-list",
-      "name": "Tags Allow List",
-      "path": "/recipes/enforce-module-boundaries/tags-allow-list"
     },
     {
       "description": "",
@@ -625,111 +443,6 @@
       "path": "/features/manage-releases"
     },
     {
-      "description": "",
-      "file": "shared/recipes/nx-release/get-started-with-nx-release",
-      "id": "get-started-with-nx-release",
-      "name": "Get Started with Nx Release",
-      "path": "/recipes/nx-release/get-started-with-nx-release"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/nx-release/release-projects-independently",
-      "id": "release-projects-independently",
-      "name": "Release Projects Independently",
-      "path": "/recipes/nx-release/release-projects-independently"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/nx-release/updating-version-references",
-      "id": "updating-version-references",
-      "name": "Updating Version References in Manifest Files (e.g. package.json)",
-      "path": "/recipes/nx-release/updating-version-references"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits",
-      "id": "automatically-version-with-conventional-commits",
-      "name": "Automatically Version with Conventional Commits",
-      "path": "/recipes/nx-release/automatically-version-with-conventional-commits"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/nx-release/customize-conventional-commit-types",
-      "id": "customize-conventional-commit-types",
-      "name": "Customize Conventional Commit Types",
-      "path": "/recipes/nx-release/customize-conventional-commit-types"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/nx-release/file-based-versioning-version-plans",
-      "id": "file-based-versioning-version-plans",
-      "name": "File Based Versioning (Version Plans)",
-      "path": "/recipes/nx-release/file-based-versioning-version-plans"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/nx-release/configure-custom-registries",
-      "id": "configure-custom-registries",
-      "name": "Configure Custom Registries",
-      "path": "/recipes/nx-release/configure-custom-registries"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/nx-release/publish-in-ci-cd",
-      "id": "publish-in-ci-cd",
-      "name": "Publish in CI/CD",
-      "path": "/recipes/nx-release/publish-in-ci-cd"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/nx-release/automate-github-releases",
-      "id": "automate-github-releases",
-      "name": "Automate GitHub Releases",
-      "path": "/recipes/nx-release/automate-github-releases"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/nx-release/automate-gitlab-releases",
-      "id": "automate-gitlab-releases",
-      "name": "Automate GitLab Releases",
-      "path": "/recipes/nx-release/automate-gitlab-releases"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/nx-release/publish-rust-crates",
-      "id": "publish-rust-crates",
-      "name": "Publish Rust Crates",
-      "path": "/recipes/nx-release/publish-rust-crates"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/nx-release/update-local-registry-setup",
-      "id": "update-local-registry-setup",
-      "name": "Update Your Local Registry Setup to use Nx Release",
-      "path": "/recipes/nx-release/update-local-registry-setup"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/nx-release/configure-changelog-format",
-      "id": "configure-changelog-format",
-      "name": "Configure Changelog Format",
-      "path": "/recipes/nx-release/configure-changelog-format"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/nx-release/build-before-versioning",
-      "id": "build-before-versioning",
-      "name": "Build Before Versioning",
-      "path": "/recipes/nx-release/build-before-versioning"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/nx-release/configuration-version-prefix",
-      "id": "configuration-version-prefix",
-      "name": "Configuring Version Prefix for Dependency Versions",
-      "path": "/recipes/nx-release/configuration-version-prefix"
-    },
-    {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/nx/documents/release",
       "id": "release",
@@ -737,140 +450,16 @@
       "path": "/nx-api/nx/documents/release"
     }
   ],
-  "installation": [
+  "intro": [
     {
       "description": "",
-      "file": "shared/recipes/installation/install-non-javascript",
-      "id": "install-non-javascript",
-      "name": "Install Nx in a Non-Javascript Repo",
-      "path": "/recipes/installation/install-non-javascript"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/installation/update-global-installation",
-      "id": "update-global-installation",
-      "name": "Update Your Global Nx Installation",
-      "path": "/recipes/installation/update-global-installation"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/installation/activate-powerpack",
-      "id": "activate-powerpack",
-      "name": "Activate Powerpack",
-      "path": "/nx-enterprise/activate-powerpack"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/create-nx-workspace",
-      "id": "create-nx-workspace",
-      "name": "create-nx-workspace",
-      "path": "/nx-api/nx/documents/create-nx-workspace"
-    }
-  ],
-  "terminal-ui": [
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/terminal-ui",
-      "id": "terminal-ui",
-      "name": "Use the Terminal UI",
-      "path": "/recipes/running-tasks/terminal-ui"
-    }
-  ],
-  "exec": [
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/root-level-scripts",
-      "id": "root-level-scripts",
-      "name": "Run Root-Level NPM Scripts with Nx",
-      "path": "/recipes/running-tasks/root-level-scripts"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/exec",
-      "id": "exec",
-      "name": "exec",
-      "path": "/nx-api/nx/documents/exec"
-    }
-  ],
-  "workspace-watching": [
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/workspace-watching",
-      "id": "workspace-watching",
-      "name": "Workspace Watching",
-      "path": "/recipes/running-tasks/workspace-watching"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/watch",
-      "id": "watch",
-      "name": "watch",
-      "path": "/nx-api/nx/documents/watch"
-    }
-  ],
-  "self-hosted-caching": [
-    {
-      "description": "Host the remote cache without using Nx Cloud",
-      "file": "shared/recipes/running-tasks/self-hosted-caching",
-      "id": "self-hosted-caching",
-      "name": "Self-Host the Remote Cache",
-      "path": "/recipes/running-tasks/self-hosted-caching"
-    }
-  ],
-  "init": [
-    {
-      "description": "",
-      "file": "shared/migration/adding-to-monorepo",
-      "id": "adding-to-monorepo",
-      "name": "NPM/Yarn/PNPM workspaces",
-      "path": "/recipes/adopting-nx/adding-to-monorepo"
-    },
-    {
-      "description": "",
-      "file": "shared/migration/adding-to-existing-project",
-      "id": "adding-to-existing-project",
-      "name": "Add to any Project",
-      "path": "/recipes/adopting-nx/adding-to-existing-project"
-    },
-    {
-      "description": "",
-      "file": "shared/migration/migration-angular",
-      "id": "angular",
-      "name": "Migrating from Angular CLI",
-      "path": "/technologies/angular/migration/angular"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/init",
-      "id": "init",
-      "name": "init",
-      "path": "/nx-api/nx/documents/init"
-    }
-  ],
-  "import": [
-    {
-      "description": "",
-      "file": "shared/migration/import-project",
-      "id": "import-project",
-      "name": "Import an Existing Project into an Nx Workspace",
-      "path": "/recipes/adopting-nx/import-project"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/import",
-      "id": "import",
-      "name": "import",
-      "path": "/nx-api/nx/documents/import"
+      "file": "shared/concepts/mental-model",
+      "id": "mental-model",
+      "name": "Mental Model",
+      "path": "/concepts/mental-model"
     }
   ],
   "add": [
-    {
-      "description": "",
-      "file": "shared/recipes/tips-n-tricks/keep-nx-versions-in-sync",
-      "id": "keep-nx-versions-in-sync",
-      "name": "Keep Nx Versions in Sync",
-      "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync"
-    },
     {
       "description": "",
       "file": "shared/concepts/nx-plugins",
@@ -884,70 +473,6 @@
       "id": "add",
       "name": "add",
       "path": "/nx-api/nx/documents/add"
-    }
-  ],
-  "environment-variables": [
-    {
-      "description": "",
-      "file": "shared/guides/define-environment-variables",
-      "id": "define-environment-variables",
-      "name": "Define Environment Variables",
-      "path": "/recipes/tips-n-tricks/define-environment-variables"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/use-environment-variables-in-angular",
-      "id": "use-environment-variables-in-angular",
-      "name": "Use Environment Variables in Angular",
-      "path": "/technologies/angular/recipes/use-environment-variables-in-angular"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/use-environment-variables-in-react",
-      "id": "use-environment-variables-in-react",
-      "name": "Use Environment Variables in React",
-      "path": "/technologies/react/recipes/use-environment-variables-in-react"
-    },
-    {
-      "description": "",
-      "file": "shared/reference/environment-variables",
-      "id": "environment-variables",
-      "name": "Environment Variables",
-      "path": "/reference/environment-variables"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/performance-profiling",
-      "id": "performance-profiling",
-      "name": "Profiling Build Performance",
-      "path": "/troubleshooting/performance-profiling"
-    }
-  ],
-  "yarn": [
-    {
-      "description": "",
-      "file": "shared/recipes/yarn-pnp",
-      "id": "yarn-pnp",
-      "name": "Using Yarn PnP",
-      "path": "/recipes/tips-n-tricks/yarn-pnp"
-    }
-  ],
-  "Plug and Play": [
-    {
-      "description": "",
-      "file": "shared/recipes/yarn-pnp",
-      "id": "yarn-pnp",
-      "name": "Using Yarn PnP",
-      "path": "/recipes/tips-n-tricks/yarn-pnp"
-    }
-  ],
-  "intro": [
-    {
-      "description": "",
-      "file": "shared/concepts/mental-model",
-      "id": "mental-model",
-      "name": "Mental Model",
-      "path": "/concepts/mental-model"
     }
   ],
   "create-your-own-plugin": [
@@ -1015,6 +540,52 @@
       "id": "daemon",
       "name": "daemon",
       "path": "/nx-api/nx/documents/daemon"
+    }
+  ],
+  "init": [
+    {
+      "description": "",
+      "file": "shared/migration/migration-angular",
+      "id": "angular",
+      "name": "Migrating from Angular CLI",
+      "path": "/technologies/angular/migration/angular"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/init",
+      "id": "init",
+      "name": "init",
+      "path": "/nx-api/nx/documents/init"
+    }
+  ],
+  "environment-variables": [
+    {
+      "description": "",
+      "file": "shared/guides/use-environment-variables-in-angular",
+      "id": "use-environment-variables-in-angular",
+      "name": "Use Environment Variables in Angular",
+      "path": "/technologies/angular/recipes/use-environment-variables-in-angular"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/use-environment-variables-in-react",
+      "id": "use-environment-variables-in-react",
+      "name": "Use Environment Variables in React",
+      "path": "/technologies/react/recipes/use-environment-variables-in-react"
+    },
+    {
+      "description": "",
+      "file": "shared/reference/environment-variables",
+      "id": "environment-variables",
+      "name": "Environment Variables",
+      "path": "/reference/environment-variables"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/performance-profiling",
+      "id": "performance-profiling",
+      "name": "Profiling Build Performance",
+      "path": "/troubleshooting/performance-profiling"
     }
   ],
   "module-federation": [
@@ -1406,6 +977,22 @@
       "path": "/technologies/test-tools/storybook/recipes/angular-configuring-styles"
     }
   ],
+  "installation": [
+    {
+      "description": "",
+      "file": "shared/recipes/installation/activate-powerpack",
+      "id": "activate-powerpack",
+      "name": "Activate Powerpack",
+      "path": "/nx-enterprise/activate-powerpack"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/create-nx-workspace",
+      "id": "create-nx-workspace",
+      "name": "create-nx-workspace",
+      "path": "/nx-api/nx/documents/create-nx-workspace"
+    }
+  ],
   "conformance": [
     {
       "description": "Write and apply rules for your Nx workspace",
@@ -1589,6 +1176,33 @@
       "id": "affected",
       "name": "affected",
       "path": "/nx-api/nx/documents/affected"
+    }
+  ],
+  "import": [
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/import",
+      "id": "import",
+      "name": "import",
+      "path": "/nx-api/nx/documents/import"
+    }
+  ],
+  "exec": [
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/exec",
+      "id": "exec",
+      "name": "exec",
+      "path": "/nx-api/nx/documents/exec"
+    }
+  ],
+  "workspace-watching": [
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/watch",
+      "id": "watch",
+      "name": "watch",
+      "path": "/nx-api/nx/documents/watch"
     }
   ]
 }

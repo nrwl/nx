@@ -1,6 +1,6 @@
 import { MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
 
-const COLLAPSIBLE_SECTIONS = ['concepts', 'nx-recipes', 'enterprise'];
+const COLLAPSIBLE_SECTIONS = ['concepts', 'recipes', 'enterprise'];
 
 export function getBasicNxSection(items: MenuItem[]): MenuSection {
   return {
@@ -14,7 +14,7 @@ export function getBasicNxSection(items: MenuItem[]): MenuSection {
           m.id === 'features' ||
           m.id === 'concepts' ||
           m.id === 'technologies' ||
-          m.id === 'nx-recipes' ||
+          m.id === 'recipes' ||
           m.id === 'nx-enterprise' ||
           m.id === 'showcase' ||
           m.id === 'reference' ||
