@@ -198,7 +198,68 @@ describe('Node Applications', () => {
     }
     runCLI(`sync`);
 
-    console.log(readJson(`apps/${nestApp}/package.json`));
+    runCLI(`build ${nestApp} --verbose`);
+    checkFilesExist(`apps/${nestApp}/dist/main.js`);
+
+    const p = await runCommandUntil(
+      `serve ${nestApp}`,
+      (output) =>
+        output.includes(
+          `Application is running on: http://localhost:${port}/api`
+        ),
+
+      {
+        env: {
+          NX_DAEMON: 'true',
+        },
+      }
+    );
+
+    const result = await getData(port, '/api');
+    expect(result.message).toMatch('Hello');
+
+    try {
+      await promisifiedTreeKill(p.pid, 'SIGKILL');
+      expect(await killPorts(port)).toBeTruthy();
+    } catch (err) {
+      expect(err).toBeFalsy();
+    }
+  }, 300_000);
+
+  // Dependencies that are not directly imported but are still required for the build to succeed
+  // App -> LibA -> LibB
+  // LibB is transitive, it's not imported in the app, but is required by LibA
+
+  it('should be able to work with transitive non-dependencies', async () => {
+    const nestApp = uniq('nestApp');
+    const nestLibA = uniq('nestliba');
+    const nestLibB = uniq('nestlibb');
+    const port = getRandomPort();
+
+    process.env.PORT = `${port}`;
+    runCLI(`generate @nx/nest:app apps/${nestApp} --no-interactive`);
+
+    runCLI(`generate @nx/nest:lib packages/${nestLibA} --no-interactive`);
+    runCLI(`generate @nx/nest:lib packages/${nestLibB} --no-interactive`);
+
+    if (pm === 'pnpm') {
+      updateJson(`apps/${nestApp}/package.json`, (json) => {
+        json.dependencies = {
+          [`@${workspaceName}/${nestLibA}`]: 'workspace:*',
+        };
+        return json;
+      });
+
+      updateJson(`packages/${nestLibA}/package.json`, (json) => {
+        json.dependencies = {
+          [`@${workspaceName}/${nestLibB}`]: 'workspace:*',
+        };
+        return json;
+      });
+      runCommand(`${getPackageManagerCommand().install}`);
+    }
+    runCLI(`sync`);
+
     runCLI(`build ${nestApp} --verbose`);
     checkFilesExist(`apps/${nestApp}/dist/main.js`);
 
