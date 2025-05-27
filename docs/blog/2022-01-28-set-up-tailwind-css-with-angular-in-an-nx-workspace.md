@@ -317,7 +317,7 @@ At this point, if we serve again the application, everything should still be wor
 
 Similar to the previous section we are going to start by creating a new library to add the card component to. The only difference is that this library is going to be buildable.
 
-> If you are not aware of what buildable libraries are or what problem do they intend to solve, please make sure to read [/ci/incremental-builds](/recipes/angular/setup-incremental-builds-angular).
+> If you are not aware of what buildable libraries are or what problem do they intend to solve, please make sure to read [/ci/incremental-builds](/technologies/angular/recipes/setup-incremental-builds-angular).
 
 Run the following command to generate the library:
 
