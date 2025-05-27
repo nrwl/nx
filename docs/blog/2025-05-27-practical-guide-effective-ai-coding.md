@@ -9,6 +9,9 @@ description: 'Learn how to effectively use AI coding assistants beyond simple pr
 
 > _"Tools amplify your talent. The better your skills, the better the tools serve you."_ — Andrew Hunt, The Pragmatic Programmer
 
+*This is the first post in the series. Much of it aggregates the insights of colleagues at Nx (Juri Strumpflohner, James Henry, and others)
+ and other developers I frequently discuss this topic with (special thanks to Matt Briggs, who is a de-facto co-author of this post).*
+
 **The main takeaway from this guide**: Being intentional and investing in workflows instead of just "using Cursor" or "chatting with GPT" is what separates effective AI-assisted development from impressive demos that don't translate to real productivity gains.
 
 AI can supercharge your development process, but it's not a magic wand. It's like learning to use power tools - requiring practice to master but transformative once you do. The difference between developers who get 10-30% productivity gains and those who struggle with AI comes down to **having proper procedures and workflows** rather than shooting random prompts at their LLM.
@@ -31,8 +34,7 @@ For software engineers, expected outcomes with proper AI implementation:
 - Faster coding on real projects (10-30% in my personal experience)
 - Faster content creation (30-50% in my personal experience)
 - Improved code quality
-- Reduced mental fatigue
-- Accelerated skill acquisition in unfamiliar areas
+- Accelerated skill acquisition
 
 Getting there requires patience and experimentation. We're all figuring this out together as tools improve every few months. No one has mastered AI-assisted development yet. Give yourself room to build this skill - the learning curve is real but worth climbing.
 
@@ -58,7 +60,7 @@ For tasks outside specific coding work - research, planning, documentation, and 
 - **T3 Chat** - A fast web-based chat client that allows you to switch between multiple models and comes with a competitive, convenient pricing approach.
 - **ChatWise** - A desktop-based chat client that uses a bring-your-own-key strategy, allowing you to integrate with all the models out there. You can provision a key via [OpenRouter](https://openrouter.ai/) or directly plug in the key.
 
-All three are comparable - consistency matters more than choice. I personally value MCP integrations, so primarily use Claude Desktop.
+All five are comparable - consistency matters more than choice. I personally value MCP integrations, so primarily use Claude Desktop.
 
 **Model Control Protocols (MCPs)** are plug-and-play tools that AI can use to fulfill requests. They're remarkably quick to create and integrate with most agent-based tools and Claude desktop. MCPs are particularly valuable as they can enhance any of the above tool categories, providing specialized capabilities and integrations that extend the base functionality of AI coding assistants. This is exactly how we integrate Nx's capabilities with existing coding assistants like VS Code Copilot and Cursor - [learn more about our MCP implementation](/blog/nx-mcp-vscode-copilot).
 
@@ -76,7 +78,7 @@ These are your everyday workhorses for AI-assisted coding. They're quick, cost-e
 
 - **Cursor** (VSCode fork)
 - **Windsurf** (Available as VSCode fork or JetBrains plugin)
-- **Copilot** (VSCode native integration; approximately 70% as effective as Cursor/Windsurf but improving fast)
+- **Copilot** (VSCode native integration; almost as effective as Cursor/Windsurf and improving fast)
 
 ### Non-interactive Agents (Deep Thinkers)
 
@@ -87,9 +89,8 @@ More precise than interactive assistants but slower and pricier - like precision
 - **Claude Code** (terminal-based interface)
 - **OpenAI Codex** (terminal-based interface)
 - **JetBrains Junie**
-- **Aider** (budget option with some quality trade-offs)
 
-They get less attention online because most streamers do work that works well with interactive agents. Any agent can put together a web page. Deep thinkers can spend many minutes performing an operation which doesn't make for impressive videos, but they're very valuable when working on real complex systems.
+They get less attention online because most streamers do work that works well with interactive agents. Any agent can put together a web page. "Deep Thinkers" can spend many minutes performing an operation which doesn't make for impressive videos, but they're very valuable when working on real complex systems.
 
 Most of my work involves distributed systems, where interactive agents aren't particularly effective. In these systems, application behavior isn't easily derivable from source code—things operate at a higher level of abstraction.
 
@@ -97,9 +98,9 @@ I get significantly more leverage from tools like Claude Code (or Junie) than Cu
 
 For tasks like writing new scripts or building web UIs, I find Copilot or Cursor work better.
 
-## The Prime Directive: Understanding over Speed
+## The Main Rule: Understanding over Speed
 
-> Never commit code you don't fully understand.
+> Never commit code you don't understand.
 
 While AI may write it, you are responsible for every character. Understanding your code completely is essential. Read, understand, investigate the code that AI generates.
 
@@ -107,13 +108,10 @@ If AI generates subpar code, it's your duty to improve it and learn how to get b
 
 **Effective AI use means:**
 
-- More thinking
-- More reading
+- More thinking and reading
 - Less typing
 
-If that's not happening, you're off track.
-
-These tools create space for better engineering practices and quality improvements - not just cramming in more features. **Critical thinking and deep codebase familiarity remain essential. They're the foundation for effective AI use.**
+These tools create space for better engineering practices - not just cramming in more features. **Critical thinking and deep codebase familiarity remain essential. They're the foundation for effective AI use.**
 
 ### Beyond "Vibing" with AI
 
@@ -125,13 +123,11 @@ Although impressive demos get attention, the vast majority of effort is spent on
 
 The most effective AI-assisted development follows a structured approach: **Plan → Act → Review → Repeat**. This isn't just good practice - it's essential for avoiding the common pitfalls that lead to frustration and wasted time.
 
-If things go sideways, don't hesitate to reset: dump context, revert changes, and start fresh. These tools drastically reduce "grunt work" costs, making restarts practical.
-
 ### Plan
 
 ![Planning Phase Workflow](/blog/images/articles/ai-flow-planning-phase.avif)
 
-Keep the agent in discussion mode - no code execution yet. Provide necessary context. For complex features, thorough planning preserves "memory" between executions. Most tasks don't require this depth, but skipping planning virtually guarantees poor results.
+Keep the agent in discussion mode - no code execution yet. Provide necessary context. For complex features, thorough planning preserves the necessary context between executions. Most tasks don't require this depth, but skipping planning virtually guarantees poor results.
 
 Planning needs substantial context. This is where tools like [Nx's AI integration](/features/enhance-AI) shine by providing agents with derived context about your codebase architecture, team responsibilities, and organizational boundaries. All of these helps LLMs and humans operate from the same architectural and organizational context.
 
@@ -141,56 +137,55 @@ For large changes, it's a good idea to persist the created plan to disk.
 
 ![Acting Phase Workflow](/blog/images/articles/ai-flow-acting-phase.avif)
 
-Release the agent to execute the plan (say: execute the plan).
+Release the agent to execute the plan.
 Stay engaged. Monitor execution and check work in progress. Halt immediately if problems arise or new information emerges, then return to planning.
 
-Agents can get stuck in loops; stop and redirect them when this happens. Mental disengagement here dramatically increases the chance of poor code requiring a restart. An Agent's effectiveness increases dramatically when it can use higher-level operations. Without these, ensuring consistency and adherence to best practices becomes much harder.
+Agents can get stuck. If this happens, restart them. An Agent's effectiveness increases dramatically when it can use higher-level operations. Without these, ensuring consistency and adherence to best practices becomes much harder.
 
-This primarily affects real organizations, not demo projects, as demos don't need to be correct or follow best practices. That was a big focus for us when developing Nx MCP (which provides numerous tools that help guarantee consistency and compliance with standards) because of us working with a lot of large companies with 1000s of engineers working in the same org.
+This primarily affects real organizations, not demo projects, as demos don't need to be correct or follow best practices. That was a big focus for us when developing Nx MCP (which provides many tools that help guarantee consistency and compliance with standards) because of us working with a lot of large companies with 1000s of engineers working in the same org.
 
 Agents excel at being almost right but struggle with executing exactly what's required. Good interactions should include requesting user input for high-impact operations that are difficult to adjust later (like creating a new package). For instance, when using Nx, an Agent would open a UI with pre-filled generator options that users can modify and confirm. The Agent then continues the work from that point. Have a look at our [latest blog post for a deeper dive into what this looks like](/blog/nx-generators-ai-integration).
+
+
+If things go sideways, don't hesitate to reset: dump context, revert changes, and start fresh. These tools drastically reduce "grunt work" costs, making restarts practical.
 
 ### Review
 
 ![Review Phase Workflow](/blog/images/articles/ai-flow-review-phase.avif)
 
-You likely won't keep pace with the agent's output, so thorough review is essential afterward. Make small changes directly if needed - using an agent doesn't mean you stop writing code. This should be collaborative.
-
-If you modify code, ask the agent to evaluate your changes. Use git extensively so you can always reset if needed. Don't accept subpar code - improve your tool usage to get the results you expect.
+Even though I try to keep a document where I note things that will require a follow-up, most likely won't keep pace with the agent's output. That's why it's important to do thorough review afterward. Make small changes directly or ask the agent to make them.
 
 ### Repeat
 
-The process is rarely linear and often varies, but follows this general pattern. Success comes from developing intuition about which direction to take at each stage - this isn't a rigid playbook. Building this intuitive sense requires practice, reflection, and time.
+The process is rarely linear and often varies, but follows this general pattern. 
 
 **Common mistakes**: skipping either "Plan" or "Repeat" - both are essential. Do not skip them when working on real projects.
 
 ## Using Rules and Persistent Context
 
-Every AI coding assistant offers automatic prompt inclusion: Cursor rules, Windsurf rules, Junie's `.junie/guidelines.md`. These are essential for consistent output. Files and rules give you "memory" between sessions.
+Every AI coding assistant offers automatic prompt inclusion: Cursor rules, Windsurf rules etc. These are essential for consistent output. 
 
-Keep it manageable - 100-300 lines works well. Your rules should document coding style, recurring patterns, and codebase navigation. If you repeat yourself during development, encode it in rules.
+Keep it manageable - a few hundred lines work well. Your rules should document coding style, recurring patterns, and architecture. If you repeat yourself during development, encode it in rules.
 
 For persistent prompts, create a human-readable version and let AI optimize it for machines. AI excels at prompt engineering - focus on tweaking, not creating from scratch.
 
 ### Example Workflow for Rules
 
-1. Create `CODING.md` with coding standards
+1. Create `STANDARDS.md` with coding standards
 2. Review with AI and request clarifications
-3. Identify gaps
-4. Request quantitative assessment
-5. Format standards appropriately
-6. Generate optimized rules
-7. Update rules files
+3. Identify gaps and address them
+4. Format standards appropriately
+5. Update rules files
 
-### For Feature Work
+### For Working on Features
 
-Maintain a `FEATURE.md` at project root. Start with ticket instructions and develop something RFC-like. Use AI as engineering partner, rubber duck, and technical writer - handling grunt work while you focus on complex thinking.
+Maintain a `PR.md` at project root. Start with issue instructions and update it with any relevant information about the PR you are working on. Use AI as pair programmer, rubber duck, and technical writer - handling grunt work while you focus on complex thinking.
 
-With your feature document ready, you can instantly provide context in any chat. Create implementation steps with AI assistance and save as a `PROGRESS.md` checklist.
+With your feature document ready, you can instantly provide context in any chat. Create implementation steps and save the checklist in `PR.md` or in a separate file.
 
 Start separate chats for each step, checking off as you complete them. Remain flexible when pivots become necessary.
 
-These techniques amplify what great programmers already do, but with more structure and effectiveness than traditional approaches. AI assistance makes these practices significantly more powerful.
+These techniques amplify what great programmers already do, but AI assistance makes these practices significantly more powerful.
 
 ## Quick Recommendations
 
