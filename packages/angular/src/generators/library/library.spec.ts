@@ -316,6 +316,7 @@ describe('lib', () => {
           experimentalDecorators: true,
           importHelpers: true,
           module: 'preserve',
+          moduleResolution: 'bundler',
           skipLibCheck: true,
           noFallthroughCasesInSwitch: true,
           noPropertyAccessFromIndexSignature: true,
