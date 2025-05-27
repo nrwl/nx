@@ -162,7 +162,7 @@ If you modify code, ask the agent to evaluate your changes. Use git extensively 
 
 The process is rarely linear and often varies, but follows this general pattern. Success comes from developing intuition about which direction to take at each stage - this isn't a rigid playbook. Building this intuitive sense requires practice, reflection, and time.
 
-**Common mistakes**: skipping either "Plan" or "Repeat" - both are essential. Do not skip them when workin on real projects.
+**Common mistakes**: skipping either "Plan" or "Repeat" - both are essential. Do not skip them when working on real projects.
 
 ## Using Rules and Persistent Context
 
