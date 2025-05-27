@@ -1320,7 +1320,7 @@
                     {
                       "name": "API",
                       "id": "api",
-                      "file": "shared/packages/eslint/eslint-plugin.md"
+                      "file": "shared/packages/eslint/eslint-plugin"
                     }
                   ]
                 }
