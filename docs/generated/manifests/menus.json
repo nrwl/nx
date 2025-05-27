@@ -224,19 +224,19 @@
       },
       {
         "name": "Core Guides",
-        "path": "/nx-recipes",
-        "id": "nx-recipes",
+        "path": "/recipes",
+        "id": "recipes",
         "isExternal": false,
         "children": [
           {
             "name": "Installation",
-            "path": "/nx-recipes/installation",
+            "path": "/recipes/installation",
             "id": "installation",
             "isExternal": false,
             "children": [
               {
                 "name": "Install Nx in a Non-Javascript Repo",
-                "path": "/nx-recipes/installation/install-non-javascript",
+                "path": "/recipes/installation/install-non-javascript",
                 "id": "install-non-javascript",
                 "isExternal": false,
                 "children": [],
@@ -244,7 +244,7 @@
               },
               {
                 "name": "Update Your Global Nx Installation",
-                "path": "/nx-recipes/installation/update-global-installation",
+                "path": "/recipes/installation/update-global-installation",
                 "id": "update-global-installation",
                 "isExternal": false,
                 "children": [],
@@ -255,13 +255,13 @@
           },
           {
             "name": "Tasks & Caching",
-            "path": "/nx-recipes/running-tasks",
+            "path": "/recipes/running-tasks",
             "id": "running-tasks",
             "isExternal": false,
             "children": [
               {
                 "name": "Configure Inputs for Task Caching",
-                "path": "/nx-recipes/running-tasks/configure-inputs",
+                "path": "/recipes/running-tasks/configure-inputs",
                 "id": "configure-inputs",
                 "isExternal": false,
                 "children": [],
@@ -269,7 +269,7 @@
               },
               {
                 "name": "Configure Outputs for Task Caching",
-                "path": "/nx-recipes/running-tasks/configure-outputs",
+                "path": "/recipes/running-tasks/configure-outputs",
                 "id": "configure-outputs",
                 "isExternal": false,
                 "children": [],
@@ -277,7 +277,7 @@
               },
               {
                 "name": "Define a Task Pipeline",
-                "path": "/nx-recipes/running-tasks/defining-task-pipeline",
+                "path": "/recipes/running-tasks/defining-task-pipeline",
                 "id": "defining-task-pipeline",
                 "isExternal": false,
                 "children": [],
@@ -285,7 +285,7 @@
               },
               {
                 "name": "Use the Terminal UI",
-                "path": "/nx-recipes/running-tasks/terminal-ui",
+                "path": "/recipes/running-tasks/terminal-ui",
                 "id": "terminal-ui",
                 "isExternal": false,
                 "children": [],
@@ -293,7 +293,7 @@
               },
               {
                 "name": "Run Custom Commands",
-                "path": "/nx-recipes/running-tasks/run-commands-executor",
+                "path": "/recipes/running-tasks/run-commands-executor",
                 "id": "run-commands-executor",
                 "isExternal": false,
                 "children": [],
@@ -301,7 +301,7 @@
               },
               {
                 "name": "Pass Args to Commands",
-                "path": "/nx-recipes/running-tasks/pass-args-to-commands",
+                "path": "/recipes/running-tasks/pass-args-to-commands",
                 "id": "pass-args-to-commands",
                 "isExternal": false,
                 "children": [],
@@ -309,7 +309,7 @@
               },
               {
                 "name": "Run Tasks in Parallel",
-                "path": "/nx-recipes/running-tasks/run-tasks-in-parallel",
+                "path": "/recipes/running-tasks/run-tasks-in-parallel",
                 "id": "run-tasks-in-parallel",
                 "isExternal": false,
                 "children": [],
@@ -317,7 +317,7 @@
               },
               {
                 "name": "Run Root-Level NPM Scripts with Nx",
-                "path": "/nx-recipes/running-tasks/root-level-scripts",
+                "path": "/recipes/running-tasks/root-level-scripts",
                 "id": "root-level-scripts",
                 "isExternal": false,
                 "children": [],
@@ -325,7 +325,7 @@
               },
               {
                 "name": "Workspace Watching",
-                "path": "/nx-recipes/running-tasks/workspace-watching",
+                "path": "/recipes/running-tasks/workspace-watching",
                 "id": "workspace-watching",
                 "isExternal": false,
                 "children": [],
@@ -333,7 +333,7 @@
               },
               {
                 "name": "Reduce Repetitive Configuration",
-                "path": "/nx-recipes/running-tasks/reduce-repetitive-configuration",
+                "path": "/recipes/running-tasks/reduce-repetitive-configuration",
                 "id": "reduce-repetitive-configuration",
                 "isExternal": false,
                 "children": [],
@@ -341,7 +341,7 @@
               },
               {
                 "name": "Change Cache Location",
-                "path": "/nx-recipes/running-tasks/change-cache-location",
+                "path": "/recipes/running-tasks/change-cache-location",
                 "id": "change-cache-location",
                 "isExternal": false,
                 "children": [],
@@ -349,7 +349,7 @@
               },
               {
                 "name": "Skip Task Caching",
-                "path": "/nx-recipes/running-tasks/skipping-cache",
+                "path": "/recipes/running-tasks/skipping-cache",
                 "id": "skipping-cache",
                 "isExternal": false,
                 "children": [],
@@ -357,7 +357,7 @@
               },
               {
                 "name": "Migrate to Inferred Tasks (Project Crystal)",
-                "path": "/nx-recipes/running-tasks/convert-to-inferred",
+                "path": "/recipes/running-tasks/convert-to-inferred",
                 "id": "convert-to-inferred",
                 "isExternal": false,
                 "children": [],
@@ -365,7 +365,7 @@
               },
               {
                 "name": "Self-Host the Remote Cache",
-                "path": "/nx-recipes/running-tasks/self-hosted-caching",
+                "path": "/recipes/running-tasks/self-hosted-caching",
                 "id": "self-hosted-caching",
                 "isExternal": false,
                 "children": [],
@@ -376,13 +376,13 @@
           },
           {
             "name": "Adopting Nx",
-            "path": "/nx-recipes/adopting-nx",
+            "path": "/recipes/adopting-nx",
             "id": "adopting-nx",
             "isExternal": false,
             "children": [
               {
                 "name": "NPM/Yarn/PNPM workspaces",
-                "path": "/nx-recipes/adopting-nx/adding-to-monorepo",
+                "path": "/recipes/adopting-nx/adding-to-monorepo",
                 "id": "adding-to-monorepo",
                 "isExternal": false,
                 "children": [],
@@ -390,7 +390,7 @@
               },
               {
                 "name": "Migrate From Turborepo",
-                "path": "/nx-recipes/adopting-nx/from-turborepo",
+                "path": "/recipes/adopting-nx/from-turborepo",
                 "id": "from-turborepo",
                 "isExternal": false,
                 "children": [],
@@ -398,7 +398,7 @@
               },
               {
                 "name": "Add to any Project",
-                "path": "/nx-recipes/adopting-nx/adding-to-existing-project",
+                "path": "/recipes/adopting-nx/adding-to-existing-project",
                 "id": "adding-to-existing-project",
                 "isExternal": false,
                 "children": [],
@@ -406,7 +406,7 @@
               },
               {
                 "name": "Import an Existing Project into an Nx Workspace",
-                "path": "/nx-recipes/adopting-nx/import-project",
+                "path": "/recipes/adopting-nx/import-project",
                 "id": "import-project",
                 "isExternal": false,
                 "children": [],
@@ -414,7 +414,7 @@
               },
               {
                 "name": "Preserving Git Histories",
-                "path": "/nx-recipes/adopting-nx/preserving-git-histories",
+                "path": "/recipes/adopting-nx/preserving-git-histories",
                 "id": "preserving-git-histories",
                 "isExternal": false,
                 "children": [],
@@ -422,7 +422,7 @@
               },
               {
                 "name": "Manual migration",
-                "path": "/nx-recipes/adopting-nx/manual",
+                "path": "/recipes/adopting-nx/manual",
                 "id": "manual",
                 "isExternal": false,
                 "children": [],
@@ -433,13 +433,13 @@
           },
           {
             "name": "Nx Release",
-            "path": "/nx-recipes/nx-release",
+            "path": "/recipes/nx-release",
             "id": "nx-release",
             "isExternal": false,
             "children": [
               {
                 "name": "Get Started with Nx Release",
-                "path": "/nx-recipes/nx-release/get-started-with-nx-release",
+                "path": "/recipes/nx-release/get-started-with-nx-release",
                 "id": "get-started-with-nx-release",
                 "isExternal": false,
                 "children": [],
@@ -447,7 +447,7 @@
               },
               {
                 "name": "Release Projects Independently",
-                "path": "/nx-recipes/nx-release/release-projects-independently",
+                "path": "/recipes/nx-release/release-projects-independently",
                 "id": "release-projects-independently",
                 "isExternal": false,
                 "children": [],
@@ -455,7 +455,7 @@
               },
               {
                 "name": "Updating Version References in Manifest Files (e.g. package.json)",
-                "path": "/nx-recipes/nx-release/updating-version-references",
+                "path": "/recipes/nx-release/updating-version-references",
                 "id": "updating-version-references",
                 "isExternal": false,
                 "children": [],
@@ -463,7 +463,7 @@
               },
               {
                 "name": "Automatically Version with Conventional Commits",
-                "path": "/nx-recipes/nx-release/automatically-version-with-conventional-commits",
+                "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
                 "id": "automatically-version-with-conventional-commits",
                 "isExternal": false,
                 "children": [],
@@ -471,7 +471,7 @@
               },
               {
                 "name": "Customize Conventional Commit Types",
-                "path": "/nx-recipes/nx-release/customize-conventional-commit-types",
+                "path": "/recipes/nx-release/customize-conventional-commit-types",
                 "id": "customize-conventional-commit-types",
                 "isExternal": false,
                 "children": [],
@@ -479,7 +479,7 @@
               },
               {
                 "name": "File Based Versioning (Version Plans)",
-                "path": "/nx-recipes/nx-release/file-based-versioning-version-plans",
+                "path": "/recipes/nx-release/file-based-versioning-version-plans",
                 "id": "file-based-versioning-version-plans",
                 "isExternal": false,
                 "children": [],
@@ -487,7 +487,7 @@
               },
               {
                 "name": "Configure Custom Registries",
-                "path": "/nx-recipes/nx-release/configure-custom-registries",
+                "path": "/recipes/nx-release/configure-custom-registries",
                 "id": "configure-custom-registries",
                 "isExternal": false,
                 "children": [],
@@ -495,7 +495,7 @@
               },
               {
                 "name": "Publish in CI/CD",
-                "path": "/nx-recipes/nx-release/publish-in-ci-cd",
+                "path": "/recipes/nx-release/publish-in-ci-cd",
                 "id": "publish-in-ci-cd",
                 "isExternal": false,
                 "children": [],
@@ -503,7 +503,7 @@
               },
               {
                 "name": "Automate GitHub Releases",
-                "path": "/nx-recipes/nx-release/automate-github-releases",
+                "path": "/recipes/nx-release/automate-github-releases",
                 "id": "automate-github-releases",
                 "isExternal": false,
                 "children": [],
@@ -511,7 +511,7 @@
               },
               {
                 "name": "Automate GitLab Releases",
-                "path": "/nx-recipes/nx-release/automate-gitlab-releases",
+                "path": "/recipes/nx-release/automate-gitlab-releases",
                 "id": "automate-gitlab-releases",
                 "isExternal": false,
                 "children": [],
@@ -519,7 +519,7 @@
               },
               {
                 "name": "Publish Rust Crates",
-                "path": "/nx-recipes/nx-release/publish-rust-crates",
+                "path": "/recipes/nx-release/publish-rust-crates",
                 "id": "publish-rust-crates",
                 "isExternal": false,
                 "children": [],
@@ -527,7 +527,7 @@
               },
               {
                 "name": "Update Your Local Registry Setup to use Nx Release",
-                "path": "/nx-recipes/nx-release/update-local-registry-setup",
+                "path": "/recipes/nx-release/update-local-registry-setup",
                 "id": "update-local-registry-setup",
                 "isExternal": false,
                 "children": [],
@@ -535,7 +535,7 @@
               },
               {
                 "name": "Configure Changelog Format",
-                "path": "/nx-recipes/nx-release/configure-changelog-format",
+                "path": "/recipes/nx-release/configure-changelog-format",
                 "id": "configure-changelog-format",
                 "isExternal": false,
                 "children": [],
@@ -543,7 +543,7 @@
               },
               {
                 "name": "Build Before Versioning",
-                "path": "/nx-recipes/nx-release/build-before-versioning",
+                "path": "/recipes/nx-release/build-before-versioning",
                 "id": "build-before-versioning",
                 "isExternal": false,
                 "children": [],
@@ -551,7 +551,7 @@
               },
               {
                 "name": "Configuring Version Prefix for Dependency Versions",
-                "path": "/nx-recipes/nx-release/configuration-version-prefix",
+                "path": "/recipes/nx-release/configuration-version-prefix",
                 "id": "configuration-version-prefix",
                 "isExternal": false,
                 "children": [],
@@ -562,13 +562,13 @@
           },
           {
             "name": "Nx Console",
-            "path": "/nx-recipes/nx-console",
+            "path": "/recipes/nx-console",
             "id": "nx-console",
             "isExternal": false,
             "children": [
               {
                 "name": "Telemetry",
-                "path": "/nx-recipes/nx-console/console-telemetry",
+                "path": "/recipes/nx-console/console-telemetry",
                 "id": "console-telemetry",
                 "isExternal": false,
                 "children": [],
@@ -576,7 +576,7 @@
               },
               {
                 "name": "Project Details View",
-                "path": "/nx-recipes/nx-console/console-project-details",
+                "path": "/recipes/nx-console/console-project-details",
                 "id": "console-project-details",
                 "isExternal": false,
                 "children": [],
@@ -584,7 +584,7 @@
               },
               {
                 "name": "Generate Command",
-                "path": "/nx-recipes/nx-console/console-generate-command",
+                "path": "/recipes/nx-console/console-generate-command",
                 "id": "console-generate-command",
                 "isExternal": false,
                 "children": [],
@@ -592,7 +592,7 @@
               },
               {
                 "name": "Run Command",
-                "path": "/nx-recipes/nx-console/console-run-command",
+                "path": "/recipes/nx-console/console-run-command",
                 "id": "console-run-command",
                 "isExternal": false,
                 "children": [],
@@ -600,7 +600,7 @@
               },
               {
                 "name": "Nx Cloud Integration",
-                "path": "/nx-recipes/nx-console/console-nx-cloud",
+                "path": "/recipes/nx-console/console-nx-cloud",
                 "id": "console-nx-cloud",
                 "isExternal": false,
                 "children": [],
@@ -608,7 +608,7 @@
               },
               {
                 "name": "Migrate UI",
-                "path": "/nx-recipes/nx-console/console-migrate-ui",
+                "path": "/recipes/nx-console/console-migrate-ui",
                 "id": "console-migrate-ui",
                 "isExternal": false,
                 "children": [],
@@ -616,7 +616,7 @@
               },
               {
                 "name": "Troubleshooting",
-                "path": "/nx-recipes/nx-console/console-troubleshooting",
+                "path": "/recipes/nx-console/console-troubleshooting",
                 "id": "console-troubleshooting",
                 "isExternal": false,
                 "children": [],
@@ -627,13 +627,13 @@
           },
           {
             "name": "Enforce Module Boundaries",
-            "path": "/nx-recipes/enforce-module-boundaries",
+            "path": "/recipes/enforce-module-boundaries",
             "id": "enforce-module-boundaries",
             "isExternal": false,
             "children": [
               {
                 "name": "Ban Dependencies with Certain Tags",
-                "path": "/nx-recipes/enforce-module-boundaries/ban-dependencies-with-tags",
+                "path": "/recipes/enforce-module-boundaries/ban-dependencies-with-tags",
                 "id": "ban-dependencies-with-tags",
                 "isExternal": false,
                 "children": [],
@@ -641,7 +641,7 @@
               },
               {
                 "name": "Tag in Multiple Dimensions",
-                "path": "/nx-recipes/enforce-module-boundaries/tag-multiple-dimensions",
+                "path": "/recipes/enforce-module-boundaries/tag-multiple-dimensions",
                 "id": "tag-multiple-dimensions",
                 "isExternal": false,
                 "children": [],
@@ -649,7 +649,7 @@
               },
               {
                 "name": "Ban External Imports",
-                "path": "/nx-recipes/enforce-module-boundaries/ban-external-imports",
+                "path": "/recipes/enforce-module-boundaries/ban-external-imports",
                 "id": "ban-external-imports",
                 "isExternal": false,
                 "children": [],
@@ -657,7 +657,7 @@
               },
               {
                 "name": "Tags Allow List",
-                "path": "/nx-recipes/enforce-module-boundaries/tags-allow-list",
+                "path": "/recipes/enforce-module-boundaries/tags-allow-list",
                 "id": "tags-allow-list",
                 "isExternal": false,
                 "children": [],
@@ -668,13 +668,13 @@
           },
           {
             "name": "Tips and tricks",
-            "path": "/nx-recipes/tips-n-tricks",
+            "path": "/recipes/tips-n-tricks",
             "id": "tips-n-tricks",
             "isExternal": false,
             "children": [
               {
                 "name": "Convert from a Standalone Repository to a Monorepo",
-                "path": "/nx-recipes/tips-n-tricks/standalone-to-monorepo",
+                "path": "/recipes/tips-n-tricks/standalone-to-monorepo",
                 "id": "standalone-to-monorepo",
                 "isExternal": false,
                 "children": [],
@@ -682,7 +682,7 @@
               },
               {
                 "name": "Keep Nx Versions in Sync",
-                "path": "/nx-recipes/tips-n-tricks/keep-nx-versions-in-sync",
+                "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync",
                 "id": "keep-nx-versions-in-sync",
                 "isExternal": false,
                 "children": [],
@@ -690,7 +690,7 @@
               },
               {
                 "name": "Define Environment Variables",
-                "path": "/nx-recipes/tips-n-tricks/define-environment-variables",
+                "path": "/recipes/tips-n-tricks/define-environment-variables",
                 "id": "define-environment-variables",
                 "isExternal": false,
                 "children": [],
@@ -698,7 +698,7 @@
               },
               {
                 "name": "Configuring Browser Support",
-                "path": "/nx-recipes/tips-n-tricks/browser-support",
+                "path": "/recipes/tips-n-tricks/browser-support",
                 "id": "browser-support",
                 "isExternal": false,
                 "children": [],
@@ -706,7 +706,7 @@
               },
               {
                 "name": "Include Assets in Build",
-                "path": "/nx-recipes/tips-n-tricks/include-assets-in-build",
+                "path": "/recipes/tips-n-tricks/include-assets-in-build",
                 "id": "include-assets-in-build",
                 "isExternal": false,
                 "children": [],
@@ -714,7 +714,7 @@
               },
               {
                 "name": "Include All package.json Files as Projects",
-                "path": "/nx-recipes/tips-n-tricks/include-all-packagejson",
+                "path": "/recipes/tips-n-tricks/include-all-packagejson",
                 "id": "include-all-packagejson",
                 "isExternal": false,
                 "children": [],
@@ -722,7 +722,7 @@
               },
               {
                 "name": "Identify Dependencies Between Folders",
-                "path": "/nx-recipes/tips-n-tricks/identify-dependencies-between-folders",
+                "path": "/recipes/tips-n-tricks/identify-dependencies-between-folders",
                 "id": "identify-dependencies-between-folders",
                 "isExternal": false,
                 "children": [],
@@ -730,7 +730,7 @@
               },
               {
                 "name": "Disable Graph Links Created from Analyzing Source Files",
-                "path": "/nx-recipes/tips-n-tricks/analyze-source-files",
+                "path": "/recipes/tips-n-tricks/analyze-source-files",
                 "id": "analyze-source-files",
                 "isExternal": false,
                 "children": [],
@@ -738,7 +738,7 @@
               },
               {
                 "name": "Altering Migration Process",
-                "path": "/nx-recipes/tips-n-tricks/advanced-update",
+                "path": "/recipes/tips-n-tricks/advanced-update",
                 "id": "advanced-update",
                 "isExternal": false,
                 "children": [],
@@ -746,7 +746,7 @@
               },
               {
                 "name": "Using Yarn PnP",
-                "path": "/nx-recipes/tips-n-tricks/yarn-pnp",
+                "path": "/recipes/tips-n-tricks/yarn-pnp",
                 "id": "yarn-pnp",
                 "isExternal": false,
                 "children": [],

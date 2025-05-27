@@ -184,7 +184,7 @@
 
         {
           "name": "Core Guides",
-          "id": "nx-recipes",
+          "id": "recipes",
           "description": "In depth recipes for common tasks",
           "itemList": [
             {
