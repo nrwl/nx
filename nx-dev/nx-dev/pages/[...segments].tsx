@@ -12,7 +12,10 @@ import { nxPackagesApi } from '../lib/packages.api';
 import { tagsApi } from '../lib/tags.api';
 import { fetchGithubStarCount } from '../lib/githubStars.api';
 import { ScrollableContent } from '@nx/ui-scrollable-content';
-import { PackageSchemaViewer } from '@nx/nx-dev/feature-package-schema-viewer';
+import {
+  PackageSchemaList,
+  PackageSchemaViewer,
+} from '@nx/nx-dev/feature-package-schema-viewer';
 import {
   type MigrationMetadata,
   type ProcessedPackageMetadata,
@@ -28,6 +31,12 @@ type NxDocumentationProps =
       widgetData: { githubStarsCount: number };
     }
   | {
+      pageType: 'api-index';
+      menu: MenuItem[];
+      pkg: ProcessedPackageMetadata;
+      migrations: MigrationMetadata[];
+    }
+  | {
       pageType: 'migrations';
       menu: MenuItem[];
       pkg: ProcessedPackageMetadata;
@@ -35,8 +44,8 @@ type NxDocumentationProps =
     }
   | {
       pageType:
-        | 'generators-list'
-        | 'executors-list'
+        | 'generators-index'
+        | 'executors-index'
         | 'generators'
         | 'executors';
       menu: MenuItem[];
@@ -73,15 +82,21 @@ export default function NxDocumentation(props: NxDocumentationProps) {
               relatedDocuments={props.relatedDocuments}
               widgetData={props.widgetData}
             />
+          ) : props.pageType === 'api-index' ? (
+            <PackageSchemaList
+              pkg={props.pkg}
+              overview={''}
+              migrations={props.migrations}
+            />
           ) : props.pageType === 'migrations' ? (
             <PackageSchemaSubList
               pkg={props.pkg}
               migrations={props.migrations}
               type={'migration'}
             />
-          ) : props.pageType === 'generators-list' ? (
+          ) : props.pageType === 'generators-index' ? (
             <PackageSchemaSubList pkg={props.pkg} type="generator" />
-          ) : props.pageType === 'executors-list' ? (
+          ) : props.pageType === 'executors-index' ? (
             <PackageSchemaSubList pkg={props.pkg} type="executor" />
           ) : (
             <PackageSchemaViewer pkg={props.pkg} schema={props.schema} />
@@ -103,6 +118,7 @@ export const getStaticPaths: GetStaticPaths = () => {
     fallback: 'blocking',
   };
 };
+
 export const getStaticProps: GetStaticProps = async ({
   params,
 }: {
@@ -111,11 +127,33 @@ export const getStaticProps: GetStaticProps = async ({
   try {
     if (params.segments[0] === 'technologies' && params.segments[2] === 'api') {
       const [, packageName, , type, ...segments] = params.segments;
-      if (type === 'generators' || type === 'executors') {
+      if (!type) {
+        // API index
+        // Example: /technologies/typescript/api
+        const pkg = nxPackagesApi.getPackage([packageName]);
+        return {
+          props: {
+            pageType: 'api-index',
+            pkg,
+            menu: menusApi.getMenu('nx', ''),
+            migrations: Object.keys(pkg.migrations).map((migration) => {
+              return nxPackagesApi.getSchemaMetadata(
+                nxPackagesApi.getPackageFileMetadatas(pkg.name, 'migrations')[
+                  migration
+                ]
+              ) as MigrationMetadata;
+            }),
+          },
+        };
+      } else if (type === 'generators' || type === 'executors') {
+        // API generators and executors
+        // Examples:
+        // - /technologies/typescript/api/generators
+        // - /technologies/typescript/api/generators/library
         const isList = segments.length === 0;
         const props: NxDocumentationProps = {
           // e.g. generators vs generators-list
-          pageType: isList ? `${type}-list` : type,
+          pageType: isList ? `${type}-index` : type,
           pkg: nxPackagesApi.getPackage([packageName]),
           menu: menusApi.getMenu('nx', ''),
         };
@@ -128,10 +166,12 @@ export const getStaticProps: GetStaticProps = async ({
         }
         return { props };
       } else if (type === 'migrations') {
+        // API migrations
+        // Example: /technologies/typescript/api/migrations
         return {
           props: {
             pageType: type,
-            menu: menusApi.getMenu('nx-api', 'nx-api'),
+            menu: menusApi.getMenu('nx', ''),
             pkg: nxPackagesApi.getPackage([packageName]),
             migrations: Object.keys(
               nxPackagesApi.getPackage([packageName]).migrations
@@ -147,6 +187,8 @@ export const getStaticProps: GetStaticProps = async ({
         };
       }
     } else {
+      // Other documentation pages (e.g. markdown files in the docs folder)
+      // Example: /features/run-tasks
       const document = nxDocumentationApi.getDocument(params.segments);
       return {
         props: {

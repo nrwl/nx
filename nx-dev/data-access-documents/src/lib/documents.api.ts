@@ -135,6 +135,8 @@ export class DocumentsApi {
       const packages = Object.values(this.packagesManifest);
 
       packages.forEach((pkg) => {
+        paths.push(`/technologies/${pkg.name}/api`);
+
         const packageName = pkg.name;
 
         if (Object.keys(pkg.executors).length > 0) {
