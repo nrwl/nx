@@ -136,9 +136,26 @@ export class DocumentsApi {
       const packages = Object.values(this.packagesManifest);
 
       packages.forEach((pkg) => {
-        const apiPagePath = pkgToGeneratedApiDocs[pkg.name]?.pagePath;
-        if (!apiPagePath) return;
+        const apiDocData = pkgToGeneratedApiDocs[pkg.name];
+        if (!apiDocData) return;
+        const apiPagePath = apiDocData.pagePath;
         paths.push(apiPagePath);
+
+        if (apiDocData.includeDocuments) {
+          if (Object.keys(pkg.documents).length > 0) {
+            paths.push(`${apiPagePath}/documents`);
+          }
+          Object.keys(pkg.documents).forEach((path) => {
+            const segments = path.split('/').filter(Boolean);
+            if (segments[0] === 'nx-api') {
+              // Create a path like /reference/core-api/nx/documents/init
+              const newPath = `${apiPagePath}/documents/${segments
+                .slice(3)
+                .join('/')}`;
+              paths.push(newPath);
+            }
+          });
+        }
 
         if (Object.keys(pkg.executors).length > 0) {
           paths.push(`${apiPagePath}/executors`);

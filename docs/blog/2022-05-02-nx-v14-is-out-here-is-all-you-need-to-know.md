@@ -197,14 +197,14 @@ This can be a game-changer when building huge apps. Stay tuned for more content 
 
 We recommend this approach if you want to speed up local serve and build times, but you still deploy the application as a whole.
 
-Read more in our docs: [/concepts/module-federation/faster-builds-with-module-federation](/concepts/module-federation/faster-builds-with-module-federation)
+Read more in our docs: [/technologies/module-federation/concepts/faster-builds-with-module-federation](/technologies/module-federation/concepts/faster-builds-with-module-federation)
 
 ## Micro Frontend Architecture with Nx
 
 As mentioned in the previous section, Nx v14 comes with out-of-the-box for Webpack Module Federation. The Micro Frontend architecture builds on top of that and adds the ability for independent deployability. While Module Federation enables faster builds by vertically slicing your application into smaller ones, the MFE architecture layers _independent deployments_  
 on top of federation. Teams should only choose MFEs if they want to deploy their host and remotes on different cadences.
 
-Read more in our docs: [/concepts/module-federation/micro-frontend-architecture](/concepts/module-federation/micro-frontend-architecture)
+Read more in our docs: [/technologies/module-federation/concepts/micro-frontend-architecture](/technologies/module-federation/concepts/micro-frontend-architecture)
 
 ## Dark mode for Project Graph as well as path tracking
 

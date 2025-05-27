@@ -1,2 +1,0 @@
-# Links that couldn't be found in map.json
-/recipes/adopting-nx/adding-to-monorepo
