@@ -102,7 +102,10 @@ function SidebarSectionItems({
 }): JSX.Element {
   const router = useRouter();
   const initialRender = useRef(true);
-  const [collapsed, setCollapsed] = useState(!item.disableCollapsible);
+  const isActiveLink = withoutAnchors(router.asPath).startsWith(item.path);
+  const [collapsed, setCollapsed] = useState(
+    !item.disableCollapsible && !isActiveLink
+  );
 
   const handleCollapseToggle = useCallback(() => {
     if (!item.disableCollapsible) {
