@@ -69,13 +69,13 @@ Let's name the initial application `angular-store`. In this tutorial we're going
    │  ├─ angular-store
    │  │  ├─ src
    │  │  │  ├─ app
-   │  │  │  │  ├─ app.component.css
-   │  │  │  │  ├─ app.component.html
-   │  │  │  │  ├─ app.component.spec.ts
-   │  │  │  │  ├─ app.component.ts
+   │  │  │  │  ├─ app.css
+   │  │  │  │  ├─ app.html
+   │  │  │  │  ├─ app.spec.ts
+   │  │  │  │  ├─ app.ts
    │  │  │  │  ├─ app.config.ts
    │  │  │  │  ├─ app.routes.ts
-   │  │  │  │  └─ nx-welcome.component.ts
+   │  │  │  │  └─ nx-welcome.ts
    │  │  │  ├─ assets
    │  │  │  ├─ index.html
    │  │  │  ├─ main.ts
@@ -85,7 +85,6 @@ Let's name the initial application `angular-store`. In this tutorial we're going
    │  │  ├─ jest.config.ts
    │  │  ├─ project.json
    │  │  ├─ tsconfig.app.json
-   │  │  ├─ tsconfig.editor.json
    │  │  ├─ tsconfig.json
    │  │  └─ tsconfig.spec.json
    │  └─ angular-store-e2e
@@ -153,7 +152,7 @@ Each target contains a configuration object that tells Nx how to run that target
   ...
   "targets": {
     "serve": {
-      "executor": "@angular-devkit/build-angular:dev-server",
+      "executor": "@angular/build:dev-server",
       "defaultConfiguration": "development",
       "options": {
         "buildTarget": "angular-store:build"
@@ -240,14 +239,13 @@ CREATE apps/inventory/src/favicon.ico
 CREATE apps/inventory/src/index.html
 CREATE apps/inventory/src/styles.css
 CREATE apps/inventory/tsconfig.app.json
-CREATE apps/inventory/tsconfig.editor.json
 CREATE apps/inventory/tsconfig.json
-CREATE apps/inventory/src/app/app.component.css
-CREATE apps/inventory/src/app/app.component.html
-CREATE apps/inventory/src/app/app.component.spec.ts
-CREATE apps/inventory/src/app/app.component.ts
+CREATE apps/inventory/src/app/app.css
+CREATE apps/inventory/src/app/app.html
+CREATE apps/inventory/src/app/app.spec.ts
+CREATE apps/inventory/src/app/app.ts
 CREATE apps/inventory/src/app/app.config.ts
-CREATE apps/inventory/src/app/nx-welcome.component.ts
+CREATE apps/inventory/src/app/nx-welcome.ts
 CREATE apps/inventory/src/main.ts
 CREATE apps/inventory/.eslintrc.json
 CREATE apps/inventory/jest.config.ts
@@ -290,9 +288,9 @@ When you develop your Angular application, usually all your logic sits in the `a
    │     │  │  ├─ cart
    │     │  │  ├─ ui
    │     │  │  ├─ ...
-   │     │  │  └─ app.tsx
+   │     │  │  └─ app.ts
    │     │  ├─ ...
-   │     │  └─ main.tsx
+   │     │  └─ main.ts
    │     ├─ ...
    │     └─ project.json
    ├─ nx.json
@@ -314,9 +312,9 @@ Nx allows you to separate this logic into "local libraries". The main benefits i
 Let's assume our domain areas include `products`, `orders` and some more generic design system components, called `ui`. We can generate a new library for each of these areas using the Angular library generator:
 
 ```
-npx nx g @nx/angular:library libs/products --standalone
-npx nx g @nx/angular:library libs/orders --standalone
-npx nx g @nx/angular:library libs/shared/ui --standalone
+npx nx g @nx/angular:library libs/products
+npx nx g @nx/angular:library libs/orders
+npx nx g @nx/angular:library libs/shared/ui
 ```
 
 Note how we type out the full path in the `directory` flag to place the libraries into a subfolder. You can choose whatever folder structure you like to organize your projects. If you change your mind later, you can run the [move generator](/nx-api/workspace/generators/move) to move a project to a different folder.
@@ -384,51 +382,56 @@ All libraries that we generate automatically have aliases created in the root-le
 }
 ```
 
-Hence we can easily import them into other libraries and our Angular application. As an example, let's use the pre-generated `ProductsComponent` component from our `libs/products` library.
+Hence we can easily import them into other libraries and our Angular application. As an example, let's use the pre-generated `Products` component from our `libs/products` library.
 
-You can see that the `ProductsComponent` is exported via the `index.ts` file of our `products` library so that other projects in the repository can use it. This is our public API with the rest of the workspace. Only export what's really necessary to be usable outside the library itself.
+You can see that the `Products` is exported via the `index.ts` file of our `products` library so that other projects in the repository can use it. This is our public API with the rest of the workspace. Only export what's really necessary to be usable outside the library itself.
 
 ```ts {% fileName="libs/products/src/index.ts" %}
-export * from './lib/products/products.component';
+export * from './lib/products/products';
 ```
 
 We're ready to import it into our main application now. First (if you haven't already), let's set up the Angular router. Configure it in the `app.config.ts`.
 
-```ts {% fileName="apps/angular-store/src/app/app.config.ts" highlightLines=[2,3,4,5,6,9] %}
-import { ApplicationConfig } from '@angular/core';
+```ts {% fileName="apps/angular-store/src/app/app.config.ts" highlightLines=[6,7,13] %}
 import {
-  provideRouter,
-  withEnabledBlockingInitialNavigation,
-} from '@angular/router';
+  ApplicationConfig,
+  provideBrowserGlobalErrorListeners,
+  provideZoneChangeDetection,
+} from '@angular/core';
+import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideRouter(appRoutes),
+  ],
 };
 ```
 
-And in `app.component.html`:
+And in `app.html`:
 
-```ts {% fileName="apps/angular-store/src/app/app.component.html" %}
+```ts {% fileName="apps/angular-store/src/app/app.html" %}
 <router-outlet></router-outlet>
 ```
 
-Then we can add the `ProductsComponent` component to our `app.routes.ts` and render it via the routing mechanism whenever a user hits the `/products` route.
+Then we can add the `Products` component to our `app.routes.ts` and render it via the routing mechanism whenever a user hits the `/products` route.
 
 ```ts {% fileName="apps/angular-store/src/app/app.routes.ts" highlightLines=[10,11,12,13,14] %}
 import { Route } from '@angular/router';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { NxWelcome } from './nx-welcome';
 
 export const appRoutes: Route[] = [
   {
     path: '',
-    component: NxWelcomeComponent,
+    component: NxWelcome,
     pathMatch: 'full',
   },
   {
     path: 'products',
     loadComponent: () =>
-      import('@angular-monorepo/products').then((m) => m.ProductsComponent),
+      import('@angular-monorepo/products').then((m) => m.Products),
   },
 ];
 ```
@@ -439,51 +442,51 @@ Serving your app (`npx nx serve angular-store`) and then navigating to `/product
 
 Let's apply the same for our `orders` library.
 
-- import the `OrdersComponent` from `libs/orders` into the `app.routes.ts` and render it via the routing mechanism whenever a user hits the `/orders` route
+- import the `Orders` from `libs/orders` into the `app.routes.ts` and render it via the routing mechanism whenever a user hits the `/orders` route
 
 In the end, your `app.routes.ts` should look similar to this:
 
 ```ts {% fileName="apps/angular-store/src/app/app.routes.ts" highlightLines=[15,16,17,18,19] %}
 import { Route } from '@angular/router';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { NxWelcome } from './nx-welcome';
 
 export const appRoutes: Route[] = [
   {
     path: '',
-    component: NxWelcomeComponent,
+    component: NxWelcome,
     pathMatch: 'full',
   },
   {
     path: 'products',
     loadComponent: () =>
-      import('@angular-monorepo/products').then((m) => m.ProductsComponent),
+      import('@angular-monorepo/products').then((m) => m.Products),
   },
   {
     path: 'orders',
     loadComponent: () =>
-      import('@angular-monorepo/orders').then((m) => m.OrdersComponent),
+      import('@angular-monorepo/orders').then((m) => m.Orders),
   },
 ];
 ```
 
 Let's also show products in the `inventory` app.
 
-```ts {% fileName="apps/inventory/src/app/app.component.ts" highlightLines=[2,5] %}
+```ts {% fileName="apps/inventory/src/app/app.ts" highlightLines=[2,5] %}
 import { Component } from '@angular/core';
-import { ProductsComponent } from '@angular-monorepo/products';
+import { Products } from '@angular-monorepo/products';
 
 @Component({
-  imports: [ProductsComponent],
+  imports: [Products],
   selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
 })
-export class AppComponent {
+export class App {
   title = 'inventory';
 }
 ```
 
-```ts {% fileName="apps/inventory/src/app/app.component.html" %}
+```ts {% fileName="apps/inventory/src/app/app.html" %}
 <lib-products></lib-products>
 ```
 
@@ -909,7 +912,7 @@ git commit -a -m "some commit message"
 
 And then make a small change to the `products` library.
 
-```html {% fileName="libs/products/src/lib/product-list/product-list.component.html" %}
+```html {% fileName="libs/products/src/lib/product-list/product-list.html" %}
 <p>product-list works!</p>
 <p>This is a change. 👋</p>
 ```
@@ -1030,10 +1033,10 @@ If you're ready and want to ship your applications, you can build them using
 ```{% command="npx nx run-many -t build" path="angular-monorepo" %}
 NX  Generating @nx/angular:component
 
-CREATE libs/orders/src/lib/order-list/order-list.component.css
-CREATE libs/orders/src/lib/order-list/order-list.component.html
-CREATE libs/orders/src/lib/order-list/order-list.component.spec.ts
-CREATE libs/orders/src/lib/order-list/order-list.component.ts
+CREATE libs/orders/src/lib/order-list/order-list.css
+CREATE libs/orders/src/lib/order-list/order-list.html
+CREATE libs/orders/src/lib/order-list/order-list.spec.ts
+CREATE libs/orders/src/lib/order-list/order-list.ts
 UPDATE libs/orders/src/index.ts
 ❯ nx run-many -t build
 
@@ -1174,23 +1177,23 @@ To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.ba
 }
 ```
 
-To test it, go to your `libs/products/src/lib/product-list/product-list.component.ts` file and import the `OrdersComponent` from the `orders` project:
+To test it, go to your `libs/products/src/lib/product-list/product-list.ts` file and import the `Orders` component from the `orders` project:
 
-```ts {% fileName="libs/products/src/lib/product-list/product-list.component.ts" highlightLines=[4,5] %}
+```ts {% fileName="libs/products/src/lib/product-list/product-list.ts" highlightLines=[4,5] %}
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 // This import is not allowed 👇
-import { OrdersComponent } from '@angular-monorepo/orders';
+import { Orders } from '@angular-monorepo/orders';
 
 @Component({
   selector: 'angular-monorepo-product-list',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './product-list.component.html',
-  styleUrls: ['./product-list.component.css'],
+  templateUrl: './product-list.html',
+  styleUrls: ['./product-list.css'],
 })
-export class ProductsComponent {}
+export class Products {}
 ```
 
 If you lint your workspace you'll get an error now:
@@ -1200,9 +1203,9 @@ NX   Running target lint for 7 projects
 ✖  nx run products:lint
    Linting "products"...
 
-   /Users/isaac/Documents/code/nx-recipes/angular-monorepo/libs/products/src/lib/product-list/product-list.component.ts
+   /Users/isaac/Documents/code/nx-recipes/angular-monorepo/libs/products/src/lib/product-list/product-list.ts
      5:1   error    A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
-     5:10  warning  'OrdersComponent' is defined but never used                                                               @typescript-eslint/no-unused-vars
+     5:10  warning  'Orders' is defined but never used                                                                           @typescript-eslint/no-unused-vars
 
    ✖ 2 problems (1 error, 1 warning)
 
