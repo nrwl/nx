@@ -9,7 +9,10 @@
  * - nx-dev/data-access-documents/src/lib/documents.api.ts (generate page urls)
  * - nx-dev/nx-dev/pages/[...segments].tsx (generate page content)
  */
-export const pkgToGeneratedApiDocs = {
+export const pkgToGeneratedApiDocs: Record<
+  string,
+  { pagePath: string; menuPath?: string; includeDocuments?: boolean }
+> = {
   // ts/js
   js: {
     pagePath: '/technologies/typescript/api',
