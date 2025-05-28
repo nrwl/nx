@@ -50,6 +50,7 @@ type NxDocumentationProps =
   | {
       pageType:
         | 'generators-index'
+        | 'legacy-documents-index'
         | 'executors-index'
         | 'generators'
         | 'executors';
@@ -111,6 +112,8 @@ export default function NxDocumentation(props: NxDocumentationProps) {
             <PackageSchemaSubList pkg={props.pkg} type="generator" />
           ) : props.pageType === 'executors-index' ? (
             <PackageSchemaSubList pkg={props.pkg} type="executor" />
+          ) : props.pageType === 'legacy-documents-index' ? (
+            <PackageSchemaSubList pkg={props.pkg} type="document" />
           ) : props.pageType === 'legacy-documents' ? (
             <DocViewer
               document={props.document}
@@ -205,29 +208,40 @@ export const getStaticProps: GetStaticProps = async ({
         }
         return { props };
       } else if (type === 'documents') {
-        const _segments = ['nx-api', packageName, 'documents', ...segments];
-        const documents = new DocumentsApi({
-          id: [packageName, 'documents'].join('-'),
-          manifest: nxPackagesApi.getPackageDocuments(packageName),
-          prefix: '',
-          publicDocsRoot: 'public/documentation',
-          tagsApi,
-        });
-        const document = documents.getDocument(_segments);
-        return {
-          props: {
-            pageType: 'legacy-documents',
-            pkg: nxPackagesApi.getPackage([packageName]),
-            document,
-            widgetData: {
-              githubStarsCount: await fetchGithubStarCount(),
+        const isList = segments.length === 0;
+        if (isList) {
+          return {
+            props: {
+              pageType: 'legacy-documents-index',
+              pkg: nxPackagesApi.getPackage([packageName]),
+              menu,
             },
-            relatedDocuments: tagsApi
-              .getAssociatedItemsFromTags(document.tags)
-              .filter((item) => item.path !== '/' + _segments.join('/')), // Remove currently displayed item
-            menu,
-          },
-        };
+          };
+        } else {
+          const _segments = ['nx-api', packageName, 'documents', ...segments];
+          const documents = new DocumentsApi({
+            id: [packageName, 'documents'].join('-'),
+            manifest: nxPackagesApi.getPackageDocuments(packageName),
+            prefix: '',
+            publicDocsRoot: 'public/documentation',
+            tagsApi,
+          });
+          const document = documents.getDocument(_segments);
+          return {
+            props: {
+              pageType: 'legacy-documents',
+              pkg: nxPackagesApi.getPackage([packageName]),
+              document,
+              widgetData: {
+                githubStarsCount: await fetchGithubStarCount(),
+              },
+              relatedDocuments: tagsApi
+                .getAssociatedItemsFromTags(document.tags)
+                .filter((item) => item.path !== '/' + _segments.join('/')), // Remove currently displayed item
+              menu,
+            },
+          };
+        }
       } else if (type === 'migrations') {
         // API migrations
         // Example: /technologies/typescript/api/migrations
