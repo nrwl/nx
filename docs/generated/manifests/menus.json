@@ -2054,12 +2054,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/next/api/executors",
+                        "path": "/technologies/react/next/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "build",
-                            "path": "/technologies/next/api/executors/build",
+                            "path": "/technologies/react/next/api/executors/build",
                             "name": "build",
                             "children": [],
                             "isExternal": false,
@@ -2067,7 +2067,7 @@
                           },
                           {
                             "id": "server",
-                            "path": "/technologies/next/api/executors/server",
+                            "path": "/technologies/react/next/api/executors/server",
                             "name": "server",
                             "children": [],
                             "isExternal": false,
@@ -2079,12 +2079,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/next/api/generators",
+                        "path": "/technologies/react/next/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/next/api/generators/init",
+                            "path": "/technologies/react/next/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -2092,7 +2092,7 @@
                           },
                           {
                             "id": "application",
-                            "path": "/technologies/next/api/generators/application",
+                            "path": "/technologies/react/next/api/generators/application",
                             "name": "application",
                             "children": [],
                             "isExternal": false,
@@ -2100,7 +2100,7 @@
                           },
                           {
                             "id": "page",
-                            "path": "/technologies/next/api/generators/page",
+                            "path": "/technologies/react/next/api/generators/page",
                             "name": "page",
                             "children": [],
                             "isExternal": false,
@@ -2108,7 +2108,7 @@
                           },
                           {
                             "id": "component",
-                            "path": "/technologies/next/api/generators/component",
+                            "path": "/technologies/react/next/api/generators/component",
                             "name": "component",
                             "children": [],
                             "isExternal": false,
@@ -2116,7 +2116,7 @@
                           },
                           {
                             "id": "library",
-                            "path": "/technologies/next/api/generators/library",
+                            "path": "/technologies/react/next/api/generators/library",
                             "name": "library",
                             "children": [],
                             "isExternal": false,
@@ -2124,7 +2124,7 @@
                           },
                           {
                             "id": "custom-server",
-                            "path": "/technologies/next/api/generators/custom-server",
+                            "path": "/technologies/react/next/api/generators/custom-server",
                             "name": "custom-server",
                             "children": [],
                             "isExternal": false,
@@ -2132,7 +2132,7 @@
                           },
                           {
                             "id": "cypress-component-configuration",
-                            "path": "/technologies/next/api/generators/cypress-component-configuration",
+                            "path": "/technologies/react/next/api/generators/cypress-component-configuration",
                             "name": "cypress-component-configuration",
                             "children": [],
                             "isExternal": false,
@@ -2140,7 +2140,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/next/api/generators/convert-to-inferred",
+                            "path": "/technologies/react/next/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -2152,7 +2152,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/next/api/migrations",
+                        "path": "/technologies/react/next/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -2194,12 +2194,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/remix/api/executors",
+                        "path": "/technologies/react/remix/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "serve",
-                            "path": "/technologies/remix/api/executors/serve",
+                            "path": "/technologies/react/remix/api/executors/serve",
                             "name": "serve",
                             "children": [],
                             "isExternal": false,
@@ -2207,7 +2207,7 @@
                           },
                           {
                             "id": "build",
-                            "path": "/technologies/remix/api/executors/build",
+                            "path": "/technologies/react/remix/api/executors/build",
                             "name": "build",
                             "children": [],
                             "isExternal": false,
@@ -2219,12 +2219,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/remix/api/generators",
+                        "path": "/technologies/react/remix/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "preset",
-                            "path": "/technologies/remix/api/generators/preset",
+                            "path": "/technologies/react/remix/api/generators/preset",
                             "name": "preset",
                             "children": [],
                             "isExternal": false,
@@ -2232,7 +2232,7 @@
                           },
                           {
                             "id": "setup",
-                            "path": "/technologies/remix/api/generators/setup",
+                            "path": "/technologies/react/remix/api/generators/setup",
                             "name": "setup",
                             "children": [],
                             "isExternal": false,
@@ -2240,7 +2240,7 @@
                           },
                           {
                             "id": "application",
-                            "path": "/technologies/remix/api/generators/application",
+                            "path": "/technologies/react/remix/api/generators/application",
                             "name": "application",
                             "children": [],
                             "isExternal": false,
@@ -2248,7 +2248,7 @@
                           },
                           {
                             "id": "cypress-component-configuration",
-                            "path": "/technologies/remix/api/generators/cypress-component-configuration",
+                            "path": "/technologies/react/remix/api/generators/cypress-component-configuration",
                             "name": "cypress-component-configuration",
                             "children": [],
                             "isExternal": false,
@@ -2256,7 +2256,7 @@
                           },
                           {
                             "id": "library",
-                            "path": "/technologies/remix/api/generators/library",
+                            "path": "/technologies/react/remix/api/generators/library",
                             "name": "library",
                             "children": [],
                             "isExternal": false,
@@ -2264,7 +2264,7 @@
                           },
                           {
                             "id": "init",
-                            "path": "/technologies/remix/api/generators/init",
+                            "path": "/technologies/react/remix/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -2272,7 +2272,7 @@
                           },
                           {
                             "id": "route",
-                            "path": "/technologies/remix/api/generators/route",
+                            "path": "/technologies/react/remix/api/generators/route",
                             "name": "route",
                             "children": [],
                             "isExternal": false,
@@ -2280,7 +2280,7 @@
                           },
                           {
                             "id": "resource-route",
-                            "path": "/technologies/remix/api/generators/resource-route",
+                            "path": "/technologies/react/remix/api/generators/resource-route",
                             "name": "resource-route",
                             "children": [],
                             "isExternal": false,
@@ -2288,7 +2288,7 @@
                           },
                           {
                             "id": "action",
-                            "path": "/technologies/remix/api/generators/action",
+                            "path": "/technologies/react/remix/api/generators/action",
                             "name": "action",
                             "children": [],
                             "isExternal": false,
@@ -2296,7 +2296,7 @@
                           },
                           {
                             "id": "loader",
-                            "path": "/technologies/remix/api/generators/loader",
+                            "path": "/technologies/react/remix/api/generators/loader",
                             "name": "loader",
                             "children": [],
                             "isExternal": false,
@@ -2304,7 +2304,7 @@
                           },
                           {
                             "id": "style",
-                            "path": "/technologies/remix/api/generators/style",
+                            "path": "/technologies/react/remix/api/generators/style",
                             "name": "style",
                             "children": [],
                             "isExternal": false,
@@ -2312,7 +2312,7 @@
                           },
                           {
                             "id": "setup-tailwind",
-                            "path": "/technologies/remix/api/generators/setup-tailwind",
+                            "path": "/technologies/react/remix/api/generators/setup-tailwind",
                             "name": "setup-tailwind",
                             "children": [],
                             "isExternal": false,
@@ -2320,7 +2320,7 @@
                           },
                           {
                             "id": "storybook-configuration",
-                            "path": "/technologies/remix/api/generators/storybook-configuration",
+                            "path": "/technologies/react/remix/api/generators/storybook-configuration",
                             "name": "storybook-configuration",
                             "children": [],
                             "isExternal": false,
@@ -2328,7 +2328,7 @@
                           },
                           {
                             "id": "meta",
-                            "path": "/technologies/remix/api/generators/meta",
+                            "path": "/technologies/react/remix/api/generators/meta",
                             "name": "meta",
                             "children": [],
                             "isExternal": false,
@@ -2336,7 +2336,7 @@
                           },
                           {
                             "id": "error-boundary",
-                            "path": "/technologies/remix/api/generators/error-boundary",
+                            "path": "/technologies/react/remix/api/generators/error-boundary",
                             "name": "error-boundary",
                             "children": [],
                             "isExternal": false,
@@ -2344,7 +2344,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/remix/api/generators/convert-to-inferred",
+                            "path": "/technologies/react/remix/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -2356,7 +2356,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/remix/api/migrations",
+                        "path": "/technologies/react/remix/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -2398,12 +2398,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/react-native/api/executors",
+                        "path": "/technologies/react/react-native/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "run-android",
-                            "path": "/technologies/react-native/api/executors/run-android",
+                            "path": "/technologies/react/react-native/api/executors/run-android",
                             "name": "run-android",
                             "children": [],
                             "isExternal": false,
@@ -2411,7 +2411,7 @@
                           },
                           {
                             "id": "run-ios",
-                            "path": "/technologies/react-native/api/executors/run-ios",
+                            "path": "/technologies/react/react-native/api/executors/run-ios",
                             "name": "run-ios",
                             "children": [],
                             "isExternal": false,
@@ -2419,7 +2419,7 @@
                           },
                           {
                             "id": "bundle",
-                            "path": "/technologies/react-native/api/executors/bundle",
+                            "path": "/technologies/react/react-native/api/executors/bundle",
                             "name": "bundle",
                             "children": [],
                             "isExternal": false,
@@ -2427,7 +2427,7 @@
                           },
                           {
                             "id": "build-android",
-                            "path": "/technologies/react-native/api/executors/build-android",
+                            "path": "/technologies/react/react-native/api/executors/build-android",
                             "name": "build-android",
                             "children": [],
                             "isExternal": false,
@@ -2435,7 +2435,7 @@
                           },
                           {
                             "id": "build-ios",
-                            "path": "/technologies/react-native/api/executors/build-ios",
+                            "path": "/technologies/react/react-native/api/executors/build-ios",
                             "name": "build-ios",
                             "children": [],
                             "isExternal": false,
@@ -2443,7 +2443,7 @@
                           },
                           {
                             "id": "start",
-                            "path": "/technologies/react-native/api/executors/start",
+                            "path": "/technologies/react/react-native/api/executors/start",
                             "name": "start",
                             "children": [],
                             "isExternal": false,
@@ -2451,7 +2451,7 @@
                           },
                           {
                             "id": "sync-deps",
-                            "path": "/technologies/react-native/api/executors/sync-deps",
+                            "path": "/technologies/react/react-native/api/executors/sync-deps",
                             "name": "sync-deps",
                             "children": [],
                             "isExternal": false,
@@ -2459,7 +2459,7 @@
                           },
                           {
                             "id": "ensure-symlink",
-                            "path": "/technologies/react-native/api/executors/ensure-symlink",
+                            "path": "/technologies/react/react-native/api/executors/ensure-symlink",
                             "name": "ensure-symlink",
                             "children": [],
                             "isExternal": false,
@@ -2467,7 +2467,7 @@
                           },
                           {
                             "id": "storybook",
-                            "path": "/technologies/react-native/api/executors/storybook",
+                            "path": "/technologies/react/react-native/api/executors/storybook",
                             "name": "storybook",
                             "children": [],
                             "isExternal": false,
@@ -2475,7 +2475,7 @@
                           },
                           {
                             "id": "pod-install",
-                            "path": "/technologies/react-native/api/executors/pod-install",
+                            "path": "/technologies/react/react-native/api/executors/pod-install",
                             "name": "pod-install",
                             "children": [],
                             "isExternal": false,
@@ -2483,7 +2483,7 @@
                           },
                           {
                             "id": "upgrade",
-                            "path": "/technologies/react-native/api/executors/upgrade",
+                            "path": "/technologies/react/react-native/api/executors/upgrade",
                             "name": "upgrade",
                             "children": [],
                             "isExternal": false,
@@ -2495,12 +2495,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/react-native/api/generators",
+                        "path": "/technologies/react/react-native/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/react-native/api/generators/init",
+                            "path": "/technologies/react/react-native/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -2508,7 +2508,7 @@
                           },
                           {
                             "id": "application",
-                            "path": "/technologies/react-native/api/generators/application",
+                            "path": "/technologies/react/react-native/api/generators/application",
                             "name": "application",
                             "children": [],
                             "isExternal": false,
@@ -2516,7 +2516,7 @@
                           },
                           {
                             "id": "library",
-                            "path": "/technologies/react-native/api/generators/library",
+                            "path": "/technologies/react/react-native/api/generators/library",
                             "name": "library",
                             "children": [],
                             "isExternal": false,
@@ -2524,7 +2524,7 @@
                           },
                           {
                             "id": "component",
-                            "path": "/technologies/react-native/api/generators/component",
+                            "path": "/technologies/react/react-native/api/generators/component",
                             "name": "component",
                             "children": [],
                             "isExternal": false,
@@ -2532,7 +2532,7 @@
                           },
                           {
                             "id": "storybook-configuration",
-                            "path": "/technologies/react-native/api/generators/storybook-configuration",
+                            "path": "/technologies/react/react-native/api/generators/storybook-configuration",
                             "name": "storybook-configuration",
                             "children": [],
                             "isExternal": false,
@@ -2540,7 +2540,7 @@
                           },
                           {
                             "id": "component-story",
-                            "path": "/technologies/react-native/api/generators/component-story",
+                            "path": "/technologies/react/react-native/api/generators/component-story",
                             "name": "component-story",
                             "children": [],
                             "isExternal": false,
@@ -2548,7 +2548,7 @@
                           },
                           {
                             "id": "stories",
-                            "path": "/technologies/react-native/api/generators/stories",
+                            "path": "/technologies/react/react-native/api/generators/stories",
                             "name": "stories",
                             "children": [],
                             "isExternal": false,
@@ -2556,7 +2556,7 @@
                           },
                           {
                             "id": "upgrade-native",
-                            "path": "/technologies/react-native/api/generators/upgrade-native",
+                            "path": "/technologies/react/react-native/api/generators/upgrade-native",
                             "name": "upgrade-native",
                             "children": [],
                             "isExternal": false,
@@ -2564,7 +2564,7 @@
                           },
                           {
                             "id": "web-configuration",
-                            "path": "/technologies/react-native/api/generators/web-configuration",
+                            "path": "/technologies/react/react-native/api/generators/web-configuration",
                             "name": "web-configuration",
                             "children": [],
                             "isExternal": false,
@@ -2572,7 +2572,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/react-native/api/generators/convert-to-inferred",
+                            "path": "/technologies/react/react-native/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -2584,7 +2584,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/react-native/api/migrations",
+                        "path": "/technologies/react/react-native/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -2626,12 +2626,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/expo/api/executors",
+                        "path": "/technologies/react/expo/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "update",
-                            "path": "/technologies/expo/api/executors/update",
+                            "path": "/technologies/react/expo/api/executors/update",
                             "name": "update",
                             "children": [],
                             "isExternal": false,
@@ -2639,7 +2639,7 @@
                           },
                           {
                             "id": "build",
-                            "path": "/technologies/expo/api/executors/build",
+                            "path": "/technologies/react/expo/api/executors/build",
                             "name": "build",
                             "children": [],
                             "isExternal": false,
@@ -2647,7 +2647,7 @@
                           },
                           {
                             "id": "build-list",
-                            "path": "/technologies/expo/api/executors/build-list",
+                            "path": "/technologies/react/expo/api/executors/build-list",
                             "name": "build-list",
                             "children": [],
                             "isExternal": false,
@@ -2655,7 +2655,7 @@
                           },
                           {
                             "id": "run",
-                            "path": "/technologies/expo/api/executors/run",
+                            "path": "/technologies/react/expo/api/executors/run",
                             "name": "run",
                             "children": [],
                             "isExternal": false,
@@ -2663,7 +2663,7 @@
                           },
                           {
                             "id": "start",
-                            "path": "/technologies/expo/api/executors/start",
+                            "path": "/technologies/react/expo/api/executors/start",
                             "name": "start",
                             "children": [],
                             "isExternal": false,
@@ -2671,7 +2671,7 @@
                           },
                           {
                             "id": "sync-deps",
-                            "path": "/technologies/expo/api/executors/sync-deps",
+                            "path": "/technologies/react/expo/api/executors/sync-deps",
                             "name": "sync-deps",
                             "children": [],
                             "isExternal": false,
@@ -2679,7 +2679,7 @@
                           },
                           {
                             "id": "ensure-symlink",
-                            "path": "/technologies/expo/api/executors/ensure-symlink",
+                            "path": "/technologies/react/expo/api/executors/ensure-symlink",
                             "name": "ensure-symlink",
                             "children": [],
                             "isExternal": false,
@@ -2687,7 +2687,7 @@
                           },
                           {
                             "id": "prebuild",
-                            "path": "/technologies/expo/api/executors/prebuild",
+                            "path": "/technologies/react/expo/api/executors/prebuild",
                             "name": "prebuild",
                             "children": [],
                             "isExternal": false,
@@ -2695,7 +2695,7 @@
                           },
                           {
                             "id": "install",
-                            "path": "/technologies/expo/api/executors/install",
+                            "path": "/technologies/react/expo/api/executors/install",
                             "name": "install",
                             "children": [],
                             "isExternal": false,
@@ -2703,7 +2703,7 @@
                           },
                           {
                             "id": "export",
-                            "path": "/technologies/expo/api/executors/export",
+                            "path": "/technologies/react/expo/api/executors/export",
                             "name": "export",
                             "children": [],
                             "isExternal": false,
@@ -2711,7 +2711,7 @@
                           },
                           {
                             "id": "submit",
-                            "path": "/technologies/expo/api/executors/submit",
+                            "path": "/technologies/react/expo/api/executors/submit",
                             "name": "submit",
                             "children": [],
                             "isExternal": false,
@@ -2719,7 +2719,7 @@
                           },
                           {
                             "id": "serve",
-                            "path": "/technologies/expo/api/executors/serve",
+                            "path": "/technologies/react/expo/api/executors/serve",
                             "name": "serve",
                             "children": [],
                             "isExternal": false,
@@ -2731,12 +2731,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/expo/api/generators",
+                        "path": "/technologies/react/expo/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/expo/api/generators/init",
+                            "path": "/technologies/react/expo/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -2744,7 +2744,7 @@
                           },
                           {
                             "id": "application",
-                            "path": "/technologies/expo/api/generators/application",
+                            "path": "/technologies/react/expo/api/generators/application",
                             "name": "application",
                             "children": [],
                             "isExternal": false,
@@ -2752,7 +2752,7 @@
                           },
                           {
                             "id": "library",
-                            "path": "/technologies/expo/api/generators/library",
+                            "path": "/technologies/react/expo/api/generators/library",
                             "name": "library",
                             "children": [],
                             "isExternal": false,
@@ -2760,7 +2760,7 @@
                           },
                           {
                             "id": "component",
-                            "path": "/technologies/expo/api/generators/component",
+                            "path": "/technologies/react/expo/api/generators/component",
                             "name": "component",
                             "children": [],
                             "isExternal": false,
@@ -2768,7 +2768,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/expo/api/generators/convert-to-inferred",
+                            "path": "/technologies/react/expo/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -2780,7 +2780,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/expo/api/migrations",
+                        "path": "/technologies/react/expo/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -2930,12 +2930,12 @@
                     "children": [
                       {
                         "id": "generators",
-                        "path": "/technologies/nuxt/api/generators",
+                        "path": "/technologies/vue/nuxt/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/nuxt/api/generators/init",
+                            "path": "/technologies/vue/nuxt/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -2943,7 +2943,7 @@
                           },
                           {
                             "id": "application",
-                            "path": "/technologies/nuxt/api/generators/application",
+                            "path": "/technologies/vue/nuxt/api/generators/application",
                             "name": "application",
                             "children": [],
                             "isExternal": false,
@@ -2951,7 +2951,7 @@
                           },
                           {
                             "id": "storybook-configuration",
-                            "path": "/technologies/nuxt/api/generators/storybook-configuration",
+                            "path": "/technologies/vue/nuxt/api/generators/storybook-configuration",
                             "name": "storybook-configuration",
                             "children": [],
                             "isExternal": false,
@@ -2963,7 +2963,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/nuxt/api/migrations",
+                        "path": "/technologies/vue/nuxt/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -3121,12 +3121,12 @@
                     "children": [
                       {
                         "id": "generators",
-                        "path": "/technologies/express/api/generators",
+                        "path": "/technologies/node/express/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/express/api/generators/init",
+                            "path": "/technologies/node/express/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -3134,7 +3134,7 @@
                           },
                           {
                             "id": "application",
-                            "path": "/technologies/express/api/generators/application",
+                            "path": "/technologies/node/express/api/generators/application",
                             "name": "application",
                             "children": [],
                             "isExternal": false,
@@ -3172,12 +3172,12 @@
                     "children": [
                       {
                         "id": "generators",
-                        "path": "/technologies/nest/api/generators",
+                        "path": "/technologies/node/nest/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "application",
-                            "path": "/technologies/nest/api/generators/application",
+                            "path": "/technologies/node/nest/api/generators/application",
                             "name": "application",
                             "children": [],
                             "isExternal": false,
@@ -3185,7 +3185,7 @@
                           },
                           {
                             "id": "init",
-                            "path": "/technologies/nest/api/generators/init",
+                            "path": "/technologies/node/nest/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -3193,7 +3193,7 @@
                           },
                           {
                             "id": "library",
-                            "path": "/technologies/nest/api/generators/library",
+                            "path": "/technologies/node/nest/api/generators/library",
                             "name": "library",
                             "children": [],
                             "isExternal": false,
@@ -3201,7 +3201,7 @@
                           },
                           {
                             "id": "class",
-                            "path": "/technologies/nest/api/generators/class",
+                            "path": "/technologies/node/nest/api/generators/class",
                             "name": "class",
                             "children": [],
                             "isExternal": false,
@@ -3209,7 +3209,7 @@
                           },
                           {
                             "id": "controller",
-                            "path": "/technologies/nest/api/generators/controller",
+                            "path": "/technologies/node/nest/api/generators/controller",
                             "name": "controller",
                             "children": [],
                             "isExternal": false,
@@ -3217,7 +3217,7 @@
                           },
                           {
                             "id": "decorator",
-                            "path": "/technologies/nest/api/generators/decorator",
+                            "path": "/technologies/node/nest/api/generators/decorator",
                             "name": "decorator",
                             "children": [],
                             "isExternal": false,
@@ -3225,7 +3225,7 @@
                           },
                           {
                             "id": "filter",
-                            "path": "/technologies/nest/api/generators/filter",
+                            "path": "/technologies/node/nest/api/generators/filter",
                             "name": "filter",
                             "children": [],
                             "isExternal": false,
@@ -3233,7 +3233,7 @@
                           },
                           {
                             "id": "gateway",
-                            "path": "/technologies/nest/api/generators/gateway",
+                            "path": "/technologies/node/nest/api/generators/gateway",
                             "name": "gateway",
                             "children": [],
                             "isExternal": false,
@@ -3241,7 +3241,7 @@
                           },
                           {
                             "id": "guard",
-                            "path": "/technologies/nest/api/generators/guard",
+                            "path": "/technologies/node/nest/api/generators/guard",
                             "name": "guard",
                             "children": [],
                             "isExternal": false,
@@ -3249,7 +3249,7 @@
                           },
                           {
                             "id": "interceptor",
-                            "path": "/technologies/nest/api/generators/interceptor",
+                            "path": "/technologies/node/nest/api/generators/interceptor",
                             "name": "interceptor",
                             "children": [],
                             "isExternal": false,
@@ -3257,7 +3257,7 @@
                           },
                           {
                             "id": "interface",
-                            "path": "/technologies/nest/api/generators/interface",
+                            "path": "/technologies/node/nest/api/generators/interface",
                             "name": "interface",
                             "children": [],
                             "isExternal": false,
@@ -3265,7 +3265,7 @@
                           },
                           {
                             "id": "middleware",
-                            "path": "/technologies/nest/api/generators/middleware",
+                            "path": "/technologies/node/nest/api/generators/middleware",
                             "name": "middleware",
                             "children": [],
                             "isExternal": false,
@@ -3273,7 +3273,7 @@
                           },
                           {
                             "id": "module",
-                            "path": "/technologies/nest/api/generators/module",
+                            "path": "/technologies/node/nest/api/generators/module",
                             "name": "module",
                             "children": [],
                             "isExternal": false,
@@ -3281,7 +3281,7 @@
                           },
                           {
                             "id": "pipe",
-                            "path": "/technologies/nest/api/generators/pipe",
+                            "path": "/technologies/node/nest/api/generators/pipe",
                             "name": "pipe",
                             "children": [],
                             "isExternal": false,
@@ -3289,7 +3289,7 @@
                           },
                           {
                             "id": "provider",
-                            "path": "/technologies/nest/api/generators/provider",
+                            "path": "/technologies/node/nest/api/generators/provider",
                             "name": "provider",
                             "children": [],
                             "isExternal": false,
@@ -3297,7 +3297,7 @@
                           },
                           {
                             "id": "resolver",
-                            "path": "/technologies/nest/api/generators/resolver",
+                            "path": "/technologies/node/nest/api/generators/resolver",
                             "name": "resolver",
                             "children": [],
                             "isExternal": false,
@@ -3305,7 +3305,7 @@
                           },
                           {
                             "id": "resource",
-                            "path": "/technologies/nest/api/generators/resource",
+                            "path": "/technologies/node/nest/api/generators/resource",
                             "name": "resource",
                             "children": [],
                             "isExternal": false,
@@ -3313,7 +3313,7 @@
                           },
                           {
                             "id": "service",
-                            "path": "/technologies/nest/api/generators/service",
+                            "path": "/technologies/node/nest/api/generators/service",
                             "name": "service",
                             "children": [],
                             "isExternal": false,
@@ -3685,12 +3685,12 @@
                     "children": [
                       {
                         "id": "documents",
-                        "path": "/technologies/eslint-plugin/api/documents",
+                        "path": "/technologies/eslint/eslint-plugin/api/documents",
                         "name": "documents",
                         "children": [
                           {
                             "id": "Overview",
-                            "path": "/technologies/eslint-plugin/api/documents/overview",
+                            "path": "/technologies/eslint/eslint-plugin/api/documents/overview",
                             "name": "Overview",
                             "children": [],
                             "isExternal": false,
@@ -3698,7 +3698,7 @@
                           },
                           {
                             "id": "The `enforce-module-boundaries` rule",
-                            "path": "/technologies/eslint-plugin/api/documents/enforce-module-boundaries",
+                            "path": "/technologies/eslint/eslint-plugin/api/documents/enforce-module-boundaries",
                             "name": "The `enforce-module-boundaries` rule",
                             "children": [],
                             "isExternal": false,
@@ -3706,7 +3706,7 @@
                           },
                           {
                             "id": "The `dependency-checks` rule",
-                            "path": "/technologies/eslint-plugin/api/documents/dependency-checks",
+                            "path": "/technologies/eslint/eslint-plugin/api/documents/dependency-checks",
                             "name": "The `dependency-checks` rule",
                             "children": [],
                             "isExternal": false,
@@ -3718,7 +3718,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/eslint-plugin/api/migrations",
+                        "path": "/technologies/eslint/eslint-plugin/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -3786,12 +3786,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/webpack/api/executors",
+                        "path": "/technologies/build-tools/webpack/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "webpack",
-                            "path": "/technologies/webpack/api/executors/webpack",
+                            "path": "/technologies/build-tools/webpack/api/executors/webpack",
                             "name": "webpack",
                             "children": [],
                             "isExternal": false,
@@ -3799,7 +3799,7 @@
                           },
                           {
                             "id": "dev-server",
-                            "path": "/technologies/webpack/api/executors/dev-server",
+                            "path": "/technologies/build-tools/webpack/api/executors/dev-server",
                             "name": "dev-server",
                             "children": [],
                             "isExternal": false,
@@ -3807,7 +3807,7 @@
                           },
                           {
                             "id": "ssr-dev-server",
-                            "path": "/technologies/webpack/api/executors/ssr-dev-server",
+                            "path": "/technologies/build-tools/webpack/api/executors/ssr-dev-server",
                             "name": "ssr-dev-server",
                             "children": [],
                             "isExternal": false,
@@ -3819,12 +3819,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/webpack/api/generators",
+                        "path": "/technologies/build-tools/webpack/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/webpack/api/generators/init",
+                            "path": "/technologies/build-tools/webpack/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -3832,7 +3832,7 @@
                           },
                           {
                             "id": "configuration",
-                            "path": "/technologies/webpack/api/generators/configuration",
+                            "path": "/technologies/build-tools/webpack/api/generators/configuration",
                             "name": "configuration",
                             "children": [],
                             "isExternal": false,
@@ -3840,7 +3840,7 @@
                           },
                           {
                             "id": "convert-config-to-webpack-plugin",
-                            "path": "/technologies/webpack/api/generators/convert-config-to-webpack-plugin",
+                            "path": "/technologies/build-tools/webpack/api/generators/convert-config-to-webpack-plugin",
                             "name": "convert-config-to-webpack-plugin",
                             "children": [],
                             "isExternal": false,
@@ -3848,7 +3848,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/webpack/api/generators/convert-to-inferred",
+                            "path": "/technologies/build-tools/webpack/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -3860,7 +3860,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/webpack/api/migrations",
+                        "path": "/technologies/build-tools/webpack/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -3911,12 +3911,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/vite/api/executors",
+                        "path": "/technologies/build-tools/vite/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "dev-server",
-                            "path": "/technologies/vite/api/executors/dev-server",
+                            "path": "/technologies/build-tools/vite/api/executors/dev-server",
                             "name": "dev-server",
                             "children": [],
                             "isExternal": false,
@@ -3924,7 +3924,7 @@
                           },
                           {
                             "id": "build",
-                            "path": "/technologies/vite/api/executors/build",
+                            "path": "/technologies/build-tools/vite/api/executors/build",
                             "name": "build",
                             "children": [],
                             "isExternal": false,
@@ -3932,7 +3932,7 @@
                           },
                           {
                             "id": "test",
-                            "path": "/technologies/vite/api/executors/test",
+                            "path": "/technologies/build-tools/vite/api/executors/test",
                             "name": "test",
                             "children": [],
                             "isExternal": false,
@@ -3940,7 +3940,7 @@
                           },
                           {
                             "id": "preview-server",
-                            "path": "/technologies/vite/api/executors/preview-server",
+                            "path": "/technologies/build-tools/vite/api/executors/preview-server",
                             "name": "preview-server",
                             "children": [],
                             "isExternal": false,
@@ -3952,12 +3952,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/vite/api/generators",
+                        "path": "/technologies/build-tools/vite/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/vite/api/generators/init",
+                            "path": "/technologies/build-tools/vite/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -3965,7 +3965,7 @@
                           },
                           {
                             "id": "configuration",
-                            "path": "/technologies/vite/api/generators/configuration",
+                            "path": "/technologies/build-tools/vite/api/generators/configuration",
                             "name": "configuration",
                             "children": [],
                             "isExternal": false,
@@ -3973,7 +3973,7 @@
                           },
                           {
                             "id": "setup-paths-plugin",
-                            "path": "/technologies/vite/api/generators/setup-paths-plugin",
+                            "path": "/technologies/build-tools/vite/api/generators/setup-paths-plugin",
                             "name": "setup-paths-plugin",
                             "children": [],
                             "isExternal": false,
@@ -3981,7 +3981,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/vite/api/generators/convert-to-inferred",
+                            "path": "/technologies/build-tools/vite/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -3989,7 +3989,7 @@
                           },
                           {
                             "id": "vitest",
-                            "path": "/technologies/vite/api/generators/vitest",
+                            "path": "/technologies/build-tools/vite/api/generators/vitest",
                             "name": "vitest",
                             "children": [],
                             "isExternal": false,
@@ -4001,7 +4001,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/vite/api/migrations",
+                        "path": "/technologies/build-tools/vite/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -4043,12 +4043,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/rollup/api/executors",
+                        "path": "/technologies/build-tools/rollup/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "rollup",
-                            "path": "/technologies/rollup/api/executors/rollup",
+                            "path": "/technologies/build-tools/rollup/api/executors/rollup",
                             "name": "rollup",
                             "children": [],
                             "isExternal": false,
@@ -4060,12 +4060,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/rollup/api/generators",
+                        "path": "/technologies/build-tools/rollup/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/rollup/api/generators/init",
+                            "path": "/technologies/build-tools/rollup/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -4073,7 +4073,7 @@
                           },
                           {
                             "id": "configuration",
-                            "path": "/technologies/rollup/api/generators/configuration",
+                            "path": "/technologies/build-tools/rollup/api/generators/configuration",
                             "name": "configuration",
                             "children": [],
                             "isExternal": false,
@@ -4081,7 +4081,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/rollup/api/generators/convert-to-inferred",
+                            "path": "/technologies/build-tools/rollup/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -4093,7 +4093,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/rollup/api/migrations",
+                        "path": "/technologies/build-tools/rollup/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -4135,12 +4135,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/esbuild/api/executors",
+                        "path": "/technologies/build-tools/esbuild/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "esbuild",
-                            "path": "/technologies/esbuild/api/executors/esbuild",
+                            "path": "/technologies/build-tools/esbuild/api/executors/esbuild",
                             "name": "esbuild",
                             "children": [],
                             "isExternal": false,
@@ -4152,12 +4152,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/esbuild/api/generators",
+                        "path": "/technologies/build-tools/esbuild/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/esbuild/api/generators/init",
+                            "path": "/technologies/build-tools/esbuild/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -4165,7 +4165,7 @@
                           },
                           {
                             "id": "configuration",
-                            "path": "/technologies/esbuild/api/generators/configuration",
+                            "path": "/technologies/build-tools/esbuild/api/generators/configuration",
                             "name": "configuration",
                             "children": [],
                             "isExternal": false,
@@ -4211,12 +4211,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/rspack/api/executors",
+                        "path": "/technologies/build-tools/rspack/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "rspack",
-                            "path": "/technologies/rspack/api/executors/rspack",
+                            "path": "/technologies/build-tools/rspack/api/executors/rspack",
                             "name": "rspack",
                             "children": [],
                             "isExternal": false,
@@ -4224,7 +4224,7 @@
                           },
                           {
                             "id": "dev-server",
-                            "path": "/technologies/rspack/api/executors/dev-server",
+                            "path": "/technologies/build-tools/rspack/api/executors/dev-server",
                             "name": "dev-server",
                             "children": [],
                             "isExternal": false,
@@ -4232,7 +4232,7 @@
                           },
                           {
                             "id": "ssr-dev-server",
-                            "path": "/technologies/rspack/api/executors/ssr-dev-server",
+                            "path": "/technologies/build-tools/rspack/api/executors/ssr-dev-server",
                             "name": "ssr-dev-server",
                             "children": [],
                             "isExternal": false,
@@ -4240,7 +4240,7 @@
                           },
                           {
                             "id": "module-federation-dev-server",
-                            "path": "/technologies/rspack/api/executors/module-federation-dev-server",
+                            "path": "/technologies/build-tools/rspack/api/executors/module-federation-dev-server",
                             "name": "module-federation-dev-server",
                             "children": [],
                             "isExternal": false,
@@ -4248,7 +4248,7 @@
                           },
                           {
                             "id": "module-federation-ssr-dev-server",
-                            "path": "/technologies/rspack/api/executors/module-federation-ssr-dev-server",
+                            "path": "/technologies/build-tools/rspack/api/executors/module-federation-ssr-dev-server",
                             "name": "module-federation-ssr-dev-server",
                             "children": [],
                             "isExternal": false,
@@ -4256,7 +4256,7 @@
                           },
                           {
                             "id": "module-federation-static-server",
-                            "path": "/technologies/rspack/api/executors/module-federation-static-server",
+                            "path": "/technologies/build-tools/rspack/api/executors/module-federation-static-server",
                             "name": "module-federation-static-server",
                             "children": [],
                             "isExternal": false,
@@ -4268,12 +4268,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/rspack/api/generators",
+                        "path": "/technologies/build-tools/rspack/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "configuration",
-                            "path": "/technologies/rspack/api/generators/configuration",
+                            "path": "/technologies/build-tools/rspack/api/generators/configuration",
                             "name": "configuration",
                             "children": [],
                             "isExternal": false,
@@ -4281,7 +4281,7 @@
                           },
                           {
                             "id": "init",
-                            "path": "/technologies/rspack/api/generators/init",
+                            "path": "/technologies/build-tools/rspack/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -4289,7 +4289,7 @@
                           },
                           {
                             "id": "preset",
-                            "path": "/technologies/rspack/api/generators/preset",
+                            "path": "/technologies/build-tools/rspack/api/generators/preset",
                             "name": "preset",
                             "children": [],
                             "isExternal": false,
@@ -4297,7 +4297,7 @@
                           },
                           {
                             "id": "application",
-                            "path": "/technologies/rspack/api/generators/application",
+                            "path": "/technologies/build-tools/rspack/api/generators/application",
                             "name": "application",
                             "children": [],
                             "isExternal": false,
@@ -4305,7 +4305,7 @@
                           },
                           {
                             "id": "convert-webpack",
-                            "path": "/technologies/rspack/api/generators/convert-webpack",
+                            "path": "/technologies/build-tools/rspack/api/generators/convert-webpack",
                             "name": "convert-webpack",
                             "children": [],
                             "isExternal": false,
@@ -4313,7 +4313,7 @@
                           },
                           {
                             "id": "convert-config-to-rspack-plugin",
-                            "path": "/technologies/rspack/api/generators/convert-config-to-rspack-plugin",
+                            "path": "/technologies/build-tools/rspack/api/generators/convert-config-to-rspack-plugin",
                             "name": "convert-config-to-rspack-plugin",
                             "children": [],
                             "isExternal": false,
@@ -4321,7 +4321,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/rspack/api/generators/convert-to-inferred",
+                            "path": "/technologies/build-tools/rspack/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -4333,7 +4333,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/rspack/api/migrations",
+                        "path": "/technologies/build-tools/rspack/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -4375,12 +4375,12 @@
                     "children": [
                       {
                         "id": "generators",
-                        "path": "/technologies/rsbuild/api/generators",
+                        "path": "/technologies/build-tools/rsbuild/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/rsbuild/api/generators/init",
+                            "path": "/technologies/build-tools/rsbuild/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -4388,7 +4388,7 @@
                           },
                           {
                             "id": "configuration",
-                            "path": "/technologies/rsbuild/api/generators/configuration",
+                            "path": "/technologies/build-tools/rsbuild/api/generators/configuration",
                             "name": "configuration",
                             "children": [],
                             "isExternal": false,
@@ -4468,12 +4468,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/cypress/api/executors",
+                        "path": "/technologies/test-tools/cypress/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "cypress",
-                            "path": "/technologies/cypress/api/executors/cypress",
+                            "path": "/technologies/test-tools/cypress/api/executors/cypress",
                             "name": "cypress",
                             "children": [],
                             "isExternal": false,
@@ -4485,12 +4485,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/cypress/api/generators",
+                        "path": "/technologies/test-tools/cypress/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/cypress/api/generators/init",
+                            "path": "/technologies/test-tools/cypress/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -4498,7 +4498,7 @@
                           },
                           {
                             "id": "configuration",
-                            "path": "/technologies/cypress/api/generators/configuration",
+                            "path": "/technologies/test-tools/cypress/api/generators/configuration",
                             "name": "configuration",
                             "children": [],
                             "isExternal": false,
@@ -4506,7 +4506,7 @@
                           },
                           {
                             "id": "component-configuration",
-                            "path": "/technologies/cypress/api/generators/component-configuration",
+                            "path": "/technologies/test-tools/cypress/api/generators/component-configuration",
                             "name": "component-configuration",
                             "children": [],
                             "isExternal": false,
@@ -4514,7 +4514,7 @@
                           },
                           {
                             "id": "migrate-to-cypress-11",
-                            "path": "/technologies/cypress/api/generators/migrate-to-cypress-11",
+                            "path": "/technologies/test-tools/cypress/api/generators/migrate-to-cypress-11",
                             "name": "migrate-to-cypress-11",
                             "children": [],
                             "isExternal": false,
@@ -4522,7 +4522,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/cypress/api/generators/convert-to-inferred",
+                            "path": "/technologies/test-tools/cypress/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -4534,7 +4534,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/cypress/api/migrations",
+                        "path": "/technologies/test-tools/cypress/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -4576,12 +4576,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/jest/api/executors",
+                        "path": "/technologies/test-tools/jest/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "jest",
-                            "path": "/technologies/jest/api/executors/jest",
+                            "path": "/technologies/test-tools/jest/api/executors/jest",
                             "name": "jest",
                             "children": [],
                             "isExternal": false,
@@ -4593,12 +4593,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/jest/api/generators",
+                        "path": "/technologies/test-tools/jest/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/jest/api/generators/init",
+                            "path": "/technologies/test-tools/jest/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -4606,7 +4606,7 @@
                           },
                           {
                             "id": "configuration",
-                            "path": "/technologies/jest/api/generators/configuration",
+                            "path": "/technologies/test-tools/jest/api/generators/configuration",
                             "name": "configuration",
                             "children": [],
                             "isExternal": false,
@@ -4614,7 +4614,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/jest/api/generators/convert-to-inferred",
+                            "path": "/technologies/test-tools/jest/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -4626,7 +4626,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/jest/api/migrations",
+                        "path": "/technologies/test-tools/jest/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -4668,12 +4668,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/playwright/api/executors",
+                        "path": "/technologies/test-tools/playwright/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "playwright",
-                            "path": "/technologies/playwright/api/executors/playwright",
+                            "path": "/technologies/test-tools/playwright/api/executors/playwright",
                             "name": "playwright",
                             "children": [],
                             "isExternal": false,
@@ -4685,12 +4685,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/playwright/api/generators",
+                        "path": "/technologies/test-tools/playwright/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "configuration",
-                            "path": "/technologies/playwright/api/generators/configuration",
+                            "path": "/technologies/test-tools/playwright/api/generators/configuration",
                             "name": "configuration",
                             "children": [],
                             "isExternal": false,
@@ -4698,7 +4698,7 @@
                           },
                           {
                             "id": "init",
-                            "path": "/technologies/playwright/api/generators/init",
+                            "path": "/technologies/test-tools/playwright/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -4706,7 +4706,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/playwright/api/generators/convert-to-inferred",
+                            "path": "/technologies/test-tools/playwright/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -4718,7 +4718,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/playwright/api/migrations",
+                        "path": "/technologies/test-tools/playwright/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -4865,12 +4865,12 @@
                     "children": [
                       {
                         "id": "documents",
-                        "path": "/technologies/storybook/api/documents",
+                        "path": "/technologies/test-tools/storybook/api/documents",
                         "name": "documents",
                         "children": [
                           {
                             "id": "Overview",
-                            "path": "/technologies/storybook/api/documents/overview",
+                            "path": "/technologies/test-tools/storybook/api/documents/overview",
                             "name": "Overview",
                             "children": [],
                             "isExternal": false,
@@ -4878,7 +4878,7 @@
                           },
                           {
                             "id": "Storybook best practices for making the most out of Nx",
-                            "path": "/technologies/storybook/api/documents/best-practices",
+                            "path": "/technologies/test-tools/storybook/api/documents/best-practices",
                             "name": "Storybook best practices for making the most out of Nx",
                             "children": [],
                             "isExternal": false,
@@ -4886,7 +4886,7 @@
                           },
                           {
                             "id": "Storybook 7",
-                            "path": "/technologies/storybook/api/documents/storybook-7-setup",
+                            "path": "/technologies/test-tools/storybook/api/documents/storybook-7-setup",
                             "name": "Storybook 7",
                             "children": [],
                             "isExternal": false,
@@ -4898,12 +4898,12 @@
                       },
                       {
                         "id": "executors",
-                        "path": "/technologies/storybook/api/executors",
+                        "path": "/technologies/test-tools/storybook/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "storybook",
-                            "path": "/technologies/storybook/api/executors/storybook",
+                            "path": "/technologies/test-tools/storybook/api/executors/storybook",
                             "name": "storybook",
                             "children": [],
                             "isExternal": false,
@@ -4911,7 +4911,7 @@
                           },
                           {
                             "id": "build",
-                            "path": "/technologies/storybook/api/executors/build",
+                            "path": "/technologies/test-tools/storybook/api/executors/build",
                             "name": "build",
                             "children": [],
                             "isExternal": false,
@@ -4923,12 +4923,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/storybook/api/generators",
+                        "path": "/technologies/test-tools/storybook/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/storybook/api/generators/init",
+                            "path": "/technologies/test-tools/storybook/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -4936,7 +4936,7 @@
                           },
                           {
                             "id": "configuration",
-                            "path": "/technologies/storybook/api/generators/configuration",
+                            "path": "/technologies/test-tools/storybook/api/generators/configuration",
                             "name": "configuration",
                             "children": [],
                             "isExternal": false,
@@ -4944,7 +4944,7 @@
                           },
                           {
                             "id": "cypress-project",
-                            "path": "/technologies/storybook/api/generators/cypress-project",
+                            "path": "/technologies/test-tools/storybook/api/generators/cypress-project",
                             "name": "cypress-project",
                             "children": [],
                             "isExternal": false,
@@ -4952,7 +4952,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/storybook/api/generators/convert-to-inferred",
+                            "path": "/technologies/test-tools/storybook/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -4960,7 +4960,7 @@
                           },
                           {
                             "id": "migrate-7",
-                            "path": "/technologies/storybook/api/generators/migrate-7",
+                            "path": "/technologies/test-tools/storybook/api/generators/migrate-7",
                             "name": "migrate-7",
                             "children": [],
                             "isExternal": false,
@@ -4968,7 +4968,7 @@
                           },
                           {
                             "id": "migrate-8",
-                            "path": "/technologies/storybook/api/generators/migrate-8",
+                            "path": "/technologies/test-tools/storybook/api/generators/migrate-8",
                             "name": "migrate-8",
                             "children": [],
                             "isExternal": false,
@@ -4980,7 +4980,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/storybook/api/migrations",
+                        "path": "/technologies/test-tools/storybook/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -5022,12 +5022,12 @@
                     "children": [
                       {
                         "id": "executors",
-                        "path": "/technologies/detox/api/executors",
+                        "path": "/technologies/test-tools/detox/api/executors",
                         "name": "executors",
                         "children": [
                           {
                             "id": "build",
-                            "path": "/technologies/detox/api/executors/build",
+                            "path": "/technologies/test-tools/detox/api/executors/build",
                             "name": "build",
                             "children": [],
                             "isExternal": false,
@@ -5035,7 +5035,7 @@
                           },
                           {
                             "id": "test",
-                            "path": "/technologies/detox/api/executors/test",
+                            "path": "/technologies/test-tools/detox/api/executors/test",
                             "name": "test",
                             "children": [],
                             "isExternal": false,
@@ -5047,12 +5047,12 @@
                       },
                       {
                         "id": "generators",
-                        "path": "/technologies/detox/api/generators",
+                        "path": "/technologies/test-tools/detox/api/generators",
                         "name": "generators",
                         "children": [
                           {
                             "id": "init",
-                            "path": "/technologies/detox/api/generators/init",
+                            "path": "/technologies/test-tools/detox/api/generators/init",
                             "name": "init",
                             "children": [],
                             "isExternal": false,
@@ -5060,7 +5060,7 @@
                           },
                           {
                             "id": "application",
-                            "path": "/technologies/detox/api/generators/application",
+                            "path": "/technologies/test-tools/detox/api/generators/application",
                             "name": "application",
                             "children": [],
                             "isExternal": false,
@@ -5068,7 +5068,7 @@
                           },
                           {
                             "id": "convert-to-inferred",
-                            "path": "/technologies/detox/api/generators/convert-to-inferred",
+                            "path": "/technologies/test-tools/detox/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
                             "children": [],
                             "isExternal": false,
@@ -5080,7 +5080,7 @@
                       },
                       {
                         "id": "migrations",
-                        "path": "/technologies/detox/api/migrations",
+                        "path": "/technologies/test-tools/detox/api/migrations",
                         "name": "migrations",
                         "children": [],
                         "isExternal": false,
@@ -8189,7 +8189,7 @@
             "children": [
               {
                 "name": "Overview",
-                "path": "/technologies/eslint-plugin/api/documents/overview",
+                "path": "/technologies/eslint/eslint-plugin/api/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -8197,7 +8197,7 @@
               },
               {
                 "name": "The `enforce-module-boundaries` rule",
-                "path": "/technologies/eslint-plugin/api/documents/enforce-module-boundaries",
+                "path": "/technologies/eslint/eslint-plugin/api/documents/enforce-module-boundaries",
                 "id": "enforce-module-boundaries",
                 "isExternal": false,
                 "children": [],
@@ -8205,7 +8205,7 @@
               },
               {
                 "name": "The `dependency-checks` rule",
-                "path": "/technologies/eslint-plugin/api/documents/dependency-checks",
+                "path": "/technologies/eslint/eslint-plugin/api/documents/dependency-checks",
                 "id": "dependency-checks",
                 "isExternal": false,
                 "children": [],
@@ -10386,7 +10386,7 @@
             "children": [
               {
                 "name": "Overview",
-                "path": "/technologies/storybook/api/documents/overview",
+                "path": "/technologies/test-tools/storybook/api/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -10394,7 +10394,7 @@
               },
               {
                 "name": "Storybook best practices for making the most out of Nx",
-                "path": "/technologies/storybook/api/documents/best-practices",
+                "path": "/technologies/test-tools/storybook/api/documents/best-practices",
                 "id": "best-practices",
                 "isExternal": false,
                 "children": [],
@@ -10402,7 +10402,7 @@
               },
               {
                 "name": "Storybook 7",
-                "path": "/technologies/storybook/api/documents/storybook-7-setup",
+                "path": "/technologies/test-tools/storybook/api/documents/storybook-7-setup",
                 "id": "storybook-7-setup",
                 "isExternal": false,
                 "children": [],

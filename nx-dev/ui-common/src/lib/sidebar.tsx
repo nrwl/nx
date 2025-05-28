@@ -15,17 +15,17 @@ import { useRouter } from 'next/router';
 import {
   createRef,
   Fragment,
-  useCallback,
-  useState,
   type JSX,
+  useCallback,
   useRef,
+  useState,
 } from 'react';
 import { NxIcon } from '@nx/nx-dev/ui-icons';
-import { pkgToGeneratedApiDocs } from '@nx/nx-dev/models-document';
 
 export interface SidebarProps {
   menu: Menu;
 }
+
 export interface FloatingSidebarProps {
   menu: Menu;
   navIsOpen: boolean;
@@ -33,7 +33,6 @@ export interface FloatingSidebarProps {
 }
 
 export function Sidebar({ menu }: SidebarProps): JSX.Element {
-  const router = useRouter();
   return (
     <div data-testid="navigation-wrapper">
       <nav
@@ -91,27 +90,6 @@ function SidebarSection({ section }: { section: MenuSection }): JSX.Element {
   );
 }
 
-// Some API docs are nested under /technologies, e.g. /technologies/next/api is under /technologies/react/next/api in the sidebar.
-// We need the mapping to detect active links.
-const remappedMenuPaths = Object.entries(pkgToGeneratedApiDocs).reduce(
-  (acc, [k, v]) => {
-    if (v.menuPath) {
-      acc[v.pagePath] = v.menuPath;
-    }
-    return acc;
-  },
-  {} as Record<string, string>
-);
-
-function normalizePath(path: string): string {
-  for (const [key, value] of Object.entries(remappedMenuPaths)) {
-    if (path.startsWith(key)) {
-      return path.replace(key, value);
-    }
-  }
-  return path;
-}
-
 function withoutAnchors(linkText: string): string {
   return linkText?.includes('#')
     ? linkText.substring(0, linkText.indexOf('#'))
@@ -131,9 +109,7 @@ function SidebarSectionItems({
 }): JSX.Element {
   const router = useRouter();
   const initialRender = useRef(true);
-  const isActiveLink = withoutAnchors(normalizePath(router.asPath)).startsWith(
-    item.path
-  );
+  const isActiveLink = withoutAnchors(router.asPath).startsWith(item.path);
   const [collapsed, setCollapsed] = useState(
     !item.disableCollapsible && !isActiveLink
   );

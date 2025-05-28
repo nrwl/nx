@@ -1,7 +1,6 @@
 /*
  * We present a different grouping or naming for the API docs compared to their package names.
  * - pagePath - the path to the package's API docs page
- * - menuPath - allows use to change the grouping without affecting the page path
  * - includeDocuments - whether to include documents, which should eventually be moved to guides
  *
  * This mapping is used in:
@@ -11,7 +10,7 @@
  */
 export const pkgToGeneratedApiDocs: Record<
   string,
-  { pagePath: string; menuPath?: string; includeDocuments?: boolean }
+  { pagePath: string; includeDocuments?: boolean }
 > = {
   // ts/js
   js: {
@@ -28,40 +27,33 @@ export const pkgToGeneratedApiDocs: Record<
     pagePath: '/technologies/react/api',
   },
   'react-native': {
-    menuPath: '/technologies/react/react-native/api',
-    pagePath: '/technologies/react-native/api',
+    pagePath: '/technologies/react/react-native/api',
   },
   expo: {
-    menuPath: '/technologies/react/expo/api',
-    pagePath: '/technologies/expo/api',
+    pagePath: '/technologies/react/expo/api',
   },
   next: {
-    menuPath: '/technologies/react/next/api',
-    pagePath: '/technologies/next/api',
+    pagePath: '/technologies/react/next/api',
   },
   remix: {
-    menuPath: '/technologies/react/remix/api',
-    pagePath: '/technologies/remix/api',
+    pagePath: '/technologies/react/remix/api',
   },
   // vue
   vue: {
     pagePath: '/technologies/vue/api',
   },
   nuxt: {
-    menuPath: '/technologies/vue/nuxt/api',
-    pagePath: '/technologies/nuxt/api',
+    pagePath: '/technologies/vue/nuxt/api',
   },
   // node
   node: {
     pagePath: '/technologies/node/api',
   },
   express: {
-    menuPath: '/technologies/node/express/api',
-    pagePath: '/technologies/express/api',
+    pagePath: '/technologies/node/express/api',
   },
   nest: {
-    menuPath: '/technologies/node/nest/api',
-    pagePath: '/technologies/nest/api',
+    pagePath: '/technologies/node/nest/api',
   },
   // java
   gradle: {
@@ -69,55 +61,43 @@ export const pkgToGeneratedApiDocs: Record<
   },
   // build tools
   webpack: {
-    menuPath: '/technologies/build-tools/webpack/api',
-    pagePath: '/technologies/webpack/api',
+    pagePath: '/technologies/build-tools/webpack/api',
   },
   vite: {
-    menuPath: '/technologies/build-tools/vite/api',
-    pagePath: '/technologies/vite/api',
+    pagePath: '/technologies/build-tools/vite/api',
   },
   rollup: {
-    menuPath: '/technologies/build-tools/rollup/api',
-    pagePath: '/technologies/rollup/api',
+    pagePath: '/technologies/build-tools/rollup/api',
   },
   esbuild: {
-    menuPath: '/technologies/build-tools/esbuild/api',
-    pagePath: '/technologies/esbuild/api',
+    pagePath: '/technologies/build-tools/esbuild/api',
   },
   rspack: {
-    menuPath: '/technologies/build-tools/rspack/api',
-    pagePath: '/technologies/rspack/api',
+    pagePath: '/technologies/build-tools/rspack/api',
   },
   rsbuild: {
-    menuPath: '/technologies/build-tools/rsbuild/api',
-    pagePath: '/technologies/rsbuild/api',
+    pagePath: '/technologies/build-tools/rsbuild/api',
   },
   // test tools
   jest: {
-    menuPath: '/technologies/test-tools/jest/api',
-    pagePath: '/technologies/jest/api',
+    pagePath: '/technologies/test-tools/jest/api',
   },
   storybook: {
-    menuPath: '/technologies/test-tools/storybook/api',
-    pagePath: '/technologies/storybook/api',
+    pagePath: '/technologies/test-tools/storybook/api',
     // TODO(docs): move these to guides and remove this
     includeDocuments: true,
   },
   playwright: {
-    menuPath: '/technologies/test-tools/playwright/api',
-    pagePath: '/technologies/playwright/api',
+    pagePath: '/technologies/test-tools/playwright/api',
   },
   cypress: {
-    menuPath: '/technologies/test-tools/cypress/api',
-    pagePath: '/technologies/cypress/api',
+    pagePath: '/technologies/test-tools/cypress/api',
   },
   detox: {
-    menuPath: '/technologies/test-tools/detox/api',
-    pagePath: '/technologies/detox/api',
+    pagePath: '/technologies/test-tools/detox/api',
   },
   // misc
   'module-federation': {
-    menuPath: '/technologies/module-federation/api',
     pagePath: '/technologies/module-federation/api',
     // TODO(docs): move these to guides and remove this
     includeDocuments: true,
@@ -126,8 +106,7 @@ export const pkgToGeneratedApiDocs: Record<
     pagePath: '/technologies/eslint/api',
   },
   'eslint-plugin': {
-    menuPath: '/technologies/eslint/eslint-plugin/api',
-    pagePath: '/technologies/eslint-plugin/api',
+    pagePath: '/technologies/eslint/eslint-plugin/api',
     // TODO(docs): move these to guides and remove this
     includeDocuments: true,
   },

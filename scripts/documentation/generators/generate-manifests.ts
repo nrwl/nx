@@ -550,13 +550,10 @@ function insertApiDocs(menus: MenuItem[], packages: PackageManifest): void {
       return;
     }
 
-    const apiItem = findMenuItemByPath(
-      menus,
-      apiDocsData.menuPath ?? apiDocsData.pagePath
-    );
+    const apiItem = findMenuItemByPath(menus, apiDocsData.pagePath);
     if (!apiItem)
       throw new Error(
-        `Cannot find where to put ${apiDocsData.menuPath}. Does it exist in map.json?`
+        `Cannot find where to put ${apiDocsData.pagePath}. Does it exist in map.json?`
       );
 
     if (apiDocsData.includeDocuments && !!Object.values(p.documents).length) {
