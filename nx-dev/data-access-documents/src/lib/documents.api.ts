@@ -145,7 +145,6 @@ export class DocumentsApi {
         if (apiDocData.includeDocuments) {
           paths.push(`${apiPagePath}/documents`);
           Object.keys(pkg.documents).forEach((path) => {
-            console.log('>>>>>>>>>adding', path);
             paths.push(path);
           });
         }
