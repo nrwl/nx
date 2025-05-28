@@ -3,7 +3,7 @@ title: 'Building an MCP Server with Nx'
 slug: building-mcp-server-with-nx
 authors: ['Max Kless']
 tags: ['nx', 'mcp', 'ai', 'node']
-cover_image: /blog/images/2025-05-27/mcp-server-cover.avif
+cover_image: /blog/images/articles/bg-building-mcp-server.avif
 description: 'Learn how to build a Model Context Protocol (MCP) server using Nx to make your applications AI-ready.'
 ---
 
@@ -57,17 +57,17 @@ We will create a new Node application that contains our MCP server and use the T
 
 MCP are JSON-RPC servers that communicate with clients via stdio or http. Thankfully, [the official Typescript SDK](https://github.com/modelcontextprotocol/typescript-sdk) abstracts away large pieces of the implementation, making it easier to get started - let's get started by installing it.
 
-```bash
+```shell
 npm install @modelcontextprotocol/sdk
 ```
 
 We'll continue by installing the `@nx/node` plugin and using it to generate a new Node application:
 
-```bash
+```shell
 npx nx add @nx/node
 ```
 
-```bash
+```shell
 npx nx generate @nx/node:application --directory=apps/mcp-server --framework=none --no-interactive
 ```
 
@@ -283,13 +283,13 @@ At Nx, we use an awesome open-source tool called [Verdaccio](https://verdaccio.o
 
 You can add verdaccio to the repo by running the `setup-verdaccio` generator:
 
-```bash
+```shell
 npx nx g @nx/js:setup-verdaccio
 ```
 
 This will create a verdaccio config and an nx target to spin it up at the root of our workspace. Start the local registry by running.
 
-```bash
+```shell
 npx nx run @astra-arcana/source:local-registry
 ```
 
@@ -357,3 +357,14 @@ We've come a long way. Looking back, we've
 - learned how to publish an executable package to npm
 
 The next post in this series will dive into implementing a different MCP transport layer in streamable HTTP and hosting our server on Cloudflare!
+
+---
+
+Learn more:
+
+- 📖️ [Blog: AI Series](/blog/nx-mcp-vscode-copilot)
+- 🧠 [Nx AI Docs](/features/enhance-AI)
+- 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
+- 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)
+- 💬 [Nx Official Discord Server](https://go.nx.dev/community)
+- 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
