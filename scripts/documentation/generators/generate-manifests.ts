@@ -84,11 +84,13 @@ export function generateManifests(workspace: string): Promise<void[]> {
    * @type {{id: string, records: Record<string, ProcessedPackageMetadata>}}
    */
   const packagesManifest = createPackagesManifest(packages);
+  const newPackagesManifest = createNewPackagesManifest(packages);
 
   /**
    * Add the packages manifest to the manifest collection for simplicity.
    */
   manifests.push(packagesManifest);
+  manifests.push(newPackagesManifest);
 
   /**
    * We can easily infer all Documents menus but need a custom way to handle them
@@ -104,13 +106,27 @@ export function generateManifests(workspace: string): Promise<void[]> {
     )
   );
 
-  /**
-   * Map API docs to their corresponding section in the nx menu. e.g. /technologies/angular/api or /reference/core-api/nx
+  /*
+   * Map API docs to /technologies section in the nx menu.
    */
   menus.forEach((menu) => {
     if (menu.id !== 'nx') return;
-    insertApiDocs(menu.menu, packagesManifest);
+    insertApiDocs(menu.menu, newPackagesManifest);
   });
+
+  /**
+   * Creating packages menu with custom package logic.
+   * @type {{id: string, menu: MenuItem[]}}
+   */
+  const packagesMenu: {
+    id: string;
+    menu: MenuItem[];
+  } = createPackagesMenu(newPackagesManifest);
+
+  /**
+   * Add the packages menu to the main menu collection for simplicity.
+   */
+  menus.push(packagesMenu);
 
   /**
    * We can easily get all associated existing tags from each manifest.
@@ -210,6 +226,86 @@ function generateTags(manifests: Manifest[]) {
   return tags;
 }
 
+// TODO(docs): Once we move API docs and set up redirect rules, we no longer need this menu
+function createPackagesMenu(packages: PackageManifest): {
+  id: string;
+  menu: MenuItem[];
+} {
+  const packagesMenu: MenuItem[] = Object.values(packages.records).map((p) => {
+    const item: MenuItem = {
+      id: p.name,
+      path: '/nx-api/' + p.name,
+      name: p.name,
+      children: [],
+      isExternal: false,
+      disableCollapsible: false,
+    };
+
+    if (!!Object.values(p.documents).length) {
+      // Might need to remove the path set in the "additional api resources" items
+      item.children.push({
+        id: 'documents',
+        path: '/' + ['nx-api', p.name, 'documents'].join('/'),
+        name: 'documents',
+        children: Object.values(p.documents).map((d) =>
+          menuItemRecurseOperations(d)
+        ),
+        isExternal: false,
+        disableCollapsible: false,
+      });
+    }
+
+    if (!!Object.values(p.executors).length) {
+      item.children.push({
+        id: 'executors',
+        path: '/' + ['nx-api', p.name, 'executors'].join('/'),
+        name: 'executors',
+        children: Object.values(p.executors).map((e) => ({
+          id: e.name,
+          path: '/' + ['nx-api', p.name, 'executors', e.name].join('/'),
+          name: e.name,
+          children: [],
+          isExternal: false,
+          disableCollapsible: false,
+        })),
+        isExternal: false,
+        disableCollapsible: false,
+      });
+    }
+
+    if (!!Object.values(p.generators).length) {
+      item.children.push({
+        id: 'generators',
+        path: '/' + ['nx-api', p.name, 'generators'].join('/'),
+        name: 'generators',
+        children: Object.values(p.generators).map((g) => ({
+          id: g.name,
+          path: '/' + ['nx-api', p.name, 'generators', g.name].join('/'),
+          name: g.name,
+          children: [],
+          isExternal: false,
+          disableCollapsible: false,
+        })),
+        isExternal: false,
+        disableCollapsible: false,
+      });
+    }
+
+    if (!!Object.values(p.migrations).length) {
+      item.children.push({
+        id: 'migrations',
+        path: '/' + ['nx-api', p.name, 'migrations'].join('/'),
+        name: 'migrations',
+        children: [],
+        isExternal: false,
+        disableCollapsible: false,
+      });
+    }
+    return item;
+  });
+  return { id: 'nx-api', menu: packagesMenu };
+}
+
 function getDocumentMenus(manifests: DocumentManifest[]): {
   id: string;
   menu: MenuItem[];
@@ -240,7 +336,7 @@ function getDocumentMenus(manifests: DocumentManifest[]): {
   });
 }
 
-function createPackagesManifest(packages: PackageMetadata[]): {
+function createNewPackagesManifest(packages: PackageMetadata[]): {
   id: string;
   records: Record<string, ProcessedPackageMetadata>;
 } {
@@ -328,6 +424,76 @@ function createPackagesManifest(packages: PackageMetadata[]): {
   return packagesManifest;
 }
 
+function createPackagesManifest(packages: PackageMetadata[]): {
+  id: string;
+  records: Record<string, ProcessedPackageMetadata>;
+} {
+  const packagesManifest: {
+    id: string;
+    records: Record<string, ProcessedPackageMetadata>;
+  } = { id: 'nx-api', records: {} };
+
+  packages.forEach((p) => {
+    packagesManifest.records[p.name] = {
+      githubRoot: p.githubRoot,
+      name: p.name,
+      packageName: p.packageName,
+      description: p.description,
+      documents: convertToDictionary(
+        p.documents.map((d) =>
+          documentRecurseOperations(
+            d,
+            createDocumentMetadata({ id: p.name, path: 'nx-api/' })
+          )
+        ),
+        'path'
+      ),
+      root: p.root,
+      source: p.source,
+      executors: convertToDictionary(
+        p.executors.map((e) => ({
+          ...e,
+          path: generatePath({ id: e.name, path: e.path }, 'nx-api'),
+          newPath: generatePath(
+            // package name is now in the prefix
+            { id: e.name, path: e.path.split('/').slice(1).join('/') },
+            `technologies/${p.name}/api`
+          ),
+        })),
+        'path'
+      ),
+      generators: convertToDictionary(
+        p.generators.map((g) => ({
+          ...g,
+          path: generatePath({ id: g.name, path: g.path }, 'nx-api'),
+          newPath: generatePath(
+            // package name is now in the prefix
+            { id: g.name, path: g.path.split('/').slice(1).join('/') },
+            `technologies/${p.name}/api`
+          ),
+        })),
+        'path'
+      ),
+      migrations: convertToDictionary(
+        p.migrations.map((g) => ({
+          ...g,
+          path: generatePath({ id: g.name, path: g.path }, 'nx-api'),
+          newPath: generatePath(
+            // package name is now in the prefix
+            { id: g.name, path: g.path.split('/').slice(1).join('/') },
+            `technologies/${p.name}/api`
+          ),
+        })),
+        'path'
+      ),
+      path: generatePath({ id: p.name, path: '' }, 'nx-api'),
+      newPath: generatePath({ id: p.name, path: '' }, `technologies/${p.name}`),
+    };
+  });
+
+  return packagesManifest;
+}
+
 function getDocumentManifests(sections: DocumentSection[]): Manifest[] {
   return sections.map((section) => {
     const records: Record<string, DocumentMetadata> = {};
@@ -385,9 +551,7 @@ function insertApiDocs(menus: MenuItem[], packages: PackageManifest): void {
     );
     if (!apiItem)
       throw new Error(
-        `Cannot find where to put ${
-          apiDocsData.menuPath ?? apiDocsData.pagePath
-        }. Does it exist in map.json?`
+        `Cannot find where to put ${apiDocsData.menuPath}. Does it exist in map.json?`
       );
 
     if (apiDocsData.includeDocuments && !!Object.values(p.documents).length) {
