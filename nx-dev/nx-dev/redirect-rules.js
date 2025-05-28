@@ -1231,6 +1231,56 @@ const tmpTerminalUiRedirects = {
   // This will be a dedicated landing page in a follow up, redirect to the recipe for now
   '/terminal-ui': '/recipes/running-tasks/terminal-ui',
 };
+const nxApiRedirects = {
+  // Reference
+  // NOTE: leaving nx/documents out for now since there is some handling for Devkit APIs that aren't working yet in the new structure.
+  // TODO(docs): handling devkit APIs and include it in redirects
+  '/nx-api/nx/executors': '/reference/core-api/nx/executors',
+  '/nx-api/nx/generators': '/reference/core-api/nx/generators',
+  '/nx-api/nx/migrations': '/reference/core-api/nx/migrations',
+  '/nx-api/workspace': '/reference/core-api/workspace',
+  '/nx-api/devkit': '/reference/core-api/devkit',
+  '/nx-api/plugin': '/reference/core-api/plugin',
+  '/nx-api/web': '/reference/core-api/web',
+  '/nx-api/azure-cache': '/reference/core-api/azure-cache',
+  '/nx-api/conformance': '/reference/core-api/conformance',
+  '/nx-api/owners': '/reference/core-api/owners',
+  '/nx-api/gcs-cache': '/reference/core-api/gcs-cache',
+  '/nx-api/s3-cache': '/reference/core-api/s3-cache',
+  '/nx-api/shared-fs-cache': '/reference/core-api/shared-fs-cache',
+  '/nx-api/create-nx-plugin': '/reference/core-api/create-nx-plugin',
+  '/nx-api/create-nx-workspace': '/reference/core-api/create-nx-workspace',
+  // Technologies
+  '/nx-api/angular': '/technologies/angular/api',
+  '/nx-api/react': '/technologies/react/api',
+  '/nx-api/react-native': '/technologies/react-native/api',
+  '/nx-api/vue': '/technologies/vue/api',
+  '/nx-api/next': '/technologies/next/api',
+  '/nx-api/remix': '/technologies/remix/api',
+  '/nx-api/nuxt': '/technologies/nuxt/api',
+  '/nx-api/expo': '/technologies/expo/api',
+  '/nx-api/nest': '/technologies/nest/api',
+  '/nx-api/express': '/technologies/express/api',
+  '/nx-api/node': '/technologies/node/api',
+  '/nx-api/webpack': '/technologies/webpack/api',
+  '/nx-api/vite': '/technologies/vite/api',
+  '/nx-api/rollup': '/technologies/rollup/api',
+  '/nx-api/esbuild': '/technologies/esbuild/api',
+  '/nx-api/rspack': '/technologies/rspack/api',
+  '/nx-api/rsbuild': '/technologies/rsbuild/api',
+  '/nx-api/cypress': '/technologies/cypress/api',
+  '/nx-api/jest': '/technologies/jest/api',
+  '/nx-api/playwright': '/technologies/playwright/api',
+  '/nx-api/storybook': '/technologies/storybook/api',
+  '/nx-api/detox': '/technologies/detox/api',
+  '/nx-api/js': '/technologies/typescript/api',
+  '/nx-api/gradle': '/technologies/java/api',
+  '/nx-api/eslint': '/technologies/eslint/api',
+  '/nx-api/eslint-plugin': '/technologies/eslint-plugin/api',
+  '/nx-api/module-federation': '/technologies/module-federation/api',
+};
+
+export default nxApiRedirects;
 
 /**
  * Public export API
