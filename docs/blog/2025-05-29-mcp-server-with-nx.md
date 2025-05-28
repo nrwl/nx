@@ -276,7 +276,7 @@ While we're in `package.json` , let's also make sure that our package is publish
 ### Local Publishing with Verdaccio
 
 {% callout type="warning" title="Publishing" %}
-Keep in mind that the `@astra-arcana/nx-mcp` package already exists on the official npm registry, so we will only publish to a local registry.
+Keep in mind that the `@astra-arcana/mcp-server` package already exists on the official npm registry, so we will only publish to a local registry.
 {% /callout %}
 
 At Nx, we use an awesome open-source tool called [Verdaccio](https://verdaccio.org/). It's a lightweight implementation of a local npm registry - let's use it to test out our publishing flow.
