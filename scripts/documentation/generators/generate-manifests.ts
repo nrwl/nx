@@ -127,6 +127,7 @@ export function generateManifests(workspace: string): Promise<void[]> {
    * Add the packages menu to the main menu collection for simplicity.
    */
   menus.push(packagesMenu);
+  menus.push(createPackagesMenu(packagesManifest));
 
   /**
    * We can easily get all associated existing tags from each manifest.
@@ -164,7 +165,7 @@ export function generateManifests(workspace: string): Promise<void[]> {
   fileGenerationPromises.push(
     generateIndexMarkdownFile(
       resolve(documentationPath, `shared`, `reference`, `sitemap.md`),
-      menus
+      menus.concat(createPackagesMenu(packagesManifest))
     )
   );
 
