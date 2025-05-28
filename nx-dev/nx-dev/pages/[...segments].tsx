@@ -187,7 +187,6 @@ export const getStaticProps: GetStaticProps = async ({
         // API index
         // Example: /technologies/typescript/api
         const pkg = nxNewPackagesApi.getPackage([packageName]);
-        console.log('>>>>>>>>>>>>', type, pkg);
         return {
           props: {
             pageType: 'api-index',
