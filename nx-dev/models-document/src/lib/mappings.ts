@@ -132,23 +132,30 @@ export const pkgToGeneratedApiDocs: Record<
   },
   workspace: {
     pagePath: '/reference/core-api/workspace',
+    includeDocuments: true,
   },
   owners: {
     pagePath: '/reference/core-api/owners',
+    includeDocuments: true,
   },
   conformance: {
     pagePath: '/reference/core-api/conformance',
+    includeDocuments: true,
   },
   'azure-cache': {
     pagePath: '/reference/core-api/azure-cache',
+    includeDocuments: true,
   },
   'gcs-cache': {
     pagePath: '/reference/core-api/gcs-cache',
+    includeDocuments: true,
   },
   's3-cache': {
     pagePath: '/reference/core-api/s3-cache',
+    includeDocuments: true,
   },
   'shared-fs-cache': {
     pagePath: '/reference/core-api/shared-fs-cache',
+    includeDocuments: true,
   },
 };

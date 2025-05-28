@@ -137,6 +137,7 @@ export class DocumentsApi {
 
       packages.forEach((pkg) => {
         const apiDocData = pkgToGeneratedApiDocs[pkg.name];
+        // Packages are not mapped, skip creating URLs for them.
         if (!apiDocData) return;
         const apiPagePath = apiDocData.pagePath;
         paths.push(apiPagePath);
@@ -144,39 +145,18 @@ export class DocumentsApi {
         if (apiDocData.includeDocuments) {
           paths.push(`${apiPagePath}/documents`);
           Object.keys(pkg.documents).forEach((path) => {
-            const segments = path.split('/').filter(Boolean);
-            if (segments[0] === 'nx-api') {
-              // Create a path like /reference/core-api/nx/documents/init
-              const newPath = `${apiPagePath}/documents/${segments
-                .slice(3)
-                .join('/')}`;
-              paths.push(newPath);
-            }
+            paths.push(path);
           });
         }
 
         paths.push(`${apiPagePath}/executors`);
         Object.keys(pkg.executors).forEach((path) => {
-          const segments = path.split('/').filter(Boolean);
-          if (segments[0] === 'nx-api') {
-            // Create a path like /technologies/react/executors/library
-            const newPath = `${apiPagePath}/executors/${segments
-              .slice(3)
-              .join('/')}`;
-            paths.push(newPath);
-          }
+          paths.push(path);
         });
 
         paths.push(`${apiPagePath}/generators`);
         Object.keys(pkg.generators).forEach((path) => {
-          const segments = path.split('/').filter(Boolean);
-          if (segments[0] === 'nx-api') {
-            // Create a path like /technologies/react/generators/library
-            const newPath = `${apiPagePath}/generators/${segments
-              .slice(3)
-              .join('/')}`;
-            paths.push(newPath);
-          }
+          paths.push(path);
         });
 
         paths.push(`${apiPagePath}/migrations`);

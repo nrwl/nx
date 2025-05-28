@@ -1,10 +1,9 @@
 import { DocumentsApi } from '@nx/nx-dev/data-access-documents/node-only';
 import documents from '../public/documentation/generated/manifests/nx.json';
-import packages from '../public/documentation/generated/manifests/nx-api.json';
+import packages from '../public/documentation/generated/manifests/new-nx-api.json';
 import { tagsApi } from './tags.api';
 import { type ProcessedPackageMetadata } from '@nx/nx-dev/models-package';
 
-// TODO(docs): delete this once no longer used
 export const nxDocumentationApi = new DocumentsApi({
   id: 'nx',
   manifest: documents,

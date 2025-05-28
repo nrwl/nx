@@ -61,18 +61,12 @@ export function DocumentationHeader({
   const router = useRouter();
   let routerPath = router.asPath;
   const isCI: boolean = routerPath.startsWith('/ci');
-  const isAPI: boolean = routerPath.startsWith('/nx-api');
   const isExtendingNx: boolean = routerPath.startsWith('/extending-nx');
   const isPlugins: boolean = routerPath.startsWith('/plugin-registry');
   const isChangelog: boolean = routerPath.startsWith('/changelog');
   const isAiChat: boolean = router.asPath.startsWith('/ai-chat');
   const isNx: boolean =
-    !isCI &&
-    !isAPI &&
-    !isExtendingNx &&
-    !isPlugins &&
-    !isChangelog &&
-    !isAiChat;
+    !isCI && !isExtendingNx && !isPlugins && !isChangelog && !isAiChat;
 
   const handleContextMenu = (e: MouseEvent) => {
     e.preventDefault();
@@ -95,11 +89,6 @@ export function DocumentationHeader({
       name: 'Plugins',
       href: '/plugin-registry',
       current: isPlugins,
-    },
-    {
-      name: 'API',
-      href: '/nx-api',
-      current: isAPI,
     },
     {
       name: 'Changelog',
