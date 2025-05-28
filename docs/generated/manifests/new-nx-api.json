@@ -1552,6 +1552,42 @@
     },
     "path": "/technologies/detox/detox"
   },
+  "devkit": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "devkit",
+    "packageName": "@nx/devkit",
+    "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more. Learn more about [extending Nx by leveraging the Nx Devkit](https://nx.dev/extending-nx/intro/getting-started) on our docs.",
+    "documents": {
+      "/reference/core-api/devkit/documents/nx_devkit": {
+        "id": "nx_devkit",
+        "name": "Overview",
+        "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more. Learn more about [extending Nx by leveraging the Nx Devkit](https://nx.dev/extending-nx/intro/getting-started) on our docs.",
+        "file": "generated/packages/devkit/documents/nx_devkit",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/core-api/devkit/documents/nx_devkit",
+        "tags": [],
+        "originalFilePath": "generated/devkit/README"
+      },
+      "/reference/core-api/devkit/documents/ngcli_adapter": {
+        "id": "ngcli_adapter",
+        "name": "Ng CLI Adapter",
+        "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more. Learn more about [extending Nx by leveraging the Nx Devkit](https://nx.dev/extending-nx/intro/getting-started) on our docs.",
+        "file": "generated/packages/devkit/documents/ngcli_adapter",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/core-api/devkit/documents/ngcli_adapter",
+        "tags": [],
+        "originalFilePath": "generated/devkit/ngcli_adapter/README"
+      }
+    },
+    "root": "/packages/devkit",
+    "source": "/packages/devkit/src",
+    "executors": {},
+    "generators": {},
+    "migrations": {},
+    "path": "/technologies/devkit/devkit"
+  },
   "esbuild": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "esbuild",
@@ -3699,6 +3735,104 @@
     },
     "path": "/technologies/playwright/playwright"
   },
+  "plugin": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "plugin",
+    "packageName": "@nx/plugin",
+    "description": "This plugin is used to create Nx plugins! It contains generators for generating common plugin features like generators, executors, migrations and more.",
+    "documents": {
+      "/reference/core-api/plugin/documents/overview": {
+        "id": "overview",
+        "name": "Overview",
+        "description": "This plugin is used to create Nx plugins! It contains generators for generating common plugin features like generators, executors, migrations and more.",
+        "file": "generated/packages/plugin/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/core-api/plugin/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/plugin/plugin"
+      }
+    },
+    "root": "/packages/plugin",
+    "source": "/packages/plugin/src",
+    "executors": {},
+    "generators": {
+      "/reference/core-api/plugin/generators/plugin": {
+        "description": "Create a Nx Plugin.",
+        "file": "generated/packages/plugin/generators/plugin.json",
+        "hidden": false,
+        "name": "plugin",
+        "originalFilePath": "/packages/plugin/src/generators/plugin/schema.json",
+        "path": "/reference/core-api/plugin/generators/plugin",
+        "type": "generator"
+      },
+      "/reference/core-api/plugin/generators/create-package": {
+        "description": "Create a package which can be used by npx to create a new workspace",
+        "file": "generated/packages/plugin/generators/create-package.json",
+        "hidden": false,
+        "name": "create-package",
+        "originalFilePath": "/packages/plugin/src/generators/create-package/schema.json",
+        "path": "/reference/core-api/plugin/generators/create-package",
+        "type": "generator"
+      },
+      "/reference/core-api/plugin/generators/e2e-project": {
+        "description": "Create a E2E application for a Nx Plugin.",
+        "file": "generated/packages/plugin/generators/e2e-project.json",
+        "hidden": false,
+        "name": "e2e-project",
+        "originalFilePath": "/packages/plugin/src/generators/e2e-project/schema.json",
+        "path": "/reference/core-api/plugin/generators/e2e-project",
+        "type": "generator"
+      },
+      "/reference/core-api/plugin/generators/migration": {
+        "description": "Create a migration for an Nx Plugin.",
+        "file": "generated/packages/plugin/generators/migration.json",
+        "hidden": false,
+        "name": "migration",
+        "originalFilePath": "/packages/plugin/src/generators/migration/schema.json",
+        "path": "/reference/core-api/plugin/generators/migration",
+        "type": "generator"
+      },
+      "/reference/core-api/plugin/generators/generator": {
+        "description": "Create a generator for an Nx Plugin.",
+        "file": "generated/packages/plugin/generators/generator.json",
+        "hidden": false,
+        "name": "generator",
+        "originalFilePath": "/packages/plugin/src/generators/generator/schema.json",
+        "path": "/reference/core-api/plugin/generators/generator",
+        "type": "generator"
+      },
+      "/reference/core-api/plugin/generators/executor": {
+        "description": "Create an executor for an Nx Plugin.",
+        "file": "generated/packages/plugin/generators/executor.json",
+        "hidden": false,
+        "name": "executor",
+        "originalFilePath": "/packages/plugin/src/generators/executor/schema.json",
+        "path": "/reference/core-api/plugin/generators/executor",
+        "type": "generator"
+      },
+      "/reference/core-api/plugin/generators/plugin-lint-checks": {
+        "description": "Adds linting configuration to validate common json files for nx plugins.",
+        "file": "generated/packages/plugin/generators/plugin-lint-checks.json",
+        "hidden": false,
+        "name": "plugin-lint-checks",
+        "originalFilePath": "/packages/plugin/src/generators/lint-checks/schema.json",
+        "path": "/reference/core-api/plugin/generators/plugin-lint-checks",
+        "type": "generator"
+      },
+      "/reference/core-api/plugin/generators/preset": {
+        "description": "Initializes a workspace with an nx-plugin inside of it. Use as: `create-nx-workspace --preset @nx/plugin`.",
+        "file": "generated/packages/plugin/generators/preset.json",
+        "hidden": true,
+        "name": "preset",
+        "originalFilePath": "/packages/plugin/src/generators/preset/schema.json",
+        "path": "/reference/core-api/plugin/generators/preset",
+        "type": "generator"
+      }
+    },
+    "migrations": {},
+    "path": "/technologies/plugin/plugin"
+  },
   "react": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "react",
@@ -5324,6 +5458,69 @@
       }
     },
     "path": "/technologies/vue/vue"
+  },
+  "web": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "web",
+    "packageName": "@nx/web",
+    "description": "The Nx Plugin for Web Components contains generators for managing Web Component applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Playwright, Cypress, and Storybook.\n\n- Scaffolding for creating buildable libraries that can be published to npm.\n\n- Utilities for automatic workspace refactoring.",
+    "documents": {
+      "/reference/core-api/web/documents/overview": {
+        "id": "overview",
+        "name": "Overview",
+        "description": "The Nx Plugin for Web Components contains generators for managing Web Component applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Playwright, Cypress, and Storybook.\n\n- Scaffolding for creating buildable libraries that can be published to npm.\n\n- Utilities for automatic workspace refactoring.",
+        "file": "generated/packages/web/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/core-api/web/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/web/web-plugin"
+      }
+    },
+    "root": "/packages/web",
+    "source": "/packages/web/src",
+    "executors": {
+      "/reference/core-api/web/executors/file-server": {
+        "description": "Serve a web application from a folder.",
+        "file": "generated/packages/web/executors/file-server.json",
+        "hidden": false,
+        "name": "file-server",
+        "originalFilePath": "/packages/web/src/executors/file-server/schema.json",
+        "path": "/reference/core-api/web/executors/file-server",
+        "type": "executor"
+      }
+    },
+    "generators": {
+      "/reference/core-api/web/generators/init": {
+        "description": "Add `@nrwl/web` to a project.",
+        "file": "generated/packages/web/generators/init.json",
+        "hidden": true,
+        "name": "init",
+        "originalFilePath": "/packages/web/src/generators/init/schema.json",
+        "path": "/reference/core-api/web/generators/init",
+        "type": "generator"
+      },
+      "/reference/core-api/web/generators/application": {
+        "description": "Create an web application.",
+        "file": "generated/packages/web/generators/application.json",
+        "hidden": false,
+        "name": "application",
+        "originalFilePath": "/packages/web/src/generators/application/schema.json",
+        "path": "/reference/core-api/web/generators/application",
+        "type": "generator"
+      },
+      "/reference/core-api/web/generators/static-config": {
+        "description": "Add a new static-serve target to a project.",
+        "file": "generated/packages/web/generators/static-config.json",
+        "hidden": false,
+        "name": "static-config",
+        "originalFilePath": "/packages/web/src/generators/static-serve/schema.json",
+        "path": "/reference/core-api/web/generators/static-config",
+        "type": "generator"
+      }
+    },
+    "migrations": {},
+    "path": "/technologies/web/web"
   },
   "webpack": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",

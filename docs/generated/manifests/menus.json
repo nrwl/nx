@@ -1234,6 +1234,47 @@
                 "isExternal": false,
                 "children": [
                   {
+                    "id": "documents",
+                    "path": "/technologies/angular/api/documents",
+                    "name": "documents",
+                    "children": [
+                      {
+                        "id": "Overview",
+                        "path": "/technologies/angular/api/documents/overview",
+                        "name": "Overview",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "Nx and the Angular CLI",
+                        "path": "/technologies/angular/api/documents/nx-and-angular",
+                        "name": "Nx and the Angular CLI",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "Nx Devkit and Angular Devkit",
+                        "path": "/technologies/angular/api/documents/nx-devkit-angular-devkit",
+                        "name": "Nx Devkit and Angular Devkit",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "Angular and Nx Version Matrix",
+                        "path": "/technologies/angular/api/documents/angular-nx-version-matrix",
+                        "name": "Angular and Nx Version Matrix",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      }
+                    ],
+                    "isExternal": false,
+                    "disableCollapsible": false
+                  },
+                  {
                     "id": "executors",
                     "path": "/technologies/angular/api/executors",
                     "name": "executors",
@@ -3470,6 +3511,31 @@
                 "isExternal": false,
                 "children": [
                   {
+                    "id": "documents",
+                    "path": "/technologies/module-federation/api/documents",
+                    "name": "documents",
+                    "children": [
+                      {
+                        "id": "NxModuleFederationPlugin",
+                        "path": "/technologies/module-federation/api/documents/nx-module-federation-plugin",
+                        "name": "NxModuleFederationPlugin",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "NxModuleFederationDevServerPlugin",
+                        "path": "/technologies/module-federation/api/documents/nx-module-federation-dev-server-plugin",
+                        "name": "NxModuleFederationDevServerPlugin",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      }
+                    ],
+                    "isExternal": false,
+                    "disableCollapsible": false
+                  },
+                  {
                     "id": "migrations",
                     "path": "/technologies/module-federation/api/migrations",
                     "name": "migrations",
@@ -3617,6 +3683,39 @@
                     "id": "api",
                     "isExternal": false,
                     "children": [
+                      {
+                        "id": "documents",
+                        "path": "/technologies/eslint-plugin/api/documents",
+                        "name": "documents",
+                        "children": [
+                          {
+                            "id": "Overview",
+                            "path": "/technologies/eslint-plugin/api/documents/overview",
+                            "name": "Overview",
+                            "children": [],
+                            "isExternal": false,
+                            "disableCollapsible": false
+                          },
+                          {
+                            "id": "The `enforce-module-boundaries` rule",
+                            "path": "/technologies/eslint-plugin/api/documents/enforce-module-boundaries",
+                            "name": "The `enforce-module-boundaries` rule",
+                            "children": [],
+                            "isExternal": false,
+                            "disableCollapsible": false
+                          },
+                          {
+                            "id": "The `dependency-checks` rule",
+                            "path": "/technologies/eslint-plugin/api/documents/dependency-checks",
+                            "name": "The `dependency-checks` rule",
+                            "children": [],
+                            "isExternal": false,
+                            "disableCollapsible": false
+                          }
+                        ],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
                       {
                         "id": "migrations",
                         "path": "/technologies/eslint-plugin/api/migrations",
@@ -4764,6 +4863,39 @@
                     "id": "api",
                     "isExternal": false,
                     "children": [
+                      {
+                        "id": "documents",
+                        "path": "/technologies/storybook/api/documents",
+                        "name": "documents",
+                        "children": [
+                          {
+                            "id": "Overview",
+                            "path": "/technologies/storybook/api/documents/overview",
+                            "name": "Overview",
+                            "children": [],
+                            "isExternal": false,
+                            "disableCollapsible": false
+                          },
+                          {
+                            "id": "Storybook best practices for making the most out of Nx",
+                            "path": "/technologies/storybook/api/documents/best-practices",
+                            "name": "Storybook best practices for making the most out of Nx",
+                            "children": [],
+                            "isExternal": false,
+                            "disableCollapsible": false
+                          },
+                          {
+                            "id": "Storybook 7",
+                            "path": "/technologies/storybook/api/documents/storybook-7-setup",
+                            "name": "Storybook 7",
+                            "children": [],
+                            "isExternal": false,
+                            "disableCollapsible": false
+                          }
+                        ],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
                       {
                         "id": "executors",
                         "path": "/technologies/storybook/api/executors",
@@ -6005,6 +6137,189 @@
                     "disableCollapsible": false
                   }
                 ],
+                "disableCollapsible": false
+              },
+              {
+                "name": "devkit",
+                "path": "/reference/core-api/devkit",
+                "id": "devkit",
+                "isExternal": false,
+                "children": [
+                  {
+                    "id": "documents",
+                    "path": "/reference/core-api/devkit/documents",
+                    "name": "documents",
+                    "children": [
+                      {
+                        "id": "Overview",
+                        "path": "/reference/core-api/devkit/documents/nx_devkit",
+                        "name": "Overview",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "Ng CLI Adapter",
+                        "path": "/reference/core-api/devkit/documents/ngcli_adapter",
+                        "name": "Ng CLI Adapter",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      }
+                    ],
+                    "isExternal": false,
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
+              },
+              {
+                "name": "plugin",
+                "path": "/reference/core-api/plugin",
+                "id": "plugin",
+                "isExternal": false,
+                "children": [
+                  {
+                    "id": "generators",
+                    "path": "/reference/core-api/plugin/generators",
+                    "name": "generators",
+                    "children": [
+                      {
+                        "id": "plugin",
+                        "path": "/reference/core-api/plugin/generators/plugin",
+                        "name": "plugin",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "create-package",
+                        "path": "/reference/core-api/plugin/generators/create-package",
+                        "name": "create-package",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "e2e-project",
+                        "path": "/reference/core-api/plugin/generators/e2e-project",
+                        "name": "e2e-project",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "migration",
+                        "path": "/reference/core-api/plugin/generators/migration",
+                        "name": "migration",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "generator",
+                        "path": "/reference/core-api/plugin/generators/generator",
+                        "name": "generator",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "executor",
+                        "path": "/reference/core-api/plugin/generators/executor",
+                        "name": "executor",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "plugin-lint-checks",
+                        "path": "/reference/core-api/plugin/generators/plugin-lint-checks",
+                        "name": "plugin-lint-checks",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "preset",
+                        "path": "/reference/core-api/plugin/generators/preset",
+                        "name": "preset",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      }
+                    ],
+                    "isExternal": false,
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
+              },
+              {
+                "name": "web",
+                "path": "/reference/core-api/web",
+                "id": "web",
+                "isExternal": false,
+                "children": [
+                  {
+                    "id": "executors",
+                    "path": "/reference/core-api/web/executors",
+                    "name": "executors",
+                    "children": [
+                      {
+                        "id": "file-server",
+                        "path": "/reference/core-api/web/executors/file-server",
+                        "name": "file-server",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      }
+                    ],
+                    "isExternal": false,
+                    "disableCollapsible": false
+                  },
+                  {
+                    "id": "generators",
+                    "path": "/reference/core-api/web/generators",
+                    "name": "generators",
+                    "children": [
+                      {
+                        "id": "init",
+                        "path": "/reference/core-api/web/generators/init",
+                        "name": "init",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "application",
+                        "path": "/reference/core-api/web/generators/application",
+                        "name": "application",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "static-config",
+                        "path": "/reference/core-api/web/generators/static-config",
+                        "name": "static-config",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      }
+                    ],
+                    "isExternal": false,
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
+              },
+              {
+                "name": "create-nx-workspace",
+                "path": "/reference/core-api/create-nx-workspace",
+                "id": "create-nx-workspace",
+                "isExternal": false,
+                "children": [],
                 "disableCollapsible": false
               }
             ],

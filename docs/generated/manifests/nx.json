@@ -11752,6 +11752,50 @@
             "isExternal": false,
             "path": "/reference/core-api/shared-fs-cache",
             "tags": []
+          },
+          {
+            "id": "devkit",
+            "name": "devkit",
+            "description": "Devkit package.",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/reference/core-api/devkit",
+            "tags": []
+          },
+          {
+            "id": "plugin",
+            "name": "plugin",
+            "description": "Plugin package.",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/reference/core-api/plugin",
+            "tags": []
+          },
+          {
+            "id": "web",
+            "name": "web",
+            "description": "Web package.",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/reference/core-api/web",
+            "tags": []
+          },
+          {
+            "id": "create-nx-workspace",
+            "name": "create-nx-workspace",
+            "description": "create-nx-workspace package.",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/reference/core-api/create-nx-workspace",
+            "tags": []
           }
         ],
         "isExternal": false,
@@ -12028,6 +12072,50 @@
         "isExternal": false,
         "path": "/reference/core-api/shared-fs-cache",
         "tags": []
+      },
+      {
+        "id": "devkit",
+        "name": "devkit",
+        "description": "Devkit package.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/core-api/devkit",
+        "tags": []
+      },
+      {
+        "id": "plugin",
+        "name": "plugin",
+        "description": "Plugin package.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/core-api/plugin",
+        "tags": []
+      },
+      {
+        "id": "web",
+        "name": "web",
+        "description": "Web package.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/core-api/web",
+        "tags": []
+      },
+      {
+        "id": "create-nx-workspace",
+        "name": "create-nx-workspace",
+        "description": "create-nx-workspace package.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/core-api/create-nx-workspace",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -12280,6 +12368,50 @@
     "itemList": [],
     "isExternal": false,
     "path": "/reference/core-api/shared-fs-cache/overview",
+    "tags": []
+  },
+  "/reference/core-api/devkit": {
+    "id": "devkit",
+    "name": "devkit",
+    "description": "Devkit package.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/reference/core-api/devkit",
+    "tags": []
+  },
+  "/reference/core-api/plugin": {
+    "id": "plugin",
+    "name": "plugin",
+    "description": "Plugin package.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/reference/core-api/plugin",
+    "tags": []
+  },
+  "/reference/core-api/web": {
+    "id": "web",
+    "name": "web",
+    "description": "Web package.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/reference/core-api/web",
+    "tags": []
+  },
+  "/reference/core-api/create-nx-workspace": {
+    "id": "create-nx-workspace",
+    "name": "create-nx-workspace",
+    "description": "create-nx-workspace package.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/reference/core-api/create-nx-workspace",
     "tags": []
   },
   "/troubleshooting": {

@@ -2001,6 +2001,26 @@
                       "file": "shared/packages/shared-fs-cache/shared-fs-cache-plugin"
                     }
                   ]
+                },
+                {
+                  "name": "devkit",
+                  "id": "devkit",
+                  "description": "Devkit package."
+                },
+                {
+                  "name": "plugin",
+                  "id": "plugin",
+                  "description": "Plugin package."
+                },
+                {
+                  "name": "web",
+                  "id": "web",
+                  "description": "Web package."
+                },
+                {
+                  "name": "create-nx-workspace",
+                  "id": "create-nx-workspace",
+                  "description": "create-nx-workspace package."
                 }
               ]
             }
