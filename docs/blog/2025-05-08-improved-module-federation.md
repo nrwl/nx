@@ -133,8 +133,8 @@ With the new [Terminal UI](/recipes/running-tasks/terminal-ui) you can very easi
 
 ## Further Reading
 
-- [Module Federation and Nx](/concepts/module-federation/module-federation-and-nx)
-- [Nx Module Federation Technical Overview](/concepts/module-federation/nx-module-federation-technical-overview)
+- [Module Federation and Nx](/technologies/module-federation/concepts/module-federation-and-nx)
+- [Nx Module Federation Technical Overview](/technologies/module-federation/concepts/nx-module-federation-technical-overview)
 - 🧠 [**Nx Docs**](/getting-started/intro)
 - 👩‍💻 [**Nx GitHub**](https://github.com/nrwl/nx)
 - 💬 [**Nx Official Discord Server**](https://go.nx.dev/community)

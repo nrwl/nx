@@ -41,7 +41,7 @@ nx init
 {% link-card title="nx init" type="API Reference" url="/reference/core-api/nx/documents/init" /%}
 {% link-card title="Add to Existing Monorepo" type="Recipe" url="/recipes/adopting-nx/adding-to-monorepo" /%}
 {% link-card title="Add to Any Project" type="Recipe" url="/recipes/adopting-nx/adding-to-existing-project" /%}
-{% link-card title="Migrate from Angular CLI" type="Recipe" url="/recipes/angular/migration/angular" /%}
+{% link-card title="Migrate from Angular CLI" type="Recipe" url="technologies/angular/migration/angular" /%}
 
 {% /cards %}
 

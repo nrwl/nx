@@ -226,7 +226,7 @@ Most settings in the old `turbo.json` file can be converted directly into `nx.js
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `cacheDir`             | Set in [`cacheDirectory`](/reference/nx-json#task-options)                                                                                                                                   |
 | `daemon`               | Use [`NX_DAEMON=false` or set `useDaemonProcess: false`](/concepts/nx-daemon#turning-it-off) in `nx.json`                                                                                    |
-| `envMode`              | Nx core does not block any environment variables. See [React](/recipes/react/use-environment-variables-in-react) and [Angular](/recipes/angular/use-environment-variables-in-angular) guides |
+| `envMode`              | Nx core does not block any environment variables. See [React](/technologies/react/recipes/use-environment-variables-in-react) and [Angular](/technologies/angular/recipes/use-environment-variables-in-angular) guides |
 | `globalDependencies`   | Add to the [`sharedGlobals` `namedInput`](/recipes/running-tasks/configure-inputs)                                                                                                           |
 | `globalEnv`            | Add to the [`sharedGlobals` `namedInput`](/recipes/running-tasks/configure-inputs) as an [`env` input](/reference/inputs#environment-variables)                                              |
 | `globalPassThroughEnv` | N/A. See [Defining Environment Variables](/recipes/tips-n-tricks/define-environment-variables)                                                                                               |
@@ -262,7 +262,7 @@ Here's how Turborepo commands map to Nx:
 | `--cwd`                     | Available in [`run-commands` executor](/nx-api/nx/executors/run-commands#cwd)                                                              |
 | `--daemon`                  | Use [`NX_DAEMON=false` or set `useDaemonProcess: false`](/concepts/nx-daemon#turning-it-off)                                               |
 | `--dry-run`                 | N/A. Nx has `--dry-run` for `nx generate` but not for running tasks                                                                        |
-| `--env-mode`                | See [React](/recipes/react/use-environment-variables-in-react) and [Angular](/recipes/angular/use-environment-variables-in-angular) guides |
+| `--env-mode`                | See [React](/technologies/react/recipes/use-environment-variables-in-react) and [Angular](/technologies/angular/recipes/use-environment-variables-in-angular) guides |
 | `--filter`                  | Use lots of advanced project matcher syntax like [`-p admin-*` or `-p tag:api-*`](/nx-api/nx/documents/run-many#projects)                  |
 | `--force`                   | [`nx reset`](/nx-api/nx/documents/reset) and then run the command again                                                                    |
 | `--framework-inference`     | N/A. [Nx plugins infer tasks automatically as a first class feature](/concepts/inferred-tasks)                                             |
