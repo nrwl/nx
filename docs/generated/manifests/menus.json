@@ -7857,23 +7857,6 @@
         "name": "cypress",
         "children": [
           {
-            "id": "documents",
-            "path": "/nx-api/cypress/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/cypress/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
             "id": "executors",
             "path": "/nx-api/cypress/executors",
             "name": "executors",
@@ -7956,23 +7939,6 @@
         "path": "/nx-api/detox",
         "name": "detox",
         "children": [
-          {
-            "id": "documents",
-            "path": "/nx-api/detox/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/detox/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
           {
             "id": "executors",
             "path": "/nx-api/detox/executors",
@@ -8083,23 +8049,6 @@
         "name": "esbuild",
         "children": [
           {
-            "id": "documents",
-            "path": "/nx-api/esbuild/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/esbuild/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
             "id": "executors",
             "path": "/nx-api/esbuild/executors",
             "name": "executors",
@@ -8150,23 +8099,6 @@
         "path": "/nx-api/eslint",
         "name": "eslint",
         "children": [
-          {
-            "id": "documents",
-            "path": "/nx-api/eslint/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/eslint/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
           {
             "id": "executors",
             "path": "/nx-api/eslint/executors",
@@ -8300,23 +8232,6 @@
         "path": "/nx-api/expo",
         "name": "expo",
         "children": [
-          {
-            "id": "documents",
-            "path": "/nx-api/expo/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/expo/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
           {
             "id": "executors",
             "path": "/nx-api/expo/executors",
@@ -8489,23 +8404,6 @@
         "name": "express",
         "children": [
           {
-            "id": "documents",
-            "path": "/nx-api/express/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/express/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
             "id": "generators",
             "path": "/nx-api/express/generators",
             "name": "generators",
@@ -8539,23 +8437,6 @@
         "path": "/nx-api/gradle",
         "name": "gradle",
         "children": [
-          {
-            "id": "documents",
-            "path": "/nx-api/gradle/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/java/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
           {
             "id": "executors",
             "path": "/nx-api/gradle/executors",
@@ -8615,23 +8496,6 @@
         "path": "/nx-api/jest",
         "name": "jest",
         "children": [
-          {
-            "id": "documents",
-            "path": "/nx-api/jest/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/jest/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
           {
             "id": "executors",
             "path": "/nx-api/jest/executors",
@@ -8699,23 +8563,6 @@
         "path": "/nx-api/js",
         "name": "js",
         "children": [
-          {
-            "id": "documents",
-            "path": "/nx-api/js/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/typescript/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
           {
             "id": "executors",
             "path": "/nx-api/js/executors",
@@ -8898,23 +8745,6 @@
         "name": "nest",
         "children": [
           {
-            "id": "documents",
-            "path": "/nx-api/nest/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/nest/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
             "id": "generators",
             "path": "/nx-api/nest/generators",
             "name": "generators",
@@ -9077,23 +8907,6 @@
         "name": "next",
         "children": [
           {
-            "id": "documents",
-            "path": "/nx-api/next/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/next/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
             "id": "executors",
             "path": "/nx-api/next/executors",
             "name": "executors",
@@ -9209,23 +9022,6 @@
         "name": "node",
         "children": [
           {
-            "id": "documents",
-            "path": "/nx-api/node/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/node/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
             "id": "generators",
             "path": "/nx-api/node/generators",
             "name": "generators",
@@ -9283,23 +9079,6 @@
         "path": "/nx-api/nuxt",
         "name": "nuxt",
         "children": [
-          {
-            "id": "documents",
-            "path": "/nx-api/nuxt/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/nuxt/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
           {
             "id": "generators",
             "path": "/nx-api/nuxt/generators",
@@ -9643,23 +9422,6 @@
         "name": "playwright",
         "children": [
           {
-            "id": "documents",
-            "path": "/nx-api/playwright/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/playwright/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
             "id": "executors",
             "path": "/nx-api/playwright/executors",
             "name": "executors",
@@ -9726,23 +9488,6 @@
         "path": "/nx-api/plugin",
         "name": "plugin",
         "children": [
-          {
-            "id": "documents",
-            "path": "/nx-api/plugin/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/reference/core-api/plugin/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
           {
             "id": "generators",
             "path": "/nx-api/plugin/generators",
@@ -9825,23 +9570,6 @@
         "path": "/nx-api/react",
         "name": "react",
         "children": [
-          {
-            "id": "documents",
-            "path": "/nx-api/react/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/react/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
           {
             "id": "executors",
             "path": "/nx-api/react/executors",
@@ -10029,23 +9757,6 @@
         "path": "/nx-api/react-native",
         "name": "react-native",
         "children": [
-          {
-            "id": "documents",
-            "path": "/nx-api/react-native/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/react-native/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
           {
             "id": "executors",
             "path": "/nx-api/react-native/executors",
@@ -10249,23 +9960,6 @@
         "path": "/nx-api/remix",
         "name": "remix",
         "children": [
-          {
-            "id": "documents",
-            "path": "/nx-api/remix/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/remix/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
           {
             "id": "executors",
             "path": "/nx-api/remix/executors",
@@ -10547,23 +10241,6 @@
         "name": "rspack",
         "children": [
           {
-            "id": "documents",
-            "path": "/nx-api/rspack/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/rspack/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
             "id": "executors",
             "path": "/nx-api/rspack/executors",
             "name": "executors",
@@ -10835,23 +10512,6 @@
         "name": "vite",
         "children": [
           {
-            "id": "documents",
-            "path": "/nx-api/vite/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/vite/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
             "id": "executors",
             "path": "/nx-api/vite/executors",
             "name": "executors",
@@ -10959,23 +10619,6 @@
         "name": "vue",
         "children": [
           {
-            "id": "documents",
-            "path": "/nx-api/vue/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/vue/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
             "id": "generators",
             "path": "/nx-api/vue/generators",
             "name": "generators",
@@ -11058,23 +10701,6 @@
         "name": "web",
         "children": [
           {
-            "id": "documents",
-            "path": "/nx-api/web/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/reference/core-api/web/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
             "id": "executors",
             "path": "/nx-api/web/executors",
             "name": "executors",
@@ -11133,23 +10759,6 @@
         "path": "/nx-api/webpack",
         "name": "webpack",
         "children": [
-          {
-            "id": "documents",
-            "path": "/nx-api/webpack/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/webpack/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
           {
             "id": "executors",
             "path": "/nx-api/webpack/executors",

@@ -373,15 +373,20 @@ function createNewPackagesManifest(packages: PackageMetadata[]): {
       name: p.name,
       packageName: p.packageName,
       description: p.description,
-      documents: convertToDictionary(
-        p.documents.map((d) =>
-          documentRecurseOperations(
-            { ...d, path: d.path.replace(new RegExp(`^${p.name}/`, 'i'), '') },
-            parentDoc
+      documents: data.includeDocuments
+        ? convertToDictionary(
+            p.documents.map((d) =>
+              documentRecurseOperations(
+                {
+                  ...d,
+                  path: d.path.replace(new RegExp(`^${p.name}/`, 'i'), ''),
+                },
+                parentDoc
+              )
+            ),
+            'path'
           )
-        ),
-        'path'
-      ),
+        : {},
       root: p.root,
       source: p.source,
       executors: convertToDictionary(

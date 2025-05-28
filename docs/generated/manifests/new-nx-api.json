@@ -1282,19 +1282,7 @@
     "name": "cypress",
     "packageName": "@nx/cypress",
     "description": "The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.",
-    "documents": {
-      "/technologies/cypress/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.",
-        "file": "generated/packages/cypress/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/cypress/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/cypress/cypress-plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/cypress",
     "source": "/packages/cypress/src",
     "executors": {
@@ -1454,19 +1442,7 @@
     "name": "detox",
     "packageName": "@nx/detox",
     "description": "The Nx Plugin for Detox contains executors and generators for allowing your workspace to use the powerful Detox integration testing capabilities.",
-    "documents": {
-      "/technologies/detox/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Nx Plugin for Detox contains executors and generators for allowing your workspace to use the powerful Detox integration testing capabilities.",
-        "file": "generated/packages/detox/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/detox/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/detox/detox-plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/detox",
     "source": "/packages/detox/src",
     "executors": {
@@ -1593,19 +1569,7 @@
     "name": "esbuild",
     "packageName": "@nx/esbuild",
     "description": "The Nx Plugin for esbuild contains executors and generators that support building applications using esbuild",
-    "documents": {
-      "/technologies/esbuild/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Nx Plugin for esbuild contains executors and generators that support building applications using esbuild",
-        "file": "generated/packages/esbuild/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/esbuild/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/esbuild/esbuild-plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/esbuild",
     "source": "/packages/esbuild/src",
     "executors": {
@@ -1647,19 +1611,7 @@
     "name": "eslint",
     "packageName": "@nx/eslint",
     "description": "The ESLint plugin for Nx contains executors, generators and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.",
-    "documents": {
-      "/technologies/eslint/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The ESLint plugin for Nx contains executors, generators and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.",
-        "file": "generated/packages/eslint/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/eslint/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/eslint/eslint"
-      }
-    },
+    "documents": {},
     "root": "/packages/eslint",
     "source": "/packages/eslint/src",
     "executors": {
@@ -1867,19 +1819,7 @@
     "name": "expo",
     "packageName": "@nx/expo",
     "description": "The Expo Plugin for Nx contains executors and generators for managing and developing an expo application within your workspace. For example, you can directly build for different target platforms as well as generate projects and publish your code.",
-    "documents": {
-      "/technologies/expo/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Expo Plugin for Nx contains executors and generators for managing and developing an expo application within your workspace. For example, you can directly build for different target platforms as well as generate projects and publish your code.",
-        "file": "generated/packages/expo/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/expo/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/expo/expo-plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/expo",
     "source": "/packages/expo/src",
     "executors": {
@@ -2108,19 +2048,7 @@
     "name": "express",
     "packageName": "@nx/express",
     "description": "The Nx Plugin for Express contains executors and generators for allowing your workspace to create powerful Express Node applications and APIs.",
-    "documents": {
-      "/technologies/express/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Nx Plugin for Express contains executors and generators for allowing your workspace to create powerful Express Node applications and APIs.",
-        "file": "generated/packages/express/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/express/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/express/express-plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/express",
     "source": "/packages/express/src",
     "executors": {},
@@ -2152,19 +2080,7 @@
     "name": "gradle",
     "packageName": "@nx/gradle",
     "description": "The Nx Plugin for Gradle allows Gradle tasks to be run through Nx",
-    "documents": {
-      "/technologies/java/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Nx Plugin for Gradle allows Gradle tasks to be run through Nx",
-        "file": "generated/packages/gradle/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/java/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/gradle/gradle-plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/gradle",
     "source": "/packages/gradle/src",
     "executors": {
@@ -2267,19 +2183,7 @@
     "name": "jest",
     "packageName": "@nx/jest",
     "description": "The Nx Plugin for Jest contains executors and generators allowing your workspace to use the powerful Jest testing capabilities.",
-    "documents": {
-      "/technologies/jest/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Nx Plugin for Jest contains executors and generators allowing your workspace to use the powerful Jest testing capabilities.",
-        "file": "generated/packages/jest/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/jest/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/jest/jest-plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/jest",
     "source": "/packages/jest/src",
     "executors": {
@@ -2381,19 +2285,7 @@
     "name": "js",
     "packageName": "@nx/js",
     "description": "The JS plugin for Nx contains executors and generators that provide the best experience for developing JavaScript and TypeScript projects. ",
-    "documents": {
-      "/technologies/typescript/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The JS plugin for Nx contains executors and generators that provide the best experience for developing JavaScript and TypeScript projects. ",
-        "file": "generated/packages/js/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/typescript/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/js/js-plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/js",
     "source": "/packages/js/src",
     "executors": {
@@ -2663,19 +2555,7 @@
     "name": "nest",
     "packageName": "@nx/nest",
     "description": "The Nx Plugin for Nest contains executors and generators for allowing your workspace to create powerful Nest best in class APIs.",
-    "documents": {
-      "/technologies/nest/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Nx Plugin for Nest contains executors and generators for allowing your workspace to create powerful Nest best in class APIs.",
-        "file": "generated/packages/nest/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/nest/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/nest/nest-plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/nest",
     "source": "/packages/nest/src",
     "executors": {},
@@ -2851,19 +2731,7 @@
     "name": "next",
     "packageName": "@nx/next",
     "description": "The Next.js plugin for Nx contains executors and generators for managing Next.js applications and libraries within an Nx workspace. It provides:\n\n\n- Scaffolding for creating, building, serving, linting, and testing Next.js applications.\n\n- Integration with building, serving, and exporting a Next.js application.\n\n- Integration with React libraries within the workspace. \n\nWhen using Next.js in Nx, you get the out-of-the-box support for TypeScript, Playwright, Cypress, and Jest. No need to configure anything: watch mode, source maps, and typings just work.",
-    "documents": {
-      "/technologies/next/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Next.js plugin for Nx contains executors and generators for managing Next.js applications and libraries within an Nx workspace. It provides:\n\n\n- Scaffolding for creating, building, serving, linting, and testing Next.js applications.\n\n- Integration with building, serving, and exporting a Next.js application.\n\n- Integration with React libraries within the workspace. \n\nWhen using Next.js in Nx, you get the out-of-the-box support for TypeScript, Playwright, Cypress, and Jest. No need to configure anything: watch mode, source maps, and typings just work.",
-        "file": "generated/packages/next/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/next/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/next/plugin-overview"
-      }
-    },
+    "documents": {},
     "root": "/packages/next",
     "source": "/packages/next/src",
     "executors": {
@@ -3009,19 +2877,7 @@
     "name": "node",
     "packageName": "@nx/node",
     "description": "The Node Plugin for Nx contains generators to manage Node applications within an Nx workspace.",
-    "documents": {
-      "/technologies/node/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Node Plugin for Nx contains generators to manage Node applications within an Nx workspace.",
-        "file": "generated/packages/node/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/node/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/node/node-plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/node",
     "source": "/packages/node/src",
     "executors": {},
@@ -3082,19 +2938,7 @@
     "name": "nuxt",
     "packageName": "@nx/nuxt",
     "description": "The Nuxt plugin for Nx contains executors and generators for managing Nuxt applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Vitest, Playwright, Cypress, and Storybook.\n\n- Generators for applications, libraries, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
-    "documents": {
-      "/technologies/nuxt/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Nx Plugin for Nuxt contains generators for managing Nuxt applications within a Nx workspace. This page also explains how to configure Nuxt on your Nx workspace.",
-        "file": "generated/packages/nuxt/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/nuxt/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/nuxt/nuxt-plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/nuxt",
     "source": "/packages/nuxt/src",
     "executors": {},
@@ -3656,19 +3500,7 @@
     "name": "playwright",
     "packageName": "@nx/playwright",
     "description": "The Nx Plugin for Playwright contains executors and generators allowing your workspace to use the powerful Playwright integration testing capabilities.",
-    "documents": {
-      "/technologies/playwright/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Nx Plugin for Playwright contains executors and generators allowing your workspace to use the powerful Playwright integration testing capabilities.",
-        "file": "generated/packages/playwright/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/playwright/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/playwright/playwright-plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/playwright",
     "source": "/packages/playwright/src",
     "executors": {
@@ -3740,19 +3572,7 @@
     "name": "plugin",
     "packageName": "@nx/plugin",
     "description": "This plugin is used to create Nx plugins! It contains generators for generating common plugin features like generators, executors, migrations and more.",
-    "documents": {
-      "/reference/core-api/plugin/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "This plugin is used to create Nx plugins! It contains generators for generating common plugin features like generators, executors, migrations and more.",
-        "file": "generated/packages/plugin/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/plugin/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/plugin/plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/plugin",
     "source": "/packages/plugin/src",
     "executors": {},
@@ -3838,19 +3658,7 @@
     "name": "react",
     "packageName": "@nx/react",
     "description": "The React plugin for Nx contains executors and generators for managing React applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Vitest, Playwright, Cypress, and Storybook.\n\n- Generators for applications, libraries, components, hooks, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
-    "documents": {
-      "/technologies/react/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The React plugin for Nx contains executors and generators for managing React applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Vitest, Playwright, Cypress, and Storybook.\n\n- Generators for applications, libraries, components, hooks, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
-        "file": "generated/packages/react/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/react/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/react/react-plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/react",
     "source": "/packages/react/src",
     "executors": {
@@ -4207,19 +4015,7 @@
     "name": "react-native",
     "packageName": "@nx/react-native",
     "description": "The Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides: \n\n-Integration with libraries such as Jest, Detox, and Storybook.\n-Scaffolding for creating buildable libraries that can be published to npm.\n-Utilities for automatic workspace refactoring.",
-    "documents": {
-      "/technologies/react-native/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides: \n\n-Integration with libraries such as Jest, Detox, and Storybook.\n-Scaffolding for creating buildable libraries that can be published to npm.\n-Utilities for automatic workspace refactoring.",
-        "file": "generated/packages/react-native/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/react-native/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/react-native/react-native-plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/react-native",
     "source": "/packages/react-native/src",
     "executors": {
@@ -4474,19 +4270,7 @@
     "name": "remix",
     "packageName": "@nx/remix",
     "description": "The Remix plugin for Nx contains executors and generators for managing Remix applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Vitest, Jest, Playwright, Cypress, and Storybook.\n\n- Generators for applications, libraries, routes, loaders, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
-    "documents": {
-      "/technologies/remix/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Remix plugin for Nx contains executors and generators for managing Remix applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Vitest, Jest, Playwright, Cypress, and Storybook.\n\n- Generators for applications, libraries, routes, loaders, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
-        "file": "generated/packages/remix/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/remix/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/remix/remix-plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/remix",
     "source": "/packages/remix/src",
     "executors": {
@@ -4768,19 +4552,7 @@
     "name": "rspack",
     "packageName": "@nx/rspack",
     "description": "The Nx Plugin for Rspack contains executors and generators that support building applications using Rspack.",
-    "documents": {
-      "/technologies/rspack/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Nx Plugin for Rspack contains executors and generators that support building applications using Rspack.",
-        "file": "generated/packages/rspack/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/rspack/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/rspack/rspack-plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/rspack",
     "source": "/packages/rspack/src",
     "executors": {
@@ -5145,19 +4917,7 @@
     "name": "vite",
     "packageName": "@nx/vite",
     "description": "The Nx Plugin for building and testing applications using Vite",
-    "documents": {
-      "/technologies/vite/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Nx Plugin for Vite contains executors and generators that support building applications using Vite. This page also explains how to configure Vite on your Nx workspace.",
-        "file": "generated/packages/vite/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/vite/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/vite/vite-plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/vite",
     "source": "/packages/vite/src",
     "executors": {
@@ -5354,19 +5114,7 @@
     "name": "vue",
     "packageName": "@nx/vue",
     "description": "The Vue plugin for Nx contains executors and generators for managing Vue applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Vitest, Playwright, Cypress, and Storybook.\n\n- Generators for applications, libraries, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
-    "documents": {
-      "/technologies/vue/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Nx Plugin for Vue contains generators for managing Vue applications and libraries within an Nx workspace. This page also explains how to configure Vue on your Nx workspace.",
-        "file": "generated/packages/vue/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/vue/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/vue/vue-plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/vue",
     "source": "/packages/vue/src",
     "executors": {},
@@ -5464,19 +5212,7 @@
     "name": "web",
     "packageName": "@nx/web",
     "description": "The Nx Plugin for Web Components contains generators for managing Web Component applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Playwright, Cypress, and Storybook.\n\n- Scaffolding for creating buildable libraries that can be published to npm.\n\n- Utilities for automatic workspace refactoring.",
-    "documents": {
-      "/reference/core-api/web/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Nx Plugin for Web Components contains generators for managing Web Component applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Playwright, Cypress, and Storybook.\n\n- Scaffolding for creating buildable libraries that can be published to npm.\n\n- Utilities for automatic workspace refactoring.",
-        "file": "generated/packages/web/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/web/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/web/web-plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/web",
     "source": "/packages/web/src",
     "executors": {
@@ -5527,19 +5263,7 @@
     "name": "webpack",
     "packageName": "@nx/webpack",
     "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
-    "documents": {
-      "/technologies/webpack/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
-        "file": "generated/packages/webpack/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/webpack/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/webpack/plugin-overview"
-      }
-    },
+    "documents": {},
     "root": "/packages/webpack",
     "source": "/packages/webpack/src",
     "executors": {
