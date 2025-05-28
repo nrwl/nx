@@ -208,6 +208,7 @@ export class DocumentsApi {
             category === 'migrations'
           ) {
             // Create the original nx-api path
+            // TODO(docs): We should update generate manifest script so we don't have to rebuild this path. We may also consider pushing this when we switch frameworks.
             const targetSegment = path.slice(3).join('/');
             const originalPath = `/nx-api/${packageName}/${category}/${targetSegment}`;
 
