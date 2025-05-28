@@ -207,7 +207,7 @@ function SidebarSectionItems({
               data-testid={`section-li:${subItem.id}`}
               className={cx(
                 'relative',
-                isNested
+                item.id !== 'technologies'
                   ? 'border-l border-slate-300 pl-2 pl-3 transition-colors duration-150 dark:border-slate-600'
                   : ''
               )}
