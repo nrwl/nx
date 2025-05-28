@@ -19,7 +19,7 @@ export const moduleFederationNodeVersion = '^2.6.26';
 export const moduleFederationEnhancedVersion = '^0.9.0';
 export const webpackMergeVersion = '^5.8.0';
 
-export const angularEslintVersion = '^19.2.0';
+export const angularEslintVersion = '^20.0.0-alpha.0';
 export const typescriptEslintVersion = '^7.16.0';
 export const tailwindVersion = '^3.0.2';
 export const postcssVersion = '^8.4.5';

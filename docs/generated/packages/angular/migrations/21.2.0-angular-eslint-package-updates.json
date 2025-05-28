@@ -1,0 +1,22 @@
+{
+  "name": "21.2.0-angular-eslint-package-updates",
+  "version": "21.2.0-beta.2",
+  "requires": {
+    "@angular/core": ">= 20.0.0 < 21.0.0",
+    "typescript-eslint": "^8.0.0",
+    "eslint": "^8.57.0 || ^9.0.0"
+  },
+  "packages": {
+    "angular-eslint": {
+      "version": "^20.0.0-alpha.0",
+      "alwaysAddToPackageJson": false
+    }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration"
+}

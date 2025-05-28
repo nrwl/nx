@@ -1730,6 +1730,61 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "21.2.0-angular-eslint": {
+      "version": "21.2.0-beta.2",
+      "requires": {
+        "@angular/core": ">= 20.0.0 < 21.0.0",
+        "typescript-eslint": "^8.0.0",
+        "eslint": "^8.57.0 || ^9.0.0"
+      },
+      "packages": {
+        "angular-eslint": {
+          "version": "^20.0.0-alpha.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "21.2.0-@angular-eslint": {
+      "version": "21.2.0-beta.2",
+      "requires": {
+        "@angular/core": ">= 20.0.0 < 21.0.0",
+        "eslint": "^8.57.0 || ^9.0.0"
+      },
+      "packages": {
+        "@angular-eslint/eslint-plugin": {
+          "version": "^20.0.0-alpha.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "^20.0.0-alpha.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "^20.0.0-alpha.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/utils": {
+          "version": "^20.0.0-alpha.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/schematics": {
+          "version": "^20.0.0-alpha.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/test-utils": {
+          "version": "^20.0.0-alpha.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/builder": {
+          "version": "^20.0.0-alpha.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/bundled-angular-compiler": {
+          "version": "^20.0.0-alpha.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
