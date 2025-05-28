@@ -1,6 +1,13 @@
 import Script from 'next/script';
 
 export default function GlobalScripts({ gaMeasurementId, gtmMeasurementId }) {
+  // Don't load analytics scripts in development
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  if (!isProduction) {
+    return null;
+  }
+
   return (
     <>
       {/* Google Analytics (gtag) */}
