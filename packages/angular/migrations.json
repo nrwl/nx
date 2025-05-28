@@ -303,17 +303,17 @@
       "description": "Change the data persistence operator imports to '@ngrx/router-store/data-persistence'.",
       "factory": "./src/migrations/update-21-0-0/change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence"
     },
-    "update-angular-cli-version-20-0-0-rc-3": {
+    "update-angular-cli-version-20-0-0-rc-4": {
       "cli": "nx",
-      "version": "21.2.0-beta.0",
+      "version": "21.2.0-beta.2",
       "requires": {
-        "@angular/core": ">=20.0.0-rc.2"
+        "@angular/core": ">=20.0.0-rc.3"
       },
-      "description": "Update the @angular/cli package version to 20.0.0-rc.3.",
+      "description": "Update the @angular/cli package version to 20.0.0-rc.4.",
       "factory": "./src/migrations/update-21-2-0/update-angular-cli"
     },
     "migrate-provide-server-rendering-import": {
-      "version": "21.2.0-beta.0",
+      "version": "21.2.0-beta.2",
       "requires": {
         "@angular/core": ">=20.0.0-rc.2"
       },
@@ -321,15 +321,15 @@
       "factory": "./src/migrations/update-21-2-0/migrate-provide-server-rendering-import"
     },
     "replace-provide-server-routing": {
-      "version": "21.2.0-beta.0",
+      "version": "21.2.0-beta.2",
       "requires": {
         "@angular/core": ">=20.0.0-rc.2"
       },
-      "description": "Replace `provideServerRouting` with `provideServerRendering` using `withRoutes`.",
+      "description": "Replace `provideServerRouting` and `provideServerRoutesConfig` with `provideServerRendering` using `withRoutes`.",
       "factory": "./src/migrations/update-21-2-0/replace-provide-server-routing"
     },
     "set-generator-defaults-for-previous-style-guide": {
-      "version": "21.2.0-beta.0",
+      "version": "21.2.0-beta.2",
       "requires": {
         "@angular/core": ">=20.0.0-rc.2"
       },
@@ -337,7 +337,7 @@
       "factory": "./src/migrations/update-21-2-0/set-generator-defaults-for-previous-style-guide"
     },
     "update-module-resolution": {
-      "version": "21.2.0-beta.0",
+      "version": "21.2.0-beta.2",
       "requires": {
         "@angular/core": ">=20.0.0-rc.2"
       },
@@ -1667,50 +1667,50 @@
       }
     },
     "21.2.0": {
-      "version": "21.2.0-beta.0",
+      "version": "21.2.0-beta.2",
       "x-prompt": "Do you want to update the Angular version to v20?",
       "requires": {
-        "@angular/core": ">=19.2.0 <20.0.0-rc.2"
+        "@angular/core": ">=19.2.0 <20.0.0-rc.3"
       },
       "packages": {
         "@angular-devkit/build-angular": {
-          "version": "20.0.0-rc.3",
+          "version": "20.0.0-rc.4",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/core": {
-          "version": "20.0.0-rc.3",
+          "version": "20.0.0-rc.4",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/schematics": {
-          "version": "20.0.0-rc.3",
+          "version": "20.0.0-rc.4",
           "alwaysAddToPackageJson": false
         },
         "@angular/build": {
-          "version": "20.0.0-rc.3",
+          "version": "20.0.0-rc.4",
           "alwaysAddToPackageJson": false
         },
         "@angular/pwa": {
-          "version": "20.0.0-rc.3",
+          "version": "20.0.0-rc.4",
           "alwaysAddToPackageJson": false
         },
         "@angular/ssr": {
-          "version": "20.0.0-rc.3",
+          "version": "20.0.0-rc.4",
           "alwaysAddToPackageJson": false
         },
         "@schematics/angular": {
-          "version": "20.0.0-rc.3",
+          "version": "20.0.0-rc.4",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/architect": {
-          "version": "0.2000.0-rc.3",
+          "version": "0.2000.0-rc.4",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/build-webpack": {
-          "version": "0.2000.0-rc.3",
+          "version": "0.2000.0-rc.4",
           "alwaysAddToPackageJson": false
         },
         "@angular/core": {
-          "version": "20.0.0-rc.2",
+          "version": "20.0.0-rc.3",
           "alwaysAddToPackageJson": true
         },
         "@angular/material": {
@@ -1726,7 +1726,7 @@
           "alwaysAddToPackageJson": false
         },
         "ng-packagr": {
-          "version": "20.0.0-rc.1",
+          "version": "20.0.0-rc.2",
           "alwaysAddToPackageJson": false
         }
       }

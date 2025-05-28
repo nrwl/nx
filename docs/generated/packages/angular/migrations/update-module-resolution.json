@@ -1,6 +1,6 @@
 {
   "name": "update-module-resolution",
-  "version": "21.2.0-beta.0",
+  "version": "21.2.0-beta.2",
   "requires": { "@angular/core": ">=20.0.0-rc.2" },
   "description": "Update 'moduleResolution' to 'bundler' in TypeScript configurations. You can read more about this here: https://www.typescriptlang.org/tsconfig/#moduleResolution.",
   "factory": "./src/migrations/update-21-2-0/update-module-resolution",

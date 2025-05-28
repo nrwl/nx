@@ -1,6 +1,6 @@
 {
   "name": "migrate-provide-server-rendering-import",
-  "version": "21.2.0-beta.0",
+  "version": "21.2.0-beta.2",
   "requires": { "@angular/core": ">=20.0.0-rc.2" },
   "description": "Migrate imports of `provideServerRendering` from `@angular/platform-server` to `@angular/ssr`.",
   "factory": "./src/migrations/update-21-2-0/migrate-provide-server-rendering-import",

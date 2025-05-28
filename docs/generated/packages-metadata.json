@@ -440,13 +440,13 @@
     ],
     "migrations": [
       {
-        "description": "Update the @angular/cli package version to 20.0.0-rc.3.",
-        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-0-0-rc-3.json",
+        "description": "Update the @angular/cli package version to 20.0.0-rc.4.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-0-0-rc-4.json",
         "hidden": false,
-        "name": "update-angular-cli-version-20-0-0-rc-3",
-        "version": "21.2.0-beta.0",
+        "name": "update-angular-cli-version-20-0-0-rc-4",
+        "version": "21.2.0-beta.2",
         "originalFilePath": "/packages/angular",
-        "path": "angular/migrations/update-angular-cli-version-20-0-0-rc-3",
+        "path": "angular/migrations/update-angular-cli-version-20-0-0-rc-4",
         "type": "migration"
       },
       {
@@ -454,17 +454,17 @@
         "file": "generated/packages/angular/migrations/migrate-provide-server-rendering-import.json",
         "hidden": false,
         "name": "migrate-provide-server-rendering-import",
-        "version": "21.2.0-beta.0",
+        "version": "21.2.0-beta.2",
         "originalFilePath": "/packages/angular",
         "path": "angular/migrations/migrate-provide-server-rendering-import",
         "type": "migration"
       },
       {
-        "description": "Replace `provideServerRouting` with `provideServerRendering` using `withRoutes`.",
+        "description": "Replace `provideServerRouting` and `provideServerRoutesConfig` with `provideServerRendering` using `withRoutes`.",
         "file": "generated/packages/angular/migrations/replace-provide-server-routing.json",
         "hidden": false,
         "name": "replace-provide-server-routing",
-        "version": "21.2.0-beta.0",
+        "version": "21.2.0-beta.2",
         "originalFilePath": "/packages/angular",
         "path": "angular/migrations/replace-provide-server-routing",
         "type": "migration"
@@ -474,7 +474,7 @@
         "file": "generated/packages/angular/migrations/set-generator-defaults-for-previous-style-guide.json",
         "hidden": false,
         "name": "set-generator-defaults-for-previous-style-guide",
-        "version": "21.2.0-beta.0",
+        "version": "21.2.0-beta.2",
         "originalFilePath": "/packages/angular",
         "path": "angular/migrations/set-generator-defaults-for-previous-style-guide",
         "type": "migration"
@@ -484,7 +484,7 @@
         "file": "generated/packages/angular/migrations/update-module-resolution.json",
         "hidden": false,
         "name": "update-module-resolution",
-        "version": "21.2.0-beta.0",
+        "version": "21.2.0-beta.2",
         "originalFilePath": "/packages/angular",
         "path": "angular/migrations/update-module-resolution",
         "type": "migration"
@@ -494,7 +494,7 @@
         "file": "generated/packages/angular/migrations/21.2.0-package-updates.json",
         "hidden": false,
         "name": "21.2.0-package-updates",
-        "version": "21.2.0-beta.0",
+        "version": "21.2.0-beta.2",
         "originalFilePath": "/packages/angular",
         "path": "angular/migrations/21.2.0-package-updates",
         "type": "migration"
