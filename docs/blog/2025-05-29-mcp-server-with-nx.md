@@ -26,7 +26,7 @@ Whatever you're building, it's becoming more and more important to ensure that A
 
 In this series of blog posts, we'll be using a fictional startup as an example: Astra Arcana - a bewitched SaaS company that lets you cast spells from anywhere with a few simple clicks.
 
-![Screenshot of the Astra Arcana app visualizing a spell](/blog/images/2025-05-29/astra-arcana-screenshot.png)
+![Screenshot of the Astra Arcana app visualizing a spell](/blog/images/2025-05-29/astra-arcana-screenshot.avif)
 
 You can go and try casting some spells right away at [https://astra-arcana.pages.dev/](https://astra-arcana.pages.dev/)
 
@@ -36,20 +36,19 @@ Of course, like any modern software company, they need to be ready for the comin
 
 ## Setting up the Server
 
-{% callout type="info" }
-If you want to code along, clone the https://github.com/MaxKless/astra-arcana repo on GitHub
+{% callout type="info" title="Code Along" %}
+If you want to code along and build your own mcp server, clone the [https://github.com/MaxKless/astra-arcana](https://github.com/MaxKless/astra-arcana) repo on GitHub to get started.
 {% /callout %}
 
 Astra Arcana is built in an Nx monorepo, where the web app and api live. There's also a shared types library as well as the Typescript SDK, which lets users programmatically cast spells.
 
 ```
 apps
-├── web
-├── api
+ ├── web
+ └── api
 libs
-  ├── spellcasting
-  ├── types
-  └── sdk
+ ├── spellcasting-types
+ └── spellcasting-sdk
 ```
 
 We will create a new Node application that contains our MCP server and use the Typescript SDK to power it.
@@ -142,7 +141,7 @@ And just like that, we've built our very own MCP server! Let's make sure it work
 
 Anthropic has not just come up with the protocol, they've also created [a great ecosystem around it](https://github.com/modelcontextprotocol): Various SDKs, reference servers and a visual testing tool: [The MCP Inspector](https://github.com/modelcontextprotocol/inspector).
 
-Let's modify our serve target to use the Inspector, letting us play explore our newly created server. First, delete the existing `serve` target in `apps/mcp-server/package.json` , as it doesn't really apply to our use case. Replace it with this
+Let's modify our serve target to use the Inspector, letting us explore our newly created server. First, delete the existing `serve` target in `apps/mcp-server/package.json` , as it doesn't really apply to our use case. Replace it with this
 
 ```json {% fileName="apps/mcp-server/package.json" %}
 "serve": {
@@ -162,11 +161,11 @@ You can see the result by running `npx nx serve mcp-server` and looking at the w
 
 The sidebar contains all the information required to start the server - here the `STDIO` transport is correctly preselected as well as the command needed to start the server.
 
-![Screenshot of the MCP Inspector sidebar](/blog/images/2025-05-29/mcp-inspector-sidebar.png)
+![Screenshot of the MCP Inspector sidebar](/blog/images/2025-05-29/mcp-inspector-sidebar.avif)
 
 After clicking on the Connect button, the server is started in the background and you'll be able to see the available tools and call them under the `Tools` tab.
 
-![Screenshot of the MCP Inspector showing the available tools](/blog/images/2025-05-29/mcp-inspector-tools.png)
+![Screenshot of the MCP Inspector showing the available tools](/blog/images/2025-05-29/mcp-inspector-tools.avif)
 
 ## Agents that can take actions
 
@@ -195,7 +194,7 @@ server.tool(
 There are a two key differences in this tool definition:
 
 - We've passed a description string as the second argument. You can do this for every tool in order to describe what to use it for and what will happen when the agent calls it. `cast-spell` is sort of self-explanatory but it's still good practice to add a description and increase the model's chances of picking the right tool for the job. You can even add more annotations to mark a tool as read-only, destructive or more.
-- We've passed an object that defines the shape of the input using [`zod`](https://zod.dev/). This lets the agent know how to structure the inputs that are passed to the tool. `ingredients` and `incantations` as arays of strings aren't very complicated, but you could also add descriptions to each individual option to explain what it does. The full feature set of `zod` is available to define exactly what's possible with each tool.
+- We've passed an object that defines the shape of the input using [`zod`](https://zod.dev/). This lets the agent know how to structure the inputs that are passed to the tool. `ingredients` and `incantations` as arrays of strings aren't very complicated, but you could also add descriptions to each individual option to explain what it does. The full feature set of `zod` is available to define exactly what's possible with each tool.
 
 Now, let's try it out in an actual agent. I'll use VSCode & GitHub Copilot for this but any agent implementation with MCP support will do. I really like [Windsurf](https://docs.windsurf.com/windsurf/getting-started) or [Cursor](https://www.cursor.com/), for example.
 
@@ -214,15 +213,15 @@ Register the MCP server by editing `.vscode/mcp.json` (or using the built-in com
 
 Once you open a Copilot chat in Agent mode, the MCP server will start automatically and you should see all four tools available
 
-![Screenshot of the VSCode quickinput listing available MCP tools](/blog/images/2025-05-29/mcp-list-vscode.png)
+![Screenshot of the VSCode quickinput listing available MCP tools](/blog/images/2025-05-29/mcp-list-vscode.avif)
 
 Let's try to cast a spell! For obvious reasons, I want to make sure that I'm writing high-quality blog posts and could use a magic boost. You can see that the AI agent uses all the tools to figure out what's available and then tries to cast the spell. Some models might ask for permission first or ask follow up questions to make sure they're getting it right.
 
-![Screenshot of a conversation with Copilot that uses the built MCP tools](/blog/images/2025-05-29/copilot-using-tools.png)
+![Screenshot of a conversation with Copilot that uses the built MCP tools](/blog/images/2025-05-29/copilot-using-tools.avif)
 
 After casting, you can head over to [https://astra-arcana.pages.dev/](https://astra-arcana.pages.dev/) and check the logs to see your spell! 🎉
 
-![Screenshot of the Astra Arcana app showing the cast spell in the browser](/blog/images/2025-05-29/astra-arcana-logs.png)
+![Screenshot of the Astra Arcana app showing the cast spell in the browser](/blog/images/2025-05-29/astra-arcana-logs.avif)
 
 ## Publishing to npm
 
@@ -264,7 +263,15 @@ We'll also set up a target that calls this script after making sure the main bun
 
 While we're in `package.json` , let's also make sure that our package is publishable and let `npx` and similar tools know where to find the executable javascript file.
 
-![image.png](attachment:0e804109-b7e9-4fcd-aaa4-bdd697f01dc9:image.png)
+```diff {% fileName="apps/mcp-server/package.json" %}
+{
+  "name": "@astra-arcana/mcp-server",
+  "version": "0.0.1",
+- "private": true,
++ "private": false,
++ "bin": "./main.js",
+  // ...
+```
 
 ### Local Publishing with Verdaccio
 
@@ -318,7 +325,7 @@ There are a couple of things we want to configure. Check out [the comprehensive 
 
 This is enough to configure `nx release` for our exact use case. With this, we can run `npx nx release --dry-run` . Nx will run the `setup-publish` target, prompt you for the kind of version change that's happening and give you a preview of what the result would be.
 
-![Screenshot of the version prompt asked by nx release](/blog/images/2025-05-29/nx-release-prompt.png)
+![Screenshot of the version prompt asked by nx release](/blog/images/2025-05-29/nx-release-prompt.avif)
 
 If you're happy with the results, rerun the command without `--dry-run` and watch as `nx release` does its _magic_. The versions will be updated across both `package.json` files, and a changelog file, a git commit and tag will be created.
 
