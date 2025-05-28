@@ -1060,11 +1060,6 @@
                   "file": "shared/packages/vue/vue-plugin"
                 },
                 {
-                  "name": "Guides",
-                  "id": "recipes",
-                  "itemList": []
-                },
-                {
                   "name": "API",
                   "id": "api",
                   "file": "shared/packages/vue/vue-plugin"
@@ -1191,11 +1186,6 @@
                   "name": "Introduction",
                   "id": "introduction",
                   "file": "shared/packages/gradle/gradle-plugin"
-                },
-                {
-                  "name": "Guides",
-                  "id": "recipes",
-                  "itemList": []
                 },
                 {
                   "name": "API",

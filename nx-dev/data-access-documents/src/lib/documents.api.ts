@@ -142,9 +142,7 @@ export class DocumentsApi {
         paths.push(apiPagePath);
 
         if (apiDocData.includeDocuments) {
-          if (Object.keys(pkg.documents).length > 0) {
-            paths.push(`${apiPagePath}/documents`);
-          }
+          paths.push(`${apiPagePath}/documents`);
           Object.keys(pkg.documents).forEach((path) => {
             const segments = path.split('/').filter(Boolean);
             if (segments[0] === 'nx-api') {
@@ -157,9 +155,7 @@ export class DocumentsApi {
           });
         }
 
-        if (Object.keys(pkg.executors).length > 0) {
-          paths.push(`${apiPagePath}/executors`);
-        }
+        paths.push(`${apiPagePath}/executors`);
         Object.keys(pkg.executors).forEach((path) => {
           const segments = path.split('/').filter(Boolean);
           if (segments[0] === 'nx-api') {
@@ -171,9 +167,7 @@ export class DocumentsApi {
           }
         });
 
-        if (Object.keys(pkg.generators).length > 0) {
-          paths.push(`${apiPagePath}/generators`);
-        }
+        paths.push(`${apiPagePath}/generators`);
         Object.keys(pkg.generators).forEach((path) => {
           const segments = path.split('/').filter(Boolean);
           if (segments[0] === 'nx-api') {
@@ -185,9 +179,7 @@ export class DocumentsApi {
           }
         });
 
-        if (Object.keys(pkg.migrations).length > 0) {
-          paths.push(`${apiPagePath}/migrations`);
-        }
+        paths.push(`${apiPagePath}/migrations`);
       });
     }
     return paths;
@@ -314,7 +306,7 @@ export class DocumentsApi {
   }
 
   isDocumentIndex(document: DocumentMetadata): boolean {
-    return !!document.itemList.length;
+    return !!document.itemList.length || !document.file;
   }
 
   generateDocumentIndexTemplate(document: DocumentMetadata): string {
@@ -335,9 +327,9 @@ export class DocumentsApi {
       .join('');
     return [
       `# ${document.name}\n\n ${document.description ?? ''}\n\n`,
-      '{% cards %}\n',
-      cardsTemplate,
-      '{% /cards %}\n\n',
+      ...(!document.itemList.length
+        ? ['No items found.']
+        : ['{% cards %}\n', cardsTemplate, '{% /cards %}\n\n']),
     ].join('');
   }
 
