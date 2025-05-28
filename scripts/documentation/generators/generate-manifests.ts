@@ -84,11 +84,13 @@ export function generateManifests(workspace: string): Promise<void[]> {
    * @type {{id: string, records: Record<string, ProcessedPackageMetadata>}}
    */
   const packagesManifest = createPackagesManifest(packages);
+  const newPackagesManifest = createNewPackagesManifest(packages);
 
   /**
    * Add the packages manifest to the manifest collection for simplicity.
    */
   manifests.push(packagesManifest);
+  manifests.push(newPackagesManifest);
 
   /**
    * We can easily infer all Documents menus but need a custom way to handle them
@@ -109,7 +111,7 @@ export function generateManifests(workspace: string): Promise<void[]> {
    */
   menus.forEach((menu) => {
     if (menu.id !== 'nx') return;
-    insertApiDocs(menu.menu, packagesManifest);
+    insertApiDocs(menu.menu, newPackagesManifest);
   });
 
   /**
@@ -119,7 +121,7 @@ export function generateManifests(workspace: string): Promise<void[]> {
   const packagesMenu: {
     id: string;
     menu: MenuItem[];
-  } = createPackagesMenu(packagesManifest);
+  } = createPackagesMenu(newPackagesManifest);
 
   /**
    * Add the packages menu to the main menu collection for simplicity.
@@ -332,6 +334,94 @@ function getDocumentMenus(manifests: DocumentManifest[]): {
         .map((item: DocumentMetadata) => menuItemRecurseOperations(item)),
     };
   });
+}
+
+function createNewPackagesManifest(packages: PackageMetadata[]): {
+  id: string;
+  records: Record<string, ProcessedPackageMetadata>;
+} {
+  const packagesManifest: {
+    id: string;
+    records: Record<string, ProcessedPackageMetadata>;
+  } = { id: 'new-nx-api', records: {} };
+
+  packages.forEach((p) => {
+    const data = pkgToGeneratedApiDocs[p.name];
+    if (!data) {
+      console.warn(
+        `No mapping data found for package ${p.name}. Check "nx-dev/models-document/src/lib/mappings.ts".`
+      );
+      return;
+    }
+
+    const parentSegments = data.pagePath.split('/').filter(Boolean);
+    let parentDoc: DocumentMetadata = createDocumentMetadata({
+      id: parentSegments[0],
+      path: `${parentSegments[0]}/`,
+    });
+    for (const ps of parentSegments.slice(1)) {
+      parentDoc = documentRecurseOperations(
+        createDocumentMetadata({
+          id: ps,
+          path: `${ps}/`,
+        }),
+        parentDoc
+      );
+    }
+    packagesManifest.records[p.name] = {
+      githubRoot: p.githubRoot,
+      name: p.name,
+      packageName: p.packageName,
+      description: p.description,
+      documents: convertToDictionary(
+        p.documents.map((d) =>
+          documentRecurseOperations(
+            { ...d, path: d.path.replace(new RegExp(`^${p.name}/`, 'i'), '') },
+            parentDoc
+          )
+        ),
+        'path'
+      ),
+      root: p.root,
+      source: p.source,
+      executors: convertToDictionary(
+        p.executors.map((e) => ({
+          ...e,
+          path: generatePath(
+            // package name is now in the prefix
+            { id: e.name, path: e.path.split('/').slice(1).join('/') },
+            data.pagePath
+          ),
+        })),
+        'path'
+      ),
+      generators: convertToDictionary(
+        p.generators.map((g) => ({
+          ...g,
+          path: generatePath(
+            // package name is now in the prefix
+            { id: g.name, path: g.path.split('/').slice(1).join('/') },
+            data.pagePath
+          ),
+        })),
+        'path'
+      ),
+      migrations: convertToDictionary(
+        p.migrations.map((g) => ({
+          ...g,
+          path: generatePath(
+            // package name is now in the prefix
+            { id: g.name, path: g.path.split('/').slice(1).join('/') },
+            data.pagePath
+          ),
+        })),
+        'path'
+      ),
+      path: generatePath({ id: p.name, path: '' }, `technologies/${p.name}`),
+    };
+  });
+
+  return packagesManifest;
 }
 
 function createPackagesManifest(packages: PackageMetadata[]): {
