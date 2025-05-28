@@ -1,5 +1,5 @@
 ---
-title: 'Your AI assistant can now read your terminal: Real-time development error fixing'
+title: 'Your AI Assistant Can Now Read Your Terminal: Real-Time Development Error Fixing'
 slug: nx-terminal-integration-ai
 authors: ['Juri Strumpflohner']
 tags: ['nx', 'nx-console', 'ai', 'terminal']
