@@ -448,21 +448,20 @@ describe('is terminal run', () => {
 });
 
 describe('isAngularSecondaryEntrypoint', () => {
-  beforeEach(() => {
-    const tsConfig = {
-      compilerOptions: {
-        baseUrl: '.',
-        resolveJsonModule: true,
-        paths: {
-          '@project/standard': ['libs/standard/src/index.ts'],
-          '@project/standard/secondary': [
-            'libs/standard/secondary/src/index.ts',
-          ],
-          '@project/features': ['libs/features/index.ts'],
-          '@project/features/*': ['libs/features/*/random/folder/api.ts'],
-        },
+  const tsConfig = {
+    compilerOptions: {
+      baseUrl: '.',
+      resolveJsonModule: true,
+      paths: {
+        '@project/standard': ['libs/standard/src/index.ts'],
+        '@project/standard/secondary': ['libs/standard/secondary/src/index.ts'],
+        '@project/features': ['libs/features/index.ts'],
+        '@project/features/*': ['libs/features/*/random/folder/api.ts'],
       },
-    };
+    },
+  };
+
+  beforeEach(() => {
     const fsJson = {
       'tsconfig.base.json': JSON.stringify(tsConfig),
       'libs/standard/package.json': '{ "version": "0.0.0" }',
@@ -546,6 +545,47 @@ describe('isAngularSecondaryEntrypoint', () => {
         '@project/features/secondary',
         'libs/features/src/subfolder/index.ts',
         'libs/features'
+      )
+    ).toBe(true);
+  });
+
+  it('should handle secondary entry points with no entry file defined in ng-package.json', () => {
+    vol.writeFileSync('/root/libs/standard/secondary/ng-package.json', '{}');
+    vol.renameSync(
+      '/root/libs/standard/secondary/src/index.ts',
+      '/root/libs/standard/secondary/src/public_api.ts'
+    );
+    const updatedTsConfig = {
+      ...tsConfig,
+      compilerOptions: {
+        ...tsConfig.compilerOptions,
+        paths: {
+          ...tsConfig.compilerOptions.paths,
+          '@project/standard/secondary': [
+            'libs/standard/secondary/src/public_api.ts',
+          ],
+        },
+      },
+    };
+    vol.writeFileSync(
+      '/root/tsconfig.base.json',
+      JSON.stringify(updatedTsConfig)
+    );
+
+    // main
+    expect(
+      belongsToDifferentEntryPoint(
+        '@project/standard',
+        'libs/standard/secondary/src/subfolder/index.ts',
+        'libs/standard'
+      )
+    ).toBe(true);
+    // secondary
+    expect(
+      belongsToDifferentEntryPoint(
+        '@project/standard/secondary',
+        'libs/standard/src/subfolder/index.ts',
+        'libs/standard'
       )
     ).toBe(true);
   });
