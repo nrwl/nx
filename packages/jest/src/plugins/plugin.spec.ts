@@ -188,7 +188,11 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                   "test-ci": {
                     "cache": true,
                     "dependsOn": [
-                      "test-ci--src/unit.spec.ts",
+                      {
+                        "params": "forward",
+                        "projects": "self",
+                        "target": "test-ci--src/unit.spec.ts",
+                      },
                     ],
                     "executor": "nx:noop",
                     "inputs": [
@@ -491,7 +495,11 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                     "test-ci": {
                       "cache": true,
                       "dependsOn": [
-                        "test-ci--src/unit.spec.ts",
+                        {
+                          "params": "forward",
+                          "projects": "self",
+                          "target": "test-ci--src/unit.spec.ts",
+                        },
                       ],
                       "executor": "nx:noop",
                       "inputs": [
@@ -641,7 +649,11 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                     "test-ci": {
                       "cache": true,
                       "dependsOn": [
-                        "test-ci--src/unit.spec.ts",
+                        {
+                          "params": "forward",
+                          "projects": "self",
+                          "target": "test-ci--src/unit.spec.ts",
+                        },
                       ],
                       "executor": "nx:noop",
                       "inputs": [
@@ -791,7 +803,11 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                     "testci": {
                       "cache": true,
                       "dependsOn": [
-                        "testci--src/unit.spec.ts",
+                        {
+                          "params": "forward",
+                          "projects": "self",
+                          "target": "testci--src/unit.spec.ts",
+                        },
                       ],
                       "executor": "nx:noop",
                       "inputs": [
