@@ -2439,7 +2439,8 @@
         "version": "21.1.2-beta.1",
         "originalFilePath": "/packages/gradle",
         "path": "/nx-api/gradle/migrations/change-plugin-version-0-1-0",
-        "type": "migration"
+        "type": "migration",
+        "newPath": "/technologies/gradle/api/migrations/change-plugin-version-0-1-0"
       },
       "/nx-api/gradle/migrations/change-ciTargetName-to-ciTestTargetName": {
         "description": "Change @nx/gradle option from ciTargetName to ciTestTargetName",
@@ -5745,7 +5746,8 @@
         "version": "21.1.2-beta.0",
         "originalFilePath": "/packages/vite",
         "path": "/nx-api/vite/migrations/21.1.2-package-updates",
-        "type": "migration"
+        "type": "migration",
+        "newPath": "/technologies/vite/api/migrations/21.1.2-package-updates"
       },
       "/nx-api/vite/migrations/20.7.1-package-updates": {
         "description": "",
