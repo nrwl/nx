@@ -92,7 +92,7 @@ export async function getStaticProps({
   const pkg = nxPackagesApi.getPackage([params.name]);
   return {
     props: {
-      menu: menusApi.getMenu('nx-api', 'nx-api'),
+      menu: menusApi.getMenu('nx', ''),
       pkg,
       migrations: Object.keys(pkg.migrations).map((migration) => {
         return nxPackagesApi.getSchemaMetadata(

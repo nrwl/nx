@@ -96,7 +96,7 @@ function getData(
         '/' + ['nx-api', packageName, 'generators', ...segments].join('/')
       ]
     ),
-    menu: menusApi.getMenu('nx-api', 'nx-api'),
+    menu: menusApi.getMenu('nx', ''),
   };
 }
 

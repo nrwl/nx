@@ -1280,8 +1280,6 @@ const nxApiRedirects = {
   '/nx-api/module-federation': '/technologies/module-federation/api',
 };
 
-export default nxApiRedirects;
-
 /**
  * Public export API
  */
@@ -1319,4 +1317,5 @@ module.exports = {
   manualDTEUpdate,
   powerpackRedirects,
   tmpTerminalUiRedirects,
+  nxApiRedirects,
 };

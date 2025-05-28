@@ -110,7 +110,7 @@ export async function getStaticProps({
         relatedDocuments: tagsApi
           .getAssociatedItemsFromTags(document.tags)
           .filter((item) => item.path !== '/' + segments.join('/')), // Remove currently displayed item
-        menu: menusApi.getMenu('nx-api', ''),
+        menu: menusApi.getMenu('nx', ''),
       },
     };
   } catch (e) {

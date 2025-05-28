@@ -110,7 +110,7 @@ function getData(packageName: string): {
   }
 
   return {
-    menu: menusApi.getMenu('nx-api', 'nx-api'),
+    menu: menusApi.getMenu('nx', ''),
     overview: overview,
     pkg,
     migrations: Object.keys(pkg.migrations).map((migration) => {
