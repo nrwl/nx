@@ -32,8 +32,8 @@ happynrwl/
 |   |   |   |   ├── src/
 |   |   |   |   |   ├──lib
 |   |   |   |   |   |   ├──my-header
-|   |   |   |   |   |   |   ├── my-header.component.ts
-|   |   |   |   |   |   |   ├── my-header.component.stories.ts
+|   |   |   |   |   |   |   ├── my-header.ts
+|   |   |   |   |   |   |   ├── my-header.stories.ts
 |   |   |   |   |   |   |   └── etc...
 |   |   |   |   |   |   └── etc...
 |   |   |   |   |   └── etc...

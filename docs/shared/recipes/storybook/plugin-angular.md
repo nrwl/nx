@@ -25,8 +25,8 @@ The [`@nx/angular:storybook-configuration` generator](/nx-api/angular/generators
 
 ```text
 <some-folder>/
-├── my.component.ts
-└── my.component.stories.ts
+├── my-component.ts
+└── my-component.stories.ts
 ```
 
 If you add more components to your project, and want to generate stories for all your (new) components at any point, you can use the [`@nx/angular:stories` generator](/nx-api/angular/generators/stories):
@@ -56,8 +56,8 @@ and the result would be the following:
 |   |   |   ├── src/
 |   |   |   |   ├──lib
 |   |   |   |   |   ├──my-button
-|   |   |   |   |   |   ├── my-button.component.ts
-|   |   |   |   |   |   ├── my-button.component.stories.ts
+|   |   |   |   |   |   ├── my-button.ts
+|   |   |   |   |   |   ├── my-button.stories.ts
 |   |   |   |   |   |   └── etc...
 |   |   |   |   |   └── etc...
 |   |   |   ├── README.md
@@ -79,7 +79,7 @@ Let's take for example a library in your workspace, under `libs/feature/ui`, cal
 
 Let's say that the template for that component looks like this:
 
-```html {% fileName="libs/feature/ui/src/lib/my-button/my-button.component.html" %}
+```html {% fileName="libs/feature/ui/src/lib/my-button/my-button.html" %}
 <button [disabled]="disabled" [ngStyle]="{ 'padding.px': padding }">
   {{ text }}
 </button>
@@ -87,16 +87,16 @@ Let's say that the template for that component looks like this:
 
 and the component looks like this:
 
-```typescript {% fileName="libs/feature/ui/src/lib/my-button/my-button.component.ts" %}
+```typescript {% fileName="libs/feature/ui/src/lib/my-button/my-button.ts" %}
 import { Component, Input } from '@angular/core';
 
 @Component({
   selector: 'feature-ui-my-button',
   standalone: true,
-  templateUrl: './my-button.component.html',
-  styleUrls: ['./my-button.component.css'],
+  templateUrl: './my-button.html',
+  styleUrls: ['./my-button.css'],
 })
-export class MyButtonComponent {
+export class MyButton {
   @Input() text = 'Click me!';
   @Input() padding = 10;
   @Input() disabled = true;
@@ -107,18 +107,18 @@ export class MyButtonComponent {
 
 The [`@nx/angular:storybook-configuration` generator](/nx-api/angular/generators/storybook-configuration) would generate a Story file that looks like this:
 
-```typescript {% fileName="libs/feature/ui/src/lib/my-button/my-button.component.stories.ts" %}
+```typescript {% fileName="libs/feature/ui/src/lib/my-button/my-button.stories.ts" %}
 import type { Meta, StoryObj } from '@storybook/angular';
-import { MyButtonComponent } from './my-button.component';
+import { MyButton } from './my-button';
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
-const meta: Meta<MyButtonComponent> = {
-  component: MyButtonComponent,
-  title: 'MyButtonComponent',
+const meta: Meta<MyButton> = {
+  component: MyButton,
+  title: 'MyButton',
 };
 export default meta;
-type Story = StoryObj<MyButtonComponent>;
+type Story = StoryObj<MyButton>;
 
 export const Primary: Story = {
   args: {
