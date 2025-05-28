@@ -471,7 +471,7 @@ function insertApiDocs(menus: MenuItem[], packages: PackageManifest): void {
         name: 'documents',
         children: Object.values(p.documents).map((x) => ({
           id: x.name,
-          path: `${apiDocsData.pagePath}/documents/${x.name}`,
+          path: `${apiDocsData.pagePath}/documents/${x.id}`,
           name: x.name,
           children: [],
           isExternal: false,

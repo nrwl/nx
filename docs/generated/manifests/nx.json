@@ -4029,17 +4029,6 @@
             "tags": []
           },
           {
-            "id": "recipes",
-            "name": "Guides",
-            "description": "",
-            "mediaImage": "",
-            "file": "",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/technologies/vue/recipes",
-            "tags": []
-          },
-          {
             "id": "api",
             "name": "API",
             "description": "",
@@ -4297,17 +4286,6 @@
             "itemList": [],
             "isExternal": false,
             "path": "/technologies/java/introduction",
-            "tags": []
-          },
-          {
-            "id": "recipes",
-            "name": "Guides",
-            "description": "",
-            "mediaImage": "",
-            "file": "",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/technologies/java/recipes",
             "tags": []
           },
           {
@@ -7174,17 +7152,6 @@
         "tags": []
       },
       {
-        "id": "recipes",
-        "name": "Guides",
-        "description": "",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/vue/recipes",
-        "tags": []
-      },
-      {
         "id": "api",
         "name": "API",
         "description": "",
@@ -7266,17 +7233,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/technologies/vue/introduction",
-    "tags": []
-  },
-  "/technologies/vue/recipes": {
-    "id": "recipes",
-    "name": "Guides",
-    "description": "",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/technologies/vue/recipes",
     "tags": []
   },
   "/technologies/vue/api": {
@@ -7847,17 +7803,6 @@
         "tags": []
       },
       {
-        "id": "recipes",
-        "name": "Guides",
-        "description": "",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/java/recipes",
-        "tags": []
-      },
-      {
         "id": "api",
         "name": "API",
         "description": "",
@@ -7882,17 +7827,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/technologies/java/introduction",
-    "tags": []
-  },
-  "/technologies/java/recipes": {
-    "id": "recipes",
-    "name": "Guides",
-    "description": "",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/technologies/java/recipes",
     "tags": []
   },
   "/technologies/java/api": {

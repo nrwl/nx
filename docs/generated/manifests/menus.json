@@ -2769,14 +2769,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Guides",
-                "path": "/technologies/vue/recipes",
-                "id": "recipes",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "API",
                 "path": "/technologies/vue/api",
                 "id": "api",
@@ -3309,14 +3301,6 @@
                 "name": "Introduction",
                 "path": "/technologies/java/introduction",
                 "id": "introduction",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Guides",
-                "path": "/technologies/java/recipes",
-                "id": "recipes",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -5340,7 +5324,7 @@
                       },
                       {
                         "id": "graph",
-                        "path": "/reference/core-api/nx/documents/graph",
+                        "path": "/reference/core-api/nx/documents/dep-graph",
                         "name": "graph",
                         "children": [],
                         "isExternal": false,
@@ -5364,7 +5348,7 @@
                       },
                       {
                         "id": "format:check",
-                        "path": "/reference/core-api/nx/documents/format:check",
+                        "path": "/reference/core-api/nx/documents/format-check",
                         "name": "format:check",
                         "children": [],
                         "isExternal": false,
@@ -5372,7 +5356,7 @@
                       },
                       {
                         "id": "format:write",
-                        "path": "/reference/core-api/nx/documents/format:write",
+                        "path": "/reference/core-api/nx/documents/format-write",
                         "name": "format:write",
                         "children": [],
                         "isExternal": false,
@@ -5436,7 +5420,7 @@
                       },
                       {
                         "id": "sync:check",
-                        "path": "/reference/core-api/nx/documents/sync:check",
+                        "path": "/reference/core-api/nx/documents/sync-check",
                         "name": "sync:check",
                         "children": [],
                         "isExternal": false,
