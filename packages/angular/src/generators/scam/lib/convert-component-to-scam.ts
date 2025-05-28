@@ -1,5 +1,4 @@
 import type { Tree } from '@nx/devkit';
-import { joinPathFragments, names } from '@nx/devkit';
 import { insertImport } from '@nx/js';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import type { NormalizedSchema } from '../schema';
@@ -50,13 +49,8 @@ export function convertComponentToScam(tree: Tree, options: NormalizedSchema) {
     return;
   }
 
-  const moduleFilePath = joinPathFragments(
-    options.directory,
-    `${options.name}.module.ts`
-  );
-
   tree.write(
-    moduleFilePath,
+    options.modulePath,
     getModuleFileContent(options.symbolName, options.fileName)
   );
 }

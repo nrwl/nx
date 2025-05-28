@@ -38,7 +38,7 @@ describe('create-nx-workspace', () => {
 
     checkFilesExist('package.json');
     checkFilesExist('project.json');
-    checkFilesExist('src/app/app.module.ts');
+    checkFilesExist('src/app/app-module.ts');
     checkFilesDoNotExist('src/app/app.routes.ts');
     expectCodeIsFormatted();
   });
@@ -61,7 +61,7 @@ describe('create-nx-workspace', () => {
     checkFilesExist('package.json');
     checkFilesExist('project.json');
     checkFilesExist('src/app/app.routes.ts');
-    checkFilesDoNotExist('src/app/app.module.ts');
+    checkFilesDoNotExist('src/app/app-module.ts');
     expectCodeIsFormatted();
   });
 

@@ -4,9 +4,11 @@ import { joinPathFragments, stripIndents } from '@nx/devkit';
 export function addSnippet(tree: Tree, name: string, path: string) {
   const fileRegExp = new RegExp(`^${name}.*\\.ts`);
 
-  const children = tree.children(path);
-  const siblingModules = children
-    .filter((f) => fileRegExp.test(f) && !/(module|spec)\.ts$/.test(f))
+  const siblingModules = tree
+    .children(path)
+    .filter(
+      (f) => fileRegExp.test(f) && !/(module|spec|config|routes)\.ts$/.test(f)
+    )
     .sort();
 
   if (siblingModules.length === 0) {

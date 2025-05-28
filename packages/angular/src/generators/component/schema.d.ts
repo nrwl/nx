@@ -17,6 +17,7 @@ export interface Schema {
   export?: boolean;
   exportDefault?: boolean;
   prefix?: string;
+  ngHtml?: boolean;
   skipFormat?: boolean;
 }
 

@@ -2,12 +2,19 @@ import {
   addDependenciesToPackageJson,
   formatFiles,
   readProjectConfiguration,
+  runTasksInSerial,
+  type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
 import {
   moduleFederationEnhancedVersion,
   nxVersion,
 } from '../../utils/versions';
+import {
+  getInstalledAngularDevkitVersion,
+  getInstalledAngularVersionInfo,
+  versions,
+} from '../utils/version-utils';
 import {
   addCypressOnErrorWorkaround,
   addRemoteEntry,
@@ -31,7 +38,7 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
   const options = normalizeOptions(tree, rawOptions);
   const projectConfig = readProjectConfiguration(tree, options.appName);
 
-  let installTask = () => {};
+  const tasks: GeneratorCallback[] = [];
   if (options.mfType === 'remote') {
     addRemoteToHost(tree, {
       appName: options.appName,
@@ -43,16 +50,18 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
     removeDeadCodeFromRemote(tree, options);
     setupTspathForRemote(tree, options);
     if (!options.skipPackageJson) {
-      installTask = addDependenciesToPackageJson(
-        tree,
-        {
-          '@module-federation/enhanced': moduleFederationEnhancedVersion,
-        },
-        {
-          '@nx/web': nxVersion,
-          '@nx/webpack': nxVersion,
-          '@nx/module-federation': nxVersion,
-        }
+      tasks.push(
+        addDependenciesToPackageJson(
+          tree,
+          {
+            '@module-federation/enhanced': moduleFederationEnhancedVersion,
+          },
+          {
+            '@nx/web': nxVersion,
+            '@nx/webpack': nxVersion,
+            '@nx/module-federation': nxVersion,
+          }
+        )
       );
     }
   }
@@ -77,14 +86,16 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
       });
     }
     if (!options.skipPackageJson) {
-      installTask = addDependenciesToPackageJson(
-        tree,
-        {},
-        {
-          '@nx/webpack': nxVersion,
-          '@module-federation/enhanced': moduleFederationEnhancedVersion,
-          '@nx/module-federation': nxVersion,
-        }
+      tasks.push(
+        addDependenciesToPackageJson(
+          tree,
+          {},
+          {
+            '@nx/webpack': nxVersion,
+            '@module-federation/enhanced': moduleFederationEnhancedVersion,
+            '@nx/module-federation': nxVersion,
+          }
+        )
       );
     }
   }
@@ -104,12 +115,31 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
     addCypressOnErrorWorkaround(tree, options);
   }
 
+  if (!options.skipPackageJson) {
+    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+    if (angularMajorVersion >= 20) {
+      const angularDevkitVersion =
+        getInstalledAngularDevkitVersion(tree) ??
+        versions(tree).angularDevkitVersion;
+      // the executors used by MF require @angular-devkit/build-angular
+      tasks.push(
+        addDependenciesToPackageJson(
+          tree,
+          {},
+          { '@angular-devkit/build-angular': angularDevkitVersion },
+          undefined,
+          true
+        )
+      );
+    }
+  }
+
   // format files
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
 
-  return installTask;
+  return runTasksInSerial(...tasks);
 }
 
 export default setupMf;

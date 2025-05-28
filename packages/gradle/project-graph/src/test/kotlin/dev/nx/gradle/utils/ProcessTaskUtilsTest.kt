@@ -57,7 +57,7 @@ class ProcessTaskUtilsTest {
 
   @Test
   fun `test getDependsOnForTask with direct dependsOn`() {
-    val project = ProjectBuilder.builder().build()
+    val project = ProjectBuilder.builder().withName("myApp").build()
     val taskA = project.tasks.register("taskA").get()
     val taskB = project.tasks.register("taskB").get()
 
@@ -67,7 +67,7 @@ class ProcessTaskUtilsTest {
     val dependsOn = getDependsOnForTask(taskA, dependencies)
 
     assertNotNull(dependsOn)
-    assertTrue(dependsOn!!.contains("taskB"))
+    assertTrue(dependsOn!!.contains("myApp:taskB"))
   }
 
   @Test

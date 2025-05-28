@@ -25,6 +25,7 @@ const packagesToUpdate: PackageSpec[] = [
       '@angular/common',
       '@angular/compiler',
       '@angular/compiler-cli',
+      '@angular/platform-browser',
       '@angular/router',
     ],
   },

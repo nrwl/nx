@@ -1,4 +1,8 @@
-import { readProjectConfiguration, type Tree } from '@nx/devkit';
+import {
+  joinPathFragments,
+  readProjectConfiguration,
+  type Tree,
+} from '@nx/devkit';
 import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { isNgStandaloneApp } from '../../../utils/nx-devkit/ast-utils';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
@@ -8,7 +12,7 @@ export async function normalizeOptions(
   tree: Tree,
   options: Schema
 ): Promise<NormalizedGeneratorOptions> {
-  const { targets } = readProjectConfiguration(tree, options.project);
+  const { targets, root } = readProjectConfiguration(tree, options.project);
   const isUsingApplicationBuilder =
     targets.build.executor === '@angular-devkit/build-angular:application' ||
     targets.build.executor === '@angular/build:application' ||
@@ -17,7 +21,7 @@ export async function normalizeOptions(
   if (options.serverRouting === undefined && isUsingApplicationBuilder) {
     const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
 
-    if (angularMajorVersion >= 19) {
+    if (angularMajorVersion === 19) {
       options.serverRouting = await promptWhenInteractive<{
         serverRouting: boolean;
       }>(
@@ -31,7 +35,7 @@ export async function normalizeOptions(
         { serverRouting: false }
       ).then(({ serverRouting }) => serverRouting);
     } else {
-      options.serverRouting = false;
+      options.serverRouting = angularMajorVersion >= 20;
     }
   } else if (
     options.serverRouting !== undefined &&
@@ -57,5 +61,8 @@ export async function normalizeOptions(
     hydration: options.hydration ?? true,
     serverRouting: options.serverRouting,
     isUsingApplicationBuilder,
+    buildTargetTsConfigPath:
+      targets.build.options?.tsConfig ??
+      joinPathFragments(root, 'tsconfig.app.json'),
   };
 }

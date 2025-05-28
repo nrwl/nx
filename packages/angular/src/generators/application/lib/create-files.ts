@@ -1,26 +1,25 @@
-import type { Tree } from '@nx/devkit';
-import { generateFiles, joinPathFragments } from '@nx/devkit';
+import { generateFiles, joinPathFragments, names, type Tree } from '@nx/devkit';
 import { getRelativePathToRootTsConfig, getRootTsConfigFileName } from '@nx/js';
-import { lt } from 'semver';
+import {
+  createNxCloudOnboardingURLForWelcomeApp,
+  getNxCloudAppOnBoardingUrl,
+} from 'nx/src/nx-cloud/utilities/onboarding';
 import { UnitTestRunner } from '../../../utils/test-runners';
+import {
+  getComponentType,
+  getModuleTypeSeparator,
+} from '../../utils/artifact-types';
 import { validateHtmlSelector } from '../../utils/selector';
 import { updateProjectRootTsConfig } from '../../utils/update-project-root-tsconfig';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
-import {
-  getNxCloudAppOnBoardingUrl,
-  createNxCloudOnboardingURLForWelcomeApp,
-} from 'nx/src/nx-cloud/utilities/onboarding';
 
 export async function createFiles(
   tree: Tree,
   options: NormalizedSchema,
   rootOffset: string
 ) {
-  const { major: angularMajorVersion, version: angularVersion } =
-    getInstalledAngularVersionInfo(tree);
-  const isUsingApplicationBuilder = options.bundler === 'esbuild';
-  const disableModernClassFieldsBehavior = lt(angularVersion, '18.1.0-rc.0');
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
 
   const rootSelector = `${options.prefix}-root`;
   validateHtmlSelector(rootSelector);
@@ -36,6 +35,10 @@ export async function createFiles(
     onBoardingStatus === 'unclaimed' &&
     (await getNxCloudAppOnBoardingUrl(options.nxCloudToken));
 
+  const componentType = getComponentType(tree);
+  const componentFileSuffix = componentType ? `.${componentType}` : '';
+  const moduleTypeSeparator = getModuleTypeSeparator(tree);
+
   const substitutions = {
     rootSelector,
     appName: options.name,
@@ -50,13 +53,14 @@ export async function createFiles(
     rootTsConfig: joinPathFragments(rootOffset, getRootTsConfigFileName(tree)),
     angularMajorVersion,
     rootOffset,
-    isUsingApplicationBuilder,
-    disableModernClassFieldsBehavior,
-    useEventCoalescing: angularMajorVersion >= 18,
-    useRouterTestingModule: angularMajorVersion < 18,
-    // Angular v19 or higher defaults to true, while v18 or lower defaults to false
+    // Angular v19 or higher defaults to true, while lower versions default to false
     setStandaloneFalse: angularMajorVersion >= 19,
     setStandaloneTrue: angularMajorVersion < 19,
+    provideGlobalErrorListener: angularMajorVersion >= 20,
+    usePlatformBrowserDynamic: angularMajorVersion < 20,
+    componentType: componentType ? names(componentType).className : '',
+    componentFileSuffix,
+    moduleTypeSeparator,
     connectCloudUrl,
     tutorialUrl: options.standalone
       ? 'https://nx.dev/getting-started/tutorials/angular-standalone-tutorial?utm_source=nx-project'
@@ -73,19 +77,9 @@ export async function createFiles(
     substitutions
   );
 
-  if (angularMajorVersion >= 18) {
-    generateFiles(
-      tree,
-      joinPathFragments(__dirname, '../files/base-18+'),
-      options.appProjectRoot,
-      substitutions
-    );
-  } else {
-    generateFiles(
-      tree,
-      joinPathFragments(__dirname, '../files/base-pre18'),
-      options.appProjectRoot,
-      substitutions
+  if (angularMajorVersion >= 20) {
+    tree.delete(
+      joinPathFragments(options.appProjectRoot, 'tsconfig.editor.json')
     );
   }
 
@@ -134,14 +128,17 @@ export async function createFiles(
     tree.delete(
       joinPathFragments(
         options.appProjectRoot,
-        '/src/app/app.component.spec.ts'
+        `src/app/app${componentFileSuffix}.spec.ts`
       )
     );
   }
 
   if (options.inlineTemplate) {
     tree.delete(
-      joinPathFragments(options.appProjectRoot, '/src/app/app.component.html')
+      joinPathFragments(
+        options.appProjectRoot,
+        `src/app/app${componentFileSuffix}.html`
+      )
     );
   }
 
@@ -149,7 +146,7 @@ export async function createFiles(
     tree.delete(
       joinPathFragments(
         options.appProjectRoot,
-        `/src/app/app.component.${options.style}`
+        `src/app/app${componentFileSuffix}.${options.style}`
       )
     );
   }
@@ -158,7 +155,7 @@ export async function createFiles(
     tree.delete(
       joinPathFragments(
         options.appProjectRoot,
-        'src/app/nx-welcome.component.ts'
+        `src/app/nx-welcome${componentFileSuffix}.ts`
       )
     );
   }

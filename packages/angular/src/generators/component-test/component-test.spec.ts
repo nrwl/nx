@@ -36,14 +36,14 @@ describe('Angular Cypress Component Test Generator', () => {
       skipFormat: true,
     });
     await componentTestGenerator(tree, {
-      componentName: 'MyLibComponent',
-      componentFileName: './my-lib.component',
+      componentName: 'MyLib',
+      componentFileName: './my-lib',
       project: 'my-lib',
       componentDir: 'src/lib/my-lib',
       skipFormat: true,
     });
     expect(
-      tree.read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
+      tree.read('my-lib/src/lib/my-lib/my-lib.cy.ts', 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -200,11 +200,11 @@ export class MyLibComponent implements OnInit {
     });
 
     const expected = `import { TestBed } from '@angular/core/testing';
-import { MyLibComponent } from './my-lib.component';
+import { MyLib } from './my-lib';
 
-describe(MyLibComponent.name, () => {
+describe(MyLib.name, () => {
   beforeEach(() => {
-    TestBed.overrideComponent(MyLibComponent, {
+    TestBed.overrideComponent(MyLib, {
       add: {
         imports: [],
         providers: []
@@ -213,34 +213,34 @@ describe(MyLibComponent.name, () => {
   });
 
   it('renders', () => {
-    cy.mount(MyLibComponent);
+    cy.mount(MyLib);
   });
 });
 `;
 
     await componentTestGenerator(tree, {
-      componentName: 'MyLibComponent',
-      componentFileName: './my-lib.component',
+      componentName: 'MyLib',
+      componentFileName: './my-lib',
       project: 'my-lib',
       componentDir: 'src/lib/my-lib',
       skipFormat: true,
     });
     expect(
       tree
-        .read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
+        .read('my-lib/src/lib/my-lib/my-lib.cy.ts', 'utf-8')
         .replaceAll(EOL, '\n')
     ).toEqual(expected);
 
     await componentTestGenerator(tree, {
-      componentName: 'MyLibComponent',
-      componentFileName: './my-lib.component',
+      componentName: 'MyLib',
+      componentFileName: './my-lib',
       project: 'my-lib',
       componentDir: 'src/lib/my-lib',
       skipFormat: true,
     });
     expect(
       tree
-        .read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
+        .read('my-lib/src/lib/my-lib/my-lib.cy.ts', 'utf-8')
         .replaceAll(EOL, '\n')
     ).toEqual(expected);
   });

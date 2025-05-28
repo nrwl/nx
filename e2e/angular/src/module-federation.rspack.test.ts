@@ -2,14 +2,11 @@ import { names } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
-  killPorts,
   killProcessAndPorts,
   newProject,
   readFile,
-  readJson,
   runCLI,
   runCommandUntil,
-  runE2ETests,
   uniq,
   updateFile,
   updateJson,
@@ -63,8 +60,8 @@ describe('Angular Module Federation', () => {
 
     // check files are generated without the layout directory ("apps/")
     checkFilesExist(
-      `${hostApp}/src/app/app.module.ts`,
-      `${remoteApp1}/src/app/app.module.ts`
+      `${hostApp}/src/app/app-module.ts`,
+      `${remoteApp1}/src/app/app-module.ts`
     );
 
     // check default generated host is built successfully
@@ -96,26 +93,26 @@ describe('Angular Module Federation', () => {
 
     // update host & remote files to use shared library
     updateFile(
-      `${hostApp}/src/app/app.module.ts`,
+      `${hostApp}/src/app/app-module.ts`,
       `import { NgModule } from '@angular/core';
       import { BrowserModule } from '@angular/platform-browser';
       import { ${
         names(wildcardLib).className
       }Module } from '@${proj}/${wildcardLib}/${
         names(secondaryEntry).fileName
-      }.module';
+      }-module';
       import { ${
         names(sharedLib).className
       }Module } from '@${proj}/${sharedLib}';
       import { ${
         names(secondaryEntry).className
       }Module } from '@${proj}/${sharedLib}/${secondaryEntry}';
-      import { AppComponent } from './app.component';
-      import { NxWelcomeComponent } from './nx-welcome.component';
+      import { App } from './app';
+      import { NxWelcome } from './nx-welcome';
       import { RouterModule } from '@angular/router';
 
       @NgModule({
-        declarations: [AppComponent, NxWelcomeComponent],
+        declarations: [App, NxWelcome],
         imports: [
           BrowserModule,
           ${names(sharedLib).className}Module,
@@ -134,13 +131,13 @@ describe('Angular Module Federation', () => {
           ),
         ],
         providers: [],
-        bootstrap: [AppComponent],
+        bootstrap: [App],
       })
       export class AppModule {}
       `
     );
     updateFile(
-      `${remoteApp1}/src/app/remote-entry/entry.module.ts`,
+      `${remoteApp1}/src/app/remote-entry/entry-module.ts`,
       `import { NgModule } from '@angular/core';
     import { CommonModule } from '@angular/common';
     import { RouterModule } from '@angular/router';
@@ -148,18 +145,18 @@ describe('Angular Module Federation', () => {
       import { ${
         names(secondaryEntry).className
       }Module } from '@${proj}/${sharedLib}/${secondaryEntry}';
-    import { RemoteEntryComponent } from './entry.component';
-    import { NxWelcomeComponent } from './nx-welcome.component';
+    import { RemoteEntry } from './entry';
+    import { NxWelcome } from './nx-welcome';
 
     @NgModule({
-      declarations: [RemoteEntryComponent, NxWelcomeComponent],
+      declarations: [RemoteEntry, NxWelcome],
       imports: [
         CommonModule,
         ${names(sharedLib).className}Module,
         RouterModule.forChild([
           {
             path: '',
-            component: RemoteEntryComponent,
+            component: RemoteEntry,
           },
         ]),
       ],

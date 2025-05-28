@@ -46,10 +46,8 @@ describe('Move Angular Project', () => {
     expect(moveOutput).toContain(`CREATE ${newPath}/src/main.ts`);
     expect(moveOutput).toContain(`CREATE ${newPath}/src/styles.css`);
     expect(moveOutput).toContain(`CREATE ${newPath}/src/test-setup.ts`);
-    expect(moveOutput).toContain(
-      `CREATE ${newPath}/src/app/app.component.html`
-    );
-    expect(moveOutput).toContain(`CREATE ${newPath}/src/app/app.component.ts`);
+    expect(moveOutput).toContain(`CREATE ${newPath}/src/app/app.html`);
+    expect(moveOutput).toContain(`CREATE ${newPath}/src/app/app.ts`);
     expect(moveOutput).toContain(`CREATE ${newPath}/src/app/app.config.ts`);
   });
 
@@ -105,7 +103,7 @@ describe('Move Angular Project', () => {
     runCLI(`generate @nx/angular:lib ${lib2} --no-standalone --no-interactive`);
 
     updateFile(
-      `${lib2}/src/lib/${lib2}.module.ts`,
+      `${lib2}/src/lib/${lib2}-module.ts`,
       `import { ${classify(lib1)}Module } from '@${proj}/${lib1}';
   
           export class ExtendedModule extends ${classify(lib1)}Module { }`
@@ -122,7 +120,7 @@ describe('Move Angular Project', () => {
     expect(moveOutput).toContain(`CREATE ${testSetupPath}`);
     checkFilesExist(testSetupPath);
 
-    const modulePath = `${newPath}/src/lib/shared-${lib1}.module.ts`;
+    const modulePath = `${newPath}/src/lib/shared-${lib1}-module.ts`;
     expect(moveOutput).toContain(`CREATE ${modulePath}`);
     checkFilesExist(modulePath);
     const moduleFile = readFile(modulePath);
@@ -132,12 +130,12 @@ describe('Move Angular Project', () => {
     expect(moveOutput).toContain(`CREATE ${indexPath}`);
     checkFilesExist(indexPath);
     const index = readFile(indexPath);
-    expect(index).toContain(`export * from './lib/shared-${lib1}.module'`);
+    expect(index).toContain(`export * from './lib/shared-${lib1}-module'`);
 
     /**
      * Check that the import in lib2 has been updated
      */
-    const lib2FilePath = `${lib2}/src/lib/${lib2}.module.ts`;
+    const lib2FilePath = `${lib2}/src/lib/${lib2}-module.ts`;
     const lib2File = readFile(lib2FilePath);
     expect(lib2File).toContain(
       `import { ${newModule} } from '@${proj}/shared-${lib1}';`

@@ -1,7 +1,7 @@
-import {bootstrapApplication} from '@angular/platform-browser';
-import {RemoteEntryComponent} from './app/remote-entry/entry.component';
-import {config} from './app/app.config.server';
+import { bootstrapApplication } from '@angular/platform-browser';
+import { RemoteEntry<%= componentType %> } from './app/remote-entry/entry<%= componentFileSuffix %>';
+import { config } from './app/app.config.server';
 
-const bootstrap = () => bootstrapApplication(RemoteEntryComponent, config);
+const bootstrap = () => bootstrapApplication(RemoteEntry<%= componentType %>, config);
 
 export default bootstrap;

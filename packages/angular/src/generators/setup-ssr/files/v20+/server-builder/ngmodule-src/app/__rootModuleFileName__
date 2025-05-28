@@ -1,0 +1,14 @@
+import { NgModule } from '@angular/core';
+import { ServerModule } from '@angular/platform-server';
+
+import { AppModule } from './app<%= moduleTypeSeparator %>module';
+import { <%= appSymbolName %> } from './<%= appFileName %>';
+
+@NgModule({
+  imports: [
+    AppModule,
+    ServerModule,
+  ],
+  bootstrap: [<%= appSymbolName %>],
+})
+export class <%= rootModuleClassName %> {}

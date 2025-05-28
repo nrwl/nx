@@ -18,6 +18,7 @@ exports[`addLinting generator should correctly generate the .eslintrc.json file 
         "*.ts",
       ],
       "rules": {
+        "@angular-eslint/component-class-suffix": "off",
         "@angular-eslint/component-selector": [
           "error",
           {
@@ -26,6 +27,7 @@ exports[`addLinting generator should correctly generate the .eslintrc.json file 
             "type": "element",
           },
         ],
+        "@angular-eslint/directive-class-suffix": "off",
         "@angular-eslint/directive-selector": [
           "error",
           {

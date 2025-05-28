@@ -222,6 +222,34 @@ describe('vitest generator', () => {
       ).toMatchSnapshot();
     });
 
+    it('should generate src/test-setup.ts using @angular/platform-browser-dynamic/testing when Angular version is lower than 20', async () => {
+      const { tree, runGenerator } = setUpAngularWorkspace();
+      tree;
+      updateJson(tree, 'package.json', (json) => {
+        json.dependencies['@angular/core'] = '~19.2.0';
+        return json;
+      });
+
+      await runGenerator();
+
+      expect(tree.read('apps/my-test-angular-app/src/test-setup.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import '@analogjs/vitest-angular/setup-zone';
+
+        import {
+          BrowserDynamicTestingModule,
+          platformBrowserDynamicTesting,
+        } from '@angular/platform-browser-dynamic/testing';
+        import { getTestBed } from '@angular/core/testing';
+
+        getTestBed().initTestEnvironment(
+          BrowserDynamicTestingModule,
+          platformBrowserDynamicTesting()
+        );
+        "
+      `);
+    });
+
     it('should exclude src/test-setup.ts in tsconfig.app.json', async () => {
       const tsConfig = readJson(
         appTree,

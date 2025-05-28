@@ -1,11 +1,21 @@
 import { joinPathFragments, type Tree } from '@nx/devkit';
-import type { Schema } from '../schema';
+import type { NormalizedOptions } from '../schema';
 
-export function fixBootstrap(tree: Tree, appRoot: string, options: Schema) {
+export function fixBootstrap(
+  tree: Tree,
+  appRoot: string,
+  options: NormalizedOptions
+) {
   const mainFilePath = joinPathFragments(appRoot, 'src/main.ts');
   const bootstrapCode = tree.read(mainFilePath, 'utf-8');
   if (options.standalone && options.mfType === 'remote') {
-    tree.write(`${appRoot}/src/bootstrap.ts`, standaloneBootstrapCode());
+    tree.write(
+      `${appRoot}/src/bootstrap.ts`,
+      standaloneBootstrapCode(
+        options.componentType,
+        options.componentFileSuffix
+      )
+    );
   } else {
     tree.write(joinPathFragments(appRoot, 'src/bootstrap.ts'), bootstrapCode);
   }
@@ -35,12 +45,14 @@ fetch('${manifestPath}')
   }
 }
 
-const standaloneBootstrapCode =
-  () => `import { bootstrapApplication } from '@angular/platform-browser';
+const standaloneBootstrapCode = (
+  componentType: string,
+  componentFileSuffix: string
+) => `import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
-import { RemoteEntryComponent } from './app/remote-entry/entry.component';
+import { RemoteEntry${componentType} } from './app/remote-entry/entry${componentFileSuffix}';
 
-bootstrapApplication(RemoteEntryComponent, appConfig).catch((err) =>
+bootstrapApplication(RemoteEntry${componentType}, appConfig).catch((err) =>
   console.error(err)
 );
 `;

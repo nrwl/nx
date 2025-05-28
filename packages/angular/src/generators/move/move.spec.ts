@@ -1,7 +1,7 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import * as devkit from '@nx/devkit';
-import { ProjectGraph, readJson, Tree } from '@nx/devkit';
+import { type ProjectGraph, readJson, type Tree, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
@@ -30,7 +30,7 @@ describe('@nx/angular:move', () => {
   }
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
 
     await generateTestLibrary(tree, {
       directory: 'my-lib',
@@ -59,7 +59,7 @@ describe('@nx/angular:move', () => {
       skipFormat: true,
     });
 
-    expect(tree.exists('mynewlib/src/lib/mynewlib.module.ts')).toEqual(true);
+    expect(tree.exists('mynewlib/src/lib/mynewlib-module.ts')).toEqual(true);
   });
 
   it('should update ng-package.json dest property', async () => {
@@ -121,8 +121,8 @@ describe('@nx/angular:move', () => {
       skipFormat: true,
     });
 
-    expect(tree.exists('my/lib/src/lib/my-lib.module.ts')).toBe(true);
-    const moduleFile = tree.read('my/lib/src/lib/my-lib.module.ts', 'utf-8');
+    expect(tree.exists('my/lib/src/lib/my-lib-module.ts')).toBe(true);
+    const moduleFile = tree.read('my/lib/src/lib/my-lib-module.ts', 'utf-8');
     expect(moduleFile).toContain(`export class MyLibModule {}`);
   });
 
@@ -138,7 +138,7 @@ describe('@nx/angular:move', () => {
         unitTestRunner: UnitTestRunner.Jest,
       });
       tree.write(
-        'my-lib/src/lib/my-lib.module.ts',
+        'my-lib/src/lib/my-lib-module.ts',
         `import { NgModule } from '@angular/core';
     import { CommonModule } from '@angular/common';
 
@@ -149,7 +149,7 @@ describe('@nx/angular:move', () => {
       );
 
       tree.write(
-        'my-lib/src/lib/my-lib.module.spec.ts',
+        'my-lib/src/lib/my-lib-module.spec.ts',
         `import { async, TestBed } from '@angular/core/testing';
     import { MyLibModule } from './my-lib.module';
 
@@ -166,7 +166,7 @@ describe('@nx/angular:move', () => {
     });`
       );
       tree.write(
-        'my-lib2/src/lib/my-lib2.module.ts',
+        'my-lib2/src/lib/my-lib2-module.ts',
         `import { MyLibModule } from '@proj/my-lib';
 
       export class MyLib2Module extends MyLibModule {}
@@ -185,21 +185,21 @@ describe('@nx/angular:move', () => {
         skipFormat: true,
       });
 
-      expect(tree.exists('shared/my-lib/src/lib/shared-my-lib.module.ts')).toBe(
+      expect(tree.exists('shared/my-lib/src/lib/shared-my-lib-module.ts')).toBe(
         true
       );
       expect(
-        tree.exists('shared/my-lib/src/lib/shared-my-lib.module.spec.ts')
+        tree.exists('shared/my-lib/src/lib/shared-my-lib-module.spec.ts')
       ).toBe(true);
 
       const moduleFile = tree.read(
-        'shared/my-lib/src/lib/shared-my-lib.module.ts',
+        'shared/my-lib/src/lib/shared-my-lib-module.ts',
         'utf-8'
       );
       expect(moduleFile).toContain(`export class SharedMyLibModule {}`);
 
       const moduleSpecFile = tree.read(
-        'shared/my-lib/src/lib/shared-my-lib.module.spec.ts',
+        'shared/my-lib/src/lib/shared-my-lib-module.spec.ts',
         'utf-8'
       );
       expect(moduleSpecFile).toContain(
@@ -224,7 +224,7 @@ describe('@nx/angular:move', () => {
       });
 
       const importerFile = tree.read(
-        'my-lib2/src/lib/my-lib2.module.ts',
+        'my-lib2/src/lib/my-lib2-module.ts',
         'utf-8'
       );
       expect(importerFile).toContain(
@@ -248,7 +248,7 @@ describe('@nx/angular:move', () => {
 
       const indexFile = tree.read('shared/my-lib/src/index.ts', 'utf-8');
       expect(indexFile).toContain(
-        `export * from './lib/shared-my-lib.module';`
+        `export * from './lib/shared-my-lib-module';`
       );
     });
   });
@@ -285,11 +285,11 @@ describe('@nx/angular:move', () => {
       });
 
       expect(
-        tree.exists('my-destination/src/lib/my-destination.module.ts')
+        tree.exists('my-destination/src/lib/my-destination-module.ts')
       ).toBe(true);
 
       const moduleFile = tree.read(
-        'my-destination/src/lib/my-destination.module.ts',
+        'my-destination/src/lib/my-destination-module.ts',
         'utf-8'
       );
       expect(moduleFile).toContain(`export class MyDestinationModule {}`);
@@ -331,7 +331,7 @@ describe('@nx/angular:move', () => {
 
       const indexFile = tree.read('my-destination/src/index.ts', 'utf-8');
       expect(indexFile).toContain(
-        `export * from './lib/my-destination.module';`
+        `export * from './lib/my-destination-module';`
       );
     });
 
@@ -359,10 +359,118 @@ describe('@nx/angular:move', () => {
       });
 
       const moduleFile = tree.read(
-        'my-lib-demo/src/lib/my-lib-demo.module.ts',
+        'my-lib-demo/src/lib/my-lib-demo-module.ts',
         'utf-8'
       );
       expect(moduleFile).toContain(`export class MyLibDemoModule {}`);
+    });
+  });
+
+  describe('legacy "." module type separator', () => {
+    beforeEach(async () => {
+      tree = createTreeWithEmptyWorkspace();
+    });
+
+    it('should move project that uses "." module type separator', async () => {
+      updateJson(tree, 'nx.json', (json) => {
+        json.generators = {
+          ...json.generators,
+          '@nx/angular:module': {
+            typeSeparator: '.',
+          },
+        };
+        return json;
+      });
+      addProjectToGraph('my-lib');
+      await generateTestLibrary(tree, {
+        directory: 'my-lib',
+        buildable: true,
+        standalone: false,
+        skipFormat: true,
+      });
+
+      await angularMoveGenerator(tree, {
+        projectName: 'my-lib',
+        destination: 'my-new-lib',
+        newProjectName: 'my-new-lib',
+        updateImportPath: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('my-lib/src/lib/my-lib.module.ts')).toBe(false);
+      expect(tree.read('my-new-lib/src/lib/my-new-lib.module.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { NgModule } from '@angular/core';
+        import { CommonModule } from '@angular/common';
+
+        @NgModule({
+          imports: [CommonModule],
+        })
+        export class MyNewLibModule {}
+        "
+      `);
+      expect(tree.exists('my-lib/ng-package.json')).toBe(false);
+      expect(tree.read('my-new-lib/ng-package.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "$schema": "../node_modules/ng-packagr/ng-package.schema.json",
+          "dest": "../dist/my-new-lib",
+          "lib": {
+            "entryFile": "src/index.ts"
+          }
+        }
+        "
+      `);
+    });
+
+    it('should move project when angular version is lower than v20', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        json.dependencies = {
+          ...json.dependencies,
+          '@angular/core': '~19.2.0',
+        };
+        return json;
+      });
+      addProjectToGraph('my-lib');
+      await generateTestLibrary(tree, {
+        directory: 'my-lib',
+        buildable: true,
+        standalone: false,
+        skipFormat: true,
+      });
+
+      await angularMoveGenerator(tree, {
+        projectName: 'my-lib',
+        destination: 'my-new-lib',
+        newProjectName: 'my-new-lib',
+        updateImportPath: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('my-lib/src/lib/my-lib.module.ts')).toBe(false);
+      expect(tree.read('my-new-lib/src/lib/my-new-lib.module.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { NgModule } from '@angular/core';
+        import { CommonModule } from '@angular/common';
+
+        @NgModule({
+          imports: [CommonModule],
+        })
+        export class MyNewLibModule {}
+        "
+      `);
+      expect(tree.exists('my-lib/ng-package.json')).toBe(false);
+      expect(tree.read('my-new-lib/ng-package.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "$schema": "../node_modules/ng-packagr/ng-package.schema.json",
+          "dest": "../dist/my-new-lib",
+          "lib": {
+            "entryFile": "src/index.ts"
+          }
+        }
+        "
+      `);
     });
   });
 });

@@ -21,6 +21,7 @@ dependencies {
   val toolingApiVersion = "8.13" // Match the Gradle version you're working with
 
   implementation("org.gradle:gradle-tooling-api:$toolingApiVersion")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
   runtimeOnly("org.slf4j:slf4j-simple:1.7.10")
   implementation("com.google.code.gson:gson:2.10.1")
 }

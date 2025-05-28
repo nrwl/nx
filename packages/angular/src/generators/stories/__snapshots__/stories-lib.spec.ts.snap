@@ -2,16 +2,16 @@
 
 exports[`angularStories generator: libraries Stories for non-empty Angular library should generate stories file for standalone components 1`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
-import { StandaloneComponent } from './standalone.component';
+import { Standalone } from './standalone';
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
-const meta: Meta<StandaloneComponent> = {
-  component: StandaloneComponent,
-  title: 'StandaloneComponent',
+const meta: Meta<Standalone> = {
+  component: Standalone,
+  title: 'Standalone',
 };
 export default meta;
-type Story = StoryObj<StandaloneComponent>;
+type Story = StoryObj<Standalone>;
 
 export const Primary: Story = {
   args: {},
@@ -29,16 +29,16 @@ export const Heading: Story = {
 
 exports[`angularStories generator: libraries Stories for non-empty Angular library should generate stories file for standalone components 2`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
-import { SecondaryStandaloneComponent } from './secondary-standalone.component';
+import { SecondaryStandalone } from './secondary-standalone';
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
-const meta: Meta<SecondaryStandaloneComponent> = {
-  component: SecondaryStandaloneComponent,
-  title: 'SecondaryStandaloneComponent',
+const meta: Meta<SecondaryStandalone> = {
+  component: SecondaryStandalone,
+  title: 'SecondaryStandalone',
 };
 export default meta;
-type Story = StoryObj<SecondaryStandaloneComponent>;
+type Story = StoryObj<SecondaryStandalone>;
 
 export const Primary: Story = {
   args: {},
@@ -56,16 +56,16 @@ export const Heading: Story = {
 
 exports[`angularStories generator: libraries Stories for non-empty Angular library should generate stories.ts files 1`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
-import { TestButtonComponent } from './test-button.component';
+import { TestButton } from './test-button';
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
-const meta: Meta<TestButtonComponent> = {
-  component: TestButtonComponent,
-  title: 'TestButtonComponent',
+const meta: Meta<TestButton> = {
+  component: TestButton,
+  title: 'TestButton',
 };
 export default meta;
-type Story = StoryObj<TestButtonComponent>;
+type Story = StoryObj<TestButton>;
 
 export const Primary: Story = {
   args: {
@@ -93,16 +93,16 @@ export const Heading: Story = {
 
 exports[`angularStories generator: libraries Stories for non-empty Angular library should ignore paths 1`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
-import { TestButtonComponent } from './test-button.component';
+import { TestButton } from './test-button';
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
-const meta: Meta<TestButtonComponent> = {
-  component: TestButtonComponent,
-  title: 'TestButtonComponent',
+const meta: Meta<TestButton> = {
+  component: TestButton,
+  title: 'TestButton',
 };
 export default meta;
-type Story = StoryObj<TestButtonComponent>;
+type Story = StoryObj<TestButton>;
 
 export const Primary: Story = {
   args: {

@@ -533,6 +533,23 @@ describe('lib', () => {
     });
   });
 
+  describe('--routing', () => {
+    it('should be able to generate a library with routing', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        routing: true,
+      });
+
+      const content = tree.read('my-lib/src/lib/my-lib.tsx', 'utf-8');
+      expect(content).toContain('react-router-dom');
+
+      expect(content).toMatch(/<Link\s*to="\/">my-lib root<\/Link>/);
+      expect(content).toMatch(
+        /<Route\s*path="\/"\s*element={<div>This is the my-lib root route.<\/div>} \/>/
+      );
+    });
+  });
+
   describe('--buildable', () => {
     it('should default to rollup bundler', async () => {
       await libraryGenerator(tree, {

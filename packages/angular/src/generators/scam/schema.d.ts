@@ -26,4 +26,5 @@ export interface NormalizedSchema extends Schema {
   symbolName: string;
   export: boolean;
   inlineScam: boolean;
+  modulePath: string;
 }

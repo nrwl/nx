@@ -11,43 +11,55 @@ import {
 let tsModule: typeof import('typescript');
 
 export function findModule(tree: Tree, path: string, module?: string) {
-  let modulePath = '';
+  const candidatePaths: string[] = [];
   let pathToSearch = path;
   while (pathToSearch !== '.' && pathToSearch !== '/') {
     if (module) {
       const pathToModule = joinPathFragments(pathToSearch, module);
       if (tree.exists(pathToModule)) {
-        modulePath = pathToModule;
+        candidatePaths.push(pathToModule);
         break;
       }
     } else {
       const potentialOptions = tree
         .children(pathToSearch)
-        .filter((f) => f.endsWith('.module.ts'));
-      if (potentialOptions.length > 1) {
-        throw new Error(
-          `More than one NgModule was found. Please provide the NgModule you wish to use.`
+        .filter((f) => f.endsWith('.module.ts') || f.endsWith('-module.ts'));
+      if (potentialOptions.length > 0) {
+        candidatePaths.push(
+          ...potentialOptions.map((p) => joinPathFragments(pathToSearch, p))
         );
-      } else if (potentialOptions.length === 1) {
-        modulePath = joinPathFragments(pathToSearch, potentialOptions[0]);
         break;
       }
     }
     pathToSearch = dirname(pathToSearch);
   }
 
-  if (modulePath === '') {
+  if (candidatePaths.length === 0) {
     throw new Error('Could not find a declaring module file.');
   }
 
-  const moduleContents = tree.read(modulePath, 'utf-8');
-  if (!moduleContents.includes('@NgModule')) {
+  const modules = candidatePaths.filter((p) => {
+    const moduleContents = tree.read(p, 'utf-8');
+    return moduleContents.includes('@NgModule');
+  });
+
+  if (modules.length === 0) {
     throw new Error(
-      `Declaring module file (${modulePath}) does not contain an @NgModule Declaration.`
+      candidatePaths.length === 1
+        ? `Declaring module file (${candidatePaths[0]}) does not contain an @NgModule Declaration.`
+        : `Declaring module files (${candidatePaths.join(
+            ', '
+          )}) do not contain an @NgModule Declaration.`
     );
   }
 
-  return modulePath;
+  if (modules.length > 1) {
+    throw new Error(
+      `More than one NgModule was found. Please provide the NgModule you wish to use.`
+    );
+  }
+
+  return modules[0];
 }
 
 export function addToNgModule(

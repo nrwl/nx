@@ -12,12 +12,6 @@
       { "name": "Using a Different Port", "keys": ["buildTarget", "port"] }
     ],
     "properties": {
-      "browserTarget": {
-        "type": "string",
-        "description": "A browser builder target to serve in the format of `project:target[:configuration]`.",
-        "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$",
-        "x-deprecated": "Use 'buildTarget' instead. It will be removed when Angular v20 is released."
-      },
       "buildTarget": {
         "type": "string",
         "description": "A build builder target to serve in the format of `project:target[:configuration]`.",
@@ -152,15 +146,12 @@
       },
       "buildLibsFromSource": {
         "type": "boolean",
-        "description": "Read buildable libraries from source instead of building them separately. If not set, it will take the value specified in the `browserTarget` options, or it will default to `true` if it's also not set in the `browserTarget` options.",
+        "description": "Read buildable libraries from source instead of building them separately. If not set, it will take the value specified in the `buildTarget` options, or it will default to `true` if it's also not set in the `buildTarget` options.",
         "x-priority": "important"
       }
     },
     "additionalProperties": false,
-    "anyOf": [
-      { "required": ["buildTarget"] },
-      { "required": ["browserTarget"] }
-    ],
+    "required": ["buildTarget"],
     "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\nThe Module Federation Dev Server will serve a host application and find the remote applications associated with the host and serve them statically also.  \nSee an example set up of it below:\n\n```json\n{\n  \"serve\": {\n    \"executor\": \"@nx/angular:module-federation-dev-server\",\n    \"configurations\": {\n      \"production\": {\n        \"buildTarget\": \"host:build:production\"\n      },\n      \"development\": {\n        \"buildTarget\": \"host:build:development\"\n      }\n    },\n    \"defaultConfiguration\": \"development\",\n    \"options\": {\n      \"port\": 4200,\n      \"publicHost\": \"http://localhost:4200\"\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"Serve host with remotes that can be live reloaded\" %}\nThe Module Federation Dev Server will serve a host application and find the remote applications associated with the host and serve a set selection with live reloading enabled also.  \nSee an example set up of it below:\n\n```json\n{\n  \"serve-with-hmr-remotes\": {\n    \"executor\": \"@nx/angular:module-federation-dev-server\",\n    \"configurations\": {\n      \"production\": {\n        \"buildTarget\": \"host:build:production\"\n      },\n      \"development\": {\n        \"buildTarget\": \"host:build:development\"\n      }\n    },\n    \"defaultConfiguration\": \"development\",\n    \"options\": {\n      \"port\": 4200,\n      \"publicHost\": \"http://localhost:4200\",\n      \"devRemotes\": [\n        \"remote1\",\n        {\n          \"remoteName\": \"remote2\",\n          \"configuration\": \"development\"\n        }\n      ]\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% /tabs %}\n"
   },
   "description": "Serves host [Module Federation](https://module-federation.io/) applications ([webpack](https://webpack.js.org/)-based) allowing to specify which remote applications should be served with the host.",

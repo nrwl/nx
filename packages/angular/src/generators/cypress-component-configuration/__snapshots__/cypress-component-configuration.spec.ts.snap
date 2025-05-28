@@ -37,11 +37,11 @@ Cypress.Commands.add('mount', mount);"
 
 exports[`Cypress Component Testing Configuration should work with complex component 1`] = `
 "import { TestBed } from '@angular/core/testing';
-import { SomethingOneComponent } from './something-one.component';
+import { SomethingOne } from './something-one';
 
-describe(SomethingOneComponent.name, () => {
+describe(SomethingOne.name, () => {
   beforeEach(() => {
-    TestBed.overrideComponent(SomethingOneComponent, {
+    TestBed.overrideComponent(SomethingOne, {
       add: {
         imports: [],
         providers: []
@@ -50,7 +50,7 @@ describe(SomethingOneComponent.name, () => {
   });
 
   it('renders', () => {
-    cy.mount(SomethingOneComponent);
+    cy.mount(SomethingOne);
   });
 });
 "
@@ -58,11 +58,11 @@ describe(SomethingOneComponent.name, () => {
 
 exports[`Cypress Component Testing Configuration should work with complex component 2`] = `
 "import { TestBed } from '@angular/core/testing';
-import { SomethingTwoComponent } from './something-two.component';
+import { SomethingTwo } from './something-two';
 
-describe(SomethingTwoComponent.name, () => {
+describe(SomethingTwo.name, () => {
   beforeEach(() => {
-    TestBed.overrideComponent(SomethingTwoComponent, {
+    TestBed.overrideComponent(SomethingTwo, {
       add: {
         imports: [],
         providers: []
@@ -71,7 +71,7 @@ describe(SomethingTwoComponent.name, () => {
   });
 
   it('renders', () => {
-    cy.mount(SomethingTwoComponent);
+    cy.mount(SomethingTwo);
   });
 });
 "
@@ -79,11 +79,11 @@ describe(SomethingTwoComponent.name, () => {
 
 exports[`Cypress Component Testing Configuration should work with complex component 3`] = `
 "import { TestBed } from '@angular/core/testing';
-import { SomethingThreeComponent } from './something-three.component';
+import { SomethingThree } from './something-three';
 
-describe(SomethingThreeComponent.name, () => {
+describe(SomethingThree.name, () => {
   beforeEach(() => {
-    TestBed.overrideComponent(SomethingThreeComponent, {
+    TestBed.overrideComponent(SomethingThree, {
       add: {
         imports: [],
         providers: []
@@ -92,7 +92,7 @@ describe(SomethingThreeComponent.name, () => {
   });
 
   it('renders', () => {
-    cy.mount(SomethingThreeComponent);
+    cy.mount(SomethingThree);
   });
 });
 "
@@ -100,11 +100,11 @@ describe(SomethingThreeComponent.name, () => {
 
 exports[`Cypress Component Testing Configuration should work with complex standalone component 1`] = `
 "import { TestBed } from '@angular/core/testing';
-import { SomethingOneComponent } from './something-one.component';
+import { SomethingOne } from './something-one';
 
-describe(SomethingOneComponent.name, () => {
+describe(SomethingOne.name, () => {
   beforeEach(() => {
-    TestBed.overrideComponent(SomethingOneComponent, {
+    TestBed.overrideComponent(SomethingOne, {
       add: {
         imports: [],
         providers: [],
@@ -113,7 +113,7 @@ describe(SomethingOneComponent.name, () => {
   });
 
   it('renders', () => {
-    cy.mount(SomethingOneComponent);
+    cy.mount(SomethingOne);
   });
 });
 "
@@ -121,11 +121,11 @@ describe(SomethingOneComponent.name, () => {
 
 exports[`Cypress Component Testing Configuration should work with complex standalone component 2`] = `
 "import { TestBed } from '@angular/core/testing';
-import { SomethingTwoComponent } from './something-two.component';
+import { SomethingTwo } from './something-two';
 
-describe(SomethingTwoComponent.name, () => {
+describe(SomethingTwo.name, () => {
   beforeEach(() => {
-    TestBed.overrideComponent(SomethingTwoComponent, {
+    TestBed.overrideComponent(SomethingTwo, {
       add: {
         imports: [],
         providers: [],
@@ -134,7 +134,7 @@ describe(SomethingTwoComponent.name, () => {
   });
 
   it('renders', () => {
-    cy.mount(SomethingTwoComponent);
+    cy.mount(SomethingTwo);
   });
 });
 "
@@ -142,11 +142,11 @@ describe(SomethingTwoComponent.name, () => {
 
 exports[`Cypress Component Testing Configuration should work with complex standalone component 3`] = `
 "import { TestBed } from '@angular/core/testing';
-import { SomethingThreeComponent } from './something-three.component';
+import { SomethingThree } from './something-three';
 
-describe(SomethingThreeComponent.name, () => {
+describe(SomethingThree.name, () => {
   beforeEach(() => {
-    TestBed.overrideComponent(SomethingThreeComponent, {
+    TestBed.overrideComponent(SomethingThree, {
       add: {
         imports: [],
         providers: [],
@@ -155,7 +155,7 @@ describe(SomethingThreeComponent.name, () => {
   });
 
   it('renders', () => {
-    cy.mount(SomethingThreeComponent);
+    cy.mount(SomethingThree);
   });
 });
 "
@@ -163,11 +163,11 @@ describe(SomethingThreeComponent.name, () => {
 
 exports[`Cypress Component Testing Configuration should work with secondary entry point libs 1`] = `
 "import { TestBed } from '@angular/core/testing';
-import { FancyButtonComponent } from './fancy-button.component';
+import { FancyButton } from './fancy-button';
 
-describe(FancyButtonComponent.name, () => {
+describe(FancyButton.name, () => {
   beforeEach(() => {
-    TestBed.overrideComponent(FancyButtonComponent, {
+    TestBed.overrideComponent(FancyButton, {
       add: {
         imports: [],
         providers: []
@@ -176,7 +176,7 @@ describe(FancyButtonComponent.name, () => {
   });
 
   it('renders', () => {
-    cy.mount(FancyButtonComponent);
+    cy.mount(FancyButton);
   });
 });
 "
@@ -184,11 +184,11 @@ describe(FancyButtonComponent.name, () => {
 
 exports[`Cypress Component Testing Configuration should work with secondary entry point libs 2`] = `
 "import { TestBed } from '@angular/core/testing';
-import { StandaloneFancyButtonComponent } from './standalone-fancy-button.component';
+import { StandaloneFancyButton } from './standalone-fancy-button';
 
-describe(StandaloneFancyButtonComponent.name, () => {
+describe(StandaloneFancyButton.name, () => {
   beforeEach(() => {
-    TestBed.overrideComponent(StandaloneFancyButtonComponent, {
+    TestBed.overrideComponent(StandaloneFancyButton, {
       add: {
         imports: [],
         providers: []
@@ -197,7 +197,7 @@ describe(StandaloneFancyButtonComponent.name, () => {
   });
 
   it('renders', () => {
-    cy.mount(StandaloneFancyButtonComponent);
+    cy.mount(StandaloneFancyButton);
   });
 });
 "
@@ -205,11 +205,11 @@ describe(StandaloneFancyButtonComponent.name, () => {
 
 exports[`Cypress Component Testing Configuration should work with simple components 1`] = `
 "import { TestBed } from '@angular/core/testing';
-import { SomethingOneComponent } from './something-one.component';
+import { SomethingOne } from './something-one';
 
-describe(SomethingOneComponent.name, () => {
+describe(SomethingOne.name, () => {
   beforeEach(() => {
-    TestBed.overrideComponent(SomethingOneComponent, {
+    TestBed.overrideComponent(SomethingOne, {
       add: {
         imports: [],
         providers: []
@@ -218,7 +218,7 @@ describe(SomethingOneComponent.name, () => {
   });
 
   it('renders', () => {
-    cy.mount(SomethingOneComponent);
+    cy.mount(SomethingOne);
   });
 });
 "
@@ -226,11 +226,11 @@ describe(SomethingOneComponent.name, () => {
 
 exports[`Cypress Component Testing Configuration should work with simple components 2`] = `
 "import { TestBed } from '@angular/core/testing';
-import { SomethingTwoComponent } from './something-two.component';
+import { SomethingTwo } from './something-two';
 
-describe(SomethingTwoComponent.name, () => {
+describe(SomethingTwo.name, () => {
   beforeEach(() => {
-    TestBed.overrideComponent(SomethingTwoComponent, {
+    TestBed.overrideComponent(SomethingTwo, {
       add: {
         imports: [],
         providers: []
@@ -239,7 +239,7 @@ describe(SomethingTwoComponent.name, () => {
   });
 
   it('renders', () => {
-    cy.mount(SomethingTwoComponent);
+    cy.mount(SomethingTwo);
   });
 });
 "
@@ -247,11 +247,11 @@ describe(SomethingTwoComponent.name, () => {
 
 exports[`Cypress Component Testing Configuration should work with simple components 3`] = `
 "import { TestBed } from '@angular/core/testing';
-import { SomethingThreeComponent } from './something-three.component';
+import { SomethingThree } from './something-three';
 
-describe(SomethingThreeComponent.name, () => {
+describe(SomethingThree.name, () => {
   beforeEach(() => {
-    TestBed.overrideComponent(SomethingThreeComponent, {
+    TestBed.overrideComponent(SomethingThree, {
       add: {
         imports: [],
         providers: []
@@ -260,7 +260,7 @@ describe(SomethingThreeComponent.name, () => {
   });
 
   it('renders', () => {
-    cy.mount(SomethingThreeComponent);
+    cy.mount(SomethingThree);
   });
 });
 "
@@ -268,11 +268,11 @@ describe(SomethingThreeComponent.name, () => {
 
 exports[`Cypress Component Testing Configuration should work with standalone component 1`] = `
 "import { TestBed } from '@angular/core/testing';
-import { SomethingOneComponent } from './something-one.component';
+import { SomethingOne } from './something-one';
 
-describe(SomethingOneComponent.name, () => {
+describe(SomethingOne.name, () => {
   beforeEach(() => {
-    TestBed.overrideComponent(SomethingOneComponent, {
+    TestBed.overrideComponent(SomethingOne, {
       add: {
         imports: [],
         providers: [],
@@ -281,7 +281,7 @@ describe(SomethingOneComponent.name, () => {
   });
 
   it('renders', () => {
-    cy.mount(SomethingOneComponent);
+    cy.mount(SomethingOne);
   });
 });
 "
@@ -289,11 +289,11 @@ describe(SomethingOneComponent.name, () => {
 
 exports[`Cypress Component Testing Configuration should work with standalone component 2`] = `
 "import { TestBed } from '@angular/core/testing';
-import { SomethingTwoComponent } from './something-two.component';
+import { SomethingTwo } from './something-two';
 
-describe(SomethingTwoComponent.name, () => {
+describe(SomethingTwo.name, () => {
   beforeEach(() => {
-    TestBed.overrideComponent(SomethingTwoComponent, {
+    TestBed.overrideComponent(SomethingTwo, {
       add: {
         imports: [],
         providers: [],
@@ -302,7 +302,7 @@ describe(SomethingTwoComponent.name, () => {
   });
 
   it('renders', () => {
-    cy.mount(SomethingTwoComponent);
+    cy.mount(SomethingTwo);
   });
 });
 "
@@ -310,11 +310,11 @@ describe(SomethingTwoComponent.name, () => {
 
 exports[`Cypress Component Testing Configuration should work with standalone component 3`] = `
 "import { TestBed } from '@angular/core/testing';
-import { SomethingThreeComponent } from './something-three.component';
+import { SomethingThree } from './something-three';
 
-describe(SomethingThreeComponent.name, () => {
+describe(SomethingThree.name, () => {
   beforeEach(() => {
-    TestBed.overrideComponent(SomethingThreeComponent, {
+    TestBed.overrideComponent(SomethingThree, {
       add: {
         imports: [],
         providers: [],
@@ -323,7 +323,7 @@ describe(SomethingThreeComponent.name, () => {
   });
 
   it('renders', () => {
-    cy.mount(SomethingThreeComponent);
+    cy.mount(SomethingThree);
   });
 });
 "

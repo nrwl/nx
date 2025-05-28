@@ -248,6 +248,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       export: true,
       routing: options.routing,
       js: options.js,
+      name: options.name,
       inSourceTests: options.inSourceTests,
       skipFormat: true,
       globalCss: options.globalCss,

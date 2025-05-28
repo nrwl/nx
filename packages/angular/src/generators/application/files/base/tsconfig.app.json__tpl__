@@ -4,7 +4,16 @@
     "outDir": "<%= rootOffset %>dist/out-tsc",
     "types": []
   },
+  <%_ if (angularMajorVersion < 20) { _%>
   "files": ["src/main.ts"],
   "include": ["src/**/*.d.ts"],
-  "exclude": ["jest.config.ts", "src/**/*.test.ts", "src/**/*.spec.ts"]
+  <%_ } else { _%>
+  "include": ["src/**/*.ts"],
+  <%_ } _%>
+  "exclude": [
+    "jest.config.ts",
+    "src/test-setup.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts"
+  ]
 }

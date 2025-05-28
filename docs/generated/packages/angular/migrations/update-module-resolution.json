@@ -1,0 +1,14 @@
+{
+  "name": "update-module-resolution",
+  "version": "21.2.0-beta.0",
+  "requires": { "@angular/core": ">=20.0.0-rc.2" },
+  "description": "Update 'moduleResolution' to 'bundler' in TypeScript configurations. You can read more about this here: https://www.typescriptlang.org/tsconfig/#moduleResolution.",
+  "factory": "./src/migrations/update-21-2-0/update-module-resolution",
+  "implementation": "/packages/angular/src/migrations/update-21-2-0/update-module-resolution.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": "#### Update `moduleResolution` to `bundler` in TypeScript configurations\n\nUpdates the TypeScript `moduleResolution` option to `'bundler'` for improved compatibility with modern package resolution algorithms used by bundlers like Webpack, Vite, and esbuild.\n\n#### Examples\n\nThe migration will update TypeScript configuration files in your workspace to use the `'bundler'` module resolution strategy:\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```json {% fileName=\"apps/app1/tsconfig.app.json\" highlightLines=[\"4\"] %}\n{\n  \"compilerOptions\": {\n    \"module\": \"es2020\",\n    \"moduleResolution\": \"node\"\n  }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"After\" %}\n\n```json {% fileName=\"apps/app1/tsconfig.app.json\" highlightLines=[\"4\"] %}\n{\n  \"compilerOptions\": {\n    \"module\": \"es2020\",\n    \"moduleResolution\": \"bundler\"\n  }\n}\n```\n\n{% /tab %}\n{% /tabs %}\n\nIf the `moduleResolution` is already set to `'bundler'` or the `module` is set to `'preserve'`, the migration will not modify the configuration:\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```json {% fileName=\"apps/app1/tsconfig.app.json\" highlightLines=[3,4] %}\n{\n  \"compilerOptions\": {\n    \"module\": \"preserve\",\n    \"moduleResolution\": \"node\"\n  }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"After\" %}\n\n```json {% fileName=\"apps/app1/tsconfig.app.json\" highlightLines=[3,4] %}\n{\n  \"compilerOptions\": {\n    \"module\": \"preserve\",\n    \"moduleResolution\": \"node\"\n  }\n}\n```\n\n{% /tab %}\n{% /tabs %}\n"
+}

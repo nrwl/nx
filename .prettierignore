@@ -51,3 +51,6 @@ CODEOWNERS
 /.nx/workflows/dynamic-changesets.yaml
 _files
 _solution
+
+# this file uses TS import attributes which the current prettier version does not support
+tools/documentation/create-embeddings/src/main.mts

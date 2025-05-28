@@ -157,7 +157,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                     leaveFrom="opacity-100 translate-y-0"
                     leaveTo="opacity-0 translate-y-1"
                   >
-                    <Popover.Panel className="absolute left-60 z-30 mt-3 w-max max-w-2xl -translate-x-1/2 transform lg:left-20">
+                    <Popover.Panel className="absolute left-60 z-30 mt-3 w-max max-w-xl -translate-x-1/2 transform lg:left-20 xl:max-w-2xl">
                       <SectionsMenu
                         sections={{
                           'Speed, Reliability and AI': solutionsItems,
@@ -267,7 +267,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                     leaveFrom="opacity-100 translate-y-0"
                     leaveTo="opacity-0 translate-y-1"
                   >
-                    <Popover.Panel className="absolute left-60 z-30 mt-3 w-max max-w-2xl -translate-x-1/2 transform lg:left-20">
+                    <Popover.Panel className="absolute left-60 z-30 mt-3 w-max max-w-xl -translate-x-1/2 transform lg:left-20 xl:max-w-2xl">
                       <SectionsMenu
                         sections={{
                           'Nx for Enterprises': enterpriseItems,

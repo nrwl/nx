@@ -35,5 +35,15 @@ export function normalizeOptions(
     prerender ??= false;
   }
 
-  return { ...options, appShell, prerender, security };
+  let sourceMap = options.sourceMap;
+  if (
+    sourceMap &&
+    typeof sourceMap === 'object' &&
+    sourceMap.sourcesContent !== undefined &&
+    angularMajorVersion < 20
+  ) {
+    delete sourceMap.sourcesContent;
+  }
+
+  return { ...options, appShell, prerender, security, sourceMap };
 }

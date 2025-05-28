@@ -26,7 +26,7 @@ describe('Angular Package', () => {
 
       // Generate root ngrx state management
       runCLI(
-        `generate @nx/angular:ngrx users --parent=${myapp}/src/app/app.module.ts --root --minimal=false`
+        `generate @nx/angular:ngrx users --parent=${myapp}/src/app/app-module.ts --root --minimal=false`
       );
       const packageJson = readJson('package.json');
       expect(packageJson.dependencies['@ngrx/store']).toBeDefined();
@@ -38,7 +38,7 @@ describe('Angular Package', () => {
       // Generate feature library and ngrx state within that library
       runCLI(`g @nx/angular:lib ${mylib} --prefix=fl --no-standalone`);
       runCLI(
-        `generate @nx/angular:ngrx flights --parent=${mylib}/src/lib/${mylib}.module.ts --facade`
+        `generate @nx/angular:ngrx flights --parent=${mylib}/src/lib/${mylib}-module.ts --facade`
       );
 
       expect(runCLI(`build ${myapp}`)).toMatch(/main-[a-zA-Z0-9]+\.js/);
@@ -57,7 +57,7 @@ describe('Angular Package', () => {
 
       // Generate root ngrx state management
       runCLI(
-        `generate @nx/angular:ngrx users --parent=${myapp}/src/app/app.module.ts --root`
+        `generate @nx/angular:ngrx users --parent=${myapp}/src/app/app-module.ts --root`
       );
       const packageJson = readJson('package.json');
       expect(packageJson.dependencies['@ngrx/entity']).toBeDefined();
@@ -73,7 +73,7 @@ describe('Angular Package', () => {
 
       const flags = `--facade --barrels`;
       runCLI(
-        `generate @nx/angular:ngrx flights --parent=${mylib}/src/lib/${mylib}.module.ts ${flags}`
+        `generate @nx/angular:ngrx flights --parent=${mylib}/src/lib/${mylib}-module.ts ${flags}`
       );
 
       expect(runCLI(`build ${myapp}`)).toMatch(/main-[a-zA-Z0-9]+\.js/);
@@ -92,7 +92,7 @@ describe('Angular Package', () => {
 
       // Generate root ngrx state management
       runCLI(
-        `generate @nx/angular:ngrx users --parent=${myapp}/src/app/app.module.ts --root`
+        `generate @nx/angular:ngrx users --parent=${myapp}/src/app/app-module.ts --root`
       );
       const packageJson = readJson('package.json');
       expect(packageJson.dependencies['@ngrx/entity']).toBeDefined();
@@ -108,7 +108,7 @@ describe('Angular Package', () => {
 
       const flags = `--facade --barrels`;
       runCLI(
-        `generate @nx/angular:ngrx flights --module=${mylib}/src/lib/${mylib}.module.ts ${flags}`
+        `generate @nx/angular:ngrx flights --module=${mylib}/src/lib/${mylib}-module.ts ${flags}`
       );
 
       expect(runCLI(`build ${myapp}`)).toMatch(/main-[a-zA-Z0-9]+\.js/);

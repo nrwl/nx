@@ -1,3 +1,5 @@
+import type { BuilderContext } from '@angular-devkit/architect';
+import type { ServerBuilderOutput } from '@angular-devkit/build-angular';
 import {
   joinPathFragments,
   normalizePath,
@@ -7,14 +9,17 @@ import { existsSync } from 'fs';
 import { relative } from 'path';
 import { Observable, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { assertBuilderPackageIsInstalled } from '../../executors/utilities/builder-package';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import { mergeCustomWebpackConfig } from '../utilities/webpack';
 import { Schema } from './schema';
 
 function buildServerApp(
   options: Schema,
-  context: import('@angular-devkit/architect').BuilderContext
-): Observable<import('@angular-devkit/build-angular').ServerBuilderOutput> {
+  context: BuilderContext
+): Observable<ServerBuilderOutput> {
+  assertBuilderPackageIsInstalled('@angular-devkit/build-angular');
+
   const { buildLibsFromSource, customWebpackConfig, ...delegateOptions } =
     options;
   // If there is a path to custom webpack config
@@ -47,7 +52,7 @@ function buildServerApp(
 
 function buildServerAppWithCustomWebpackConfiguration(
   options: Schema,
-  context: import('@angular-devkit/architect').BuilderContext,
+  context: BuilderContext,
   pathToWebpackConfig: string
 ) {
   return from(import('@angular-devkit/build-angular')).pipe(
@@ -89,8 +94,8 @@ function buildServerAppWithCustomWebpackConfiguration(
 
 export function executeWebpackServerBuilder(
   options: Schema,
-  context: import('@angular-devkit/architect').BuilderContext
-): Observable<import('@angular-devkit/build-angular').ServerBuilderOutput> {
+  context: BuilderContext
+): Observable<ServerBuilderOutput> {
   options.buildLibsFromSource ??= true;
 
   process.env.NX_BUILD_LIBS_FROM_SOURCE = `${options.buildLibsFromSource}`;

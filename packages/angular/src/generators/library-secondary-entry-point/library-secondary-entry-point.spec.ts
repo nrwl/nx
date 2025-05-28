@@ -1,7 +1,14 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import * as devkit from '@nx/devkit';
-import { addProjectConfiguration, readJson, Tree } from '@nx/devkit';
+import {
+  addProjectConfiguration,
+  readJson,
+  readNxJson,
+  Tree,
+  updateJson,
+  updateNxJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { generateTestLibrary } from '../utils/testing';
 import { librarySecondaryEntryPointGenerator } from './library-secondary-entry-point';
@@ -10,7 +17,7 @@ describe('librarySecondaryEntryPoint generator', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should throw when the library does not exist in the workspace', async () => {
@@ -78,11 +85,45 @@ describe('librarySecondaryEntryPoint generator', () => {
     expect(tree.exists('libs/lib1/testing/README.md')).toBeTruthy();
     expect(tree.exists('libs/lib1/testing/src/index.ts')).toBeTruthy();
     expect(
-      tree.exists('libs/lib1/testing/src/lib/testing.module.ts')
+      tree.exists('libs/lib1/testing/src/lib/testing-module.ts')
     ).toBeTruthy();
     expect(
       tree.read('libs/lib1/testing/src/index.ts', 'utf-8')
     ).toMatchSnapshot();
+  });
+
+  it('should generate the module file respecting the "typeSeparator" generator default', async () => {
+    const nxJson = readNxJson(tree);
+    nxJson.generators = {
+      ...nxJson.generators,
+      '@nx/angular:module': {
+        typeSeparator: '.',
+      },
+    };
+    updateNxJson(tree, nxJson);
+    addProjectConfiguration(tree, 'lib1', {
+      root: 'libs/lib1',
+      projectType: 'library',
+    });
+    tree.write(
+      'libs/lib1/package.json',
+      JSON.stringify({ name: '@my-org/lib1' })
+    );
+
+    await librarySecondaryEntryPointGenerator(tree, {
+      name: 'testing',
+      library: 'lib1',
+      skipFormat: true,
+    });
+
+    expect(tree.exists('libs/lib1/testing/src/lib/testing.module.ts')).toBe(
+      true
+    );
+    expect(tree.read('libs/lib1/testing/src/index.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "export * from './lib/testing.module';
+      "
+    `);
   });
 
   it('should configure the entry file', async () => {
@@ -205,7 +246,7 @@ describe('librarySecondaryEntryPoint generator', () => {
       tree.read('libs/lib1/testing/src/index.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/lib1/testing/src/lib/testing.module.ts', 'utf-8')
+      tree.read('libs/lib1/testing/src/lib/testing-module.ts', 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -228,7 +269,7 @@ describe('librarySecondaryEntryPoint generator', () => {
       });
 
       expect(
-        tree.exists('libs/lib1/testing/src/lib/testing.module.ts')
+        tree.exists('libs/lib1/testing/src/lib/testing-module.ts')
       ).toBeFalsy();
       expect(tree.exists('libs/lib1/testing/ng-package.json')).toBeTruthy();
       expect(tree.exists('libs/lib1/testing/README.md')).toBeTruthy();
@@ -236,6 +277,42 @@ describe('librarySecondaryEntryPoint generator', () => {
       expect(
         tree.read('libs/lib1/testing/src/index.ts', 'utf-8')
       ).toMatchSnapshot();
+    });
+  });
+
+  describe('compat', () => {
+    it('should generate the module file with the "." type separator for versions lower than v20', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        json.dependencies = {
+          ...json.dependencies,
+          '@angular/core': '~19.2.0',
+        };
+        return json;
+      });
+
+      addProjectConfiguration(tree, 'lib1', {
+        root: 'libs/lib1',
+        projectType: 'library',
+      });
+      tree.write(
+        'libs/lib1/package.json',
+        JSON.stringify({ name: '@my-org/lib1' })
+      );
+
+      await librarySecondaryEntryPointGenerator(tree, {
+        name: 'testing',
+        library: 'lib1',
+        skipFormat: true,
+      });
+
+      expect(tree.exists('libs/lib1/testing/src/lib/testing.module.ts')).toBe(
+        true
+      );
+      expect(tree.read('libs/lib1/testing/src/index.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "export * from './lib/testing.module';
+        "
+      `);
     });
   });
 });

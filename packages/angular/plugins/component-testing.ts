@@ -195,7 +195,9 @@ function normalizeBuildTargetOptions(
     },
     buildContext
   );
-  const buildOptions = withSchemaDefaults(options);
+  const project =
+    buildContext.projectsConfigurations.projects[buildContext.projectName];
+  const buildOptions = withSchemaDefaults(options, project, buildContext.root);
 
   // cypress creates a tsconfig if one isn't preset
   // that contains all the support required for angular and component tests
@@ -305,9 +307,18 @@ Note: this may fail, setting the correct 'sourceRoot' for ${buildContext.project
   };
 }
 
-function withSchemaDefaults(options: any): BrowserBuilderSchema {
+function withSchemaDefaults(
+  options: any,
+  project: ProjectConfiguration,
+  workspaceRoot: string
+): BrowserBuilderSchema {
   if (!options.main && !options.browser) {
-    throw new Error('Missing executor options "main" and "browser"');
+    const sourceRoot =
+      project.sourceRoot ?? joinPathFragments(project.root, 'src');
+    options.browser = joinPathFragments(sourceRoot, 'main.ts');
+    if (!existsSync(join(workspaceRoot, options.browser))) {
+      throw new Error('Missing executor options "main" and "browser"');
+    }
   }
   if (!options.index) {
     throw new Error('Missing executor options "index"');

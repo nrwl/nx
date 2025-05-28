@@ -9,7 +9,7 @@ fun createNodeForProject(
     project: Project,
     targetNameOverrides: Map<String, String>,
     workspaceRoot: String,
-    cwd: String
+    atomized: Boolean
 ): GradleNodeReport {
   val logger = project.logger
   logger.info("${Date()} ${project.name} createNodeForProject: get nodes and dependencies")
@@ -31,7 +31,8 @@ fun createNodeForProject(
 
   try {
     val gradleTargets: GradleTargets =
-        processTargetsForProject(project, dependencies, targetNameOverrides, workspaceRoot, cwd)
+        processTargetsForProject(
+            project, dependencies, targetNameOverrides, workspaceRoot, atomized)
     val projectRoot = project.projectDir.path
     val projectNode =
         ProjectNode(
@@ -61,7 +62,7 @@ fun processTargetsForProject(
     dependencies: MutableSet<Dependency>,
     targetNameOverrides: Map<String, String>,
     workspaceRoot: String,
-    cwd: String
+    atomized: Boolean
 ): GradleTargets {
   val targets: NxTargets = mutableMapOf()
   val targetGroups: TargetGroups = mutableMapOf()
@@ -111,7 +112,7 @@ fun processTargetsForProject(
 
       targets[taskName] = target
 
-      if (hasCiTestTarget && task.name.startsWith("compileTest")) {
+      if (hasCiTestTarget && task.name.startsWith("compileTest") && atomized) {
         addTestCiTargets(
             task.inputs.sourceFiles,
             projectBuildPath,
@@ -124,7 +125,7 @@ fun processTargetsForProject(
             ciTestTargetName!!)
       }
 
-      if (hasCiIntTestTarget && task.name.startsWith("compileIntTest")) {
+      if (hasCiIntTestTarget && task.name.startsWith("compileIntTest") && atomized) {
         addTestCiTargets(
             task.inputs.sourceFiles,
             projectBuildPath,
@@ -137,14 +138,19 @@ fun processTargetsForProject(
             ciIntTestTargetName!!)
       }
 
-      if (task.name == "check" && (hasCiTestTarget || hasCiIntTestTarget)) {
+      if (task.name == "check") {
         val replacedDependencies =
             (target["dependsOn"] as? List<*>)?.map { dep ->
-              when (dep.toString()) {
-                testTargetName -> ciTestTargetName ?: dep
-                intTestTargetName -> ciIntTestTargetName ?: dep
-                else -> dep
-              }.toString()
+              val dependsOn = dep.toString()
+              if (hasCiTestTarget && dependsOn == "${project.name}:$testTargetName" && atomized) {
+                "${project.name}:$ciTestTargetName"
+              } else if (hasCiIntTestTarget &&
+                  dependsOn == "${project.name}:$intTestTargetName" &&
+                  atomized) {
+                "${project.name}:$ciIntTestTargetName"
+              } else {
+                dep
+              }
             } ?: emptyList()
 
         val newTarget: MutableMap<String, Any?> =

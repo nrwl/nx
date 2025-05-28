@@ -2,21 +2,15 @@ import {
   addDependenciesToPackageJson,
   formatFiles,
   GeneratorCallback,
-  globAsync,
-  logger,
   readNxJson,
   runTasksInSerial,
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import {
-  gradleProjectGraphPluginName,
-  gradleProjectGraphVersion,
-  nxVersion,
-} from '../../utils/versions';
+import { nxVersion } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
 import { hasGradlePlugin } from '../../utils/has-gradle-plugin';
-import { dirname, join, basename } from 'path';
+import { addNxProjectGraphPlugin } from './gradle-project-graph-plugin-utils';
 
 export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -34,7 +28,7 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
       )
     );
   }
-  await addBuildGradleFileNextToSettingsGradle(tree);
+  await addNxProjectGraphPlugin(tree);
   addPlugin(tree);
   updateNxJsonConfiguration(tree);
 
@@ -60,84 +54,6 @@ function addPlugin(tree: Tree) {
     });
     updateNxJson(tree, nxJson);
   }
-}
-
-/**
- * This function creates and populate build.gradle file next to the settings.gradle file.
- */
-export async function addBuildGradleFileNextToSettingsGradle(tree: Tree) {
-  const settingsGradleFiles = await globAsync(tree, [
-    '**/settings.gradle?(.kts)',
-  ]);
-  settingsGradleFiles.forEach((settingsGradleFile) => {
-    addNxProjectGraphPluginToBuildGradle(settingsGradleFile, tree);
-  });
-}
-
-/**
- * - creates a build.gradle file next to the settings.gradle file if it does not exist.
- * - adds the NxProjectGraphPlugin plugin to the build.gradle file if it does not exist.
- */
-function addNxProjectGraphPluginToBuildGradle(
-  settingsGradleFile: string,
-  tree: Tree
-) {
-  const filename = basename(settingsGradleFile);
-  let gradleFilePath = 'build.gradle';
-  if (filename.endsWith('.kts')) {
-    gradleFilePath = 'build.gradle.kts';
-  }
-  gradleFilePath = join(dirname(settingsGradleFile), gradleFilePath);
-  let buildGradleContent = '';
-  if (!tree.exists(gradleFilePath)) {
-    tree.write(gradleFilePath, buildGradleContent); // create a build.gradle file near settings.gradle file if it does not exist
-  } else {
-    buildGradleContent = tree.read(gradleFilePath).toString();
-  }
-
-  const nxProjectGraphReportPlugin = filename.endsWith('.kts')
-    ? `id("${gradleProjectGraphPluginName}") version("${gradleProjectGraphVersion}")`
-    : `id "${gradleProjectGraphPluginName}" version "${gradleProjectGraphVersion}"`;
-  if (buildGradleContent.includes('plugins {')) {
-    if (!buildGradleContent.includes(gradleProjectGraphPluginName)) {
-      buildGradleContent = buildGradleContent.replace(
-        'plugins {',
-        `plugins {
-    ${nxProjectGraphReportPlugin}`
-      );
-    }
-  } else {
-    buildGradleContent = `plugins {
-    ${nxProjectGraphReportPlugin}
-}\n\r${buildGradleContent}`;
-  }
-
-  const applyNxProjectGraphReportPlugin = `plugin("${gradleProjectGraphPluginName}")`;
-  if (buildGradleContent.includes('allprojects {')) {
-    if (
-      !buildGradleContent.includes(
-        `plugin("${gradleProjectGraphPluginName}")`
-      ) &&
-      !buildGradleContent.includes(`plugin('${gradleProjectGraphPluginName}')`)
-    ) {
-      logger.warn(
-        `Please add the ${gradleProjectGraphPluginName} plugin to your ${gradleFilePath}:
-allprojects {
-  apply {
-      ${applyNxProjectGraphReportPlugin}
-  }
-}`
-      );
-    }
-  } else {
-    buildGradleContent = `${buildGradleContent}\n\rallprojects {
-    apply {
-        ${applyNxProjectGraphReportPlugin}
-    }
-  }`;
-  }
-
-  tree.write(gradleFilePath, buildGradleContent);
 }
 
 export function updateNxJsonConfiguration(tree: Tree) {

@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';<% } %>
   standalone: <%= standalone %>,<% } %><% if(standalone) { %>
   imports: [CommonModule],<%}%><% if(inlineTemplate) { %>
   template: `<p><%= name %> works!</p>`<% } else { %>
-  templateUrl: './<%= fileName %>.html'<% } if(inlineStyle) { %>,
+  templateUrl: './<%= fileName %><%= ngext %>.html'<% } if(inlineStyle) { %>,
   styles: `<% if(displayBlock){ %>
     :host {
       display: block;

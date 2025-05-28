@@ -72,7 +72,7 @@
   {
     "name": "create-nx-workspace",
     "packageName": "create-nx-workspace",
-    "description": "Smart Monorepos · Fast CI",
+    "description": "Smart Repos · Fast Builds",
     "path": "generated/packages/create-nx-workspace.json",
     "schemas": {
       "executors": [],

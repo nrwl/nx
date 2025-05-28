@@ -66,7 +66,7 @@ describe('addLinting generator', () => {
 
     const { devDependencies } = readJson(tree, 'package.json');
     expect(devDependencies['@typescript-eslint/utils']).toMatchInlineSnapshot(
-      `"^8.19.0"`
+      `"^8.29.0"`
     );
     delete process.env.ESLINT_USE_FLAT_CONFIG;
   });
@@ -168,7 +168,9 @@ describe('addLinting generator', () => {
                           prefix: "my-org",
                           style: "kebab-case"
                       }
-                  ]
+                  ],
+                  "@angular-eslint/component-class-suffix": "off",
+                  "@angular-eslint/directive-class-suffix": "off"
               }
           },
           {
@@ -289,7 +291,9 @@ describe('addLinting generator', () => {
                   "prefix": "my-org",
                   "style": "kebab-case"
                 }
-              ]
+              ],
+              "@angular-eslint/component-class-suffix": "off",
+              "@angular-eslint/directive-class-suffix": "off"
             }
           },
           {

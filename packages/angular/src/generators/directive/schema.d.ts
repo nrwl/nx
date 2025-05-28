@@ -8,6 +8,7 @@ export interface Schema {
   standalone?: boolean;
   module?: string;
   export?: boolean;
+  type?: string;
   skipFormat?: boolean;
 }
 

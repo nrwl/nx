@@ -37,7 +37,6 @@ async function createPreset(tree: Tree, options: Schema) {
       unitTestRunner: options.unitTestRunner,
       bundler: options.bundler,
       ssr: options.ssr,
-      serverRouting: options.serverRouting,
       prefix: options.prefix,
       nxCloudToken: options.nxCloudToken,
     });
@@ -58,7 +57,6 @@ async function createPreset(tree: Tree, options: Schema) {
       unitTestRunner: options.unitTestRunner,
       bundler: options.bundler,
       ssr: options.ssr,
-      serverRouting: options.serverRouting,
       prefix: options.prefix,
       nxCloudToken: options.nxCloudToken,
     });

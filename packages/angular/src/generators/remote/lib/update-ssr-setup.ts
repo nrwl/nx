@@ -3,6 +3,7 @@ import {
   addDependenciesToPackageJson,
   generateFiles,
   joinPathFragments,
+  names,
   readProjectConfiguration,
   updateProjectConfiguration,
 } from '@nx/devkit';
@@ -12,6 +13,7 @@ import {
   moduleFederationNodeVersion,
   typesCorsVersion,
 } from '../../../utils/versions';
+import { getComponentType } from '../../utils/artifact-types';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 
 export async function updateSsrSetup(
@@ -77,6 +79,9 @@ export async function updateSsrSetup(
   );
 
   if (standalone) {
+    const componentType = getComponentType(tree);
+    const componentFileSuffix = componentType ? `.${componentType}` : '';
+
     generateFiles(
       tree,
       joinPathFragments(__dirname, '../files/standalone'),
@@ -84,6 +89,8 @@ export async function updateSsrSetup(
       {
         appName,
         standalone,
+        componentType: componentType ? names(componentType).className : '',
+        componentFileSuffix,
         tmpl: '',
       }
     );

@@ -3,7 +3,12 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import { getInstalledPackageVersion, versions } from './version-utils';
+import {
+  getInstalledAngularDevkitVersion,
+  getInstalledAngularVersionInfo,
+  getInstalledPackageVersion,
+  versions,
+} from './version-utils';
 
 export function ensureAngularDependencies(tree: Tree): GeneratorCallback {
   const dependencies: Record<string, string> = {};
@@ -34,17 +39,13 @@ export function ensureAngularDependencies(tree: Tree): GeneratorCallback {
     dependencies['@angular/core'] = angularVersion;
     dependencies['@angular/forms'] = angularVersion;
     dependencies['@angular/platform-browser'] = angularVersion;
-    dependencies['@angular/platform-browser-dynamic'] = angularVersion;
     dependencies['@angular/router'] = angularVersion;
     dependencies.rxjs = rxjsVersion;
     dependencies.tslib = tsLibVersion;
     dependencies['zone.js'] = zoneJsVersion;
   }
 
-  const installedAngularDevkitVersion = getInstalledPackageVersion(
-    tree,
-    '@angular-devkit/build-angular'
-  );
+  const installedAngularDevkitVersion = getInstalledAngularDevkitVersion(tree);
   if (!installedAngularDevkitVersion) {
     /**
      * If `@angular-devkit/build-angular` is already installed, we assume the workspace
@@ -59,9 +60,14 @@ export function ensureAngularDependencies(tree: Tree): GeneratorCallback {
   // Ensure the `@nx/angular` peer dependencies are always installed.
   const angularDevkitVersion =
     installedAngularDevkitVersion ?? pkgVersions.angularDevkitVersion;
-  devDependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
   devDependencies['@angular-devkit/schematics'] = angularDevkitVersion;
   devDependencies['@schematics/angular'] = angularDevkitVersion;
+
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  if (angularMajorVersion < 20) {
+    devDependencies['@angular/build'] = angularDevkitVersion;
+    devDependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
+  }
 
   return addDependenciesToPackageJson(
     tree,

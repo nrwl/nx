@@ -38,6 +38,11 @@
     "outFile": {
       "type": "string",
       "description": "Name of the file to output."
+    },
+    "i18nDuplicateTranslation": {
+      "type": "string",
+      "description": "How to handle duplicate translations. _Note: this is only available in Angular 20.0.0 and above._",
+      "enum": ["error", "warning", "ignore"]
     }
   },
   "additionalProperties": false,

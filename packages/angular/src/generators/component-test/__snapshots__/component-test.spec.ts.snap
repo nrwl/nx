@@ -30,11 +30,11 @@ describe(MyLibComponent.name, () => {
 
 exports[`Angular Cypress Component Test Generator should handle component w/o inputs 1`] = `
 "import { TestBed } from '@angular/core/testing';
-import { MyLibComponent } from './my-lib.component';
+import { MyLib } from './my-lib';
 
-describe(MyLibComponent.name, () => {
+describe(MyLib.name, () => {
   beforeEach(() => {
-    TestBed.overrideComponent(MyLibComponent, {
+    TestBed.overrideComponent(MyLib, {
       add: {
         imports: [],
         providers: []
@@ -43,7 +43,7 @@ describe(MyLibComponent.name, () => {
   });
 
   it('renders', () => {
-    cy.mount(MyLibComponent);
+    cy.mount(MyLib);
   });
 });
 "

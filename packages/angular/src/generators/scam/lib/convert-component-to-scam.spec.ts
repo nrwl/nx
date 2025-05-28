@@ -6,7 +6,7 @@ import { convertComponentToScam } from './convert-component-to-scam';
 describe('convertComponentToScam', () => {
   it('should create the scam inline correctly', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -26,18 +26,19 @@ describe('convertComponentToScam', () => {
     convertComponentToScam(tree, {
       path: 'apps/app1/src/app/example/example',
       directory: 'apps/app1/src/app/example',
-      fileName: 'example.component',
-      filePath: 'apps/app1/src/app/example/example.component.ts',
+      fileName: 'example',
+      filePath: 'apps/app1/src/app/example/example.ts',
       name: 'example',
       projectName: 'app1',
+      modulePath: 'apps/app1/src/app/example/example-module.ts',
       export: false,
       inlineScam: true,
-      symbolName: 'ExampleComponent',
+      symbolName: 'Example',
     });
 
     // ASSERT
     const componentSource = tree.read(
-      'apps/app1/src/app/example/example.component.ts',
+      'apps/app1/src/app/example/example.ts',
       'utf-8'
     );
     expect(componentSource).toMatchInlineSnapshot(`
@@ -47,24 +48,24 @@ describe('convertComponentToScam', () => {
       @Component({
         selector: 'example',
         standalone: false,
-        templateUrl: './example.component.html',
-        styleUrl: './example.component.css'
+        templateUrl: './example.html',
+        styleUrl: './example.css'
       })
-      export class ExampleComponent {}
+      export class Example {}
 
       @NgModule({
         imports: [CommonModule],
-        declarations: [ExampleComponent],
-        exports: [ExampleComponent],
+        declarations: [Example],
+        exports: [Example],
       })
-      export class ExampleComponentModule {}
+      export class ExampleModule {}
       "
     `);
   });
 
   it('should create the scam separately correctly', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -84,38 +85,39 @@ describe('convertComponentToScam', () => {
     convertComponentToScam(tree, {
       path: 'apps/app1/src/app/example/example',
       directory: 'apps/app1/src/app/example',
-      fileName: 'example.component',
-      filePath: 'apps/app1/src/app/example/example.component.ts',
+      fileName: 'example',
+      filePath: 'apps/app1/src/app/example/example.ts',
       name: 'example',
       projectName: 'app1',
+      modulePath: 'apps/app1/src/app/example/example-module.ts',
       export: false,
       inlineScam: false,
-      symbolName: 'ExampleComponent',
+      symbolName: 'Example',
     });
 
     // ASSERT
     const componentModuleSource = tree.read(
-      'apps/app1/src/app/example/example.module.ts',
+      'apps/app1/src/app/example/example-module.ts',
       'utf-8'
     );
     expect(componentModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
-      import { ExampleComponent } from './example.component';
+      import { Example } from './example';
 
       @NgModule({
         imports: [CommonModule],
-        declarations: [ExampleComponent],
-        exports: [ExampleComponent],
+        declarations: [Example],
+        exports: [Example],
       })
-      export class ExampleComponentModule {}
+      export class ExampleModule {}
       "
     `);
   });
 
   it('should create the scam inline correctly when --type', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -140,6 +142,7 @@ describe('convertComponentToScam', () => {
       filePath: 'apps/app1/src/app/example.random.ts',
       name: 'example',
       projectName: 'app1',
+      modulePath: 'apps/app1/src/app/example-module.ts',
       export: false,
       inlineScam: true,
       type: 'random',
@@ -175,7 +178,7 @@ describe('convertComponentToScam', () => {
 
   it('should create the scam separately correctly when --type', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -200,6 +203,7 @@ describe('convertComponentToScam', () => {
       filePath: 'apps/app1/src/app/example.random.ts',
       name: 'example',
       projectName: 'app1',
+      modulePath: 'apps/app1/src/app/example-module.ts',
       export: false,
       inlineScam: false,
       type: 'random',
@@ -208,7 +212,7 @@ describe('convertComponentToScam', () => {
 
     // ASSERT
     const componentModuleSource = tree.read(
-      'apps/app1/src/app/example.module.ts',
+      'apps/app1/src/app/example-module.ts',
       'utf-8'
     );
     expect(componentModuleSource).toMatchInlineSnapshot(`

@@ -44,33 +44,41 @@ export function updateModuleName(
 
   const findModuleName = new RegExp(`\\b${moduleName.from}`, 'g');
 
-  const moduleFile = {
-    from: `${oldProjectName}.module`,
-    to: `${unscopedNewProjectName}.module`,
-  };
-
-  const findFileName = new RegExp(`\\b${moduleFile.from}`, 'g');
-
-  const filesToRename = [
+  const moduleFiles = [
     {
-      from: `${project.sourceRoot}/lib/${moduleFile.from}.ts`,
-      to: `${project.sourceRoot}/lib/${moduleFile.to}.ts`,
+      from: `${oldProjectName}.module`,
+      fromRegex: new RegExp(`\\b${oldProjectName}\\.module`, 'g'),
+      to: `${unscopedNewProjectName}.module`,
     },
     {
-      from: `${project.sourceRoot}/lib/${moduleFile.from}.spec.ts`,
-      to: `${project.sourceRoot}/lib/${moduleFile.to}.spec.ts`,
+      from: `${oldProjectName}-module`,
+      fromRegex: new RegExp(`\\b${oldProjectName}-module`, 'g'),
+      to: `${unscopedNewProjectName}-module`,
     },
-  ].filter((rename) => rename.from !== rename.to);
+  ];
+
+  const filesToRename = moduleFiles.flatMap((moduleFile) =>
+    [
+      {
+        from: `${project.sourceRoot}/lib/${moduleFile.from}.ts`,
+        to: `${project.sourceRoot}/lib/${moduleFile.to}.ts`,
+      },
+      {
+        from: `${project.sourceRoot}/lib/${moduleFile.from}.spec.ts`,
+        to: `${project.sourceRoot}/lib/${moduleFile.to}.spec.ts`,
+      },
+    ].filter((rename) => rename.from !== rename.to)
+  );
 
   if (filesToRename.length === 0) {
     return;
   }
 
   const replacements = [
-    {
-      regex: findFileName,
+    ...moduleFiles.map((moduleFile) => ({
+      regex: moduleFile.fromRegex,
       replaceWith: moduleFile.to,
-    },
+    })),
     {
       regex: findModuleName,
       replaceWith: moduleName.to,

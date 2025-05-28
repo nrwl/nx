@@ -7,7 +7,6 @@ export * from './create-project';
 export * from './enable-strict-type-checking';
 export * from './normalize-options';
 export * from './normalized-schema';
-export * from './set-app-strict-default';
 export * from './set-generator-defaults';
-export * from './update-editor-tsconfig';
+export * from './update-tsconfig-files';
 export * from './add-serve-static-target';

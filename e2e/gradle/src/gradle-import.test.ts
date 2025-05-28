@@ -9,6 +9,7 @@ import {
   e2eCwd,
   readJson,
   runCommand,
+  createFile,
 } from '@nx/e2e/utils';
 import { mkdirSync, rmdirSync, writeFileSync } from 'fs';
 import { execSync } from 'node:child_process';
@@ -36,6 +37,8 @@ describe('Nx Import Gradle', () => {
         return json;
       });
     }
+
+    createFile('.gitignore', '.kotlin/');
 
     try {
       rmdirSync(tempImportE2ERoot);

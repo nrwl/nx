@@ -25,8 +25,8 @@ export type ArtifactGenerationOptions = {
   name?: string;
   fileExtension?: string;
   suffix?: string;
+  suffixSeparator?: string;
   allowedFileExtensions?: string[];
-
   /**
    * @deprecated Provide the full file path including the file extension in the `path` option. This option will be removed in Nx v21.
    */
@@ -116,7 +116,7 @@ function getNameAndDirectoryOptions(
     fileName = fileName.replace(fileExtensionRegex, '');
     extractedName = fileName;
   } else if (options.suffix) {
-    fileName = `${fileName}.${options.suffix}`;
+    fileName = `${fileName}${options.suffixSeparator ?? '.'}${options.suffix}`;
   }
 
   const filePath = joinPathFragments(directory, `${fileName}.${fileExtension}`);
