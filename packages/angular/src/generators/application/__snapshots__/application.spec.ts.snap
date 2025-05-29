@@ -600,9 +600,6 @@ exports[`app --strict should enable strict type checking: app tsconfig.json 1`] 
   "include": [],
   "references": [
     {
-      "path": "./tsconfig.editor.json",
-    },
-    {
       "path": "./tsconfig.app.json",
     },
     {
@@ -1162,9 +1159,6 @@ exports[`app not nested should generate files: tsconfig.json 1`] = `
   "files": [],
   "include": [],
   "references": [
-    {
-      "path": "./tsconfig.editor.json",
-    },
     {
       "path": "./tsconfig.app.json",
     },

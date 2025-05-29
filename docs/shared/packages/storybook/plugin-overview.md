@@ -221,7 +221,7 @@ export default config;
 
 ### Setting up documentation
 
-To set up documentation, you can use [Storybook Autodocs](https://storybook.js.org/docs/react/writing-docs/autodocs). For Angular, [you can use `compodoc`](/recipes/storybook/angular-storybook-compodoc) to infer `argTypes`. You can read more about `argTypes` in the [official Storybook `argTypes` documentation](https://storybook.js.org/docs/angular/api/argtypes#automatic-argtype-inference).
+To set up documentation, you can use [Storybook Autodocs](https://storybook.js.org/docs/react/writing-docs/autodocs). For Angular, [you can use `compodoc`](/technologies/test-tools/storybook/recipes/angular-storybook-compodoc) to infer `argTypes`. You can read more about `argTypes` in the [official Storybook `argTypes` documentation](https://storybook.js.org/docs/angular/api/argtypes#automatic-argtype-inference).
 
 You can read more about how to best set up documentation using Storybook for your project in the [official Storybook documentation](https://storybook.js.org/docs/react/writing-docs/introduction).
 
@@ -229,11 +229,11 @@ You can read more about how to best set up documentation using Storybook for you
 
 You can find dedicated information for React and Angular:
 
-- [Set up Storybook for Angular Projects](/recipes/storybook/overview-angular)
-- [Set up Storybook for React Projects](/recipes/storybook/overview-react)
-- [Set up Storybook for Vue Projects](/recipes/storybook/overview-vue)
+- [Set up Storybook for Angular Projects](/technologies/test-tools/storybook/recipes/overview-angular)
+- [Set up Storybook for React Projects](/technologies/test-tools/storybook/recipes/overview-react)
+- [Set up Storybook for Vue Projects](/technologies/test-tools/storybook/recipes/overview-vue)
 
-You can find all Storybook-related Nx documentation in the [Storybook recipes section](/recipes/storybook).
+You can find all Storybook-related Nx documentation in the [Storybook recipes section](/technologies/test-tools/storybook/recipes).
 
 For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/basics/introduction/).
 

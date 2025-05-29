@@ -15,6 +15,8 @@ youtubeUrl: https://youtu.be/fPqPh4h8RJg
 - [Nx MCP Now Available for VS Code Copilot](/blog/nx-mcp-vscode-copilot)
 - [Nx and AI: Why They Work so Well Together](/blog/nx-and-ai-why-they-work-together)
 - **Save Time: Connecting Your Editor, CI and LLMs**
+- [Enhancing Nx Generators with AI: Predictability Meets Intelligence](/blog/nx-generators-ai-integration)
+- [Your AI Assistant Can Now Read Your Terminal: Real-Time Development Error Fixing](/blog/nx-terminal-integration-ai)
 
 {% /callout %}
 

@@ -6,9 +6,9 @@ Specify what should be done when a file is generated but already exists on the s
 
 ### Enumeration Members
 
-- [KeepExisting](../../devkit/documents/OverwriteStrategy#keepexisting)
-- [Overwrite](../../devkit/documents/OverwriteStrategy#overwrite)
-- [ThrowIfExisting](../../devkit/documents/OverwriteStrategy#throwifexisting)
+- [KeepExisting](/reference/core-api/devkit/documents/OverwriteStrategy#keepexisting)
+- [Overwrite](/reference/core-api/devkit/documents/OverwriteStrategy#overwrite)
+- [ThrowIfExisting](/reference/core-api/devkit/documents/OverwriteStrategy#throwifexisting)
 
 ## Enumeration Members
 

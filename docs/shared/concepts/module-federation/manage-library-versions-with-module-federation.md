@@ -21,7 +21,7 @@ The Shared API maintains a registry of all the downloaded dependencies. When a f
 ![How Shared API works](/shared/concepts/module-federation/shared-api.png)
 
 {% callout type="info" title="Lost?" %}
-If you are not familiar with the concepts of federated modules, remotes, and hosts, please read the [Faster builds with module federation](/concepts/module-federation/faster-builds-with-module-federation) for an introduction.
+If you are not familiar with the concepts of federated modules, remotes, and hosts, please read the [Faster builds with module federation](/technologies/module-federation/concepts/faster-builds-with-module-federation) for an introduction.
 {% /callout %}
 
 ## Our Approach

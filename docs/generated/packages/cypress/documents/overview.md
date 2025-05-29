@@ -14,7 +14,7 @@ Cypress is a test runner built for the modern web. It has a lot of great feature
 
 ## Setting Up @nx/cypress
 
-> Info about [Cypress Component Testing can be found here](/recipes/cypress/cypress-component-testing)
+> Info about [Cypress Component Testing can be found here](/technologies/test-tools/cypress/recipes/cypress-component-testing)
 
 ### Installation
 
@@ -111,7 +111,7 @@ export default defineConfig({
 ```
 
 {% callout type="note" title="Using setupNodeEvents function" %}
-If you use the `setupNodeEvents` function in your Cypress configuration, make sure to invoke the same function that is returned by `nxE2EPreset`. See the recipe on [using `setupNodeEvents` with Cypress preset](/recipes/cypress/cypress-setup-node-events) for more details.
+If you use the `setupNodeEvents` function in your Cypress configuration, make sure to invoke the same function that is returned by `nxE2EPreset`. See the recipe on [using `setupNodeEvents` with Cypress preset](/technologies/test-tools/cypress/recipes/cypress-setup-node-events) for more details.
 {% /callout %}
 
 ## E2E Testing

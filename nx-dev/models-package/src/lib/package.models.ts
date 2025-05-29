@@ -5,7 +5,6 @@ import { DocumentMetadata } from '@nx/nx-dev/models-document';
  */
 import { JsonSchema1 } from './json-schema.models';
 
-export type PackageContentTypes = 'documents' | 'executors' | 'generators';
 export interface FileMetadata {
   description: string;
   file: string;

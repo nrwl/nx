@@ -117,7 +117,7 @@ module.exports = {
 
 {% callout type="note" title="Creating a Host" %}
 If you do not already have a host application in your workspace, look at
-the [Create a Host Recipe](/recipes/module-federation/create-a-host) for more information on how to achieve
+the [Create a Host Recipe](/technologies/module-federation/recipes/create-a-host) for more information on how to achieve
 this.
 {% /callout %}
 

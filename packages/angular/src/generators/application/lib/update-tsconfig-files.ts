@@ -7,8 +7,8 @@ import {
 } from '@nx/devkit';
 import { getRootTsConfigFileName } from '@nx/js';
 import { getNeededCompilerOptionOverrides } from '@nx/js/src/utils/typescript/configuration';
-import { gte, lt } from 'semver';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { gte, lt } from 'semver';
 import { updateAppEditorTsConfigExcludedFiles } from '../../utils/update-app-editor-tsconfig-excluded-files';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import { enableStrictTypeChecking } from './enable-strict-type-checking';
@@ -59,7 +59,11 @@ export function updateTsconfigFiles(tree: Tree, options: NormalizedSchema) {
     }
   }
 
-  updateJson(tree, `${options.appProjectRoot}/tsconfig.json`, (json) => {
+  const tsconfigPath = joinPathFragments(
+    options.appProjectRoot,
+    'tsconfig.json'
+  );
+  updateJson(tree, tsconfigPath, (json) => {
     json.compilerOptions = {
       ...json.compilerOptions,
       ...compilerOptions,
@@ -71,9 +75,37 @@ export function updateTsconfigFiles(tree: Tree, options: NormalizedSchema) {
     );
     return json;
   });
+
+  if (options.unitTestRunner === 'jest') {
+    const tsconfigSpecPath = joinPathFragments(
+      options.appProjectRoot,
+      'tsconfig.spec.json'
+    );
+    updateJson(tree, tsconfigSpecPath, (json) => {
+      json.compilerOptions = {
+        ...json.compilerOptions,
+        module: 'commonjs',
+        moduleResolution: 'node10',
+      };
+      json.compilerOptions = getNeededCompilerOptionOverrides(
+        tree,
+        json.compilerOptions,
+        tsconfigPath
+      );
+      return json;
+    });
+  }
 }
 
 function updateEditorTsConfig(tree: Tree, options: NormalizedSchema) {
+  const tsconfigEditorPath = joinPathFragments(
+    options.appProjectRoot,
+    'tsconfig.editor.json'
+  );
+  if (!tree.exists(tsconfigEditorPath)) {
+    return;
+  }
+
   const appTsConfig = readJson<TsConfig>(
     tree,
     joinPathFragments(options.appProjectRoot, 'tsconfig.app.json')

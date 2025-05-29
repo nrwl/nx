@@ -1,8 +1,16 @@
 import Script from 'next/script';
 
-export default function GlobalScripts({ gaMeasurementId }) {
+export default function GlobalScripts({ gaMeasurementId, gtmMeasurementId }) {
+  // Don't load analytics scripts in development
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  if (!isProduction) {
+    return null;
+  }
+
   return (
     <>
+      {/* Google Analytics (gtag) */}
       <Script
         id="gtag-script-dependency"
         strategy="afterInteractive"
@@ -22,6 +30,35 @@ export default function GlobalScripts({ gaMeasurementId }) {
           `,
         }}
       />
+
+      {/* Google Tag Manager */}
+      {gtmMeasurementId && (
+        <>
+          <Script
+            id="gtm-script"
+            strategy="afterInteractive"
+            dangerouslySetInnerHTML={{
+              __html: `
+              (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+              new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+              j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+              'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+              })(window,document,'script','dataLayer','${gtmMeasurementId}');
+              `,
+            }}
+          />
+          {/* Google Tag Manager - NoScript */}
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${gtmMeasurementId}`}
+              height="0"
+              width="0"
+              style={{ display: 'none', visibility: 'hidden' }}
+            />
+          </noscript>
+        </>
+      )}
+
       {/* Apollo.io Embed Code */}
       <Script
         type="text/javascript"

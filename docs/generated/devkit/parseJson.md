@@ -13,10 +13,10 @@ By default javascript-style comments and trailing commas are allowed.
 
 #### Parameters
 
-| Name       | Type                                                          | Description            |
-| :--------- | :------------------------------------------------------------ | :--------------------- |
-| `input`    | `string`                                                      | JSON content as string |
-| `options?` | [`JsonParseOptions`](../../devkit/documents/JsonParseOptions) | JSON parse options     |
+| Name       | Type                                                                        | Description            |
+| :--------- | :-------------------------------------------------------------------------- | :--------------------- |
+| `input`    | `string`                                                                    | JSON content as string |
+| `options?` | [`JsonParseOptions`](/reference/core-api/devkit/documents/JsonParseOptions) | JSON parse options     |
 
 #### Returns
 

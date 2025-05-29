@@ -1336,9 +1336,9 @@ Here's some things you can dive into next:
 
 - Read more about [how Nx compares to the Angular CLI](/nx-api/angular/documents/nx-and-angular)
 - Learn more about the [underlying mental model of Nx](/concepts/mental-model)
-- Learn about popular generators such as [how to setup Tailwind](/recipes/angular/using-tailwind-css-with-angular-projects)
-- Learn how to [migrate your existing Angular CLI repo to Nx](/recipes/angular/migration/angular)
-- [Setup Storybook for our shared UI library](/recipes/storybook/overview-angular)
+- Learn about popular generators such as [how to setup Tailwind](/technologies/angular/recipes/using-tailwind-css-with-angular-projects)
+- Learn how to [migrate your existing Angular CLI repo to Nx](technologies/angular/migration/angular)
+- [Setup Storybook for our shared UI library](/technologies/test-tools/storybook/recipes/overview-angular)
 
 Also, make sure you
 

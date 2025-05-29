@@ -5,6 +5,7 @@ import {
   convertToDocumentMetadata,
   createDocumentMetadata,
   DocumentMetadata,
+  pkgToGeneratedApiDocs,
 } from '@nx/nx-dev/models-document';
 import { MenuItem } from '@nx/nx-dev/models-menu';
 import {
@@ -83,11 +84,13 @@ export function generateManifests(workspace: string): Promise<void[]> {
    * @type {{id: string, records: Record<string, ProcessedPackageMetadata>}}
    */
   const packagesManifest = createPackagesManifest(packages);
+  const newPackagesManifest = createNewPackagesManifest(packages);
 
   /**
    * Add the packages manifest to the manifest collection for simplicity.
    */
   manifests.push(packagesManifest);
+  manifests.push(newPackagesManifest);
 
   /**
    * We can easily infer all Documents menus but need a custom way to handle them
@@ -103,6 +106,14 @@ export function generateManifests(workspace: string): Promise<void[]> {
     )
   );
 
+  /*
+   * Map API docs to /technologies section in the nx menu.
+   */
+  menus.forEach((menu) => {
+    if (menu.id !== 'nx') return;
+    insertApiDocs(menu.menu, newPackagesManifest);
+  });
+
   /**
    * Creating packages menu with custom package logic.
    * @type {{id: string, menu: MenuItem[]}}
@@ -110,12 +121,13 @@ export function generateManifests(workspace: string): Promise<void[]> {
   const packagesMenu: {
     id: string;
     menu: MenuItem[];
-  } = createPackagesMenu(packagesManifest);
+  } = createPackagesMenu(newPackagesManifest);
 
   /**
    * Add the packages menu to the main menu collection for simplicity.
    */
   menus.push(packagesMenu);
+  menus.push(createPackagesMenu(packagesManifest));
 
   /**
    * We can easily get all associated existing tags from each manifest.
@@ -153,7 +165,7 @@ export function generateManifests(workspace: string): Promise<void[]> {
   fileGenerationPromises.push(
     generateIndexMarkdownFile(
       resolve(documentationPath, `shared`, `reference`, `sitemap.md`),
-      menus
+      menus.concat(createPackagesMenu(packagesManifest))
     )
   );
 
@@ -215,6 +227,7 @@ function generateTags(manifests: Manifest[]) {
   return tags;
 }
 
+// TODO(docs): Once we move API docs and set up redirect rules, we no longer need this menu
 function createPackagesMenu(packages: PackageManifest): {
   id: string;
   menu: MenuItem[];
@@ -298,14 +311,119 @@ function getDocumentMenus(manifests: DocumentManifest[]): {
   id: string;
   menu: MenuItem[];
 }[] {
-  return manifests.map((record) => ({
-    id: record.id,
-    menu: Object.values(record.records)
-      .map((item: any) => convertToDocumentMetadata(item))
-      .map((item: DocumentMetadata) => menuItemRecurseOperations(item)),
-  }));
+  return manifests.map((record) => {
+    // TODO(docs): This shouldn't be needed, we should look into why we need this filter when it wasn't needed before
+    const topLevelItems = Object.values(record.records).filter((item) => {
+      const pathSegments = item.path.split('/').filter(Boolean);
+      return (
+        pathSegments.length === 1 ||
+        (pathSegments.length === 2 && pathSegments[0] === record.id)
+      );
+    });
+
+    return {
+      id: record.id,
+      menu: topLevelItems
+        .map((item: any) => convertToDocumentMetadata(item))
+        .map((item: DocumentMetadata) => menuItemRecurseOperations(item)),
+    };
+  });
 }
 
+function createNewPackagesManifest(packages: PackageMetadata[]): {
+  id: string;
+  records: Record<string, ProcessedPackageMetadata>;
+} {
+  const packagesManifest: {
+    id: string;
+    records: Record<string, ProcessedPackageMetadata>;
+  } = { id: 'new-nx-api', records: {} };
+
+  packages.forEach((p) => {
+    const data = pkgToGeneratedApiDocs[p.name];
+    if (!data) {
+      console.warn(
+        `No mapping data found for package ${p.name}. Check "nx-dev/models-document/src/lib/mappings.ts".`
+      );
+      return;
+    }
+
+    const parentSegments = data.pagePath.split('/').filter(Boolean);
+    let parentDoc: DocumentMetadata = createDocumentMetadata({
+      id: parentSegments[0],
+      path: `${parentSegments[0]}/`,
+    });
+    for (const ps of parentSegments.slice(1)) {
+      parentDoc = documentRecurseOperations(
+        createDocumentMetadata({
+          id: ps,
+          path: `${ps}/`,
+        }),
+        parentDoc
+      );
+    }
+    packagesManifest.records[p.name] = {
+      githubRoot: p.githubRoot,
+      name: p.name,
+      packageName: p.packageName,
+      description: p.description,
+      documents: data.includeDocuments
+        ? convertToDictionary(
+            p.documents.map((d) =>
+              documentRecurseOperations(
+                {
+                  ...d,
+                  path: d.path.replace(new RegExp(`^${p.name}/`, 'i'), ''),
+                },
+                parentDoc
+              )
+            ),
+            'path'
+          )
+        : {},
+      root: p.root,
+      source: p.source,
+      executors: convertToDictionary(
+        p.executors.map((e) => ({
+          ...e,
+          path: generatePath(
+            // package name is now in the prefix
+            { id: e.name, path: e.path.split('/').slice(1).join('/') },
+            data.pagePath
+          ),
+        })),
+        'path'
+      ),
+      generators: convertToDictionary(
+        p.generators.map((g) => ({
+          ...g,
+          path: generatePath(
+            // package name is now in the prefix
+            { id: g.name, path: g.path.split('/').slice(1).join('/') },
+            data.pagePath
+          ),
+        })),
+        'path'
+      ),
+      migrations: convertToDictionary(
+        p.migrations.map((g) => ({
+          ...g,
+          path: generatePath(
+            // package name is now in the prefix
+            { id: g.name, path: g.path.split('/').slice(1).join('/') },
+            data.pagePath
+          ),
+        })),
+        'path'
+      ),
+      path: generatePath({ id: p.name, path: '' }, `technologies/${p.name}`),
+    };
+  });
+
+  return packagesManifest;
+}
+
+// TODO(docs): remove this function one smarter files are all updated to not reference and nx-api
 function createPackagesManifest(packages: PackageMetadata[]): {
   id: string;
   records: Record<string, ProcessedPackageMetadata>;
@@ -379,6 +497,109 @@ function getDocumentManifests(sections: DocumentSection[]): Manifest[] {
       id: section.name,
       records,
     };
+  });
+}
+
+function findMenuItemByPath(menus: MenuItem[], path: string): MenuItem | null {
+  const parts = path.split('/').filter(Boolean);
+  const id = parts.shift();
+
+  let curr: MenuItem | null = null;
+
+  for (const menu of menus) {
+    if (menu.id !== id) continue;
+    curr = menu;
+    for (const part of parts) {
+      if (!curr?.children) break;
+      curr = curr.children.find((child) => child.id === part);
+    }
+    break;
+  }
+
+  return curr;
+}
+
+function insertApiDocs(menus: MenuItem[], packages: PackageManifest): void {
+  Object.values(packages.records).forEach((p) => {
+    const apiDocsData = pkgToGeneratedApiDocs[p.name];
+    if (!apiDocsData) {
+      console.warn(
+        `No API path found for package ${p.name}. Skipping API docs insertion.`
+      );
+      return;
+    }
+
+    const apiItem = findMenuItemByPath(menus, apiDocsData.pagePath);
+    if (!apiItem)
+      throw new Error(
+        `Cannot find where to put ${apiDocsData.pagePath}. Does it exist in map.json?`
+      );
+
+    if (apiDocsData.includeDocuments && !!Object.values(p.documents).length) {
+      apiItem.children.push({
+        id: 'documents',
+        path: `${apiDocsData.pagePath}/documents`,
+        name: 'documents',
+        children: Object.values(p.documents).map((x) => ({
+          id: x.name,
+          path: `${apiDocsData.pagePath}/documents/${x.id}`,
+          name: x.name,
+          children: [],
+          isExternal: false,
+          disableCollapsible: false,
+        })),
+        isExternal: false,
+        disableCollapsible: false,
+      });
+    }
+
+    if (!!Object.values(p.executors).length) {
+      apiItem.children.push({
+        id: 'executors',
+        path: `${apiDocsData.pagePath}/executors`,
+        name: 'executors',
+        children: Object.values(p.executors).map((x) => ({
+          id: x.name,
+          path: `${apiDocsData.pagePath}/executors/${x.name}`,
+          name: x.name,
+          children: [],
+          isExternal: false,
+          disableCollapsible: false,
+        })),
+        isExternal: false,
+        disableCollapsible: false,
+      });
+    }
+
+    if (!!Object.values(p.generators).length) {
+      apiItem.children.push({
+        id: 'generators',
+        path: `${apiDocsData.pagePath}/generators`,
+        name: 'generators',
+        children: Object.values(p.generators).map((x) => ({
+          id: x.name,
+          path: `${apiDocsData.pagePath}/generators/${x.name}`,
+          name: x.name,
+          children: [],
+          isExternal: false,
+          disableCollapsible: false,
+        })),
+        isExternal: false,
+        disableCollapsible: false,
+      });
+    }
+
+    if (!!Object.values(p.migrations).length) {
+      apiItem.children.push({
+        id: 'migrations',
+        path: `${apiDocsData.pagePath}/migrations`,
+        name: 'migrations',
+        children: [],
+        isExternal: false,
+        disableCollapsible: false,
+      });
+    }
+    return apiItem;
   });
 }
 

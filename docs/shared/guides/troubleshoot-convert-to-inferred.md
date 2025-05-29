@@ -99,7 +99,7 @@ to `"type": "module"`.
 
 The `generatePackageJson` and `generateLockFile` options in [`@nx/remix:build`](/nx-api/remix/executors/build) cannot
 currently be migrated. There is support for this feature in
-the [Nx Vite plugin](/recipes/vite/configure-vite#typescript-paths), so in the future we may be able to support it if
+the [Nx Vite plugin](/technologies/build-tools/vite/recipes/configure-vite#typescript-paths), so in the future we may be able to support it if
 using Remix+Vite.
 
 ## Storybook: Conflicting `staticDir` Options
@@ -158,7 +158,7 @@ export default defineConfig({
 ## Webpack: Project Cannot Be Migrated
 
 Projects that
-use [Nx-enhanced Webpack configuration](/recipes/webpack/webpack-config-setup#nxenhanced-configuration-with-composable-plugins)
+use [Nx-enhanced Webpack configuration](/technologies/build-tools/webpack/recipes/webpack-config-setup#nxenhanced-configuration-with-composable-plugins)
 files cannot be migrated to use Webpack CLI. Nx-enhanced configuration files that contain `composePlugins` and `withNx`
 require the `@nx/webpack:webpack` executor to work.
 
@@ -167,7 +167,7 @@ To solve this issue, run `nx g @nx/webpack:convert-config-to-webpack-plugin` fir
 ## Webpack: Usage of `useLegacyNxPlugin`
 
 When converting
-from [Nx-enhanced](/recipes/webpack/webpack-config-setup#nxenhanced-configuration-with-composable-plugins) to basic
+from [Nx-enhanced](/technologies/build-tools/webpack/recipes/webpack-config-setup#nxenhanced-configuration-with-composable-plugins) to basic
 Webpack configuration, we add the `useLegacyNxPlugin` utility function to
 ensure that your build tasks behave the same after the migration. We recommend that you refactor the configuration such
 that `useLegacyNxPlugin` is not needed.

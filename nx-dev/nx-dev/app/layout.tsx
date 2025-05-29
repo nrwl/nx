@@ -52,6 +52,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   const gaMeasurementId = 'UA-88380372-10';
+  const gtmMeasurementId = 'GTM-KW8423B6';
   return (
     <html lang="en" className="h-full scroll-smooth" suppressHydrationWarning>
       <AppRouterAnalytics gaMeasurementId={gaMeasurementId} />
@@ -80,7 +81,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {children}
         {/* <LiveStreamNotifier /> */}
         <FrontendObservability />
-        <GlobalScripts gaMeasurementId={gaMeasurementId} />
+        <GlobalScripts
+          gaMeasurementId={gaMeasurementId}
+          gtmMeasurementId={gtmMeasurementId}
+        />
       </body>
     </html>
   );

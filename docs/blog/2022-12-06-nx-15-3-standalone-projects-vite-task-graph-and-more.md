@@ -227,7 +227,7 @@ Check out our docs for all the details on
 - [adding Nx to an existing monorepo](/recipes/adopting-nx/adding-to-monorepo)
 - [adding Nx to any non-monorepo setup](/recipes/adopting-nx/adding-to-existing-project)
 - [migrating your CRA project to Nx](/recipes/adopting-nx/adding-to-existing-project)
-- [migrating your Angular CLI app to Nx](/recipes/angular/migration/angular)
+- [migrating your Angular CLI app to Nx](/technologies/angular/migration/angular)
 
 Oh..you're wondering why you would want to add Nx to an existing non-monorepo project? Then keep reading 👇
 

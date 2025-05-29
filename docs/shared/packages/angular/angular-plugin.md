@@ -26,7 +26,7 @@ Among other things, it provides:
 
 {% callout type="note" title="Currently using the Angular CLI?" %}
 You can easily and mostly **automatically migrate from an Angular CLI** project to Nx! Learn
-more [here](/recipes/angular/migration/angular).
+more [here](technologies/angular/migration/angular).
 {% /callout %}
 
 ## Setting Up @nx/angular
@@ -114,6 +114,6 @@ nx g @nx/angular:service apps/appName/src/lib/my-service/my-service
 ## More Documentation
 
 - [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
-- [Migrating from the Angular CLI](/recipes/angular/migration/angular)
-- [Setup Module Federation with Angular and Nx](/concepts/module-federation/faster-builds-with-module-federation)
-- [Using Tailwind CSS with Angular projects](/recipes/angular/using-tailwind-css-with-angular-projects)
+- [Migrating from the Angular CLI](technologies/angular/migration/angular)
+- [Setup Module Federation with Angular and Nx](/technologies/module-federation/concepts/faster-builds-with-module-federation)
+- [Using Tailwind CSS with Angular projects](/technologies/angular/recipes/using-tailwind-css-with-angular-projects)

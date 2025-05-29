@@ -9,7 +9,7 @@ As of Nx 17, official Nx plugins no longer export [schematics](https://angular.d
 
 Currently, the Angular CLI can only run its own schematics and builders. The Nx CLI is still able to directly run any schematics or builders created for the Angular CLI as well as Nx's own generators and executors. The only thing that has changed is that Nx is no longer taking the extra step of converting our own code into a format that the Angular CLI recognizes.
 
-To switch from using the Angular CLI to using the Nx CLI follow the [migrating an Angular CLI project to Nx](/recipes/angular/migration/angular) recipe.
+To switch from using the Angular CLI to using the Nx CLI follow the [migrating an Angular CLI project to Nx](technologies/angular/migration/angular) recipe.
 
 ## Interop between Nx Generators and Angular Schematics
 

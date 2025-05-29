@@ -54,7 +54,7 @@ export async function generateDevkitDocumentation() {
     tsconfig: 'build/packages/devkit/tsconfig.lib.json',
     out: 'docs/generated/devkit',
     excludePrivate: true,
-    publicPath: '../../devkit/',
+    publicPath: '/reference/core-api/devkit/',
   });
 
   await runTypedoc({
@@ -62,7 +62,7 @@ export async function generateDevkitDocumentation() {
     entryPoints: ['build/packages/devkit/ngcli-adapter.d.ts'],
     tsconfig: 'build/packages/devkit/tsconfig.lib.json',
     out: 'docs/generated/devkit/ngcli_adapter',
-    publicPath: '../../devkit/ngcli_adapter/',
+    publicPath: '/reference/core-api/devkit/ngcli_adapter/',
   });
 
   rmSync('build/packages/devkit/tsconfig.lib.json', {

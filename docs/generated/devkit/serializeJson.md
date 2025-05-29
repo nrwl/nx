@@ -13,10 +13,10 @@ By default the JSON string is formatted with a 2 space indentation to be easy re
 
 #### Parameters
 
-| Name       | Type                                                                  | Description                               |
-| :--------- | :-------------------------------------------------------------------- | :---------------------------------------- |
-| `input`    | `T`                                                                   | Object which should be serialized to JSON |
-| `options?` | [`JsonSerializeOptions`](../../devkit/documents/JsonSerializeOptions) | JSON serialize options                    |
+| Name       | Type                                                                                | Description                               |
+| :--------- | :---------------------------------------------------------------------------------- | :---------------------------------------- |
+| `input`    | `T`                                                                                 | Object which should be serialized to JSON |
+| `options?` | [`JsonSerializeOptions`](/reference/core-api/devkit/documents/JsonSerializeOptions) | JSON serialize options                    |
 
 #### Returns
 

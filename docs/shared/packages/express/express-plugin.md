@@ -33,5 +33,5 @@ This will install the correct version of `@nx/express`.
 ## Recipes
 
 - [Add an Express Application to Your Workspace](/showcase/example-repos/add-express)
-- [Set Up Application Proxies](/recipes/node/application-proxies)
-- [Wait For Tasks To Finish](/recipes/node/wait-for-tasks)
+- [Set Up Application Proxies](/technologies/node/recipes/application-proxies)
+- [Wait For Tasks To Finish](/technologies/node/recipes/wait-for-tasks)

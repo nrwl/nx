@@ -275,7 +275,7 @@ Nx is really made to scale with you. You can
 - start small with a single-project workspace
 - modularize your application into more fine-grained libraries for better maintainability as your application (and team) grows, including mechanisms to make sure [things stay within their boundaries](/features/enforce-module-boundaries)
 - you can then migrate to a monorepo when you are ready and need one ([more here](/recipes/tips-n-tricks/standalone-to-monorepo))
-- or even [add Webpack Module Federation support](/recipes/angular/module-federation-with-ssr)
+- or even [add Webpack Module Federation support](/technologies/angular/recipes/module-federation-with-ssr)
 
 ### Visualize your Workspace
 
@@ -405,9 +405,9 @@ Migrating an Angular CLI project to Nx can be done by running
 npx nx@latest init
 ```
 
-or alternatively using the `--integrated` flag if you want to create an Nx monorepo right away. Learn more about all the details on the [dedicated docs page](/recipes/angular/migration/angular).
+or alternatively using the `--integrated` flag if you want to create an Nx monorepo right away. Learn more about all the details on the [dedicated docs page](technologies/angular/migration/angular).
 
-There is also a guide describing how to [consolidate multiple Angular CLI projects into a single Nx monorepo](/recipes/angular/migration/angular-multiple).
+There is also a guide describing how to [consolidate multiple Angular CLI projects into a single Nx monorepo](technologies/angular/migration/angular-multiple).
 
 You can learn more about Angular & Nx by following our dedicated tutorials:
 

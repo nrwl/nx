@@ -152,7 +152,7 @@ Let's have a closer look.
 
 The Nx core team strongly believes in the benefits of TypeScript (in fact, check out the [new Nx and TypeScript setup](/getting-started/intro)). As such, by default every project is automatically set up and configured to use TypeScript, making sure builds, as well as IDEs, are able to properly pick up TypeScript definitions. All without you having to worry about it.
 
-Now, if you really want to use pure JavaScript you totally can. Just pass the `--js` when running a generator. Read [more on the docs](/recipes/tips-n-tricks/js-and-ts).
+Now, if you really want to use pure JavaScript you totally can. Just pass the `--js` when running a generator. Read [more on the docs](/technologies/typescript/recipes/js-and-ts).
 
 ## ESLint preconfigured!
 

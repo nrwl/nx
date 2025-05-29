@@ -180,7 +180,7 @@ Check out the following video walkthrough on using these features for modularizi
 
 ## Storybook
 
-Nx now generates stories using [Component Storybook Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/). If you are using our `@nrwl/react:storybook-configuration`, `@nrwl/angular:storybook-configuration`, `@nrwl/react:stories` and `@nrwl/angular:stories` generators, you will notice that the stories are now generated in the new format. You can check out our documentation for [Storybook and Angular](/recipes/storybook/overview-angular) or [Storybook and React](/recipes/storybook/overview-react) to see the new syntax.
+Nx now generates stories using [Component Storybook Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/). If you are using our `@nrwl/react:storybook-configuration`, `@nrwl/angular:storybook-configuration`, `@nrwl/react:stories` and `@nrwl/angular:stories` generators, you will notice that the stories are now generated in the new format. You can check out our documentation for [Storybook and Angular](/technologies/test-tools/storybook/recipes/overview-angular) or [Storybook and React](/technologies/test-tools/storybook/recipes/overview-react) to see the new syntax.
 
 As the Storybook doc mentions, CSF3 _reduces boilerplate code and improves ergonomics. This makes stories more concise, faster to write and easier to maintain._
 

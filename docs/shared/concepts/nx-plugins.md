@@ -12,7 +12,7 @@ For example, plugins can accomplish the following:
 - [Configure Nx cache settings](/concepts/inferred-tasks) for a tool. The [`@nx/webpack`](/nx-api/webpack) plugin can automatically configure the [inputs](/recipes/running-tasks/configure-inputs) and [outputs](/recipes/running-tasks/configure-outputs) for a `build` task based on the settings in the `webpack.config.js` file it uses.
 - [Update tooling configuration](/features/automate-updating-dependencies) when upgrading the tool version. When Storybook 7 introduced a [new format](https://storybook.js.org/blog/storybook-csf3-is-here) for their configuration files, anyone using the [`@nx/storybook`](/nx-api/storybook) plugin could automatically apply those changes to their repository when upgrading.
 - [Set up a tool](/features/generate-code) for the first time. With the [`@nx/playwright`](/nx-api/playwright) plugin installed, you can use the `@nx/playwright:configuration` code generator to set up Playwright tests in an existing project.
-- [Run a tool in an advanced way](/concepts/executors-and-configurations). The [`@nx/js`](/nx-api/js) plugin's [`@nx/js:tsc` executor](/nx-api/js/executors/tsc) combines Nx's understanding of your repository with Typescript's native batch mode feature to make your builds [even more performant](/recipes/tips-n-tricks/enable-tsc-batch-mode).
+- [Run a tool in an advanced way](/concepts/executors-and-configurations). The [`@nx/js`](/nx-api/js) plugin's [`@nx/js:tsc` executor](/nx-api/js/executors/tsc) combines Nx's understanding of your repository with Typescript's native batch mode feature to make your builds [even more performant](/technologies/typescript/recipes/enable-tsc-batch-mode).
 
 ## Plugin Features
 

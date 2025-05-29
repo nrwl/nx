@@ -6,7 +6,7 @@ description: This guide explains how to set up Compodoc for Storybook on Angular
 # Set up Compodoc for Storybook on Nx
 
 {% callout type="note" title="Note" %}
-This documentation page contains information about the [Storybook plugin](/nx-api/storybook), specifically regarding [Angular projects that are using Storybook](/recipes/storybook/overview-angular).
+This documentation page contains information about the [Storybook plugin](/nx-api/storybook), specifically regarding [Angular projects that are using Storybook](/technologies/test-tools/storybook/recipes/overview-angular).
 {% /callout %}
 
 {% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/storybook-compodoc-angular" /%}
@@ -52,7 +52,7 @@ The main things that you need to do are:
 Let's see how you can do that.
 
 {% callout type="note" title="Note" %}
-This guide assumes that you have an Angular project with Storybook configured in your Nx workspace. If you do not know how to set these up, please read about [setting up Storybook for Angular](/recipes/storybook/overview-angular) on the Nx documentation website.
+This guide assumes that you have an Angular project with Storybook configured in your Nx workspace. If you do not know how to set these up, please read about [setting up Storybook for Angular](/technologies/test-tools/storybook/recipes/overview-angular) on the Nx documentation website.
 {% /callout %}
 
 ### 1. Install the necessary packages
@@ -129,7 +129,7 @@ make sure to also include
 
 for the components to be included in the TypeScript compilation as well.
 
-This applies in cases where, for example, you have [one single Storybook for your whole workspace](/recipes/storybook/one-storybook-for-all), where you import stories from all the projects. In that case, you need to import all the components as well!
+This applies in cases where, for example, you have [one single Storybook for your whole workspace](/technologies/test-tools/storybook/recipes/one-storybook-for-all), where you import stories from all the projects. In that case, you need to import all the components as well!
 {% /callout %}
 
 ### 3. Enable `compodoc` and configure it

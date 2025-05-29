@@ -22,6 +22,18 @@ describe('Run Commands', () => {
     jest.clearAllMocks();
   });
 
+  it('should handle empty commands array', async () => {
+    const result = await runCommands(
+      {
+        commands: [],
+        __unparsed__: [],
+      },
+      context
+    );
+    expect(result.success).toEqual(true);
+    expect(result.terminalOutput).toEqual('');
+  });
+
   it('should interpolate provided --args', async () => {
     const f = fileSync().name;
     const result = await runCommands(

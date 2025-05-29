@@ -72,8 +72,8 @@ export async function libraryGenerator(
   const project = await addProject(tree, libraryOptions);
 
   createFiles(tree, options, project);
-  updateTsConfigFiles(tree, libraryOptions);
   await addUnitTestRunner(tree, libraryOptions);
+  updateTsConfigFiles(tree, libraryOptions);
   updateNpmScopeIfBuildableOrPublishable(tree, libraryOptions);
   setGeneratorDefaults(tree, options);
 

@@ -10,30 +10,30 @@
 
 ### Constructors
 
-- [constructor](../../devkit/documents/StaleProjectGraphCacheError#constructor)
+- [constructor](/reference/core-api/devkit/documents/StaleProjectGraphCacheError#constructor)
 
 ### Properties
 
-- [cause](../../devkit/documents/StaleProjectGraphCacheError#cause): unknown
-- [message](../../devkit/documents/StaleProjectGraphCacheError#message): string
-- [name](../../devkit/documents/StaleProjectGraphCacheError#name): string
-- [stack](../../devkit/documents/StaleProjectGraphCacheError#stack): string
-- [prepareStackTrace](../../devkit/documents/StaleProjectGraphCacheError#preparestacktrace): Function
-- [stackTraceLimit](../../devkit/documents/StaleProjectGraphCacheError#stacktracelimit): number
+- [cause](/reference/core-api/devkit/documents/StaleProjectGraphCacheError#cause): unknown
+- [message](/reference/core-api/devkit/documents/StaleProjectGraphCacheError#message): string
+- [name](/reference/core-api/devkit/documents/StaleProjectGraphCacheError#name): string
+- [stack](/reference/core-api/devkit/documents/StaleProjectGraphCacheError#stack): string
+- [prepareStackTrace](/reference/core-api/devkit/documents/StaleProjectGraphCacheError#preparestacktrace): Function
+- [stackTraceLimit](/reference/core-api/devkit/documents/StaleProjectGraphCacheError#stacktracelimit): number
 
 ### Methods
 
-- [captureStackTrace](../../devkit/documents/StaleProjectGraphCacheError#capturestacktrace)
+- [captureStackTrace](/reference/core-api/devkit/documents/StaleProjectGraphCacheError#capturestacktrace)
 
 ## Constructors
 
 ### constructor
 
-• **new StaleProjectGraphCacheError**(): [`StaleProjectGraphCacheError`](../../devkit/documents/StaleProjectGraphCacheError)
+• **new StaleProjectGraphCacheError**(): [`StaleProjectGraphCacheError`](/reference/core-api/devkit/documents/StaleProjectGraphCacheError)
 
 #### Returns
 
-[`StaleProjectGraphCacheError`](../../devkit/documents/StaleProjectGraphCacheError)
+[`StaleProjectGraphCacheError`](/reference/core-api/devkit/documents/StaleProjectGraphCacheError)
 
 #### Overrides
 

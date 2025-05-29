@@ -99,7 +99,7 @@ export function PackageSchemaSubList({
 
             <Heading2 title={vm.heading} />
 
-            <p className="mb-16">
+            <p className="mb-8">
               Here is a list of all {vm.type}s available for this package.
             </p>
 

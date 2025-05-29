@@ -81,7 +81,7 @@ nx g @nx/nuxt:app apps/my-app
 
 Once you are ready to deploy your Nuxt application, you have absolute freedom to choose any hosting provider that fits your needs.
 
-We have detailed [how to deploy your Nuxt application to Vercel in a separate guide](/recipes/nuxt/deploy-nuxt-to-vercel).
+We have detailed [how to deploy your Nuxt application to Vercel in a separate guide](/technologies/vue/nuxt/recipes/deploy-nuxt-to-vercel).
 
 ### E2E testing
 

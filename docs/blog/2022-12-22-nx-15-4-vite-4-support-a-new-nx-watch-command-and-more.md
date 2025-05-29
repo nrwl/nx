@@ -38,7 +38,7 @@ We've also spent some effort into making the conversion of existing projects to 
 - enhanced `vite.config.ts` file configuration
 - better DX with detailed messages during conversion
 - [better documentation around converting using our generator](/nx-api/vite/generators/configuration)
-- [adding a guide to our docs for converting manually](/recipes/vite/configure-vite)
+- [adding a guide to our docs for converting manually](/technologies/build-tools/vite/recipes/configure-vite)
 
 You can check out more details about our Vite plugin including how to add Vite and Vitest to your existing Nx workspace by visiting our docs at [nx.dev/nx-api/vite](/nx-api/vite)
 
@@ -96,7 +96,7 @@ Our existing `host` and `remote` Module Federation generators have an added `--s
 
 We've also added a new executor to allow you to serve the host server locally, along with all remote servers from a single command.
 
-Learn more about this new feature [in our docs](/recipes/react/module-federation-with-ssr)!
+Learn more about this new feature [in our docs](/technologies/react/recipes/module-federation-with-ssr)!
 
 ## Running Multiple Targets in Parallel for Multiple Projects
 

@@ -6,7 +6,7 @@ description: Learn how to set up and use Cypress component testing in your Nx wo
 # Cypress Component Testing
 
 > Component testing requires Cypress v10 and above.
-> See our [guide for more information](/recipes/cypress/cypress-v11-migration) to migrate to Cypress v10.
+> See our [guide for more information](/technologies/test-tools/cypress/recipes/cypress-v11-migration) to migrate to Cypress v10.
 
 Unlike [E2E testing](/nx-api/cypress), component testing does not create a new project. Instead, Cypress component testing is added
 directly to a project, like [Jest](/nx-api/jest)
