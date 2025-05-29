@@ -170,57 +170,6 @@ export class DocumentsApi {
       this.manifest[this.getManifestKey(path.join('/'))] || null;
 
     if (!document) {
-      // Handle API docs paths now at /technologies/{pkg}/{category}/...
-      if (path[0] === 'technologies' && this.packagesManifest) {
-        const packageName = path[1];
-        const category = path[2]; // 'executors', 'generators', or 'migrations'
-
-        // Try to find the package in packagesManifest
-        const pkg = Object.values(this.packagesManifest).find(
-          (p) => p.name === packageName
-        );
-
-        if (pkg) {
-          // Check if the category exists
-          if (
-            category === 'executors' ||
-            category === 'generators' ||
-            category === 'migrations'
-          ) {
-            // Create the original nx-api path
-            // TODO(docs): We should update generate manifest script so we don't have to rebuild this path. We may also consider pushing this when we switch frameworks.
-            const targetSegment = path.slice(3).join('/');
-            const originalPath = `/nx-api/${packageName}/${category}/${targetSegment}`;
-
-            // Get the file metadata from the package
-            const fileMetadata = pkg[category][originalPath];
-
-            if (fileMetadata) {
-              try {
-                // Read the schema file
-                const schemaContent = JSON.parse(
-                  readFileSync(this.getFilePath(fileMetadata.file), 'utf-8')
-                );
-
-                return {
-                  content:
-                    fileMetadata.description || schemaContent.description || '',
-                  description:
-                    fileMetadata.description || schemaContent.description || '',
-                  filePath: this.getFilePath(fileMetadata.file),
-                  id: fileMetadata.name,
-                  name: fileMetadata.name,
-                  relatedDocuments: {},
-                  tags: [],
-                };
-              } catch (e) {
-                throw new Error(`Error reading schema file: ${e.message}`);
-              }
-            }
-          }
-        }
-      }
-
       // Legacy handler for devkit docs
       if (
         path[0] === 'nx-api' &&

@@ -88,7 +88,7 @@ function SchemaListItem({ file }: { file: FileMetadata }): JSX.Element {
       </div>
       <div className="ml-3 py-2">
         <p className="text-sm font-bold">
-          <Link href={file.newPath ?? file.path} className="focus:outline-none">
+          <Link href={file.path} className="focus:outline-none">
             <span className="absolute inset-0" aria-hidden="true"></span>
             {file.name}
           </Link>

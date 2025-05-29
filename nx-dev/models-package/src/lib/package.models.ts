@@ -12,8 +12,6 @@ export interface FileMetadata {
   name: string;
   originalFilePath: string;
   path: string;
-  // Migration to new structure under /technologies
-  newPath?: string;
   type: 'executor' | 'generator' | 'migration';
 }
 
@@ -67,8 +65,6 @@ export interface ProcessedPackageMetadata {
   name: string;
   packageName: string;
   path: string;
-  // Migration to new structure under /technologies
-  newPath?: string;
   root: string;
   source: string;
 }

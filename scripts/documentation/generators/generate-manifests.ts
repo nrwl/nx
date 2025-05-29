@@ -312,15 +312,8 @@ function getDocumentMenus(manifests: DocumentManifest[]): {
   menu: MenuItem[];
 }[] {
   return manifests.map((record) => {
-    // IMPORTANT: Only use top-level items to avoid duplicate menu entries
-    // The populateDictionary function adds all items (including nested children) to
-    // a flat dictionary. Without filtering, each nested item would appear both in
-    // its parent's children array AND as a separate top-level menu item. This was an issue
-    // for the extending-nx page, where the menu was showing the same item twice.
+    // TODO(docs): This shouldn't be needed, we should look into why we need this filter when it wasn't needed before
     const topLevelItems = Object.values(record.records).filter((item) => {
-      // Determine top-level items by analyzing path segments:
-      // - For root items (no prefix): path will have 1 segment (just the id)
-      // - For prefixed sections: path will have 2 segments (prefix + id)
       const pathSegments = item.path.split('/').filter(Boolean);
       return (
         pathSegments.length === 1 ||
@@ -430,6 +423,7 @@ function createNewPackagesManifest(packages: PackageMetadata[]): {
   return packagesManifest;
 }
 
+// TODO(docs): remove this function one smarter files are all updated to not reference and nx-api
 function createPackagesManifest(packages: PackageMetadata[]): {
   id: string;
   records: Record<string, ProcessedPackageMetadata>;
@@ -460,11 +454,6 @@ function createPackagesManifest(packages: PackageMetadata[]): {
         p.executors.map((e) => ({
           ...e,
           path: generatePath({ id: e.name, path: e.path }, 'nx-api'),
-          newPath: generatePath(
-            // package name is now in the prefix
-            { id: e.name, path: e.path.split('/').slice(1).join('/') },
-            `technologies/${p.name}/api`
-          ),
         })),
         'path'
       ),
@@ -472,11 +461,6 @@ function createPackagesManifest(packages: PackageMetadata[]): {
         p.generators.map((g) => ({
           ...g,
           path: generatePath({ id: g.name, path: g.path }, 'nx-api'),
-          newPath: generatePath(
-            // package name is now in the prefix
-            { id: g.name, path: g.path.split('/').slice(1).join('/') },
-            `technologies/${p.name}/api`
-          ),
         })),
         'path'
       ),
@@ -484,16 +468,10 @@ function createPackagesManifest(packages: PackageMetadata[]): {
         p.migrations.map((g) => ({
           ...g,
           path: generatePath({ id: g.name, path: g.path }, 'nx-api'),
-          newPath: generatePath(
-            // package name is now in the prefix
-            { id: g.name, path: g.path.split('/').slice(1).join('/') },
-            `technologies/${p.name}/api`
-          ),
         })),
         'path'
       ),
       path: generatePath({ id: p.name, path: '' }, 'nx-api'),
-      newPath: generatePath({ id: p.name, path: '' }, `technologies/${p.name}`),
     };
   });
 
