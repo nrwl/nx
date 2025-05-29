@@ -38,11 +38,11 @@ Note that the return value is a promise of an iterator, so you need to await bef
 
 #### Parameters
 
-| Name                | Type                                                        |
-| :------------------ | :---------------------------------------------------------- |
-| `targetDescription` | [`Target`](../../devkit/documents/Target)                   |
-| `overrides`         | `Object`                                                    |
-| `context`           | [`ExecutorContext`](../../devkit/documents/ExecutorContext) |
+| Name                | Type                                                                           |
+| :------------------ | :----------------------------------------------------------------------------- |
+| `targetDescription` | [`Target`](../../reference/core-api/devkit/documents/Target)                   |
+| `overrides`         | `Object`                                                                       |
+| `context`           | [`ExecutorContext`](../../reference/core-api/devkit/documents/ExecutorContext) |
 
 #### Returns
 

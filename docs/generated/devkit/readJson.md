@@ -12,11 +12,11 @@ Reads a json file, removes all comments and parses JSON.
 
 #### Parameters
 
-| Name       | Type                                                          | Description                 |
-| :--------- | :------------------------------------------------------------ | :-------------------------- |
-| `tree`     | [`Tree`](../../devkit/documents/Tree)                         | file system tree            |
-| `path`     | `string`                                                      | file path                   |
-| `options?` | [`JsonParseOptions`](../../devkit/documents/JsonParseOptions) | Optional JSON Parse Options |
+| Name       | Type                                                                             | Description                 |
+| :--------- | :------------------------------------------------------------------------------- | :-------------------------- |
+| `tree`     | [`Tree`](../../reference/core-api/devkit/documents/Tree)                         | file system tree            |
+| `path`     | `string`                                                                         | file path                   |
+| `options?` | [`JsonParseOptions`](../../reference/core-api/devkit/documents/JsonParseOptions) | Optional JSON Parse Options |
 
 #### Returns
 

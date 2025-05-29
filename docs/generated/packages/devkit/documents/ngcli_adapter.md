@@ -4,9 +4,9 @@
 
 ### Classes
 
-- [NxScopedHost](../../devkit/documents/ngcli_adapter/NxScopedHost)
+- [NxScopedHost](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost)
 
 ### Functions
 
-- [mockSchematicsForTesting](../../devkit/documents/ngcli_adapter/mockSchematicsForTesting)
-- [wrapAngularDevkitSchematic](../../devkit/documents/ngcli_adapter/wrapAngularDevkitSchematic)
+- [mockSchematicsForTesting](../../reference/core-api/devkit/documents/ngcli_adapter/mockSchematicsForTesting)
+- [wrapAngularDevkitSchematic](../../reference/core-api/devkit/documents/ngcli_adapter/wrapAngularDevkitSchematic)

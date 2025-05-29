@@ -4,38 +4,38 @@
 
 ### Properties
 
-- [hasher](../../devkit/documents/HasherContext#hasher): TaskHasher
-- [nxJsonConfiguration](../../devkit/documents/HasherContext#nxjsonconfiguration): NxJsonConfiguration<string[] | "\*">
-- [projectGraph](../../devkit/documents/HasherContext#projectgraph): ProjectGraph
-- [projectsConfigurations](../../devkit/documents/HasherContext#projectsconfigurations): ProjectsConfigurations
-- [taskGraph](../../devkit/documents/HasherContext#taskgraph): TaskGraph
+- [hasher](../../reference/core-api/devkit/documents/HasherContext#hasher): TaskHasher
+- [nxJsonConfiguration](../../reference/core-api/devkit/documents/HasherContext#nxjsonconfiguration): NxJsonConfiguration<string[] | "\*">
+- [projectGraph](../../reference/core-api/devkit/documents/HasherContext#projectgraph): ProjectGraph
+- [projectsConfigurations](../../reference/core-api/devkit/documents/HasherContext#projectsconfigurations): ProjectsConfigurations
+- [taskGraph](../../reference/core-api/devkit/documents/HasherContext#taskgraph): TaskGraph
 
 ## Properties
 
 ### hasher
 
-• **hasher**: [`TaskHasher`](../../devkit/documents/TaskHasher)
+• **hasher**: [`TaskHasher`](../../reference/core-api/devkit/documents/TaskHasher)
 
 ---
 
 ### nxJsonConfiguration
 
-• **nxJsonConfiguration**: [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)\<`string`[] \| `"*"`\>
+• **nxJsonConfiguration**: [`NxJsonConfiguration`](../../reference/core-api/devkit/documents/NxJsonConfiguration)\<`string`[] \| `"*"`\>
 
 ---
 
 ### projectGraph
 
-• **projectGraph**: [`ProjectGraph`](../../devkit/documents/ProjectGraph)
+• **projectGraph**: [`ProjectGraph`](../../reference/core-api/devkit/documents/ProjectGraph)
 
 ---
 
 ### projectsConfigurations
 
-• **projectsConfigurations**: [`ProjectsConfigurations`](../../devkit/documents/ProjectsConfigurations)
+• **projectsConfigurations**: [`ProjectsConfigurations`](../../reference/core-api/devkit/documents/ProjectsConfigurations)
 
 ---
 
 ### taskGraph
 
-• **taskGraph**: [`TaskGraph`](../../devkit/documents/TaskGraph)
+• **taskGraph**: [`TaskGraph`](../../reference/core-api/devkit/documents/TaskGraph)

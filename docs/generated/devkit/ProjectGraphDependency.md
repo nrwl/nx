@@ -6,9 +6,9 @@ A dependency between two projects
 
 ### Properties
 
-- [source](../../devkit/documents/ProjectGraphDependency#source): string
-- [target](../../devkit/documents/ProjectGraphDependency#target): string
-- [type](../../devkit/documents/ProjectGraphDependency#type): string
+- [source](../../reference/core-api/devkit/documents/ProjectGraphDependency#source): string
+- [target](../../reference/core-api/devkit/documents/ProjectGraphDependency#target): string
+- [type](../../reference/core-api/devkit/documents/ProjectGraphDependency#type): string
 
 ## Properties
 

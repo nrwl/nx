@@ -1,6 +1,6 @@
 # Function: readCachedProjectGraph
 
-▸ **readCachedProjectGraph**(`minimumComputedAt?`): [`ProjectGraph`](../../devkit/documents/ProjectGraph)
+▸ **readCachedProjectGraph**(`minimumComputedAt?`): [`ProjectGraph`](../../reference/core-api/devkit/documents/ProjectGraph)
 
 Synchronously reads the latest cached copy of the workspace's ProjectGraph.
 
@@ -12,7 +12,7 @@ Synchronously reads the latest cached copy of the workspace's ProjectGraph.
 
 #### Returns
 
-[`ProjectGraph`](../../devkit/documents/ProjectGraph)
+[`ProjectGraph`](../../reference/core-api/devkit/documents/ProjectGraph)
 
 **`Throws`**
 

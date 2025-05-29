@@ -1,10 +1,10 @@
 # Interface: CreateNodesContext
 
-Context for [CreateNodesFunction](../../devkit/documents/CreateNodesFunction)
+Context for [CreateNodesFunction](../../reference/core-api/devkit/documents/CreateNodesFunction)
 
 ## Hierarchy
 
-- [`CreateNodesContextV2`](../../devkit/documents/CreateNodesContextV2)
+- [`CreateNodesContextV2`](../../reference/core-api/devkit/documents/CreateNodesContextV2)
 
   ↳ **`CreateNodesContext`**
 
@@ -12,9 +12,9 @@ Context for [CreateNodesFunction](../../devkit/documents/CreateNodesFunction)
 
 ### Properties
 
-- [configFiles](../../devkit/documents/CreateNodesContext#configfiles): readonly string[]
-- [nxJsonConfiguration](../../devkit/documents/CreateNodesContext#nxjsonconfiguration): NxJsonConfiguration<string[] | "\*">
-- [workspaceRoot](../../devkit/documents/CreateNodesContext#workspaceroot): string
+- [configFiles](../../reference/core-api/devkit/documents/CreateNodesContext#configfiles): readonly string[]
+- [nxJsonConfiguration](../../reference/core-api/devkit/documents/CreateNodesContext#nxjsonconfiguration): NxJsonConfiguration<string[] | "\*">
+- [workspaceRoot](../../reference/core-api/devkit/documents/CreateNodesContext#workspaceroot): string
 
 ## Properties
 
@@ -28,11 +28,11 @@ The subset of configuration files which match the createNodes pattern
 
 ### nxJsonConfiguration
 
-• `Readonly` **nxJsonConfiguration**: [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)\<`string`[] \| `"*"`\>
+• `Readonly` **nxJsonConfiguration**: [`NxJsonConfiguration`](../../reference/core-api/devkit/documents/NxJsonConfiguration)\<`string`[] \| `"*"`\>
 
 #### Inherited from
 
-[CreateNodesContextV2](../../devkit/documents/CreateNodesContextV2).[nxJsonConfiguration](../../devkit/documents/CreateNodesContextV2#nxjsonconfiguration)
+[CreateNodesContextV2](../../reference/core-api/devkit/documents/CreateNodesContextV2).[nxJsonConfiguration](../../reference/core-api/devkit/documents/CreateNodesContextV2#nxjsonconfiguration)
 
 ---
 
@@ -42,4 +42,4 @@ The subset of configuration files which match the createNodes pattern
 
 #### Inherited from
 
-[CreateNodesContextV2](../../devkit/documents/CreateNodesContextV2).[workspaceRoot](../../devkit/documents/CreateNodesContextV2#workspaceroot)
+[CreateNodesContextV2](../../reference/core-api/devkit/documents/CreateNodesContextV2).[workspaceRoot](../../reference/core-api/devkit/documents/CreateNodesContextV2#workspaceroot)

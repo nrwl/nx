@@ -1,9 +1,9 @@
 # Type alias: CreateDependencies\<T\>
 
-Ƭ **CreateDependencies**\<`T`\>: (`options`: `T` \| `undefined`, `context`: [`CreateDependenciesContext`](../../devkit/documents/CreateDependenciesContext)) => [`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[] \| `Promise`\<[`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[]\>
+Ƭ **CreateDependencies**\<`T`\>: (`options`: `T` \| `undefined`, `context`: [`CreateDependenciesContext`](../../reference/core-api/devkit/documents/CreateDependenciesContext)) => [`RawProjectGraphDependency`](../../reference/core-api/devkit/documents/RawProjectGraphDependency)[] \| `Promise`\<[`RawProjectGraphDependency`](../../reference/core-api/devkit/documents/RawProjectGraphDependency)[]\>
 
-A function which parses files in the workspace to create dependencies in the [ProjectGraph](../../devkit/documents/ProjectGraph)
-Use [validateDependency](../../devkit/documents/validateDependency) to validate dependencies
+A function which parses files in the workspace to create dependencies in the [ProjectGraph](../../reference/core-api/devkit/documents/ProjectGraph)
+Use [validateDependency](../../reference/core-api/devkit/documents/validateDependency) to validate dependencies
 
 #### Type parameters
 
@@ -13,15 +13,15 @@ Use [validateDependency](../../devkit/documents/validateDependency) to validate 
 
 #### Type declaration
 
-▸ (`options`, `context`): [`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[] \| `Promise`\<[`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[]\>
+▸ (`options`, `context`): [`RawProjectGraphDependency`](../../reference/core-api/devkit/documents/RawProjectGraphDependency)[] \| `Promise`\<[`RawProjectGraphDependency`](../../reference/core-api/devkit/documents/RawProjectGraphDependency)[]\>
 
 ##### Parameters
 
-| Name      | Type                                                                            |
-| :-------- | :------------------------------------------------------------------------------ |
-| `options` | `T` \| `undefined`                                                              |
-| `context` | [`CreateDependenciesContext`](../../devkit/documents/CreateDependenciesContext) |
+| Name      | Type                                                                                               |
+| :-------- | :------------------------------------------------------------------------------------------------- |
+| `options` | `T` \| `undefined`                                                                                 |
+| `context` | [`CreateDependenciesContext`](../../reference/core-api/devkit/documents/CreateDependenciesContext) |
 
 ##### Returns
 
-[`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[] \| `Promise`\<[`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[]\>
+[`RawProjectGraphDependency`](../../reference/core-api/devkit/documents/RawProjectGraphDependency)[] \| `Promise`\<[`RawProjectGraphDependency`](../../reference/core-api/devkit/documents/RawProjectGraphDependency)[]\>

@@ -8,4 +8,4 @@
 
 ## Indexable
 
-▪ [key: `string`]: `T` \| [`ImplicitJsonSubsetDependency`](../../devkit/documents/ImplicitJsonSubsetDependency)\<`T`\>
+▪ [key: `string`]: `T` \| [`ImplicitJsonSubsetDependency`](../../reference/core-api/devkit/documents/ImplicitJsonSubsetDependency)\<`T`\>

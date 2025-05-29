@@ -6,11 +6,11 @@ Analogous to cp -r oldDir newDir
 
 #### Parameters
 
-| Name     | Type                                  |
-| :------- | :------------------------------------ |
-| `tree`   | [`Tree`](../../devkit/documents/Tree) |
-| `oldDir` | `string`                              |
-| `newDir` | `string`                              |
+| Name     | Type                                                     |
+| :------- | :------------------------------------------------------- |
+| `tree`   | [`Tree`](../../reference/core-api/devkit/documents/Tree) |
+| `oldDir` | `string`                                                 |
+| `newDir` | `string`                                                 |
 
 #### Returns
 

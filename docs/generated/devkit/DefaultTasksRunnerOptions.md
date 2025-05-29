@@ -4,17 +4,17 @@
 
 ### Properties
 
-- [batch](../../devkit/documents/DefaultTasksRunnerOptions#batch): boolean
-- [cacheDirectory](../../devkit/documents/DefaultTasksRunnerOptions#cachedirectory): string
-- [cacheableOperations](../../devkit/documents/DefaultTasksRunnerOptions#cacheableoperations): string[]
-- [cacheableTargets](../../devkit/documents/DefaultTasksRunnerOptions#cacheabletargets): string[]
-- [captureStderr](../../devkit/documents/DefaultTasksRunnerOptions#capturestderr): boolean
-- [lifeCycle](../../devkit/documents/DefaultTasksRunnerOptions#lifecycle): LifeCycle
-- [parallel](../../devkit/documents/DefaultTasksRunnerOptions#parallel): number
-- [remoteCache](../../devkit/documents/DefaultTasksRunnerOptions#remotecache): RemoteCache
-- [runtimeCacheInputs](../../devkit/documents/DefaultTasksRunnerOptions#runtimecacheinputs): string[]
-- [skipNxCache](../../devkit/documents/DefaultTasksRunnerOptions#skipnxcache): boolean
-- [skipRemoteCache](../../devkit/documents/DefaultTasksRunnerOptions#skipremotecache): boolean
+- [batch](../../reference/core-api/devkit/documents/DefaultTasksRunnerOptions#batch): boolean
+- [cacheDirectory](../../reference/core-api/devkit/documents/DefaultTasksRunnerOptions#cachedirectory): string
+- [cacheableOperations](../../reference/core-api/devkit/documents/DefaultTasksRunnerOptions#cacheableoperations): string[]
+- [cacheableTargets](../../reference/core-api/devkit/documents/DefaultTasksRunnerOptions#cacheabletargets): string[]
+- [captureStderr](../../reference/core-api/devkit/documents/DefaultTasksRunnerOptions#capturestderr): boolean
+- [lifeCycle](../../reference/core-api/devkit/documents/DefaultTasksRunnerOptions#lifecycle): LifeCycle
+- [parallel](../../reference/core-api/devkit/documents/DefaultTasksRunnerOptions#parallel): number
+- [remoteCache](../../reference/core-api/devkit/documents/DefaultTasksRunnerOptions#remotecache): RemoteCache
+- [runtimeCacheInputs](../../reference/core-api/devkit/documents/DefaultTasksRunnerOptions#runtimecacheinputs): string[]
+- [skipNxCache](../../reference/core-api/devkit/documents/DefaultTasksRunnerOptions#skipnxcache): boolean
+- [skipRemoteCache](../../reference/core-api/devkit/documents/DefaultTasksRunnerOptions#skipremotecache): boolean
 
 ## Properties
 
@@ -62,7 +62,7 @@
 
 ### remoteCache
 
-• `Optional` **remoteCache**: [`RemoteCache`](../../devkit/documents/RemoteCache)
+• `Optional` **remoteCache**: [`RemoteCache`](../../reference/core-api/devkit/documents/RemoteCache)
 
 ---
 

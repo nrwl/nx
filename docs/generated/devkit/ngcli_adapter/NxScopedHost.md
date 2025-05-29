@@ -10,41 +10,41 @@
 
 ### Constructors
 
-- [constructor](../../devkit/documents/ngcli_adapter/NxScopedHost#constructor)
+- [constructor](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#constructor)
 
 ### Properties
 
-- [\_delegate](../../devkit/documents/ngcli_adapter/NxScopedHost#_delegate): Host<any>
-- [\_root](../../devkit/documents/ngcli_adapter/NxScopedHost#_root): Path
-- [root](../../devkit/documents/ngcli_adapter/NxScopedHost#root): string
+- [\_delegate](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#_delegate): Host<any>
+- [\_root](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#_root): Path
+- [root](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#root): string
 
 ### Accessors
 
-- [capabilities](../../devkit/documents/ngcli_adapter/NxScopedHost#capabilities)
+- [capabilities](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#capabilities)
 
 ### Methods
 
-- [\_resolve](../../devkit/documents/ngcli_adapter/NxScopedHost#_resolve)
-- [delete](../../devkit/documents/ngcli_adapter/NxScopedHost#delete)
-- [exists](../../devkit/documents/ngcli_adapter/NxScopedHost#exists)
-- [isDirectory](../../devkit/documents/ngcli_adapter/NxScopedHost#isdirectory)
-- [isFile](../../devkit/documents/ngcli_adapter/NxScopedHost#isfile)
-- [list](../../devkit/documents/ngcli_adapter/NxScopedHost#list)
-- [mergeProjectConfiguration](../../devkit/documents/ngcli_adapter/NxScopedHost#mergeprojectconfiguration)
-- [read](../../devkit/documents/ngcli_adapter/NxScopedHost#read)
-- [readExistingAngularJson](../../devkit/documents/ngcli_adapter/NxScopedHost#readexistingangularjson)
-- [readJson](../../devkit/documents/ngcli_adapter/NxScopedHost#readjson)
-- [readMergedWorkspaceConfiguration](../../devkit/documents/ngcli_adapter/NxScopedHost#readmergedworkspaceconfiguration)
-- [rename](../../devkit/documents/ngcli_adapter/NxScopedHost#rename)
-- [stat](../../devkit/documents/ngcli_adapter/NxScopedHost#stat)
-- [watch](../../devkit/documents/ngcli_adapter/NxScopedHost#watch)
-- [write](../../devkit/documents/ngcli_adapter/NxScopedHost#write)
+- [\_resolve](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#_resolve)
+- [delete](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#delete)
+- [exists](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#exists)
+- [isDirectory](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#isdirectory)
+- [isFile](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#isfile)
+- [list](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#list)
+- [mergeProjectConfiguration](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#mergeprojectconfiguration)
+- [read](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#read)
+- [readExistingAngularJson](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#readexistingangularjson)
+- [readJson](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#readjson)
+- [readMergedWorkspaceConfiguration](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#readmergedworkspaceconfiguration)
+- [rename](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#rename)
+- [stat](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#stat)
+- [watch](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#watch)
+- [write](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#write)
 
 ## Constructors
 
 ### constructor
 
-• **new NxScopedHost**(`root`): [`NxScopedHost`](../../devkit/documents/ngcli_adapter/NxScopedHost)
+• **new NxScopedHost**(`root`): [`NxScopedHost`](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost)
 
 #### Parameters
 
@@ -54,7 +54,7 @@
 
 #### Returns
 
-[`NxScopedHost`](../../devkit/documents/ngcli_adapter/NxScopedHost)
+[`NxScopedHost`](../../reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost)
 
 #### Overrides
 

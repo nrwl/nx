@@ -1,18 +1,18 @@
 # Type alias: CustomHasher
 
-Ƭ **CustomHasher**: (`task`: [`Task`](../../devkit/documents/Task), `context`: [`HasherContext`](../../devkit/documents/HasherContext)) => `Promise`\<[`Hash`](../../devkit/documents/Hash)\>
+Ƭ **CustomHasher**: (`task`: [`Task`](../../reference/core-api/devkit/documents/Task), `context`: [`HasherContext`](../../reference/core-api/devkit/documents/HasherContext)) => `Promise`\<[`Hash`](../../reference/core-api/devkit/documents/Hash)\>
 
 #### Type declaration
 
-▸ (`task`, `context`): `Promise`\<[`Hash`](../../devkit/documents/Hash)\>
+▸ (`task`, `context`): `Promise`\<[`Hash`](../../reference/core-api/devkit/documents/Hash)\>
 
 ##### Parameters
 
-| Name      | Type                                                    |
-| :-------- | :------------------------------------------------------ |
-| `task`    | [`Task`](../../devkit/documents/Task)                   |
-| `context` | [`HasherContext`](../../devkit/documents/HasherContext) |
+| Name      | Type                                                                       |
+| :-------- | :------------------------------------------------------------------------- |
+| `task`    | [`Task`](../../reference/core-api/devkit/documents/Task)                   |
+| `context` | [`HasherContext`](../../reference/core-api/devkit/documents/HasherContext) |
 
 ##### Returns
 
-`Promise`\<[`Hash`](../../devkit/documents/Hash)\>
+`Promise`\<[`Hash`](../../reference/core-api/devkit/documents/Hash)\>

@@ -4,11 +4,11 @@
 
 #### Parameters
 
-| Name                  | Type                                  |
-| :-------------------- | :------------------------------------ |
-| `tree`                | [`Tree`](../../devkit/documents/Tree) |
-| `options`             | `Object`                              |
-| `options.projectRoot` | `string`                              |
+| Name                  | Type                                                     |
+| :-------------------- | :------------------------------------------------------- |
+| `tree`                | [`Tree`](../../reference/core-api/devkit/documents/Tree) |
+| `options`             | `Object`                                                 |
+| `options.projectRoot` | `string`                                                 |
 
 #### Returns
 

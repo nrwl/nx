@@ -2,14 +2,14 @@
 
 ▸ **validateDependency**(`dependency`, `ctx`): `void`
 
-A function to validate dependencies in a [CreateDependencies](../../devkit/documents/CreateDependencies) function
+A function to validate dependencies in a [CreateDependencies](../../reference/core-api/devkit/documents/CreateDependencies) function
 
 #### Parameters
 
-| Name         | Type                                                                            |
-| :----------- | :------------------------------------------------------------------------------ |
-| `dependency` | [`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency) |
-| `ctx`        | [`CreateDependenciesContext`](../../devkit/documents/CreateDependenciesContext) |
+| Name         | Type                                                                                               |
+| :----------- | :------------------------------------------------------------------------------------------------- |
+| `dependency` | [`RawProjectGraphDependency`](../../reference/core-api/devkit/documents/RawProjectGraphDependency) |
+| `ctx`        | [`CreateDependenciesContext`](../../reference/core-api/devkit/documents/CreateDependenciesContext) |
 
 #### Returns
 
