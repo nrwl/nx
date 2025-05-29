@@ -399,14 +399,14 @@
       }
     },
     "migrations": {
-      "/technologies/angular/api/migrations/update-angular-cli-version-20-0-0-rc-4": {
-        "description": "Update the @angular/cli package version to 20.0.0-rc.4.",
-        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-0-0-rc-4.json",
+      "/technologies/angular/api/migrations/update-angular-cli-version-20-0-0": {
+        "description": "Update the @angular/cli package version to ~20.0.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-0-0.json",
         "hidden": false,
-        "name": "update-angular-cli-version-20-0-0-rc-4",
+        "name": "update-angular-cli-version-20-0-0",
         "version": "21.2.0-beta.2",
         "originalFilePath": "/packages/angular",
-        "path": "/technologies/angular/api/migrations/update-angular-cli-version-20-0-0-rc-4",
+        "path": "/technologies/angular/api/migrations/update-angular-cli-version-20-0-0",
         "type": "migration"
       },
       "/technologies/angular/api/migrations/migrate-provide-server-rendering-import": {

@@ -1,7 +1,7 @@
 {
   "name": "set-generator-defaults-for-previous-style-guide",
   "version": "21.2.0-beta.2",
-  "requires": { "@angular/core": ">=20.0.0-rc.2" },
+  "requires": { "@angular/core": ">=20.0.0" },
   "description": "Update the generator defaults to maintain the previous style guide behavior.",
   "factory": "./src/migrations/update-21-2-0/set-generator-defaults-for-previous-style-guide",
   "implementation": "/packages/angular/src/migrations/update-21-2-0/set-generator-defaults-for-previous-style-guide.ts",
