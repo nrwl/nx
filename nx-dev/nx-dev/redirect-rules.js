@@ -1234,13 +1234,14 @@ const tmpTerminalUiRedirects = {
 
 const nxApiRedirects = {
   // Reference
-  // NOTE: leaving nx/documents out for now since there is some handling for Devkit APIs that aren't working yet in the new structure.
+  // NOTE: leaving devkit out for now since there is some handling for Devkit APIs that aren't working yet in the new structure.
   // TODO(docs): handling devkit APIs and include it in redirects
-  '/nx-api/nx/executors/:slug*': '/reference/core-api/nx/executors/:slug*',
+  '/nx-api/devkit/executors/:slug*':
+    '/reference/core-api/devkit/executors/:slug*',
   '/nx-api/nx/generators/:slug*': '/reference/core-api/nx/generators/:slug*',
   '/nx-api/nx/migrations/:slug*': '/reference/core-api/nx/migrations/:slug*',
+  '/nx-api/nx/:slug*': '/reference/core-api/nx/:slug*',
   '/nx-api/workspace/:slug*': '/reference/core-api/workspace/:slug*',
-  '/nx-api/devkit/:slug*': '/reference/core-api/devkit/:slug*',
   '/nx-api/plugin/:slug*': '/reference/core-api/plugin/:slug*',
   '/nx-api/web/:slug*': '/reference/core-api/web/:slug*',
   '/nx-api/azure-cache/:slug*': '/reference/core-api/azure-cache/:slug*',
