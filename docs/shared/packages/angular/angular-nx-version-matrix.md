@@ -50,7 +50,7 @@ Additionally, you can check the supported versions of Node and Typescript for th
 
 ## Nx and Angular Rspack Version Compatibility Matrix
 
-Below is a reference table that matches versions of [Angular Rspack](/recipes/angular/rspack/introduction) to the versions of Angular and Nx that is compatible with it.
+Below is a reference table that matches versions of [Angular Rspack](/technologies/angular/angular-rspack/introduction) to the versions of Angular and Nx that is compatible with it.
 
 | Angular Rspack | Angular     | Nx                  |
 | -------------- | ----------- | ------------------- |

@@ -39,11 +39,11 @@ If you are on a project using Angular, React or React Native, you can also gener
 
 If your project is not configured yet, check out one of these guides:
 
-- [Set up Storybook for React (and Next.js) Projects](/recipes/storybook/overview-react)
+- [Set up Storybook for React (and Next.js) Projects](/technologies/test-tools/storybook/recipes/overview-react)
 
-- [Set up Storybook for Angular Projects](/recipes/storybook/overview-angular)
+- [Set up Storybook for Angular Projects](/technologies/test-tools/storybook/recipes/overview-angular)
 
-- [Set up Storybook for Vue Projects](/recipes/storybook/overview-vue)
+- [Set up Storybook for Vue Projects](/technologies/test-tools/storybook/recipes/overview-vue)
 
 If your project is [already configured](/nx-api/storybook), you can use the `stories` generator:
 
@@ -61,7 +61,7 @@ The stories generator will read your inputs (if you’re using Angular), or your
 
 [Storybook interaction tests](https://storybook.js.org/docs/react/writing-tests/interaction-testing) allow you to test user interactions within your Storybook stories. It enhances your [Storybook](https://storybook.js.org/) setup, ensuring that not only do your components look right, but they also work correctly when interacted with.
 
-Nx will generate interaction tests for your stories. You can read more in our [Setting up Storybook Interaction Tests with Nx guide](/recipes/storybook/storybook-interaction-tests).
+Nx will generate interaction tests for your stories. You can read more in our [Setting up Storybook Interaction Tests with Nx guide](/technologies/test-tools/storybook/recipes/storybook-interaction-tests).
 
 ### CI/CD tools
 
@@ -126,7 +126,7 @@ You can think of the central Storybook container as a grouping of similar-concep
 Then, according to your use-case, you can have one central Storybook for your whole workspace, importing all the stories from all the projects. Alternatively, you can have one Storybook per "scope", which imports all the stories from projects the same scope. Or even one Storybook per application, importing all the stories of all the libraries that it is depending on. As you can see, there are many options, and you can choose the one that best suits your needs.
 
 {% callout type="note" title="Storybook Composition" %}
-In order to achieve some things mentioned above, you may use [Storybook Composition](/recipes/storybook/storybook-composition-setup). However, in this case, you would still need to build each project’s Storybook individually, and also deploy it individually. So in the cases where you have multiple projects, Storybook Composition would not be very efficient.
+In order to achieve some things mentioned above, you may use [Storybook Composition](/technologies/test-tools/storybook/recipes/storybook-composition-setup). However, in this case, you would still need to build each project’s Storybook individually, and also deploy it individually. So in the cases where you have multiple projects, Storybook Composition would not be very efficient.
 {% /callout %}
 
 Before moving on to the examples section, it could be useful to read the [Library Types](/concepts/decisions/project-dependency-rules) documentation page and the [Grouping libraries](/concepts/decisions/folder-structure) documentation page. These could help you decide which way fits your use case better.
@@ -135,9 +135,9 @@ Before moving on to the examples section, it could be useful to read the [Librar
 
 You can check out the following examples (recipes) to see publishing strategies for Storybook in Nx:
 
-- [One main Storybook instance for all projects](/recipes/storybook/one-storybook-for-all)
-- [One Storybook instance per scope](/recipes/storybook/one-storybook-per-scope)
-- [One main Storybook instance using Storybook Composition](/recipes/storybook/one-storybook-with-composition)
+- [One main Storybook instance for all projects](/technologies/test-tools/storybook/recipes/one-storybook-for-all)
+- [One Storybook instance per scope](/technologies/test-tools/storybook/recipes/one-storybook-per-scope)
+- [One main Storybook instance using Storybook Composition](/technologies/test-tools/storybook/recipes/one-storybook-with-composition)
 
 ## Conclusion
 

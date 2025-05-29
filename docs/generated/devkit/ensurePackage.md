@@ -4,14 +4,14 @@
 
 #### Parameters
 
-| Name                      | Type                                  | Description                                                        |
-| :------------------------ | :------------------------------------ | :----------------------------------------------------------------- |
-| `tree`                    | [`Tree`](../../devkit/documents/Tree) | the file system tree                                               |
-| `pkg`                     | `string`                              | the package to check (e.g. @nx/jest)                               |
-| `requiredVersion`         | `string`                              | the version or semver range to check (e.g. ~1.0.0, >=1.0.0 <2.0.0) |
-| `options?`                | `Object`                              | -                                                                  |
-| `options.dev?`            | `boolean`                             | -                                                                  |
-| `options.throwOnMissing?` | `boolean`                             | -                                                                  |
+| Name                      | Type                                                | Description                                                        |
+| :------------------------ | :-------------------------------------------------- | :----------------------------------------------------------------- |
+| `tree`                    | [`Tree`](/reference/core-api/devkit/documents/Tree) | the file system tree                                               |
+| `pkg`                     | `string`                                            | the package to check (e.g. @nx/jest)                               |
+| `requiredVersion`         | `string`                                            | the version or semver range to check (e.g. ~1.0.0, >=1.0.0 <2.0.0) |
+| `options?`                | `Object`                                            | -                                                                  |
+| `options.dev?`            | `boolean`                                           | -                                                                  |
+| `options.throwOnMissing?` | `boolean`                                           | -                                                                  |
 
 #### Returns
 

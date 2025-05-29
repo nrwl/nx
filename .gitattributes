@@ -7,3 +7,5 @@
 # These are Windows script files and should use crlf
 *.bat           text eol=crlf
 
+# Exclude files from Graphite reviews
+docs/generated/* linguist-generated=true

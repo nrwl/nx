@@ -11,7 +11,7 @@ Read our [Using Storybook in a Nx workspace - Best practices](/nx-api/storybook/
 
 Nx does not generate a root Storybook directory and shared root Storybook configurations. Instead, it only generates a Storybook configuration for each project in your workspace. You may still manually create a root Storybook configuration file, if it is needed for your use case.
 
-You can read all about creating and using a root Storybook configuration in our guide [How to configure Webpack and Vite for Storybook](/recipes/storybook/custom-builder-configs).
+You can read all about creating and using a root Storybook configuration in our guide [How to configure Webpack and Vite for Storybook](/technologies/test-tools/storybook/recipes/custom-builder-configs).
 
 This change means that each of your projects that has Storybook configured has only one, project-level, project-specific `.storybook/main.js|ts` file that it relies on, without importing settings from external files. This simplifies the configuration process, makes it easier for the user to understand the configuration that each project is using, and also makes it easier to maintain, relying on automatic migration scripts, for example.
 
