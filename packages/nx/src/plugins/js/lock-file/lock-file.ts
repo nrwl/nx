@@ -171,7 +171,7 @@ export function getLockFileName(packageManager: PackageManager): string {
     return NPM_LOCK_FILE;
   }
   if (packageManager === 'bun') {
-    return BUN_LOCK_FILE;
+    return isBunTextLockFile() ? BUN_TEXT_LOCK_FILE : BUN_LOCK_FILE;
   }
   throw new Error(`Unknown package manager: ${packageManager}`);
 }
@@ -187,18 +187,19 @@ function getLockFilePath(packageManager: PackageManager): string {
     return NPM_LOCK_PATH;
   }
   if (packageManager === 'bun') {
-    try {
-      const bunVersion = execSync('bun --version').toString().trim();
-      // In version 1.2.0, bun switched to a text based lockfile format by default
-      if (gte(bunVersion, '1.2.0')) {
-        return BUN_TEXT_LOCK_FILE;
-      }
-      return BUN_LOCK_PATH;
-    } catch {
-      return BUN_LOCK_PATH;
-    }
+    return isBunTextLockFile() ? BUN_TEXT_LOCK_FILE : BUN_LOCK_PATH;
   }
   throw new Error(`Unknown package manager: ${packageManager}`);
+}
+
+function isBunTextLockFile() {
+  try {
+    const bunVersion = execSync('bun --version').toString().trim();
+    // In version 1.2.0, bun switched to a text based lockfile format by default
+    return gte(bunVersion, '1.2.0');
+  } catch {
+    return false;
+  }
 }
 
 /**
