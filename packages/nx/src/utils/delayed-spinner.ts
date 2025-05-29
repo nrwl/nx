@@ -1,4 +1,4 @@
-import * as ora from 'ora';
+import { createSpinner, type Spinner } from 'nanospinner';
 import { isCI } from './is-ci';
 
 export type DelayedSpinnerOptions = {
@@ -13,7 +13,7 @@ export type DelayedSpinnerOptions = {
  * takes longer than a certain amount of time.
  */
 export class DelayedSpinner {
-  spinner: ora.Ora;
+  spinner: Spinner;
   timeouts: NodeJS.Timeout[] = [];
 
   private lastMessage: string;
@@ -35,7 +35,7 @@ export class DelayedSpinner {
         if (!SHOULD_SHOW_SPINNERS) {
           console.warn(this.lastMessage);
         } else {
-          this.spinner = ora(this.lastMessage).start();
+          this.spinner = createSpinner(this.lastMessage).start();
         }
       }, delay).unref()
     );
@@ -50,7 +50,7 @@ export class DelayedSpinner {
   setMessage(message: string) {
     if (SHOULD_SHOW_SPINNERS) {
       if (this.spinner) {
-        this.spinner.text = message;
+        this.spinner.write(message);
       }
     } else if (this.ready && this.lastMessage && this.lastMessage !== message) {
       console.warn(message);
