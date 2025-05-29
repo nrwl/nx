@@ -8,7 +8,7 @@
   },
   "packages": {
     "angular-eslint": {
-      "version": "^20.0.0-alpha.0",
+      "version": "^20.0.0-alpha.1",
       "alwaysAddToPackageJson": false
     }
   },
