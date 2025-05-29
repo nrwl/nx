@@ -903,6 +903,9 @@ importers:
       nx:
         specifier: 21.2.0-beta.1
         version: 21.2.0-beta.1(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.21)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))
+      nx-mcp:
+        specifier: ^0.0.9
+        version: 0.0.9
       octokit:
         specifier: ^2.0.14
         version: 2.1.0(encoding@0.1.13)
@@ -15377,6 +15380,10 @@ packages:
 
   nwsapi@2.2.12:
     resolution: {integrity: sha512-qXDmcVlZV4XRtKFzddidpfVP4oMSGhga+xdMc25mv8kaLUHtgzCDhUxkrN8exkGdTlLNaXj7CV3GtON7zuGZ+w==}
+
+  nx-mcp@0.0.9:
+    resolution: {integrity: sha512-MtwJnHABkxiJG+cgSmrfS8u4xuy4g09lhRrOY/dbg91ajgvcHYEUNv3DArX+0ULiUWOFOTfIqd3yDp9rIzRmHw==}
+    hasBin: true
 
   nx@21.2.0-beta.1:
     resolution: {integrity: sha512-g/TarsaRChAcDjWmQhR7Tbz5SVXBSBHYmkQj+ZcuQXvPVIHCcbXYPbDe63gPfXqI5YEGiXaIrUuF2yRMmeWYsA==}
@@ -39754,6 +39761,8 @@ snapshots:
       - xml2js
 
   nwsapi@2.2.12: {}
+
+  nx-mcp@0.0.9: {}
 
   nx@21.2.0-beta.1(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.21)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)):
     dependencies:
