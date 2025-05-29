@@ -191,7 +191,7 @@ server.tool(
 );
 ```
 
-There are a two key differences in this tool definition:
+There are two key differences in this tool definition:
 
 - We've passed a description string as the second argument. You can do this for every tool in order to describe what to use it for and what will happen when the agent calls it. `cast-spell` is sort of self-explanatory but it's still good practice to add a description and increase the model's chances of picking the right tool for the job. You can even add more annotations to mark a tool as read-only, destructive or more.
 - We've passed an object that defines the shape of the input using [`zod`](https://zod.dev/). This lets the agent know how to structure the inputs that are passed to the tool. `ingredients` and `incantations` as arrays of strings aren't very complicated, but you could also add descriptions to each individual option to explain what it does. The full feature set of `zod` is available to define exactly what's possible with each tool.
