@@ -1,0 +1,21 @@
+{
+  "name": "21.2.0-package-updates",
+  "version": "21.2.0-beta.2",
+  "packages": {
+    "@analogjs/vite-plugin-angular": {
+      "version": "~1.17.0",
+      "alwaysAddToPackageJson": false
+    },
+    "@analogjs/vitest-angular": {
+      "version": "~1.17.0",
+      "alwaysAddToPackageJson": false
+    }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/vite",
+  "schema": null,
+  "type": "migration"
+}
