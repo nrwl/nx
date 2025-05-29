@@ -19,7 +19,7 @@ jobs:
       NX_E2E_CI_CACHE_KEY: e2e-github-linux
       NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
-      NX_VERBOSE_LOGGING: 'false'
+      NX_VERBOSE_LOGGING: 'true'
       NX_NATIVE_LOGGING: 'false'
       NX_E2E_RUN_E2E: 'true'
       NX_CI_EXECUTION_ENV: 'linux'
