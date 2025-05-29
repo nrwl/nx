@@ -19,7 +19,7 @@
   },
   "nxCloudId": "6810b7447beee15fcea96208",
   "targetDefaults": {
-    "@angular-devkit/build-angular:application": {
+    "@angular/build:application": {
       "cache": true,
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
@@ -51,6 +51,15 @@
     }
   },
   "plugins": [
+    {
+      "plugin": "@nx/cypress/plugin",
+      "options": {
+        "targetName": "e2e",
+        "openTargetName": "open-cypress",
+        "componentTestingTargetName": "component-test",
+        "ciTargetName": "e2e-ci"
+      }
+    },
     {
       "plugin": "@nx/eslint/plugin",
       "options": {
