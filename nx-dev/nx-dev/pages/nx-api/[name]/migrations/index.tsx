@@ -1,6 +1,5 @@
-import { getPackagesSections } from '@nx/nx-dev/data-access-menu';
-import { sortCorePackagesFirst } from '@nx/nx-dev/data-access-packages';
-import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
+import { getBasicNxSection } from '@nx/nx-dev/data-access-menu';
+import { Menu, MenuItem } from '@nx/nx-dev/models-menu';
 import {
   MigrationMetadata,
   ProcessedPackageMetadata,
@@ -26,10 +25,7 @@ export default function GeneratorsIndex({
 
   const vm: { menu: Menu; package: ProcessedPackageMetadata } = {
     menu: {
-      sections: sortCorePackagesFirst<MenuSection>(
-        getPackagesSections(menu),
-        'id'
-      ),
+      sections: [getBasicNxSection(menu)],
     },
     package: pkg,
   };

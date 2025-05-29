@@ -1,9 +1,8 @@
 import { DocumentsApi } from '@nx/nx-dev/data-access-documents/node-only';
-import { getPackagesSections } from '@nx/nx-dev/data-access-menu';
-import { sortCorePackagesFirst } from '@nx/nx-dev/data-access-packages';
+import { getBasicNxSection } from '@nx/nx-dev/data-access-menu';
 import { DocViewer } from '@nx/nx-dev/feature-doc-viewer';
 import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev/models-document';
-import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
+import { Menu, MenuItem } from '@nx/nx-dev/models-menu';
 import { ProcessedPackageMetadata } from '@nx/nx-dev/models-package';
 import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
 import { GetStaticPaths } from 'next';
@@ -34,12 +33,7 @@ export default function PackageDocument({
     relatedDocuments: RelatedDocument[];
   } = {
     document,
-    menu: {
-      sections: sortCorePackagesFirst<MenuSection>(
-        getPackagesSections(menu),
-        'id'
-      ),
-    },
+    menu: { sections: [getBasicNxSection(menu)] },
     relatedDocuments,
   };
 
