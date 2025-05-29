@@ -225,7 +225,7 @@ Learn more about the advantages of Nx in the following guides:
 - [Computation Caching](/concepts/how-caching-works)
 - [Rebuilding and Retesting What is Affected](/ci/features/affected)
 - [Integrate with Editors](/getting-started/editor-setup)
-- [Advanced Angular Micro Frontends with Dynamic Module Federation](/recipes/angular/dynamic-module-federation-with-angular)
+- [Advanced Angular Micro Frontends with Dynamic Module Federation](/technologies/angular/recipes/dynamic-module-federation-with-angular)
 
 ## From Nx Console
 
@@ -242,6 +242,6 @@ Once the script has run, commit the changes. Reverting this commit will effectiv
 
 {% card title="Nx and the Angular CLI" description="Differences between Nx and the Angular CLI" type="documentation" url="/nx-api/angular/documents/nx-and-angular" /%}
 
-{% card title="Multiple Angular Repositories to one Nx Workspace" description="Combine multiple Angular CLI workspaces into one Nx workspace" type="documentation" url="/recipes/angular/migration/angular-multiple" /%}
+{% card title="Multiple Angular Repositories to one Nx Workspace" description="Combine multiple Angular CLI workspaces into one Nx workspace" type="documentation" url="technologies/angular/migration/angular-multiple" /%}
 
 {% /cards %}

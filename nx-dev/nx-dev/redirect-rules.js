@@ -1232,6 +1232,56 @@ const tmpTerminalUiRedirects = {
   '/terminal-ui': '/recipes/running-tasks/terminal-ui',
 };
 
+const nxApiRedirects = {
+  // Reference
+  // NOTE: leaving devkit out for now since there is some handling for Devkit APIs that aren't working yet in the new structure.
+  '/nx-api/devkit/:slug*': '/reference/core-api/devkit/:slug*',
+  '/nx-api/nx/:slug*': '/reference/core-api/nx/:slug*',
+  '/nx-api/workspace/:slug*': '/reference/core-api/workspace/:slug*',
+  '/nx-api/plugin/:slug*': '/reference/core-api/plugin/:slug*',
+  '/nx-api/web/:slug*': '/reference/core-api/web/:slug*',
+  '/nx-api/azure-cache/:slug*': '/reference/core-api/azure-cache/:slug*',
+  '/nx-api/conformance/:slug*': '/reference/core-api/conformance/:slug*',
+  '/nx-api/owners/:slug*': '/reference/core-api/owners/:slug*',
+  '/nx-api/gcs-cache/:slug*': '/reference/core-api/gcs-cache/:slug*',
+  '/nx-api/s3-cache/:slug*': '/reference/core-api/s3-cache/:slug*',
+  '/nx-api/shared-fs-cache/:slug*':
+    '/reference/core-api/shared-fs-cache/:slug*',
+  '/nx-api/create-nx-plugin/:slug*':
+    '/reference/core-api/create-nx-plugin/:slug*',
+  '/nx-api/create-nx-workspace/:slug*':
+    '/reference/core-api/create-nx-workspace/:slug*',
+  // Technologies
+  '/nx-api/angular/:slug*': '/technologies/angular/api/:slug*',
+  '/nx-api/react/:slug*': '/technologies/react/api/:slug*',
+  '/nx-api/react-native/:slug*': '/technologies/react-native/api/:slug*',
+  '/nx-api/vue/:slug*': '/technologies/vue/api/:slug*',
+  '/nx-api/next/:slug*': '/technologies/next/api/:slug*',
+  '/nx-api/remix/:slug*': '/technologies/remix/api/:slug*',
+  '/nx-api/nuxt/:slug*': '/technologies/nuxt/api/:slug*',
+  '/nx-api/expo/:slug*': '/technologies/expo/api/:slug*',
+  '/nx-api/nest/:slug*': '/technologies/nest/api/:slug*',
+  '/nx-api/express/:slug*': '/technologies/express/api/:slug*',
+  '/nx-api/node/:slug*': '/technologies/node/api/:slug*',
+  '/nx-api/webpack/:slug*': '/technologies/webpack/api/:slug*',
+  '/nx-api/vite/:slug*': '/technologies/vite/api/:slug*',
+  '/nx-api/rollup/:slug*': '/technologies/rollup/api/:slug*',
+  '/nx-api/esbuild/:slug*': '/technologies/esbuild/api/:slug*',
+  '/nx-api/rspack/:slug*': '/technologies/rspack/api/:slug*',
+  '/nx-api/rsbuild/:slug*': '/technologies/rsbuild/api/:slug*',
+  '/nx-api/cypress/:slug*': '/technologies/cypress/api/:slug*',
+  '/nx-api/jest/:slug*': '/technologies/jest/api/:slug*',
+  '/nx-api/playwright/:slug*': '/technologies/playwright/api/:slug*',
+  '/nx-api/storybook/:slug*': '/technologies/storybook/api/:slug*',
+  '/nx-api/detox/:slug*': '/technologies/detox/api/:slug*',
+  '/nx-api/js/:slug*': '/technologies/typescript/api/:slug*',
+  '/nx-api/gradle/:slug*': '/technologies/java/api/:slug*',
+  '/nx-api/eslint/:slug*': '/technologies/eslint/api/:slug*',
+  '/nx-api/eslint-plugin/:slug*': '/technologies/eslint-plugin/api/:slug*',
+  '/nx-api/module-federation/:slug*':
+    '/technologies/module-federation/api/:slug*',
+};
+
 /**
  * Public export API
  */
@@ -1269,4 +1319,5 @@ module.exports = {
   manualDTEUpdate,
   powerpackRedirects,
   tmpTerminalUiRedirects,
+  nxApiRedirects,
 };

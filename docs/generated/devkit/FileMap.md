@@ -4,17 +4,17 @@
 
 ### Properties
 
-- [nonProjectFiles](../../devkit/documents/FileMap#nonprojectfiles): FileData[]
-- [projectFileMap](../../devkit/documents/FileMap#projectfilemap): ProjectFileMap
+- [nonProjectFiles](/reference/core-api/devkit/documents/FileMap#nonprojectfiles): FileData[]
+- [projectFileMap](/reference/core-api/devkit/documents/FileMap#projectfilemap): ProjectFileMap
 
 ## Properties
 
 ### nonProjectFiles
 
-• **nonProjectFiles**: [`FileData`](../../devkit/documents/FileData)[]
+• **nonProjectFiles**: [`FileData`](/reference/core-api/devkit/documents/FileData)[]
 
 ---
 
 ### projectFileMap
 
-• **projectFileMap**: [`ProjectFileMap`](../../devkit/documents/ProjectFileMap)
+• **projectFileMap**: [`ProjectFileMap`](/reference/core-api/devkit/documents/ProjectFileMap)

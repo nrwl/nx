@@ -15,7 +15,7 @@ In order to share a module, it must be _federated_. This means that the module m
 
 {% callout type="info" title="Assumption" %}
 With this recipe we assume that you have already created a workspace with at least one React or Angular Module Federation host application.
-If you haven't, you can follow the [Create a Host Recipe](/recipes/module-federation/create-a-host).
+If you haven't, you can follow the [Create a Host Recipe](/technologies/module-federation/recipes/create-a-host).
 {% /callout %}
 
 ## Step 1: Create the module

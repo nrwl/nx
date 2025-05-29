@@ -1178,8 +1178,8 @@ Here's some things you can dive into next:
 
 - Learn more about the [underlying mental model of Nx](/concepts/mental-model)
 - Learn how to [migrate your React app to Nx](/recipes/adopting-nx/adding-to-existing-project)
-- [Learn how to setup Tailwind](/recipes/react/using-tailwind-css-in-react)
-- [Setup Storybook for our shared UI library](/recipes/storybook/overview-react)
+- [Learn how to setup Tailwind](/technologies/react/recipes/using-tailwind-css-in-react)
+- [Setup Storybook for our shared UI library](/technologies/test-tools/storybook/recipes/overview-react)
 
 Also, make sure you
 

@@ -8,15 +8,24 @@ import {
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
 import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
+import { iconsMap } from '@nx/nx-dev/ui-references';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { createRef, Fragment, useCallback, useEffect, useState } from 'react';
+import {
+  createRef,
+  Fragment,
+  type JSX,
+  useCallback,
+  useRef,
+  useState,
+} from 'react';
 import { NxIcon } from '@nx/nx-dev/ui-icons';
 
 export interface SidebarProps {
   menu: Menu;
 }
+
 export interface FloatingSidebarProps {
   menu: Menu;
   navIsOpen: boolean;
@@ -31,37 +40,29 @@ export function Sidebar({ menu }: SidebarProps): JSX.Element {
         data-testid="navigation"
         className="pb-4 text-base lg:text-sm"
       >
-        {menu.sections.map((section, index) => (
-          <SidebarSection key={section.id + '-' + index} section={section} />
-        ))}
+        {menu.sections.map((section, index) => {
+          return (
+            <SidebarSection key={section.id + '-' + index} section={section} />
+          );
+        })}
       </nav>
     </div>
   );
 }
 
 function SidebarSection({ section }: { section: MenuSection }): JSX.Element {
-  const router = useRouter();
+  // Get all items with refs
   const itemList = section.itemList.map((i) => ({
     ...i,
     ref: createRef<HTMLDivElement>(),
   }));
 
-  const currentItem = itemList.find((s) => router.asPath.includes(s.path));
-
-  useEffect(() => {
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        if (currentItem && currentItem.ref.current)
-          currentItem.ref.current.scrollIntoView({ behavior: 'smooth' });
-      }, 0);
-    });
-  }, [currentItem]);
   return (
     <>
       {section.hideSectionHeader ? null : (
         <h4
           data-testid={`section-h4:${section.id}`}
-          className="mt-8 border-b border-solid border-slate-50 text-lg font-bold dark:border-slate-800 dark:text-slate-100"
+          className="mb-3 mt-8 border-b border-solid border-slate-200 pb-2 text-xl font-bold dark:border-slate-700 dark:text-slate-100"
         >
           {section.name}
         </h4>
@@ -70,73 +71,134 @@ function SidebarSection({ section }: { section: MenuSection }): JSX.Element {
         <li className="mt-2">
           {itemList
             .filter((i) => !!i.children?.length)
-            .map((item, index) => (
-              <div key={item.id + '-' + index} ref={item.ref}>
-                <SidebarSectionItems key={item.id + '-' + index} item={item} />
-              </div>
-            ))}
+            .map((item, index) => {
+              // Check if this specific item is the Technologies item
+              return (
+                <div key={item.id + '-' + index} ref={item.ref}>
+                  <SidebarSectionItems
+                    key={item.id + '-' + index}
+                    item={item}
+                    isNested={false}
+                    firstLevel={true}
+                  />
+                </div>
+              );
+            })}
         </li>
       </ul>
     </>
   );
 }
 
-function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
+function withoutAnchors(linkText: string): string {
+  return linkText?.includes('#')
+    ? linkText.substring(0, linkText.indexOf('#'))
+    : linkText;
+}
+
+function SidebarSectionItems({
+  item,
+  isNested,
+  icon,
+  firstLevel,
+}: {
+  item: MenuItem;
+  isNested?: boolean;
+  icon?: string;
+  firstLevel?: boolean;
+}): JSX.Element {
   const router = useRouter();
-  const [collapsed, setCollapsed] = useState(!item.disableCollapsible);
+  const initialRender = useRef(true);
+  const isActiveLink = withoutAnchors(router.asPath).startsWith(item.path);
+  const [collapsed, setCollapsed] = useState(
+    !item.disableCollapsible && !isActiveLink
+  );
 
   const handleCollapseToggle = useCallback(() => {
     if (!item.disableCollapsible) {
       setCollapsed(!collapsed);
     }
   }, [collapsed, setCollapsed, item]);
-  function withoutAnchors(linkText: string): string {
-    return linkText?.includes('#')
-      ? linkText.substring(0, linkText.indexOf('#'))
-      : linkText;
-  }
+
+  // Update the children mapping to safely handle cases where item.children might be undefined
+  const children = item.children || [];
 
   return (
     <>
       <h5
         data-testid={`section-h5:${item.id}`}
         className={cx(
-          'flex py-2',
-          'text-sm font-semibold uppercase tracking-wide text-slate-800 lg:text-xs dark:text-slate-200',
+          'group flex items-center py-2',
+          '-ml-1 px-1 ',
+          !isNested
+            ? 'text-base text-slate-800 lg:text-base dark:text-slate-200'
+            : 'text-sm text-slate-800 lg:text-sm dark:text-slate-200',
+          firstLevel ? 'font-semibold' : '',
           item.disableCollapsible ? 'cursor-text' : 'cursor-pointer'
         )}
         onClick={handleCollapseToggle}
       >
-        {item.disableCollapsible ? (
-          <Link
-            href={item.path as string}
-            className="hover:underline"
-            prefetch={false}
-          >
-            {item.name}
-          </Link>
-        ) : (
-          <>
-            {item.name} <CollapsibleIcon isCollapsed={collapsed} />
-          </>
+        {icon && (
+          <div className="mr-1 flex h-5 w-5 flex-shrink-0 items-center justify-center">
+            <img
+              className="h-4 w-4 object-cover opacity-100 dark:invert"
+              loading="lazy"
+              src={iconsMap[icon || 'nx']}
+              alt={item.name + ' illustration'}
+              aria-hidden="true"
+            />
+          </div>
         )}
+        <div className={cx('flex flex-grow items-center justify-between')}>
+          {item.disableCollapsible ? (
+            <Link
+              href={item.path as string}
+              className="hover:underline"
+              prefetch={false}
+            >
+              {item.name}
+            </Link>
+          ) : (
+            <>
+              <span className={icon ? 'flex-grow' : ''}>{item.name}</span>
+              <CollapsibleIcon isCollapsed={collapsed} />
+            </>
+          )}
+        </div>
       </h5>
-      <ul className={cx('mb-6 ml-3', collapsed ? 'hidden' : '')}>
-        {(item.children as MenuItem[]).map((subItem, index) => {
+      <ul className={collapsed ? 'hidden' : ''}>
+        {children.map((subItem, index) => {
           const isActiveLink = withoutAnchors(router.asPath).startsWith(
             subItem.path
           );
-          if (isActiveLink && collapsed) {
+          if (isActiveLink && collapsed && initialRender.current) {
             handleCollapseToggle();
           }
+
+          initialRender.current = false;
 
           return (
             <li
               key={subItem.id + '-' + index}
               data-testid={`section-li:${subItem.id}`}
+              className={cx(
+                'relative',
+                item.id !== 'technologies'
+                  ? 'border-l border-slate-300 pl-2 pl-3 transition-colors duration-150 dark:border-slate-600'
+                  : ''
+              )}
             >
-              {subItem.children.length ? (
-                <SidebarSectionItems item={subItem} />
+              {(subItem.children || []).length ? (
+                <SidebarSectionItems
+                  item={subItem}
+                  firstLevel={false}
+                  isNested={true}
+                  icon={
+                    item.id === 'technologies'
+                      ? getIconKeyForTechnology(subItem.id)
+                      : undefined
+                  }
+                />
               ) : (
                 <Link
                   href={subItem.path}
@@ -365,4 +427,63 @@ export function SidebarMobile({
       </Dialog>
     </Transition>
   );
+}
+
+const technologyIconMap: Record<string, string> = {
+  // JavaScript/TypeScript
+  typescript: 'ts',
+  js: 'js',
+
+  // Angular
+  angular: 'angular',
+  'angular-rspack': 'angular-rspack',
+  'angular-rsbuild': 'angular-rsbuild',
+
+  // React
+  react: 'react',
+  'react-native': 'react-native',
+  remix: 'remix',
+  next: 'next',
+  expo: 'expo',
+
+  // Vue
+  vue: 'vue',
+  nuxt: 'nuxt',
+
+  // Node
+  nodejs: 'node',
+  'node.js': 'node',
+  node: 'node',
+
+  // Java
+  java: 'java',
+  gradle: 'gradle',
+
+  // Module Federation
+  'module-federation': 'module-federation',
+
+  // Linting
+  eslint: 'eslint',
+  'eslint-technology': 'eslint',
+
+  // Testing
+  'test-tools': 'testtools',
+  cypress: 'cypress',
+  jest: 'jest',
+  playwright: 'playwright',
+  storybook: 'storybook',
+  detox: 'detox',
+
+  'build-tools': 'buildtools',
+  webpack: 'webpack',
+  vite: 'vite',
+  rollup: 'rollup',
+  esbuild: 'esbuild',
+  rspack: 'rspack',
+  rsbuild: 'rsbuild',
+};
+
+function getIconKeyForTechnology(idOrName: string): string {
+  const normalized = idOrName.toLowerCase();
+  return technologyIconMap[normalized] || 'nx';
 }

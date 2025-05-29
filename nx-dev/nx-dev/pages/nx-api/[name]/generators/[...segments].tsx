@@ -1,7 +1,6 @@
 import { PackageSchemaViewer } from '@nx/nx-dev/feature-package-schema-viewer';
-import { getPackagesSections } from '@nx/nx-dev/data-access-menu';
-import { sortCorePackagesFirst } from '@nx/nx-dev/data-access-packages';
-import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
+import { getBasicNxSection } from '@nx/nx-dev/data-access-menu';
+import { Menu, MenuItem } from '@nx/nx-dev/models-menu';
 import {
   ProcessedPackageMetadata,
   SchemaMetadata,
@@ -29,10 +28,7 @@ export default function PackageGenerator({
     schema: SchemaMetadata;
   } = {
     menu: {
-      sections: sortCorePackagesFirst<MenuSection>(
-        getPackagesSections(menu),
-        'id'
-      ),
+      sections: [getBasicNxSection(menu)],
     },
     package: pkg,
     schema: schema,
@@ -96,7 +92,7 @@ function getData(
         '/' + ['nx-api', packageName, 'generators', ...segments].join('/')
       ]
     ),
-    menu: menusApi.getMenu('nx-api', 'nx-api'),
+    menu: menusApi.getMenu('nx', ''),
   };
 }
 

@@ -7,7 +7,7 @@ cover_image: /blog/images/2025-01-31/cover-image.jpg
 description: 'Deploy React Native app updates instantly with Module Federation and Zephyr Cloud, skipping app store review processes.'
 ---
 
-Module Federation is an exciting and continually evolving technology. The use cases for Module Federation have expanded from [Micro Frontends](/concepts/module-federation/micro-frontend-architecture) and [Faster Builds](/concepts/module-federation/faster-builds-with-module-federation) to also include something that should be extremely interesting for React Native users.
+Module Federation is an exciting and continually evolving technology. The use cases for Module Federation have expanded from [Micro Frontends](/technologies/module-federation/concepts/micro-frontend-architecture) and [Faster Builds](/technologies/module-federation/concepts/faster-builds-with-module-federation) to also include something that should be extremely interesting for React Native users.
 
 Thanks to the wonderful work from the [Re.Pack](https://re-pack.dev/) team at [Callstack](https://www.callstack.com/) and [Zephyr Cloud](https://www.zephyr-cloud.io/) now you can provide over-the-air (OTA) updates to your deployed native mobile apps by running a build from your laptop - without having to deal with the difficulties or time-consuming process of deploying a new binary to each of the app stores your application is deployed to.
 
