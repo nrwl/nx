@@ -67,6 +67,7 @@ function menuItemToStrings(item: MenuItem, pathPrefix = '/'): string[] {
   if (item.isExternal) {
     return [];
   }
+
   const line = item.path ? `- [${item.name}](${item.path})` : `- ${item.name}`;
   const padding = item.path
     .replace(pathPrefix, '')
