@@ -9,7 +9,6 @@ import {
   Tree,
   updateJson,
   updateNxJson,
-  updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as enquirer from 'enquirer';
