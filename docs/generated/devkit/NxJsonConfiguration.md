@@ -12,40 +12,40 @@ Nx.json configuration
 
 - **`NxJsonConfiguration`**
 
-  ↳ [`Workspace`](../../reference/core-api/devkit/documents/Workspace)
+  ↳ [`Workspace`](/reference/core-api/devkit/documents/Workspace)
 
 ## Table of contents
 
 ### Properties
 
-- [$schema](../../reference/core-api/devkit/documents/NxJsonConfiguration#$schema): string
-- [affected](../../reference/core-api/devkit/documents/NxJsonConfiguration#affected): NxAffectedConfig
-- [cacheDirectory](../../reference/core-api/devkit/documents/NxJsonConfiguration#cachedirectory): string
-- [cli](../../reference/core-api/devkit/documents/NxJsonConfiguration#cli): Object
-- [defaultBase](../../reference/core-api/devkit/documents/NxJsonConfiguration#defaultbase): string
-- [defaultProject](../../reference/core-api/devkit/documents/NxJsonConfiguration#defaultproject): string
-- [extends](../../reference/core-api/devkit/documents/NxJsonConfiguration#extends): string
-- [generators](../../reference/core-api/devkit/documents/NxJsonConfiguration#generators): Object
-- [implicitDependencies](../../reference/core-api/devkit/documents/NxJsonConfiguration#implicitdependencies): ImplicitDependencyEntry<T>
-- [installation](../../reference/core-api/devkit/documents/NxJsonConfiguration#installation): NxInstallationConfiguration
-- [maxCacheSize](../../reference/core-api/devkit/documents/NxJsonConfiguration#maxcachesize): string
-- [namedInputs](../../reference/core-api/devkit/documents/NxJsonConfiguration#namedinputs): Object
-- [neverConnectToCloud](../../reference/core-api/devkit/documents/NxJsonConfiguration#neverconnecttocloud): boolean
-- [nxCloudAccessToken](../../reference/core-api/devkit/documents/NxJsonConfiguration#nxcloudaccesstoken): string
-- [nxCloudEncryptionKey](../../reference/core-api/devkit/documents/NxJsonConfiguration#nxcloudencryptionkey): string
-- [nxCloudId](../../reference/core-api/devkit/documents/NxJsonConfiguration#nxcloudid): string
-- [nxCloudUrl](../../reference/core-api/devkit/documents/NxJsonConfiguration#nxcloudurl): string
-- [parallel](../../reference/core-api/devkit/documents/NxJsonConfiguration#parallel): number
-- [plugins](../../reference/core-api/devkit/documents/NxJsonConfiguration#plugins): PluginConfiguration[]
-- [pluginsConfig](../../reference/core-api/devkit/documents/NxJsonConfiguration#pluginsconfig): Record<string, Record<string, unknown>>
-- [release](../../reference/core-api/devkit/documents/NxJsonConfiguration#release): NxReleaseConfiguration
-- [sync](../../reference/core-api/devkit/documents/NxJsonConfiguration#sync): NxSyncConfiguration
-- [targetDefaults](../../reference/core-api/devkit/documents/NxJsonConfiguration#targetdefaults): TargetDefaults
-- [tasksRunnerOptions](../../reference/core-api/devkit/documents/NxJsonConfiguration#tasksrunneroptions): Object
-- [tui](../../reference/core-api/devkit/documents/NxJsonConfiguration#tui): Object
-- [useDaemonProcess](../../reference/core-api/devkit/documents/NxJsonConfiguration#usedaemonprocess): boolean
-- [useInferencePlugins](../../reference/core-api/devkit/documents/NxJsonConfiguration#useinferenceplugins): boolean
-- [workspaceLayout](../../reference/core-api/devkit/documents/NxJsonConfiguration#workspacelayout): Object
+- [$schema](/reference/core-api/devkit/documents/NxJsonConfiguration#$schema): string
+- [affected](/reference/core-api/devkit/documents/NxJsonConfiguration#affected): NxAffectedConfig
+- [cacheDirectory](/reference/core-api/devkit/documents/NxJsonConfiguration#cachedirectory): string
+- [cli](/reference/core-api/devkit/documents/NxJsonConfiguration#cli): Object
+- [defaultBase](/reference/core-api/devkit/documents/NxJsonConfiguration#defaultbase): string
+- [defaultProject](/reference/core-api/devkit/documents/NxJsonConfiguration#defaultproject): string
+- [extends](/reference/core-api/devkit/documents/NxJsonConfiguration#extends): string
+- [generators](/reference/core-api/devkit/documents/NxJsonConfiguration#generators): Object
+- [implicitDependencies](/reference/core-api/devkit/documents/NxJsonConfiguration#implicitdependencies): ImplicitDependencyEntry<T>
+- [installation](/reference/core-api/devkit/documents/NxJsonConfiguration#installation): NxInstallationConfiguration
+- [maxCacheSize](/reference/core-api/devkit/documents/NxJsonConfiguration#maxcachesize): string
+- [namedInputs](/reference/core-api/devkit/documents/NxJsonConfiguration#namedinputs): Object
+- [neverConnectToCloud](/reference/core-api/devkit/documents/NxJsonConfiguration#neverconnecttocloud): boolean
+- [nxCloudAccessToken](/reference/core-api/devkit/documents/NxJsonConfiguration#nxcloudaccesstoken): string
+- [nxCloudEncryptionKey](/reference/core-api/devkit/documents/NxJsonConfiguration#nxcloudencryptionkey): string
+- [nxCloudId](/reference/core-api/devkit/documents/NxJsonConfiguration#nxcloudid): string
+- [nxCloudUrl](/reference/core-api/devkit/documents/NxJsonConfiguration#nxcloudurl): string
+- [parallel](/reference/core-api/devkit/documents/NxJsonConfiguration#parallel): number
+- [plugins](/reference/core-api/devkit/documents/NxJsonConfiguration#plugins): PluginConfiguration[]
+- [pluginsConfig](/reference/core-api/devkit/documents/NxJsonConfiguration#pluginsconfig): Record<string, Record<string, unknown>>
+- [release](/reference/core-api/devkit/documents/NxJsonConfiguration#release): NxReleaseConfiguration
+- [sync](/reference/core-api/devkit/documents/NxJsonConfiguration#sync): NxSyncConfiguration
+- [targetDefaults](/reference/core-api/devkit/documents/NxJsonConfiguration#targetdefaults): TargetDefaults
+- [tasksRunnerOptions](/reference/core-api/devkit/documents/NxJsonConfiguration#tasksrunneroptions): Object
+- [tui](/reference/core-api/devkit/documents/NxJsonConfiguration#tui): Object
+- [useDaemonProcess](/reference/core-api/devkit/documents/NxJsonConfiguration#usedaemonprocess): boolean
+- [useInferencePlugins](/reference/core-api/devkit/documents/NxJsonConfiguration#useinferenceplugins): boolean
+- [workspaceLayout](/reference/core-api/devkit/documents/NxJsonConfiguration#workspacelayout): Object
 
 ## Properties
 
@@ -57,13 +57,13 @@ Nx.json configuration
 
 ### affected
 
-• `Optional` **affected**: [`NxAffectedConfig`](../../reference/core-api/devkit/documents/NxAffectedConfig)
+• `Optional` **affected**: [`NxAffectedConfig`](/reference/core-api/devkit/documents/NxAffectedConfig)
 
 Default options for `nx affected`
 
 **`Deprecated`**
 
-use [defaultBase](../../reference/core-api/devkit/documents/NxJsonConfiguration#defaultbase) instead. For more information see https://nx.dev/deprecated/affected-config#affected-config
+use [defaultBase](/reference/core-api/devkit/documents/NxJsonConfiguration#defaultbase) instead. For more information see https://nx.dev/deprecated/affected-config#affected-config
 
 ---
 
@@ -83,10 +83,10 @@ Default generator collection. It is used when no collection is provided.
 
 #### Type declaration
 
-| Name                  | Type                                                                         |
-| :-------------------- | :--------------------------------------------------------------------------- |
-| `defaultProjectName?` | `string`                                                                     |
-| `packageManager?`     | [`PackageManager`](../../reference/core-api/devkit/documents/PackageManager) |
+| Name                  | Type                                                                    |
+| :-------------------- | :---------------------------------------------------------------------- |
+| `defaultProjectName?` | `string`                                                                |
+| `packageManager?`     | [`PackageManager`](/reference/core-api/devkit/documents/PackageManager) |
 
 ---
 
@@ -143,13 +143,13 @@ Example:
 
 ### implicitDependencies
 
-• `Optional` **implicitDependencies**: [`ImplicitDependencyEntry`](../../reference/core-api/devkit/documents/ImplicitDependencyEntry)\<`T`\>
+• `Optional` **implicitDependencies**: [`ImplicitDependencyEntry`](/reference/core-api/devkit/documents/ImplicitDependencyEntry)\<`T`\>
 
 Map of files to projects that implicitly depend on them
 
 **`Deprecated`**
 
-use [namedInputs](../../reference/core-api/devkit/documents/NxJsonConfiguration#namedinputs) instead. For more information see https://nx.dev/deprecated/global-implicit-dependencies#global-implicit-dependencies
+use [namedInputs](/reference/core-api/devkit/documents/NxJsonConfiguration#namedinputs) instead. For more information see https://nx.dev/deprecated/global-implicit-dependencies#global-implicit-dependencies
 
 ---
 
@@ -196,7 +196,7 @@ Set this to true to disable connection to Nx Cloud
 • `Optional` **nxCloudAccessToken**: `string`
 
 If specified Nx will use nx-cloud by default with the given token.
-To use a different runner that accepts an access token, define it in [tasksRunnerOptions](../../reference/core-api/devkit/documents/NxJsonConfiguration#tasksrunneroptions)
+To use a different runner that accepts an access token, define it in [tasksRunnerOptions](/reference/core-api/devkit/documents/NxJsonConfiguration#tasksrunneroptions)
 
 ---
 
@@ -213,7 +213,7 @@ Specifies the encryption key used to encrypt artifacts data before sending it to
 • `Optional` **nxCloudId**: `string`
 
 If specified Nx will use nx-cloud by default with the given cloud id.
-To use a different runner that accepts a cloud id, define it in [tasksRunnerOptions](../../reference/core-api/devkit/documents/NxJsonConfiguration#tasksrunneroptions)
+To use a different runner that accepts a cloud id, define it in [tasksRunnerOptions](/reference/core-api/devkit/documents/NxJsonConfiguration#tasksrunneroptions)
 
 ---
 
@@ -236,7 +236,7 @@ Specifies how many tasks can be run in parallel.
 
 ### plugins
 
-• `Optional` **plugins**: [`PluginConfiguration`](../../reference/core-api/devkit/documents/PluginConfiguration)[]
+• `Optional` **plugins**: [`PluginConfiguration`](/reference/core-api/devkit/documents/PluginConfiguration)[]
 
 Plugins for extending the project graph
 
@@ -268,7 +268,7 @@ Configuration for the `nx sync` command.
 
 ### targetDefaults
 
-• `Optional` **targetDefaults**: [`TargetDefaults`](../../reference/core-api/devkit/documents/TargetDefaults)
+• `Optional` **targetDefaults**: [`TargetDefaults`](/reference/core-api/devkit/documents/TargetDefaults)
 
 Dependencies between different target names across all projects
 

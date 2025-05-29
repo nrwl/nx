@@ -6,18 +6,18 @@ A representation of the invocation of an Executor
 
 ### Properties
 
-- [cache](../../reference/core-api/devkit/documents/Task#cache): boolean
-- [continuous](../../reference/core-api/devkit/documents/Task#continuous): boolean
-- [endTime](../../reference/core-api/devkit/documents/Task#endtime): number
-- [hash](../../reference/core-api/devkit/documents/Task#hash): string
-- [hashDetails](../../reference/core-api/devkit/documents/Task#hashdetails): Object
-- [id](../../reference/core-api/devkit/documents/Task#id): string
-- [outputs](../../reference/core-api/devkit/documents/Task#outputs): string[]
-- [overrides](../../reference/core-api/devkit/documents/Task#overrides): any
-- [parallelism](../../reference/core-api/devkit/documents/Task#parallelism): boolean
-- [projectRoot](../../reference/core-api/devkit/documents/Task#projectroot): string
-- [startTime](../../reference/core-api/devkit/documents/Task#starttime): number
-- [target](../../reference/core-api/devkit/documents/Task#target): Object
+- [cache](/reference/core-api/devkit/documents/Task#cache): boolean
+- [continuous](/reference/core-api/devkit/documents/Task#continuous): boolean
+- [endTime](/reference/core-api/devkit/documents/Task#endtime): number
+- [hash](/reference/core-api/devkit/documents/Task#hash): string
+- [hashDetails](/reference/core-api/devkit/documents/Task#hashdetails): Object
+- [id](/reference/core-api/devkit/documents/Task#id): string
+- [outputs](/reference/core-api/devkit/documents/Task#outputs): string[]
+- [overrides](/reference/core-api/devkit/documents/Task#overrides): any
+- [parallelism](/reference/core-api/devkit/documents/Task#parallelism): boolean
+- [projectRoot](/reference/core-api/devkit/documents/Task#projectroot): string
+- [startTime](/reference/core-api/devkit/documents/Task#starttime): number
+- [target](/reference/core-api/devkit/documents/Task#target): Object
 
 ## Properties
 

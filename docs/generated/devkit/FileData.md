@@ -6,9 +6,9 @@ Some metadata about a file
 
 ### Properties
 
-- [deps](../../reference/core-api/devkit/documents/FileData#deps): FileDataDependency[]
-- [file](../../reference/core-api/devkit/documents/FileData#file): string
-- [hash](../../reference/core-api/devkit/documents/FileData#hash): string
+- [deps](/reference/core-api/devkit/documents/FileData#deps): FileDataDependency[]
+- [file](/reference/core-api/devkit/documents/FileData#file): string
+- [hash](/reference/core-api/devkit/documents/FileData#hash): string
 
 ## Properties
 

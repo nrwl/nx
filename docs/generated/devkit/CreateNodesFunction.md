@@ -1,9 +1,9 @@
 # Type alias: CreateNodesFunction\<T\>
 
-Ƭ **CreateNodesFunction**\<`T`\>: (`projectConfigurationFile`: `string`, `options`: `T` \| `undefined`, `context`: [`CreateNodesContext`](../../reference/core-api/devkit/documents/CreateNodesContext)) => [`CreateNodesResult`](../../reference/core-api/devkit/documents/CreateNodesResult) \| `Promise`\<[`CreateNodesResult`](../../reference/core-api/devkit/documents/CreateNodesResult)\>
+Ƭ **CreateNodesFunction**\<`T`\>: (`projectConfigurationFile`: `string`, `options`: `T` \| `undefined`, `context`: [`CreateNodesContext`](/reference/core-api/devkit/documents/CreateNodesContext)) => [`CreateNodesResult`](/reference/core-api/devkit/documents/CreateNodesResult) \| `Promise`\<[`CreateNodesResult`](/reference/core-api/devkit/documents/CreateNodesResult)\>
 
 A function which parses a configuration file into a set of nodes.
-Used for creating nodes for the [ProjectGraph](../../reference/core-api/devkit/documents/ProjectGraph)
+Used for creating nodes for the [ProjectGraph](/reference/core-api/devkit/documents/ProjectGraph)
 
 #### Type parameters
 
@@ -13,16 +13,16 @@ Used for creating nodes for the [ProjectGraph](../../reference/core-api/devkit/d
 
 #### Type declaration
 
-▸ (`projectConfigurationFile`, `options`, `context`): [`CreateNodesResult`](../../reference/core-api/devkit/documents/CreateNodesResult) \| `Promise`\<[`CreateNodesResult`](../../reference/core-api/devkit/documents/CreateNodesResult)\>
+▸ (`projectConfigurationFile`, `options`, `context`): [`CreateNodesResult`](/reference/core-api/devkit/documents/CreateNodesResult) \| `Promise`\<[`CreateNodesResult`](/reference/core-api/devkit/documents/CreateNodesResult)\>
 
 ##### Parameters
 
-| Name                       | Type                                                                                 |
-| :------------------------- | :----------------------------------------------------------------------------------- |
-| `projectConfigurationFile` | `string`                                                                             |
-| `options`                  | `T` \| `undefined`                                                                   |
-| `context`                  | [`CreateNodesContext`](../../reference/core-api/devkit/documents/CreateNodesContext) |
+| Name                       | Type                                                                            |
+| :------------------------- | :------------------------------------------------------------------------------ |
+| `projectConfigurationFile` | `string`                                                                        |
+| `options`                  | `T` \| `undefined`                                                              |
+| `context`                  | [`CreateNodesContext`](/reference/core-api/devkit/documents/CreateNodesContext) |
 
 ##### Returns
 
-[`CreateNodesResult`](../../reference/core-api/devkit/documents/CreateNodesResult) \| `Promise`\<[`CreateNodesResult`](../../reference/core-api/devkit/documents/CreateNodesResult)\>
+[`CreateNodesResult`](/reference/core-api/devkit/documents/CreateNodesResult) \| `Promise`\<[`CreateNodesResult`](/reference/core-api/devkit/documents/CreateNodesResult)\>

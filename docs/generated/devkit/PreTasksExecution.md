@@ -1,6 +1,6 @@
 # Type alias: PreTasksExecution\<TOptions\>
 
-Ƭ **PreTasksExecution**\<`TOptions`\>: (`options`: `TOptions` \| `undefined`, `context`: [`PreTasksExecutionContext`](../../reference/core-api/devkit/documents/PreTasksExecutionContext)) => `void` \| `Promise`\<`void`\>
+Ƭ **PreTasksExecution**\<`TOptions`\>: (`options`: `TOptions` \| `undefined`, `context`: [`PreTasksExecutionContext`](/reference/core-api/devkit/documents/PreTasksExecutionContext)) => `void` \| `Promise`\<`void`\>
 
 #### Type parameters
 
@@ -14,10 +14,10 @@
 
 ##### Parameters
 
-| Name      | Type                                                                                             |
-| :-------- | :----------------------------------------------------------------------------------------------- |
-| `options` | `TOptions` \| `undefined`                                                                        |
-| `context` | [`PreTasksExecutionContext`](../../reference/core-api/devkit/documents/PreTasksExecutionContext) |
+| Name      | Type                                                                                        |
+| :-------- | :------------------------------------------------------------------------------------------ |
+| `options` | `TOptions` \| `undefined`                                                                   |
+| `context` | [`PreTasksExecutionContext`](/reference/core-api/devkit/documents/PreTasksExecutionContext) |
 
 ##### Returns
 

@@ -2,13 +2,13 @@
 
 **`Deprecated`**
 
-Use [NxJsonConfiguration#defaultBase](../../reference/core-api/devkit/documents/NxJsonConfiguration#defaultbase) instead
+Use [NxJsonConfiguration#defaultBase](/reference/core-api/devkit/documents/NxJsonConfiguration#defaultbase) instead
 
 ## Table of contents
 
 ### Properties
 
-- [defaultBase](../../reference/core-api/devkit/documents/NxAffectedConfig#defaultbase): string
+- [defaultBase](/reference/core-api/devkit/documents/NxAffectedConfig#defaultbase): string
 
 ## Properties
 

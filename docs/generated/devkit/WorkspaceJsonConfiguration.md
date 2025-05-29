@@ -1,6 +1,6 @@
 # Type alias: WorkspaceJsonConfiguration
 
-Ƭ **WorkspaceJsonConfiguration**: [`ProjectsConfigurations`](../../reference/core-api/devkit/documents/ProjectsConfigurations)
+Ƭ **WorkspaceJsonConfiguration**: [`ProjectsConfigurations`](/reference/core-api/devkit/documents/ProjectsConfigurations)
 
 **`Deprecated`**
 

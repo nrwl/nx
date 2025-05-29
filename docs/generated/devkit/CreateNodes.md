@@ -2,7 +2,7 @@
 
 Ƭ **CreateNodes**\<`T`\>: readonly [projectFilePattern: string, createNodesFunction: CreateNodesFunction\<T\>]
 
-A pair of file patterns and [CreateNodesFunction](../../reference/core-api/devkit/documents/CreateNodesFunction)
+A pair of file patterns and [CreateNodesFunction](/reference/core-api/devkit/documents/CreateNodesFunction)
 
 Nx 19.2+: Both original `CreateNodes` and `CreateNodesV2` are supported. Nx will only invoke `CreateNodesV2` if it is present.
 Nx 21.X : The `CreateNodesV2` will be the only supported API. This typing will still exist, but be identical to `CreateNodesV2`.
@@ -14,7 +14,7 @@ Nx 22.X : The `CreateNodesV2` typing will be removed, as it has replaced `Create
 
 **`Deprecated`**
 
-Use [CreateNodesV2](../../reference/core-api/devkit/documents/CreateNodesV2) instead. CreateNodesV2 will replace this API. Read more about the transition above.
+Use [CreateNodesV2](/reference/core-api/devkit/documents/CreateNodesV2) instead. CreateNodesV2 will replace this API. Read more about the transition above.
 
 #### Type parameters
 

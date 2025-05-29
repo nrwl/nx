@@ -8,9 +8,9 @@ Use this to expose a compatible Angular Builder
 
 #### Parameters
 
-| Name       | Type                                                             |
-| :--------- | :--------------------------------------------------------------- |
-| `executor` | [`Executor`](../../reference/core-api/devkit/documents/Executor) |
+| Name       | Type                                                        |
+| :--------- | :---------------------------------------------------------- |
+| `executor` | [`Executor`](/reference/core-api/devkit/documents/Executor) |
 
 #### Returns
 

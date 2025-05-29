@@ -1,6 +1,6 @@
 # Type alias: Migration
 
-Ƭ **Migration**: (`tree`: [`Tree`](../../reference/core-api/devkit/documents/Tree)) => `void` \| `Promise`\<`void`\> \| `string`[] \| `Promise`\<`string`[]\>
+Ƭ **Migration**: (`tree`: [`Tree`](/reference/core-api/devkit/documents/Tree)) => `void` \| `Promise`\<`void`\> \| `string`[] \| `Promise`\<`string`[]\>
 
 Represents a migration that is executed when running `nx migrate`.
 
@@ -13,9 +13,9 @@ a list of next steps to be displayed to the user.
 
 ##### Parameters
 
-| Name   | Type                                                     |
-| :----- | :------------------------------------------------------- |
-| `tree` | [`Tree`](../../reference/core-api/devkit/documents/Tree) |
+| Name   | Type                                                |
+| :----- | :-------------------------------------------------- |
+| `tree` | [`Tree`](/reference/core-api/devkit/documents/Tree) |
 
 ##### Returns
 

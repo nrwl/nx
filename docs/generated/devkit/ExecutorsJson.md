@@ -4,8 +4,8 @@
 
 ### Properties
 
-- [builders](../../reference/core-api/devkit/documents/ExecutorsJson#builders): Record<string, ExecutorsJsonEntry>
-- [executors](../../reference/core-api/devkit/documents/ExecutorsJson#executors): Record<string, ExecutorsJsonEntry>
+- [builders](/reference/core-api/devkit/documents/ExecutorsJson#builders): Record<string, ExecutorsJsonEntry>
+- [executors](/reference/core-api/devkit/documents/ExecutorsJson#executors): Record<string, ExecutorsJsonEntry>
 
 ## Properties
 

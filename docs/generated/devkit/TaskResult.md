@@ -1,15 +1,15 @@
 # Interface: TaskResult
 
-The result of a completed [Task](../../reference/core-api/devkit/documents/Task)
+The result of a completed [Task](/reference/core-api/devkit/documents/Task)
 
 ## Table of contents
 
 ### Properties
 
-- [code](../../reference/core-api/devkit/documents/TaskResult#code): number
-- [status](../../reference/core-api/devkit/documents/TaskResult#status): TaskStatus
-- [task](../../reference/core-api/devkit/documents/TaskResult#task): Task
-- [terminalOutput](../../reference/core-api/devkit/documents/TaskResult#terminaloutput): string
+- [code](/reference/core-api/devkit/documents/TaskResult#code): number
+- [status](/reference/core-api/devkit/documents/TaskResult#status): TaskStatus
+- [task](/reference/core-api/devkit/documents/TaskResult#task): Task
+- [terminalOutput](/reference/core-api/devkit/documents/TaskResult#terminaloutput): string
 
 ## Properties
 
@@ -27,7 +27,7 @@ The result of a completed [Task](../../reference/core-api/devkit/documents/Task)
 
 ### task
 
-• **task**: [`Task`](../../reference/core-api/devkit/documents/Task)
+• **task**: [`Task`](/reference/core-api/devkit/documents/Task)
 
 ---
 

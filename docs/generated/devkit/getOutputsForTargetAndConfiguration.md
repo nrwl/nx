@@ -4,10 +4,10 @@
 
 #### Parameters
 
-| Name   | Type                                                                                           |
-| :----- | :--------------------------------------------------------------------------------------------- |
-| `task` | [`Task`](../../reference/core-api/devkit/documents/Task)                                       |
-| `node` | [`ProjectGraphProjectNode`](../../reference/core-api/devkit/documents/ProjectGraphProjectNode) |
+| Name   | Type                                                                                      |
+| :----- | :---------------------------------------------------------------------------------------- |
+| `task` | [`Task`](/reference/core-api/devkit/documents/Task)                                       |
+| `node` | [`ProjectGraphProjectNode`](/reference/core-api/devkit/documents/ProjectGraphProjectNode) |
 
 #### Returns
 
@@ -23,11 +23,11 @@ Returns the list of outputs that will be cached.
 
 #### Parameters
 
-| Name        | Type                                                                                                                                   |
-| :---------- | :------------------------------------------------------------------------------------------------------------------------------------- |
-| `target`    | [`Task`](../../reference/core-api/devkit/documents/Task) \| \{ `configuration?`: `string` ; `project`: `string` ; `target`: `string` } |
-| `overrides` | `any`                                                                                                                                  |
-| `node`      | [`ProjectGraphProjectNode`](../../reference/core-api/devkit/documents/ProjectGraphProjectNode)                                         |
+| Name        | Type                                                                                                                              |
+| :---------- | :-------------------------------------------------------------------------------------------------------------------------------- |
+| `target`    | [`Task`](/reference/core-api/devkit/documents/Task) \| \{ `configuration?`: `string` ; `project`: `string` ; `target`: `string` } |
+| `overrides` | `any`                                                                                                                             |
+| `node`      | [`ProjectGraphProjectNode`](/reference/core-api/devkit/documents/ProjectGraphProjectNode)                                         |
 
 #### Returns
 

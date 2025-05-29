@@ -14,10 +14,10 @@ Works as if you invoked the target yourself without passing any command lint ove
 
 #### Parameters
 
-| Name             | Type                                                                           |
-| :--------------- | :----------------------------------------------------------------------------- |
-| `«destructured»` | [`Target`](../../reference/core-api/devkit/documents/Target)                   |
-| `context`        | [`ExecutorContext`](../../reference/core-api/devkit/documents/ExecutorContext) |
+| Name             | Type                                                                      |
+| :--------------- | :------------------------------------------------------------------------ |
+| `«destructured»` | [`Target`](/reference/core-api/devkit/documents/Target)                   |
+| `context`        | [`ExecutorContext`](/reference/core-api/devkit/documents/ExecutorContext) |
 
 #### Returns
 

@@ -4,10 +4,10 @@
 
 ### Properties
 
-- [dependencies](../../reference/core-api/devkit/documents/TargetDependencyConfig#dependencies): boolean
-- [params](../../reference/core-api/devkit/documents/TargetDependencyConfig#params): "ignore" | "forward"
-- [projects](../../reference/core-api/devkit/documents/TargetDependencyConfig#projects): string | string[]
-- [target](../../reference/core-api/devkit/documents/TargetDependencyConfig#target): string
+- [dependencies](/reference/core-api/devkit/documents/TargetDependencyConfig#dependencies): boolean
+- [params](/reference/core-api/devkit/documents/TargetDependencyConfig#params): "ignore" | "forward"
+- [projects](/reference/core-api/devkit/documents/TargetDependencyConfig#projects): string | string[]
+- [target](/reference/core-api/devkit/documents/TargetDependencyConfig#target): string
 
 ## Properties
 

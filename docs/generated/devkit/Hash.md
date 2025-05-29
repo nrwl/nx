@@ -6,8 +6,8 @@ A data structure returned by the default hasher.
 
 ### Properties
 
-- [details](../../reference/core-api/devkit/documents/Hash#details): Object
-- [value](../../reference/core-api/devkit/documents/Hash#value): string
+- [details](/reference/core-api/devkit/documents/Hash#details): Object
+- [value](/reference/core-api/devkit/documents/Hash#value): string
 
 ## Properties
 

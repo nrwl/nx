@@ -8,10 +8,10 @@ Paths should be unix-style with forward slashes.
 
 #### Parameters
 
-| Name       | Type                                                     | Description             |
-| :--------- | :------------------------------------------------------- | :---------------------- |
-| `tree`     | [`Tree`](../../reference/core-api/devkit/documents/Tree) | The file system tree    |
-| `patterns` | `string`[]                                               | A list of glob patterns |
+| Name       | Type                                                | Description             |
+| :--------- | :-------------------------------------------------- | :---------------------- |
+| `tree`     | [`Tree`](/reference/core-api/devkit/documents/Tree) | The file system tree    |
+| `patterns` | `string`[]                                          | A list of glob patterns |
 
 #### Returns
 
@@ -21,4 +21,4 @@ Normalized paths in the workspace that match the provided glob patterns.
 
 **`Deprecated`**
 
-Use [globAsync](../../reference/core-api/devkit/documents/globAsync) instead.
+Use [globAsync](/reference/core-api/devkit/documents/globAsync) instead.

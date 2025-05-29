@@ -10,30 +10,30 @@
 
 ### Constructors
 
-- [constructor](../../reference/core-api/devkit/documents/StaleProjectGraphCacheError#constructor)
+- [constructor](/reference/core-api/devkit/documents/StaleProjectGraphCacheError#constructor)
 
 ### Properties
 
-- [cause](../../reference/core-api/devkit/documents/StaleProjectGraphCacheError#cause): unknown
-- [message](../../reference/core-api/devkit/documents/StaleProjectGraphCacheError#message): string
-- [name](../../reference/core-api/devkit/documents/StaleProjectGraphCacheError#name): string
-- [stack](../../reference/core-api/devkit/documents/StaleProjectGraphCacheError#stack): string
-- [prepareStackTrace](../../reference/core-api/devkit/documents/StaleProjectGraphCacheError#preparestacktrace): Function
-- [stackTraceLimit](../../reference/core-api/devkit/documents/StaleProjectGraphCacheError#stacktracelimit): number
+- [cause](/reference/core-api/devkit/documents/StaleProjectGraphCacheError#cause): unknown
+- [message](/reference/core-api/devkit/documents/StaleProjectGraphCacheError#message): string
+- [name](/reference/core-api/devkit/documents/StaleProjectGraphCacheError#name): string
+- [stack](/reference/core-api/devkit/documents/StaleProjectGraphCacheError#stack): string
+- [prepareStackTrace](/reference/core-api/devkit/documents/StaleProjectGraphCacheError#preparestacktrace): Function
+- [stackTraceLimit](/reference/core-api/devkit/documents/StaleProjectGraphCacheError#stacktracelimit): number
 
 ### Methods
 
-- [captureStackTrace](../../reference/core-api/devkit/documents/StaleProjectGraphCacheError#capturestacktrace)
+- [captureStackTrace](/reference/core-api/devkit/documents/StaleProjectGraphCacheError#capturestacktrace)
 
 ## Constructors
 
 ### constructor
 
-• **new StaleProjectGraphCacheError**(): [`StaleProjectGraphCacheError`](../../reference/core-api/devkit/documents/StaleProjectGraphCacheError)
+• **new StaleProjectGraphCacheError**(): [`StaleProjectGraphCacheError`](/reference/core-api/devkit/documents/StaleProjectGraphCacheError)
 
 #### Returns
 
-[`StaleProjectGraphCacheError`](../../reference/core-api/devkit/documents/StaleProjectGraphCacheError)
+[`StaleProjectGraphCacheError`](/reference/core-api/devkit/documents/StaleProjectGraphCacheError)
 
 #### Overrides
 

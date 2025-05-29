@@ -1,6 +1,6 @@
 # Type alias: PostTasksExecution\<TOptions\>
 
-Ƭ **PostTasksExecution**\<`TOptions`\>: (`options`: `TOptions` \| `undefined`, `context`: [`PostTasksExecutionContext`](../../reference/core-api/devkit/documents/PostTasksExecutionContext)) => `void` \| `Promise`\<`void`\>
+Ƭ **PostTasksExecution**\<`TOptions`\>: (`options`: `TOptions` \| `undefined`, `context`: [`PostTasksExecutionContext`](/reference/core-api/devkit/documents/PostTasksExecutionContext)) => `void` \| `Promise`\<`void`\>
 
 #### Type parameters
 
@@ -14,10 +14,10 @@
 
 ##### Parameters
 
-| Name      | Type                                                                                               |
-| :-------- | :------------------------------------------------------------------------------------------------- |
-| `options` | `TOptions` \| `undefined`                                                                          |
-| `context` | [`PostTasksExecutionContext`](../../reference/core-api/devkit/documents/PostTasksExecutionContext) |
+| Name      | Type                                                                                          |
+| :-------- | :-------------------------------------------------------------------------------------------- |
+| `options` | `TOptions` \| `undefined`                                                                     |
+| `context` | [`PostTasksExecutionContext`](/reference/core-api/devkit/documents/PostTasksExecutionContext) |
 
 ##### Returns
 

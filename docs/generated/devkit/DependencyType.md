@@ -6,9 +6,9 @@ Type of dependency between projects
 
 ### Enumeration Members
 
-- [dynamic](../../reference/core-api/devkit/documents/DependencyType#dynamic)
-- [implicit](../../reference/core-api/devkit/documents/DependencyType#implicit)
-- [static](../../reference/core-api/devkit/documents/DependencyType#static)
+- [dynamic](/reference/core-api/devkit/documents/DependencyType#dynamic)
+- [implicit](/reference/core-api/devkit/documents/DependencyType#implicit)
+- [static](/reference/core-api/devkit/documents/DependencyType#static)
 
 ## Enumeration Members
 

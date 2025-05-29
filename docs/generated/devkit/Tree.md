@@ -6,19 +6,19 @@ Virtual file system tree.
 
 ### Properties
 
-- [root](../../reference/core-api/devkit/documents/Tree#root): string
+- [root](/reference/core-api/devkit/documents/Tree#root): string
 
 ### Methods
 
-- [changePermissions](../../reference/core-api/devkit/documents/Tree#changepermissions)
-- [children](../../reference/core-api/devkit/documents/Tree#children)
-- [delete](../../reference/core-api/devkit/documents/Tree#delete)
-- [exists](../../reference/core-api/devkit/documents/Tree#exists)
-- [isFile](../../reference/core-api/devkit/documents/Tree#isfile)
-- [listChanges](../../reference/core-api/devkit/documents/Tree#listchanges)
-- [read](../../reference/core-api/devkit/documents/Tree#read)
-- [rename](../../reference/core-api/devkit/documents/Tree#rename)
-- [write](../../reference/core-api/devkit/documents/Tree#write)
+- [changePermissions](/reference/core-api/devkit/documents/Tree#changepermissions)
+- [children](/reference/core-api/devkit/documents/Tree#children)
+- [delete](/reference/core-api/devkit/documents/Tree#delete)
+- [exists](/reference/core-api/devkit/documents/Tree#exists)
+- [isFile](/reference/core-api/devkit/documents/Tree#isfile)
+- [listChanges](/reference/core-api/devkit/documents/Tree#listchanges)
+- [read](/reference/core-api/devkit/documents/Tree#read)
+- [rename](/reference/core-api/devkit/documents/Tree#rename)
+- [write](/reference/core-api/devkit/documents/Tree#write)
 
 ## Properties
 
@@ -123,13 +123,13 @@ Check if this is a file or not.
 
 ### listChanges
 
-▸ **listChanges**(): [`FileChange`](../../reference/core-api/devkit/documents/FileChange)[]
+▸ **listChanges**(): [`FileChange`](/reference/core-api/devkit/documents/FileChange)[]
 
 Returns the list of currently recorded changes.
 
 #### Returns
 
-[`FileChange`](../../reference/core-api/devkit/documents/FileChange)[]
+[`FileChange`](/reference/core-api/devkit/documents/FileChange)[]
 
 ---
 

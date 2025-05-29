@@ -4,9 +4,9 @@
 
 ### Properties
 
-- [index](../../reference/core-api/devkit/documents/StringInsertion#index): number
-- [text](../../reference/core-api/devkit/documents/StringInsertion#text): string
-- [type](../../reference/core-api/devkit/documents/StringInsertion#type): Insert
+- [index](/reference/core-api/devkit/documents/StringInsertion#index): number
+- [text](/reference/core-api/devkit/documents/StringInsertion#text): string
+- [type](/reference/core-api/devkit/documents/StringInsertion#type): Insert
 
 ## Properties
 
@@ -28,4 +28,4 @@ Text to insert into the original text
 
 ### type
 
-• **type**: [`Insert`](../../reference/core-api/devkit/documents/ChangeType#insert)
+• **type**: [`Insert`](/reference/core-api/devkit/documents/ChangeType#insert)

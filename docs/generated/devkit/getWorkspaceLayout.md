@@ -13,9 +13,9 @@ Example:
 
 #### Parameters
 
-| Name   | Type                                                     | Description      |
-| :----- | :------------------------------------------------------- | :--------------- |
-| `tree` | [`Tree`](../../reference/core-api/devkit/documents/Tree) | file system tree |
+| Name   | Type                                                | Description      |
+| :----- | :-------------------------------------------------- | :--------------- |
+| `tree` | [`Tree`](/reference/core-api/devkit/documents/Tree) | file system tree |
 
 #### Returns
 

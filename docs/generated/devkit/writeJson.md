@@ -12,12 +12,12 @@ Writes a JSON value to the file system tree
 
 #### Parameters
 
-| Name       | Type                                                                                     | Description                     |
-| :--------- | :--------------------------------------------------------------------------------------- | :------------------------------ |
-| `tree`     | [`Tree`](../../reference/core-api/devkit/documents/Tree)                                 | File system tree                |
-| `path`     | `string`                                                                                 | Path of JSON file in the Tree   |
-| `value`    | `T`                                                                                      | Serializable value to write     |
-| `options?` | [`JsonSerializeOptions`](../../reference/core-api/devkit/documents/JsonSerializeOptions) | Optional JSON Serialize Options |
+| Name       | Type                                                                                | Description                     |
+| :--------- | :---------------------------------------------------------------------------------- | :------------------------------ |
+| `tree`     | [`Tree`](/reference/core-api/devkit/documents/Tree)                                 | File system tree                |
+| `path`     | `string`                                                                            | Path of JSON file in the Tree   |
+| `value`    | `T`                                                                                 | Serializable value to write     |
+| `options?` | [`JsonSerializeOptions`](/reference/core-api/devkit/documents/JsonSerializeOptions) | Optional JSON Serialize Options |
 
 #### Returns
 
