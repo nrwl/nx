@@ -6,6 +6,7 @@ tags: ['nx', 'nx-console', 'ai', 'terminal']
 cover_image: /blog/images/articles/bg-nx-tui-llm-integration.avif
 description: 'Learn how Nx Console now enables AI assistants to read your terminal output in real-time, automatically detecting and fixing development errors as they happen.'
 youtubeUrl: https://youtu.be/Cbc9_W5J6DA
+pinned: true
 ---
 
 {% callout type="deepdive" title="Series: Making your LLM smarter" expanded=true %}
