@@ -21,9 +21,11 @@ const nxAngularLegacyVersionMap: Record<number, string> = {
   14: '~17.0.0',
   15: '~19.0.0',
   16: '~20.1.0',
+  17: '~21.1.0',
 };
 // min major angular version supported in latest Nx
-const minMajorAngularVersionSupported = 17;
+const minMajorAngularVersionSupported =
+  Math.max(...Object.keys(nxAngularLegacyVersionMap).map(Number)) + 1;
 // version when the Nx CLI changed from @nrwl/tao & @nrwl/cli to nx
 const versionWithConsolidatedPackages = '13.9.0';
 // version when packages were rescoped from @nrwl/* to @nx/*
