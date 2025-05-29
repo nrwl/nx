@@ -238,6 +238,24 @@ export class DocumentsApi {
           tags: [],
         };
       }
+      // NEW Legacy handler for devkit docs
+      if (
+        path[0] === 'reference' &&
+        path[1] === 'core-api' &&
+        path[2] === 'devkit' &&
+        path[3] === 'documents'
+      ) {
+        const file = `generated/devkit/${path.slice(4).join('/')}`;
+        return {
+          content: readFileSync(this.getFilePath(`${file}.md`), 'utf8'),
+          description: '',
+          filePath: this.getFilePath(file),
+          id: path.at(-1) || '',
+          name: path.at(-1) || '',
+          relatedDocuments: {},
+          tags: [],
+        };
+      }
       throw new Error(
         `Document not found in manifest with: "${path.join('/')}"`
       );
