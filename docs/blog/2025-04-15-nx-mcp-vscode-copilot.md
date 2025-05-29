@@ -6,7 +6,6 @@ tags: ['nx', 'nx-console', 'ai']
 cover_image: /blog/images/articles/bg-copilot-nx-mcp.avif
 description: 'Learn how to enhance VS Code Copilot with Nx MCP integration, providing rich monorepo context for smarter AI assistance.'
 youtubeUrl: https://youtu.be/dRQq_B1HSLA
-pinned: true
 ---
 
 {% callout type="deepdive" title="Series: Making your LLM smarter" expanded=true %}
