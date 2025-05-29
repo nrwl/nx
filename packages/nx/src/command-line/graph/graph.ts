@@ -21,6 +21,7 @@ import {
   parse,
   relative,
 } from 'path';
+import * as net from 'net';
 import { performance } from 'perf_hooks';
 import { readNxJson, workspaceLayout } from '../../config/configuration';
 import {
@@ -490,17 +491,29 @@ export async function generateGraph(
       !!args.file && args.file.endsWith('html') ? 'build' : 'serve'
     );
 
-    const { app, url } = await startServer(
-      html,
-      environmentJs,
-      args.host || '127.0.0.1',
-      args.port || 4211,
-      args.watch,
-      affectedProjects,
-      args.focus,
-      args.groupByFolder,
-      args.exclude
-    );
+    let app: Server;
+    let url: URL;
+    try {
+      const result = await startServer(
+        html,
+        environmentJs,
+        args.host || '127.0.0.1',
+        args.port || 4211,
+        args.watch,
+        affectedProjects,
+        args.focus,
+        args.groupByFolder,
+        args.exclude
+      );
+      app = result.app;
+      url = result.url;
+    } catch (err) {
+      output.error({
+        title: 'Failed to start graph server',
+        bodyLines: [err.message],
+      });
+      process.exit(1);
+    }
 
     url.pathname = args.view;
 
@@ -537,6 +550,33 @@ export async function generateGraph(
       app.once('close', res);
     });
   }
+}
+
+function findAvailablePort(
+  startPort: number,
+  host: string = '127.0.0.1'
+): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+
+    server.listen(startPort, host, () => {
+      const port = (server.address() as net.AddressInfo).port;
+      server.close(() => {
+        resolve(port);
+      });
+    });
+
+    server.on('error', (err: NodeJS.ErrnoException) => {
+      if (err.code === 'EADDRINUSE') {
+        // Port is in use, try the next one
+        findAvailablePort(startPort + 1, host)
+          .then(resolve)
+          .catch(reject);
+      } else {
+        reject(err);
+      }
+    });
+  });
 }
 
 async function startServer(
@@ -676,9 +716,21 @@ async function startServer(
   process.on('SIGINT', () => handleTermination(128 + 2));
   process.on('SIGTERM', () => handleTermination(128 + 15));
 
-  return new Promise<{ app: Server; url: URL }>((res) => {
-    app.listen(port, host, () => {
-      res({ app, url: new URL(`http://${host}:${port}`) });
+  // Find an available port starting from the requested port
+  const availablePort = await findAvailablePort(port, host);
+
+  return new Promise<{ app: Server; url: URL }>((res, rej) => {
+    app.on('error', (err: NodeJS.ErrnoException) => {
+      rej(err);
+    });
+
+    app.listen(availablePort, host, () => {
+      if (availablePort !== port) {
+        output.note({
+          title: `Port ${port} was already in use, using port ${availablePort} instead`,
+        });
+      }
+      res({ app, url: new URL(`http://${host}:${availablePort}`) });
     });
   });
 }
