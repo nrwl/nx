@@ -3322,6 +3322,14 @@
                         ],
                         "isExternal": false,
                         "disableCollapsible": false
+                      },
+                      {
+                        "id": "migrations",
+                        "path": "/technologies/node/nest/api/migrations",
+                        "name": "migrations",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
                       }
                     ],
                     "disableCollapsible": false
@@ -8896,6 +8904,14 @@
             ],
             "isExternal": false,
             "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/nest/migrations",
+            "name": "migrations",
+            "children": [],
+            "isExternal": false,
+            "disableCollapsible": false
           }
         ],
         "isExternal": false,
@@ -12887,6 +12903,14 @@
                 "disableCollapsible": false
               }
             ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "migrations",
+            "path": "/nx-api/nest/migrations",
+            "name": "migrations",
+            "children": [],
             "isExternal": false,
             "disableCollapsible": false
           }
