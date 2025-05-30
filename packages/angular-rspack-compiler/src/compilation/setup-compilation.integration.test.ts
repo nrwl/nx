@@ -54,9 +54,9 @@ describe('styleTransform', () => {
       "/* angular:styles/component:css;592f34f9ac48ea19451aae3dd366efc0192c0cb126186ed755223c4c22e86e79; */
       h1 {
         font-size: 40px;
-        code {
-          font-face: Roboto Mono;
-        }
+      }
+      h1 code {
+        font-face: Roboto Mono;
       }
       "
     `);
