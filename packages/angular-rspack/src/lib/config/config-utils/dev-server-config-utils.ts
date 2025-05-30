@@ -247,7 +247,10 @@ async function getProxyConfig(
         proxyConfiguration = require(proxyPath);
       } catch (e) {
         assertIsError(e);
-        if (e.code !== 'ERR_REQUIRE_ESM') {
+        if (
+          e.code !== 'ERR_REQUIRE_ESM' &&
+          e.code !== 'ERR_REQUIRE_ASYNC_MODULE'
+        ) {
           throw e;
         }
 

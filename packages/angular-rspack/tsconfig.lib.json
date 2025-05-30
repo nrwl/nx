@@ -14,7 +14,12 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src/**/*.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/lib/plugins/loaders/hmr-accept.ts",
+    "src/lib/plugins/loaders/hmr-accept-loader.ts",
+    "src/lib/plugins/tools/*.ts"
+  ],
   "exclude": ["vitest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
   "references": [
     {

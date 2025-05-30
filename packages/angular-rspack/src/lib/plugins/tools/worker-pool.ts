@@ -15,9 +15,6 @@ export class WorkerPool extends Piscina {
     const piscinaOptions: WorkerPoolOptions = {
       minThreads: 1,
       idleTimeout: 1000,
-      // Web containers do not support transferable objects with receiveOnMessagePort which
-      // is used when the Atomics based wait loop is enable.
-      useAtomics: !process.versions.webcontainer,
       recordTiming: false,
       ...options,
     };
