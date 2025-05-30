@@ -98,3 +98,7 @@ node_modules/
 # Task files
 tasks.json
 tasks/ 
+
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
+.cursor/mcp.json

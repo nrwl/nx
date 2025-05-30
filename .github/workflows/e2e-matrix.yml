@@ -250,7 +250,9 @@ jobs:
       - name: Run e2e tests with pnpm (Linux/Windows)
         id: e2e-run-pnpm
         if: ${{ matrix.os != 'macos-latest' }}
-        run: pnpm nx run ${{ matrix.project }}:e2e-local
+        run: |
+          mkdir -p test-results
+          pnpm nx run ${{ matrix.project }}:e2e-local -- --json --outputFile=test-results/${{ matrix.project }}-${{ matrix.os_name }}-node${{ matrix.node_version }}-${{ matrix.package_manager }}.json || true
         shell: bash
         timeout-minutes: ${{ matrix.os_timeout }}
         env:
@@ -267,18 +269,17 @@ jobs:
           npm_config_registry: http://localhost:4872
           YARN_REGISTRY: http://localhost:4872
           CI: true
-  
+
       - name: Run e2e tests with npm (macOS)
         id: e2e-run-npm
         if: ${{ matrix.os == 'macos-latest' }}
         run: |
-          # Run the tests
+          mkdir -p test-results
           if [[ "${{ matrix.project }}" == "e2e-detox" ]] || [[ "${{ matrix.project }}" == "e2e-react-native" ]] || [[ "${{ matrix.project }}" == "e2e-expo" ]]; then
-            NX_E2E_VERBOSE_DEBUG=1 pnpm nx run ${{ matrix.project }}:e2e-macos-local
+            NX_E2E_VERBOSE_DEBUG=1 pnpm nx run ${{ matrix.project }}:e2e-macos-local -- --json --outputFile=test-results/${{ matrix.project }}-${{ matrix.os_name }}-node${{ matrix.node_version }}-${{ matrix.package_manager }}.json || true
           else
-            NX_E2E_VERBOSE_DEBUG=1 pnpm nx run ${{ matrix.project }}:e2e-local
+            NX_E2E_VERBOSE_DEBUG=1 pnpm nx run ${{ matrix.project }}:e2e-local -- --json --outputFile=test-results/${{ matrix.project }}-${{ matrix.os_name }}-node${{ matrix.node_version }}-${{ matrix.package_manager }}.json || true
           fi
-        
         env:
           NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
           NX_PERF_LOGGING: 'false'
@@ -293,6 +294,14 @@ jobs:
           YARN_REGISTRY: http://localhost:4872
           DEVELOPER_DIR: '/Applications/Xcode.app/Contents/Developer'
           CI: true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.project }}
+          path: test-results
+          if-no-files-found: warn
 
       - name: Save matrix config in file
         if: ${{ always() }}
@@ -333,24 +342,42 @@ jobs:
     needs: e2e
     timeout-minutes: 10
     outputs:
-      message: ${{ steps.process-json.outputs.SLACK_MESSAGE }}
+      matrix_failures: ${{ steps.process-json.outputs.MATRIX_FAILURES }}
+      test_failures: ${{ steps.process-test-results.outputs.TEST_FAILURES }}
+      has_failures: ${{ steps.process-test-results.outputs.HAS_FAILURES }}
       proj-duration: ${{ steps.process-json.outputs.SLACK_PROJ_DURATION }}
       pm-duration: ${{ steps.process-json.outputs.SLACK_PM_DURATION }}
-      codeowners: ${{ steps.process-json.outputs.CODEOWNERS }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Prepare dir for output
         run: mkdir -p outputs
 
-      - name: Load outputs
+      - name: Load matrix outputs
         uses: actions/download-artifact@v4
         with:
           path: outputs
+
+      - name: Create test results directory
+        run: mkdir -p test-results
+
+      - name: Download all test results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: test-results-*
+          path: test-results
+          merge-multiple: true
 
       - name: Join and stringify matrix configs
         id: combine-json
         run: |
           combined=$((jq -s . outputs/*/matrix.json) | jq tostring)
           echo "combined=$combined" >> $GITHUB_OUTPUT
+
+      - name: Process test results
+        id: process-test-results
+        run: node .github/workflows/process-test-results.js
 
       - name: Make slack outputs
         id: process-json
@@ -362,18 +389,11 @@ jobs:
             const combined = JSON.parse(${{ steps.combine-json.outputs.combined }});
             const failedProjects = combined.filter(c => c.status === 'failure').sort((a, b) => a.project.localeCompare(b.project));
 
-            // codeowners
-            const codeowners = new Set();
-            failedProjects.forEach(c => {
-              codeowners.add(c.codeowners);
-            });
-            core.setOutput('CODEOWNERS', Array.from(codeowners).join(','));
-
             function trimSpace(res) {
               return res.split('\n').map((l) => l.trim()).join('\n');
             }
 
-            // failed message
+            // failed matrix runs message
             let lastProject;
             let result = `
               \`\`\`
@@ -385,7 +405,7 @@ jobs:
               lastProject = matrix.project;
             });
             result += `\`\`\``;
-            core.setOutput('SLACK_MESSAGE', trimSpace(result));
+            core.setOutput('MATRIX_FAILURES', trimSpace(result));
             console.log(trimSpace(result));
 
             function humanizeDuration(num) {
@@ -497,10 +517,18 @@ jobs:
         uses: ravsamhq/notify-slack-action@v2
         with:
           status: 'failure'
-          message_format: '{emoji} Workflow has {status_message} ${{ needs.process-result.outputs.message }}'
-          notification_title: '{workflow}'
-          footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
-          mention_groups: ${{ needs.process-result.outputs.codeowners }}
+          message_format: |
+            :rotating_light: *E2E Test Failures Detected* :rotating_light:
+
+            ${{ needs.process-result.outputs.test_failures }}
+
+            *Duration Stats:*
+            ${{ needs.process-result.outputs.proj-duration }}
+
+            *Package Manager Performance:*
+            ${{ needs.process-result.outputs.pm-duration }}
+          notification_title: 'E2E Matrix Results'
+          footer: ':link: <{run_url}|View Full Run Details>'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
@@ -515,9 +543,16 @@ jobs:
         uses: ravsamhq/notify-slack-action@v2
         with:
           status: ${{ needs.e2e.result }}
-          message_format: '{emoji} Workflow has {status_message}'
-          notification_title: '{workflow}'
-          footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
+          message_format: |
+            :white_check_mark: *All E2E Tests Passed Successfully*
+
+            *Duration Stats:*
+            ${{ needs.process-result.outputs.proj-duration }}
+
+            *Package Manager Performance:*
+            ${{ needs.process-result.outputs.pm-duration }}
+          notification_title: 'E2E Matrix Results'
+          footer: ':link: <{run_url}|View Full Run Details>'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 

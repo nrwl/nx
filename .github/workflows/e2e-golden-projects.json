@@ -1,0 +1,10 @@
+{
+  "goldenProjects": [
+    "e2e-lerna-smoke-tests",
+    "e2e-js",
+    "e2e-nx-init",
+    "e2e-nx",
+    "e2e-release",
+    "e2e-workspace-create"
+  ]
+} 
