@@ -220,32 +220,105 @@ jobs:
       - name: Configure Detox Environment, Install applesimutils
         if: ${{ matrix.os == 'macos-latest' }}
         run: |
-          # Check if applesimutils is already installed
+          # Ensure Xcode command line tools are installed and configured
+          xcode-select --print-path || sudo xcode-select --reset
+          sudo xcode-select -s /Applications/Xcode.app
+          
+          # Install or update applesimutils with error handling
           if ! brew list applesimutils &>/dev/null; then
+            echo "Installing applesimutils..."
             HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
-            HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null || {
+              echo "Failed to install applesimutils, retrying with update..."
+              brew update
+              HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils
+            }
           else
-            echo "applesimutils is already installed, skipping installation"
+            echo "Updating applesimutils..."
+            HOMEBREW_NO_AUTO_UPDATE=1 brew upgrade applesimutils || true
           fi
+          
+          # Verify applesimutils installation
+          applesimutils --version || (echo "applesimutils installation failed" && exit 1)
+          
+          # Configure environment for M-series Mac
+          echo "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer" >> $GITHUB_ENV
+          echo "PLATFORM_NAME=iOS Simulator" >> $GITHUB_ENV
+          
+          # Set additional environment variables for better debugging
+          echo "DETOX_DISABLE_TELEMETRY=1" >> $GITHUB_ENV
+          echo "DETOX_LOG_LEVEL=trace" >> $GITHUB_ENV
+          
+          # Verify Xcode installation
+          xcodebuild -version
+          
+          # List available simulators
+          xcrun simctl list devices available
         timeout-minutes: 10
+        continue-on-error: false
 
       - name: Reset iOS Simulators
         if: ${{ matrix.os == 'macos-latest' }}
+        id: reset-simulators
         run: |
-          xcrun simctl shutdown all && xcrun simctl erase all
+          # Kill any existing simulator processes
+          sudo killall -9 com.apple.CoreSimulator.CoreSimulatorService || true
+          killall "Simulator" || true
+          
+          # Wait for processes to fully terminate
+          sleep 5
+          
+          # Clean up simulator runtime and cache directories
+          rm -rf ~/Library/Developer/CoreSimulator/Devices/* || true
+          rm -rf ~/Library/Developer/CoreSimulator/Caches/* || true
+          rm -rf ~/Library/Logs/CoreSimulator/* || true
+          rm -rf ~/Library/Developer/Xcode/DerivedData/* || true
+          rm -rf ~/Library/Developer/Xcode/iOS\ DeviceSupport/* || true
+          
+          # Ensure CoreSimulator service is not running
+          launchctl remove com.apple.CoreSimulator.CoreSimulatorService || true
+          
+          # Wait for system to stabilize
+          sleep 5
+          
+          # Start fresh CoreSimulator service
+          open -a Simulator --args -CurrentDeviceUDID "" || true
+          sleep 10
+          
+          # Shutdown and erase all simulators with increased timeout
+          xcrun simctl shutdown all 2>/dev/null || true
+          xcrun simctl erase all
+        timeout-minutes: 15
+        continue-on-error: true
+
+      # Add verification step
+      - name: Verify Simulator Reset
+        if: ${{ matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success' }}
+        run: |
+          # Verify CoreSimulator service restarted
+          pgrep -fl "CoreSimulator" || (echo "CoreSimulator service not running" && exit 1)
+          
+          # Check simulator list is clean
+          xcrun simctl list devices
+          
+          # Verify simulator runtime paths exist and are writable
+          test -d ~/Library/Developer/CoreSimulator/Devices || (echo "Simulator devices directory missing" && exit 1)
+          touch ~/Library/Developer/CoreSimulator/Devices/test || (echo "Simulator devices directory not writable" && exit 1)
+          rm ~/Library/Developer/CoreSimulator/Devices/test
         timeout-minutes: 5
 
       - name: Configure git metadata (needed for lerna smoke tests)
+        if: ${{ (matrix.os != 'macos-latest') || (matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success') }}
         run: |
           git config --global user.email test@test.com
           git config --global user.name "Test Test"
 
       - name: Set starting timestamp
+        if: ${{ (matrix.os != 'macos-latest') || (matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success') }}
         id: before-e2e
         shell: bash
         run: |
           echo "timestamp=$(date +%s)" >> $GITHUB_OUTPUT
-
 
       - name: Run e2e tests with pnpm (Linux/Windows)
         id: e2e-run-pnpm
@@ -272,7 +345,7 @@ jobs:
 
       - name: Run e2e tests with npm (macOS)
         id: e2e-run-npm
-        if: ${{ matrix.os == 'macos-latest' }}
+        if: ${{ matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success' }}
         run: |
           mkdir -p test-results
           if [[ "${{ matrix.project }}" == "e2e-detox" ]] || [[ "${{ matrix.project }}" == "e2e-react-native" ]] || [[ "${{ matrix.project }}" == "e2e-expo" ]]; then
@@ -296,7 +369,7 @@ jobs:
           CI: true
 
       - name: Upload test results
-        if: always()
+        if: always() && ((matrix.os != 'macos-latest') || (matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success'))
         uses: actions/upload-artifact@v4
         with:
           name: test-results-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.project }}
@@ -304,7 +377,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Save matrix config in file
-        if: ${{ always() }}
+        if: ${{ always() && ((matrix.os != 'macos-latest') || (matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success')) }}
         id: save-matrix
         shell: bash
         run: |
@@ -321,8 +394,8 @@ jobs:
           echo "$matrix" > 'outputs/matrix.json'
 
       - name: Upload matrix config
+        if: ${{ always() && ((matrix.os != 'macos-latest') || (matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success')) }}
         uses: actions/upload-artifact@v4
-        if: ${{ always() }}
         with:
           name: ${{ matrix.os_name}}-${{ matrix.node_version}}-${{ matrix.package_manager}}-${{ matrix.project }}
           overwrite: true
