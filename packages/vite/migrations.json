@@ -76,11 +76,11 @@
       "version": "21.2.0-beta.2",
       "packages": {
         "@analogjs/vite-plugin-angular": {
-          "version": "~1.17.0",
+          "version": "~1.17.1",
           "alwaysAddToPackageJson": false
         },
         "@analogjs/vitest-angular": {
-          "version": "~1.17.0",
+          "version": "~1.17.1",
           "alwaysAddToPackageJson": false
         }
       }
