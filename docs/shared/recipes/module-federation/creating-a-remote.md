@@ -63,7 +63,6 @@ CREATE apps/angular/myremote/src/favicon.ico
 CREATE apps/angular/myremote/src/index.html
 CREATE apps/angular/myremote/src/styles.css
 CREATE apps/angular/myremote/tsconfig.app.json
-CREATE apps/angular/myremote/tsconfig.editor.json
 CREATE apps/angular/myremote/tsconfig.json
 CREATE apps/angular/myremote/src/app/app.ts
 CREATE apps/angular/myremote/src/app/app.routes.ts
@@ -172,7 +171,6 @@ CREATE apps/angular/myremote/src/favicon.ico
 CREATE apps/angular/myremote/src/index.html
 CREATE apps/angular/myremote/src/styles.css
 CREATE apps/angular/myremote/tsconfig.app.json
-CREATE apps/angular/myremote/tsconfig.editor.json
 CREATE apps/angular/myremote/tsconfig.json
 CREATE apps/angular/myremote/src/app/app.ts
 CREATE apps/angular/myremote/src/app/app.routes.ts

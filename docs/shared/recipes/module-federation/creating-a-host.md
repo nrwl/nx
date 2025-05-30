@@ -62,7 +62,6 @@ CREATE apps/angular/shell/src/favicon.ico
 CREATE apps/angular/shell/src/index.html
 CREATE apps/angular/shell/src/styles.css
 CREATE apps/angular/shell/tsconfig.app.json
-CREATE apps/angular/shell/tsconfig.editor.json
 CREATE apps/angular/shell/tsconfig.json
 CREATE apps/angular/shell/src/app/app.css
 CREATE apps/angular/shell/src/app/app.html
@@ -180,7 +179,6 @@ CREATE apps/angular/with-remotes/shell/src/favicon.ico
 CREATE apps/angular/with-remotes/shell/src/index.html
 CREATE apps/angular/with-remotes/shell/src/styles.css
 CREATE apps/angular/with-remotes/shell/tsconfig.app.json
-CREATE apps/angular/with-remotes/shell/tsconfig.editor.json
 CREATE apps/angular/with-remotes/shell/tsconfig.json
 CREATE apps/angular/with-remotes/shell/src/app/app.css
 CREATE apps/angular/with-remotes/shell/src/app/app.html
@@ -204,7 +202,6 @@ CREATE apps/angular/with-remotes/ng-remote1/src/favicon.ico
 CREATE apps/angular/with-remotes/ng-remote1/src/index.html
 CREATE apps/angular/with-remotes/ng-remote1/src/styles.css
 CREATE apps/angular/with-remotes/ng-remote1/tsconfig.app.json
-CREATE apps/angular/with-remotes/ng-remote1/tsconfig.editor.json
 CREATE apps/angular/with-remotes/ng-remote1/tsconfig.json
 CREATE apps/angular/with-remotes/ng-remote1/src/app/app.ts
 CREATE apps/angular/with-remotes/ng-remote1/src/app/app.routes.ts
@@ -229,7 +226,6 @@ CREATE apps/angular/with-remotes/ng-remote2/src/favicon.ico
 CREATE apps/angular/with-remotes/ng-remote2/src/index.html
 CREATE apps/angular/with-remotes/ng-remote2/src/styles.css
 CREATE apps/angular/with-remotes/ng-remote2/tsconfig.app.json
-CREATE apps/angular/with-remotes/ng-remote2/tsconfig.editor.json
 CREATE apps/angular/with-remotes/ng-remote2/tsconfig.json
 CREATE apps/angular/with-remotes/ng-remote2/src/app/app.ts
 CREATE apps/angular/with-remotes/ng-remote2/src/app/app.routes.ts
