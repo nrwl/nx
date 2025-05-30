@@ -147,42 +147,44 @@ function applyNxIndependentConfig(
     ...(config.ignoreWarnings ?? []),
   ];
 
-  config.optimization = !isProd
-    ? undefined
-    : {
-        ...(config.optimization ?? {}),
-        sideEffects: true,
-        minimize:
-          typeof options.optimization === 'object'
-            ? !!options.optimization.scripts
-            : !!options.optimization,
-        minimizer: [
-          new SwcJsMinimizerRspackPlugin({
-            extractComments: false,
-            minimizerOptions: {
-              // this needs to be false to allow toplevel variables to be used in the global scope
-              // important especially for module-federation which operates as such
-              module: false,
-              mangle: {
-                keep_classnames: true,
+  config.optimization = {
+    ...(config.optimization ?? {}),
+    ...(isProd
+      ? {
+          sideEffects: true,
+          minimize:
+            typeof options.optimization === 'object'
+              ? !!options.optimization.scripts
+              : !!options.optimization,
+          minimizer: [
+            new SwcJsMinimizerRspackPlugin({
+              extractComments: false,
+              minimizerOptions: {
+                // this needs to be false to allow toplevel variables to be used in the global scope
+                // important especially for module-federation which operates as such
+                module: false,
+                mangle: {
+                  keep_classnames: true,
+                },
+                format: {
+                  ecma: getTerserEcmaVersion(
+                    path.join(options.root, options.projectRoot)
+                  ),
+                  ascii_only: true,
+                  comments: false,
+                  webkit: true,
+                  safari10: true,
+                },
               },
-              format: {
-                ecma: getTerserEcmaVersion(
-                  path.join(options.root, options.projectRoot)
-                ),
-                ascii_only: true,
-                comments: false,
-                webkit: true,
-                safari10: true,
-              },
-            },
-          }),
-        ],
-        concatenateModules: true,
-        runtimeChunk: isDevServer
-          ? config.optimization?.runtimeChunk ?? undefined
-          : false,
-      };
+            }),
+          ],
+          concatenateModules: true,
+          runtimeChunk: isDevServer
+            ? config.optimization?.runtimeChunk ?? undefined
+            : false,
+        }
+      : {}),
+  };
 
   config.stats = {
     hash: true,
