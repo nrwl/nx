@@ -17,7 +17,14 @@ import {
   type TargetConfiguration,
 } from '@nx/devkit';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import {
+  existsSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  statSync,
+  unlinkSync,
+} from 'node:fs';
 import {
   basename,
   dirname,
@@ -122,7 +129,20 @@ function readTsConfigCacheData(): Record<string, TsconfigCacheData> {
 }
 
 function writeToCache<T extends object>(cachePath: string, data: T) {
-  writeJsonFile(cachePath, data, { spaces: 0 });
+  const maxAttempts = 5;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const unique = (Math.random().toString(16) + '00000000').slice(2, 10);
+    const tempPath = `${cachePath}.${process.pid}.${unique}.tmp`;
+    try {
+      writeJsonFile(tempPath, data, { spaces: 0 });
+      renameSync(tempPath, cachePath);
+      return;
+    } catch {
+      try {
+        unlinkSync(tempPath);
+      } catch {}
+    }
+  }
 }
 function writeTsConfigCache(data: Record<string, TsconfigCacheData>) {
   writeToCache(TS_CONFIG_CACHE_PATH, {
