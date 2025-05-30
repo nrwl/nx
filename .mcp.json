@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "nx": {
+      "command": "pnpm",
+      "args": ["nx-mcp", "."],
+      "env": {}
+    }
+  }
+}

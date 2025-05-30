@@ -191,6 +191,11 @@ rust-toolchain.toml @nrwl/nx-native-reviewers
 /.husky/** @nrwl/nx-pipelines-reviewers
 /packages/workspace/src/generators/ci-workflow/** @nrwl/nx-pipelines-reviewers
 
+# Claude AI Integration
+CLAUDE.md @FrozenPandaz
+.claude/** @FrozenPandaz
+.mcp.json @FrozenPandaz
+
 # Global Files
 project.json @FrozenPandaz @vsavkin
 jest.config.ts @nrwl/nx-testing-tools-reviewers @FrozenPandaz
