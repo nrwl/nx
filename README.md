@@ -1,7 +1,7 @@
 <p style="text-align: center;">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-dark.svg">
-    <img alt="Nx - Smart Monorepos · Fast CI" src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-light.svg" width="100%">
+    <img alt="Nx - Smart Repos · Fast Builds" src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-light.svg" width="100%">
   </picture>
 </p>
 
@@ -19,7 +19,7 @@
 
 <hr>
 
-# Smart Monorepos · Fast CI
+# Smart Repos · Fast Builds
 
 Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.
 
@@ -58,7 +58,7 @@ Learn more in the [Nx CI docs &raquo;](https://nx.dev/ci/intro?utm_source=nxrepo
 - [Our Twitter/X](https://x.com/nxdevtools)
 
 <p style="text-align: center;"><a href="https://www.youtube.com/@nxdevtools/videos" target="_blank" rel="noreferrer"><img src="./images/nx-courses-and-videos.svg" 
-width="100%" alt="Nx - Smart Monorepos · Fast CI"></a></p>
+width="100%" alt="Nx - Smart Repos · Fast Builds"></a></p>
 
 ## Want to help?
 

@@ -19,7 +19,7 @@ import { getTerserEcmaVersion } from './get-terser-ecma-version';
 import nodeExternals = require('webpack-node-externals');
 import { NormalizedNxAppRspackPluginOptions } from './models';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { isBuildableLibrary } from './is-lib-buildable';
+import { getNonBuildableLibs } from './get-non-buildable-libs';
 
 const IGNORED_RSPACK_WARNINGS = [
   /The comment file/i,
@@ -64,6 +64,7 @@ function applyNxIndependentConfig(
 ): void {
   const isProd =
     process.env.NODE_ENV === 'production' || options.mode === 'production';
+  const isDevServer = process.env['WEBPACK_SERVE'];
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
   config.context = path.join(options.root, options.projectRoot);
   config.target ??= options.target as 'async-node' | 'node' | 'web';
@@ -146,39 +147,44 @@ function applyNxIndependentConfig(
     ...(config.ignoreWarnings ?? []),
   ];
 
-  config.optimization = !isProd
-    ? undefined
-    : {
-        ...(config.optimization ?? {}),
-        sideEffects: true,
-        minimize:
-          typeof options.optimization === 'object'
-            ? !!options.optimization.scripts
-            : !!options.optimization,
-        minimizer: [
-          new SwcJsMinimizerRspackPlugin({
-            extractComments: false,
-            minimizerOptions: {
-              // this needs to be false to allow toplevel variables to be used in the global scope
-              // important especially for module-federation which operates as such
-              module: false,
-              mangle: {
-                keep_classnames: true,
+  config.optimization = {
+    ...(config.optimization ?? {}),
+    ...(isProd
+      ? {
+          sideEffects: true,
+          minimize:
+            typeof options.optimization === 'object'
+              ? !!options.optimization.scripts
+              : !!options.optimization,
+          minimizer: [
+            new SwcJsMinimizerRspackPlugin({
+              extractComments: false,
+              minimizerOptions: {
+                // this needs to be false to allow toplevel variables to be used in the global scope
+                // important especially for module-federation which operates as such
+                module: false,
+                mangle: {
+                  keep_classnames: true,
+                },
+                format: {
+                  ecma: getTerserEcmaVersion(
+                    path.join(options.root, options.projectRoot)
+                  ),
+                  ascii_only: true,
+                  comments: false,
+                  webkit: true,
+                  safari10: true,
+                },
               },
-              format: {
-                ecma: getTerserEcmaVersion(
-                  path.join(options.root, options.projectRoot)
-                ),
-                ascii_only: true,
-                comments: false,
-                webkit: true,
-                safari10: true,
-              },
-            },
-          }),
-        ],
-        concatenateModules: true,
-      };
+            }),
+          ],
+          concatenateModules: true,
+          runtimeChunk: isDevServer
+            ? config.optimization?.runtimeChunk ?? undefined
+            : false,
+        }
+      : {}),
+  };
 
   config.stats = {
     hash: true,
@@ -353,32 +359,13 @@ function applyNxDependentConfig(
     const graph = options.projectGraph;
     const projectName = options.projectName;
 
-    const deps = graph?.dependencies?.[projectName] ?? [];
-
     // Collect non-buildable TS project references so that they are bundled
     // in the final output. This is needed for projects that are not buildable
     // but are referenced by buildable projects. This is needed for the new TS
     // solution setup.
+
     const nonBuildableWorkspaceLibs = isUsingTsSolution
-      ? deps
-          .filter((dep) => {
-            const node = graph.nodes?.[dep.target];
-            if (!node || node.type !== 'lib') return false;
-
-            const hasBuildTarget = 'build' in (node.data?.targets ?? {});
-
-            if (hasBuildTarget) {
-              return false;
-            }
-
-            // If there is no build target we check the package exports to see if they reference
-            // source files
-            return !isBuildableLibrary(node);
-          })
-          .map(
-            (dep) => graph.nodes?.[dep.target]?.data?.metadata?.js?.packageName
-          )
-          .filter((name): name is string => !!name)
+      ? getNonBuildableLibs(graph, projectName)
       : [];
 
     externals.push(

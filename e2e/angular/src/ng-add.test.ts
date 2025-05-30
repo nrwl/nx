@@ -115,7 +115,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       '.prettierrc',
       `apps/${project}/src/main.ts`,
       `apps/${project}/src/app/app.config.ts`,
-      `apps/${project}/src/app/app.component.ts`,
+      `apps/${project}/src/app/app.ts`,
       `apps/${project}/src/app/app.routes.ts`
     );
 
@@ -178,10 +178,10 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     const projectConfig = readJson(`apps/${project}/project.json`);
     expect(projectConfig.sourceRoot).toEqual(`apps/${project}/src`);
     expect(projectConfig.targets.build).toStrictEqual({
-      executor: '@angular-devkit/build-angular:application',
+      executor: '@angular/build:application',
+      outputs: ['{options.outputPath}'],
       options: {
-        outputPath: `dist/apps/${project}`,
-        index: `apps/${project}/src/index.html`,
+        outputPath: `dist/${project}`,
         browser: `apps/${project}/src/main.ts`,
         polyfills: [`zone.js`],
         tsConfig: `apps/${project}/tsconfig.app.json`,
@@ -214,7 +214,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       defaultConfiguration: 'production',
     });
     expect(projectConfig.targets.serve).toEqual({
-      executor: '@angular-devkit/build-angular:dev-server',
+      executor: '@angular/build:dev-server',
       configurations: {
         production: { buildTarget: `${project}:build:production` },
         development: { buildTarget: `${project}:build:development` },
@@ -222,7 +222,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       defaultConfiguration: 'development',
     });
     expect(projectConfig.targets.test).toStrictEqual({
-      executor: '@angular-devkit/build-angular:karma',
+      executor: '@angular/build:karma',
       options: {
         polyfills: [`zone.js`, `zone.js/testing`],
         tsConfig: `apps/${project}/tsconfig.spec.json`,
@@ -249,7 +249,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     });
 
     runCLI(`build ${project} --configuration production --outputHashing none`);
-    checkFilesExist(`dist/apps/${project}/browser/main.js`);
+    checkFilesExist(`dist/${project}/browser/main.js`);
   });
 
   it('should handle a workspace with cypress v9', () => {
@@ -436,7 +436,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(output).toContain(
       `Successfully ran target build for project ${project}`
     );
-    checkFilesExist(`dist/apps/${project}/browser/main.js`);
+    checkFilesExist(`dist/${project}/browser/main.js`);
 
     output = runCLI(`build ${project} --outputHashing none`);
     expect(output).toContain(
@@ -454,7 +454,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(output).toContain(
       `Successfully ran target build for project ${app1}`
     );
-    checkFilesExist(`dist/apps/${app1}/browser/main.js`);
+    checkFilesExist(`dist/${app1}/browser/main.js`);
 
     output = runCLI(`build ${app1} --outputHashing none`);
     expect(output).toContain(

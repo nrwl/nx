@@ -5,7 +5,7 @@
   },
   "include": [
     "src/main.ts",
-    <% if(type === "remote") { %> "src/remote-entry/<% if(standalone) { %>entry.routes.ts", <% } else { %> entry.module.ts", <% } } %>
+    <% if(type === "remote") { %> "src/remote-entry/<% if(standalone) { %>entry.routes.ts",<% } else { %><%= entryModuleFileName %>.ts",<% } } %>
     "webpack.config.ts",
     "webpack.prod.config.ts"
   ]

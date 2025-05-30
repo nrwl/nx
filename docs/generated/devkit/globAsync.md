@@ -8,10 +8,10 @@ Paths should be unix-style with forward slashes.
 
 #### Parameters
 
-| Name       | Type                                  | Description             |
-| :--------- | :------------------------------------ | :---------------------- |
-| `tree`     | [`Tree`](../../devkit/documents/Tree) | The file system tree    |
-| `patterns` | `string`[]                            | A list of glob patterns |
+| Name       | Type                                                | Description             |
+| :--------- | :-------------------------------------------------- | :---------------------- |
+| `tree`     | [`Tree`](/reference/core-api/devkit/documents/Tree) | The file system tree    |
+| `patterns` | `string`[]                                          | A list of glob patterns |
 
 #### Returns
 

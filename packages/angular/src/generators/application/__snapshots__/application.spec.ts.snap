@@ -27,7 +27,6 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack and
   "styles": [
     "./src/styles.css"
   ],
-  "scripts": [],
   "devServer": {},
   "ssr": {
     "entry": "./src/server.ts"
@@ -188,7 +187,6 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack inc
   "styles": [
     "./src/styles.css"
   ],
-  "scripts": [],
   "devServer": {}
 
     }
@@ -228,54 +226,54 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack inc
       }});"
 `;
 
-exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps with routing 1`] = `
-"import { NgModule } from '@angular/core';
+exports[`app --minimal should skip "nx-welcome.ts" file and references for non-standalone apps with routing 1`] = `
+"import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
-import { AppComponent } from './app.component';
+import { App } from './app';
 import { appRoutes } from './app.routes';
 
 @NgModule({
-  declarations: [AppComponent],
+  declarations: [App],
   imports: [
     BrowserModule,
     RouterModule.forRoot(appRoutes),
   ],
-  providers: [],
-  bootstrap: [AppComponent],
+  providers: [provideBrowserGlobalErrorListeners()],
+  bootstrap: [App],
 })
 export class AppModule {}
 "
 `;
 
-exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps with routing 2`] = `
+exports[`app --minimal should skip "nx-welcome.ts" file and references for non-standalone apps with routing 2`] = `
 "import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-root',
   standalone: false,
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
 })
-export class AppComponent {}
+export class App {}
 "
 `;
 
-exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps with routing 3`] = `
+exports[`app --minimal should skip "nx-welcome.ts" file and references for non-standalone apps with routing 3`] = `
 "import { TestBed } from '@angular/core/testing';
-import { AppComponent } from './app.component';
+import { App } from './app';
 import { RouterModule } from '@angular/router';
 
-describe('AppComponent', () => {
+describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [RouterModule.forRoot([])],
-      declarations: [AppComponent]
+      declarations: [App]
     }).compileComponents();
   });
 
   it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
+    const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
@@ -286,56 +284,56 @@ describe('AppComponent', () => {
 "
 `;
 
-exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps with routing 4`] = `
+exports[`app --minimal should skip "nx-welcome.ts" file and references for non-standalone apps with routing 4`] = `
 "<h1>Welcome plain</h1>
 <router-outlet></router-outlet>
 "
 `;
 
-exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps without routing 1`] = `
-"import { NgModule } from '@angular/core';
+exports[`app --minimal should skip "nx-welcome.ts" file and references for non-standalone apps without routing 1`] = `
+"import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { AppComponent } from './app.component';
+import { App } from './app';
 
 @NgModule({
-  declarations: [AppComponent],
+  declarations: [App],
   imports: [
     BrowserModule,
   ],
-  providers: [],
-  bootstrap: [AppComponent],
+  providers: [provideBrowserGlobalErrorListeners()],
+  bootstrap: [App],
 })
 export class AppModule {}
 "
 `;
 
-exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps without routing 2`] = `
+exports[`app --minimal should skip "nx-welcome.ts" file and references for non-standalone apps without routing 2`] = `
 "import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-root',
   standalone: false,
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
 })
-export class AppComponent {}
+export class App {}
 "
 `;
 
-exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps without routing 3`] = `
+exports[`app --minimal should skip "nx-welcome.ts" file and references for non-standalone apps without routing 3`] = `
 "import { TestBed } from '@angular/core/testing';
-import { AppComponent } from './app.component';
+import { App } from './app';
 
-describe('AppComponent', () => {
+describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [],
-      declarations: [AppComponent]
+      declarations: [App]
     }).compileComponents();
   });
 
   it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
+    const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
@@ -346,39 +344,39 @@ describe('AppComponent', () => {
 "
 `;
 
-exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps without routing 4`] = `
+exports[`app --minimal should skip "nx-welcome.ts" file and references for non-standalone apps without routing 4`] = `
 "<h1>Welcome plain</h1>
 "
 `;
 
-exports[`app --minimal should skip "nx-welcome.component.ts" file and references for standalone apps with routing 1`] = `
+exports[`app --minimal should skip "nx-welcome.ts" file and references for standalone apps with routing 1`] = `
 "import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 
 @Component({
   imports: [RouterModule],
   selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
 })
-export class AppComponent {}
+export class App {}
 "
 `;
 
-exports[`app --minimal should skip "nx-welcome.component.ts" file and references for standalone apps with routing 2`] = `
+exports[`app --minimal should skip "nx-welcome.ts" file and references for standalone apps with routing 2`] = `
 "import { TestBed } from '@angular/core/testing';
-import { AppComponent } from './app.component';
+import { App } from './app';
 import { RouterModule } from '@angular/router';
 
-describe('AppComponent', () => {
+describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent, RouterModule.forRoot([])],
+      imports: [App, RouterModule.forRoot([])],
     }).compileComponents();
   });
 
   it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
+    const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
@@ -389,38 +387,38 @@ describe('AppComponent', () => {
 "
 `;
 
-exports[`app --minimal should skip "nx-welcome.component.ts" file and references for standalone apps with routing 3`] = `
+exports[`app --minimal should skip "nx-welcome.ts" file and references for standalone apps with routing 3`] = `
 "<h1>Welcome plain</h1>
 <router-outlet></router-outlet>
 "
 `;
 
-exports[`app --minimal should skip "nx-welcome.component.ts" file and references for standalone apps without routing 1`] = `
+exports[`app --minimal should skip "nx-welcome.ts" file and references for standalone apps without routing 1`] = `
 "import { Component } from '@angular/core';
 
 @Component({
   imports: [],
   selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
 })
-export class AppComponent {}
+export class App {}
 "
 `;
 
-exports[`app --minimal should skip "nx-welcome.component.ts" file and references for standalone apps without routing 2`] = `
+exports[`app --minimal should skip "nx-welcome.ts" file and references for standalone apps without routing 2`] = `
 "import { TestBed } from '@angular/core/testing';
-import { AppComponent } from './app.component';
+import { App } from './app';
 
-describe('AppComponent', () => {
+describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent],
+      imports: [App],
     }).compileComponents();
   });
 
   it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
+    const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
@@ -431,7 +429,7 @@ describe('AppComponent', () => {
 "
 `;
 
-exports[`app --minimal should skip "nx-welcome.component.ts" file and references for standalone apps without routing 3`] = `
+exports[`app --minimal should skip "nx-welcome.ts" file and references for standalone apps without routing 3`] = `
 "<h1>Welcome plain</h1>
 "
 `;
@@ -439,21 +437,25 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 exports[`app --standalone should generate a standalone app correctly with routing 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
-import { AppComponent } from './app/app.component';
+import { App } from './app/app';
 
-bootstrapApplication(AppComponent, appConfig).catch((err) =>
+bootstrapApplication(App, appConfig).catch((err) =>
   console.error(err)
 );
 "
 `;
 
 exports[`app --standalone should generate a standalone app correctly with routing 2`] = `
-"import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideRouter(appRoutes)
+  ]
 };
 "
 `;
@@ -468,46 +470,40 @@ export const appRoutes: Route[] = [];
 exports[`app --standalone should generate a standalone app correctly with routing 4`] = `
 "import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { NxWelcome } from './nx-welcome';
 
 @Component({
-  imports: [NxWelcomeComponent, RouterModule],
+  imports: [NxWelcome, RouterModule],
   selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
 })
-export class AppComponent {
-  title = 'standalone';
+export class App {
+  protected title = 'standalone';
 }
 "
 `;
 
 exports[`app --standalone should generate a standalone app correctly with routing 5`] = `
 "import { TestBed } from '@angular/core/testing';
-import { AppComponent } from './app.component';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { App } from './app';
+import { NxWelcome } from './nx-welcome';
 import { RouterModule } from '@angular/router';
 
-describe('AppComponent', () => {
+describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent, NxWelcomeComponent, RouterModule.forRoot([])],
+      imports: [App, NxWelcome, RouterModule.forRoot([])],
     }).compileComponents();
   });
 
   it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
+    const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome standalone'
     );
-  });
-
-  it(\`should have as title 'standalone'\`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('standalone');
   });
 });
 "
@@ -516,77 +512,63 @@ describe('AppComponent', () => {
 exports[`app --standalone should generate a standalone app correctly without routing 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
-import { AppComponent } from './app/app.component';
+import { App } from './app/app';
 
-bootstrapApplication(AppComponent, appConfig).catch((err) =>
+bootstrapApplication(App, appConfig).catch((err) =>
   console.error(err)
 );
 "
 `;
 
 exports[`app --standalone should generate a standalone app correctly without routing 2`] = `
-"import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideZoneChangeDetection({ eventCoalescing: true }), ]
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideZoneChangeDetection({ eventCoalescing: true })
+  ]
 };
 "
 `;
 
 exports[`app --standalone should generate a standalone app correctly without routing 3`] = `
 "import { Component } from '@angular/core';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { NxWelcome } from './nx-welcome';
 
 @Component({
-  imports: [NxWelcomeComponent, ],
+  imports: [NxWelcome, ],
   selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
 })
-export class AppComponent {
-  title = 'standalone';
+export class App {
+  protected title = 'standalone';
 }
 "
 `;
 
 exports[`app --standalone should generate a standalone app correctly without routing 4`] = `
 "import { TestBed } from '@angular/core/testing';
-import { AppComponent } from './app.component';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { App } from './app';
+import { NxWelcome } from './nx-welcome';
 
-describe('AppComponent', () => {
+describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent, NxWelcomeComponent],
+      imports: [App, NxWelcome],
     }).compileComponents();
   });
 
   it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
+    const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome standalone'
     );
   });
-
-  it(\`should have as title 'standalone'\`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('standalone');
-  });
 });
-"
-`;
-
-exports[`app --standalone should should not use event coalescing in versions lower than v18 1`] = `
-"import { ApplicationConfig } from '@angular/core';
-import { provideRouter } from '@angular/router';
-import { appRoutes } from './app.routes';
-
-export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(appRoutes) ]
-};
 "
 `;
 
@@ -597,14 +579,19 @@ exports[`app --strict should enable strict type checking: app tsconfig.json 1`] 
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
     "strictTemplates": true,
+    "typeCheckHostBindings": true,
   },
   "compilerOptions": {
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "isolatedModules": true,
+    "module": "preserve",
+    "moduleResolution": "bundler",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
     "noPropertyAccessFromIndexSignature": true,
+    "skipLibCheck": true,
     "strict": true,
     "target": "es2022",
   },
@@ -612,9 +599,6 @@ exports[`app --strict should enable strict type checking: app tsconfig.json 1`] 
   "files": [],
   "include": [],
   "references": [
-    {
-      "path": "./tsconfig.editor.json",
-    },
     {
       "path": "./tsconfig.app.json",
     },
@@ -629,7 +613,6 @@ exports[`app --strict should enable strict type checking: e2e tsconfig.json 1`] 
 {
   "compilerOptions": {
     "allowJs": true,
-    "forceConsistentCasingInFileNames": true,
     "module": "commonjs",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
@@ -689,17 +672,18 @@ exports[`app --unit-test-runner vitest should add tsconfig.spec.json 1`] = `
 `;
 
 exports[`app --unit-test-runner vitest should generate src/test-setup.ts 1`] = `
-"import '@analogjs/vitest-angular/setup-zone';
+"import '@angular/compiler';
+import '@analogjs/vitest-angular/setup-zone';
 
 import {
-  BrowserDynamicTestingModule,
-  platformBrowserDynamicTesting,
-} from '@angular/platform-browser-dynamic/testing';
+  BrowserTestingModule,
+  platformBrowserTesting,
+} from '@angular/platform-browser/testing';
 import { getTestBed } from '@angular/core/testing';
 
 getTestBed().initTestEnvironment(
-  BrowserDynamicTestingModule,
-  platformBrowserDynamicTesting()
+  BrowserTestingModule,
+  platformBrowserTesting()
 );
 "
 `;
@@ -735,32 +719,86 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`app angular compat support should import "ApplicationConfig" from "@angular/platform-browser" 1`] = `
-"import { ApplicationConfig } from '@angular/core';
-import { provideRouter } from '@angular/router';
-import { appRoutes } from './app.routes';
+exports[`app angular compat support should generate components with the "component" type for versions lower than v20 1`] = `
+"import { Component } from '@angular/core';
+import { RouterModule } from '@angular/router';
+import { NxWelcomeComponent } from './nx-welcome.component';
 
-export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(appRoutes) ]
-};
+@Component({
+  imports: [NxWelcomeComponent, RouterModule],
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.css',
+})
+export class AppComponent {
+  title = 'myapp';
+}
+"
+`;
+
+exports[`app angular compat support should generate components with the "component" type for versions lower than v20 2`] = `
+"<app-nx-welcome></app-nx-welcome>
+<router-outlet></router-outlet>
+"
+`;
+
+exports[`app angular compat support should generate components with the "component" type for versions lower than v20 3`] = `
+"import { TestBed } from '@angular/core/testing';
+import { AppComponent } from './app.component';
+import { NxWelcomeComponent } from './nx-welcome.component';
+import { RouterModule } from '@angular/router';
+
+describe('AppComponent', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [AppComponent, NxWelcomeComponent, RouterModule.forRoot([])],
+    }).compileComponents();
+  });
+
+  it('should render title', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('h1')?.textContent).toContain(
+      'Welcome myapp'
+    );
+  });
+
+  it(\`should have as title 'myapp'\`, () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    expect(app.title).toEqual('myapp');
+  });
+});
+"
+`;
+
+exports[`app angular compat support should generate components with the "component" type for versions lower than v20 4`] = `
+"import { bootstrapApplication } from '@angular/platform-browser';
+import { appConfig } from './app/app.config';
+import { AppComponent } from './app/app.component';
+
+bootstrapApplication(AppComponent, appConfig).catch((err) =>
+  console.error(err)
+);
 "
 `;
 
 exports[`app at the root should accept numbers in the path 1`] = `"src/9-websites/my-app"`;
 
 exports[`app format files should format files 1`] = `
-"import { NgModule } from '@angular/core';
+"import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
-import { AppComponent } from './app.component';
+import { App } from './app';
 import { appRoutes } from './app.routes';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { NxWelcome } from './nx-welcome';
 
 @NgModule({
-  declarations: [AppComponent, NxWelcomeComponent],
+  declarations: [App, NxWelcome],
   imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
-  providers: [],
-  bootstrap: [AppComponent],
+  providers: [provideBrowserGlobalErrorListeners()],
+  bootstrap: [App],
 })
 export class AppModule {}
 "
@@ -772,42 +810,36 @@ exports[`app format files should format files 2`] = `
 @Component({
   selector: 'app-root',
   standalone: false,
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
 })
-export class AppComponent {
-  title = 'my-app';
+export class App {
+  protected title = 'my-app';
 }
 "
 `;
 
 exports[`app format files should format files 3`] = `
 "import { TestBed } from '@angular/core/testing';
-import { AppComponent } from './app.component';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { App } from './app';
+import { NxWelcome } from './nx-welcome';
 import { RouterModule } from '@angular/router';
 
-describe('AppComponent', () => {
+describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [RouterModule.forRoot([])],
-      declarations: [AppComponent, NxWelcomeComponent],
+      declarations: [App, NxWelcome],
     }).compileComponents();
   });
 
   it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
+    const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Welcome my-app'
     );
-  });
-
-  it(\`should have as title 'my-app'\`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('my-app');
   });
 });
 "
@@ -854,7 +886,7 @@ exports[`app nested should create project configs 1`] = `
         },
       },
       "defaultConfiguration": "production",
-      "executor": "@angular-devkit/build-angular:application",
+      "executor": "@angular/build:application",
       "options": {
         "assets": [
           {
@@ -863,12 +895,10 @@ exports[`app nested should create project configs 1`] = `
           },
         ],
         "browser": "my-dir/my-app/src/main.ts",
-        "index": "my-dir/my-app/src/index.html",
         "outputPath": "dist/my-dir/my-app",
         "polyfills": [
           "zone.js",
         ],
-        "scripts": [],
         "styles": [
           "my-dir/my-app/src/styles.css",
         ],
@@ -879,7 +909,7 @@ exports[`app nested should create project configs 1`] = `
       ],
     },
     "extract-i18n": {
-      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "executor": "@angular/build:extract-i18n",
       "options": {
         "buildTarget": "my-app:build",
       },
@@ -898,7 +928,7 @@ exports[`app nested should create project configs 1`] = `
       },
       "continuous": true,
       "defaultConfiguration": "development",
-      "executor": "@angular-devkit/build-angular:dev-server",
+      "executor": "@angular/build:dev-server",
     },
     "serve-static": {
       "continuous": true,
@@ -972,7 +1002,7 @@ exports[`app not nested should create project configs 1`] = `
         },
       },
       "defaultConfiguration": "production",
-      "executor": "@angular-devkit/build-angular:application",
+      "executor": "@angular/build:application",
       "options": {
         "assets": [
           {
@@ -981,12 +1011,10 @@ exports[`app not nested should create project configs 1`] = `
           },
         ],
         "browser": "my-app/src/main.ts",
-        "index": "my-app/src/index.html",
         "outputPath": "dist/my-app",
         "polyfills": [
           "zone.js",
         ],
-        "scripts": [],
         "styles": [
           "my-app/src/styles.css",
         ],
@@ -997,7 +1025,7 @@ exports[`app not nested should create project configs 1`] = `
       ],
     },
     "extract-i18n": {
-      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "executor": "@angular/build:extract-i18n",
       "options": {
         "buildTarget": "my-app:build",
       },
@@ -1016,7 +1044,7 @@ exports[`app not nested should create project configs 1`] = `
       },
       "continuous": true,
       "defaultConfiguration": "development",
-      "executor": "@angular-devkit/build-angular:dev-server",
+      "executor": "@angular/build:dev-server",
     },
     "serve-static": {
       "continuous": true,
@@ -1060,7 +1088,6 @@ exports[`app not nested should generate files: e2e tsconfig.json 1`] = `
 {
   "compilerOptions": {
     "allowJs": true,
-    "forceConsistentCasingInFileNames": true,
     "module": "commonjs",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
@@ -1094,15 +1121,13 @@ exports[`app not nested should generate files: tsconfig.app.json 1`] = `
   },
   "exclude": [
     "jest.config.ts",
+    "src/test-setup.ts",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
   ],
   "extends": "./tsconfig.json",
-  "files": [
-    "src/main.ts",
-  ],
   "include": [
-    "src/**/*.d.ts",
+    "src/**/*.ts",
   ],
 }
 `;
@@ -1114,14 +1139,19 @@ exports[`app not nested should generate files: tsconfig.json 1`] = `
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
     "strictTemplates": true,
+    "typeCheckHostBindings": true,
   },
   "compilerOptions": {
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "isolatedModules": true,
+    "module": "preserve",
+    "moduleResolution": "bundler",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
     "noPropertyAccessFromIndexSignature": true,
+    "skipLibCheck": true,
     "strict": true,
     "target": "es2022",
   },
@@ -1129,9 +1159,6 @@ exports[`app not nested should generate files: tsconfig.json 1`] = `
   "files": [],
   "include": [],
   "references": [
-    {
-      "path": "./tsconfig.editor.json",
-    },
     {
       "path": "./tsconfig.app.json",
     },
@@ -1142,17 +1169,61 @@ exports[`app not nested should generate files: tsconfig.json 1`] = `
 }
 `;
 
-exports[`app should generate correct tsconfig.editor.json 1`] = `
-{
-  "compilerOptions": {},
-  "exclude": [
-    "jest.config.ts",
-    "src/**/*.test.ts",
-    "src/**/*.spec.ts",
-  ],
-  "extends": "./tsconfig.json",
-  "include": [
-    "src/**/*.ts",
-  ],
+exports[`app template generation mode should respect the "type" configured in the component generator defaults 1`] = `
+"import { Component } from '@angular/core';
+import { RouterModule } from '@angular/router';
+import { NxWelcomeComponent } from './nx-welcome.component';
+
+@Component({
+  imports: [NxWelcomeComponent, RouterModule],
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.css',
+})
+export class AppComponent {
+  protected title = 'myapp';
 }
+"
+`;
+
+exports[`app template generation mode should respect the "type" configured in the component generator defaults 2`] = `
+"<app-nx-welcome></app-nx-welcome>
+<router-outlet></router-outlet>
+"
+`;
+
+exports[`app template generation mode should respect the "type" configured in the component generator defaults 3`] = `
+"import { TestBed } from '@angular/core/testing';
+import { AppComponent } from './app.component';
+import { NxWelcomeComponent } from './nx-welcome.component';
+import { RouterModule } from '@angular/router';
+
+describe('AppComponent', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [AppComponent, NxWelcomeComponent, RouterModule.forRoot([])],
+    }).compileComponents();
+  });
+
+  it('should render title', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('h1')?.textContent).toContain(
+      'Welcome myapp'
+    );
+  });
+});
+"
+`;
+
+exports[`app template generation mode should respect the "type" configured in the component generator defaults 4`] = `
+"import { bootstrapApplication } from '@angular/platform-browser';
+import { appConfig } from './app/app.config';
+import { AppComponent } from './app/app.component';
+
+bootstrapApplication(AppComponent, appConfig).catch((err) =>
+  console.error(err)
+);
+"
 `;

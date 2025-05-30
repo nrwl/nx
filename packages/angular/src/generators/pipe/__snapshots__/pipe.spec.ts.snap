@@ -2,7 +2,7 @@
 
 exports[`pipe generator --no-standalone should export the pipe correctly when directory is nested deeper 1`] = `
 "import { NgModule } from '@angular/core';
-import { TestPipe } from './my-pipes/test/test.pipe';
+import { TestPipe } from './my-pipes/test/test-pipe';
 @NgModule({
   imports: [],
   declarations: [TestPipe],
@@ -28,7 +28,7 @@ export class TestPipe implements PipeTransform {
 `;
 
 exports[`pipe generator --no-standalone should generate a pipe with test files and attach to the NgModule automatically 2`] = `
-"import { TestPipe } from './test.pipe';
+"import { TestPipe } from './test-pipe';
 
 describe('TestPipe', () => {
   it('create an instance', () => {
@@ -41,7 +41,7 @@ describe('TestPipe', () => {
 
 exports[`pipe generator --no-standalone should generate a pipe with test files and attach to the NgModule automatically 3`] = `
 "import { NgModule } from '@angular/core';
-import { TestPipe } from './test.pipe';
+import { TestPipe } from './test-pipe';
 @NgModule({
   imports: [],
   declarations: [TestPipe],
@@ -67,7 +67,7 @@ export class TestPipe implements PipeTransform {
 `;
 
 exports[`pipe generator --no-standalone should import the pipe correctly when files are flat 2`] = `
-"import { TestPipe } from './test.pipe';
+"import { TestPipe } from './test-pipe';
 
 describe('TestPipe', () => {
   it('create an instance', () => {
@@ -80,7 +80,7 @@ describe('TestPipe', () => {
 
 exports[`pipe generator --no-standalone should import the pipe correctly when files are flat 3`] = `
 "import { NgModule } from '@angular/core';
-import { TestPipe } from './test/test.pipe';
+import { TestPipe } from './test/test-pipe';
 @NgModule({
   imports: [],
   declarations: [TestPipe],
@@ -106,7 +106,7 @@ export class TestPipe implements PipeTransform {
 `;
 
 exports[`pipe generator --no-standalone should import the pipe correctly when files are flat but deeply nested 2`] = `
-"import { TestPipe } from './test.pipe';
+"import { TestPipe } from './test-pipe';
 
 describe('TestPipe', () => {
   it('create an instance', () => {
@@ -119,7 +119,7 @@ describe('TestPipe', () => {
 
 exports[`pipe generator --no-standalone should import the pipe correctly when files are flat but deeply nested 3`] = `
 "import { NgModule } from '@angular/core';
-import { TestPipe } from './my-pipes/test/test.pipe';
+import { TestPipe } from './my-pipes/test/test-pipe';
 @NgModule({
   imports: [],
   declarations: [TestPipe],
@@ -144,7 +144,7 @@ export class TestPipe implements PipeTransform {
 `;
 
 exports[`pipe generator should generate correctly 2`] = `
-"import { TestPipe } from './test.pipe';
+"import { TestPipe } from './test-pipe';
 
 describe('TestPipe', () => {
   it('create an instance', () => {

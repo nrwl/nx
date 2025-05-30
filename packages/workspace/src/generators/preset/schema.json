@@ -110,10 +110,6 @@
       "type": "boolean",
       "default": false
     },
-    "serverRouting": {
-      "description": "Use the Angular Server Routing and App Engine APIs (Developer Preview).",
-      "type": "boolean"
-    },
     "prefix": {
       "description": "The prefix to use for Angular component and directive selectors.",
       "type": "string"

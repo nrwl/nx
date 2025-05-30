@@ -13,7 +13,7 @@ This technology has enabled a much cleaner approach to Micro Frontend Architectu
 
 Nx offers great out-of-the-box support and developer experience for Module Federation for Angular and React. You can learn more about it from the resources below:
 
-📄 [Module Federation Recipes on Nx](/recipes/module-federation)  
+📄 [Module Federation Recipes on Nx](/technologies/module-federation/recipes)
 📺 [Speed up your Angular serve and build times with Module Federation and Nx](https://www.youtube.com/watch?v=JkcaGzhRjkc)
 
 However, until now, it has only supported Client-Side Rendering (CSR). Essentially it worked only for Single Page Applications (SPAs). While this is still valuable, it is becoming ever more apparent that Server-Side Rendering (SSR) is becoming the de-facto standard for building web applications, due to the multitude of benefits it provides.

@@ -15,11 +15,15 @@
         "command": "nx g @nx/angular:pipe mylib/src/lib/foo.pipe.ts"
       },
       {
-        "description": "Generate a pipe without providing the file extension. It results in the pipe `FooPipe` at `mylib/src/lib/foo.pipe.ts`",
+        "description": "Generate a pipe without providing the file extension. It results in the pipe `FooPipe` at `mylib/src/lib/foo-pipe.ts`",
         "command": "nx g @nx/angular:pipe mylib/src/lib/foo"
       },
       {
-        "description": "Generate a pipe with the exported symbol different from the file name. It results in the pipe `CustomPipe` at `mylib/src/lib/foo.pipe.ts`",
+        "description": "Generate a pipe with a different type separator. It results in the pipe `FooPipe` at `mylib/src/lib/foo.pipe.ts`",
+        "command": "nx g @nx/angular:pipe mylib/src/lib/foo --typeSeparator=."
+      },
+      {
+        "description": "Generate a pipe with the exported symbol different from the file name. It results in the pipe `CustomPipe` at `mylib/src/lib/foo-pipe.ts`",
         "command": "nx g @nx/angular:pipe mylib/src/lib/foo --name=custom"
       }
     ],
@@ -58,6 +62,11 @@
         "type": "boolean",
         "default": false,
         "description": "The declaring NgModule exports this pipe."
+      },
+      "typeSeparator": {
+        "type": "string",
+        "enum": ["-", "."],
+        "description": "The separator character to use before the type within the generated file's name. For example, if you set the option to `.`, the file will be named `example.pipe.ts`. It defaults to '-' for Angular v20+. For versions below v20, it defaults to '.'."
       },
       "skipFormat": {
         "type": "boolean",

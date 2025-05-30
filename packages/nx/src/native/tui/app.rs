@@ -43,6 +43,7 @@ pub struct App {
     pub components: Vec<Box<dyn Component>>,
     pub quit_at: Option<std::time::Instant>,
     focus: Focus,
+    run_mode: RunMode,
     previous_focus: Focus,
     done_callback: Option<ThreadsafeFunction<(), ErrorStrategy::Fatal>>,
     forced_shutdown_callback: Option<ThreadsafeFunction<(), ErrorStrategy::Fatal>>,
@@ -111,6 +112,7 @@ impl App {
         let main_terminal_pane_data = TerminalPaneData::new();
 
         Ok(Self {
+            run_mode,
             components,
             pinned_tasks,
             quit_at: None,
@@ -121,7 +123,7 @@ impl App {
             tui_config,
             user_has_interacted: false,
             is_forced_shutdown: false,
-            layout_manager: LayoutManager::new(task_count),
+            layout_manager: LayoutManager::new_with_run_mode(task_count, run_mode),
             frame_area: None,
             layout_areas: None,
             terminal_pane_data: [main_terminal_pane_data, TerminalPaneData::new()],
@@ -154,7 +156,11 @@ impl App {
                     .select_task(task.clone());
 
                 if pinned_tasks.len() == 1 && idx == 0 {
-                    self.display_and_focus_current_task_in_terminal_pane(self.tasks.len() != 1);
+                    self.display_and_focus_current_task_in_terminal_pane(match self.run_mode {
+                        RunMode::RunMany => true,
+                        RunMode::RunOne if self.tasks.len() == 1 => false,
+                        RunMode::RunOne => true,
+                    });
                 } else {
                     self.assign_current_task_to_pane(idx);
                 }
@@ -179,7 +185,7 @@ impl App {
     }
 
     fn should_set_interactive_by_default(&self, task_id: &str) -> bool {
-        self.tasks.len() == 1
+        matches!(self.run_mode, RunMode::RunOne)
             && self
                 .pty_instances
                 .get(task_id)

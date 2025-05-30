@@ -1,10 +1,10 @@
 import { Heading1 } from '@nx/nx-dev/feature-package-schema-viewer';
-import { getPackagesSections } from '@nx/nx-dev/data-access-menu';
+import { getBasicNxSection } from '@nx/nx-dev/data-access-menu';
 import {
   filterMigrationPackages,
   sortCorePackagesFirst,
 } from '@nx/nx-dev/data-access-packages';
-import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
+import { Menu, MenuItem } from '@nx/nx-dev/models-menu';
 import { IntrinsicPackageMetadata } from '@nx/nx-dev/models-package';
 import {
   Breadcrumbs,
@@ -34,10 +34,7 @@ export default function Packages({
 
   const vm: { menu: Menu; packages: IntrinsicPackageMetadata[] } = {
     menu: {
-      sections: sortCorePackagesFirst<MenuSection>(
-        getPackagesSections(menu),
-        'id'
-      ),
+      sections: [getBasicNxSection(menu)],
     },
     packages: useMemo(() => {
       return sortCorePackagesFirst<IntrinsicPackageMetadata>(
@@ -61,7 +58,7 @@ export default function Packages({
               url: 'https://nx.dev/socials/nx-media.png',
               width: 1200,
               height: 600,
-              alt: 'Nx: Smart Monorepos · Fast CI',
+              alt: 'Nx: Smart Repos · Fast Builds',
               type: 'image/png',
             },
           ],
@@ -150,7 +147,7 @@ export async function getStaticProps(): Promise<{
   return {
     props: {
       packages: nxPackagesApi.getRootPackageIndex(),
-      menu: menusApi.getMenu('nx-api', ''),
+      menu: menusApi.getMenu('nx', ''),
     },
   };
 }

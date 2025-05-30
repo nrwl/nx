@@ -79,7 +79,7 @@ export function PackageSchemaList({
               url: vm.seo.imageUrl,
               width: 1600,
               height: 800,
-              alt: 'Nx: Smart Monorepos · Fast CI',
+              alt: 'Nx: Smart Repos · Fast Builds',
               type: 'image/jpeg',
             },
           ],
@@ -108,10 +108,14 @@ export function PackageSchemaList({
               available from this package.
             </p>
 
-            <Heading2 title={'Guides'} />
-            <DocumentList documents={vm.package.documents} />
+            {vm.package.documents?.length ? (
+              <>
+                <Heading2 title={'Guides'} />
+                <DocumentList documents={vm.package.documents} />
+                <div className="h-12">{/* SPACER */}</div>
+              </>
+            ) : null}
 
-            <div className="h-12">{/* SPACER */}</div>
             <Heading2 title={'Executors'} />
             <SchemaList files={vm.package.executors} type={'executor'} />
 

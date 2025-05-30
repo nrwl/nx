@@ -19,14 +19,6 @@ class NxProjectGraphReportPlugin : Plugin<Project> {
                     "default-hash"
                   }
 
-          val cwdProperty =
-              project.findProperty("cwd")?.toString()
-                  ?: run {
-                    project.logger.warn(
-                        "No 'cwd' property was provided for $project. Using default hash value: ${System.getProperty("user.dir")}")
-                    System.getProperty("user.dir")
-                  }
-
           val workspaceRootProperty =
               project.findProperty("workspaceRoot")?.toString()
                   ?: run {
@@ -43,7 +35,6 @@ class NxProjectGraphReportPlugin : Plugin<Project> {
           task.projectRef.set(project)
           task.hash.set(hashProperty)
           task.targetNameOverrides.set(targetNameOverrides)
-          task.cwd.set(cwdProperty)
           task.workspaceRoot.set(workspaceRootProperty)
 
           task.description = "Create Nx project report for ${project.name}"

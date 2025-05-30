@@ -6,6 +6,7 @@ export interface Schema {
   standalone?: boolean;
   module?: string;
   export?: boolean;
+  typeSeparator?: string;
   skipFormat?: boolean;
 }
 

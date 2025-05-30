@@ -12,7 +12,7 @@ export function Hero(): ReactElement {
             <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
               Smart
             </span>{' '}
-            Monorepos
+            Repos
             <br className="sm:hidden" />
             <svg
               viewBox="0 0 2 2"
@@ -24,7 +24,7 @@ export function Hero(): ReactElement {
             <span className="rounded-lg bg-gradient-to-r from-pink-500 to-fuchsia-500 bg-clip-text text-transparent">
               Fast
             </span>{' '}
-            CI
+            Builds
           </SectionHeading>
           <SectionHeading
             as="p"

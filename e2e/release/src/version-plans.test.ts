@@ -1,4 +1,4 @@
-import { NxJsonConfiguration } from '@nx/devkit';
+import { NxJsonConfiguration, readJsonFile, workspaceRoot } from '@nx/devkit';
 import {
   cleanupProject,
   exists,
@@ -459,7 +459,11 @@ Update the independent packages with a patch, preminor, and prerelease.
     expect(exists(join(versionPlansDir, 'bump-fixed.md'))).toBe(true);
     expect(exists(join(versionPlansDir, 'bump-independent.md'))).toBe(true);
 
-    packageInstall('yargs', null, 'latest', 'dev');
+    // Reference the same version of yargs as nx uses to avoid compatibility issues
+    const nxPackageJson = readJsonFile(
+      join(workspaceRoot, 'packages/nx/package.json')
+    );
+    packageInstall('yargs', null, nxPackageJson.dependencies.yargs, 'dev');
 
     await writeFile(
       tmpProjPath('release.js'),

@@ -32,7 +32,7 @@ class CreateNodeForProjectTest {
             project = project,
             targetNameOverrides = targetNameOverrides,
             workspaceRoot = workspaceRoot,
-            cwd = "{projectRoot}")
+            atomized = true)
 
     // Assert
     val projectRoot = project.projectDir.absolutePath
