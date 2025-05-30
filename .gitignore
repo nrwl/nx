@@ -26,6 +26,8 @@ jest.debug.config.js
 /nx-dev/nx-dev/public/images/open-graph
 **/tests/temp-db
 
+e2e/**/test-results.json
+
 # Issues scraper creates these files, stored by github's cache
 /scripts/issues-scraper/cached
 

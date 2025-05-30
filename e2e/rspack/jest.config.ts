@@ -16,4 +16,15 @@ export default {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/e2e/e2e-rspack',
+  reporters: [
+    'default',
+    [
+      'jest-json-reporter2',
+      {
+        outputDir: __dirname,
+        outputFile: 'test-results.json',
+        fullOutput: true,
+      },
+    ],
+  ],
 };

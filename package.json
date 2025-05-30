@@ -242,6 +242,7 @@
     "jest-diff": "29.7.0",
     "jest-environment-jsdom": "29.7.0",
     "jest-environment-node": "29.7.0",
+    "jest-json-reporter2": "^1.1.0",
     "jest-resolve": "29.7.0",
     "jest-runtime": "29.7.0",
     "jest-util": "29.7.0",

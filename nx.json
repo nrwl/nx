@@ -155,7 +155,8 @@
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:local-registry"
-      ]
+      ],
+      "outputs": ["{projectRoot}/test-results.json"]
     },
     "e2e-macos-ci--**/*": {
       "inputs": ["e2eInputs", "^production"],

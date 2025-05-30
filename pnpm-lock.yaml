@@ -819,6 +819,9 @@ importers:
       jest-environment-node:
         specifier: 29.7.0
         version: 29.7.0
+      jest-json-reporter2:
+        specifier: ^1.1.0
+        version: 1.1.0
       jest-resolve:
         specifier: 29.7.0
         version: 29.7.0
@@ -13714,6 +13717,10 @@ packages:
   jest-haste-map@29.7.0:
     resolution: {integrity: sha512-fP8u2pyfqx0K1rGn1R9pyE0/KTn+G7PxktWidOBTqFPLYX0b9ksaMFkhK5vrS3DVun09pckLdlx90QthlW7AmA==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
+
+  jest-json-reporter2@1.1.0:
+    resolution: {integrity: sha512-GeLuIxEEP14lCdtXQzV/TvkkH8EFngQr0wmNyi8bQ9en/rEpWsZOK7/fUzhOYI0FbQ2NKhm4J5M1hrO0pdtmtQ==}
+    engines: {node: '>=6.0.0'}
 
   jest-leak-detector@29.7.0:
     resolution: {integrity: sha512-kYA8IJcSYtST2BY9I+SMC32nDpBT3J2NvWJx8+JCuCdl/CR1I4EKUJROiP8XtCcxqgTTBGJNdbB1A8XRKbTetw==}
@@ -37057,6 +37064,10 @@ snapshots:
       walker: 1.0.8
     optionalDependencies:
       fsevents: 2.3.3
+
+  jest-json-reporter2@1.1.0:
+    dependencies:
+      mkdirp: 0.5.6
 
   jest-leak-detector@29.7.0:
     dependencies:
