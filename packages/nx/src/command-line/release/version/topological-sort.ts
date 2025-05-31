@@ -44,5 +44,5 @@ export function topologicalSort<T>(
     }
   }
 
-  return result.reverse();
+  return result;
 }
