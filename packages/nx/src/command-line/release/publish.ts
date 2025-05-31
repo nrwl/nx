@@ -257,7 +257,9 @@ async function runPublishOnProjects(
       `Based on your config, the following projects were matched for publishing but do not have the "${requiredTargetName}" target specified:\n${[
         ...projectsToRun.map((p) => `- ${p.name}`),
         '',
-        `This is usually caused by not having an appropriate plugin, such as "@nx/js" installed, which will add the appropriate "${requiredTargetName}" target for you automatically.`,
+        `This is usually caused by either`,
+        `- not having an appropriate plugin, such as "@nx/js" installed, which will add the appropriate "${requiredTargetName}" target for you automatically`,
+        `- having "private": true set in your package.json, which prevents the target from being created`,
       ].join('\n')}\n`
     );
   }
