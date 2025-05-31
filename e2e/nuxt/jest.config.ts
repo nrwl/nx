@@ -10,4 +10,15 @@ export default {
   globals: {},
   globalSetup: '../utils/global-setup.ts',
   globalTeardown: '../utils/global-teardown.ts',
+  reporters: [
+    'default',
+    [
+      'jest-json-reporter2',
+      {
+        outputDir: __dirname,
+        outputFile: 'test-results.json',
+        fullOutput: true,
+      },
+    ],
+  ],
 };

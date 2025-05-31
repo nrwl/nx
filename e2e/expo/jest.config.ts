@@ -11,4 +11,15 @@ export default {
   displayName: 'e2e-expo',
   testTimeout: 600000,
   preset: '../jest.preset.e2e.js',
+  reporters: [
+    'default',
+    [
+      'jest-json-reporter2',
+      {
+        outputDir: __dirname,
+        outputFile: 'test-results.json',
+        fullOutput: true,
+      },
+    ],
+  ],
 };
