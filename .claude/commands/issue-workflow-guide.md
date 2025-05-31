@@ -2,23 +2,6 @@
 
 ## Quick Start
 
-### For Planning Phase
-
-1. Comment `@claude plan` on any issue, OR
-2. Add the label `claude:plan` to trigger automatic planning
-
-### For Implementation Phase
-
-1. Comment `@claude implement` on an issue with a plan, OR
-2. Add the label `claude:implement` to trigger automatic implementation
-
-## Workflow Labels
-
-- `claude:plan` - Triggers the planning workflow
-- `claude:planned` - Added after planning is complete
-- `claude:implement` - Triggers the implementation workflow
-- `claude:implemented` - Added after implementation is complete
-
 ## Expected Outputs
 
 ### Planning Phase

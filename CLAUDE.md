@@ -58,7 +58,7 @@ After code changes are made, please make sure to format the files with prettier 
 
 ```bash
 # Full validation suite - run before committing
-pnpm nx prepush
+nx prepush
 ```
 
 If the prepush validation suite fails, please fix the issues before proceeding with your work. This ensures that all code adheres to the project's standards and passes all tests.
@@ -94,7 +94,21 @@ When working on a GitHub issue, follow this systematic approach:
 ```bash
 # Get issue details using GitHub CLI (replace ISSUE_NUMBER with actual number)
 gh issue view ISSUE_NUMBER
+
+# View multiple issues efficiently in one command
+gh issue list --limit 50 --json number,title,state,labels,assignees,updatedAt,body --jq '.[] | select(.number == 123 or .number == 456 or .number == 789)'
+
+# Or filter by specific criteria to get multiple related issues
+gh issue list --label "bug" --state "open" --json number,title,body,labels --jq '.[]'
+gh issue list --assignee "@me" --json number,title,body,state --jq '.[]'
 ```
+
+**Tip**: Instead of running `gh issue view` multiple times, use `gh issue list` with JSON output and filtering to gather information about multiple issues in a single command. This is much more efficient than viewing issues one at a time.
+
+**Always provide clickable links**: When discussing GitHub issues or PRs, always include the full GitHub URL so the user can easily open them in their browser. For example:
+
+- Issue #12345: https://github.com/nrwl/nx/issues/12345
+- PR #67890: https://github.com/nrwl/nx/pull/67890
 
 When cloning reproduction repos, please clone within `./tmp/claude/repro-ISSUE_NUMBER`
 
@@ -117,13 +131,14 @@ Use the testing workflow from the "Essential Commands" section.
 ### 5. Submit Pull Request
 
 - Create a descriptive PR title that references the issue
+- **Always fill in the PR template** - don't leave it empty
 - Include "Fixes #ISSUE_NUMBER" in the PR description
 - Provide a clear summary of changes made
 - Request appropriate reviewers
 
 ## Pull Request Template
 
-When creating a pull request, follow the template found in `.github/PULL_REQUEST_TEMPLATE.md`. The template includes:
+**IMPORTANT**: When creating a pull request, you MUST fill in the template found in `.github/PULL_REQUEST_TEMPLATE.md`. Do not leave the template sections empty. The template includes:
 
 ### Required Sections
 
