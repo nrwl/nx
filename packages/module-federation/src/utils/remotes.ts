@@ -1,5 +1,6 @@
 import { Remotes } from './models';
 import { extname } from 'path';
+import { normalizeProjectName } from './normalize-project-name';
 
 /**
  * Map remote names to a format that can be understood and used by Module
@@ -19,17 +20,15 @@ export function mapRemotes(
 
   for (const nxRemoteProjectName of remotes) {
     if (Array.isArray(nxRemoteProjectName)) {
-      const mfRemoteName = normalizeRemoteName(nxRemoteProjectName[0]);
+      const mfRemoteName = nxRemoteProjectName[0];
       mappedRemotes[mfRemoteName] = handleArrayRemote(
         nxRemoteProjectName,
         remoteEntryExt,
         isRemoteGlobal
       );
     } else if (typeof nxRemoteProjectName === 'string') {
-      const mfRemoteName = normalizeRemoteName(nxRemoteProjectName);
-      mappedRemotes[mfRemoteName] = handleStringRemote(
+      mappedRemotes[nxRemoteProjectName] = handleStringRemote(
         nxRemoteProjectName,
-
         determineRemoteUrl,
         isRemoteGlobal
       );
@@ -46,7 +45,7 @@ function handleArrayRemote(
   isRemoteGlobal: boolean
 ): string {
   const [nxRemoteProjectName, remoteLocation] = remote;
-  const mfRemoteName = normalizeRemoteName(nxRemoteProjectName);
+  const mfRemoteName = normalizeProjectName(nxRemoteProjectName);
 
   // Remote string starts like "promise new Promise(...)" – return as-is
   if (remoteLocation.startsWith('promise new Promise')) {
@@ -75,7 +74,7 @@ function handleStringRemote(
   isRemoteGlobal: boolean
 ): string {
   const globalPrefix = isRemoteGlobal
-    ? `${normalizeRemoteName(nxRemoteProjectName)}@`
+    ? `${normalizeProjectName(nxRemoteProjectName)}@`
     : '';
 
   return `${globalPrefix}${determineRemoteUrl(nxRemoteProjectName)}`;
@@ -99,7 +98,7 @@ export function mapRemotesForSSR(
   for (const remote of remotes) {
     if (Array.isArray(remote)) {
       let [nxRemoteProjectName, remoteLocation] = remote;
-      const mfRemoteName = normalizeRemoteName(nxRemoteProjectName);
+      const mfRemoteName = normalizeProjectName(nxRemoteProjectName);
 
       const resolvedUrl = new URL(remoteLocation);
       const remoteLocationExt = extname(resolvedUrl.pathname);
@@ -115,16 +114,12 @@ export function mapRemotesForSSR(
       const finalRemoteUrl = resolvedUrl.href;
       mappedRemotes[mfRemoteName] = `${mfRemoteName}@${finalRemoteUrl}`;
     } else if (typeof remote === 'string') {
-      const mfRemoteName = normalizeRemoteName(remote);
-      mappedRemotes[mfRemoteName] = `${mfRemoteName}@${determineRemoteUrl(
+      const mfRemoteName = normalizeProjectName(remote);
+      mappedRemotes[remote] = `${mfRemoteName}@${determineRemoteUrl(
         remote
       )}`;
     }
   }
 
   return mappedRemotes;
-}
-
-function normalizeRemoteName(remote: string) {
-  return remote.replace(/-/g, '_');
 }

@@ -19,6 +19,8 @@ import {
   shareWorkspaceLibraries,
 } from './share';
 
+import { normalizeProjectName } from './normalize-project-name';
+
 import { mapRemotes, mapRemotesForSSR } from './remotes';
 
 import { getDependentPackagesForProject } from './dependencies';
@@ -43,6 +45,7 @@ export {
   sharePackages,
   mapRemotes,
   mapRemotesForSSR,
+  normalizeProjectName,
   getDependentPackagesForProject,
   readRootPackageJson,
 };
