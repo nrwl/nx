@@ -134,7 +134,8 @@
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:local-registry"
-      ]
+      ],
+      "outputs": ["{projectRoot}/test-results/**/*"]
     },
     "e2e-ci": {
       "inputs": ["e2eInputs", "^production"]
