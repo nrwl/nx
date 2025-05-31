@@ -261,67 +261,36 @@ jobs:
         if: ${{ matrix.os == 'macos-latest' }}
         id: reset-simulators
         run: |
-          # Kill any existing simulator processes
-          sudo killall -9 com.apple.CoreSimulator.CoreSimulatorService || true
-          killall "Simulator" || true
-          killall "iOS Simulator" || true
+          echo "Resetting iOS Simulators..."
           
-          # Wait for processes to fully terminate
+          # Kill simulator processes
+          sudo killall -9 com.apple.CoreSimulator.CoreSimulatorService 2>/dev/null || true
+          killall "Simulator" 2>/dev/null || true
+          killall "iOS Simulator" 2>/dev/null || true
+          
+          # Wait for processes to terminate
           sleep 3
           
-          # Force shutdown all simulators first
-          echo "Shutting down all simulators..."
+          # Shutdown and erase all simulators (ignore failures)
           xcrun simctl shutdown all 2>/dev/null || true
+          sleep 5
+          xcrun simctl erase all 2>/dev/null || true
           
-          # Wait for shutdown to complete with polling
-          echo "Waiting for simulators to shut down..."
-          for i in {1..30}; do
-            booted_count=$(xcrun simctl list devices | grep -c "Booted" || echo "0")
-            if [[ "$booted_count" -eq 0 ]]; then
-              echo "All simulators shut down successfully"
-              break
-            fi
-            echo "Still $booted_count booted simulators, waiting..."
-            sleep 2
-          done
-          
-          # Check if any simulators are still booted and force shutdown again
-          booted_devices=$(xcrun simctl list devices | grep "Booted" || true)
-          if [[ -n "$booted_devices" ]]; then
-            echo "Some simulators still booted, forcing shutdown again..."
-            xcrun simctl shutdown all --force 2>/dev/null || true
-            sleep 5
+          # If erase failed, try the nuclear option
+          if xcrun simctl list devices | grep -q "Booted" 2>/dev/null; then
+            echo "Standard reset failed, using nuclear option..."
+            rm -rf ~/Library/Developer/CoreSimulator/Devices/* 2>/dev/null || true
+            launchctl remove com.apple.CoreSimulator.CoreSimulatorService 2>/dev/null || true
+            sleep 3
           fi
           
-          # Now erase all simulators
-          echo "Erasing all simulators..."
-          xcrun simctl erase all 2>/dev/null || {
-            echo "Initial erase failed, trying individual device reset..."
-            # If bulk erase fails, try to erase individual devices
-            xcrun simctl list devices -j | jq -r '.devices[] | .[] | select(.state != "Shutdown") | .udid' | while read udid; do
-              echo "Shutting down and erasing device: $udid"
-              xcrun simctl shutdown "$udid" 2>/dev/null || true
-              xcrun simctl erase "$udid" 2>/dev/null || true
-            done
-          }
+          # Clean up additional directories
+          rm -rf ~/Library/Developer/CoreSimulator/Caches/* 2>/dev/null || true
+          rm -rf ~/Library/Logs/CoreSimulator/* 2>/dev/null || true
+          rm -rf ~/Library/Developer/Xcode/DerivedData/* 2>/dev/null || true
           
-          # Clean up simulator runtime and cache directories
-          rm -rf ~/Library/Developer/CoreSimulator/Devices/* || true
-          rm -rf ~/Library/Developer/CoreSimulator/Caches/* || true
-          rm -rf ~/Library/Logs/CoreSimulator/* || true
-          rm -rf ~/Library/Developer/Xcode/DerivedData/* || true
-          rm -rf ~/Library/Developer/Xcode/iOS\ DeviceSupport/* || true
-          
-          # Ensure CoreSimulator service is not running
-          launchctl remove com.apple.CoreSimulator.CoreSimulatorService || true
-          
-          # Wait for system to stabilize
-          sleep 3
-          
-          # Start fresh CoreSimulator service
-          open -a Simulator --args -CurrentDeviceUDID "" || true
-          sleep 5
-        timeout-minutes: 15
+          echo "Simulator reset completed"
+        timeout-minutes: 5
         continue-on-error: true
 
       # Add verification step
