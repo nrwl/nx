@@ -5,6 +5,8 @@ import {
   HeroDevsIcon,
   PushBasedIcon,
   BriebugIcon,
+  LiveLoveAppIcon,
+  NStudioIcon,
 } from '@nx/nx-dev/ui-icons';
 import { useEffect, useMemo, useState } from 'react';
 import { Partner } from './partner';
@@ -60,6 +62,27 @@ export function PartnersList(): JSX.Element {
         location: 'US',
         tagline: 'Your Angular and Nx Experts.',
         capabilities: ['Angular', 'Ionic', 'NgRx'],
+      },
+      {
+        name: 'LiveLoveApp',
+        logo: <LiveLoveAppIcon aria-hidden="true" className="mb-4 h-12" />,
+        href: 'https://liveloveapp.com/',
+        location: 'EU',
+        tagline: 'Bring Data to Life on the Web',
+        capabilities: ['AI', 'Ag Grid', 'Angular', 'React'],
+      },
+      {
+        name: 'NStudio',
+        logo: <NStudioIcon aria-hidden="true" className="mb-4 h-12" />,
+        href: 'https://nstudio.io/',
+        location: 'EU',
+        tagline: "Craftsmanship perfected 'n' ways for your goals.",
+        capabilities: [
+          'Arch/Perf/Mobile/Web',
+          'Angular/React/Solid/Svelte/Vue',
+          'Swift/Kotlin',
+          'NativeScript',
+        ],
       },
     ],
     []
