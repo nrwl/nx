@@ -12,6 +12,14 @@ private val testFileNameRegex =
     Regex("^(?!(abstract|fake)).*?(Test)(s)?\\d*", RegexOption.IGNORE_CASE)
 
 private val classDeclarationRegex = Regex("""class\s+([A-Za-z_][A-Za-z0-9_]*)""")
+private val packageDeclarationRegex =
+    Regex("""package\s+([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)""")
+
+private data class TestClassInfo(
+    val className: String,
+    val packageName: String,
+    val fullQualifiedName: String
+)
 
 fun addTestCiTargets(
     testFiles: FileCollection,
@@ -31,12 +39,16 @@ fun addTestCiTargets(
   testFiles
       .filter { isTestFile(it, workspaceRoot) }
       .forEach { testFile ->
-        val className = getTestClassNameIfAnnotated(testFile) ?: return@forEach
+        val testClassInfo = getTestClassInfoIfAnnotated(testFile) ?: return@forEach
 
-        val targetName = "$ciTestTargetName--$className"
+        val targetName = "$ciTestTargetName--${testClassInfo.className}"
         targets[targetName] =
             buildTestCiTarget(
-                projectBuildPath, className, testFile, testTask, projectRoot, workspaceRoot)
+                projectBuildPath,
+                testClassInfo.fullQualifiedName,
+                testTask,
+                projectRoot,
+                workspaceRoot)
         targetGroups[testCiTargetGroup]?.add(targetName)
 
         ciDependsOn.add(mapOf("target" to targetName, "projects" to "self", "params" to "forward"))
@@ -56,7 +68,7 @@ fun addTestCiTargets(
   }
 }
 
-private fun getTestClassNameIfAnnotated(file: File): String? {
+private fun getTestClassInfoIfAnnotated(file: File): TestClassInfo? {
   return file
       .takeIf { it.exists() }
       ?.readText()
@@ -65,8 +77,16 @@ private fun getTestClassNameIfAnnotated(file: File): String? {
       }
       ?.let { content ->
         val className = classDeclarationRegex.find(content)?.groupValues?.getOrNull(1)
+        val packageName = packageDeclarationRegex.find(content)?.groupValues?.getOrNull(1)
+
         return if (className != null && !className.startsWith("Fake")) {
-          className
+          val fullQualifiedName =
+              if (packageName != null) {
+                "$packageName.$className"
+              } else {
+                className
+              }
+          TestClassInfo(className, packageName ?: "", fullQualifiedName)
         } else {
           null
         }
@@ -85,7 +105,6 @@ private fun isTestFile(file: File, workspaceRoot: String): Boolean {
 private fun buildTestCiTarget(
     projectBuildPath: String,
     testClassName: String,
-    testFile: File,
     testTask: Task,
     projectRoot: String,
     workspaceRoot: String,
@@ -96,11 +115,8 @@ private fun buildTestCiTarget(
       mutableMapOf<String, Any?>(
           "executor" to "@nx/gradle:gradle",
           "options" to
-              mapOf(
-                  "taskName" to "${projectBuildPath}:${testTask.name}",
-                  "testClassName" to testClassName),
-          "metadata" to
-              getMetadata("Runs Gradle test $testClassName in CI", projectBuildPath, "test"),
+              mapOf("taskName" to "${projectBuildPath}:${testTask.name}", "testClassName" to testClassName),
+          "metadata" to getMetadata("Runs Gradle test $testClassName in CI", projectBuildPath, "test"),
           "cache" to true,
           "inputs" to taskInputs)
 

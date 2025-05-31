@@ -15,7 +15,7 @@
       },
       "testClassName": {
         "type": "string",
-        "description": "The test class name to run for test task."
+        "description": "The full test name to run for test task (package name and class name)."
       },
       "args": {
         "oneOf": [

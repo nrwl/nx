@@ -29,8 +29,8 @@ fun main(args: Array<String>) {
   var connection: ProjectConnection? = null
 
   try {
-    connection =
-        GradleConnector.newConnector().forProjectDirectory(File(options.workspaceRoot)).connect()
+    val connector = GradleConnector.newConnector().forProjectDirectory(File(options.workspaceRoot))
+    connection = connector.connect()
 
     val results = runBlocking {
       runTasksInParallel(connection, options.tasks, options.args, options.excludeTasks)

@@ -8,6 +8,7 @@ import dev.nx.gradle.util.logger
 import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import org.gradle.tooling.BuildCancelledException
 import org.gradle.tooling.ProjectConnection
 import org.gradle.tooling.events.OperationType
 
@@ -33,8 +34,8 @@ suspend fun runTasksInParallel(
     // --info is for terminal per task
     // --continue is for continue running tasks if one failed in a batch
     // --parallel is for performance
-    // -Dorg.gradle.daemon.idletimeout=10000 is to kill daemon after 10 seconds
-    addAll(listOf("--info", "--continue", "-Dorg.gradle.daemon.idletimeout=10000"))
+    // -Dorg.gradle.daemon.idletimeout=10000 is to kill daemon after 0 ms
+    addAll(listOf("--info", "--continue", "-Dorg.gradle.daemon.idletimeout=0"))
     addAll(additionalArgs.split(" ").filter { it.isNotBlank() })
     excludeTasks.forEach {
       add("--exclude-task")
@@ -130,7 +131,7 @@ fun runTestLauncher(
     outputStream: ByteArrayOutputStream,
     errorStream: ByteArrayOutputStream
 ): Map<String, TaskResult> {
-  val taskNames = tasks.values.map { it.taskName }.distinct().toTypedArray()
+  val taskNames = tasks.values.map { it.taskName }.distinct()
   logger.info("📋 Collected ${taskNames.size} unique task names: ${taskNames.joinToString(", ")}")
 
   val taskStartTimes = mutableMapOf<String, Long>()
@@ -144,6 +145,7 @@ fun runTestLauncher(
       testTaskStatus[nxTaskId] = true
     }
   }
+  val expectedTestClasses = tasks.values.mapNotNull { it.testClassName }.toSet()
 
   val globalStart = System.currentTimeMillis()
   var globalOutput: String
@@ -152,24 +154,25 @@ fun runTestLauncher(
     connection
         .newTestLauncher()
         .apply {
-          forTasks(*taskNames)
-          tasks.values
-              .mapNotNull { it.testClassName }
-              .forEach {
-                logger.info("Registering test class: $it")
-                withArguments("--tests", it)
-                withJvmTestClasses(it)
-              }
-          withArguments(*args.toTypedArray())
+          forTasks(*taskNames.toTypedArray())
+          expectedTestClasses.forEach {
+            logger.info("Registering test class: $it")
+            withJvmTestClasses(it)
+          }
+          addArguments(*args.toTypedArray())
           setStandardOutput(outputStream)
           setStandardError(errorStream)
           addProgressListener(
               testListener(
                   tasks, taskStartTimes, taskResults, testTaskStatus, testStartTimes, testEndTimes),
               OperationType.TEST)
+          withDetailedFailure()
         }
         .run()
     globalOutput = buildTerminalOutput(outputStream, errorStream)
+  } catch (e: BuildCancelledException) {
+    globalOutput = buildTerminalOutput(outputStream, errorStream)
+    logger.info("✅ Build cancelled gracefully by token.")
   } catch (e: Exception) {
     logger.warning(errorStream.toString())
     globalOutput =
@@ -181,12 +184,14 @@ fun runTestLauncher(
   }
 
   val globalEnd = System.currentTimeMillis()
+  val maxEndTime = testEndTimes.values.maxOrNull() ?: globalEnd
+  val delta = globalEnd - maxEndTime
 
   tasks.forEach { (nxTaskId, taskConfig) ->
     if (taskConfig.testClassName != null) {
       val success = testTaskStatus[nxTaskId] ?: false
       val startTime = testStartTimes[nxTaskId] ?: globalStart
-      val endTime = testEndTimes[nxTaskId] ?: globalEnd
+      val endTime = testEndTimes[nxTaskId]?.plus(delta) ?: globalEnd
 
       if (!taskResults.containsKey(nxTaskId)) {
         taskResults[nxTaskId] = TaskResult(success, startTime, endTime, "")
