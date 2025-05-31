@@ -475,7 +475,7 @@ jobs:
           sudo: ${{ matrix.os != 'windows-latest' }} # disable sudo for windows debugging
 
   process-result:
-    if: ${{ always() && github.repository_owner == 'nrwl' }}
+    if: ${{ always() }}
     runs-on: ubuntu-latest
     needs: e2e
     timeout-minutes: 10
@@ -643,7 +643,7 @@ jobs:
             console.log(trimSpace(resultPm));
 
   report-failure:
-    if: ${{ failure() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+    if: ${{ failure() }}
     needs: process-result
     runs-on: ubuntu-latest
     name: Report failure
@@ -667,7 +667,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
   report-success:
-    if: ${{ success() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+    if: ${{ success() }}
     needs: process-result
     runs-on: ubuntu-latest
     name: Report status
@@ -691,7 +691,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
   report-pm-time:
-    if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+    if: ${{ always() }}
     needs: process-result
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -707,7 +707,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
   report-proj-time:
-    if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+    if: ${{ always() }}
     needs: process-result
     runs-on: ubuntu-latest
     timeout-minutes: 10
