@@ -343,10 +343,13 @@ jobs:
 
       - name: Run e2e tests with pnpm (Linux/Windows)
         id: e2e-run-pnpm
-        if: ${{ matrix.os != 'macos-latest' && steps.build.outcome == 'success' }}
+        if: ${{ matrix.os != 'macos-latest' }}
         run: |
+          # Create test results directory in both locations to be safe
           mkdir -p test-results
-          pnpm nx run ${{ matrix.project }}:e2e-local -- --json --outputFile=test-results/${{ matrix.project }}-${{ matrix.os_name }}-node${{ matrix.node_version }}-${{ matrix.package_manager }}.json || true
+          mkdir -p e2e/${{ matrix.project }}/test-results
+          
+          pnpm nx run ${{ matrix.project }}:e2e-local -- --json --outputFile=e2e/${{ matrix.project }}/test-results/${{ matrix.project }}-${{ matrix.os_name }}-node${{ matrix.node_version }}-${{ matrix.package_manager }}.json || true
         shell: bash
         timeout-minutes: ${{ matrix.os_timeout }}
         env:
@@ -385,13 +388,16 @@ jobs:
 
       - name: Run e2e tests with npm (macOS)
         id: e2e-run-npm
-        if: ${{ matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success' && steps.build-macos.outcome == 'success' }}
+        if: ${{ matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success' }}
         run: |
+          # Create test results directory in both locations to be safe
           mkdir -p test-results
+          mkdir -p e2e/${{ matrix.project }}/test-results
+          
           if [[ "${{ matrix.project }}" == "e2e-detox" ]] || [[ "${{ matrix.project }}" == "e2e-react-native" ]] || [[ "${{ matrix.project }}" == "e2e-expo" ]]; then
-            NX_E2E_VERBOSE_DEBUG=1 pnpm nx run ${{ matrix.project }}:e2e-macos-local -- --json --outputFile=test-results/${{ matrix.project }}-${{ matrix.os_name }}-node${{ matrix.node_version }}-${{ matrix.package_manager }}.json || true
+            NX_E2E_VERBOSE_DEBUG=1 pnpm nx run ${{ matrix.project }}:e2e-macos-local -- --json --outputFile=e2e/${{ matrix.project }}/test-results/${{ matrix.project }}-${{ matrix.os_name }}-node${{ matrix.node_version }}-${{ matrix.package_manager }}.json || true
           else
-            NX_E2E_VERBOSE_DEBUG=1 pnpm nx run ${{ matrix.project }}:e2e-local -- --json --outputFile=test-results/${{ matrix.project }}-${{ matrix.os_name }}-node${{ matrix.node_version }}-${{ matrix.package_manager }}.json || true
+            NX_E2E_VERBOSE_DEBUG=1 pnpm nx run ${{ matrix.project }}:e2e-local -- --json --outputFile=e2e/${{ matrix.project }}/test-results/${{ matrix.project }}-${{ matrix.os_name }}-node${{ matrix.node_version }}-${{ matrix.package_manager }}.json || true
           fi
         env:
           NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
