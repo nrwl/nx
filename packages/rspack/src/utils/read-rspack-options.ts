@@ -67,6 +67,8 @@ export async function readRspackOptions(
     } else {
       return config as Configuration;
     }
+
+    return resolvedConfig;
   };
 
   // Since configs can have nested arrays, we need to flatten them
