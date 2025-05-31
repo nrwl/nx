@@ -1,0 +1,17 @@
+{
+  "name": "21.2.0-angular-rspack-package-updates",
+  "version": "21.2.0-beta.2",
+  "packages": {
+    "@nx/angular-rspack": {
+      "version": "^21.1.0",
+      "alwaysAddToPackageJson": false
+    }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration"
+}

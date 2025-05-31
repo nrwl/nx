@@ -115,4 +115,80 @@ export const config = mergeApplicationConfig(appConfig, serverConfig);
       "
     `);
   });
+
+  it('should remove "provideServerRoutesConfig", add an import for "withRoutes" and update "provideServerRendering" to use "withRoutes"', async () => {
+    tree.write(
+      'apps/app1/src/app/app.config.server.ts',
+      `import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
+import { provideServerRendering, provideServerRoutesConfig } from '@angular/ssr';
+import { appConfig } from './app.config';
+import { serverRoutes } from './app.routes.server';
+
+const serverConfig: ApplicationConfig = {
+  providers: [provideServerRendering(), provideServerRoutesConfig(serverRoutes)],
+};
+
+export const config = mergeApplicationConfig(appConfig, serverConfig);
+`
+    );
+
+    await migration(tree);
+
+    expect(tree.read('apps/app1/src/app/app.config.server.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
+      import { provideServerRendering, withRoutes } from '@angular/ssr';
+      import { appConfig } from './app.config';
+      import { serverRoutes } from './app.routes.server';
+
+      const serverConfig: ApplicationConfig = {
+        providers: [provideServerRendering(withRoutes(serverRoutes))],
+      };
+
+      export const config = mergeApplicationConfig(appConfig, serverConfig);
+      "
+    `);
+  });
+
+  it('should include extra arguments provided to "provideServerRoutesConfig"', async () => {
+    tree.write(
+      'apps/app1/src/app/app.config.server.ts',
+      `import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
+import { provideServerRendering, provideServerRoutesConfig, withAppShell } from '@angular/ssr';
+import { appConfig } from './app.config';
+import { serverRoutes } from './app.routes.server';
+
+const serverConfig: ApplicationConfig = {
+  providers: [
+    provideServerRendering(),
+    provideServerRoutesConfig(serverRoutes, withAppShell(AppShellComponent)),
+  ],
+};
+
+export const config = mergeApplicationConfig(appConfig, serverConfig);
+`
+    );
+
+    await migration(tree);
+
+    expect(tree.read('apps/app1/src/app/app.config.server.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
+      import { provideServerRendering, withAppShell, withRoutes } from '@angular/ssr';
+      import { appConfig } from './app.config';
+      import { serverRoutes } from './app.routes.server';
+      
+      const serverConfig: ApplicationConfig = {
+        providers: [
+          provideServerRendering(
+            withRoutes(serverRoutes),
+            withAppShell(AppShellComponent)
+          ),
+        ],
+      };
+
+      export const config = mergeApplicationConfig(appConfig, serverConfig);
+      "
+    `);
+  });
 });

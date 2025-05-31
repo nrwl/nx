@@ -30,7 +30,8 @@ function processFile(tree: Tree, filePath: string): void {
   const content = tree.read(filePath, 'utf-8');
 
   if (
-    !content.includes('provideServerRouting') ||
+    (!content.includes('provideServerRouting') &&
+      !content.includes('provideServerRoutesConfig')) ||
     !content.includes('@angular/ssr')
   ) {
     return;
@@ -40,10 +41,23 @@ function processFile(tree: Tree, filePath: string): void {
 
   const providersArray = tsquery.query<ts.ArrayLiteralExpression>(
     sourceFile,
-    'PropertyAssignment:has(Identifier[name=providers]) > ArrayLiteralExpression:has(CallExpression > Identifier[name=provideServerRouting])',
+    'PropertyAssignment:has(Identifier[name=providers]) > ArrayLiteralExpression',
     { visitAllChildren: true }
   )[0];
+
   if (!providersArray) {
+    return;
+  }
+
+  if (
+    !providersArray.elements.some(
+      (el) =>
+        ts.isCallExpression(el) &&
+        ts.isIdentifier(el.expression) &&
+        (el.expression.getText() === 'provideServerRouting' ||
+          el.expression.getText() === 'provideServerRoutesConfig')
+    )
+  ) {
     return;
   }
 
@@ -61,7 +75,10 @@ function processFile(tree: Tree, filePath: string): void {
   for (const node of providerCallNodes) {
     if (node.expression.getText() === 'provideServerRendering') {
       provideServerRenderingCall = node;
-    } else if (node.expression.getText() === 'provideServerRouting') {
+    } else if (
+      node.expression.getText() === 'provideServerRouting' ||
+      node.expression.getText() === 'provideServerRoutesConfig'
+    ) {
       provideServerRoutingCall = node;
     }
   }
@@ -74,7 +91,8 @@ function processFile(tree: Tree, filePath: string): void {
 
   let updatedProvidersArray: ts.ArrayLiteralExpression;
   if (provideServerRenderingCall) {
-    // remove the "provideServerRouting" call and update the existing "provideServerRendering" call
+    // remove the "provideServerRouting" and "provideServerRoutesConfig"
+    // calls and update the existing "provideServerRendering" call
     updatedProvidersArray = ts.factory.updateArrayLiteralExpression(
       providersArray,
       providersArray.elements
@@ -83,7 +101,8 @@ function processFile(tree: Tree, filePath: string): void {
             !(
               ts.isCallExpression(el) &&
               ts.isIdentifier(el.expression) &&
-              el.expression.text === 'provideServerRouting'
+              (el.expression.text === 'provideServerRouting' ||
+                el.expression.text === 'provideServerRoutesConfig')
             )
         )
         .map((el) => {
@@ -104,14 +123,16 @@ function processFile(tree: Tree, filePath: string): void {
         })
     );
   } else {
-    // replace the "provideServerRouting" call with the new "provideServerRendering" call
+    // replace the "provideServerRouting" and "provideServerRoutesConfig"
+    // calls with the new "provideServerRendering" call
     updatedProvidersArray = ts.factory.updateArrayLiteralExpression(
       providersArray,
       providersArray.elements.map((el) => {
         if (
           ts.isCallExpression(el) &&
           ts.isIdentifier(el.expression) &&
-          el.expression.text === 'provideServerRouting'
+          (el.expression.text === 'provideServerRouting' ||
+            el.expression.text === 'provideServerRoutesConfig')
         ) {
           return ts.factory.createCallExpression(
             ts.factory.createIdentifier('provideServerRendering'),
@@ -145,11 +166,15 @@ function processFile(tree: Tree, filePath: string): void {
     const namedBindings = importDecl?.importClause.namedBindings;
 
     if (ts.isNamedImports(namedBindings)) {
-      // remove the "provideServerRouting" import and ensure we have the "withRoutes" import
+      // remove the "provideServerRouting" and "provideServerRoutesConfig"
+      // imports and ensure we have the "withRoutes" import
       const updatedElementNames = new Set([
         ...namedBindings.elements
           .map((el) => el.getText())
-          .filter((x) => x !== 'provideServerRouting'),
+          .filter(
+            (x) =>
+              x !== 'provideServerRouting' && x !== 'provideServerRoutesConfig'
+          ),
         'withRoutes',
       ]);
       const updatedNamedBindings = ts.factory.updateNamedImports(

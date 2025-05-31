@@ -318,8 +318,8 @@
         "options": {
           "versionRange": ">= 19.8",
           "groups": [
+            ["angular-eslint"],
             [
-              "angular-eslint",
               "@angular-eslint/eslint-plugin",
               "@angular-eslint/eslint-plugin-template",
               "@angular-eslint/template-parser",
