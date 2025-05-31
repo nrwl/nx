@@ -348,7 +348,12 @@ jobs:
         id: e2e-run-pnpm
         if: ${{ matrix.os != 'macos-latest' }}
         run: |
-          pnpm nx run ${{ matrix.project }}:e2e-local -- --json --outputFile=${{ matrix.project }}-${{ matrix.os_name }}-${{ matrix.node_version }}-${{ matrix.package_manager }}.json || true
+          FILENAME="${{ matrix.project }}-${{ matrix.os_name }}-${{ matrix.node_version }}-${{ matrix.package_manager }}.json"
+      
+          echo "Running E2E tests and writing output to $FILENAME"
+          
+          # Run the test command
+          pnpm nx run ${{ matrix.project }}:e2e-local -- --json --outputFile="$FILENAME" || true
         shell: bash
         timeout-minutes: ${{ matrix.os_timeout }}
         env:
@@ -391,11 +396,19 @@ jobs:
         id: e2e-run-npm
         if: ${{ matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success' }}
         run: |
+          FILENAME="${{ matrix.project }}-${{ matrix.os_name }}-${{ matrix.node_version }}-${{ matrix.package_manager }}.json"
+      
+          echo "Running E2E tests and writing output to $FILENAME"
+          
+          # Determine which test target to use based on project type
           if [[ "${{ matrix.project }}" == "e2e-detox" ]] || [[ "${{ matrix.project }}" == "e2e-react-native" ]] || [[ "${{ matrix.project }}" == "e2e-expo" ]]; then
-            NX_E2E_VERBOSE_DEBUG=1 pnpm nx run ${{ matrix.project }}:e2e-macos-local -- --json --outputFile=${{ matrix.project }}-${{ matrix.os_name }}-${{ matrix.node_version }}-${{ matrix.package_manager }}.json || true
+            TARGET="e2e-macos-local"
           else
-            NX_E2E_VERBOSE_DEBUG=1 pnpm nx run ${{ matrix.project }}:e2e-local -- --json --outputFile=${{ matrix.project }}-${{ matrix.os_name }}-${{ matrix.node_version }}-${{ matrix.package_manager }}.json || true
+            TARGET="e2e-local"
           fi
+          
+          # Run the test command
+          NX_E2E_VERBOSE_DEBUG=1 pnpm nx run ${{ matrix.project }}:$TARGET -- --json --outputFile="$FILENAME" || true
         env:
           NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
           NX_PERF_LOGGING: 'false'
@@ -426,7 +439,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results-${{ matrix.project }}-${{ matrix.os_name }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
-          path: e2e/${{ matrix.directory }}/${{ matrix.project }}-${{ matrix.os_name }}-${{ matrix.node_version }}-${{ matrix.package_manager }}.json
+          path: e2e/${{matrix.directory}}/${{ matrix.project }}-${{ matrix.os_name }}-${{ matrix.node_version }}-${{ matrix.package_manager }}.json
           if-no-files-found: warn
 
       - name: Save matrix config in file
@@ -496,7 +509,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: outputs
-          pattern: test-results-*
+          pattern: "*-*-*-e2e-*"
           merge-multiple: true
 
       - name: Download all test results
@@ -504,6 +517,17 @@ jobs:
         with:
           pattern: test-results-*
           merge-multiple: true
+
+      - name: Debug downloaded artifacts
+        run: |
+          echo "=== Contents of outputs directory ==="
+          find outputs -type f -name "*.json" | head -10
+          echo "=== Directory structure ==="
+          ls -la outputs/ || echo "No outputs directory"
+          echo "=== Looking for matrix.json files specifically ==="
+          find outputs -name "matrix.json" -exec echo "Found: {}" \; -exec cat {} \; || echo "No matrix.json found"
+          echo "=== Available JSON files in root ==="
+          ls -la *.json || echo "No JSON files in root"
 
       - name: Join and stringify matrix configs
         id: combine-json
@@ -514,6 +538,8 @@ jobs:
       - name: Process test results
         id: process-test-results
         run: node .github/workflows/process-test-results.js
+        env:
+          MATRIX_DATA: ${{ steps.combine-json.outputs.combined }}
 
       - name: Make slack outputs
         id: process-json
@@ -523,6 +549,12 @@ jobs:
         with:
           script: |
             const combined = JSON.parse(${{ steps.combine-json.outputs.combined }});
+            console.log('=== DEBUG: Combined matrix data ===');
+            console.log(`Found ${combined.length} matrix entries`);
+            combined.forEach((matrix, i) => {
+              console.log(`Matrix ${i}: project=${matrix.project}, duration=${matrix.duration}, os=${matrix.os_name}, pm=${matrix.package_manager}`);
+            });
+            
             const failedProjects = combined.filter(c => c.status === 'failure').sort((a, b) => a.project.localeCompare(b.project));
 
             function trimSpace(res) {
@@ -545,6 +577,7 @@ jobs:
             console.log(trimSpace(result));
 
             function humanizeDuration(num) {
+              if (!num || num === 0) return '0s';
               let res = '';
               const hours = Math.floor(num / 3600);
               if (hours) {
@@ -570,27 +603,30 @@ jobs:
             };
             const macosProjects = ['e2e-detox', 'e2e-expo', 'e2e-react-native'];
             combined.forEach((matrix) => {
-              if (matrix.os_name === 'Linux' && matrix.node_version === 20) {
-                pmReport[matrix.package_manager] += matrix.duration;
+              // Fix node version comparison - use string comparison or parse to major version
+              const majorNodeVersion = parseInt(matrix.node_version.toString().split('.')[0]);
+              if (matrix.os_name === 'Linux' && majorNodeVersion === 20) {
+                pmReport[matrix.package_manager] += (matrix.duration || 0);
               }
               if (matrix.os_name === 'Linux' || macosProjects.includes(matrix.project)) {
+                const duration = matrix.duration || 0;
                 if (timeReport[matrix.project]) {
-                  if (matrix.duration > timeReport[matrix.project].max) {
-                    timeReport[matrix.project].max = matrix.duration;
+                  if (duration > timeReport[matrix.project].max) {
+                    timeReport[matrix.project].max = duration;
                     timeReport[
                       matrix.project
                     ].maxEnv = `${matrix.os_name}, ${matrix.package_manager}`;
                   }
-                  if (matrix.duration < timeReport[matrix.project].min) {
-                    timeReport[matrix.project].min = matrix.duration;
+                  if (duration < timeReport[matrix.project].min) {
+                    timeReport[matrix.project].min = duration;
                     timeReport[
                       matrix.project
                     ].minEnv = `${matrix.os_name}, ${matrix.package_manager}`;
                   }
                 } else {
                   timeReport[matrix.project] = {
-                    min: matrix.duration,
-                    max: matrix.duration,
+                    min: duration,
+                    max: duration,
                     minEnv: `${matrix.os_name}, ${matrix.package_manager}`,
                     maxEnv: `${matrix.os_name}, ${matrix.package_manager}`,
                   };
@@ -610,10 +646,11 @@ jobs:
               return res;
             }
             function durationIcon(proj, section) {
-              if (timeReport[proj][section] < 12 * 60) {
+              const duration = timeReport[proj][section] || 0;
+              if (duration < 12 * 60) {
                 return `${section} ✅`;
               }
-              if (timeReport[proj][section] < 15 * 60) {
+              if (duration < 15 * 60) {
                 return `${section} ❗`;
               }
               return `${section} ❌`;
@@ -643,7 +680,7 @@ jobs:
             console.log(trimSpace(resultPm));
 
   report-failure:
-    if: ${{ failure() }}
+    if: ${{ always() && needs.process-result.outputs.has_failures == 'true' }}
     needs: process-result
     runs-on: ubuntu-latest
     name: Report failure
@@ -653,7 +690,7 @@ jobs:
         uses: ravsamhq/notify-slack-action@v2
         with:
           status: 'failure'
-          notification_title: 'E2E Matrix Results'
+          notification_title: 'Golden Test Suite Validation - Failures Detected'
           message_format: |
             ${{ needs.process-result.outputs.test_failures }}
 
@@ -667,7 +704,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
   report-success:
-    if: ${{ success() }}
+    if: ${{ always() && needs.process-result.outputs.has_failures == 'false' }}
     needs: process-result
     runs-on: ubuntu-latest
     name: Report status
@@ -676,8 +713,8 @@ jobs:
       - name: Send notification
         uses: ravsamhq/notify-slack-action@v2
         with:
-          status: ${{ needs.e2e.result }}
-          notification_title: 'E2E Matrix Results'
+          status: 'success'
+          notification_title: 'Golden Test Suite Validation - All Passed'
           message_format: |
             ${{ needs.process-result.outputs.test_failures }}
 
@@ -690,6 +727,7 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
+  
   report-pm-time:
     if: ${{ always() }}
     needs: process-result
