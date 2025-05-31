@@ -3538,6 +3538,39 @@
                 "isExternal": false,
                 "path": "/technologies/angular/recipes/setup-incremental-builds-angular",
                 "tags": []
+              },
+              {
+                "id": "nx-and-angular",
+                "name": "Nx and the Angular CLI",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/nx-and-angular-cli",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/angular/recipes/nx-and-angular",
+                "tags": []
+              },
+              {
+                "id": "nx-devkit-angular-devkit",
+                "name": "Nx Devkit and Angular Devkit",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/nx-devkit-angular-devkit",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/angular/recipes/nx-devkit-angular-devkit",
+                "tags": ["create-your-own-plugin"]
+              },
+              {
+                "id": "angular-nx-version-matrix",
+                "name": "Angular and Nx Version Matrix",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/packages/angular/angular-nx-version-matrix",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/angular/recipes/angular-nx-version-matrix",
+                "tags": []
               }
             ],
             "isExternal": false,
@@ -5636,6 +5669,39 @@
             "isExternal": false,
             "path": "/technologies/angular/recipes/setup-incremental-builds-angular",
             "tags": []
+          },
+          {
+            "id": "nx-and-angular",
+            "name": "Nx and the Angular CLI",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/nx-and-angular-cli",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/angular/recipes/nx-and-angular",
+            "tags": []
+          },
+          {
+            "id": "nx-devkit-angular-devkit",
+            "name": "Nx Devkit and Angular Devkit",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/nx-devkit-angular-devkit",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/angular/recipes/nx-devkit-angular-devkit",
+            "tags": ["create-your-own-plugin"]
+          },
+          {
+            "id": "angular-nx-version-matrix",
+            "name": "Angular and Nx Version Matrix",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/packages/angular/angular-nx-version-matrix",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/angular/recipes/angular-nx-version-matrix",
+            "tags": []
           }
         ],
         "isExternal": false,
@@ -5899,6 +5965,39 @@
         "isExternal": false,
         "path": "/technologies/angular/recipes/setup-incremental-builds-angular",
         "tags": []
+      },
+      {
+        "id": "nx-and-angular",
+        "name": "Nx and the Angular CLI",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/nx-and-angular-cli",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/angular/recipes/nx-and-angular",
+        "tags": []
+      },
+      {
+        "id": "nx-devkit-angular-devkit",
+        "name": "Nx Devkit and Angular Devkit",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/nx-devkit-angular-devkit",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/angular/recipes/nx-devkit-angular-devkit",
+        "tags": ["create-your-own-plugin"]
+      },
+      {
+        "id": "angular-nx-version-matrix",
+        "name": "Angular and Nx Version Matrix",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/packages/angular/angular-nx-version-matrix",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/angular/recipes/angular-nx-version-matrix",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -5958,6 +6057,39 @@
     "itemList": [],
     "isExternal": false,
     "path": "/technologies/angular/recipes/setup-incremental-builds-angular",
+    "tags": []
+  },
+  "/technologies/angular/recipes/nx-and-angular": {
+    "id": "nx-and-angular",
+    "name": "Nx and the Angular CLI",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/nx-and-angular-cli",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/angular/recipes/nx-and-angular",
+    "tags": []
+  },
+  "/technologies/angular/recipes/nx-devkit-angular-devkit": {
+    "id": "nx-devkit-angular-devkit",
+    "name": "Nx Devkit and Angular Devkit",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/nx-devkit-angular-devkit",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/angular/recipes/nx-devkit-angular-devkit",
+    "tags": ["create-your-own-plugin"]
+  },
+  "/technologies/angular/recipes/angular-nx-version-matrix": {
+    "id": "angular-nx-version-matrix",
+    "name": "Angular and Nx Version Matrix",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/packages/angular/angular-nx-version-matrix",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/angular/recipes/angular-nx-version-matrix",
     "tags": []
   },
   "/technologies/angular/api": {

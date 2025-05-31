@@ -818,6 +818,25 @@
                       "name": "Setup incremental builds for Angular applications",
                       "id": "setup-incremental-builds-angular",
                       "file": "shared/guides/setup-incremental-builds-angular"
+                    },
+                    {
+                      "name": "Nx and the Angular CLI",
+                      "id": "nx-and-angular",
+                      "file": "shared/guides/nx-and-angular-cli",
+                      "path": "/technologies/angular/recipes/nx-and-angular"
+                    },
+                    {
+                      "name": "Nx Devkit and Angular Devkit",
+                      "id": "nx-devkit-angular-devkit",
+                      "tags": ["create-your-own-plugin"],
+                      "file": "shared/guides/nx-devkit-angular-devkit",
+                      "path": "/technologies/angular/recipes/nx-devkit-angular-devkit"
+                    },
+                    {
+                      "name": "Angular and Nx Version Matrix",
+                      "id": "angular-nx-version-matrix",
+                      "file": "shared/packages/angular/angular-nx-version-matrix",
+                      "path": "/technologies/angular/recipes/angular-nx-version-matrix"
                     }
                   ]
                 },
@@ -3150,23 +3169,6 @@
               "id": "overview",
               "path": "/nx-api/angular",
               "file": "shared/packages/angular/angular-plugin"
-            },
-            {
-              "name": "Nx and the Angular CLI",
-              "id": "nx-and-angular",
-              "file": "shared/guides/nx-and-angular-cli"
-            },
-            {
-              "name": "Nx Devkit and Angular Devkit",
-              "id": "nx-devkit-angular-devkit",
-              "tags": ["create-your-own-plugin"],
-              "file": "shared/guides/nx-devkit-angular-devkit"
-            },
-            {
-              "name": "Angular and Nx Version Matrix",
-              "id": "angular-nx-version-matrix",
-              "file": "shared/packages/angular/angular-nx-version-matrix",
-              "path": "/angular-nx-version-matrix"
             }
           ]
         },

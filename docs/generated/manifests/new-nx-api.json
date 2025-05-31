@@ -4,52 +4,7 @@
     "name": "angular",
     "packageName": "@nx/angular",
     "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
-    "documents": {
-      "/technologies/angular/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
-        "file": "generated/packages/angular/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/angular/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/angular/angular-plugin"
-      },
-      "/technologies/angular/api/documents/nx-and-angular": {
-        "id": "nx-and-angular",
-        "name": "Nx and the Angular CLI",
-        "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
-        "file": "generated/packages/angular/documents/nx-and-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/angular/api/documents/nx-and-angular",
-        "tags": [],
-        "originalFilePath": "shared/guides/nx-and-angular-cli"
-      },
-      "/technologies/angular/api/documents/nx-devkit-angular-devkit": {
-        "id": "nx-devkit-angular-devkit",
-        "name": "Nx Devkit and Angular Devkit",
-        "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
-        "file": "generated/packages/angular/documents/nx-devkit-angular-devkit",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/angular/api/documents/nx-devkit-angular-devkit",
-        "tags": ["create-your-own-plugin"],
-        "originalFilePath": "shared/guides/nx-devkit-angular-devkit"
-      },
-      "/technologies/angular/api/documents/angular-nx-version-matrix": {
-        "id": "angular-nx-version-matrix",
-        "name": "Angular and Nx Version Matrix",
-        "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
-        "file": "generated/packages/angular/documents/angular-nx-version-matrix",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/angular/api/documents/angular-nx-version-matrix",
-        "tags": [],
-        "originalFilePath": "shared/packages/angular/angular-nx-version-matrix"
-      }
-    },
+    "documents": {},
     "root": "/packages/angular",
     "source": "/packages/angular/src",
     "executors": {
@@ -1533,30 +1488,7 @@
     "name": "devkit",
     "packageName": "@nx/devkit",
     "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more. Learn more about [extending Nx by leveraging the Nx Devkit](https://nx.dev/extending-nx/intro/getting-started) on our docs.",
-    "documents": {
-      "/reference/core-api/devkit/documents/nx_devkit": {
-        "id": "nx_devkit",
-        "name": "Overview",
-        "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more. Learn more about [extending Nx by leveraging the Nx Devkit](https://nx.dev/extending-nx/intro/getting-started) on our docs.",
-        "file": "generated/packages/devkit/documents/nx_devkit",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/devkit/documents/nx_devkit",
-        "tags": [],
-        "originalFilePath": "generated/devkit/README"
-      },
-      "/reference/core-api/devkit/documents/ngcli_adapter": {
-        "id": "ngcli_adapter",
-        "name": "Ng CLI Adapter",
-        "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more. Learn more about [extending Nx by leveraging the Nx Devkit](https://nx.dev/extending-nx/intro/getting-started) on our docs.",
-        "file": "generated/packages/devkit/documents/ngcli_adapter",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/devkit/documents/ngcli_adapter",
-        "tags": [],
-        "originalFilePath": "generated/devkit/ngcli_adapter/README"
-      }
-    },
+    "documents": {},
     "root": "/packages/devkit",
     "source": "/packages/devkit/src",
     "executors": {},
@@ -1761,41 +1693,7 @@
     "name": "eslint-plugin",
     "packageName": "@nx/eslint-plugin",
     "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
-    "documents": {
-      "/technologies/eslint/eslint-plugin/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
-        "file": "generated/packages/eslint-plugin/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/eslint/eslint-plugin/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/eslint/eslint-plugin"
-      },
-      "/technologies/eslint/eslint-plugin/api/documents/enforce-module-boundaries": {
-        "id": "enforce-module-boundaries",
-        "name": "The `enforce-module-boundaries` rule",
-        "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
-        "file": "generated/packages/eslint-plugin/documents/enforce-module-boundaries",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/eslint/eslint-plugin/api/documents/enforce-module-boundaries",
-        "tags": [],
-        "originalFilePath": "shared/packages/eslint/enforce-module-boundaries"
-      },
-      "/technologies/eslint/eslint-plugin/api/documents/dependency-checks": {
-        "id": "dependency-checks",
-        "name": "The `dependency-checks` rule",
-        "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
-        "file": "generated/packages/eslint-plugin/documents/dependency-checks",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/eslint/eslint-plugin/api/documents/dependency-checks",
-        "tags": [],
-        "originalFilePath": "shared/packages/eslint/dependency-checks"
-      }
-    },
+    "documents": {},
     "root": "/packages/eslint-plugin",
     "source": "/packages/eslint-plugin/src",
     "executors": {},
@@ -2498,30 +2396,7 @@
     "name": "module-federation",
     "packageName": "@nx/module-federation",
     "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
-    "documents": {
-      "/technologies/module-federation/api/documents/nx-module-federation-plugin": {
-        "id": "nx-module-federation-plugin",
-        "name": "NxModuleFederationPlugin",
-        "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
-        "file": "generated/packages/module-federation/documents/nx-module-federation-plugin",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/module-federation/api/documents/nx-module-federation-plugin",
-        "tags": [],
-        "originalFilePath": "shared/packages/module-federation/nx-module-federation-plugin"
-      },
-      "/technologies/module-federation/api/documents/nx-module-federation-dev-server-plugin": {
-        "id": "nx-module-federation-dev-server-plugin",
-        "name": "NxModuleFederationDevServerPlugin",
-        "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
-        "file": "generated/packages/module-federation/documents/nx-module-federation-dev-server-plugin",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/module-federation/api/documents/nx-module-federation-dev-server-plugin",
-        "tags": [],
-        "originalFilePath": "shared/packages/module-federation/nx-module-federation-dev-server-plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/module-federation",
     "source": "/packages/module-federation/src",
     "executors": {},
@@ -2990,305 +2865,7 @@
     "name": "nx",
     "packageName": "nx",
     "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-    "documents": {
-      "/reference/core-api/nx/documents/create-nx-workspace": {
-        "id": "create-nx-workspace",
-        "name": "create-nx-workspace",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/create-nx-workspace",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/create-nx-workspace",
-        "tags": ["installation"],
-        "originalFilePath": "generated/cli/create-nx-workspace"
-      },
-      "/reference/core-api/nx/documents/init": {
-        "id": "init",
-        "name": "init",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/init",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/init",
-        "tags": ["init"],
-        "originalFilePath": "generated/cli/init"
-      },
-      "/reference/core-api/nx/documents/generate": {
-        "id": "generate",
-        "name": "generate",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/generate",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/generate",
-        "tags": ["generate-code"],
-        "originalFilePath": "generated/cli/generate"
-      },
-      "/reference/core-api/nx/documents/run": {
-        "id": "run",
-        "name": "run",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/run",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/run",
-        "tags": ["run-tasks"],
-        "originalFilePath": "generated/cli/run"
-      },
-      "/reference/core-api/nx/documents/daemon": {
-        "id": "daemon",
-        "name": "daemon",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/daemon",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/daemon",
-        "tags": ["daemon"],
-        "originalFilePath": "generated/cli/daemon"
-      },
-      "/reference/core-api/nx/documents/dep-graph": {
-        "id": "dep-graph",
-        "name": "graph",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/dep-graph",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/dep-graph",
-        "tags": ["explore-graph"],
-        "originalFilePath": "generated/cli/graph"
-      },
-      "/reference/core-api/nx/documents/run-many": {
-        "id": "run-many",
-        "name": "run-many",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/run-many",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/run-many",
-        "tags": ["run-tasks"],
-        "originalFilePath": "generated/cli/run-many"
-      },
-      "/reference/core-api/nx/documents/affected": {
-        "id": "affected",
-        "name": "affected",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/affected",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/affected",
-        "tags": ["run-tasks", "affected"],
-        "originalFilePath": "generated/cli/affected"
-      },
-      "/reference/core-api/nx/documents/format-check": {
-        "id": "format-check",
-        "name": "format:check",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/format-check",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/format-check",
-        "tags": ["enforce-module-boundaries"],
-        "originalFilePath": "generated/cli/format-check"
-      },
-      "/reference/core-api/nx/documents/format-write": {
-        "id": "format-write",
-        "name": "format:write",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/format-write",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/format-write",
-        "tags": ["enforce-module-boundaries"],
-        "originalFilePath": "generated/cli/format-write"
-      },
-      "/reference/core-api/nx/documents/migrate": {
-        "id": "migrate",
-        "name": "migrate",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/migrate",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/migrate",
-        "tags": ["automate-updating-dependencies"],
-        "originalFilePath": "generated/cli/migrate"
-      },
-      "/reference/core-api/nx/documents/report": {
-        "id": "report",
-        "name": "report",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/report",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/report",
-        "tags": [],
-        "originalFilePath": "generated/cli/report"
-      },
-      "/reference/core-api/nx/documents/list": {
-        "id": "list",
-        "name": "list",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/list",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/list",
-        "tags": [],
-        "originalFilePath": "generated/cli/list"
-      },
-      "/reference/core-api/nx/documents/connect-to-nx-cloud": {
-        "id": "connect-to-nx-cloud",
-        "name": "connect-to-nx-cloud",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/connect-to-nx-cloud",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/connect-to-nx-cloud",
-        "tags": ["cache-task-results", "distribute-task-execution"],
-        "originalFilePath": "generated/cli/connect"
-      },
-      "/reference/core-api/nx/documents/reset": {
-        "id": "reset",
-        "name": "reset",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/reset",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/reset",
-        "tags": ["cache-task-results"],
-        "originalFilePath": "generated/cli/reset"
-      },
-      "/reference/core-api/nx/documents/repair": {
-        "id": "repair",
-        "name": "repair",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/repair",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/repair",
-        "tags": [],
-        "originalFilePath": "generated/cli/repair"
-      },
-      "/reference/core-api/nx/documents/sync": {
-        "id": "sync",
-        "name": "sync",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/sync",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/sync",
-        "tags": ["sync"],
-        "originalFilePath": "generated/cli/sync"
-      },
-      "/reference/core-api/nx/documents/sync-check": {
-        "id": "sync-check",
-        "name": "sync:check",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/sync-check",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/sync-check",
-        "tags": ["sync"],
-        "originalFilePath": "generated/cli/sync-check"
-      },
-      "/reference/core-api/nx/documents/import": {
-        "id": "import",
-        "name": "import",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/import",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/import",
-        "tags": ["import"],
-        "originalFilePath": "generated/cli/import"
-      },
-      "/reference/core-api/nx/documents/exec": {
-        "id": "exec",
-        "name": "exec",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/exec",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/exec",
-        "tags": ["exec"],
-        "originalFilePath": "generated/cli/exec"
-      },
-      "/reference/core-api/nx/documents/watch": {
-        "id": "watch",
-        "name": "watch",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/watch",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/watch",
-        "tags": ["workspace-watching"],
-        "originalFilePath": "generated/cli/watch"
-      },
-      "/reference/core-api/nx/documents/show": {
-        "id": "show",
-        "name": "show",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/show",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/show",
-        "tags": ["explore-graph"],
-        "originalFilePath": "generated/cli/show"
-      },
-      "/reference/core-api/nx/documents/view-logs": {
-        "id": "view-logs",
-        "name": "view-logs",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/view-logs",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/view-logs",
-        "tags": [],
-        "originalFilePath": "generated/cli/view-logs"
-      },
-      "/reference/core-api/nx/documents/release": {
-        "id": "release",
-        "name": "release",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/release",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/release",
-        "tags": ["nx-release"],
-        "originalFilePath": "generated/cli/release"
-      },
-      "/reference/core-api/nx/documents/add": {
-        "id": "add",
-        "name": "add",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/add",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/add",
-        "tags": ["add"],
-        "originalFilePath": "generated/cli/add"
-      },
-      "/reference/core-api/nx/documents/login": {
-        "id": "login",
-        "name": "login",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/login",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/login",
-        "tags": ["login"],
-        "originalFilePath": "generated/cli/login"
-      },
-      "/reference/core-api/nx/documents/logout": {
-        "id": "logout",
-        "name": "logout",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/logout",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/nx/documents/logout",
-        "tags": ["login"],
-        "originalFilePath": "generated/cli/logout"
-      }
-    },
+    "documents": {},
     "root": "/packages/nx",
     "source": "/packages/nx/src",
     "executors": {
@@ -4755,41 +4332,7 @@
     "name": "storybook",
     "packageName": "@nx/storybook",
     "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
-    "documents": {
-      "/technologies/test-tools/storybook/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "This is an overview page for the Storybook plugin in Nx. It explains what Storybook is and how to set it up in your Nx workspace.",
-        "file": "generated/packages/storybook/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/test-tools/storybook/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/plugin-overview"
-      },
-      "/technologies/test-tools/storybook/api/documents/best-practices": {
-        "id": "best-practices",
-        "name": "Storybook best practices for making the most out of Nx",
-        "description": "The purpose of this guide is to help you set up Storybook in your Nx workspace so that you can get the most out of Nx and its powerful capabilities.",
-        "file": "generated/packages/storybook/documents/best-practices",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/test-tools/storybook/api/documents/best-practices",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/best-practices"
-      },
-      "/technologies/test-tools/storybook/api/documents/storybook-7-setup": {
-        "id": "storybook-7-setup",
-        "name": "Storybook 7",
-        "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
-        "file": "generated/packages/storybook/documents/storybook-7-setup",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/test-tools/storybook/api/documents/storybook-7-setup",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/storybook-7-setup"
-      }
-    },
+    "documents": {},
     "root": "/packages/storybook",
     "source": "/packages/storybook/src",
     "executors": {
@@ -5402,30 +4945,7 @@
     "name": "workspace",
     "packageName": "@nx/workspace",
     "description": "The Workspace plugin contains executors and generators that are useful for any Nx workspace. It should be present in every Nx workspace and other plugins build on it.",
-    "documents": {
-      "/reference/core-api/workspace/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Workspace plugin contains executors and generators that are useful for any Nx workspace. It should be present in every Nx workspace and other plugins build on it.",
-        "file": "generated/packages/workspace/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/workspace/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/workspace/workspace-plugin"
-      },
-      "/reference/core-api/workspace/documents/nx-nodejs-typescript-version-matrix": {
-        "id": "nx-nodejs-typescript-version-matrix",
-        "name": "Nx, NodeJS and Typescript Versions",
-        "description": "The Workspace plugin contains executors and generators that are useful for any Nx workspace. It should be present in every Nx workspace and other plugins build on it.",
-        "file": "generated/packages/workspace/documents/nx-nodejs-typescript-version-matrix",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/workspace/documents/nx-nodejs-typescript-version-matrix",
-        "tags": [],
-        "originalFilePath": "shared/packages/workspace/nx-compatibility-matrix"
-      }
-    },
+    "documents": {},
     "root": "/packages/workspace",
     "source": "/packages/workspace/src",
     "executors": {
@@ -5580,19 +5100,7 @@
     "name": "azure-cache",
     "packageName": "@nx/azure-cache",
     "description": "A Nx plugin which provides a Nx cache which can be self hosted on Azure Blob Storage.",
-    "documents": {
-      "/reference/core-api/azure-cache/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx plugin which provides a Nx cache which can be self hosted on Azure Blob Storage.",
-        "file": "external-generated/packages/azure-cache/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/azure-cache/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/azure-cache/azure-cache-plugin"
-      }
-    },
+    "documents": {},
     "root": "/libs/nx-packages/azure-cache",
     "source": "/libs/nx-packages/azure-cache/src",
     "executors": {},
@@ -5605,30 +5113,7 @@
     "name": "conformance",
     "packageName": "@nx/conformance",
     "description": "A Nx plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
-    "documents": {
-      "/reference/core-api/conformance/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
-        "file": "external-generated/packages/conformance/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/conformance/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/conformance/conformance-plugin"
-      },
-      "/reference/core-api/conformance/documents/create-conformance-rule": {
-        "id": "create-conformance-rule",
-        "name": "Create a Conformance Rule",
-        "description": "A Nx plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
-        "file": "external-generated/packages/conformance/documents/create-conformance-rule",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/conformance/documents/create-conformance-rule",
-        "tags": [],
-        "originalFilePath": "shared/packages/conformance/create-conformance-rule"
-      }
-    },
+    "documents": {},
     "root": "/libs/nx-packages/conformance",
     "source": "/libs/nx-packages/conformance/src",
     "executors": {
@@ -5661,19 +5146,7 @@
     "name": "owners",
     "packageName": "@nx/owners",
     "description": "A Nx plugin which provides the ability to configure and maintain codeowners for projects in Nx workspaces.",
-    "documents": {
-      "/reference/core-api/owners/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx plugin which provides the ability to configure and maintain codeowners for projects in Nx workspaces.",
-        "file": "external-generated/packages/owners/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/owners/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/owners/owners-plugin"
-      }
-    },
+    "documents": {},
     "root": "/libs/nx-packages/owners",
     "source": "/libs/nx-packages/owners/src",
     "executors": {},
@@ -5705,19 +5178,7 @@
     "name": "gcs-cache",
     "packageName": "@nx/gcs-cache",
     "description": "A Nx plugin which provides a Nx cache which can be self hosted on Google Cloud Storage.",
-    "documents": {
-      "/reference/core-api/gcs-cache/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx plugin which provides a Nx cache which can be self hosted on Google Cloud Storage.",
-        "file": "external-generated/packages/gcs-cache/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/gcs-cache/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/gcs-cache/gcs-cache-plugin"
-      }
-    },
+    "documents": {},
     "root": "/libs/nx-packages/gcs-cache",
     "source": "/libs/nx-packages/gcs-cache/src",
     "executors": {},
@@ -5730,19 +5191,7 @@
     "name": "s3-cache",
     "packageName": "@nx/s3-cache",
     "description": "A Nx plugin which provides a Nx cache which can be self hosted on Amazon S3.",
-    "documents": {
-      "/reference/core-api/s3-cache/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx plugin which provides a Nx cache which can be self hosted on Amazon S3.",
-        "file": "external-generated/packages/s3-cache/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/s3-cache/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/s3-cache/s3-cache-plugin"
-      }
-    },
+    "documents": {},
     "root": "/libs/nx-packages/s3-cache",
     "source": "/libs/nx-packages/s3-cache/src",
     "executors": {},
@@ -5755,19 +5204,7 @@
     "name": "shared-fs-cache",
     "packageName": "@nx/shared-fs-cache",
     "description": "A Nx plugin to enable you to use a shared file system directory",
-    "documents": {
-      "/reference/core-api/shared-fs-cache/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx plugin to enable you to use a shared file system directory",
-        "file": "external-generated/packages/shared-fs-cache/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/shared-fs-cache/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/shared-fs-cache/shared-fs-cache-plugin"
-      }
-    },
+    "documents": {},
     "root": "/libs/nx-packages/shared-fs-cache",
     "source": "/libs/nx-packages/shared-fs-cache/src",
     "executors": {},

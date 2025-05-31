@@ -19,8 +19,6 @@ export const pkgToGeneratedApiDocs: Record<
   // angular
   angular: {
     pagePath: '/technologies/angular/api',
-    // TODO(docs): move these to guides and remove this
-    includeDocuments: true,
   },
   // react
   react: {
@@ -84,8 +82,6 @@ export const pkgToGeneratedApiDocs: Record<
   },
   storybook: {
     pagePath: '/technologies/test-tools/storybook/api',
-    // TODO(docs): move these to guides and remove this
-    includeDocuments: true,
   },
   playwright: {
     pagePath: '/technologies/test-tools/playwright/api',
@@ -99,63 +95,41 @@ export const pkgToGeneratedApiDocs: Record<
   // misc
   'module-federation': {
     pagePath: '/technologies/module-federation/api',
-    // TODO(docs): move these to guides and remove this
-    includeDocuments: true,
   },
   eslint: {
     pagePath: '/technologies/eslint/api',
   },
   'eslint-plugin': {
     pagePath: '/technologies/eslint/eslint-plugin/api',
-    // TODO(docs): move these to guides and remove this
-    includeDocuments: true,
   },
   // core and misc
   // For now, things that are not in technologies are put here in references/core-api
   nx: {
     pagePath: '/reference/core-api/nx',
-    // TODO(docs): move these to guides and remove this
-    includeDocuments: true,
   },
   workspace: {
     pagePath: '/reference/core-api/workspace',
-    // TODO(docs): move these to guides and remove this
-    includeDocuments: true,
   },
   owners: {
     pagePath: '/reference/core-api/owners',
-    // TODO(docs): move these to guides and remove this
-    includeDocuments: true,
   },
   conformance: {
     pagePath: '/reference/core-api/conformance',
-    // TODO(docs): move these to guides and remove this
-    includeDocuments: true,
   },
   'azure-cache': {
     pagePath: '/reference/core-api/azure-cache',
-    // TODO(docs): move these to guides and remove this
-    includeDocuments: true,
   },
   'gcs-cache': {
     pagePath: '/reference/core-api/gcs-cache',
-    // TODO(docs): move these to guides and remove this
-    includeDocuments: true,
   },
   's3-cache': {
     pagePath: '/reference/core-api/s3-cache',
-    // TODO(docs): move these to guides and remove this
-    includeDocuments: true,
   },
   'shared-fs-cache': {
     pagePath: '/reference/core-api/shared-fs-cache',
-    // TODO(docs): move these to guides and remove this
-    includeDocuments: true,
   },
   devkit: {
     pagePath: '/reference/core-api/devkit',
-    // TODO(docs): move these to guides and remove this
-    includeDocuments: true,
   },
   plugin: {
     pagePath: '/reference/core-api/plugin',
