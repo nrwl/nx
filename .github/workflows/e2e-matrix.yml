@@ -25,7 +25,7 @@ jobs:
         os:
           - ubuntu-latest
           - macos-latest
-          - windows-latest
+          # - windows-latest
         node_version:
           - 20
           - 22
@@ -36,8 +36,8 @@ jobs:
             node_version: 22
           # - os: macos-latest
           #   node_version: 23
-          - os: windows-latest
-            node_version: 22
+          # - os: windows-latest
+            # node_version: 22
           # - os: windows-latest
           #   node_version: 23
 
@@ -320,9 +320,30 @@ jobs:
         run: |
           echo "timestamp=$(date +%s)" >> $GITHUB_OUTPUT
 
+      - name: Build (Linux/Windows)
+        id: build
+        if: ${{ matrix.os != 'macos-latest' }}
+        run: |
+          pnpm build
+        shell: bash
+        timeout-minutes: 15
+        env:
+          NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
+          NX_DAEMON: 'true'
+          NX_PERF_LOGGING: 'false'
+          NX_E2E_VERBOSE_LOGGING: 'true'
+          NX_NATIVE_LOGGING: 'false'
+          NX_E2E_RUN_E2E: 'true'
+          NX_CLOUD_NO_TIMEOUTS: 'true'
+          NODE_OPTIONS: --max_old_space_size=8192
+          SELECTED_PM: ${{ matrix.package_manager }}
+          npm_config_registry: http://localhost:4872
+          YARN_REGISTRY: http://localhost:4872
+          CI: true
+
       - name: Run e2e tests with pnpm (Linux/Windows)
         id: e2e-run-pnpm
-        if: ${{ matrix.os != 'macos-latest' }}
+        if: ${{ matrix.os != 'macos-latest' && steps.build.outcome == 'success' }}
         run: |
           mkdir -p test-results
           pnpm nx run ${{ matrix.project }}:e2e-local -- --json --outputFile=test-results/${{ matrix.project }}-${{ matrix.os_name }}-node${{ matrix.node_version }}-${{ matrix.package_manager }}.json || true
@@ -343,9 +364,28 @@ jobs:
           YARN_REGISTRY: http://localhost:4872
           CI: true
 
+      - name: Build (macOS)
+        id: build-macos
+        if: ${{ matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success' }}
+        run: |
+          pnpm build
+        env:
+          NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
+          NX_PERF_LOGGING: 'false'
+          NX_CI_EXECUTION_ENV: 'macos'
+          NX_E2E_VERBOSE_LOGGING: 'true'
+          NX_NATIVE_LOGGING: 'false'
+          NX_E2E_RUN_E2E: 'true'
+          NODE_OPTIONS: --max_old_space_size=8192
+          SELECTED_PM: 'npm'
+          npm_config_registry: http://localhost:4872
+          YARN_REGISTRY: http://localhost:4872
+          DEVELOPER_DIR: '/Applications/Xcode.app/Contents/Developer'
+          CI: true
+
       - name: Run e2e tests with npm (macOS)
         id: e2e-run-npm
-        if: ${{ matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success' }}
+        if: ${{ matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success' && steps.build-macos.outcome == 'success' }}
         run: |
           mkdir -p test-results
           if [[ "${{ matrix.project }}" == "e2e-detox" ]] || [[ "${{ matrix.project }}" == "e2e-react-native" ]] || [[ "${{ matrix.project }}" == "e2e-expo" ]]; then

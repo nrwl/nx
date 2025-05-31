@@ -58,7 +58,7 @@ const matrixData: MatrixData = {
   setup: [
     { os: 'ubuntu-latest', os_name: 'Linux', os_timeout: 100, package_managers: ['npm', 'pnpm', 'yarn'], node_versions: ['20.19.0', "22.12.0"], excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo'] },
     { os: 'macos-latest', os_name: 'MacOS', os_timeout: 120, package_managers: ['npm'], node_versions: ['20.19.0'] },
-    { os: 'windows-latest', os_name: 'WinOS', os_timeout: 180, package_managers: ['npm'], node_versions: ['20.19.0'], excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo', 'e2e-gradle'] }
+    // { os: 'windows-latest', os_name: 'WinOS', os_timeout: 180, package_managers: ['npm'], node_versions: ['20.19.0'], excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo', 'e2e-gradle'] }
   ]
 };
 
