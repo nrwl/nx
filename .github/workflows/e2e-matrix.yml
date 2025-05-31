@@ -264,9 +264,46 @@ jobs:
           # Kill any existing simulator processes
           sudo killall -9 com.apple.CoreSimulator.CoreSimulatorService || true
           killall "Simulator" || true
+          killall "iOS Simulator" || true
           
           # Wait for processes to fully terminate
-          sleep 5
+          sleep 3
+          
+          # Force shutdown all simulators first
+          echo "Shutting down all simulators..."
+          xcrun simctl shutdown all 2>/dev/null || true
+          
+          # Wait for shutdown to complete with polling
+          echo "Waiting for simulators to shut down..."
+          for i in {1..30}; do
+            booted_count=$(xcrun simctl list devices | grep -c "Booted" || echo "0")
+            if [[ "$booted_count" -eq 0 ]]; then
+              echo "All simulators shut down successfully"
+              break
+            fi
+            echo "Still $booted_count booted simulators, waiting..."
+            sleep 2
+          done
+          
+          # Check if any simulators are still booted and force shutdown again
+          booted_devices=$(xcrun simctl list devices | grep "Booted" || true)
+          if [[ -n "$booted_devices" ]]; then
+            echo "Some simulators still booted, forcing shutdown again..."
+            xcrun simctl shutdown all --force 2>/dev/null || true
+            sleep 5
+          fi
+          
+          # Now erase all simulators
+          echo "Erasing all simulators..."
+          xcrun simctl erase all 2>/dev/null || {
+            echo "Initial erase failed, trying individual device reset..."
+            # If bulk erase fails, try to erase individual devices
+            xcrun simctl list devices -j | jq -r '.devices[] | .[] | select(.state != "Shutdown") | .udid' | while read udid; do
+              echo "Shutting down and erasing device: $udid"
+              xcrun simctl shutdown "$udid" 2>/dev/null || true
+              xcrun simctl erase "$udid" 2>/dev/null || true
+            done
+          }
           
           # Clean up simulator runtime and cache directories
           rm -rf ~/Library/Developer/CoreSimulator/Devices/* || true
@@ -279,15 +316,11 @@ jobs:
           launchctl remove com.apple.CoreSimulator.CoreSimulatorService || true
           
           # Wait for system to stabilize
-          sleep 5
+          sleep 3
           
           # Start fresh CoreSimulator service
           open -a Simulator --args -CurrentDeviceUDID "" || true
-          sleep 10
-          
-          # Shutdown and erase all simulators with increased timeout
-          xcrun simctl shutdown all 2>/dev/null || true
-          xcrun simctl erase all
+          sleep 5
         timeout-minutes: 15
         continue-on-error: true
 
@@ -410,12 +443,21 @@ jobs:
           DEVELOPER_DIR: '/Applications/Xcode.app/Contents/Developer'
           CI: true
 
+      - name: View e2e directory
+        if: always() && ((matrix.os != 'macos-latest') || (matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success'))
+        run: |
+          if command -v tree &> /dev/null; then
+            tree e2e
+          else
+            find e2e -type f -o -type d | sed -e "s/[^-][^\/]*\// |/g" -e "s/|\([^ ]\)/|-\1/"
+          fi
+
       - name: Upload test results
         if: always() && ((matrix.os != 'macos-latest') || (matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success'))
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
-          path: ${{ matrix.project }}-${{ matrix.os_name }}-${{ matrix.node_version }}-${{ matrix.package_manager }}.json
+          name: test-results-${{ matrix.project }}-${{ matrix.os_name }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
+          path: e2e/${{ matrix.directory }}/${{ matrix.project }}-${{ matrix.os_name }}-${{ matrix.node_version }}-${{ matrix.package_manager }}.json
           if-no-files-found: warn
 
       - name: Save matrix config in file
@@ -427,8 +469,20 @@ jobs:
           now=$(date +%s)
           delta=$(($now - $before))
           
-          # Determine the outcome based on which step ran
-          outcome="${{ matrix.os == 'macos-latest' && steps.e2e-run-npm.outcome || steps.e2e-run-pnpm.outcome }}"
+          # Check if any critical setup steps failed
+          if [[ "${{ matrix.os == 'macos-latest' }}" == "true" ]]; then
+            if [[ "${{ steps.build-macos.outcome }}" == "failure" ]]; then
+              outcome="failure"
+            else
+              outcome="success" # Let test results processing determine actual success/failure
+            fi
+          else
+            if [[ "${{ steps.build.outcome }}" == "failure" ]]; then
+              outcome="failure"
+            else
+              outcome="success" # Let test results processing determine actual success/failure
+            fi
+          fi
           
           matrix=$((
             echo '${{ toJSON(matrix) }}'
@@ -473,12 +527,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: outputs
+          pattern: test-results-*
+          merge-multiple: true
 
       - name: Download all test results
         uses: actions/download-artifact@v4
         with:
-          name: test-results
-          path: .
+          pattern: test-results-*
           merge-multiple: true
 
       - name: Join and stringify matrix configs

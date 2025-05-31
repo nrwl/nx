@@ -1,6 +1,7 @@
 type MatrixDataProject = {
   name: string,
   codeowners: string,
+  directory: string, // The actual directory name without e2e- prefix
 };
 
 type MatrixDataOS = {
@@ -22,37 +23,37 @@ type MatrixData = {
 // TODO: Extract Slack groups into named groups for easier maintenance
 const matrixData: MatrixData = {
   coreProjects: [
-    { name: 'e2e-lerna-smoke-tests', codeowners: 'S04TNCVEETS' },
-    { name: 'e2e-js', codeowners: 'S04SJ6HHP0X' },
-    { name: 'e2e-nx-init', codeowners: 'S04SYHYKGNP' },
-    { name: 'e2e-nx', codeowners: 'S04SYHYKGNP' },
-    { name: 'e2e-release', codeowners: 'S04SYHYKGNP' },
-    { name: 'e2e-workspace-create', codeowners: 'S04SYHYKGNP' }
+    { name: 'e2e-lerna-smoke-tests', directory: 'lerna-smoke-tests', codeowners: 'S04TNCVEETS' },
+    { name: 'e2e-js', directory: 'js', codeowners: 'S04SJ6HHP0X' },
+    { name: 'e2e-nx-init', directory: 'nx-init', codeowners: 'S04SYHYKGNP' },
+    { name: 'e2e-nx', directory: 'nx', codeowners: 'S04SYHYKGNP' },
+    { name: 'e2e-release', directory: 'release', codeowners: 'S04SYHYKGNP' },
+    { name: 'e2e-workspace-create', directory: 'workspace-create', codeowners: 'S04SYHYKGNP' }
   ],
   projects: [
-    { name: 'e2e-angular', codeowners: 'S04SS457V38' },
-    { name: 'e2e-cypress', codeowners: 'S04T16BTJJY' },
-    { name: 'e2e-detox', codeowners: 'S04TNCNJG5N' },
-    { name: 'e2e-esbuild', codeowners: 'S04SJ6HHP0X' },
-    { name: 'e2e-expo', codeowners: 'S04TNCNJG5N' },
-    { name: 'e2e-gradle', codeowners: 'S04TNCNJG5N' },
-    { name: 'e2e-jest', codeowners: 'S04T16BTJJY' },
-    { name: 'e2e-eslint', codeowners: 'S04SYJGKSCT' },
-    { name: 'e2e-next', codeowners: 'S04TNCNJG5N' },
-    { name: 'e2e-node', codeowners: 'S04SJ6HHP0X' },
-    { name: 'e2e-plugin', codeowners: 'S04SYHYKGNP' },
-    { name: 'e2e-react', codeowners: 'S04TNCNJG5N' },
-    { name: 'e2e-react-native', codeowners: 'S04TNCNJG5N' },
-    { name: 'e2e-web', codeowners: 'S04SJ6PL98X' },
-    { name: 'e2e-rollup', codeowners: 'S04SJ6PL98X' },
-    { name: 'e2e-storybook', codeowners: 'S04SVQ8H0G5' },
-    { name: 'e2e-playwright', codeowners: 'S04SVQ8H0G5' },
-    { name: 'e2e-remix', codeowners: 'S04SVQ8H0G5' },
-    { name: 'e2e-rspack', codeowners: 'S04SJ6HHP0X' },
-    { name: 'e2e-vite', codeowners: 'S04SJ6PL98X' },
-    { name: 'e2e-vue', codeowners: 'S04SJ6PL98X' },
-    { name: 'e2e-nuxt', codeowners: 'S04SJ6PL98X' },
-    { name: 'e2e-webpack', codeowners: 'S04SJ6PL98X' }
+    { name: 'e2e-angular', directory: 'angular', codeowners: 'S04SS457V38' },
+    { name: 'e2e-cypress', directory: 'cypress', codeowners: 'S04T16BTJJY' },
+    { name: 'e2e-detox', directory: 'detox', codeowners: 'S04TNCNJG5N' },
+    { name: 'e2e-esbuild', directory: 'esbuild', codeowners: 'S04SJ6HHP0X' },
+    { name: 'e2e-expo', directory: 'expo', codeowners: 'S04TNCNJG5N' },
+    { name: 'e2e-gradle', directory: 'gradle', codeowners: 'S04TNCNJG5N' },
+    { name: 'e2e-jest', directory: 'jest', codeowners: 'S04T16BTJJY' },
+    { name: 'e2e-eslint', directory: 'eslint', codeowners: 'S04SYJGKSCT' },
+    { name: 'e2e-next', directory: 'next', codeowners: 'S04TNCNJG5N' },
+    { name: 'e2e-node', directory: 'node', codeowners: 'S04SJ6HHP0X' },
+    { name: 'e2e-plugin', directory: 'plugin', codeowners: 'S04SYHYKGNP' },
+    { name: 'e2e-react', directory: 'react', codeowners: 'S04TNCNJG5N' },
+    { name: 'e2e-react-native', directory: 'react-native', codeowners: 'S04TNCNJG5N' },
+    { name: 'e2e-web', directory: 'web', codeowners: 'S04SJ6PL98X' },
+    { name: 'e2e-rollup', directory: 'rollup', codeowners: 'S04SJ6PL98X' },
+    { name: 'e2e-storybook', directory: 'storybook', codeowners: 'S04SVQ8H0G5' },
+    { name: 'e2e-playwright', directory: 'playwright', codeowners: 'S04SVQ8H0G5' },
+    { name: 'e2e-remix', directory: 'remix', codeowners: 'S04SVQ8H0G5' },
+    { name: 'e2e-rspack', directory: 'rspack', codeowners: 'S04SJ6HHP0X' },
+    { name: 'e2e-vite', directory: 'vite', codeowners: 'S04SJ6PL98X' },
+    { name: 'e2e-vue', directory: 'vue', codeowners: 'S04SJ6PL98X' },
+    { name: 'e2e-nuxt', directory: 'nuxt', codeowners: 'S04SJ6PL98X' },
+    { name: 'e2e-webpack', directory: 'webpack', codeowners: 'S04SJ6PL98X' }
   ],
   nodeTLS: 20,
   setup: [
@@ -64,6 +65,7 @@ const matrixData: MatrixData = {
 
 const matrix: Array<{
   project: string,
+  directory: string,
   codeowners: string,
   node_version: number | string,
   package_manager: string,
@@ -75,6 +77,7 @@ const matrix: Array<{
 function addMatrixCombo(project: MatrixDataProject, nodeVersion: number | string, pm: number, os: number) {
   matrix.push({
     project: project.name,
+    directory: project.directory,
     codeowners: project.codeowners,
     node_version: nodeVersion,
     package_manager: matrixData.setup[os].package_managers[pm],

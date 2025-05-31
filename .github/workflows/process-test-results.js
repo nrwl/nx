@@ -2,7 +2,9 @@ const fs = require('fs');
 const path = require('path');
 
 function processTestResults() {
-  const files = fs.readdirSync('.').filter(f => f.endsWith('.json'));
+  // Look for test results files in the current directory
+  const files = fs.readdirSync('.')
+    .filter(f => f.endsWith('.json'));
   
   const failures = [];
   let totalTests = 0;
@@ -11,6 +13,7 @@ function processTestResults() {
 
   files.forEach(file => {
     try {
+      // File name format: e2e-project-OS-nodeVersion-packageManager.json
       const [project, os, nodeVer, pm] = file.replace('.json', '').split('-');
       const results = JSON.parse(fs.readFileSync(file, 'utf8'));
       
