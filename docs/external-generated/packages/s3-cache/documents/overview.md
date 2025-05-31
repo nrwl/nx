@@ -174,6 +174,7 @@ If you are using MinIO earlier than `2024-07-04T14-25-45Z` it is recommended to 
 | **accessKeyId**     | AWS Access Key ID (optional if `AWS_ACCESS_KEY_ID` is set in the environment)                             |
 | **secretAccessKey** | AWS secret access key (optional if `AWS_SECRET_ACCESS_KEY` is set in the environment)                     |
 | **disableChecksum** | This disables AWS' checksum validation for cache entries                                                  |
+| **cacheKeyPrefix**  | This adds a prefix to your cache key.                                                                     |
 
 # Cache Modes
 
@@ -199,6 +200,20 @@ The cache mode in CI can also be configured by setting `ciMode` to `read-only` o
     "region": "us-east-1",
     "bucket": "my-bucket",
     "ciMode": "read-only"
+  }
+}
+```
+
+# Cache Key Prefix
+
+The `cacheKeyPrefix` setting enables you to add a prefix to your cache keys, making it possible to store multiple projects within a single storage bucket. This provides significant flexibility in how you organize and manage your cached data across different environments and projects.
+
+By using prefixes, you can maintain clear separation between projects while leveraging shared infrastructure. For example, you might use different prefixes for staging and production environments, or separate prefixes for different teams working within the same organization. This approach eliminates the need to provision separate storage buckets for each project, reducing complexity and operational overhead.
+
+```jsonc {% fileName="nx.json" %}
+{
+  "s3": {
+    "cacheKeyPrefix": "designSystem"
   }
 }
 ```
