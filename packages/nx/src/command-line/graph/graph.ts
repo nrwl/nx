@@ -240,6 +240,7 @@ function filterGraph(
 export async function generateGraph(
   args: {
     file?: string;
+    print?: boolean;
     host?: string;
     port?: number;
     groupByFolder?: boolean;
@@ -389,6 +390,23 @@ export async function generateGraph(
     args.focus || null,
     args.exclude || []
   );
+
+  if (args.print) {
+    console.log(
+      JSON.stringify(
+        await createJsonOutput(
+          prunedGraph,
+          rawGraph,
+          args.projects,
+          args.targets
+        ),
+        null,
+        2
+      )
+    );
+    await output.drain();
+    process.exit(0);
+  }
 
   if (args.file) {
     // stdout is a magical constant that doesn't actually write a file
