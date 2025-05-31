@@ -337,6 +337,7 @@ jobs:
           NX_CLOUD_NO_TIMEOUTS: 'true'
           NODE_OPTIONS: --max_old_space_size=8192
           SELECTED_PM: ${{ matrix.package_manager }}
+          PROJECT: ${{ matrix.project }}
           npm_config_registry: http://localhost:4872
           YARN_REGISTRY: http://localhost:4872
           CI: true
@@ -345,11 +346,7 @@ jobs:
         id: e2e-run-pnpm
         if: ${{ matrix.os != 'macos-latest' }}
         run: |
-          # Create test results directory in both locations to be safe
-          mkdir -p test-results
-          mkdir -p e2e/${{ matrix.project }}/test-results
-          
-          pnpm nx run ${{ matrix.project }}:e2e-local -- --json --outputFile=e2e/${{ matrix.project }}/test-results/${{ matrix.project }}-${{ matrix.os_name }}-node${{ matrix.node_version }}-${{ matrix.package_manager }}.json || true
+          pnpm nx run ${{ matrix.project }}:e2e-local -- --json --outputFile=${{ matrix.project }}-${{ matrix.os_name }}-${{ matrix.node_version }}-${{ matrix.package_manager }}.json || true
         shell: bash
         timeout-minutes: ${{ matrix.os_timeout }}
         env:
@@ -363,6 +360,7 @@ jobs:
           NX_E2E_SKIP_CLEANUP: 'true'
           NODE_OPTIONS: --max_old_space_size=8192
           SELECTED_PM: ${{ matrix.package_manager }}
+          PROJECT: ${{ matrix.project }}
           npm_config_registry: http://localhost:4872
           YARN_REGISTRY: http://localhost:4872
           CI: true
@@ -381,6 +379,7 @@ jobs:
           NX_E2E_RUN_E2E: 'true'
           NODE_OPTIONS: --max_old_space_size=8192
           SELECTED_PM: 'npm'
+          PROJECT: ${{ matrix.project }}
           npm_config_registry: http://localhost:4872
           YARN_REGISTRY: http://localhost:4872
           DEVELOPER_DIR: '/Applications/Xcode.app/Contents/Developer'
@@ -390,14 +389,10 @@ jobs:
         id: e2e-run-npm
         if: ${{ matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success' }}
         run: |
-          # Create test results directory in both locations to be safe
-          mkdir -p test-results
-          mkdir -p e2e/${{ matrix.project }}/test-results
-          
           if [[ "${{ matrix.project }}" == "e2e-detox" ]] || [[ "${{ matrix.project }}" == "e2e-react-native" ]] || [[ "${{ matrix.project }}" == "e2e-expo" ]]; then
-            NX_E2E_VERBOSE_DEBUG=1 pnpm nx run ${{ matrix.project }}:e2e-macos-local -- --json --outputFile=e2e/${{ matrix.project }}/test-results/${{ matrix.project }}-${{ matrix.os_name }}-node${{ matrix.node_version }}-${{ matrix.package_manager }}.json || true
+            NX_E2E_VERBOSE_DEBUG=1 pnpm nx run ${{ matrix.project }}:e2e-macos-local -- --json --outputFile=${{ matrix.project }}-${{ matrix.os_name }}-${{ matrix.node_version }}-${{ matrix.package_manager }}.json || true
           else
-            NX_E2E_VERBOSE_DEBUG=1 pnpm nx run ${{ matrix.project }}:e2e-local -- --json --outputFile=e2e/${{ matrix.project }}/test-results/${{ matrix.project }}-${{ matrix.os_name }}-node${{ matrix.node_version }}-${{ matrix.package_manager }}.json || true
+            NX_E2E_VERBOSE_DEBUG=1 pnpm nx run ${{ matrix.project }}:e2e-local -- --json --outputFile=${{ matrix.project }}-${{ matrix.os_name }}-${{ matrix.node_version }}-${{ matrix.package_manager }}.json || true
           fi
         env:
           NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
@@ -409,6 +404,7 @@ jobs:
           NX_E2E_SKIP_CLEANUP: 'true'
           NODE_OPTIONS: --max_old_space_size=8192
           SELECTED_PM: 'npm'
+          PROJECT: ${{ matrix.project }}
           npm_config_registry: http://localhost:4872
           YARN_REGISTRY: http://localhost:4872
           DEVELOPER_DIR: '/Applications/Xcode.app/Contents/Developer'
@@ -418,8 +414,8 @@ jobs:
         if: always() && ((matrix.os != 'macos-latest') || (matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success'))
         uses: actions/upload-artifact@v4
         with:
-          name: test-results-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.project }}
-          path: test-results
+          name: test-results
+          path: ${{ matrix.project }}-${{ matrix.os_name }}-${{ matrix.node_version }}-${{ matrix.package_manager }}.json
           if-no-files-found: warn
 
       - name: Save matrix config in file
@@ -478,14 +474,11 @@ jobs:
         with:
           path: outputs
 
-      - name: Create test results directory
-        run: mkdir -p test-results
-
       - name: Download all test results
         uses: actions/download-artifact@v4
         with:
-          pattern: test-results-*
-          path: test-results
+          name: test-results
+          path: .
           merge-multiple: true
 
       - name: Join and stringify matrix configs
@@ -636,9 +629,8 @@ jobs:
         uses: ravsamhq/notify-slack-action@v2
         with:
           status: 'failure'
+          notification_title: 'E2E Matrix Results'
           message_format: |
-            :rotating_light: *E2E Test Failures Detected* :rotating_light:
-
             ${{ needs.process-result.outputs.test_failures }}
 
             *Duration Stats:*
@@ -646,14 +638,13 @@ jobs:
 
             *Package Manager Performance:*
             ${{ needs.process-result.outputs.pm-duration }}
-          notification_title: 'E2E Matrix Results'
           footer: ':link: <{run_url}|View Full Run Details>'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
   report-success:
     if: ${{ success() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
-    needs: e2e
+    needs: process-result
     runs-on: ubuntu-latest
     name: Report status
     timeout-minutes: 10
@@ -662,15 +653,15 @@ jobs:
         uses: ravsamhq/notify-slack-action@v2
         with:
           status: ${{ needs.e2e.result }}
+          notification_title: 'E2E Matrix Results'
           message_format: |
-            :white_check_mark: *All E2E Tests Passed Successfully*
+            ${{ needs.process-result.outputs.test_failures }}
 
             *Duration Stats:*
             ${{ needs.process-result.outputs.proj-duration }}
 
             *Package Manager Performance:*
             ${{ needs.process-result.outputs.pm-duration }}
-          notification_title: 'E2E Matrix Results'
           footer: ':link: <{run_url}|View Full Run Details>'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
