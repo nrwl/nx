@@ -11,7 +11,19 @@ const val testCiTargetGroup = "verification"
 private val testFileNameRegex =
     Regex("^(?!(abstract|fake)).*?(Test)(s)?\\d*", RegexOption.IGNORE_CASE)
 
-private val classDeclarationRegex = Regex("""class\s+([A-Za-z_][A-Za-z0-9_]*)""")
+private val classDeclarationRegex = Regex("""(?<!private\s)class\s+([A-Za-z_][A-Za-z0-9_]*)""")
+
+// Essential annotations (most common subset)
+private val essentialTestAnnotations =
+    setOf(
+        "@Test",
+        "@TestTemplate",
+        "@ParameterizedTest",
+        "@RepeatedTest",
+        "@TestFactory",
+        "@org.junit.Test", // JUnit 4
+        "@org.testng.annotations.Test" // TestNG
+        )
 
 fun addTestCiTargets(
     testFiles: FileCollection,
@@ -56,21 +68,40 @@ fun addTestCiTargets(
   }
 }
 
+private fun containsEssentialTestAnnotations(content: String): Boolean {
+  return essentialTestAnnotations.any { content.contains(it) }
+}
+
 private fun getTestClassNameIfAnnotated(file: File): String? {
-  return file
-      .takeIf { it.exists() }
-      ?.readText()
-      ?.takeIf {
-        it.contains("@Test") || it.contains("@TestTemplate") || it.contains("@ParameterizedTest")
-      }
-      ?.let { content ->
-        val className = classDeclarationRegex.find(content)?.groupValues?.getOrNull(1)
-        return if (className != null && !className.startsWith("Fake")) {
-          className
-        } else {
-          null
-        }
-      }
+  val content = file.takeIf { it.exists() }?.readText() ?: return null
+
+  // Only process files that contain test annotations
+  if (!containsEssentialTestAnnotations(content)) {
+    return null
+  }
+
+  // Find all non-private class declarations
+  val classMatches = classDeclarationRegex.findAll(content).toList()
+
+  // First, try to find a class that ends with "Test" or "Tests"
+  for (match in classMatches) {
+    val className = match.groupValues.getOrNull(1) ?: continue
+    if ((className.endsWith("Test") || className.endsWith("Tests")) &&
+        !className.startsWith("Fake") &&
+        !className.startsWith("Abstract")) {
+      return className
+    }
+  }
+
+  // Fallback: find the first non-private class that's not Fake or Abstract
+  for (match in classMatches) {
+    val className = match.groupValues.getOrNull(1) ?: continue
+    if (!className.startsWith("Fake") && !className.startsWith("Abstract")) {
+      return className
+    }
+  }
+
+  return null
 }
 
 fun ensureTargetGroupExists(targetGroups: TargetGroups, group: String) {
