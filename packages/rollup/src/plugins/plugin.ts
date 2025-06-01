@@ -188,7 +188,9 @@ async function buildRollupTarget(
   const targets: Record<string, TargetConfiguration> = {};
   targets[options.buildTargetName] = {
     command: `rollup -c ${basename(configFilePath)}${
-      isTsConfig ? ` --configPlugin ${tsConfigPlugin}` : ''
+      isTsConfig
+        ? ` --configPlugin typescript={tsconfig:\\'tsconfig.lib.json\\'}`
+        : ''
     }`,
     options: { cwd: projectRoot },
     cache: true,
