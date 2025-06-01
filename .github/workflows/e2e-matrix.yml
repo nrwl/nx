@@ -62,13 +62,17 @@ jobs:
           node-version: ${{ matrix.node_version }}
           cache: 'pnpm'
 
-      - name: Cache node_modules
-        id: cache-modules
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "path=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
         uses: actions/cache@v4
         with:
-          lookup-only: true
-          path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ hashFiles('pnpm-lock.yaml') }}
+          path: ${{ steps.pnpm-cache.outputs.path }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Ensure Python setuptools Installed on Macos
         if: ${{ matrix.os == 'macos-latest' }}
@@ -76,7 +80,6 @@ jobs:
         run: brew install python-setuptools
 
       - name: Install packages
-        if: steps.cache-modules.outputs.cache-hit != 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Homebrew cache directory path
@@ -572,8 +575,8 @@ jobs:
         uses: ravsamhq/notify-slack-action@v2
         with:
           status: 'failure'
-          message_format: '{emoji} Workflow has {status_message} ${{ needs.process-result.outputs.message }}'
-          notification_title: '{workflow}'
+          message_format: '🚨 Workflow has {status_message} ${{ needs.process-result.outputs.message }}'
+          notification_title: 'Golden Test Failure - Critical Tests Are Failing'
           footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
           mention_groups: ${{ needs.process-result.outputs.codeowners }}
         env:
@@ -590,7 +593,7 @@ jobs:
         uses: ravsamhq/notify-slack-action@v2
         with:
           status: ${{ needs.e2e.result }}
-          message_format: '{emoji} Workflow has {status_message}'
+          message_format: '✅ Workflow has {status_message}'
           notification_title: '{workflow}'
           footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
         env:
@@ -608,7 +611,7 @@ jobs:
         with:
           status: 'skipped'
           message_format: '${{ needs.process-result.outputs.pm-duration }}'
-          notification_title: 'Total duration per package manager (ubuntu only)'
+          notification_title: '⌛ Total duration per package manager (ubuntu only)'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
@@ -624,6 +627,6 @@ jobs:
         with:
           status: 'skipped'
           message_format: '${{ needs.process-result.outputs.proj-duration }}'
-          notification_title: 'E2E Project duration stats'
+          notification_title: '⌛ E2E Project duration stats'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
