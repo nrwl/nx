@@ -1,10 +1,12 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   logger,
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
 import {
+  ajvVersion,
   analogVitestAngular,
   edgeRuntimeVmVersion,
   happyDomVersion,
@@ -54,6 +56,9 @@ export function ensureDependencies(
 
   if (schema.includeLib) {
     devDependencies['vite-plugin-dts'] = vitePluginDtsVersion;
+    if (detectPackageManager() !== 'pnpm') {
+      devDependencies['ajv'] = ajvVersion;
+    }
   }
 
   return addDependenciesToPackageJson(host, {}, devDependencies);
