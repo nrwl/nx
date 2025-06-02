@@ -531,6 +531,16 @@
       },
       {
         "description": "",
+        "file": "generated/packages/angular/migrations/21.2.0-jest-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-jest-package-updates",
+        "version": "21.2.0-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/21.2.0-jest-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
         "file": "generated/packages/angular/migrations/21.1.0-package-updates.json",
         "hidden": false,
         "name": "21.1.0-package-updates",
