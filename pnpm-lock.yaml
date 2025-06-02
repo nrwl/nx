@@ -904,8 +904,8 @@ importers:
         specifier: 21.2.0-beta.1
         version: 21.2.0-beta.1(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.21)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))
       nx-mcp:
-        specifier: ^0.0.9
-        version: 0.0.9
+        specifier: ^0.1.0
+        version: 0.1.0
       octokit:
         specifier: ^2.0.14
         version: 2.1.0(encoding@0.1.13)
@@ -1073,7 +1073,7 @@ importers:
         version: 5.99.8(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4)
       webpack-dev-server:
         specifier: 5.2.1
-        version: 5.2.1(bufferutil@4.0.7)(webpack-cli@5.1.4(webpack-dev-server@5.2.1)(webpack@5.99.8))(webpack@5.99.8(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
+        version: 5.2.1(bufferutil@4.0.7)(webpack-cli@5.1.4)(webpack@5.99.8)
       webpack-merge:
         specifier: ^5.8.0
         version: 5.10.0
@@ -15381,8 +15381,8 @@ packages:
   nwsapi@2.2.12:
     resolution: {integrity: sha512-qXDmcVlZV4XRtKFzddidpfVP4oMSGhga+xdMc25mv8kaLUHtgzCDhUxkrN8exkGdTlLNaXj7CV3GtON7zuGZ+w==}
 
-  nx-mcp@0.0.9:
-    resolution: {integrity: sha512-MtwJnHABkxiJG+cgSmrfS8u4xuy4g09lhRrOY/dbg91ajgvcHYEUNv3DArX+0ULiUWOFOTfIqd3yDp9rIzRmHw==}
+  nx-mcp@0.1.0:
+    resolution: {integrity: sha512-uMgGNovSRP6OGJz9m/FSV9i4joMtswnhKU3tk3MC3bJRLOGC+4GmHATlhGt7cCLaY6SACWN9IUoEeejo7n1RLQ==}
     hasBin: true
 
   nx@21.2.0-beta.1:
@@ -26930,7 +26930,7 @@ snapshots:
       tsconfig-paths-webpack-plugin: 4.0.0
       tslib: 2.8.1
       webpack: 5.99.8(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4)
-      webpack-dev-server: 5.2.1(bufferutil@4.0.7)(webpack-cli@5.1.4(webpack-dev-server@5.2.1)(webpack@5.99.8))(webpack@5.99.8(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
+      webpack-dev-server: 5.2.1(bufferutil@4.0.7)(webpack-cli@5.1.4)(webpack@5.99.8)
       webpack-node-externals: 3.0.0
       webpack-subresource-integrity: 5.1.0(html-webpack-plugin@5.5.0(webpack@5.99.8(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4)))(webpack@5.99.8(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
     transitivePeerDependencies:
@@ -27419,7 +27419,7 @@ snapshots:
       webpack: 5.99.8(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4)
     optionalDependencies:
       type-fest: 3.13.1
-      webpack-dev-server: 5.2.1(bufferutil@4.0.7)(webpack-cli@5.1.4(webpack-dev-server@5.2.1)(webpack@5.99.8))(webpack@5.99.8(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
+      webpack-dev-server: 5.2.1(bufferutil@4.0.7)(webpack-cli@5.1.4)(webpack@5.99.8)
       webpack-hot-middleware: 2.26.1
 
   '@pnpm/lockfile-types@6.0.0':
@@ -31204,7 +31204,7 @@ snapshots:
       webpack: 5.99.8(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack-dev-server@5.2.1)(webpack@5.99.8)
     optionalDependencies:
-      webpack-dev-server: 5.2.1(bufferutil@4.0.7)(webpack-cli@5.1.4(webpack-dev-server@5.2.1)(webpack@5.99.8))(webpack@5.99.8(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
+      webpack-dev-server: 5.2.1(bufferutil@4.0.7)(webpack-cli@5.1.4)(webpack@5.99.8)
 
   '@xhmikosr/archive-type@7.0.0':
     dependencies:
@@ -39762,7 +39762,7 @@ snapshots:
 
   nwsapi@2.2.12: {}
 
-  nx-mcp@0.0.9: {}
+  nx-mcp@0.1.0: {}
 
   nx@21.2.0-beta.1(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.21)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)):
     dependencies:
@@ -45177,7 +45177,7 @@ snapshots:
       webpack: 5.99.8(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4)
       webpack-merge: 5.10.0
     optionalDependencies:
-      webpack-dev-server: 5.2.1(bufferutil@4.0.7)(webpack-cli@5.1.4(webpack-dev-server@5.2.1)(webpack@5.99.8))(webpack@5.99.8(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
+      webpack-dev-server: 5.2.1(bufferutil@4.0.7)(webpack-cli@5.1.4)(webpack@5.99.8)
 
   webpack-dev-middleware@6.1.3(webpack@5.99.8(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4)):
     dependencies:
@@ -45249,45 +45249,6 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  webpack-dev-server@5.2.1(bufferutil@4.0.7)(webpack-cli@5.1.4(webpack-dev-server@5.2.1)(webpack@5.99.8))(webpack@5.99.8(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4)):
-    dependencies:
-      '@types/bonjour': 3.5.13
-      '@types/connect-history-api-fallback': 1.5.4
-      '@types/express': 4.17.21
-      '@types/express-serve-static-core': 4.19.5
-      '@types/serve-index': 1.9.4
-      '@types/serve-static': 1.15.7
-      '@types/sockjs': 0.3.36
-      '@types/ws': 8.5.12
-      ansi-html-community: 0.0.8
-      bonjour-service: 1.2.1
-      chokidar: 3.6.0
-      colorette: 2.0.20
-      compression: 1.7.5
-      connect-history-api-fallback: 2.0.0
-      express: 4.21.2
-      graceful-fs: 4.2.11
-      http-proxy-middleware: 2.0.7(@types/express@4.17.21)
-      ipaddr.js: 2.2.0
-      launch-editor: 2.9.1
-      open: 10.1.0
-      p-retry: 6.2.0
-      schema-utils: 4.3.0
-      selfsigned: 2.4.1
-      serve-index: 1.9.1
-      sockjs: 0.3.24
-      spdy: 4.0.2
-      webpack-dev-middleware: 7.4.2(webpack@5.99.8(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
-      ws: 8.18.0(bufferutil@4.0.7)
-    optionalDependencies:
-      webpack: 5.99.8(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4)
-      webpack-cli: 5.1.4(webpack-dev-server@5.2.1)(webpack@5.99.8)
-    transitivePeerDependencies:
-      - bufferutil
-      - debug
-      - supports-color
-      - utf-8-validate
-
   webpack-dev-server@5.2.1(bufferutil@4.0.7)(webpack-cli@5.1.4(webpack-dev-server@5.2.1)(webpack@5.99.8))(webpack@5.99.8(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.4)(webpack-cli@5.1.4(webpack-dev-server@5.2.1)(webpack@5.99.8))):
     dependencies:
       '@types/bonjour': 3.5.13
@@ -45320,6 +45281,45 @@ snapshots:
       ws: 8.18.0(bufferutil@4.0.7)
     optionalDependencies:
       webpack: 5.99.8(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.4)(webpack-cli@5.1.4(webpack-dev-server@5.2.1)(webpack@5.99.8))
+      webpack-cli: 5.1.4(webpack-dev-server@5.2.1)(webpack@5.99.8)
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - supports-color
+      - utf-8-validate
+
+  webpack-dev-server@5.2.1(bufferutil@4.0.7)(webpack-cli@5.1.4)(webpack@5.99.8):
+    dependencies:
+      '@types/bonjour': 3.5.13
+      '@types/connect-history-api-fallback': 1.5.4
+      '@types/express': 4.17.21
+      '@types/express-serve-static-core': 4.19.5
+      '@types/serve-index': 1.9.4
+      '@types/serve-static': 1.15.7
+      '@types/sockjs': 0.3.36
+      '@types/ws': 8.5.12
+      ansi-html-community: 0.0.8
+      bonjour-service: 1.2.1
+      chokidar: 3.6.0
+      colorette: 2.0.20
+      compression: 1.7.5
+      connect-history-api-fallback: 2.0.0
+      express: 4.21.2
+      graceful-fs: 4.2.11
+      http-proxy-middleware: 2.0.7(@types/express@4.17.21)
+      ipaddr.js: 2.2.0
+      launch-editor: 2.9.1
+      open: 10.1.0
+      p-retry: 6.2.0
+      schema-utils: 4.3.0
+      selfsigned: 2.4.1
+      serve-index: 1.9.1
+      sockjs: 0.3.24
+      spdy: 4.0.2
+      webpack-dev-middleware: 7.4.2(webpack@5.99.8(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4))
+      ws: 8.18.0(bufferutil@4.0.7)
+    optionalDependencies:
+      webpack: 5.99.8(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack-dev-server@5.2.1)(webpack@5.99.8)
     transitivePeerDependencies:
       - bufferutil
