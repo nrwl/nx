@@ -1100,6 +1100,13 @@
     },
     {
       "description": "",
+      "file": "shared/guides/nx-devkit-angular-devkit",
+      "id": "nx-devkit-angular-devkit",
+      "name": "Nx Devkit and Angular Devkit",
+      "path": "/technologies/angular/recipes/nx-devkit-angular-devkit"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/plugins/migration-generators",
       "id": "migration-generators",
       "name": "Write a Migration",

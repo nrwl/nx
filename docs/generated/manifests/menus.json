@@ -1223,6 +1223,30 @@
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
+                  },
+                  {
+                    "name": "Nx and the Angular CLI",
+                    "path": "/technologies/angular/recipes/nx-and-angular",
+                    "id": "nx-and-angular",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Nx Devkit and Angular Devkit",
+                    "path": "/technologies/angular/recipes/nx-devkit-angular-devkit",
+                    "id": "nx-devkit-angular-devkit",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Angular and Nx Version Matrix",
+                    "path": "/technologies/angular/recipes/angular-nx-version-matrix",
+                    "id": "angular-nx-version-matrix",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
                   }
                 ],
                 "disableCollapsible": false
@@ -3508,6 +3532,22 @@
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
+                  },
+                  {
+                    "name": "NxModuleFederationPlugin",
+                    "path": "/technologies/module-federation/recipes/nx-module-federation-plugin",
+                    "id": "nx-module-federation-plugin",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "NxModuleFederationDevServerPlugin",
+                    "path": "/technologies/module-federation/recipes/nx-module-federation-dev-server-plugin",
+                    "id": "nx-module-federation-dev-server-plugin",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
                   }
                 ],
                 "disableCollapsible": false
@@ -3685,6 +3725,31 @@
                 "id": "eslint-plugin",
                 "isExternal": false,
                 "children": [
+                  {
+                    "name": "Guides",
+                    "path": "/technologies/eslint/eslint-plugin/recipes",
+                    "id": "recipes",
+                    "isExternal": false,
+                    "children": [
+                      {
+                        "name": "The enforce-module-boundaries rule",
+                        "path": "/technologies/eslint/eslint-plugin/recipes/enforce-module-boundaries",
+                        "id": "enforce-module-boundaries",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "The dependency-checks rule",
+                        "path": "/technologies/eslint/eslint-plugin/recipes/dependency-checks",
+                        "id": "dependency-checks",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      }
+                    ],
+                    "disableCollapsible": false
+                  },
                   {
                     "name": "API",
                     "path": "/technologies/eslint/eslint-plugin/api",
@@ -4758,6 +4823,22 @@
                     "id": "recipes",
                     "isExternal": false,
                     "children": [
+                      {
+                        "name": "Storybook best practices for making the most out of Nx",
+                        "path": "/technologies/test-tools/storybook/recipes/best-practices",
+                        "id": "best-practices",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "Storybook 7",
+                        "path": "/technologies/test-tools/storybook/recipes/storybook-7-setup",
+                        "id": "storybook-7-setup",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
                       {
                         "name": "Set up Storybook for React Projects",
                         "path": "/technologies/test-tools/storybook/recipes/overview-react",
