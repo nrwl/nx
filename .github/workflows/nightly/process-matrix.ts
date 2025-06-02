@@ -76,18 +76,16 @@ const matrix: Array<{
 }> = [];
 
 function addMatrixCombo(project: MatrixDataProject, nodeVersion: number | string, pm: number, os: number) {
-  if(!!project.isGolden) {
-    matrix.push({
-      project: project.name,
-      codeowners: project.codeowners,
-      node_version: nodeVersion,
-      package_manager: matrixData.setup[os].package_managers[pm],
-      os: matrixData.setup[os].os,
-      os_name: matrixData.setup[os].os_name,
-      os_timeout: matrixData.setup[os].os_timeout,
-      isGolden: true,
-    });
-  }
+  matrix.push({
+    project: project.name,
+    codeowners: project.codeowners,
+    node_version: nodeVersion,
+    package_manager: matrixData.setup[os].package_managers[pm],
+    os: matrixData.setup[os].os,
+    os_name: matrixData.setup[os].os_name,
+    os_timeout: matrixData.setup[os].os_timeout,
+    isGolden: !!project.isGolden, // Mark golden projects as true, others as false
+  });
 }
 
 function processProject(project: MatrixDataProject, nodeVersion?: number) {
