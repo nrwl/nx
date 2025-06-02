@@ -197,7 +197,9 @@ describe('app', () => {
             "targets": {
               "build": {
                 "configurations": {
-                  "development": {},
+                  "development": {
+                    "outputHashing": "none",
+                  },
                   "production": {},
                 },
                 "defaultConfiguration": "production",
@@ -366,7 +368,9 @@ describe('app', () => {
           "targets": {
             "build": {
               "configurations": {
-                "development": {},
+                "development": {
+                  "outputHashing": "none",
+                },
                 "production": {},
               },
               "defaultConfiguration": "production",
