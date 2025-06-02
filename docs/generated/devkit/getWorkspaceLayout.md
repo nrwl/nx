@@ -26,3 +26,7 @@ Example:
 | `appsDir`             | `string`  |
 | `libsDir`             | `string`  |
 | `standaloneAsDefault` | `boolean` |
+
+**`Deprecated`**
+
+Generators should accept the full path via a --directory argument.
