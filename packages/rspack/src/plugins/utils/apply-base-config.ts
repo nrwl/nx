@@ -27,6 +27,12 @@ const IGNORED_RSPACK_WARNINGS = [
 ];
 
 const extensions = ['...', '.ts', '.tsx', '.mjs', '.js', '.jsx'];
+
+const extensionAlias = {
+  '.js': ['.ts', '.js'],
+  '.mjs': ['.mts', '.mjs'],
+  '.cjs': ['.cts', '.cjs'],
+};
 const mainFields = ['module', 'main'];
 
 export function applyBaseConfig(
@@ -385,6 +391,10 @@ function applyNxDependentConfig(
   config.resolve = {
     ...config.resolve,
     extensions: [...(config?.resolve?.extensions ?? []), ...extensions],
+    extensionAlias: {
+      ...(config.resolve?.extensionAlias ?? {}),
+      ...extensionAlias,
+    },
     alias: {
       ...(config.resolve?.alias ?? {}),
       ...(options.fileReplacements?.reduce(

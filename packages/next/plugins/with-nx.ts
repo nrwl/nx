@@ -269,6 +269,7 @@ export function getNextConfig(
         ...(config.resolve.extensionAlias || {}),
         '.js': ['.ts', '.js'],
         '.mjs': ['.mts', '.mjs'],
+        '.cjs': ['.cts', '.cjs'],
       };
       /*
        * Update babel to support our monorepo setup.
