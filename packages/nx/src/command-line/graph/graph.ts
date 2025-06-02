@@ -391,7 +391,7 @@ export async function generateGraph(
     args.exclude || []
   );
 
-  if (args.print) {
+  if (args.print || args.file === 'stdout') {
     console.log(
       JSON.stringify(
         await createJsonOutput(
@@ -409,24 +409,6 @@ export async function generateGraph(
   }
 
   if (args.file) {
-    // stdout is a magical constant that doesn't actually write a file
-    if (args.file === 'stdout') {
-      console.log(
-        JSON.stringify(
-          await createJsonOutput(
-            prunedGraph,
-            rawGraph,
-            args.projects,
-            args.targets
-          ),
-          null,
-          2
-        )
-      );
-      await output.drain();
-      process.exit(0);
-    }
-
     const workspaceFolder = workspaceRoot;
     const ext = extname(args.file);
     const fullFilePath = isAbsolute(args.file)
