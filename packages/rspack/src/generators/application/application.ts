@@ -1,4 +1,4 @@
-import { ensurePackage, formatFiles, runTasksInSerial, Tree } from '@nx/devkit';
+import { ensurePackage, formatFiles, logger, runTasksInSerial, Tree } from '@nx/devkit';
 import { version as nxVersion } from 'nx/package.json';
 import configurationGenerator from '../configuration/configuration';
 import rspackInitGenerator from '../init/init';
@@ -9,6 +9,14 @@ export default async function (
   tree: Tree,
   _options: ApplicationGeneratorSchema
 ) {
+  // Add deprecation warning with alternatives based on framework
+  const framework = _options.framework || 'react'; // Default is react
+
+  logger.warn(
+    `The @nx/rspack:application generator is deprecated and will be removed in Nx 22. ` +
+    `Please use @nx/${framework === 'nest' ? 'nest' : framework === 'web' ? 'web' : 'react'}:application instead.`
+  );
+
   const tasks = [];
   const initTask = await rspackInitGenerator(tree, {
     ..._options,
