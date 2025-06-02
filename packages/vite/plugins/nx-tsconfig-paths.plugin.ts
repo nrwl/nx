@@ -20,6 +20,7 @@ import { Plugin } from 'vite';
 import { nxViteBuildCoordinationPlugin } from './nx-vite-build-coordination.plugin';
 import { findFile } from '../src/utils/nx-tsconfig-paths-find-file';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectTsConfigPath } from '../src/utils/options-utils';
 
 export interface nxViteTsPathsOptions {
   /**
@@ -210,17 +211,21 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
   } as Plugin;
 
   function getTsConfig(preferredTsConfigPath: string): string {
+    const projectTsConfigPath = getProjectTsConfigPath(projectRoot);
     return [
       resolve(preferredTsConfigPath),
+      projectTsConfigPath ? resolve(projectTsConfigPath) : null,
       resolve(join(workspaceRoot, 'tsconfig.base.json')),
       resolve(join(workspaceRoot, 'tsconfig.json')),
       resolve(join(workspaceRoot, 'jsconfig.json')),
-    ].find((tsPath) => {
-      if (existsSync(tsPath)) {
-        logIt('Found tsconfig at', tsPath);
-        return tsPath;
-      }
-    });
+    ]
+      .filter(Boolean)
+      .find((tsPath) => {
+        if (existsSync(tsPath)) {
+          logIt('Found tsconfig at', tsPath);
+          return tsPath;
+        }
+      });
   }
 
   function logIt(...msg: any[]) {
