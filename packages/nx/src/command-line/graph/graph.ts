@@ -354,7 +354,7 @@ export async function generateGraph(
         splitArgsIntoNxArgsAndOverrides(
           args,
           'affected',
-          { printWarnings: args.file !== 'stdout' },
+          { printWarnings: !args.print && args.file !== 'stdout' },
           readNxJson()
         ).nxArgs,
         rawGraph
