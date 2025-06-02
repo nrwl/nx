@@ -37,6 +37,7 @@ export default async function (
       newProject: false,
       buildTarget: 'build',
       framework: 'nest',
+      addPlugin: false,
     });
 
     tasks.push(createAppTask, convertAppTask);
@@ -92,6 +93,7 @@ export default async function (
       buildTarget: 'build',
       serveTarget: 'serve',
       framework: 'react',
+      addPlugin: false,
     });
     tasks.push(createAppTask, convertAppTask);
   }

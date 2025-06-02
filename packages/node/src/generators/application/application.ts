@@ -95,7 +95,9 @@ function getWebpackBuildConfig(
       generatePackageJson: options.isUsingTsSolutionConfig ? undefined : true,
     },
     configurations: {
-      development: {},
+      development: {
+        outputHashing: 'none',
+      },
       production: {
         ...(options.docker && { generateLockfile: true }),
       },
@@ -197,7 +199,7 @@ function addProject(tree: Tree, options: NormalizedSchema) {
     addBuildTargetDefaults(tree, '@nx/esbuild:esbuild');
     project.targets.build = getEsBuildConfig(project, options);
   } else if (options.bundler === 'webpack') {
-    if (!hasWebpackPlugin(tree)) {
+    if (!hasWebpackPlugin(tree) && options.addPlugin === false) {
       addBuildTargetDefaults(tree, `@nx/webpack:webpack`);
       project.targets.build = getWebpackBuildConfig(project, options);
     } else if (options.isNest) {
@@ -253,20 +255,21 @@ function addAppFiles(tree: Tree, options: NormalizedSchema) {
         tree,
         options.appProjectRoot
       ),
-      webpackPluginOptions: hasWebpackPlugin(tree)
-        ? {
-            outputPath: options.isUsingTsSolutionConfig
-              ? 'dist'
-              : joinPathFragments(
-                  offsetFromRoot(options.appProjectRoot),
-                  'dist',
-                  options.rootProject ? options.name : options.appProjectRoot
-                ),
-            main: './src/main' + (options.js ? '.js' : '.ts'),
-            tsConfig: './tsconfig.app.json',
-            assets: ['./src/assets'],
-          }
-        : null,
+      webpackPluginOptions:
+        hasWebpackPlugin(tree) && options.addPlugin !== false
+          ? {
+              outputPath: options.isUsingTsSolutionConfig
+                ? 'dist'
+                : joinPathFragments(
+                    offsetFromRoot(options.appProjectRoot),
+                    'dist',
+                    options.rootProject ? options.name : options.appProjectRoot
+                  ),
+              main: './src/main' + (options.js ? '.js' : '.ts'),
+              tsConfig: './tsconfig.app.json',
+              assets: ['./src/assets'],
+            }
+          : null,
     }
   );
 
