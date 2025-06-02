@@ -1234,7 +1234,6 @@ const tmpTerminalUiRedirects = {
 
 const nxApiRedirects = {
   // Reference
-  // NOTE: leaving devkit out for now since there is some handling for Devkit APIs that aren't working yet in the new structure.
   '/nx-api/devkit/:slug*': '/reference/core-api/devkit/:slug*',
   '/nx-api/nx/:slug*': '/reference/core-api/nx/:slug*',
   '/nx-api/workspace/:slug*': '/reference/core-api/workspace/:slug*',
@@ -1254,32 +1253,76 @@ const nxApiRedirects = {
   // Technologies
   '/nx-api/angular/:slug*': '/technologies/angular/api/:slug*',
   '/nx-api/react/:slug*': '/technologies/react/api/:slug*',
-  '/nx-api/react-native/:slug*': '/technologies/react-native/api/:slug*',
+  '/nx-api/react-native/:slug*': '/technologies/react/react-native/api/:slug*',
   '/nx-api/vue/:slug*': '/technologies/vue/api/:slug*',
   '/nx-api/next/:slug*': '/technologies/next/api/:slug*',
-  '/nx-api/remix/:slug*': '/technologies/remix/api/:slug*',
-  '/nx-api/nuxt/:slug*': '/technologies/nuxt/api/:slug*',
-  '/nx-api/expo/:slug*': '/technologies/expo/api/:slug*',
+  '/nx-api/remix/:slug*': '/technologies/react/remix/api/:slug*',
+  '/nx-api/nuxt/:slug*': '/technologies/vue/nuxt/api/:slug*',
+  '/nx-api/expo/:slug*': '/technologies/react/expo/api/:slug*',
   '/nx-api/nest/:slug*': '/technologies/nest/api/:slug*',
-  '/nx-api/express/:slug*': '/technologies/express/api/:slug*',
+  '/nx-api/express/:slug*': '/technologies/node/express/api/:slug*',
   '/nx-api/node/:slug*': '/technologies/node/api/:slug*',
-  '/nx-api/webpack/:slug*': '/technologies/webpack/api/:slug*',
-  '/nx-api/vite/:slug*': '/technologies/vite/api/:slug*',
-  '/nx-api/rollup/:slug*': '/technologies/rollup/api/:slug*',
-  '/nx-api/esbuild/:slug*': '/technologies/esbuild/api/:slug*',
-  '/nx-api/rspack/:slug*': '/technologies/rspack/api/:slug*',
-  '/nx-api/rsbuild/:slug*': '/technologies/rsbuild/api/:slug*',
-  '/nx-api/cypress/:slug*': '/technologies/cypress/api/:slug*',
-  '/nx-api/jest/:slug*': '/technologies/jest/api/:slug*',
-  '/nx-api/playwright/:slug*': '/technologies/playwright/api/:slug*',
-  '/nx-api/storybook/:slug*': '/technologies/storybook/api/:slug*',
-  '/nx-api/detox/:slug*': '/technologies/detox/api/:slug*',
+  '/nx-api/webpack/:slug*': '/technologies/build-tools/webpack/api/:slug*',
+  '/nx-api/vite/:slug*': '/technologies/build-tools/vite/api/:slug*',
+  '/nx-api/rollup/:slug*': '/technologies/build-tools/rollup/api/:slug*',
+  '/nx-api/esbuild/:slug*': '/technologies/build-tools/esbuild/api/:slug*',
+  '/nx-api/rspack/:slug*': '/technologies/build-tools/rspack/api/:slug*',
+  '/nx-api/rsbuild/:slug*': '/technologies/build-tools/rsbuild/api/:slug*',
+  '/nx-api/cypress/:slug*': '/technologies/build-tools/cypress/api/:slug*',
+  '/nx-api/jest/:slug*': '/technologies/test-tools/jest/api/:slug*',
+  '/nx-api/playwright/:slug*': '/technologies/test-tools/playwright/api/:slug*',
+  '/nx-api/storybook/:slug*': '/technologies/test-tools/storybook/api/:slug*',
+  '/nx-api/detox/:slug*': '/technologies/test-tools/detox/api/:slug*',
   '/nx-api/js/:slug*': '/technologies/typescript/api/:slug*',
   '/nx-api/gradle/:slug*': '/technologies/java/api/:slug*',
   '/nx-api/eslint/:slug*': '/technologies/eslint/api/:slug*',
-  '/nx-api/eslint-plugin/:slug*': '/technologies/eslint-plugin/api/:slug*',
+  '/nx-api/eslint-plugin/:slug*':
+    '/technologies/eslint/eslint-plugin/api/:slug*',
   '/nx-api/module-federation/:slug*':
     '/technologies/module-federation/api/:slug*',
+};
+
+// We got rid of `/recipes` URLs, so we need to redirect them to new /technologies or /reference URLs.
+const nxRecipesRedirects = {
+  // Recipes index pages
+  '/recipes/module-federation': '/technologies/module-federation/recipes',
+  '/recipes/react': '/technologies/react/recipes',
+  '/recipes/angular': '/technologies/angular/recipes',
+  '/recipes/node': '/technologies/node/recipes',
+  '/recipes/storybook': '/technologies/test-tools/storybook/recipes',
+  '/recipes/cypress': '/technologies/test-tools/cypress/recipes',
+  '/recipes/next': '/technologies/react/next/recipes',
+  '/recipes/nuxt': '/technologies/vue/nuxt/recipes',
+  '/recipes/vite': '/technologies/build-tools/vite/recipes',
+  '/recipes/webpack': '/technologies/build-tools/webpack/recipes',
+  // Recipes sub-pages
+  '/recipes/module-federation/:slug*':
+    '/technologies/module-federation/recipes/:slug*',
+  '/recipes/react/:slug*': '/technologies/react/recipes/:slug*',
+  '/recipes/node/:slug*': '/technologies/node/recipes/:slug*',
+  '/recipes/storybook/:slug*':
+    '/technologies/test-tools/storybook/recipes/:slug*',
+  '/recipes/cypress/:slug*': '/technologies/test-tools/cypress/recipes/:slug*',
+  '/recipes/next/:slug*': '/technologies/react/next/recipes/:slug*',
+  '/recipes/nuxt/:slug*': '/technologies/vue/nuxt/recipes/:slug*',
+  '/recipes/vite/:slug*': '/technologies/build-tools/vite/recipes/:slug*',
+  '/recipes/webpack/:slug*': '/technologies/build-tools/webpack/recipes/:slug*',
+  // Angular - has some special cases for angular-rspack
+  '/recipes/angular/rspack': '/technologies/angular/angular-rspack/recipes',
+  '/recipes/angular/rspack/introduction':
+    '/technologies/angular/angular-rspack/introduction',
+  '/recipes/angular/rspack/:slug*':
+    '/technologies/angular/angular-rspack/recipes/:slug*',
+  '/recipes/angular/migration': '/technologies/angular/migration',
+  '/recipes/angular/migration/angular': '/technologies/angular',
+  '/recipes/angular/migration/angular-multiple':
+    '/technologies/angular/migration/angular-multiple',
+  '/recipes/angular/:slug*': '/technologies/angular/recipes/:slug*',
+  // Tips-n-tricks - keeping individual because destinations vary greatly
+  '/recipes/tips-n-tricks/eslint': '/technologies/eslint',
+  '/recipes/tips-n-tricks/flat-config':
+    '/technologies/eslint/recipes/flat-config',
+  '/recipes/tips-n-tricks/:slug*': '/technologies/typescript/recipes/:slug*',
 };
 
 /**
@@ -1320,4 +1363,5 @@ module.exports = {
   powerpackRedirects,
   tmpTerminalUiRedirects,
   nxApiRedirects,
+  nxRecipesRedirects,
 };
