@@ -77,12 +77,7 @@ export function PartnersList(): JSX.Element {
         href: 'https://nstudio.io/',
         location: 'EU',
         tagline: "Craftsmanship perfected 'n' ways for your goals.",
-        capabilities: [
-          'Arch/Perf/Mobile/Web',
-          'Angular/React/Solid/Svelte/Vue',
-          'Swift/Kotlin',
-          'NativeScript',
-        ],
+        capabilities: ['Typescript', 'Swift', 'Kotlin', 'NativeScript'],
       },
     ],
     []
