@@ -176,6 +176,8 @@ for (let file in documentLinks) {
     if (
       link.includes('/nx-api/angular-rspack') ||
       link.includes('/nx-api/angular-rsbuild') ||
+      // TODO(docs): Once we complete the migration we can remove this. For now, there is a discrepancy between the links website-21 and master.
+      link.startsWith('/recipes') ||
       // These legacy devkit links are handled by the Next.js app and will not actually be at the expected location in docs/generated. Just ignore them.
       link.includes('/reference/core-api/devkit')
     ) {
