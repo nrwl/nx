@@ -1294,8 +1294,8 @@ const nxApiRedirects = {
     '/technologies/build-tools/rsbuild/recipes/:slug*',
   '/nx-api/rsbuild/:slug*': '/technologies/build-tools/rsbuild/api/:slug*',
   '/nx-api/cypress/documents/:slug*':
-    '/technologies/build-tools/cypress/recipes/:slug*',
-  '/nx-api/cypress/:slug*': '/technologies/build-tools/cypress/api/:slug*',
+    '/technologies/test-tools/cypress/recipes/:slug*',
+  '/nx-api/cypress/:slug*': '/technologies/test-tools/cypress/api/:slug*',
   '/nx-api/jest/documents/:slug*':
     '/technologies/test-tools/jest/recipes/:slug*',
   '/nx-api/jest/:slug*': '/technologies/test-tools/jest/api/:slug*',
