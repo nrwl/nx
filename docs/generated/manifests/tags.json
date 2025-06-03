@@ -1100,6 +1100,13 @@
     },
     {
       "description": "",
+      "file": "shared/guides/nx-devkit-angular-devkit",
+      "id": "nx-devkit-angular-devkit",
+      "name": "Nx Devkit and Angular Devkit",
+      "path": "/technologies/angular/recipes/nx-devkit-angular-devkit"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/plugins/migration-generators",
       "id": "migration-generators",
       "name": "Write a Migration",
@@ -1139,13 +1146,6 @@
       "id": "nx-devkit-angular-devkit",
       "name": "Nx Devkit and Angular Devkit",
       "path": "/nx-api/angular/documents/nx-devkit-angular-devkit"
-    },
-    {
-      "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
-      "file": "generated/packages/angular/documents/nx-devkit-angular-devkit",
-      "id": "nx-devkit-angular-devkit",
-      "name": "Nx Devkit and Angular Devkit",
-      "path": "/technologies/angular/api/documents/nx-devkit-angular-devkit"
     }
   ],
   "daemon": [

@@ -1223,6 +1223,30 @@
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
+                  },
+                  {
+                    "name": "Nx and the Angular CLI",
+                    "path": "/technologies/angular/recipes/nx-and-angular",
+                    "id": "nx-and-angular",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Nx Devkit and Angular Devkit",
+                    "path": "/technologies/angular/recipes/nx-devkit-angular-devkit",
+                    "id": "nx-devkit-angular-devkit",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Angular and Nx Version Matrix",
+                    "path": "/technologies/angular/recipes/angular-nx-version-matrix",
+                    "id": "angular-nx-version-matrix",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
                   }
                 ],
                 "disableCollapsible": false
@@ -1233,47 +1257,6 @@
                 "id": "api",
                 "isExternal": false,
                 "children": [
-                  {
-                    "id": "documents",
-                    "path": "/technologies/angular/api/documents",
-                    "name": "documents",
-                    "children": [
-                      {
-                        "id": "Overview",
-                        "path": "/technologies/angular/api/documents/overview",
-                        "name": "Overview",
-                        "children": [],
-                        "isExternal": false,
-                        "disableCollapsible": false
-                      },
-                      {
-                        "id": "Nx and the Angular CLI",
-                        "path": "/technologies/angular/api/documents/nx-and-angular",
-                        "name": "Nx and the Angular CLI",
-                        "children": [],
-                        "isExternal": false,
-                        "disableCollapsible": false
-                      },
-                      {
-                        "id": "Nx Devkit and Angular Devkit",
-                        "path": "/technologies/angular/api/documents/nx-devkit-angular-devkit",
-                        "name": "Nx Devkit and Angular Devkit",
-                        "children": [],
-                        "isExternal": false,
-                        "disableCollapsible": false
-                      },
-                      {
-                        "id": "Angular and Nx Version Matrix",
-                        "path": "/technologies/angular/api/documents/angular-nx-version-matrix",
-                        "name": "Angular and Nx Version Matrix",
-                        "children": [],
-                        "isExternal": false,
-                        "disableCollapsible": false
-                      }
-                    ],
-                    "isExternal": false,
-                    "disableCollapsible": false
-                  },
                   {
                     "id": "executors",
                     "path": "/technologies/angular/api/executors",
@@ -3508,6 +3491,22 @@
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
+                  },
+                  {
+                    "name": "NxModuleFederationPlugin",
+                    "path": "/technologies/module-federation/recipes/nx-module-federation-plugin",
+                    "id": "nx-module-federation-plugin",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "NxModuleFederationDevServerPlugin",
+                    "path": "/technologies/module-federation/recipes/nx-module-federation-dev-server-plugin",
+                    "id": "nx-module-federation-dev-server-plugin",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
                   }
                 ],
                 "disableCollapsible": false
@@ -3518,31 +3517,6 @@
                 "id": "api",
                 "isExternal": false,
                 "children": [
-                  {
-                    "id": "documents",
-                    "path": "/technologies/module-federation/api/documents",
-                    "name": "documents",
-                    "children": [
-                      {
-                        "id": "NxModuleFederationPlugin",
-                        "path": "/technologies/module-federation/api/documents/nx-module-federation-plugin",
-                        "name": "NxModuleFederationPlugin",
-                        "children": [],
-                        "isExternal": false,
-                        "disableCollapsible": false
-                      },
-                      {
-                        "id": "NxModuleFederationDevServerPlugin",
-                        "path": "/technologies/module-federation/api/documents/nx-module-federation-dev-server-plugin",
-                        "name": "NxModuleFederationDevServerPlugin",
-                        "children": [],
-                        "isExternal": false,
-                        "disableCollapsible": false
-                      }
-                    ],
-                    "isExternal": false,
-                    "disableCollapsible": false
-                  },
                   {
                     "id": "migrations",
                     "path": "/technologies/module-federation/api/migrations",
@@ -3686,44 +3660,36 @@
                 "isExternal": false,
                 "children": [
                   {
+                    "name": "Guides",
+                    "path": "/technologies/eslint/eslint-plugin/recipes",
+                    "id": "recipes",
+                    "isExternal": false,
+                    "children": [
+                      {
+                        "name": "The enforce-module-boundaries rule",
+                        "path": "/technologies/eslint/eslint-plugin/recipes/enforce-module-boundaries",
+                        "id": "enforce-module-boundaries",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "The dependency-checks rule",
+                        "path": "/technologies/eslint/eslint-plugin/recipes/dependency-checks",
+                        "id": "dependency-checks",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      }
+                    ],
+                    "disableCollapsible": false
+                  },
+                  {
                     "name": "API",
                     "path": "/technologies/eslint/eslint-plugin/api",
                     "id": "api",
                     "isExternal": false,
                     "children": [
-                      {
-                        "id": "documents",
-                        "path": "/technologies/eslint/eslint-plugin/api/documents",
-                        "name": "documents",
-                        "children": [
-                          {
-                            "id": "Overview",
-                            "path": "/technologies/eslint/eslint-plugin/api/documents/overview",
-                            "name": "Overview",
-                            "children": [],
-                            "isExternal": false,
-                            "disableCollapsible": false
-                          },
-                          {
-                            "id": "The `enforce-module-boundaries` rule",
-                            "path": "/technologies/eslint/eslint-plugin/api/documents/enforce-module-boundaries",
-                            "name": "The `enforce-module-boundaries` rule",
-                            "children": [],
-                            "isExternal": false,
-                            "disableCollapsible": false
-                          },
-                          {
-                            "id": "The `dependency-checks` rule",
-                            "path": "/technologies/eslint/eslint-plugin/api/documents/dependency-checks",
-                            "name": "The `dependency-checks` rule",
-                            "children": [],
-                            "isExternal": false,
-                            "disableCollapsible": false
-                          }
-                        ],
-                        "isExternal": false,
-                        "disableCollapsible": false
-                      },
                       {
                         "id": "migrations",
                         "path": "/technologies/eslint/eslint-plugin/api/migrations",
@@ -4759,6 +4725,22 @@
                     "isExternal": false,
                     "children": [
                       {
+                        "name": "Storybook best practices for making the most out of Nx",
+                        "path": "/technologies/test-tools/storybook/recipes/best-practices",
+                        "id": "best-practices",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "Storybook 7",
+                        "path": "/technologies/test-tools/storybook/recipes/storybook-7-setup",
+                        "id": "storybook-7-setup",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
                         "name": "Set up Storybook for React Projects",
                         "path": "/technologies/test-tools/storybook/recipes/overview-react",
                         "id": "overview-react",
@@ -4871,39 +4853,6 @@
                     "id": "api",
                     "isExternal": false,
                     "children": [
-                      {
-                        "id": "documents",
-                        "path": "/technologies/test-tools/storybook/api/documents",
-                        "name": "documents",
-                        "children": [
-                          {
-                            "id": "Overview",
-                            "path": "/technologies/test-tools/storybook/api/documents/overview",
-                            "name": "Overview",
-                            "children": [],
-                            "isExternal": false,
-                            "disableCollapsible": false
-                          },
-                          {
-                            "id": "Storybook best practices for making the most out of Nx",
-                            "path": "/technologies/test-tools/storybook/api/documents/best-practices",
-                            "name": "Storybook best practices for making the most out of Nx",
-                            "children": [],
-                            "isExternal": false,
-                            "disableCollapsible": false
-                          },
-                          {
-                            "id": "Storybook 7",
-                            "path": "/technologies/test-tools/storybook/api/documents/storybook-7-setup",
-                            "name": "Storybook 7",
-                            "children": [],
-                            "isExternal": false,
-                            "disableCollapsible": false
-                          }
-                        ],
-                        "isExternal": false,
-                        "disableCollapsible": false
-                      },
                       {
                         "id": "executors",
                         "path": "/technologies/test-tools/storybook/api/executors",
@@ -7445,47 +7394,6 @@
         "name": "angular",
         "children": [
           {
-            "id": "documents",
-            "path": "/nx-api/angular/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/angular/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Nx and the Angular CLI",
-                "path": "/technologies/angular/api/documents/nx-and-angular",
-                "id": "nx-and-angular",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Nx Devkit and Angular Devkit",
-                "path": "/technologies/angular/api/documents/nx-devkit-angular-devkit",
-                "id": "nx-devkit-angular-devkit",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Angular and Nx Version Matrix",
-                "path": "/technologies/angular/api/documents/angular-nx-version-matrix",
-                "id": "angular-nx-version-matrix",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
             "id": "executors",
             "path": "/nx-api/angular/executors",
             "name": "executors",
@@ -8191,39 +8099,6 @@
         "name": "eslint-plugin",
         "children": [
           {
-            "id": "documents",
-            "path": "/nx-api/eslint-plugin/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/eslint/eslint-plugin/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "The `enforce-module-boundaries` rule",
-                "path": "/technologies/eslint/eslint-plugin/api/documents/enforce-module-boundaries",
-                "id": "enforce-module-boundaries",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "The `dependency-checks` rule",
-                "path": "/technologies/eslint/eslint-plugin/api/documents/dependency-checks",
-                "id": "dependency-checks",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
             "id": "migrations",
             "path": "/nx-api/eslint-plugin/migrations",
             "name": "migrations",
@@ -8710,31 +8585,6 @@
         "path": "/nx-api/module-federation",
         "name": "module-federation",
         "children": [
-          {
-            "id": "documents",
-            "path": "/nx-api/module-federation/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "NxModuleFederationPlugin",
-                "path": "/technologies/module-federation/api/documents/nx-module-federation-plugin",
-                "id": "nx-module-federation-plugin",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "NxModuleFederationDevServerPlugin",
-                "path": "/technologies/module-federation/api/documents/nx-module-federation-dev-server-plugin",
-                "id": "nx-module-federation-dev-server-plugin",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
           {
             "id": "migrations",
             "path": "/nx-api/module-federation/migrations",
@@ -10395,39 +10245,6 @@
         "path": "/nx-api/storybook",
         "name": "storybook",
         "children": [
-          {
-            "id": "documents",
-            "path": "/nx-api/storybook/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/technologies/test-tools/storybook/api/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Storybook best practices for making the most out of Nx",
-                "path": "/technologies/test-tools/storybook/api/documents/best-practices",
-                "id": "best-practices",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Storybook 7",
-                "path": "/technologies/test-tools/storybook/api/documents/storybook-7-setup",
-                "id": "storybook-7-setup",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
           {
             "id": "executors",
             "path": "/nx-api/storybook/executors",
