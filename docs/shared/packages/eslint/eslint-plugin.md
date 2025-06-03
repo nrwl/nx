@@ -55,8 +55,8 @@ You can also use `@nx/react` which includes all three `@nx/react-*` plugins
 
 ### Enforce Module Boundaries rule
 
-The `enforce-module-boundaries` ESLint rule enables you to define strict rules for accessing resources between different projects in the repository. Enforcing strict boundaries helps prevent unplanned cross-dependencies. Read more about it on a [dedicated page](/nx-api/eslint-plugin/documents/enforce-module-boundaries).
+The `enforce-module-boundaries` ESLint rule enables you to define strict rules for accessing resources between different projects in the repository. Enforcing strict boundaries helps prevent unplanned cross-dependencies. Read more about it on a [dedicated page](/technologies/eslint/eslint-plugin/recipes/enforce-module-boundaries).
 
 ### Dependency Checks rule
 
-The `@nx/dependency-checks` ESLint rule enables you to discover mismatches between dependencies specified in a project's `package.json` and the dependencies that your project actually depends on. Read more about it on a [dedicated page](/nx-api/eslint-plugin/documents/dependency-checks).
+The `@nx/dependency-checks` ESLint rule enables you to discover mismatches between dependencies specified in a project's `package.json` and the dependencies that your project actually depends on. Read more about it on a [dedicated page](/technologies/eslint/eslint-plugin/recipes/dependency-checks).

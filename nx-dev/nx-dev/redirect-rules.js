@@ -1251,33 +1251,75 @@ const nxApiRedirects = {
   '/nx-api/create-nx-workspace/:slug*':
     '/reference/core-api/create-nx-workspace/:slug*',
   // Technologies
+  '/nx-api/angular/documents/:slug*': '/technologies/angular/recipes/:slug*',
   '/nx-api/angular/:slug*': '/technologies/angular/api/:slug*',
+  '/nx-api/react/documents/:slug*': '/technologies/react/recipes/:slug*',
   '/nx-api/react/:slug*': '/technologies/react/api/:slug*',
+  '/nx-api/react-native/documents/:slug*':
+    '/technologies/react/react-native/recipes/:slug*',
   '/nx-api/react-native/:slug*': '/technologies/react/react-native/api/:slug*',
+  '/nx-api/vue/documents/:slug*': '/technologies/vue/recipes/:slug*',
   '/nx-api/vue/:slug*': '/technologies/vue/api/:slug*',
-  '/nx-api/next/:slug*': '/technologies/next/api/:slug*',
+  '/nx-api/next/documents/:slug*': '/technologies/react/next/recipes/:slug*',
+  '/nx-api/next/:slug*': '/technologies/react/next/api/:slug*',
+  '/nx-api/remix/documents/:slug*': '/technologies/react/remix/recipes/:slug*',
   '/nx-api/remix/:slug*': '/technologies/react/remix/api/:slug*',
+  '/nx-api/nuxt/documents/:slug*': '/technologies/vue/nuxt/recipes/:slug*',
   '/nx-api/nuxt/:slug*': '/technologies/vue/nuxt/api/:slug*',
+  '/nx-api/expo/documents/:slug*': '/technologies/react/expo/recipes/:slug*',
   '/nx-api/expo/:slug*': '/technologies/react/expo/api/:slug*',
+  '/nx-api/nest/documents/:slug*': '/technologies/nest/recipes/:slug*',
   '/nx-api/nest/:slug*': '/technologies/nest/api/:slug*',
+  '/nx-api/express/documents/:slug*':
+    '/technologies/node/express/recipes/:slug*',
   '/nx-api/express/:slug*': '/technologies/node/express/api/:slug*',
+  '/nx-api/node/documents/:slug*': '/technologies/node/recipes/:slug*',
   '/nx-api/node/:slug*': '/technologies/node/api/:slug*',
+  '/nx-api/webpack/documents/:slug*':
+    '/technologies/build-tools/webpack/recipes/:slug*',
   '/nx-api/webpack/:slug*': '/technologies/build-tools/webpack/api/:slug*',
+  '/nx-api/vite/documents/:slug*':
+    '/technologies/build-tools/vite/recipes/:slug*',
   '/nx-api/vite/:slug*': '/technologies/build-tools/vite/api/:slug*',
+  '/nx-api/rollup/documents/:slug*':
+    '/technologies/build-tools/rollup/recipes/:slug*',
   '/nx-api/rollup/:slug*': '/technologies/build-tools/rollup/api/:slug*',
+  '/nx-api/esbuild/documents/:slug*':
+    '/technologies/build-tools/esbuild/recipes/:slug*',
   '/nx-api/esbuild/:slug*': '/technologies/build-tools/esbuild/api/:slug*',
+  '/nx-api/rspack/documents/:slug*':
+    '/technologies/build-tools/rspack/recipes/:slug*',
   '/nx-api/rspack/:slug*': '/technologies/build-tools/rspack/api/:slug*',
+  '/nx-api/rsbuild/documents/:slug*':
+    '/technologies/build-tools/rsbuild/recipes/:slug*',
   '/nx-api/rsbuild/:slug*': '/technologies/build-tools/rsbuild/api/:slug*',
+  '/nx-api/cypress/documents/:slug*':
+    '/technologies/build-tools/cypress/recipes/:slug*',
   '/nx-api/cypress/:slug*': '/technologies/build-tools/cypress/api/:slug*',
+  '/nx-api/jest/documents/:slug*':
+    '/technologies/test-tools/jest/recipes/:slug*',
   '/nx-api/jest/:slug*': '/technologies/test-tools/jest/api/:slug*',
+  '/nx-api/playwright/documents/:slug*':
+    '/technologies/test-tools/playwright/recipes/:slug*',
   '/nx-api/playwright/:slug*': '/technologies/test-tools/playwright/api/:slug*',
+  '/nx-api/storybook/documents/:slug*':
+    '/technologies/test-tools/storybook/recipes/:slug*',
   '/nx-api/storybook/:slug*': '/technologies/test-tools/storybook/api/:slug*',
+  '/nx-api/detox/documents/:slug*':
+    '/technologies/test-tools/detox/recipes/:slug*',
   '/nx-api/detox/:slug*': '/technologies/test-tools/detox/api/:slug*',
+  '/nx-api/js/documents/:slug*': '/technologies/typescript/recipes/:slug*',
   '/nx-api/js/:slug*': '/technologies/typescript/api/:slug*',
+  '/nx-api/gradle/documents/:slug*': '/technologies/java/recipes/:slug*',
   '/nx-api/gradle/:slug*': '/technologies/java/api/:slug*',
+  '/nx-api/eslint/documents/:slug*': '/technologies/eslint/recipes/:slug*',
   '/nx-api/eslint/:slug*': '/technologies/eslint/api/:slug*',
+  '/nx-api/eslint-plugin/documents/:slug*':
+    '/technologies/eslint/eslint-plugin/recipes/:slug*',
   '/nx-api/eslint-plugin/:slug*':
     '/technologies/eslint/eslint-plugin/api/:slug*',
+  '/nx-api/module-federation/documents/:slug*':
+    '/technologies/module-federation/recipes/:slug*',
   '/nx-api/module-federation/:slug*':
     '/technologies/module-federation/api/:slug*',
 };

@@ -3538,6 +3538,39 @@
                 "isExternal": false,
                 "path": "/technologies/angular/recipes/setup-incremental-builds-angular",
                 "tags": []
+              },
+              {
+                "id": "nx-and-angular",
+                "name": "Nx and the Angular CLI",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/nx-and-angular-cli",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/angular/recipes/nx-and-angular",
+                "tags": []
+              },
+              {
+                "id": "nx-devkit-angular-devkit",
+                "name": "Nx Devkit and Angular Devkit",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/nx-devkit-angular-devkit",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/angular/recipes/nx-devkit-angular-devkit",
+                "tags": ["create-your-own-plugin"]
+              },
+              {
+                "id": "angular-nx-version-matrix",
+                "name": "Angular and Nx Version Matrix",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/packages/angular/angular-nx-version-matrix",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/angular/recipes/angular-nx-version-matrix",
+                "tags": []
               }
             ],
             "isExternal": false,
@@ -4428,6 +4461,28 @@
                 "isExternal": false,
                 "path": "/technologies/module-federation/recipes/federate-a-module",
                 "tags": []
+              },
+              {
+                "id": "nx-module-federation-plugin",
+                "name": "NxModuleFederationPlugin",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/packages/module-federation/nx-module-federation-plugin",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/module-federation/recipes/nx-module-federation-plugin",
+                "tags": []
+              },
+              {
+                "id": "nx-module-federation-dev-server-plugin",
+                "name": "NxModuleFederationDevServerPlugin",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/packages/module-federation/nx-module-federation-dev-server-plugin",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/module-federation/recipes/nx-module-federation-dev-server-plugin",
+                "tags": []
               }
             ],
             "isExternal": false,
@@ -4520,6 +4575,40 @@
             "mediaImage": "",
             "file": "",
             "itemList": [
+              {
+                "id": "recipes",
+                "name": "Guides",
+                "description": "",
+                "mediaImage": "",
+                "file": "",
+                "itemList": [
+                  {
+                    "id": "enforce-module-boundaries",
+                    "name": "The enforce-module-boundaries rule",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/packages/eslint/enforce-module-boundaries",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/eslint/eslint-plugin/recipes/enforce-module-boundaries",
+                    "tags": []
+                  },
+                  {
+                    "id": "dependency-checks",
+                    "name": "The dependency-checks rule",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/packages/eslint/dependency-checks",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/eslint/eslint-plugin/recipes/dependency-checks",
+                    "tags": []
+                  }
+                ],
+                "isExternal": false,
+                "path": "/technologies/eslint/eslint-plugin/recipes",
+                "tags": []
+              },
               {
                 "id": "api",
                 "name": "API",
@@ -5059,6 +5148,28 @@
                 "mediaImage": "",
                 "file": "",
                 "itemList": [
+                  {
+                    "id": "best-practices",
+                    "name": "Storybook best practices for making the most out of Nx",
+                    "description": "The purpose of this guide is to help you set up Storybook in your Nx workspace so that you can get the most out of Nx and its powerful capabilities.",
+                    "mediaImage": "",
+                    "file": "shared/packages/storybook/best-practices",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/test-tools/storybook/recipes/best-practices",
+                    "tags": []
+                  },
+                  {
+                    "id": "storybook-7-setup",
+                    "name": "Storybook 7",
+                    "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
+                    "mediaImage": "",
+                    "file": "shared/packages/storybook/storybook-7-setup",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/test-tools/storybook/recipes/storybook-7-setup",
+                    "tags": []
+                  },
                   {
                     "id": "overview-react",
                     "name": "Set up Storybook for React Projects",
@@ -5636,6 +5747,39 @@
             "isExternal": false,
             "path": "/technologies/angular/recipes/setup-incremental-builds-angular",
             "tags": []
+          },
+          {
+            "id": "nx-and-angular",
+            "name": "Nx and the Angular CLI",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/nx-and-angular-cli",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/angular/recipes/nx-and-angular",
+            "tags": []
+          },
+          {
+            "id": "nx-devkit-angular-devkit",
+            "name": "Nx Devkit and Angular Devkit",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/nx-devkit-angular-devkit",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/angular/recipes/nx-devkit-angular-devkit",
+            "tags": ["create-your-own-plugin"]
+          },
+          {
+            "id": "angular-nx-version-matrix",
+            "name": "Angular and Nx Version Matrix",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/packages/angular/angular-nx-version-matrix",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/angular/recipes/angular-nx-version-matrix",
+            "tags": []
           }
         ],
         "isExternal": false,
@@ -5899,6 +6043,39 @@
         "isExternal": false,
         "path": "/technologies/angular/recipes/setup-incremental-builds-angular",
         "tags": []
+      },
+      {
+        "id": "nx-and-angular",
+        "name": "Nx and the Angular CLI",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/nx-and-angular-cli",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/angular/recipes/nx-and-angular",
+        "tags": []
+      },
+      {
+        "id": "nx-devkit-angular-devkit",
+        "name": "Nx Devkit and Angular Devkit",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/nx-devkit-angular-devkit",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/angular/recipes/nx-devkit-angular-devkit",
+        "tags": ["create-your-own-plugin"]
+      },
+      {
+        "id": "angular-nx-version-matrix",
+        "name": "Angular and Nx Version Matrix",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/packages/angular/angular-nx-version-matrix",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/angular/recipes/angular-nx-version-matrix",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -5958,6 +6135,39 @@
     "itemList": [],
     "isExternal": false,
     "path": "/technologies/angular/recipes/setup-incremental-builds-angular",
+    "tags": []
+  },
+  "/technologies/angular/recipes/nx-and-angular": {
+    "id": "nx-and-angular",
+    "name": "Nx and the Angular CLI",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/nx-and-angular-cli",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/angular/recipes/nx-and-angular",
+    "tags": []
+  },
+  "/technologies/angular/recipes/nx-devkit-angular-devkit": {
+    "id": "nx-devkit-angular-devkit",
+    "name": "Nx Devkit and Angular Devkit",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/nx-devkit-angular-devkit",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/angular/recipes/nx-devkit-angular-devkit",
+    "tags": ["create-your-own-plugin"]
+  },
+  "/technologies/angular/recipes/angular-nx-version-matrix": {
+    "id": "angular-nx-version-matrix",
+    "name": "Angular and Nx Version Matrix",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/packages/angular/angular-nx-version-matrix",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/angular/recipes/angular-nx-version-matrix",
     "tags": []
   },
   "/technologies/angular/api": {
@@ -7964,6 +8174,28 @@
             "isExternal": false,
             "path": "/technologies/module-federation/recipes/federate-a-module",
             "tags": []
+          },
+          {
+            "id": "nx-module-federation-plugin",
+            "name": "NxModuleFederationPlugin",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/packages/module-federation/nx-module-federation-plugin",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/module-federation/recipes/nx-module-federation-plugin",
+            "tags": []
+          },
+          {
+            "id": "nx-module-federation-dev-server-plugin",
+            "name": "NxModuleFederationDevServerPlugin",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/packages/module-federation/nx-module-federation-dev-server-plugin",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/module-federation/recipes/nx-module-federation-dev-server-plugin",
+            "tags": []
           }
         ],
         "isExternal": false,
@@ -8158,6 +8390,28 @@
         "isExternal": false,
         "path": "/technologies/module-federation/recipes/federate-a-module",
         "tags": []
+      },
+      {
+        "id": "nx-module-federation-plugin",
+        "name": "NxModuleFederationPlugin",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/packages/module-federation/nx-module-federation-plugin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/module-federation/recipes/nx-module-federation-plugin",
+        "tags": []
+      },
+      {
+        "id": "nx-module-federation-dev-server-plugin",
+        "name": "NxModuleFederationDevServerPlugin",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/packages/module-federation/nx-module-federation-dev-server-plugin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/module-federation/recipes/nx-module-federation-dev-server-plugin",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -8195,6 +8449,28 @@
     "itemList": [],
     "isExternal": false,
     "path": "/technologies/module-federation/recipes/federate-a-module",
+    "tags": []
+  },
+  "/technologies/module-federation/recipes/nx-module-federation-plugin": {
+    "id": "nx-module-federation-plugin",
+    "name": "NxModuleFederationPlugin",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/packages/module-federation/nx-module-federation-plugin",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/module-federation/recipes/nx-module-federation-plugin",
+    "tags": []
+  },
+  "/technologies/module-federation/recipes/nx-module-federation-dev-server-plugin": {
+    "id": "nx-module-federation-dev-server-plugin",
+    "name": "NxModuleFederationDevServerPlugin",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/packages/module-federation/nx-module-federation-dev-server-plugin",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/module-federation/recipes/nx-module-federation-dev-server-plugin",
     "tags": []
   },
   "/technologies/module-federation/api": {
@@ -8278,6 +8554,40 @@
         "mediaImage": "",
         "file": "",
         "itemList": [
+          {
+            "id": "recipes",
+            "name": "Guides",
+            "description": "",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [
+              {
+                "id": "enforce-module-boundaries",
+                "name": "The enforce-module-boundaries rule",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/packages/eslint/enforce-module-boundaries",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/eslint/eslint-plugin/recipes/enforce-module-boundaries",
+                "tags": []
+              },
+              {
+                "id": "dependency-checks",
+                "name": "The dependency-checks rule",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/packages/eslint/dependency-checks",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/eslint/eslint-plugin/recipes/dependency-checks",
+                "tags": []
+              }
+            ],
+            "isExternal": false,
+            "path": "/technologies/eslint/eslint-plugin/recipes",
+            "tags": []
+          },
           {
             "id": "api",
             "name": "API",
@@ -8385,6 +8695,40 @@
     "file": "",
     "itemList": [
       {
+        "id": "recipes",
+        "name": "Guides",
+        "description": "",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "enforce-module-boundaries",
+            "name": "The enforce-module-boundaries rule",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/packages/eslint/enforce-module-boundaries",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/eslint/eslint-plugin/recipes/enforce-module-boundaries",
+            "tags": []
+          },
+          {
+            "id": "dependency-checks",
+            "name": "The dependency-checks rule",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/packages/eslint/dependency-checks",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/eslint/eslint-plugin/recipes/dependency-checks",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/technologies/eslint/eslint-plugin/recipes",
+        "tags": []
+      },
+      {
         "id": "api",
         "name": "API",
         "description": "",
@@ -8398,6 +8742,62 @@
     ],
     "isExternal": false,
     "path": "/technologies/eslint/eslint-plugin",
+    "tags": []
+  },
+  "/technologies/eslint/eslint-plugin/recipes": {
+    "id": "recipes",
+    "name": "Guides",
+    "description": "",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "enforce-module-boundaries",
+        "name": "The enforce-module-boundaries rule",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/packages/eslint/enforce-module-boundaries",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/eslint/eslint-plugin/recipes/enforce-module-boundaries",
+        "tags": []
+      },
+      {
+        "id": "dependency-checks",
+        "name": "The dependency-checks rule",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/packages/eslint/dependency-checks",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/eslint/eslint-plugin/recipes/dependency-checks",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/technologies/eslint/eslint-plugin/recipes",
+    "tags": []
+  },
+  "/technologies/eslint/eslint-plugin/recipes/enforce-module-boundaries": {
+    "id": "enforce-module-boundaries",
+    "name": "The enforce-module-boundaries rule",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/packages/eslint/enforce-module-boundaries",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/eslint/eslint-plugin/recipes/enforce-module-boundaries",
+    "tags": []
+  },
+  "/technologies/eslint/eslint-plugin/recipes/dependency-checks": {
+    "id": "dependency-checks",
+    "name": "The dependency-checks rule",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/packages/eslint/dependency-checks",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/eslint/eslint-plugin/recipes/dependency-checks",
     "tags": []
   },
   "/technologies/eslint/eslint-plugin/api": {
@@ -9501,6 +9901,28 @@
             "file": "",
             "itemList": [
               {
+                "id": "best-practices",
+                "name": "Storybook best practices for making the most out of Nx",
+                "description": "The purpose of this guide is to help you set up Storybook in your Nx workspace so that you can get the most out of Nx and its powerful capabilities.",
+                "mediaImage": "",
+                "file": "shared/packages/storybook/best-practices",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/test-tools/storybook/recipes/best-practices",
+                "tags": []
+              },
+              {
+                "id": "storybook-7-setup",
+                "name": "Storybook 7",
+                "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
+                "mediaImage": "",
+                "file": "shared/packages/storybook/storybook-7-setup",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/test-tools/storybook/recipes/storybook-7-setup",
+                "tags": []
+              },
+              {
                 "id": "overview-react",
                 "name": "Set up Storybook for React Projects",
                 "description": "This guide explains how to set up Storybook for React projects in your Nx workspace.",
@@ -10075,6 +10497,28 @@
         "file": "",
         "itemList": [
           {
+            "id": "best-practices",
+            "name": "Storybook best practices for making the most out of Nx",
+            "description": "The purpose of this guide is to help you set up Storybook in your Nx workspace so that you can get the most out of Nx and its powerful capabilities.",
+            "mediaImage": "",
+            "file": "shared/packages/storybook/best-practices",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/test-tools/storybook/recipes/best-practices",
+            "tags": []
+          },
+          {
+            "id": "storybook-7-setup",
+            "name": "Storybook 7",
+            "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
+            "mediaImage": "",
+            "file": "shared/packages/storybook/storybook-7-setup",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/test-tools/storybook/recipes/storybook-7-setup",
+            "tags": []
+          },
+          {
             "id": "overview-react",
             "name": "Set up Storybook for React Projects",
             "description": "This guide explains how to set up Storybook for React projects in your Nx workspace.",
@@ -10257,6 +10701,28 @@
     "file": "",
     "itemList": [
       {
+        "id": "best-practices",
+        "name": "Storybook best practices for making the most out of Nx",
+        "description": "The purpose of this guide is to help you set up Storybook in your Nx workspace so that you can get the most out of Nx and its powerful capabilities.",
+        "mediaImage": "",
+        "file": "shared/packages/storybook/best-practices",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/test-tools/storybook/recipes/best-practices",
+        "tags": []
+      },
+      {
+        "id": "storybook-7-setup",
+        "name": "Storybook 7",
+        "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
+        "mediaImage": "",
+        "file": "shared/packages/storybook/storybook-7-setup",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/test-tools/storybook/recipes/storybook-7-setup",
+        "tags": []
+      },
+      {
         "id": "overview-react",
         "name": "Set up Storybook for React Projects",
         "description": "This guide explains how to set up Storybook for React projects in your Nx workspace.",
@@ -10402,6 +10868,28 @@
     ],
     "isExternal": false,
     "path": "/technologies/test-tools/storybook/recipes",
+    "tags": []
+  },
+  "/technologies/test-tools/storybook/recipes/best-practices": {
+    "id": "best-practices",
+    "name": "Storybook best practices for making the most out of Nx",
+    "description": "The purpose of this guide is to help you set up Storybook in your Nx workspace so that you can get the most out of Nx and its powerful capabilities.",
+    "mediaImage": "",
+    "file": "shared/packages/storybook/best-practices",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/test-tools/storybook/recipes/best-practices",
+    "tags": []
+  },
+  "/technologies/test-tools/storybook/recipes/storybook-7-setup": {
+    "id": "storybook-7-setup",
+    "name": "Storybook 7",
+    "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
+    "mediaImage": "",
+    "file": "shared/packages/storybook/storybook-7-setup",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/test-tools/storybook/recipes/storybook-7-setup",
     "tags": []
   },
   "/technologies/test-tools/storybook/recipes/overview-react": {

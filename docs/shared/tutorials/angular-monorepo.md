@@ -23,11 +23,11 @@ Advantages of Nx over the Angular CLI:
 
 - [Cache any target](/features/cache-task-results)
 - [Run only tasks affected by a code change](/ci/features/affected)
-- [Split a large angular.json into multiple project.json files](/nx-api/angular/documents/nx-and-angular#projectjson-vs-angularjson)
-- [Integrate with modern tools](/nx-api/angular/documents/nx-and-angular#integrating-with-modern-tools)
-- [Controllable update process](/nx-api/angular/documents/nx-and-angular#ng-update-vs-nx-migrate)
+- [Split a large angular.json into multiple project.json files](/technologies/angular/recipes/nx-and-angular#projectjson-vs-angularjson)
+- [Integrate with modern tools](/technologies/angular/recipes/nx-and-angular#integrating-with-modern-tools)
+- [Controllable update process](/technologies/angular/recipes/nx-and-angular#ng-update-vs-nx-migrate)
 
-Visit our ["Nx and the Angular CLI" page](/nx-api/angular/documents/nx-and-angular) for more details.
+Visit our ["Nx and the Angular CLI" page](/technologies/angular/recipes/nx-and-angular) for more details.
 
 ## Final Code
 
@@ -1334,7 +1334,7 @@ For more information about how Nx can improve your CI pipeline, check out one of
 
 Here's some things you can dive into next:
 
-- Read more about [how Nx compares to the Angular CLI](/nx-api/angular/documents/nx-and-angular)
+- Read more about [how Nx compares to the Angular CLI](/technologies/angular/recipes/nx-and-angular)
 - Learn more about the [underlying mental model of Nx](/concepts/mental-model)
 - Learn about popular generators such as [how to setup Tailwind](/technologies/angular/recipes/using-tailwind-css-with-angular-projects)
 - Learn how to [migrate your existing Angular CLI repo to Nx](technologies/angular/migration/angular)

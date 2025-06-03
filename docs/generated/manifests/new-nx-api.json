@@ -4,52 +4,7 @@
     "name": "angular",
     "packageName": "@nx/angular",
     "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
-    "documents": {
-      "/technologies/angular/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
-        "file": "generated/packages/angular/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/angular/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/angular/angular-plugin"
-      },
-      "/technologies/angular/api/documents/nx-and-angular": {
-        "id": "nx-and-angular",
-        "name": "Nx and the Angular CLI",
-        "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
-        "file": "generated/packages/angular/documents/nx-and-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/angular/api/documents/nx-and-angular",
-        "tags": [],
-        "originalFilePath": "shared/guides/nx-and-angular-cli"
-      },
-      "/technologies/angular/api/documents/nx-devkit-angular-devkit": {
-        "id": "nx-devkit-angular-devkit",
-        "name": "Nx Devkit and Angular Devkit",
-        "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
-        "file": "generated/packages/angular/documents/nx-devkit-angular-devkit",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/angular/api/documents/nx-devkit-angular-devkit",
-        "tags": ["create-your-own-plugin"],
-        "originalFilePath": "shared/guides/nx-devkit-angular-devkit"
-      },
-      "/technologies/angular/api/documents/angular-nx-version-matrix": {
-        "id": "angular-nx-version-matrix",
-        "name": "Angular and Nx Version Matrix",
-        "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
-        "file": "generated/packages/angular/documents/angular-nx-version-matrix",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/angular/api/documents/angular-nx-version-matrix",
-        "tags": [],
-        "originalFilePath": "shared/packages/angular/angular-nx-version-matrix"
-      }
-    },
+    "documents": {},
     "root": "/packages/angular",
     "source": "/packages/angular/src",
     "executors": {
@@ -1761,41 +1716,7 @@
     "name": "eslint-plugin",
     "packageName": "@nx/eslint-plugin",
     "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
-    "documents": {
-      "/technologies/eslint/eslint-plugin/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
-        "file": "generated/packages/eslint-plugin/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/eslint/eslint-plugin/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/eslint/eslint-plugin"
-      },
-      "/technologies/eslint/eslint-plugin/api/documents/enforce-module-boundaries": {
-        "id": "enforce-module-boundaries",
-        "name": "The `enforce-module-boundaries` rule",
-        "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
-        "file": "generated/packages/eslint-plugin/documents/enforce-module-boundaries",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/eslint/eslint-plugin/api/documents/enforce-module-boundaries",
-        "tags": [],
-        "originalFilePath": "shared/packages/eslint/enforce-module-boundaries"
-      },
-      "/technologies/eslint/eslint-plugin/api/documents/dependency-checks": {
-        "id": "dependency-checks",
-        "name": "The `dependency-checks` rule",
-        "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
-        "file": "generated/packages/eslint-plugin/documents/dependency-checks",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/eslint/eslint-plugin/api/documents/dependency-checks",
-        "tags": [],
-        "originalFilePath": "shared/packages/eslint/dependency-checks"
-      }
-    },
+    "documents": {},
     "root": "/packages/eslint-plugin",
     "source": "/packages/eslint-plugin/src",
     "executors": {},
@@ -2498,30 +2419,7 @@
     "name": "module-federation",
     "packageName": "@nx/module-federation",
     "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
-    "documents": {
-      "/technologies/module-federation/api/documents/nx-module-federation-plugin": {
-        "id": "nx-module-federation-plugin",
-        "name": "NxModuleFederationPlugin",
-        "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
-        "file": "generated/packages/module-federation/documents/nx-module-federation-plugin",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/module-federation/api/documents/nx-module-federation-plugin",
-        "tags": [],
-        "originalFilePath": "shared/packages/module-federation/nx-module-federation-plugin"
-      },
-      "/technologies/module-federation/api/documents/nx-module-federation-dev-server-plugin": {
-        "id": "nx-module-federation-dev-server-plugin",
-        "name": "NxModuleFederationDevServerPlugin",
-        "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
-        "file": "generated/packages/module-federation/documents/nx-module-federation-dev-server-plugin",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/module-federation/api/documents/nx-module-federation-dev-server-plugin",
-        "tags": [],
-        "originalFilePath": "shared/packages/module-federation/nx-module-federation-dev-server-plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/module-federation",
     "source": "/packages/module-federation/src",
     "executors": {},
@@ -4755,41 +4653,7 @@
     "name": "storybook",
     "packageName": "@nx/storybook",
     "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
-    "documents": {
-      "/technologies/test-tools/storybook/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "This is an overview page for the Storybook plugin in Nx. It explains what Storybook is and how to set it up in your Nx workspace.",
-        "file": "generated/packages/storybook/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/test-tools/storybook/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/plugin-overview"
-      },
-      "/technologies/test-tools/storybook/api/documents/best-practices": {
-        "id": "best-practices",
-        "name": "Storybook best practices for making the most out of Nx",
-        "description": "The purpose of this guide is to help you set up Storybook in your Nx workspace so that you can get the most out of Nx and its powerful capabilities.",
-        "file": "generated/packages/storybook/documents/best-practices",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/test-tools/storybook/api/documents/best-practices",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/best-practices"
-      },
-      "/technologies/test-tools/storybook/api/documents/storybook-7-setup": {
-        "id": "storybook-7-setup",
-        "name": "Storybook 7",
-        "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
-        "file": "generated/packages/storybook/documents/storybook-7-setup",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/test-tools/storybook/api/documents/storybook-7-setup",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/storybook-7-setup"
-      }
-    },
+    "documents": {},
     "root": "/packages/storybook",
     "source": "/packages/storybook/src",
     "executors": {
