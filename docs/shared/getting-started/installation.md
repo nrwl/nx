@@ -80,7 +80,6 @@ You can install Nx globally. Depending on your package manager, use one of the f
 {% tab label="Homebrew" %}
 
 ```shell
-brew tap nrwl/nx
 brew install nx
 ```
 

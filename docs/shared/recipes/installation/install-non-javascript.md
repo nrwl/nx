@@ -9,7 +9,7 @@ Nx can manage its own installation without requiring a `package.json` file or a 
 
 ## Globally Install Nx
 
-First globally install Nx using Homebrew (Mac only) or with a manually installed version of Node (any OS).
+First globally install Nx using Homebrew (Mac and Linux) or with a manually installed version of Node (any OS).
 
 {% tabs %}
 {% tab label="Homebrew" %}
@@ -17,7 +17,6 @@ First globally install Nx using Homebrew (Mac only) or with a manually installed
 If you have [Homebrew installed](https://brew.sh/), you can install Nx globally with these commands:
 
 ```shell
-brew tap nrwl/nx
 brew install nx
 ```
 
