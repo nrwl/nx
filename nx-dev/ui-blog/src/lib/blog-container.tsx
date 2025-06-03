@@ -5,6 +5,7 @@ import { FeaturedBlogs } from './featured-blogs';
 import { useEffect, useMemo, useState } from 'react';
 import { Filters } from './filters';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { ALL_TOPICS } from './topics';
 import {
   ComputerDesktopIcon,
@@ -15,6 +16,8 @@ import {
   ChatBubbleOvalLeftEllipsisIcon,
   ListBulletIcon,
   VideoCameraIcon,
+  RssIcon,
+  AtSymbolIcon,
 } from '@heroicons/react/24/outline';
 
 export interface BlogContainerProps {
@@ -94,8 +97,24 @@ export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
         <FeaturedBlogs blogs={firstFiveBlogs} />
         {!!remainingBlogs.length && (
           <>
-            <div className="mx-auto mb-8 mt-20 border-b-2 border-slate-300 pb-3 text-sm dark:border-slate-700">
+            <div className="mx-auto mb-8 mt-20 flex items-center justify-between border-b-2 border-slate-300 pb-3 text-sm dark:border-slate-700">
               <h2 className="font-semibold">More blogs</h2>
+              <div className="flex gap-2">
+                <Link
+                  href="/blog/rss.xml"
+                  aria-label="RSS feed"
+                  prefetch={false}
+                >
+                  <RssIcon className="h-5 w-5 text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200" />
+                </Link>
+                <Link
+                  href="/blog/atom.xml"
+                  aria-label="Atom feed"
+                  prefetch={false}
+                >
+                  <AtSymbolIcon className="h-5 w-5 text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200" />
+                </Link>
+              </div>
             </div>
             <MoreBlogs blogs={remainingBlogs} />
           </>
