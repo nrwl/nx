@@ -27,7 +27,7 @@ To verify that Gradle was installed correctly, run this command:
 gradle --version
 ```
 
-To streamline this tutorial, we'll install Nx globally on your system. You can use Homebrew (Mac only) or a manually installed Node version (any OS).
+To streamline this tutorial, we'll install Nx globally on your system. You can use Homebrew (Mac and Linux) or a manually installed Node version (any OS).
 
 {% tabs %}
 {% tab label="Homebrew" %}
@@ -35,7 +35,6 @@ To streamline this tutorial, we'll install Nx globally on your system. You can u
 Make sure [Homebrew is installed](https://brew.sh/), then install Nx globally with these commands:
 
 ```shell
-brew tap nrwl/nx
 brew install nx
 ```
 
