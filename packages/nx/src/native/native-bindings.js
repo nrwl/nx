@@ -378,6 +378,7 @@ module.exports.WorkspaceContext = nativeBinding.WorkspaceContext
 module.exports.closeDbConnection = nativeBinding.closeDbConnection
 module.exports.connectToNxDb = nativeBinding.connectToNxDb
 module.exports.copy = nativeBinding.copy
+module.exports.ensureNxConsoleInstalled = nativeBinding.ensureNxConsoleInstalled
 module.exports.EventType = nativeBinding.EventType
 module.exports.expandOutputs = nativeBinding.expandOutputs
 module.exports.findImports = nativeBinding.findImports

@@ -159,6 +159,8 @@ export interface DepsOutputsInput {
   transitive?: boolean
 }
 
+export declare export declare function ensureNxConsoleInstalled(): void
+
 export interface EnvironmentInput {
   env: string
 }

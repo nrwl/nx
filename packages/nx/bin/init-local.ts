@@ -25,6 +25,10 @@ export function initLocal(workspace: WorkspaceTypeAndRoot) {
       return;
     }
 
+    // Attempt to install Nx Console extension in the background
+    const { ensureNxConsoleInstalled } = require('../src/native');
+    ensureNxConsoleInstalled();
+
     const command = process.argv[2];
     if (command === 'run' || command === 'g' || command === 'generate') {
       commandsObject.parse(process.argv.slice(2));

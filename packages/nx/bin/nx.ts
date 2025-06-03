@@ -21,7 +21,6 @@ import { performance } from 'perf_hooks';
 import { setupWorkspaceContext } from '../src/utils/workspace-context';
 import { daemonClient } from '../src/daemon/client/client';
 import { removeDbConnections } from '../src/utils/db-connection';
-import { signalToCode } from '../src/utils/exit-codes';
 
 // In case Nx Cloud forcibly exits while the TUI is running, ensure the terminal is restored etc.
 process.on('exit', (...args) => {
@@ -44,16 +43,16 @@ function main() {
 
   const workspace = findWorkspaceRoot(process.cwd());
 
-  performance.mark('loading dotenv files:start');
   if (workspace) {
+    performance.mark('loading dotenv files:start');
     loadRootEnvFiles(workspace.dir);
+    performance.mark('loading dotenv files:end');
+    performance.measure(
+      'loading dotenv files',
+      'loading dotenv files:start',
+      'loading dotenv files:end'
+    );
   }
-  performance.mark('loading dotenv files:end');
-  performance.measure(
-    'loading dotenv files',
-    'loading dotenv files:start',
-    'loading dotenv files:end'
-  );
 
   // new is a special case because there is no local workspace to load
   if (
