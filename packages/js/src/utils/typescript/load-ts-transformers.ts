@@ -9,8 +9,8 @@ import {
 
 enum TransformerFormat {
   STANDARD, // Standard TypeScript transformer API: { before, after, afterDeclarations }
-  NESTJS,   // NestJS-style: exports a function or { before: Function }
-  UNKNOWN   // Unknown format
+  FUNCTION_EXPORT, // Function-based: exports a function or { before: Function }
+  UNKNOWN, // Unknown format
 }
 
 function detectTransformerFormat(plugin: any): TransformerFormat {
@@ -18,35 +18,39 @@ function detectTransformerFormat(plugin: any): TransformerFormat {
   if (plugin && (plugin.before || plugin.after || plugin.afterDeclarations)) {
     return TransformerFormat.STANDARD;
   }
-  
-  // Check if it's a NestJS-style transformer (exports a function directly)
+
+  // Check if it's a function-based transformer (exports a function directly)
   if (typeof plugin === 'function') {
-    return TransformerFormat.NESTJS;
+    return TransformerFormat.FUNCTION_EXPORT;
   }
-  
-  // Check if it has a 'before' function export (NestJS GraphQL plugin pattern)
+
+  // Check if it has a 'before' function export (function-based plugin pattern)
   if (plugin && typeof plugin.before === 'function') {
-    return TransformerFormat.NESTJS;
+    return TransformerFormat.FUNCTION_EXPORT;
   }
-  
+
   return TransformerFormat.UNKNOWN;
 }
 
-function adaptNestJSTransformer(plugin: any, pluginOptions: Record<string, unknown>) {
+function adaptFunctionBasedTransformer(
+  plugin: any,
+  pluginOptions: Record<string, unknown>
+) {
   // Handle direct function export
   if (typeof plugin === 'function') {
     return {
-      before: (options: Record<string, unknown>, program: any) => plugin(options, program)
+      before: (options: Record<string, unknown>, program: any) =>
+        plugin(options, program),
     };
   }
-  
-  // Handle { before: Function } export (NestJS GraphQL plugin)
+
+  // Handle { before: Function } export (function-based plugin)
   if (plugin && typeof plugin.before === 'function') {
     return {
-      before: plugin.before
+      before: plugin.before,
     };
   }
-  
+
   return plugin;
 }
 
@@ -96,28 +100,28 @@ export function loadTsTransformers(
   for (let i = 0; i < pluginRefs.length; i++) {
     const { name: pluginName, options: pluginOptions } = normalizedPlugins[i];
     let plugin = pluginRefs[i];
-    
+
     // Skip empty plugins (failed to load)
     if (!plugin || Object.keys(plugin).length === 0) {
       continue;
     }
-    
+
     const format = detectTransformerFormat(plugin);
-    
-    // Adapt NestJS-style transformers to standard format
-    if (format === TransformerFormat.NESTJS) {
-      logger.debug(`Adapting NestJS-style transformer: ${pluginName}`);
-      plugin = adaptNestJSTransformer(plugin, pluginOptions);
+
+    // Adapt function-based transformers to standard format
+    if (format === TransformerFormat.FUNCTION_EXPORT) {
+      logger.debug(`Adapting function-based transformer: ${pluginName}`);
+      plugin = adaptFunctionBasedTransformer(plugin, pluginOptions);
     } else if (format === TransformerFormat.UNKNOWN) {
       logger.warn(
         `${pluginName} is not a recognized Transformer Plugin format. It should export ` +
-        `{ before?, after?, afterDeclarations? } functions or be a NestJS-style transformer.`
+          `{ before?, after?, afterDeclarations? } functions or be a function-based transformer.`
       );
       continue;
     }
 
     const { before, after, afterDeclarations } = plugin;
-    
+
     // Validate that at least one hook is available
     if (!before && !after && !afterDeclarations) {
       logger.warn(
@@ -131,7 +135,9 @@ export function loadTsTransformers(
       try {
         beforeHooks.push((program) => before(pluginOptions, program));
       } catch (error) {
-        logger.error(`Failed to register 'before' transformer for ${pluginName}: ${error.message}`);
+        logger.error(
+          `Failed to register 'before' transformer for ${pluginName}: ${error.message}`
+        );
       }
     }
 
@@ -139,17 +145,21 @@ export function loadTsTransformers(
       try {
         afterHooks.push((program) => after(pluginOptions, program));
       } catch (error) {
-        logger.error(`Failed to register 'after' transformer for ${pluginName}: ${error.message}`);
+        logger.error(
+          `Failed to register 'after' transformer for ${pluginName}: ${error.message}`
+        );
       }
     }
 
     if (afterDeclarations) {
       try {
-        afterDeclarationsHooks.push((program) => 
+        afterDeclarationsHooks.push((program) =>
           afterDeclarations(pluginOptions, program)
         );
       } catch (error) {
-        logger.error(`Failed to register 'afterDeclarations' transformer for ${pluginName}: ${error.message}`);
+        logger.error(
+          `Failed to register 'afterDeclarations' transformer for ${pluginName}: ${error.message}`
+        );
       }
     }
   }

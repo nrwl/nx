@@ -33,14 +33,32 @@ export interface CompilerPlugin {
 
 /**
  * Extended plugin interface to support different transformer API formats
- * including NestJS-style transformers and direct function exports
+ * including function-based transformers and direct function exports
  */
-export type AnyCompilerPlugin = 
+export type AnyCompilerPlugin =
   | CompilerPlugin
-  | ((options?: Record<string, unknown>, program?: Program) => TransformerFactory)
-  | { before: (options?: Record<string, unknown>, program?: Program) => TransformerFactory }
-  | { after: (options?: Record<string, unknown>, program?: Program) => TransformerFactory }
-  | { afterDeclarations: (options?: Record<string, unknown>, program?: Program) => TransformerFactory };
+  | ((
+      options?: Record<string, unknown>,
+      program?: Program
+    ) => TransformerFactory)
+  | {
+      before: (
+        options?: Record<string, unknown>,
+        program?: Program
+      ) => TransformerFactory;
+    }
+  | {
+      after: (
+        options?: Record<string, unknown>,
+        program?: Program
+      ) => TransformerFactory;
+    }
+  | {
+      afterDeclarations: (
+        options?: Record<string, unknown>,
+        program?: Program
+      ) => TransformerFactory;
+    };
 
 export interface CompilerPluginHooks {
   beforeHooks: Array<(program?: Program) => TransformerFactory>;
