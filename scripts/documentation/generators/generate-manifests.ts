@@ -416,7 +416,7 @@ function createNewPackagesManifest(packages: PackageMetadata[]): {
         })),
         'path'
       ),
-      path: generatePath({ id: p.name, path: '' }, `technologies/${p.name}`),
+      path: data.pagePath,
     };
   });
 
