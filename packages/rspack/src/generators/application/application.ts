@@ -62,6 +62,7 @@ function updateRspackPluginExclusion(tree: Tree, options: NormalizedSchema) {
   }
 }
 
+// TODO(v22) - remove this generator
 export default async function (
   tree: Tree,
   _options: ApplicationGeneratorSchema
