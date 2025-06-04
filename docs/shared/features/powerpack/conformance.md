@@ -7,14 +7,14 @@ description: 'Learn how to use Nx Powerpack conformance rules to enforce organiz
 
 {% youtube src="https://youtu.be/6wg23sLveTQ" title="Nx Powerpack workspace conformance" /%}
 
-The [`@nx/conformance`](/nx-api/conformance) plugin allows [Nx Powerpack](/powerpack) users to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability** and **security**. Powerpack is available for Nx version 19.8 and higher.
+The [`@nx/conformance`](/reference/core-api/conformance) plugin allows [Nx Powerpack](/powerpack) users to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability** and **security**. Powerpack is available for Nx version 19.8 and higher.
 
 The conformance plugin allows you to **encode your own organization's standards** so that they can be enforced automatically. Conformance rules can also **complement linting tools** by enforcing that those tools are configured in the recommended way. The rules are written in TypeScript but can be **applied to any language in the codebase** or focus entirely on configuration files.
 
 The plugin also provides the following pre-written rules:
 
 - **Enforce Project Boundaries**: Similar to the Nx [ESLint Enforce Module Boundaries rule](/features/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
-- **Ensure Owners**: Require every project to have an owner defined for the [`@nx/owners` plugin](/nx-api/owners)
+- **Ensure Owners**: Require every project to have an owner defined for the [`@nx/owners` plugin](/reference/core-api/owners)
 
 ## Setup
 
@@ -28,7 +28,7 @@ Then, add the Conformance plugin to your workspace.
 
 ## Configure Conformance Rules
 
-Conformance rules are configured in the `conformance` property of the `nx.json` file. You can use the pre-defined rules or reference [your own custom rule](/nx-api/conformance#custom-conformance-rules). See the [plugin documentation](/nx-api/conformance) for more details.
+Conformance rules are configured in the `conformance` property of the `nx.json` file. You can use the pre-defined rules or reference [your own custom rule](/reference/core-api/conformance#custom-conformance-rules). See the [plugin documentation](/reference/core-api/conformance) for more details.
 
 ```jsonc {% fileName="nx.json" %}
 {

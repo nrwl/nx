@@ -81,7 +81,7 @@ Next, we'll want to navigate into our new workspace:
 cd myorg
 ```
 
-And finally, we'll add the [`@nx/react`](/nx-api/react) plugin to our workspace.
+And finally, we'll add the [`@nx/react`](/technologies/react/api) plugin to our workspace.
 
 ```shell
 npx nx add @nx/react

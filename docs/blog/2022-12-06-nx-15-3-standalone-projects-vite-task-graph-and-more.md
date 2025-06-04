@@ -198,9 +198,9 @@ If you are currently using the NxExt based Vite plugin, or even a Webpack based 
 npx nx g @nrwl/vite:configuration
 ```
 
-This will adjust the NxExt Vite plugin configuration to match the one provided by our core team. Check out our docs for more info: [/nx-api/vite/generators/configuration](/nx-api/vite/generators/configuration)
+This will adjust the NxExt Vite plugin configuration to match the one provided by our core team. Check out our docs for more info: [/nx-api/vite/generators/configuration](/technologies/build-tools/vite/api/generators/configuration)
 
-You can also find all the details about the new Vite package in our docs: [/nx-api/vite](/nx-api/vite)
+You can also find all the details about the new Vite package in our docs: [/nx-api/vite](/technologies/build-tools/vite/api)
 
 ## Adopting Nx has never been easier
 

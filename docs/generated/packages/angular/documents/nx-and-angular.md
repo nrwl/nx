@@ -150,7 +150,7 @@ npx nx g @schematics/angular:component my-component
 ```
 
 {% callout type="check" title="Important" %}
-Support to run Angular Devkit builders and schematics is enabled by installing the [`@nx/angular` plugin](/nx-api/angular/documents/overview). This plugin is installed by default when creating a new Angular workspace with Nx or [migrate an existing Angular CLI workspace to Nx](#migrate-from-the-angular-cli).
+Support to run Angular Devkit builders and schematics is enabled by installing the [`@nx/angular` plugin](/technologies/angular/introduction). This plugin is installed by default when creating a new Angular workspace with Nx or [migrate an existing Angular CLI workspace to Nx](#migrate-from-the-angular-cli).
 {% /callout %}
 
 ### Running Commands
@@ -200,7 +200,7 @@ To reiterate: `nx migrate` runs the migrations written by the Angular team the s
 
 ### 'nx add'
 
-The [`nx add` command](/nx-api/nx/documents/add) is similar to the `ng add` command. It installs a given package specifier (e.g. `@nx/react`, `@nx/react@18.1.0`, `@nx/react@latest`) and it runs an `init` or `ng-add` generator if the installed package contains it.
+The [`nx add` command](/reference/core-api/nx/documents/add) is similar to the `ng add` command. It installs a given package specifier (e.g. `@nx/react`, `@nx/react@18.1.0`, `@nx/react@latest`) and it runs an `init` or `ng-add` generator if the installed package contains it.
 
 ```shell
 nx add [package]
@@ -260,7 +260,7 @@ Features like
 - offering [remote caching abilities](/ci/features/remote-cache) on CI
 - offering [task distribution across machines (Nx Agents)](/ci/features/distribute-task-execution)
 
-And, Nx already uses fast, modern tooling like [ESBuild](/nx-api/esbuild), [Vite](/nx-api/vite), Vitest and [Rspack](/nx-api/rspack) for non-Angular stacks. So once Angular is ready to use these tools, Nx will also be ready.
+And, Nx already uses fast, modern tooling like [ESBuild](/technologies/build-tools/esbuild/api), [Vite](/technologies/build-tools/vite/api), Vitest and [Rspack](/technologies/build-tools/rspack/api) for non-Angular stacks. So once Angular is ready to use these tools, Nx will also be ready.
 
 ### Editor Integration
 
@@ -393,7 +393,7 @@ Learn more about the [graph features here](/features/explore-graph).
 
 ### Extensible and Customizable: Make it fit your own needs
 
-Nx is [built to be extensible](/getting-started/why-nx#how-does-nx-work). Just like the [packages published by the Nx core team](/nx-api) you can create your own Nx plugins by [extending Nx](/extending-nx/intro/getting-started). This can be as simple as using [run-commands](/nx-api/nx/executors/run-commands) to integrate custom commands into the project configuration or as complex as [creating your own local executor](/extending-nx/recipes/local-executors).
+Nx is [built to be extensible](/getting-started/why-nx#how-does-nx-work). Just like the [packages published by the Nx core team](/nx-api) you can create your own Nx plugins by [extending Nx](/extending-nx/intro/getting-started). This can be as simple as using [run-commands](/reference/core-api/nx/executors/run-commands) to integrate custom commands into the project configuration or as complex as [creating your own local executor](/extending-nx/recipes/local-executors).
 
 And if you ever need to expand beyond Angular or diversify your stack, you can still keep using Nx, which is [battle-tested with many different technologies](/getting-started/intro#pick-your-stack).
 

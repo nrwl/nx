@@ -37,7 +37,7 @@ You can also append the `--generate-tests` to automatically generate Cypress com
 nx g @nrwl/react:cypress-component-configuration --project=my-react-project --generate-tests
 ```
 
-Check out our [generator docs](/nx-api/react/generators/cypress-component-configuration) for more info.
+Check out our [generator docs](/technologies/react/api/generators/cypress-component-configuration) for more info.
 
 {% youtube src="https://youtu.be/QDWN4C7T-Ck" /%}
 

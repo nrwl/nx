@@ -203,4 +203,4 @@ Bundling dependencies is typically not recommended for Node applications.
 
 ## More Documentation
 
-- [Using Jest](/nx-api/jest)
+- [Using Jest](/technologies/test-tools/jest/api)

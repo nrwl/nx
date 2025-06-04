@@ -23,7 +23,7 @@ Then, add the Owners plugin to your workspace.
 
 ## Project or File-based Configuration
 
-The ownership configuration is defined in the `nx.json` file or in individual project configuration files. Nx then uses a [sync generator](/concepts/sync-generators) to automatically compile those settings into a valid CODEOWNERS file for GitHub, Bitbucket or GitLab. See the [plugin documentation](/nx-api/owners) for more details.
+The ownership configuration is defined in the `nx.json` file or in individual project configuration files. Nx then uses a [sync generator](/concepts/sync-generators) to automatically compile those settings into a valid CODEOWNERS file for GitHub, Bitbucket or GitLab. See the [plugin documentation](/reference/core-api/owners) for more details.
 
 {% cards smCols="2" mdCols="2" lgCols="2" %}
 

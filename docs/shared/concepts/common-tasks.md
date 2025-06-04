@@ -22,7 +22,7 @@ This task should produce the compiled output of this project. Typically, you'll 
 }
 ```
 
-The task might use the [@nx/vite](/nx-api/vite), [@nx/webpack](/nx-api/webpack) or [@nx/rspack](/nx-api/rspack) plugins. Or you could have the task launch your own custom script.
+The task might use the [@nx/vite](/technologies/build-tools/vite/api), [@nx/webpack](/technologies/build-tools/webpack/api) or [@nx/rspack](/technologies/build-tools/rspack/api) plugins. Or you could have the task launch your own custom script.
 
 {% tabs %}
 {% tab label="Vite" %}
@@ -102,7 +102,7 @@ You can define your own `build` task in your project configuration. Here is an e
 
 ## `serve`
 
-This task should run your project in a developer preview mode. The task might use the [@nx/vite](/nx-api/vite), [@nx/webpack](/nx-api/webpack) or [@nx/rspack](/nx-api/rspack) plugins. Or you could have the task launch your own custom script.
+This task should run your project in a developer preview mode. The task might use the [@nx/vite](/technologies/build-tools/vite/api), [@nx/webpack](/technologies/build-tools/webpack/api) or [@nx/rspack](/technologies/build-tools/rspack/api) plugins. Or you could have the task launch your own custom script.
 
 {% tabs %}
 {% tab label="Vite" %}
@@ -182,7 +182,7 @@ You can define your own `serve` task in your project configuration. Here is an e
 
 ## `test`
 
-This task typically runs unit tests for a project. The task might use the [@nx/vite](/nx-api/vite) or [@nx/jest](/nx-api/jest) plugins. Or you could have the task launch your own custom script.
+This task typically runs unit tests for a project. The task might use the [@nx/vite](/technologies/build-tools/vite/api) or [@nx/jest](/technologies/test-tools/jest/api) plugins. Or you could have the task launch your own custom script.
 
 {% tabs %}
 {% tab label="Vitest" %}
@@ -242,7 +242,7 @@ You can define your own `test` task in your project configuration. Here is an ex
 
 ## `lint`
 
-This task should run lint rules for a project. The task might use the [@nx/eslint](/nx-api/eslint) plugin or run your own custom script.
+This task should run lint rules for a project. The task might use the [@nx/eslint](/technologies/eslint/api) plugin or run your own custom script.
 
 {% tabs %}
 {% tab label="ESLint" %}

@@ -300,7 +300,7 @@ In this blog, we have:
 - Used Nx to run Playwright tests
 - Set up a Playwright configuration for an existing Nx app
 
-Hopefully, this gives you good insight into how to get started with Playwright. The Playwright configuration in this example is pretty simple, to learn more about `@nx/playwright` plugin, check out the Nx documentation: [/nx-api/playwright](/nx-api/playwright).
+Hopefully, this gives you good insight into how to get started with Playwright. The Playwright configuration in this example is pretty simple, to learn more about `@nx/playwright` plugin, check out the Nx documentation: [/nx-api/playwright](/technologies/test-tools/playwright/api).
 
 ## Learn more
 

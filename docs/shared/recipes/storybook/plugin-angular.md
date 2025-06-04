@@ -8,12 +8,12 @@ description: This guide explains how to set up Storybook for Angular projects in
 This guide will walk you through setting up [Storybook](https://storybook.js.org) for Angular projects in your Nx workspace.
 
 {% callout type="warning" title="Set up Storybook in your workspace" %}
-You first need to set up Storybook for your Nx workspace, if you haven't already. You can read the [Storybook plugin overview guide](/nx-api/storybook) to get started.
+You first need to set up Storybook for your Nx workspace, if you haven't already. You can read the [Storybook plugin overview guide](/technologies/test-tools/storybook/api) to get started.
 {% /callout %}
 
 ## Generate Storybook Configuration for an Angular project
 
-You can generate Storybook configuration for an individual Angular project by using the [`@nx/angular:storybook-configuration` generator](/nx-api/angular/generators/storybook-configuration), like this:
+You can generate Storybook configuration for an individual Angular project by using the [`@nx/angular:storybook-configuration` generator](/technologies/angular/api/generators/storybook-configuration), like this:
 
 ```shell
 nx g @nx/angular:storybook-configuration project-name
@@ -21,7 +21,7 @@ nx g @nx/angular:storybook-configuration project-name
 
 ## Auto-generate Stories
 
-The [`@nx/angular:storybook-configuration` generator](/nx-api/angular/generators/storybook-configuration) has the option to automatically generate `*.stories.ts` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
+The [`@nx/angular:storybook-configuration` generator](/technologies/angular/api/generators/storybook-configuration) has the option to automatically generate `*.stories.ts` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
 
 ```text
 <some-folder>/
@@ -29,7 +29,7 @@ The [`@nx/angular:storybook-configuration` generator](/nx-api/angular/generators
 └── my.component.stories.ts
 ```
 
-If you add more components to your project, and want to generate stories for all your (new) components at any point, you can use the [`@nx/angular:stories` generator](/nx-api/angular/generators/stories):
+If you add more components to your project, and want to generate stories for all your (new) components at any point, you can use the [`@nx/angular:stories` generator](/technologies/angular/api/generators/stories):
 
 ```shell
 nx g @nx/angular:stories --project=<project-name>
@@ -105,7 +105,7 @@ export class MyButtonComponent {
 
 ### Story file
 
-The [`@nx/angular:storybook-configuration` generator](/nx-api/angular/generators/storybook-configuration) would generate a Story file that looks like this:
+The [`@nx/angular:storybook-configuration` generator](/technologies/angular/api/generators/storybook-configuration) would generate a Story file that looks like this:
 
 ```typescript {% fileName="libs/feature/ui/src/lib/my-button/my-button.component.stories.ts" %}
 import type { Meta, StoryObj } from '@storybook/angular';
@@ -188,4 +188,4 @@ For more on using Storybook, see the [official Storybook documentation](https://
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 
 - [Set up Storybook version 7](/technologies/test-tools/storybook/recipes/storybook-7-setup)
-- [Migrate to Storybook version 7](/nx-api/storybook/generators/migrate-7)
+- [Migrate to Storybook version 7](/technologies/test-tools/storybook/api/generators/migrate-7)

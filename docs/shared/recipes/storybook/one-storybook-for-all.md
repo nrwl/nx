@@ -28,7 +28,7 @@ Now, you have a new library, which will act as a shell/host for all your stories
 
 ### Configure the new library to use Storybook
 
-Now let’s configure our new library to use Storybook, using the [`@nx/storybook:configuration` generator](/nx-api/storybook/generators/configuration). Run:
+Now let’s configure our new library to use Storybook, using the [`@nx/storybook:configuration` generator](/technologies/test-tools/storybook/api/generators/configuration). Run:
 
 ```shell
 nx g @nx/storybook:configuration storybook-host --interactionTests=true --uiFramework=@storybook/react-vite
