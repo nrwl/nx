@@ -533,18 +533,18 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
             if (!fromRef && useAutomaticFromRef) {
               const firstCommit = await getFirstGitCommit();
-              const allCommits = await getCommits(firstCommit, toSHA);
-              const commitsForProject = allCommits.filter((c) =>
-                c.affectedFiles.find((f) => f.startsWith(project.data.root))
-              );
+              commits = await filterProjectCommits({
+                fromSHA: firstCommit,
+                toSHA,
+                projectPath: project.data.root,
+              });
 
-              fromRef = commitsForProject[0]?.shortHash;
+              fromRef = commits[0]?.shortHash;
               if (args.verbose) {
                 console.log(
                   `Determined --from ref for ${project.name} from the first commit in which it exists: ${fromRef}`
                 );
               }
-              commits = commitsForProject;
             }
 
             if (!fromRef && !commits) {
@@ -554,7 +554,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             }
 
             if (!commits) {
-              commits = await getCommits(fromRef, toSHA);
+              commits = await filterProjectCommits({
+                fromSHA: fromRef,
+                toSHA,
+                projectPath: project.data.root,
+              });
             }
 
             const { fileMap } = await createFileMapUsingProjectGraph(
@@ -1347,6 +1351,21 @@ async function getCommits(
   const rawCommits = await getGitDiff(fromSHA, toSHA);
   // Parse as conventional commits
   return parseCommits(rawCommits);
+}
+
+async function filterProjectCommits({
+  fromSHA,
+  toSHA,
+  projectPath,
+}: {
+  fromSHA: string;
+  toSHA: string;
+  projectPath: string;
+}) {
+  const allCommits = await getCommits(fromSHA, toSHA);
+  return allCommits.filter((c) =>
+    c.affectedFiles.find((f) => f.startsWith(projectPath))
+  );
 }
 
 function filterHiddenChanges(
