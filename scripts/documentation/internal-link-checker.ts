@@ -160,7 +160,8 @@ const anchorUrls = ['nx.json', 'ci.json', 'extending-nx.json'].flatMap(
   (manifestFileName) => readApiJson(manifestFileName)
 );
 const ignoreAnchorUrls = [
-  '/nx-api',
+  '/reference/core-api',
+  '/technologies',
   '/nx-cloud',
   '/blog',
   '/pricing',
