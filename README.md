@@ -21,7 +21,7 @@
 
 # Smart Repos · Fast Builds
 
-Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.
+An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.
 
 Create a new Nx workspace with
 
