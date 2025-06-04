@@ -65,7 +65,7 @@ It is also often helpful to add `nx sync` as a git push hook or git commit hook.
         "owners": ["@joelovesrust"],
         // specify either projects or files, not both
         // Can be any project specifier that could be used in `nx run-many`
-        // See https://nx.dev/nx-api/nx/documents/run-many
+        // See https://nx.dev/reference/core-api/nx/documents/run-many
         "projects": ["my-rust-app", "rust-*", "tag:rust"],
         // File globs
         "files": [".github/workflows/**/*"]
@@ -93,7 +93,7 @@ It is also often helpful to add `nx sync` as a git push hook or git commit hook.
         "owners": ["@joelovesrust"],
         // specify either projects or files, not both
         // Can be any project specifier that could be used in `nx run-many`
-        // See https://nx.dev/nx-api/nx/documents/run-many
+        // See https://nx.dev/reference/core-api/nx/documents/run-many
         "projects": ["my-rust-app", "rust-*", "tag:rust"],
         // File globs
         "files": [".github/workflows/**/*"]
@@ -123,7 +123,7 @@ If you are using GitLab, you can specify CODEOWNERS [sections](https://docs.gitl
         "owners": ["@joelovesrust"],
         // Specify either `projects` or `files`, not both
         // Can be any project specifier that could be used in `nx run-many`
-        // See https://nx.dev/nx-api/nx/documents/run-many
+        // See https://nx.dev/reference/core-api/nx/documents/run-many
         "projects": ["my-rust-app", "rust-*", "tag:rust"],
         // File globs
         "files": [".github/workflows/**/*"]

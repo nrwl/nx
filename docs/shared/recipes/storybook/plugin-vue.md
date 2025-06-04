@@ -103,6 +103,6 @@ and the result would be the following:
 
 ## More Documentation
 
-You can find all Storybook-related Nx topics [here](/nx-api#storybook).
+You can find all Storybook-related Nx topics [here](/technologies/test-tools/storybook/introduction).
 
 For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/vue/get-started/introduction).

@@ -19,7 +19,7 @@ The `@nx/owners` plugin requires an Nx Powerpack license to function. [Activatin
 
 Then, add the Owners plugin to your workspace.
 
-{% link-card title="Owners" type="Nx Plugin" url="/nx-api/owners" icon="UserGroupIcon" /%}
+{% link-card title="Owners" type="Nx Plugin" url="/reference/core-api/owners/overview" icon="UserGroupIcon" /%}
 
 ## Project or File-based Configuration
 

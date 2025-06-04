@@ -139,7 +139,7 @@ Notice the interaction test on the second story, inside the `play` function. Thi
 
 ## More Documentation
 
-You can find all Storybook-related Nx topics [here](/nx-api#storybook).
+You can find all Storybook-related Nx topics [here](/technologies/test-tools/storybook/introduction).
 
 For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/react/get-started/introduction).
 

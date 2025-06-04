@@ -121,7 +121,7 @@ export default createConfig(
 
 {% callout type="deepdive" title="createConfig Information" %}
 The `createConfig` function is used to create an Rspack configuration object setup for Angular applications.
-You can read more about it [here](/nx-api/angular-rspack/documents/create-config).
+You can read more about it [here](/technologies/angular/angular-rspack/api).
 {% /callout %}
 
 ### Building and Serving your Application

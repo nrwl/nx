@@ -70,7 +70,7 @@ This creates a new application in your Nx monorepo that uses Rspack as the bundl
 Go and learn more on the
 
 - official Rspack website: [https://rspack.dev](https://rspack.dev/)
-- learn about the Nx Rspack plugin: [/nx-api/rspack](/technologies/build-tools/rspack/api)
+- learn about the Nx Rspack plugin: [/technologies/build-tools/rspack/introduction](/technologies/build-tools/rspack/api)
 
 ## Learn more
 

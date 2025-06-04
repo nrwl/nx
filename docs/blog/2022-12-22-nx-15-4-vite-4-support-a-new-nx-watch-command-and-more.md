@@ -40,7 +40,7 @@ We've also spent some effort into making the conversion of existing projects to 
 - [better documentation around converting using our generator](/technologies/build-tools/vite/api/generators/configuration)
 - [adding a guide to our docs for converting manually](/technologies/build-tools/vite/recipes/configure-vite)
 
-You can check out more details about our Vite plugin including how to add Vite and Vitest to your existing Nx workspace by visiting our docs at [nx.dev/nx-api/vite](/technologies/build-tools/vite/api)
+You can check out more details about our Vite plugin including how to add Vite and Vitest to your existing Nx workspace by visiting our docs at [nx.dev/technologies/build-tools/vite](/technologies/build-tools/vite/api)
 
 ## Nx Watch
 

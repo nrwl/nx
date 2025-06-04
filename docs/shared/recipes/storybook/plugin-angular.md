@@ -179,7 +179,7 @@ This setup instructs Nx to use the configuration under the `build` target of `my
 - [Set up Compodoc for Storybook on Nx](/technologies/test-tools/storybook/recipes/angular-storybook-compodoc)
 - [Configuring styles and preprocessor options](/technologies/test-tools/storybook/recipes/angular-configuring-styles)
 
-You can find all Storybook-related Nx topics [here](/nx-api#storybook).
+You can find all Storybook-related Nx topics [here](/technologies/test-tools/storybook/introduction).
 
 For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/angular/get-started/introduction).
 
