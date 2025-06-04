@@ -832,10 +832,8 @@ To fix this you will either need to add a package.json file at that location, or
           }
 
           // Apply the new version of the dependency to the dependent (if not preserving locally linked package protocols)
-          const shouldUpdateDependency = !(
-            isLocallyLinkedPackageVersion(currentDependencyVersion) &&
-            options.preserveLocalDependencyProtocols
-          );
+          const shouldUpdateDependency =
+            !options.preserveLocalDependencyProtocols;
           if (shouldUpdateDependency) {
             const newDepVersion = `${versionPrefix}${newDependencyVersion}`;
             json[dependentProject.dependencyCollection][dependencyPackageName] =

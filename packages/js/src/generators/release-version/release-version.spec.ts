@@ -2025,6 +2025,124 @@ Valid values are: "auto", "", "~", "^", "="`,
         }
       `);
     });
+
+    it('should not bump pinned versions when preserveLocalDependencyProtocols is true', async () => {
+      // Supported package manager for workspace: protocol
+      mockDetectPackageManager.mockReturnValue('pnpm');
+
+      projectGraph = createWorkspaceWithPackageDependencies(tree, {
+        'package-a': {
+          projectRoot: 'packages/package-a',
+          packageName: 'package-a',
+          version: '1.0.0',
+          packageJsonPath: 'packages/package-a/package.json',
+          localDependencies: [
+            {
+              projectName: 'package-b',
+              dependencyCollection: 'dependencies',
+              version: 'workspace:*',
+            },
+            {
+              projectName: 'package-c',
+              dependencyCollection: 'dependencies',
+              version: '2.0.0', // <--pinned
+            },
+          ],
+        },
+        'package-b': {
+          projectRoot: 'packages/package-b',
+          packageName: 'package-b',
+          version: '1.0.0',
+          packageJsonPath: 'packages/package-b/package.json',
+          localDependencies: [],
+        },
+        'package-c': {
+          projectRoot: 'packages/package-c',
+          packageName: 'package-c',
+          version: '3.0.0',
+          packageJsonPath: 'packages/package-c/package.json',
+          localDependencies: [],
+        },
+      });
+
+      expect(readJson(tree, 'packages/package-a/package.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "package-b": "workspace:*",
+            "package-c": "2.0.0",
+          },
+          "name": "package-a",
+          "version": "1.0.0",
+        }
+      `);
+      expect(readJson(tree, 'packages/package-b/package.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "name": "package-b",
+          "version": "1.0.0",
+        }
+      `);
+      expect(readJson(tree, 'packages/package-c/package.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "name": "package-c",
+          "version": "3.0.0",
+        }
+      `);
+
+      expect(
+        await releaseVersionGenerator(tree, {
+          projects: [projectGraph.nodes['package-c']], // version only package-c
+          projectGraph,
+          specifier: '3.1.0',
+          currentVersionResolver: 'disk',
+          specifierSource: 'prompt',
+          releaseGroup: createReleaseGroup('independent'),
+          updateDependents: 'auto',
+          preserveLocalDependencyProtocols: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "callback": [Function],
+          "data": {
+            "package-c": {
+              "currentVersion": "3.0.0",
+              "dependentProjects": [],
+              "newVersion": "3.1.0",
+            },
+          },
+        }
+      `);
+
+      expect(readJson(tree, 'packages/package-a/package.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "package-b": "workspace:*",
+            "package-c": "2.0.0",
+          },
+          "name": "package-a",
+          "version": "1.0.0",
+        }
+      `);
+
+      expect(readJson(tree, 'packages/package-b/package.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "name": "package-b",
+          "version": "1.0.0",
+        }
+      `);
+
+      expect(readJson(tree, 'packages/package-c/package.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "name": "package-c",
+          "version": "3.1.0",
+        }
+      `);
+    });
   });
 
   it('should not double patch transitive dependents that are already direct dependents', async () => {
