@@ -26,6 +26,7 @@
       "@nx/docs": ["docs"],
       "@nx/docs/*": ["docs/*"],
       "@nx/e2e/utils": ["e2e/utils"],
+      "@nx/e2e/utils/*": ["e2e/utils/*"],
       "@nx/esbuild": ["packages/esbuild"],
       "@nx/eslint": ["packages/eslint"],
       "@nx/eslint-plugin": ["packages/eslint-plugin/src/index.ts"],
