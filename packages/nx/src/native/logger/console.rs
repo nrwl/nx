@@ -1,10 +1,10 @@
 use crate::native::logger::enable_logger;
-use tracing::{error, info};
+use tracing::{error, debug};
 
 #[napi]
 pub fn log_info(message: String) {
     enable_logger();
-    info!(message);
+    debug!(message);
 }
 
 #[napi]
