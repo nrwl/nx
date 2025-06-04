@@ -19,7 +19,7 @@ You can configure Webpack using a [`webpack.config.js`](https://webpack.js.org/c
 ]
 ```
 
-If you are using the [`@nx/webpack:webpack`](/nx-api/webpack/executors/webpack) executor, the path to your webpack config is set in the `webpackConfig` option in your `project.json` file.
+If you are using the [`@nx/webpack:webpack`](/technologies/build-tools/webpack/api/executors/webpack) executor, the path to your webpack config is set in the `webpackConfig` option in your `project.json` file.
 
 ```json5 {% fileName="project.json" highlightLines=["7"] %}
 "my-app": {
@@ -44,7 +44,7 @@ In the webpack config file, you can add the necessary configuration for Webpack.
 Nx supports two flavors of Webpack configuration files:
 
 1. [_Basic_](#basic-configuration-for-nx) (or standard) Webpack configuration. The file exports a Webpack config object, or one of the [standard configuration types](https://webpack.js.org/configuration/configuration-types).
-2. [_Nx-enhanced_](#nxenhanced-configuration-with-composable-plugins) Webpack configuration. The file exports a function that takes in a Webpack configuration object, plus the [`@nx/webpack:webpack`](/nx-api/webpack/executors/webpack) options and context, and returns an updated Webpack configuration object.
+2. [_Nx-enhanced_](#nxenhanced-configuration-with-composable-plugins) Webpack configuration. The file exports a function that takes in a Webpack configuration object, plus the [`@nx/webpack:webpack`](/technologies/build-tools/webpack/api/executors/webpack) options and context, and returns an updated Webpack configuration object.
 
 The basic configuration works with Webpack CLI, whereas the Nx-enhanced configuration requires the use of the `@nx/webpack:webpack` executor.
 

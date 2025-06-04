@@ -178,4 +178,4 @@ Caching is hard. If you run into issues, check out the following resources:
 - [Debug cache misses](/troubleshooting/troubleshoot-cache-misses)
 - [Turn off or skip the cache](/recipes/running-tasks/skipping-cache)
 - [Change the cache location](/recipes/running-tasks/change-cache-location)
-- [Clear the local or remote cache](/nx-api/nx/documents/reset)
+- [Clear the local or remote cache](/reference/core-api/nx/documents/reset)

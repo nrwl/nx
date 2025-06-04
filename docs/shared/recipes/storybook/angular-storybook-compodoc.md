@@ -6,7 +6,7 @@ description: This guide explains how to set up Compodoc for Storybook on Angular
 # Set up Compodoc for Storybook on Nx
 
 {% callout type="note" title="Note" %}
-This documentation page contains information about the [Storybook plugin](/nx-api/storybook), specifically regarding [Angular projects that are using Storybook](/technologies/test-tools/storybook/recipes/overview-angular).
+This documentation page contains information about the [Storybook plugin](/technologies/test-tools/storybook/api), specifically regarding [Angular projects that are using Storybook](/technologies/test-tools/storybook/recipes/overview-angular).
 {% /callout %}
 
 {% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/storybook-compodoc-angular" /%}

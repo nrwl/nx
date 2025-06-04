@@ -364,7 +364,7 @@ npx nx g @nx/react:library libs/orders --unitTestRunner=vitest --bundler=none
 npx nx g @nx/react:library libs/shared/ui --unitTestRunner=vitest --bundler=none
 ```
 
-Note how we type out the full path in the `directory` flag to place the libraries into a subfolder. You can choose whatever folder structure you like to organize your projects. If you change your mind later, you can run the [move generator](/nx-api/workspace/generators/move) to move a project to a different folder.
+Note how we type out the full path in the `directory` flag to place the libraries into a subfolder. You can choose whatever folder structure you like to organize your projects. If you change your mind later, you can run the [move generator](/reference/core-api/workspace/generators/move) to move a project to a different folder.
 
 Running the above commands should lead to the following directory structure:
 

@@ -343,5 +343,5 @@ Below table is a map between expo commands and Nx commands:
 
 ## More Documentation
 
-- [Using Detox](/nx-api/detox)
-- [Using Jest](/nx-api/jest)
+- [Using Detox](/technologies/test-tools/detox/api)
+- [Using Jest](/technologies/test-tools/jest/api)
