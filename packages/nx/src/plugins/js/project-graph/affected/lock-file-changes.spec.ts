@@ -62,7 +62,7 @@ describe('getTouchedProjectsFromLockFile', () => {
           ],
           graph.nodes
         );
-        expect(result).toEqual([]);
+        expect(result).toStrictEqual([]);
       });
 
       it(`should return all nodes when "${lockFile}" is touched`, () => {
@@ -76,7 +76,7 @@ describe('getTouchedProjectsFromLockFile', () => {
           ],
           graph.nodes
         );
-        expect(result).toEqual(allNodes);
+        expect(result).toStrictEqual(allNodes);
       });
     });
   });
@@ -111,7 +111,7 @@ describe('getTouchedProjectsFromLockFile', () => {
           ],
           graph.nodes
         );
-        expect(result).toEqual([]);
+        expect(result).toStrictEqual([]);
       });
 
       it(`should not return changes when whole lock file "${lockFile}" is changed`, () => {
@@ -125,7 +125,7 @@ describe('getTouchedProjectsFromLockFile', () => {
           ],
           graph.nodes
         );
-        expect(result).toEqual([]);
+        expect(result).toStrictEqual([]);
       });
 
       it(`should return only changed projects when "${lockFile}" is touched`, () => {
@@ -163,12 +163,26 @@ describe('getTouchedProjectsFromLockFile', () => {
                     rhs: '4.0.1',
                   },
                 },
+                {
+                  type: JsonDiffType.Deleted,
+                  path: [
+                    'importers',
+                    'apps/app-that-was-deleted',
+                    'devDependencies',
+                    'some-other-external-package',
+                    'version',
+                  ],
+                  value: {
+                    lhs: '4.0.1',
+                    rhs: undefined,
+                  },
+                },
               ],
             },
           ],
           graph.nodes
         );
-        expect(result).toEqual(['proj1', 'app1']);
+        expect(result).toStrictEqual(['proj1', 'app1']);
       });
     });
   });

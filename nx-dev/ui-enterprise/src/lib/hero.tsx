@@ -49,9 +49,9 @@ export function Hero(): ReactElement {
               variant="display"
               className="mt-8 text-pretty tracking-tight"
             >
-              Solving the Performance Paradox,{' '}
+              Develop like an enterprise.{' '}
               <span className="rounded-lg bg-gradient-to-r from-pink-500 to-fuchsia-500 bg-clip-text text-transparent">
-                get speed and scale
+                Deliver like a startup.
               </span>
             </SectionHeading>
             <SectionHeading

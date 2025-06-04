@@ -818,6 +818,22 @@
                       "name": "Setup incremental builds for Angular applications",
                       "id": "setup-incremental-builds-angular",
                       "file": "shared/guides/setup-incremental-builds-angular"
+                    },
+                    {
+                      "name": "Nx and the Angular CLI",
+                      "id": "nx-and-angular",
+                      "file": "shared/guides/nx-and-angular-cli"
+                    },
+                    {
+                      "name": "Nx Devkit and Angular Devkit",
+                      "id": "nx-devkit-angular-devkit",
+                      "tags": ["create-your-own-plugin"],
+                      "file": "shared/guides/nx-devkit-angular-devkit"
+                    },
+                    {
+                      "name": "Angular and Nx Version Matrix",
+                      "id": "angular-nx-version-matrix",
+                      "file": "shared/packages/angular/angular-nx-version-matrix"
                     }
                   ]
                 },
@@ -1260,6 +1276,16 @@
                       "name": "How to Federate a Module",
                       "description": "A guide on how to federate a module in your Nx workspace",
                       "file": "shared/recipes/module-federation/federate-a-module"
+                    },
+                    {
+                      "name": "NxModuleFederationPlugin",
+                      "id": "nx-module-federation-plugin",
+                      "file": "shared/packages/module-federation/nx-module-federation-plugin"
+                    },
+                    {
+                      "name": "NxModuleFederationDevServerPlugin",
+                      "id": "nx-module-federation-dev-server-plugin",
+                      "file": "shared/packages/module-federation/nx-module-federation-dev-server-plugin"
                     }
                   ]
                 },
@@ -1306,6 +1332,22 @@
                   "name": "ESLint Plugin",
                   "id": "eslint-plugin",
                   "itemList": [
+                    {
+                      "name": "Guides",
+                      "id": "recipes",
+                      "itemList": [
+                        {
+                          "id": "enforce-module-boundaries",
+                          "name": "The enforce-module-boundaries rule",
+                          "file": "shared/packages/eslint/enforce-module-boundaries"
+                        },
+                        {
+                          "id": "dependency-checks",
+                          "name": "The dependency-checks rule",
+                          "file": "shared/packages/eslint/dependency-checks"
+                        }
+                      ]
+                    },
                     {
                       "name": "API",
                       "id": "api",
@@ -1563,6 +1605,18 @@
                       "name": "Guides",
                       "id": "recipes",
                       "itemList": [
+                        {
+                          "id": "best-practices",
+                          "name": "Storybook best practices for making the most out of Nx",
+                          "description": "The purpose of this guide is to help you set up Storybook in your Nx workspace so that you can get the most out of Nx and its powerful capabilities.",
+                          "file": "shared/packages/storybook/best-practices"
+                        },
+                        {
+                          "id": "storybook-7-setup",
+                          "name": "Storybook 7",
+                          "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
+                          "file": "shared/packages/storybook/storybook-7-setup"
+                        },
                         {
                           "name": "Set up Storybook for React Projects",
                           "id": "overview-react",

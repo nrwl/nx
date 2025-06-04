@@ -192,7 +192,7 @@ What's the difference?
 - Fix migrations that "almost work".
 - Commit a partially migrated state.
 - Change versions of packages to match org requirements.
-- [Opt out of Angular updates when updating Nx versions](/recipes/tips-n-tricks/advanced-update#choosing-optional-package-updates-to-apply) as long as [the Angular version is still supported](/nx-api/angular/documents/angular-nx-version-matrix)
+- [Opt out of Angular updates when updating Nx versions](/recipes/tips-n-tricks/advanced-update#choosing-optional-package-updates-to-apply) as long as [the Angular version is still supported](/technologies/angular/recipes/angular-nx-version-matrix)
 
 `nx migrate` does this by splitting the process into two steps. `nx migrate latest` creates a `migrations.json` file with a list of all the migrations needed by Nx, Angular, and other packages. You can then modify that file before running `nx migrate --run-migrations` to execute those migrations.
 

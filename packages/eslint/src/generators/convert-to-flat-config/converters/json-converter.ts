@@ -185,7 +185,7 @@ export function convertEslintJsonToFlatConfig(
     if (tree.exists(ignorePath)) {
       const patterns = tree
         .read(ignorePath, 'utf-8')
-        .split('\n')
+        .split(/\r\n|\r|\n/)
         .filter((line) => line.length > 0 && line !== 'node_modules')
         .map((path) => mapFilePath(path));
       if (patterns.length > 0) {

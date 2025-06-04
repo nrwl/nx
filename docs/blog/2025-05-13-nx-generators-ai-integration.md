@@ -119,7 +119,7 @@ To use this feature, you'll need:
 
 Once set up, you can start leveraging this powerful combination of predictable generators and intelligent AI assistance.
 
-This integration is just one example of our broader vision for AI-enhanced development with Nx, providing useful and deep integration of LLMs into your development workflow. Currently we're looking into integrating our [new Nx terminal UI](blog/nx-21-terminal-ui) with your coding assistant, allowing for some interesting new AI powered workflows.
+This integration is just one example of our broader vision for AI-enhanced development with Nx, providing useful and deep integration of LLMs into your development workflow. Currently we're looking into integrating our [new Nx terminal UI](/blog/nx-21-terminal-ui) with your coding assistant, allowing for some interesting new AI powered workflows.
 
 That said, don't forget to subscribe to our [YouTube channel](https://www.youtube.com/@nxdevtools) or [subscribe to our newsletter](https://go.nx.dev/nx-newsletter) for future announcements and demonstrations.
 

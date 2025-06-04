@@ -11,6 +11,7 @@ on:
 
 env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+  PNPM_HOME: ~/.pnpm
 
 jobs:
   main-linux:
@@ -61,10 +62,23 @@ jobs:
           version: 9.8.0
           run_install: false
 
-      - name: Install project dependencies
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm playwright install --with-deps
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Cache Rust toolchain and cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -74,6 +88,14 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Install project dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm playwright install --with-deps
 
       - name: Check Documentation
         run: pnpm nx documentation
@@ -163,13 +185,31 @@ jobs:
           version: 9.8.0
           run_install: false
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Cache Rust toolchain and cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Install project dependencies
         run: |
           pnpm install --frozen-lockfile
           pnpm playwright install --with-deps
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
 
       - name: Set SHAs
         uses: nrwl/nx-set-shas@v4

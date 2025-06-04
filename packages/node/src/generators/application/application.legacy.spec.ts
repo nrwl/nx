@@ -31,7 +31,9 @@ describe('node app generator (legacy)', () => {
     expect(project.targets.build).toMatchInlineSnapshot(`
       {
         "configurations": {
-          "development": {},
+          "development": {
+            "outputHashing": "none",
+          },
           "production": {},
         },
         "defaultConfiguration": "production",

@@ -29,9 +29,18 @@ Check the "_CI Platform Considerations_" section below and if there are no addit
 
 #### Using a Personal Access Token
 
+Github supports two [Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#about-personal-access-tokens) types: Classic and Fine-grained.
+
 To use a Personal Access Token for authentication, one must be generated with proper permissions. The minimum required permissions are shown in the screenshot below.
 
+{% tabs %}
+{% tab label="Classic" %}
 ![Minimum GitHub Personal Access Token Permissions](/nx-cloud/set-up/minimal-github-access-token.webp)
+{% /tab %}
+{% tab label="Fine-grained" %}
+![Minimum GitHub Fine-grained Personal Access Token Permissions](/nx-cloud/set-up/fine-grained-gh-pat-permissions.avif)
+{% /tab %}
+{% /tabs %}
 
 Once this token is created, select the radio button for providing a personal access token, paste the value, and then click "Connect". This will verify that Nx Cloud can connect to your repo. Upon a successful test, your configuration is saved. Check the "_CI Platform Considerations_" section below, and if there are no additional instructions for your platform of choice, setup is complete.
 

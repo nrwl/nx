@@ -19,8 +19,6 @@ export const pkgToGeneratedApiDocs: Record<
   // angular
   angular: {
     pagePath: '/technologies/angular/api',
-    // TODO(docs): move these to guides and remove this
-    includeDocuments: true,
   },
   // react
   react: {
@@ -84,8 +82,6 @@ export const pkgToGeneratedApiDocs: Record<
   },
   storybook: {
     pagePath: '/technologies/test-tools/storybook/api',
-    // TODO(docs): move these to guides and remove this
-    includeDocuments: true,
   },
   playwright: {
     pagePath: '/technologies/test-tools/playwright/api',
@@ -99,16 +95,12 @@ export const pkgToGeneratedApiDocs: Record<
   // misc
   'module-federation': {
     pagePath: '/technologies/module-federation/api',
-    // TODO(docs): move these to guides and remove this
-    includeDocuments: true,
   },
   eslint: {
     pagePath: '/technologies/eslint/api',
   },
   'eslint-plugin': {
     pagePath: '/technologies/eslint/eslint-plugin/api',
-    // TODO(docs): move these to guides and remove this
-    includeDocuments: true,
   },
   // core and misc
   // For now, things that are not in technologies are put here in references/core-api

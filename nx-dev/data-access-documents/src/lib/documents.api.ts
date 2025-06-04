@@ -5,7 +5,7 @@ import {
   type RelatedDocument,
 } from '@nx/nx-dev/models-document';
 import { type ProcessedPackageMetadata } from '@nx/nx-dev/models-package';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { type TagsApi } from './tags.api';
 
@@ -147,6 +147,29 @@ export class DocumentsApi {
           Object.keys(pkg.documents).forEach((path) => {
             paths.push(path);
           });
+
+          // Legacy devkit API documents
+          if (pkg.name === 'devkit') {
+            readdirSync('../../docs/generated/devkit').forEach((fileName) => {
+              // Private files
+              if (fileName.startsWith('.')) return;
+              if (fileName.endsWith('.md')) {
+                const apiDocPath = `${
+                  pkgToGeneratedApiDocs['devkit'].pagePath
+                }/documents/${fileName.replace('.md', '')}`;
+                paths.push(apiDocPath);
+              } else {
+                readdirSync('../../docs/generated/devkit/' + fileName).forEach(
+                  (subFileName) => {
+                    const apiDocPath = `${
+                      pkgToGeneratedApiDocs['devkit'].pagePath
+                    }/documents/${fileName}/${subFileName.replace('.md', '')}`;
+                    paths.push(apiDocPath);
+                  }
+                );
+              }
+            });
+          }
         }
 
         paths.push(`${apiPagePath}/executors`);

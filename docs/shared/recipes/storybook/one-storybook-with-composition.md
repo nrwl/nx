@@ -6,7 +6,7 @@ description: Dive into the comprehensive guide on publishing a unified Storybook
 # Publishing Storybook: One main Storybook instance using Storybook Composition
 
 This guide extends the
-[Using Storybook in a Nx workspace - Best practices](/nx-api/storybook/documents/best-practices) guide. In that guide, we discussed the best practices of using Storybook in a Nx workspace. We explained the main concepts and the mental model of how to best set up Storybook. In this guide, we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one single Storybook for your workspace, even you are using multiple frameworks, taking advantage of [Storybook Composition](/technologies/test-tools/storybook/recipes/storybook-composition-setup).
+[Using Storybook in a Nx workspace - Best practices](/technologies/test-tools/storybook/recipes/best-practices) guide. In that guide, we discussed the best practices of using Storybook in a Nx workspace. We explained the main concepts and the mental model of how to best set up Storybook. In this guide, we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one single Storybook for your workspace, even you are using multiple frameworks, taking advantage of [Storybook Composition](/technologies/test-tools/storybook/recipes/storybook-composition-setup).
 
 In this case, we are dealing with a Nx workspace that uses multiple frameworks. Essentially, you would need to have one Storybook host for each of the frameworks, containing all the stories of that specific framework, since the Storybook builder can not handle multiple frameworks simultaneously.
 

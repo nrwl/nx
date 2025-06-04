@@ -8,6 +8,7 @@ export const vitePluginReactVersion = '^4.2.0';
 export const vitePluginReactSwcVersion = '^3.5.0';
 export const jsdomVersion = '~22.1.0';
 export const vitePluginDtsVersion = '~4.5.0';
+export const ajvVersion = '^8.0.0';
 export const happyDomVersion = '~9.20.3';
 export const edgeRuntimeVmVersion = '~3.0.2';
 export const jitiVersion = '2.4.2';

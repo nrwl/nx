@@ -743,4 +743,468 @@ describe('convert-to-rspack', () => {
       "
     `);
   });
+
+  describe('top-level target options', () => {
+    describe('build target', () => {
+      it('should remove the target when there are no relevant top-level options', async () => {
+        const tree = createTreeWithEmptyWorkspace();
+        addProjectConfiguration(tree, 'app', {
+          root: 'apps/app',
+          sourceRoot: 'apps/app/src',
+          projectType: 'application',
+          targets: {
+            build: {
+              executor: '@angular-devkit/build-angular:browser',
+              options: {
+                outputPath: 'dist/apps/app',
+                index: 'apps/app/src/index.html',
+                main: 'apps/app/src/main.ts',
+                tsConfig: 'apps/app/tsconfig.app.json',
+              },
+            },
+          },
+        });
+        writeJson(tree, 'apps/app/tsconfig.json', {});
+
+        await convertToRspack(tree, { project: 'app' });
+
+        const updatedProject = readProjectConfiguration(tree, 'app');
+        expect(updatedProject.targets.build).not.toBeDefined();
+      });
+
+      it('should remove the target when all the top-level options match what would be inferred', async () => {
+        const tree = createTreeWithEmptyWorkspace();
+        updateJson(tree, 'nx.json', (json) => {
+          json.namedInputs = {
+            ...json.namedInputs,
+            production: [
+              'default',
+              '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
+            ],
+          };
+          return json;
+        });
+        addProjectConfiguration(tree, 'app', {
+          root: 'apps/app',
+          sourceRoot: 'apps/app/src',
+          projectType: 'application',
+          targets: {
+            build: {
+              dependsOn: ['^build'],
+              cache: true,
+              inputs: ['production', '^production'],
+              outputs: ['{options.outputPath}'],
+              syncGenerators: ['@nx/js:typescript-sync'],
+              executor: '@angular-devkit/build-angular:browser',
+              options: {
+                outputPath: 'dist/apps/app',
+                index: 'apps/app/src/index.html',
+                main: 'apps/app/src/main.ts',
+                tsConfig: 'apps/app/tsconfig.app.json',
+              },
+            },
+          },
+        });
+        writeJson(tree, 'apps/app/tsconfig.json', {});
+
+        await convertToRspack(tree, { project: 'app' });
+
+        const updatedProject = readProjectConfiguration(tree, 'app');
+        expect(updatedProject.targets.build).not.toBeDefined();
+      });
+
+      it('should remove the target when the normalized output matches what would be inferred', async () => {
+        const tree = createTreeWithEmptyWorkspace();
+        addProjectConfiguration(tree, 'app', {
+          root: 'apps/app',
+          sourceRoot: 'apps/app/src',
+          projectType: 'application',
+          targets: {
+            build: {
+              outputs: ['{workspaceRoot}/dist/{projectRoot}'],
+              executor: '@angular-devkit/build-angular:browser',
+              options: {
+                outputPath: 'dist/apps/app',
+                index: 'apps/app/src/index.html',
+                main: 'apps/app/src/main.ts',
+                tsConfig: 'apps/app/tsconfig.app.json',
+              },
+            },
+          },
+        });
+        writeJson(tree, 'apps/app/tsconfig.json', {});
+
+        await convertToRspack(tree, { project: 'app' });
+
+        const updatedProject = readProjectConfiguration(tree, 'app');
+        expect(updatedProject.targets.build).not.toBeDefined();
+      });
+
+      it('should remove the target when the transformed output matches what would be inferred', async () => {
+        const tree = createTreeWithEmptyWorkspace();
+        addProjectConfiguration(tree, 'app', {
+          root: 'apps/app',
+          sourceRoot: 'apps/app/src',
+          projectType: 'application',
+          targets: {
+            build: {
+              outputs: ['{workspaceRoot}/dist/{projectRoot}/browser'],
+              executor: '@angular-devkit/build-angular:browser',
+              options: {
+                outputPath: 'dist/apps/app/browser',
+                index: 'apps/app/src/index.html',
+                main: 'apps/app/src/main.ts',
+                tsConfig: 'apps/app/tsconfig.app.json',
+              },
+            },
+          },
+        });
+        writeJson(tree, 'apps/app/tsconfig.json', {});
+
+        await convertToRspack(tree, { project: 'app' });
+
+        const updatedProject = readProjectConfiguration(tree, 'app');
+        expect(updatedProject.targets.build).not.toBeDefined();
+      });
+
+      it('should keep the target with updated outputs when they would not match what would be inferred', async () => {
+        const tree = createTreeWithEmptyWorkspace();
+        addProjectConfiguration(tree, 'app', {
+          root: 'apps/app',
+          sourceRoot: 'apps/app/src',
+          projectType: 'application',
+          targets: {
+            build: {
+              outputs: [
+                // will be replaced with a explicit output path because the
+                // inferred task won't have an outputPath option
+                '{options.outputPath}',
+                '{workspaceRoot}/some-other-output',
+              ],
+              executor: '@angular-devkit/build-angular:browser',
+              options: {
+                outputPath: 'dist/apps/app/browser',
+                index: 'apps/app/src/index.html',
+                main: 'apps/app/src/main.ts',
+                tsConfig: 'apps/app/tsconfig.app.json',
+              },
+            },
+          },
+        });
+        writeJson(tree, 'apps/app/tsconfig.json', {});
+
+        await convertToRspack(tree, { project: 'app' });
+
+        const updatedProject = readProjectConfiguration(tree, 'app');
+        expect(updatedProject.targets.build).toStrictEqual({
+          outputs: [
+            '{workspaceRoot}/dist/apps/app',
+            '{workspaceRoot}/some-other-output',
+          ],
+        });
+      });
+
+      it('should remove the target when the dependsOn option matches what would be inferred', async () => {
+        const tree = createTreeWithEmptyWorkspace();
+        addProjectConfiguration(tree, 'app', {
+          root: 'apps/app',
+          sourceRoot: 'apps/app/src',
+          projectType: 'application',
+          targets: {
+            build: {
+              dependsOn: ['^build'],
+              executor: '@angular-devkit/build-angular:browser',
+              options: {
+                outputPath: 'dist/apps/app',
+                index: 'apps/app/src/index.html',
+                main: 'apps/app/src/main.ts',
+                tsConfig: 'apps/app/tsconfig.app.json',
+              },
+            },
+          },
+        });
+        writeJson(tree, 'apps/app/tsconfig.json', {});
+
+        await convertToRspack(tree, { project: 'app' });
+
+        const updatedProject = readProjectConfiguration(tree, 'app');
+        expect(updatedProject.targets.build).not.toBeDefined();
+      });
+
+      it('should keep the target with dependsOn when they would not match what would be inferred', async () => {
+        const tree = createTreeWithEmptyWorkspace();
+        addProjectConfiguration(tree, 'app', {
+          root: 'apps/app',
+          sourceRoot: 'apps/app/src',
+          projectType: 'application',
+          targets: {
+            build: {
+              dependsOn: ['pre-build', '^build'],
+              executor: '@angular-devkit/build-angular:browser',
+              options: {
+                outputPath: 'dist/apps/app/browser',
+                index: 'apps/app/src/index.html',
+                main: 'apps/app/src/main.ts',
+                tsConfig: 'apps/app/tsconfig.app.json',
+              },
+            },
+          },
+        });
+        writeJson(tree, 'apps/app/tsconfig.json', {});
+
+        await convertToRspack(tree, { project: 'app' });
+
+        const updatedProject = readProjectConfiguration(tree, 'app');
+        expect(updatedProject.targets.build).toStrictEqual({
+          dependsOn: ['pre-build', '^build'],
+        });
+      });
+
+      it('should remove the target when the syncGenerators option matches what would be inferred', async () => {
+        const tree = createTreeWithEmptyWorkspace();
+        addProjectConfiguration(tree, 'app', {
+          root: 'apps/app',
+          sourceRoot: 'apps/app/src',
+          projectType: 'application',
+          targets: {
+            build: {
+              syncGenerators: ['@nx/js:typescript-sync'],
+              executor: '@angular-devkit/build-angular:browser',
+              options: {
+                outputPath: 'dist/apps/app',
+                index: 'apps/app/src/index.html',
+                main: 'apps/app/src/main.ts',
+                tsConfig: 'apps/app/tsconfig.app.json',
+              },
+            },
+          },
+        });
+        writeJson(tree, 'apps/app/tsconfig.json', {});
+
+        await convertToRspack(tree, { project: 'app' });
+
+        const updatedProject = readProjectConfiguration(tree, 'app');
+        expect(updatedProject.targets.build).not.toBeDefined();
+      });
+
+      it('should keep the target with syncGenerators when they would not match what would be inferred', async () => {
+        const tree = createTreeWithEmptyWorkspace();
+        addProjectConfiguration(tree, 'app', {
+          root: 'apps/app',
+          sourceRoot: 'apps/app/src',
+          projectType: 'application',
+          targets: {
+            build: {
+              syncGenerators: ['@foo/bar:baz'],
+              executor: '@angular-devkit/build-angular:browser',
+              options: {
+                outputPath: 'dist/apps/app/browser',
+                index: 'apps/app/src/index.html',
+                main: 'apps/app/src/main.ts',
+                tsConfig: 'apps/app/tsconfig.app.json',
+              },
+            },
+          },
+        });
+        writeJson(tree, 'apps/app/tsconfig.json', {});
+
+        await convertToRspack(tree, { project: 'app' });
+
+        const updatedProject = readProjectConfiguration(tree, 'app');
+        expect(updatedProject.targets.build).toStrictEqual({
+          syncGenerators: ['@foo/bar:baz', '@nx/js:typescript-sync'],
+        });
+      });
+
+      it('should keep the target with any other extra top-level option that would not be inferred', async () => {
+        const tree = createTreeWithEmptyWorkspace();
+        addProjectConfiguration(tree, 'app', {
+          root: 'apps/app',
+          sourceRoot: 'apps/app/src',
+          projectType: 'application',
+          targets: {
+            build: {
+              parallelism: false,
+              executor: '@angular-devkit/build-angular:browser',
+              options: {
+                outputPath: 'dist/apps/app/browser',
+                index: 'apps/app/src/index.html',
+                main: 'apps/app/src/main.ts',
+                tsConfig: 'apps/app/tsconfig.app.json',
+              },
+            },
+          },
+        });
+        writeJson(tree, 'apps/app/tsconfig.json', {});
+
+        await convertToRspack(tree, { project: 'app' });
+
+        const updatedProject = readProjectConfiguration(tree, 'app');
+        expect(updatedProject.targets.build).toStrictEqual({
+          parallelism: false,
+        });
+      });
+    });
+
+    describe('serve target', () => {
+      it('should remove the target when there are no relevant top-level options', async () => {
+        const tree = createTreeWithEmptyWorkspace();
+        addProjectConfiguration(tree, 'app', {
+          root: 'apps/app',
+          sourceRoot: 'apps/app/src',
+          projectType: 'application',
+          targets: {
+            build: {
+              executor: '@angular-devkit/build-angular:browser',
+              options: {
+                outputPath: 'dist/apps/app',
+                index: 'apps/app/src/index.html',
+                main: 'apps/app/src/main.ts',
+                tsConfig: 'apps/app/tsconfig.app.json',
+              },
+            },
+            serve: {
+              executor: '@angular-devkit/build-angular:dev-server',
+              options: {},
+            },
+          },
+        });
+        writeJson(tree, 'apps/app/tsconfig.json', {});
+
+        await convertToRspack(tree, { project: 'app' });
+
+        const updatedProject = readProjectConfiguration(tree, 'app');
+        expect(updatedProject.targets.serve).not.toBeDefined();
+      });
+
+      it('should remove the target when all the top-level options match what would be inferred', async () => {
+        const tree = createTreeWithEmptyWorkspace();
+        addProjectConfiguration(tree, 'app', {
+          root: 'apps/app',
+          sourceRoot: 'apps/app/src',
+          projectType: 'application',
+          targets: {
+            build: {
+              executor: '@angular-devkit/build-angular:browser',
+              options: {
+                outputPath: 'dist/apps/app',
+                index: 'apps/app/src/index.html',
+                main: 'apps/app/src/main.ts',
+                tsConfig: 'apps/app/tsconfig.app.json',
+              },
+            },
+            serve: {
+              continuous: true,
+              syncGenerators: ['@nx/js:typescript-sync'],
+              executor: '@angular-devkit/build-angular:dev-server',
+              options: {},
+            },
+          },
+        });
+        writeJson(tree, 'apps/app/tsconfig.json', {});
+
+        await convertToRspack(tree, { project: 'app' });
+
+        const updatedProject = readProjectConfiguration(tree, 'app');
+        expect(updatedProject.targets.serve).not.toBeDefined();
+      });
+
+      it('should remove the target when the syncGenerators option matches what would be inferred', async () => {
+        const tree = createTreeWithEmptyWorkspace();
+        addProjectConfiguration(tree, 'app', {
+          root: 'apps/app',
+          sourceRoot: 'apps/app/src',
+          projectType: 'application',
+          targets: {
+            build: {
+              executor: '@angular-devkit/build-angular:browser',
+              options: {
+                outputPath: 'dist/apps/app',
+                index: 'apps/app/src/index.html',
+                main: 'apps/app/src/main.ts',
+                tsConfig: 'apps/app/tsconfig.app.json',
+              },
+            },
+            serve: {
+              syncGenerators: ['@nx/js:typescript-sync'],
+              executor: '@angular-devkit/build-angular:dev-server',
+              options: {},
+            },
+          },
+        });
+        writeJson(tree, 'apps/app/tsconfig.json', {});
+
+        await convertToRspack(tree, { project: 'app' });
+
+        const updatedProject = readProjectConfiguration(tree, 'app');
+        expect(updatedProject.targets.serve).not.toBeDefined();
+      });
+
+      it('should keep the target with syncGenerators when they would not match what would be inferred', async () => {
+        const tree = createTreeWithEmptyWorkspace();
+        addProjectConfiguration(tree, 'app', {
+          root: 'apps/app',
+          sourceRoot: 'apps/app/src',
+          projectType: 'application',
+          targets: {
+            build: {
+              executor: '@angular-devkit/build-angular:browser',
+              options: {
+                outputPath: 'dist/apps/app/browser',
+                index: 'apps/app/src/index.html',
+                main: 'apps/app/src/main.ts',
+                tsConfig: 'apps/app/tsconfig.app.json',
+              },
+            },
+            serve: {
+              syncGenerators: ['@foo/bar:baz'],
+              executor: '@angular-devkit/build-angular:dev-server',
+              options: {},
+            },
+          },
+        });
+        writeJson(tree, 'apps/app/tsconfig.json', {});
+
+        await convertToRspack(tree, { project: 'app' });
+
+        const updatedProject = readProjectConfiguration(tree, 'app');
+        expect(updatedProject.targets.serve).toStrictEqual({
+          syncGenerators: ['@foo/bar:baz', '@nx/js:typescript-sync'],
+        });
+      });
+
+      it('should keep the target with any other extra top-level option that would not be inferred', async () => {
+        const tree = createTreeWithEmptyWorkspace();
+        addProjectConfiguration(tree, 'app', {
+          root: 'apps/app',
+          sourceRoot: 'apps/app/src',
+          projectType: 'application',
+          targets: {
+            build: {
+              executor: '@angular-devkit/build-angular:browser',
+              options: {
+                outputPath: 'dist/apps/app/browser',
+                index: 'apps/app/src/index.html',
+                main: 'apps/app/src/main.ts',
+                tsConfig: 'apps/app/tsconfig.app.json',
+              },
+            },
+            serve: {
+              parallelism: false,
+              executor: '@angular-devkit/build-angular:dev-server',
+              options: {},
+            },
+          },
+        });
+        writeJson(tree, 'apps/app/tsconfig.json', {});
+
+        await convertToRspack(tree, { project: 'app' });
+
+        const updatedProject = readProjectConfiguration(tree, 'app');
+        expect(updatedProject.targets.serve).toStrictEqual({
+          parallelism: false,
+        });
+      });
+    });
+  });
 });

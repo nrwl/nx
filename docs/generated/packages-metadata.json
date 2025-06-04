@@ -2849,7 +2849,18 @@
         "type": "generator"
       }
     ],
-    "migrations": [],
+    "migrations": [
+      {
+        "description": "",
+        "file": "generated/packages/nest/migrations/21.2.0-beta.2-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-beta.2-package-updates",
+        "version": "21.2.0-beta.2",
+        "originalFilePath": "/packages/nest",
+        "path": "nest/migrations/21.2.0-beta.2-package-updates",
+        "type": "migration"
+      }
+    ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "nest",
     "packageName": "@nx/nest",

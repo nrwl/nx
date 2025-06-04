@@ -5,6 +5,7 @@ authors: ['Victor Savkin']
 tags: ['ai', 'development', 'productivity', 'best-practices']
 cover_image: /blog/images/articles/bg-practical-ai-guide-part-1.avif
 description: 'Learn how to effectively use AI coding assistants beyond simple prompts. Discover proven workflows, best practices, and strategies that transform AI from a novelty into a powerful development multiplier.'
+pinned: true
 ---
 
 > _"Tools amplify your talent. The better your skills, the better the tools serve you."_ — Andrew Hunt, The Pragmatic Programmer

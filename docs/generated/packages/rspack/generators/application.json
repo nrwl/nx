@@ -7,6 +7,7 @@
     "title": "Application generator for React + rspack",
     "type": "object",
     "description": "React + Rspack application generator.",
+    "x-deprecated": "This generator will be removed in Nx 22. Please use the equivalent generator for your application type instead.",
     "examples": [
       {
         "command": "nx g app myorg/myapp",
@@ -90,6 +91,7 @@
   "aliases": ["app"],
   "x-type": "application",
   "description": "React application generator.",
+  "x-deprecated": "This generator will be removed in Nx 22. Please use the equivalent generator for your application type instead.",
   "implementation": "/packages/rspack/src/generators/application/application.ts",
   "hidden": false,
   "path": "/packages/rspack/src/generators/application/schema.json",
