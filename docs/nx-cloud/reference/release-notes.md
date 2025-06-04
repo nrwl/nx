@@ -6,9 +6,6 @@
   - See [configuration details](https://github.com/nrwl/nx-cloud-helm/blob/main/EXTERNAL-RESOURCE-CLASSES.md)
 - Feat: Flaky task retry configuration
   - Configure in the workspace settings how Nx Cloud should handle flaky tasks
-- Feat: DTE supports non-cacheable tasks
-  - Such as `deploy` tasks which have historically been allowed to run only on the main job
-  - Activate by setting `NX_ALLOW_NON_CACHEABLE_DTE=true` on both main job and agents
 - Feat: Full GitLab integration
   - Allows automatic members sync to your Nx Cloud workspace
 - Feat: Agent logs timestamps and full-screen mode
