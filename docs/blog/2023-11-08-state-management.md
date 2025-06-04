@@ -706,8 +706,8 @@ Here is a simple app that uses TanStack Query and Redux for state management. Th
 Nx is a powerful monorepo tool. Together with Nx and these 2 state management tools, it will be very easy to scale up any app.
 
 - TanStack Query site: [https://tanstack.com/query/latest](https://tanstack.com/query/latest)
-- Official @nx/expo plugin: [/nx-api/expo](/nx-api/expo)
-- Official @nx/react-native plugin: [/nx-api/react-native](/nx-api/react-native)
+- Official @nx/expo plugin: [/technologies/react/expo](/technologies/react/expo/api)
+- Official @nx/react-native plugin: [/technologies/react/react-native](/technologies/react/react-native/api)
 
 ---
 

@@ -83,13 +83,11 @@ export function generateManifests(workspace: string): Promise<void[]> {
    * Packages are not Documents and need to be handled in a custom way.
    * @type {{id: string, records: Record<string, ProcessedPackageMetadata>}}
    */
-  const packagesManifest = createPackagesManifest(packages);
   const newPackagesManifest = createNewPackagesManifest(packages);
 
   /**
    * Add the packages manifest to the manifest collection for simplicity.
    */
-  manifests.push(packagesManifest);
   manifests.push(newPackagesManifest);
 
   /**
@@ -113,21 +111,6 @@ export function generateManifests(workspace: string): Promise<void[]> {
     if (menu.id !== 'nx') return;
     insertApiDocs(menu.menu, newPackagesManifest);
   });
-
-  /**
-   * Creating packages menu with custom package logic.
-   * @type {{id: string, menu: MenuItem[]}}
-   */
-  const packagesMenu: {
-    id: string;
-    menu: MenuItem[];
-  } = createPackagesMenu(newPackagesManifest);
-
-  /**
-   * Add the packages menu to the main menu collection for simplicity.
-   */
-  menus.push(packagesMenu);
-  menus.push(createPackagesMenu(packagesManifest));
 
   /**
    * We can easily get all associated existing tags from each manifest.
@@ -165,7 +148,7 @@ export function generateManifests(workspace: string): Promise<void[]> {
   fileGenerationPromises.push(
     generateIndexMarkdownFile(
       resolve(documentationPath, `shared`, `reference`, `sitemap.md`),
-      menus.concat(createPackagesMenu(packagesManifest))
+      menus
     )
   );
 
@@ -225,86 +208,6 @@ function generateTags(manifests: Manifest[]) {
   });
 
   return tags;
-}
-
-// TODO(docs): Once we move API docs and set up redirect rules, we no longer need this menu
-function createPackagesMenu(packages: PackageManifest): {
-  id: string;
-  menu: MenuItem[];
-} {
-  const packagesMenu: MenuItem[] = Object.values(packages.records).map((p) => {
-    const item: MenuItem = {
-      id: p.name,
-      path: '/nx-api/' + p.name,
-      name: p.name,
-      children: [],
-      isExternal: false,
-      disableCollapsible: false,
-    };
-
-    if (!!Object.values(p.documents).length) {
-      // Might need to remove the path set in the "additional api resources" items
-      item.children.push({
-        id: 'documents',
-        path: '/' + ['nx-api', p.name, 'documents'].join('/'),
-        name: 'documents',
-        children: Object.values(p.documents).map((d) =>
-          menuItemRecurseOperations(d)
-        ),
-        isExternal: false,
-        disableCollapsible: false,
-      });
-    }
-
-    if (!!Object.values(p.executors).length) {
-      item.children.push({
-        id: 'executors',
-        path: '/' + ['nx-api', p.name, 'executors'].join('/'),
-        name: 'executors',
-        children: Object.values(p.executors).map((e) => ({
-          id: e.name,
-          path: '/' + ['nx-api', p.name, 'executors', e.name].join('/'),
-          name: e.name,
-          children: [],
-          isExternal: false,
-          disableCollapsible: false,
-        })),
-        isExternal: false,
-        disableCollapsible: false,
-      });
-    }
-
-    if (!!Object.values(p.generators).length) {
-      item.children.push({
-        id: 'generators',
-        path: '/' + ['nx-api', p.name, 'generators'].join('/'),
-        name: 'generators',
-        children: Object.values(p.generators).map((g) => ({
-          id: g.name,
-          path: '/' + ['nx-api', p.name, 'generators', g.name].join('/'),
-          name: g.name,
-          children: [],
-          isExternal: false,
-          disableCollapsible: false,
-        })),
-        isExternal: false,
-        disableCollapsible: false,
-      });
-    }
-
-    if (!!Object.values(p.migrations).length) {
-      item.children.push({
-        id: 'migrations',
-        path: '/' + ['nx-api', p.name, 'migrations'].join('/'),
-        name: 'migrations',
-        children: [],
-        isExternal: false,
-        disableCollapsible: false,
-      });
-    }
-    return item;
-  });
-  return { id: 'nx-api', menu: packagesMenu };
 }
 
 function getDocumentMenus(manifests: DocumentManifest[]): {
@@ -417,61 +320,6 @@ function createNewPackagesManifest(packages: PackageMetadata[]): {
         'path'
       ),
       path: data.pagePath,
-    };
-  });
-
-  return packagesManifest;
-}
-
-// TODO(docs): remove this function one smarter files are all updated to not reference and nx-api
-function createPackagesManifest(packages: PackageMetadata[]): {
-  id: string;
-  records: Record<string, ProcessedPackageMetadata>;
-} {
-  const packagesManifest: {
-    id: string;
-    records: Record<string, ProcessedPackageMetadata>;
-  } = { id: 'nx-api', records: {} };
-
-  packages.forEach((p) => {
-    packagesManifest.records[p.name] = {
-      githubRoot: p.githubRoot,
-      name: p.name,
-      packageName: p.packageName,
-      description: p.description,
-      documents: convertToDictionary(
-        p.documents.map((d) =>
-          documentRecurseOperations(
-            d,
-            createDocumentMetadata({ id: p.name, path: 'nx-api/' })
-          )
-        ),
-        'path'
-      ),
-      root: p.root,
-      source: p.source,
-      executors: convertToDictionary(
-        p.executors.map((e) => ({
-          ...e,
-          path: generatePath({ id: e.name, path: e.path }, 'nx-api'),
-        })),
-        'path'
-      ),
-      generators: convertToDictionary(
-        p.generators.map((g) => ({
-          ...g,
-          path: generatePath({ id: g.name, path: g.path }, 'nx-api'),
-        })),
-        'path'
-      ),
-      migrations: convertToDictionary(
-        p.migrations.map((g) => ({
-          ...g,
-          path: generatePath({ id: g.name, path: g.path }, 'nx-api'),
-        })),
-        'path'
-      ),
-      path: generatePath({ id: p.name, path: '' }, 'nx-api'),
     };
   });
 

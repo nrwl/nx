@@ -70,7 +70,7 @@ Now `my-sync-generator` will be executed any time the `nx sync` command is run.
 
 ## Create a Task Sync Generator that Uses the Project Graph
 
-Task sync generators are run before a particular task and are used to ensure that the files are in the correct state for the task to be run. The primary use case for this is to set up configuration files based on the project graph. To read from the project graph, use the [`createProjectGraphAsync`](/nx-api/devkit/documents/createProjectGraphAsync) from the `@nx/devkit` package. Create a generator in the same way as a global sync generator and then read the project graph like this:
+Task sync generators are run before a particular task and are used to ensure that the files are in the correct state for the task to be run. The primary use case for this is to set up configuration files based on the project graph. To read from the project graph, use the [`createProjectGraphAsync`](/reference/core-api/devkit/documents/createProjectGraphAsync) from the `@nx/devkit` package. Create a generator in the same way as a global sync generator and then read the project graph like this:
 
 ```ts {% fileName="tools/my-plugin/src/generators/my-sync-generator/my-sync-generator.ts" %}
 import { Tree, createProjectGraphAsync } from '@nx/devkit';

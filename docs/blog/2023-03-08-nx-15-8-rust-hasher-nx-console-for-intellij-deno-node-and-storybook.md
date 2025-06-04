@@ -137,7 +137,7 @@ Read all the details [on our blog post](/blog/expanding-nx-console-to-jetbrains-
 
 {% youtube src="https://youtu.be/JJ12zKedwIs" /%}
 
-Nx Console has proven a highly valuable tool for exploring Nx generators. Especially if you cannot recall all the various parameters, you can possibly pass. And sure, you could always pass the `--help` or browse [the docs](/nx-api/react/generators/library), but it is just less convenient.
+Nx Console has proven a highly valuable tool for exploring Nx generators. Especially if you cannot recall all the various parameters, you can possibly pass. And sure, you could always pass the `--help` or browse [the docs](/technologies/react/api/generators/library), but it is just less convenient.
 
 ![](/blog/images/2023-03-08/xFSreZ1G_zifIsdf.avif)
 
@@ -164,7 +164,7 @@ Read all about it [in the doc about Customizing Generator Options](/extending-nx
 
 ## Modular Node Applications
 
-Nx has had Node backend support since the beginning, where you could add an [ExpressJS](/nx-api/express) or [Nest.js](/nx-api/nest) based application to your monorepo. This is a powerful approach as it allows you to colocate your frontend and backend code, which helps share code and, in particular, TypeScript types for your APIs!!
+Nx has had Node backend support since the beginning, where you could add an [ExpressJS](/technologies/node/express/api) or [Nest.js](/technologies/node/nest/api) based application to your monorepo. This is a powerful approach as it allows you to colocate your frontend and backend code, which helps share code and, in particular, TypeScript types for your APIs!!
 
 In [Nx 15.7](/blog/nx-15-7-node-support-angular-lts-lockfile-pruning), we then announced [Nx Standalone Projects](https://youtu.be/qEaVzh-oBBc) support for Node. This allows to develop a Node backend in isolation but still leverages all the features from Nx in terms of code generators, automated migrations, and speed features such as [affected commands](/ci/features/affected), [caching](/concepts/how-caching-works), and [optimized CI setups](/ci/features/distribute-task-execution).
 

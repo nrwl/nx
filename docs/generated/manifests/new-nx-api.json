@@ -399,66 +399,6 @@
       }
     },
     "migrations": {
-      "/technologies/angular/api/migrations/update-angular-cli-version-20-0-0-rc-3": {
-        "description": "Update the @angular/cli package version to 20.0.0-rc.3.",
-        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-0-0-rc-3.json",
-        "hidden": false,
-        "name": "update-angular-cli-version-20-0-0-rc-3",
-        "version": "21.2.0-beta.0",
-        "originalFilePath": "/packages/angular",
-        "path": "/technologies/angular/api/migrations/update-angular-cli-version-20-0-0-rc-3",
-        "type": "migration"
-      },
-      "/technologies/angular/api/migrations/migrate-provide-server-rendering-import": {
-        "description": "Migrate imports of `provideServerRendering` from `@angular/platform-server` to `@angular/ssr`.",
-        "file": "generated/packages/angular/migrations/migrate-provide-server-rendering-import.json",
-        "hidden": false,
-        "name": "migrate-provide-server-rendering-import",
-        "version": "21.2.0-beta.0",
-        "originalFilePath": "/packages/angular",
-        "path": "/technologies/angular/api/migrations/migrate-provide-server-rendering-import",
-        "type": "migration"
-      },
-      "/technologies/angular/api/migrations/replace-provide-server-routing": {
-        "description": "Replace `provideServerRouting` with `provideServerRendering` using `withRoutes`.",
-        "file": "generated/packages/angular/migrations/replace-provide-server-routing.json",
-        "hidden": false,
-        "name": "replace-provide-server-routing",
-        "version": "21.2.0-beta.0",
-        "originalFilePath": "/packages/angular",
-        "path": "/technologies/angular/api/migrations/replace-provide-server-routing",
-        "type": "migration"
-      },
-      "/technologies/angular/api/migrations/set-generator-defaults-for-previous-style-guide": {
-        "description": "Update the generator defaults to maintain the previous style guide behavior.",
-        "file": "generated/packages/angular/migrations/set-generator-defaults-for-previous-style-guide.json",
-        "hidden": false,
-        "name": "set-generator-defaults-for-previous-style-guide",
-        "version": "21.2.0-beta.0",
-        "originalFilePath": "/packages/angular",
-        "path": "/technologies/angular/api/migrations/set-generator-defaults-for-previous-style-guide",
-        "type": "migration"
-      },
-      "/technologies/angular/api/migrations/update-module-resolution": {
-        "description": "Update 'moduleResolution' to 'bundler' in TypeScript configurations. You can read more about this here: https://www.typescriptlang.org/tsconfig/#moduleResolution.",
-        "file": "generated/packages/angular/migrations/update-module-resolution.json",
-        "hidden": false,
-        "name": "update-module-resolution",
-        "version": "21.2.0-beta.0",
-        "originalFilePath": "/packages/angular",
-        "path": "/technologies/angular/api/migrations/update-module-resolution",
-        "type": "migration"
-      },
-      "/technologies/angular/api/migrations/21.2.0-package-updates": {
-        "description": "",
-        "file": "generated/packages/angular/migrations/21.2.0-package-updates.json",
-        "hidden": false,
-        "name": "21.2.0-package-updates",
-        "version": "21.2.0-beta.0",
-        "originalFilePath": "/packages/angular",
-        "path": "/technologies/angular/api/migrations/21.2.0-package-updates",
-        "type": "migration"
-      },
       "/technologies/angular/api/migrations/21.1.0-package-updates": {
         "description": "",
         "file": "generated/packages/angular/migrations/21.1.0-package-updates.json",
@@ -1628,26 +1568,6 @@
       }
     },
     "migrations": {
-      "/technologies/eslint/api/migrations/21.2.0-typescript-eslint-package-updates": {
-        "description": "",
-        "file": "generated/packages/eslint/migrations/21.2.0-typescript-eslint-package-updates.json",
-        "hidden": false,
-        "name": "21.2.0-typescript-eslint-package-updates",
-        "version": "21.2.0-beta.0",
-        "originalFilePath": "/packages/eslint",
-        "path": "/technologies/eslint/api/migrations/21.2.0-typescript-eslint-package-updates",
-        "type": "migration"
-      },
-      "/technologies/eslint/api/migrations/21.2.0-@typescript-eslint-package-updates": {
-        "description": "",
-        "file": "generated/packages/eslint/migrations/21.2.0-@typescript-eslint-package-updates.json",
-        "hidden": false,
-        "name": "21.2.0-@typescript-eslint-package-updates",
-        "version": "21.2.0-beta.0",
-        "originalFilePath": "/packages/eslint",
-        "path": "/technologies/eslint/api/migrations/21.2.0-@typescript-eslint-package-updates",
-        "type": "migration"
-      },
       "/technologies/eslint/api/migrations/20.7.0-package-updates": {
         "description": "",
         "file": "generated/packages/eslint/migrations/20.7.0-package-updates.json",
@@ -2036,16 +1956,6 @@
       }
     },
     "migrations": {
-      "/technologies/java/api/migrations/change-plugin-version-0-1-0": {
-        "description": "Change dev.nx.gradle.project-graph to version 0.1.0 in build file",
-        "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-0.json",
-        "hidden": false,
-        "name": "change-plugin-version-0-1-0",
-        "version": "21.1.2-beta.1",
-        "originalFilePath": "/packages/gradle",
-        "path": "/technologies/java/api/migrations/change-plugin-version-0-1-0",
-        "type": "migration"
-      },
       "/technologies/java/api/migrations/change-ciTargetName-to-ciTestTargetName": {
         "description": "Change @nx/gradle option from ciTargetName to ciTestTargetName",
         "file": "generated/packages/gradle/migrations/change-ciTargetName-to-ciTestTargetName.json",
@@ -2331,16 +2241,6 @@
       }
     },
     "migrations": {
-      "/technologies/typescript/api/migrations/21.2.0-package-updates": {
-        "description": "",
-        "file": "generated/packages/js/migrations/21.2.0-package-updates.json",
-        "hidden": false,
-        "name": "21.2.0-package-updates",
-        "version": "21.2.0-beta.0",
-        "originalFilePath": "/packages/js",
-        "path": "/technologies/typescript/api/migrations/21.2.0-package-updates",
-        "type": "migration"
-      },
       "/technologies/typescript/api/migrations/20.7.1-beta.0-package-updates": {
         "description": "",
         "file": "generated/packages/js/migrations/20.7.1-beta.0-package-updates.json",
@@ -2622,7 +2522,7 @@
       }
     },
     "migrations": {},
-    "path": "/technologies/nest/nest"
+    "path": "/technologies/node/nest/api"
   },
   "next": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -4870,16 +4770,6 @@
       }
     },
     "migrations": {
-      "/technologies/build-tools/vite/api/migrations/21.1.2-package-updates": {
-        "description": "",
-        "file": "generated/packages/vite/migrations/21.1.2-package-updates.json",
-        "hidden": false,
-        "name": "21.1.2-package-updates",
-        "version": "21.1.2-beta.0",
-        "originalFilePath": "/packages/vite",
-        "path": "/technologies/build-tools/vite/api/migrations/21.1.2-package-updates",
-        "type": "migration"
-      },
       "/technologies/build-tools/vite/api/migrations/20.7.1-package-updates": {
         "description": "",
         "file": "generated/packages/vite/migrations/20.7.1-package-updates.json",
@@ -5396,16 +5286,6 @@
       }
     },
     "migrations": {
-      "/reference/core-api/workspace/migrations/21.2.0-package-updates": {
-        "description": "",
-        "file": "generated/packages/workspace/migrations/21.2.0-package-updates.json",
-        "hidden": false,
-        "name": "21.2.0-package-updates",
-        "version": "21.2.0-beta.0",
-        "originalFilePath": "/packages/workspace",
-        "path": "/reference/core-api/workspace/migrations/21.2.0-package-updates",
-        "type": "migration"
-      },
       "/reference/core-api/workspace/migrations/20.4.0-package-updates": {
         "description": "",
         "file": "generated/packages/workspace/migrations/20.4.0-package-updates.json",
@@ -5444,19 +5324,7 @@
     "name": "azure-cache",
     "packageName": "@nx/azure-cache",
     "description": "A Nx plugin which provides a Nx cache which can be self hosted on Azure Blob Storage.",
-    "documents": {
-      "/reference/core-api/azure-cache/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx plugin which provides a Nx cache which can be self hosted on Azure Blob Storage.",
-        "file": "external-generated/packages/azure-cache/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/azure-cache/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/azure-cache/azure-cache-plugin"
-      }
-    },
+    "documents": {},
     "root": "/libs/nx-packages/azure-cache",
     "source": "/libs/nx-packages/azure-cache/src",
     "executors": {},
@@ -5525,19 +5393,7 @@
     "name": "owners",
     "packageName": "@nx/owners",
     "description": "A Nx plugin which provides the ability to configure and maintain codeowners for projects in Nx workspaces.",
-    "documents": {
-      "/reference/core-api/owners/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx plugin which provides the ability to configure and maintain codeowners for projects in Nx workspaces.",
-        "file": "external-generated/packages/owners/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/owners/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/owners/owners-plugin"
-      }
-    },
+    "documents": {},
     "root": "/libs/nx-packages/owners",
     "source": "/libs/nx-packages/owners/src",
     "executors": {},
@@ -5569,19 +5425,7 @@
     "name": "gcs-cache",
     "packageName": "@nx/gcs-cache",
     "description": "A Nx plugin which provides a Nx cache which can be self hosted on Google Cloud Storage.",
-    "documents": {
-      "/reference/core-api/gcs-cache/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx plugin which provides a Nx cache which can be self hosted on Google Cloud Storage.",
-        "file": "external-generated/packages/gcs-cache/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/gcs-cache/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/gcs-cache/gcs-cache-plugin"
-      }
-    },
+    "documents": {},
     "root": "/libs/nx-packages/gcs-cache",
     "source": "/libs/nx-packages/gcs-cache/src",
     "executors": {},
@@ -5594,19 +5438,7 @@
     "name": "s3-cache",
     "packageName": "@nx/s3-cache",
     "description": "A Nx plugin which provides a Nx cache which can be self hosted on Amazon S3.",
-    "documents": {
-      "/reference/core-api/s3-cache/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx plugin which provides a Nx cache which can be self hosted on Amazon S3.",
-        "file": "external-generated/packages/s3-cache/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/s3-cache/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/s3-cache/s3-cache-plugin"
-      }
-    },
+    "documents": {},
     "root": "/libs/nx-packages/s3-cache",
     "source": "/libs/nx-packages/s3-cache/src",
     "executors": {},
@@ -5619,19 +5451,7 @@
     "name": "shared-fs-cache",
     "packageName": "@nx/shared-fs-cache",
     "description": "A Nx plugin to enable you to use a shared file system directory",
-    "documents": {
-      "/reference/core-api/shared-fs-cache/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx plugin to enable you to use a shared file system directory",
-        "file": "external-generated/packages/shared-fs-cache/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/shared-fs-cache/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/shared-fs-cache/shared-fs-cache-plugin"
-      }
-    },
+    "documents": {},
     "root": "/libs/nx-packages/shared-fs-cache",
     "source": "/libs/nx-packages/shared-fs-cache/src",
     "executors": {},

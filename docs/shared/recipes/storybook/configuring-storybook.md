@@ -28,6 +28,6 @@ If you need to create a root Storybook configuration file, you can do so by crea
 
 ## Read our guides for Configuring Storybook
 
-You can read all our guides for configuring Storybook in our [Storybook documents page](/nx-api/storybook/documents).
+You can read all our guides for configuring Storybook in our [Storybook documents page](/technologies/test-tools/storybook/recipes).
 
 Please also make sure to read our [Using Storybook in a Nx workspace - Best practices](/technologies/test-tools/storybook/recipes/best-practices) guide, where you can find some best practices for using Storybook in a Nx workspace.

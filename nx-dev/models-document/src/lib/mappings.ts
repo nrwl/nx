@@ -116,8 +116,6 @@ export const pkgToGeneratedApiDocs: Record<
   },
   owners: {
     pagePath: '/reference/core-api/owners',
-    // TODO(docs): move these to guides and remove this
-    includeDocuments: true,
   },
   conformance: {
     pagePath: '/reference/core-api/conformance',
@@ -126,23 +124,15 @@ export const pkgToGeneratedApiDocs: Record<
   },
   'azure-cache': {
     pagePath: '/reference/core-api/azure-cache',
-    // TODO(docs): move these to guides and remove this
-    includeDocuments: true,
   },
   'gcs-cache': {
     pagePath: '/reference/core-api/gcs-cache',
-    // TODO(docs): move these to guides and remove this
-    includeDocuments: true,
   },
   's3-cache': {
     pagePath: '/reference/core-api/s3-cache',
-    // TODO(docs): move these to guides and remove this
-    includeDocuments: true,
   },
   'shared-fs-cache': {
     pagePath: '/reference/core-api/shared-fs-cache',
-    // TODO(docs): move these to guides and remove this
-    includeDocuments: true,
   },
   devkit: {
     pagePath: '/reference/core-api/devkit',

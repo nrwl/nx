@@ -76,7 +76,7 @@ The `buildTargetName`, `previewTargetName`, `serveTargetName` and `serveStaticTa
 
 ## Generate a new project using Webpack
 
-You can generate a [React](/nx-api/react) application or a [Web](/nx-api/web) application that uses Webpack in an existing Nx workspace. The [`@nx/react:app`](/nx-api/react/generators/application), [`@nx/node:app`](/nx-api/node/generators/application) and [`@nx/web:app`](/nx-api/web/generators/application) generators accept the `bundler` option, where you can pass `webpack`. This will generate a new application configured to use Webpack, and it will also install all the necessary dependencies, including the `@nx/webpack` plugin.
+You can generate a [React](/technologies/react/api) application or a [Web](/reference/core-api/web) application that uses Webpack in an existing Nx workspace. The [`@nx/react:app`](/technologies/react/api/generators/application), [`@nx/node:app`](/technologies/node/api/generators/application) and [`@nx/web:app`](/reference/core-api/web/generators/application) generators accept the `bundler` option, where you can pass `webpack`. This will generate a new application configured to use Webpack, and it will also install all the necessary dependencies, including the `@nx/webpack` plugin.
 
 To generate a React application using Webpack, run the following:
 

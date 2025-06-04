@@ -18,7 +18,7 @@ import mapJson from '../../../../docs/map.json' assert { type: 'json' };
 import manifestsCI from '../../../../docs/generated/manifests/ci.json' assert { type: 'json' };
 import manifestsExtending from '../../../../docs/generated/manifests/extending-nx.json' assert { type: 'json' };
 import manifestsNx from '../../../../docs/generated/manifests/nx.json' assert { type: 'json' };
-import manifestsPackages from '../../../../docs/generated/manifests/nx-api.json' assert { type: 'json' };
+import manifestsPackages from '../../../../docs/generated/manifests/new-nx-api.json' assert { type: 'json' };
 import manifestsTags from '../../../../docs/generated/manifests/tags.json' assert { type: 'json' };
 import communityPlugins from '../../../../community/approved-plugins.json' assert { type: 'json' };
 
@@ -391,6 +391,7 @@ function delay(ms: number) {
 
 function getAllFilesFromMapJson(doc): WalkEntry[] {
   const files: WalkEntry[] = [];
+
   function traverse(itemList) {
     for (const item of itemList) {
       if (item.file && item.file.length > 0) {
