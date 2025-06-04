@@ -3,7 +3,7 @@
 # Build the docker image with `npx nx docker-build <%= project %>`.
 # Tip: Modify "docker-build" options in project.json to change docker build args.
 #
-# Run the container with `docker run -p 3000:3000 -t <%= project %>`.
+# Run the container with `docker run -p 3000:3000 -t <%= sanitizedProjectName %>`.
 FROM docker.io/node:lts-alpine
 
 ENV HOST=0.0.0.0
@@ -11,14 +11,15 @@ ENV PORT=3000
 
 WORKDIR /app
 
-RUN addgroup --system <%= project %> && \
-          adduser --system -G <%= project %> <%= project %>
+RUN addgroup --system <%= sanitizedProjectName %> && \
+          adduser --system -G <%= sanitizedProjectName %> <%= sanitizedProjectName %>
 
-COPY <%= buildLocation %> <%= project %>/
-RUN chown -R <%= project %>:<%= project %> .
+COPY <%= buildLocation %> <%= sanitizedProjectName %>/
+COPY <%= projectPath %>/package.json <%= sanitizedProjectName %>/
+RUN chown -R <%= sanitizedProjectName %>:<%= sanitizedProjectName %> .
 
 # You can remove this install step if you build with `--bundle` option.
 # The bundled output will include external dependencies.
-RUN npm --prefix <%= project %> --omit=dev -f install
+RUN npm --prefix <%= sanitizedProjectName %> --omit=dev -f install
 
-CMD [ "node", "<%= project %>" ]
+CMD [ "node", "<%= sanitizedProjectName %>" ]
