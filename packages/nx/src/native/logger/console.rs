@@ -1,8 +1,8 @@
 use crate::native::logger::enable_logger;
-use tracing::{error, debug};
+use tracing::{debug, error};
 
 #[napi]
-pub fn log_info(message: String) {
+pub fn log_debug(message: String) {
     enable_logger();
     debug!(message);
 }

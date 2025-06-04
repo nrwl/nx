@@ -29,7 +29,7 @@ process.on('exit', (...args) => {
   }
 });
 
-function main() {
+async function main() {
   if (
     process.argv[2] !== 'report' &&
     process.argv[2] !== '--version' &&
@@ -102,7 +102,7 @@ function main() {
 
     // this file is already in the local workspace
     if (isLocalInstall) {
-      initLocal(workspace);
+      await initLocal(workspace);
     } else {
       // Nx is being run from globally installed CLI - hand off to the local
       warnIfUsingOutdatedGlobalInstall(GLOBAL_NX_VERSION, LOCAL_NX_VERSION);
@@ -286,4 +286,7 @@ process.on('exit', () => {
   removeDbConnections();
 });
 
-main();
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
