@@ -37,9 +37,9 @@ jobs:
             node_version: 22
           # - os: macos-latest
           #   node_version: 23
-          # - os: windows-latest
+          # - os: windows-latest TODO (emily): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
             # node_version: 22
-          # - os: windows-latest
+          # - os: windows-latest TODO (emily): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
           #   node_version: 23
 
     name: Cache install (${{ matrix.os }}, node v${{ matrix.node_version }})

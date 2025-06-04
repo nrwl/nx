@@ -1,16 +1,9 @@
 import * as fs from 'fs';
+import { MatrixItem } from './process-matrix';
 
-interface MatrixResult {
-  project: string;
-  codeowners: string;
-  node_version: number | string;
-  package_manager: string;
-  os: string;
-  os_name: string;
-  os_timeout: number;
+interface MatrixResult extends MatrixItem {
   status: 'success' | 'failure' | 'cancelled';
   duration: number;
-  isGolden?: boolean;
 }
 
 interface ProcessedResults {
@@ -38,7 +31,7 @@ function humanizeDuration(num: number): string {
 
 function processResults(combined: MatrixResult[]): ProcessedResults {
   const failedProjects = combined.filter(c => c.status === 'failure').sort((a, b) => a.project.localeCompare(b.project));
-  const failedGoldenProjects = failedProjects.filter(c => c.isGolden);
+  const failedGoldenProjects = failedProjects.filter(c => c.is_golden);
   const hasGoldenFailures = failedGoldenProjects.length > 0;
   const codeowners = new Set<string>();
   failedGoldenProjects.forEach(c => codeowners.add(c.codeowners));
@@ -63,7 +56,7 @@ function processResults(combined: MatrixResult[]): ProcessedResults {
     result += '\n✅ **Golden Tests: All Passed!**';
   }
 
-  const failedRegularProjects = failedProjects.filter(c => !c.isGolden);
+  const failedRegularProjects = failedProjects.filter(c => !c.is_golden);
   if (failedRegularProjects.length > 0) {
     if (failedGoldenProjects.length > 0 || result.length > 0) result += '\n\n';
     result += `
@@ -170,37 +163,18 @@ function setOutput(key: string, value: string) {
   }
 }
 
-// Main execution
-if (require.main === module) {
-  try {
-    const combinedInput = process.argv[2]
-      ? process.argv[2]
-      : fs.readFileSync(0, 'utf-8').trim();
+try {
+  const combinedInput = process.argv[2]
+    ? process.argv[2]
+    : fs.readFileSync(0, 'utf-8').trim();
 
-    const combined: MatrixResult[] = JSON.parse(combinedInput);
-    const results = processResults(combined);
+  const combined: MatrixResult[] = JSON.parse(combinedInput);
+  const results = processResults(combined);
 
-    // Debug logging
-    console.log('\n=== DEBUG OUTPUTS ===');
-    console.log('has_golden_failures:', results.has_golden_failures);
-    console.log('codeowners:', results.codeowners);
-    console.log('Failed projects count:', combined.filter(c => c.status === 'failure').length);
-    console.log('Golden failed projects count:', combined.filter(c => c.status === 'failure' && c.isGolden).length);
-
-    Object.entries(results).forEach(([key, value]) => {
-      setOutput(key, value);
-    });
-
-    console.log('\n=== Failed Projects ===');
-    console.log(results.slack_message);
-    console.log('\n=== Project Duration Report ===');
-    console.log(results.slack_proj_duration);
-    console.log('\n=== Package Manager Duration Report ===');
-    console.log(results.slack_pm_duration);
-  } catch (error) {
-    console.error('Error processing results:', error);
-    process.exit(1);
-  }
+  Object.entries(results).forEach(([key, value]) => {
+    setOutput(key, value);
+  });
+} catch (error) {
+  console.error('Error processing results:', error);
+  process.exit(1);
 }
-
-export { processResults, MatrixResult, ProcessedResults };
