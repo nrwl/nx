@@ -5815,23 +5815,6 @@
                     "disableCollapsible": false
                   },
                   {
-                    "id": "documents",
-                    "path": "/reference/core-api/owners/documents",
-                    "name": "documents",
-                    "children": [
-                      {
-                        "id": "Overview",
-                        "path": "/reference/core-api/owners/documents/overview",
-                        "name": "Overview",
-                        "children": [],
-                        "isExternal": false,
-                        "disableCollapsible": false
-                      }
-                    ],
-                    "isExternal": false,
-                    "disableCollapsible": false
-                  },
-                  {
                     "id": "generators",
                     "path": "/reference/core-api/owners/generators",
                     "name": "generators",
@@ -5879,31 +5862,6 @@
                     "id": "create-conformance-rule",
                     "isExternal": false,
                     "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "id": "documents",
-                    "path": "/reference/core-api/conformance/documents",
-                    "name": "documents",
-                    "children": [
-                      {
-                        "id": "Overview",
-                        "path": "/reference/core-api/conformance/documents/overview",
-                        "name": "Overview",
-                        "children": [],
-                        "isExternal": false,
-                        "disableCollapsible": false
-                      },
-                      {
-                        "id": "Create a Conformance Rule",
-                        "path": "/reference/core-api/conformance/documents/create-conformance-rule",
-                        "name": "Create a Conformance Rule",
-                        "children": [],
-                        "isExternal": false,
-                        "disableCollapsible": false
-                      }
-                    ],
-                    "isExternal": false,
                     "disableCollapsible": false
                   },
                   {
@@ -5956,23 +5914,6 @@
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
-                  },
-                  {
-                    "id": "documents",
-                    "path": "/reference/core-api/azure-cache/documents",
-                    "name": "documents",
-                    "children": [
-                      {
-                        "id": "Overview",
-                        "path": "/reference/core-api/azure-cache/documents/overview",
-                        "name": "Overview",
-                        "children": [],
-                        "isExternal": false,
-                        "disableCollapsible": false
-                      }
-                    ],
-                    "isExternal": false,
-                    "disableCollapsible": false
                   }
                 ],
                 "disableCollapsible": false
@@ -5989,23 +5930,6 @@
                     "id": "overview",
                     "isExternal": false,
                     "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "id": "documents",
-                    "path": "/reference/core-api/gcs-cache/documents",
-                    "name": "documents",
-                    "children": [
-                      {
-                        "id": "Overview",
-                        "path": "/reference/core-api/gcs-cache/documents/overview",
-                        "name": "Overview",
-                        "children": [],
-                        "isExternal": false,
-                        "disableCollapsible": false
-                      }
-                    ],
-                    "isExternal": false,
                     "disableCollapsible": false
                   }
                 ],
@@ -6024,23 +5948,6 @@
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
-                  },
-                  {
-                    "id": "documents",
-                    "path": "/reference/core-api/s3-cache/documents",
-                    "name": "documents",
-                    "children": [
-                      {
-                        "id": "Overview",
-                        "path": "/reference/core-api/s3-cache/documents/overview",
-                        "name": "Overview",
-                        "children": [],
-                        "isExternal": false,
-                        "disableCollapsible": false
-                      }
-                    ],
-                    "isExternal": false,
-                    "disableCollapsible": false
                   }
                 ],
                 "disableCollapsible": false
@@ -6057,23 +5964,6 @@
                     "id": "overview",
                     "isExternal": false,
                     "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "id": "documents",
-                    "path": "/reference/core-api/shared-fs-cache/documents",
-                    "name": "documents",
-                    "children": [
-                      {
-                        "id": "Overview",
-                        "path": "/reference/core-api/shared-fs-cache/documents/overview",
-                        "name": "Overview",
-                        "children": [],
-                        "isExternal": false,
-                        "disableCollapsible": false
-                      }
-                    ],
-                    "isExternal": false,
                     "disableCollapsible": false
                   },
                   {

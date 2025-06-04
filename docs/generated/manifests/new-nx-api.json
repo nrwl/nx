@@ -5455,19 +5455,7 @@
     "name": "azure-cache",
     "packageName": "@nx/azure-cache",
     "description": "A Nx plugin which provides a Nx cache which can be self hosted on Azure Blob Storage.",
-    "documents": {
-      "/reference/core-api/azure-cache/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx plugin which provides a Nx cache which can be self hosted on Azure Blob Storage.",
-        "file": "external-generated/packages/azure-cache/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/azure-cache/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/azure-cache/azure-cache-plugin"
-      }
-    },
+    "documents": {},
     "root": "/libs/nx-packages/azure-cache",
     "source": "/libs/nx-packages/azure-cache/src",
     "executors": {},
@@ -5480,30 +5468,7 @@
     "name": "conformance",
     "packageName": "@nx/conformance",
     "description": "A Nx plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
-    "documents": {
-      "/reference/core-api/conformance/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
-        "file": "external-generated/packages/conformance/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/conformance/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/conformance/conformance-plugin"
-      },
-      "/reference/core-api/conformance/documents/create-conformance-rule": {
-        "id": "create-conformance-rule",
-        "name": "Create a Conformance Rule",
-        "description": "A Nx plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
-        "file": "external-generated/packages/conformance/documents/create-conformance-rule",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/conformance/documents/create-conformance-rule",
-        "tags": [],
-        "originalFilePath": "shared/packages/conformance/create-conformance-rule"
-      }
-    },
+    "documents": {},
     "root": "/libs/nx-packages/conformance",
     "source": "/libs/nx-packages/conformance/src",
     "executors": {
@@ -5536,19 +5501,7 @@
     "name": "owners",
     "packageName": "@nx/owners",
     "description": "A Nx plugin which provides the ability to configure and maintain codeowners for projects in Nx workspaces.",
-    "documents": {
-      "/reference/core-api/owners/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx plugin which provides the ability to configure and maintain codeowners for projects in Nx workspaces.",
-        "file": "external-generated/packages/owners/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/owners/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/owners/owners-plugin"
-      }
-    },
+    "documents": {},
     "root": "/libs/nx-packages/owners",
     "source": "/libs/nx-packages/owners/src",
     "executors": {},
@@ -5580,19 +5533,7 @@
     "name": "gcs-cache",
     "packageName": "@nx/gcs-cache",
     "description": "A Nx plugin which provides a Nx cache which can be self hosted on Google Cloud Storage.",
-    "documents": {
-      "/reference/core-api/gcs-cache/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx plugin which provides a Nx cache which can be self hosted on Google Cloud Storage.",
-        "file": "external-generated/packages/gcs-cache/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/gcs-cache/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/gcs-cache/gcs-cache-plugin"
-      }
-    },
+    "documents": {},
     "root": "/libs/nx-packages/gcs-cache",
     "source": "/libs/nx-packages/gcs-cache/src",
     "executors": {},
@@ -5605,19 +5546,7 @@
     "name": "s3-cache",
     "packageName": "@nx/s3-cache",
     "description": "A Nx plugin which provides a Nx cache which can be self hosted on Amazon S3.",
-    "documents": {
-      "/reference/core-api/s3-cache/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx plugin which provides a Nx cache which can be self hosted on Amazon S3.",
-        "file": "external-generated/packages/s3-cache/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/s3-cache/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/s3-cache/s3-cache-plugin"
-      }
-    },
+    "documents": {},
     "root": "/libs/nx-packages/s3-cache",
     "source": "/libs/nx-packages/s3-cache/src",
     "executors": {},
@@ -5630,19 +5559,7 @@
     "name": "shared-fs-cache",
     "packageName": "@nx/shared-fs-cache",
     "description": "A Nx plugin to enable you to use a shared file system directory",
-    "documents": {
-      "/reference/core-api/shared-fs-cache/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx plugin to enable you to use a shared file system directory",
-        "file": "external-generated/packages/shared-fs-cache/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/shared-fs-cache/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/shared-fs-cache/shared-fs-cache-plugin"
-      }
-    },
+    "documents": {},
     "root": "/libs/nx-packages/shared-fs-cache",
     "source": "/libs/nx-packages/shared-fs-cache/src",
     "executors": {},
