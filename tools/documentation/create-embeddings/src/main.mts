@@ -18,7 +18,7 @@ import mapJson from '../../../../docs/map.json' with { type: 'json' };
 import manifestsCI from '../../../../docs/generated/manifests/ci.json' with { type: 'json' };
 import manifestsExtending from '../../../../docs/generated/manifests/extending-nx.json' with { type: 'json' };
 import manifestsNx from '../../../../docs/generated/manifests/nx.json' with { type: 'json' };
-import manifestsPackages from '../../../../docs/generated/manifests/nx-api.json' with { type: 'json' };
+import manifestsPackages from '../../../../docs/generated/manifests/new-nx-api.json' with { type: 'json' };
 import manifestsTags from '../../../../docs/generated/manifests/tags.json' with { type: 'json' };
 import communityPlugins from '../../../../community/approved-plugins.json' with { type: 'json' };
 
@@ -71,7 +71,7 @@ export function processMdxForSearch(content: string): ProcessedMdx {
   if (!mdTree) {
     return {
       checksum,
-      sections: [],
+      sections: []
     };
   }
 
@@ -91,13 +91,13 @@ export function processMdxForSearch(content: string): ProcessedMdx {
     return {
       content: toMarkdown(tree),
       heading,
-      slug,
+      slug
     };
   });
 
   return {
     checksum,
-    sections,
+    sections
   };
 }
 
@@ -114,7 +114,8 @@ abstract class BaseEmbeddingSource {
     public source: string,
     public path: string,
     public url_partial: string
-  ) {}
+  ) {
+  }
 
   abstract load(): Promise<{
     checksum: string;
@@ -146,7 +147,7 @@ class MarkdownEmbeddingSource extends BaseEmbeddingSource {
 
     return {
       checksum,
-      sections,
+      sections
     };
   }
 }
@@ -157,7 +158,7 @@ async function generateEmbeddings() {
   const argv = await yargs(process.argv).option('refresh', {
     alias: 'r',
     description: 'Refresh data',
-    type: 'boolean',
+    type: 'boolean'
   }).argv;
 
   const shouldRefresh = argv.refresh;
@@ -186,8 +187,8 @@ async function generateEmbeddings() {
     {
       auth: {
         persistSession: false,
-        autoRefreshToken: false,
-      },
+        autoRefreshToken: false
+      }
     }
   );
 
@@ -200,7 +201,7 @@ async function generateEmbeddings() {
     ...getAllFilesWithItemList(manifestsCI),
     ...getAllFilesWithItemList(manifestsExtending),
     ...getAllFilesWithItemList(manifestsPackages),
-    ...getAllFilesWithItemList(manifestsTags),
+    ...getAllFilesWithItemList(manifestsTags)
   ].filter(
     (entry) =>
       !entry.path.includes('sitemap') && !entry.path.includes('deprecated')
@@ -221,7 +222,7 @@ async function generateEmbeddings() {
         content.url,
         content.text
       );
-    }),
+    })
   ];
 
   console.log(`Discovered ${embeddingSources.length} pages`);
@@ -286,7 +287,7 @@ async function generateEmbeddings() {
             path,
             url_partial,
             type,
-            source,
+            source
           },
           { onConflict: 'path' }
         )
@@ -311,11 +312,11 @@ async function generateEmbeddings() {
 
         try {
           const openai = new OpenAI({
-            apiKey: process.env.NX_OPENAI_KEY,
+            apiKey: process.env.NX_OPENAI_KEY
           });
           const embeddingResponse = await openai.embeddings.create({
             model: 'text-embedding-ada-002',
-            input,
+            input
           });
 
           const [responseData] = embeddingResponse.data;
@@ -323,8 +324,8 @@ async function generateEmbeddings() {
           const longer_heading =
             source !== 'community-plugins'
               ? removeTitleDescriptionFromHeading(
-                  createLongerHeading(heading, url_partial)
-                )
+                createLongerHeading(heading, url_partial)
+              )
               : heading;
 
           const { error: insertPageSectionError } = await supabaseClient
@@ -340,7 +341,7 @@ async function generateEmbeddings() {
               content,
               url_partial,
               token_count: embeddingResponse.usage.total_tokens,
-              embedding: responseData.embedding,
+              embedding: responseData.embedding
             })
             .select()
             .limit(1)
@@ -391,6 +392,7 @@ function delay(ms: number) {
 
 function getAllFilesFromMapJson(doc): WalkEntry[] {
   const files: WalkEntry[] = [];
+
   function traverse(itemList) {
     for (const item of itemList) {
       if (item.file && item.file.length > 0) {
@@ -399,7 +401,7 @@ function getAllFilesFromMapJson(doc): WalkEntry[] {
         // the url_partial is the relative path to the file within the docs site - under nx.dev
         files.push({
           path: `docs/${item.file}.md`,
-          url_partial: identityMap[item.id]?.path || '',
+          url_partial: identityMap[item.id]?.path || ''
         });
       }
 
@@ -487,7 +489,7 @@ function createMarkdownForCommunityPlugins(): {
   return communityPlugins.map((plugin) => {
     return {
       text: `## ${plugin.name} plugin\n\nThere is a ${plugin.name} community plugin.\n\nHere is the description for it: ${plugin.description}\n\nHere is the link to it: [${plugin.url}](${plugin.url})\n\nHere is the list of all the plugins that exist for Nx: https://nx.dev/plugin-registry`,
-      url: plugin.url,
+      url: plugin.url
     };
   });
 }

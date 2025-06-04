@@ -119,6 +119,8 @@ export const pkgToGeneratedApiDocs: Record<
   },
   conformance: {
     pagePath: '/reference/core-api/conformance',
+    // TODO(docs): move these to guides and remove this
+    includeDocuments: true,
   },
   'azure-cache': {
     pagePath: '/reference/core-api/azure-cache',

@@ -5865,6 +5865,31 @@
                     "disableCollapsible": false
                   },
                   {
+                    "id": "documents",
+                    "path": "/reference/core-api/conformance/documents",
+                    "name": "documents",
+                    "children": [
+                      {
+                        "id": "Overview",
+                        "path": "/reference/core-api/conformance/documents/overview",
+                        "name": "Overview",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "Create a Conformance Rule",
+                        "path": "/reference/core-api/conformance/documents/create-conformance-rule",
+                        "name": "Create a Conformance Rule",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      }
+                    ],
+                    "isExternal": false,
+                    "disableCollapsible": false
+                  },
+                  {
                     "id": "executors",
                     "path": "/reference/core-api/conformance/executors",
                     "name": "executors",

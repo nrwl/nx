@@ -5468,7 +5468,30 @@
     "name": "conformance",
     "packageName": "@nx/conformance",
     "description": "A Nx plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
-    "documents": {},
+    "documents": {
+      "/reference/core-api/conformance/documents/overview": {
+        "id": "overview",
+        "name": "Overview",
+        "description": "A Nx plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
+        "file": "external-generated/packages/conformance/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/core-api/conformance/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/conformance/conformance-plugin"
+      },
+      "/reference/core-api/conformance/documents/create-conformance-rule": {
+        "id": "create-conformance-rule",
+        "name": "Create a Conformance Rule",
+        "description": "A Nx plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
+        "file": "external-generated/packages/conformance/documents/create-conformance-rule",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/core-api/conformance/documents/create-conformance-rule",
+        "tags": [],
+        "originalFilePath": "shared/packages/conformance/create-conformance-rule"
+      }
+    },
     "root": "/libs/nx-packages/conformance",
     "source": "/libs/nx-packages/conformance/src",
     "executors": {
