@@ -57,7 +57,7 @@ As long as your server adheres to the OpenAPI spec, you can implement it in any 
   "openapi": "3.0.0",
   "info": {
     "title": "Nx custom remote cache specification.",
-    "description": "Nx is a build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.",
+    "description": "Nx is an AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.",
     "version": "1.0.0"
   },
   "paths": {
