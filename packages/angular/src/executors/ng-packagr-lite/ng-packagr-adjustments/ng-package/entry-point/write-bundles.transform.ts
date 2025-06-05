@@ -9,11 +9,24 @@
 
 import type { NgEntryPoint } from 'ng-packagr/src/lib/ng-package/entry-point/entry-point';
 import type { NgPackagrOptions } from 'ng-packagr/src/lib/ng-package/options.di';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { dirname, join, normalize } from 'node:path';
 import { getNgPackagrVersionInfo } from '../../../../utilities/ng-packagr/ng-packagr-version';
 import { importNgPackagrPath } from '../../../../utilities/ng-packagr/package-imports';
 import { createNgEntryPoint, type NgEntryPointType } from './entry-point';
+
+async function shouldWriteFile(
+  filePath: string,
+  newContent: string
+): Promise<boolean> {
+  try {
+    const existingContent = await readFile(filePath, 'utf-8');
+    return existingContent !== newContent;
+  } catch (error) {
+    // If we can't read the existing file (including if it doesn't exist), write the new one
+    return true;
+  }
+}
 
 export const writeBundlesTransform = (_options: NgPackagrOptions) => {
   const { major: ngPackagrMajorVersion } = getNgPackagrVersionInfo();
@@ -42,9 +55,12 @@ export const writeBundlesTransform = (_options: NgPackagrOptions) => {
 
         for (const [path, outputCache] of entry.cache.outputCache.entries()) {
           const normalizedPath = normalizeEsm2022Path(path, entryPoint);
-          // write the outputs to the file system
-          await mkdir(dirname(normalizedPath), { recursive: true });
-          await writeFile(normalizedPath, outputCache.content);
+
+          // Only write if content has changed
+          if (await shouldWriteFile(normalizedPath, outputCache.content)) {
+            await mkdir(dirname(normalizedPath), { recursive: true });
+            await writeFile(normalizedPath, outputCache.content);
+          }
         }
         if (!entry.cache.outputCache.size && entryPoint.isSecondaryEntryPoint) {
           await mkdir(entryPoint.destinationPath, { recursive: true });
