@@ -1233,7 +1233,18 @@ const tmpTerminalUiRedirects = {
 };
 
 const nxApiRedirects = {
+  // Old index page lists official plugins, so redirect to plugin registry
+  '/nx-api': '/plugin-registry',
   // Reference
+  '/nx-api/azure-cache/documents/overview':
+    '/reference/core-api/azure-cache/overview',
+  '/nx-api/owners/documents/overview': '/reference/core-api/owners/overview',
+  '/nx-api/gcs-cache/documents/overview':
+    '/reference/core-api/gcs-cache/overview',
+  '/nx-api/s3-cache/documents/overview':
+    '/reference/core-api/s3-cache/overview',
+  '/nx-api/shared-fs-cache/documents/overview':
+    '/reference/core-api/shared-fs-cache/overview',
   '/nx-api/devkit/:slug*': '/reference/core-api/devkit/:slug*',
   '/nx-api/nx/:slug*': '/reference/core-api/nx/:slug*',
   '/nx-api/workspace/:slug*': '/reference/core-api/workspace/:slug*',
@@ -1256,6 +1267,34 @@ const nxApiRedirects = {
   '/nx-api/create-nx-workspace/documents': '/reference/core-api',
   '/nx-api/create-nx-workspace/:slug*':
     '/reference/core-api/create-nx-workspace/:slug*',
+  // Angular Rspack and Rsbuild -- these never had executors, generators, or migrations
+  // We'll just redirect them to the API index, and make sure create-server and create-config exist
+  '/nx-api/angular-rspack/documents/create-config':
+    '/technologies/angular/angular-rspack/api/create-config',
+  '/nx-api/angular-rspack/documents/create-server':
+    '/technologies/angular/angular-rspack/api/create-server',
+  '/nx-api/angular-rsbuild/documents/create-config':
+    '/technologies/angular/angular-rsbuild/api/create-config',
+  '/nx-api/angular-rsbuild/documents/create-server':
+    '/technologies/angular/angular-rsbuild/api/create-server',
+  '/nx-api/angular-rspack/documents':
+    '/technologies/angular/angular-rspack/introduction',
+  '/nx-api/angular-rsbuild/documents':
+    '/technologies/angular/angular-rsbuild/api',
+  '/nx-api/angular-rspack/executors':
+    '/technologies/angular/angular-rspack/api',
+  '/nx-api/angular-rsbuild/executors':
+    '/technologies/angular/angular-rsbuild/api',
+  '/nx-api/angular-rspack': '/technologies/angular/angular-rspack/introduction',
+  '/nx-api/angular-rsbuild': '/technologies/angular/angular-rsbuild/api',
+  '/nx-api/angular-rspack/migrations':
+    '/technologies/angular/angular-rspack/api',
+  '/nx-api/angular-rsbuild/migrations':
+    '/technologies/angular/angular-rsbuild/api',
+  '/nx-api/angular-rspack/generators':
+    '/technologies/angular/angular-rspack/api',
+  '/nx-api/angular-rsbuild/generators':
+    '/technologies/angular/angular-rsbuild/api',
   // Technologies
   '/nx-api/angular/documents/overview': '/technologies/angular/introduction',
   '/nx-api/react/documents/overview': '/technologies/react/introduction',
