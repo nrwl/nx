@@ -1177,6 +1177,38 @@
       "path": "/technologies/angular/angular-rspack/recipes/internationalization"
     }
   ],
+  "create-config": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-config",
+      "id": "create-config",
+      "name": "Create Config",
+      "path": "/technologies/angular/angular-rspack/api/create-config"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-config",
+      "id": "create-config",
+      "name": "Create Config",
+      "path": "/technologies/angular/angular-rsbuild/api/create-config"
+    }
+  ],
+  "create-server": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-server",
+      "id": "create-server",
+      "name": "Create Server",
+      "path": "/technologies/angular/angular-rspack/api/create-server"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-server",
+      "id": "create-server",
+      "name": "Create Server",
+      "path": "/technologies/angular/angular-rsbuild/api/create-server"
+    }
+  ],
   "react": [
     {
       "description": "",

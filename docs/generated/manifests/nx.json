@@ -3667,8 +3667,31 @@
                 "name": "API",
                 "description": "",
                 "mediaImage": "",
-                "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-config",
-                "itemList": [],
+                "file": "",
+                "itemList": [
+                  {
+                    "id": "create-config",
+                    "name": "Create Config",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-config",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/angular/angular-rspack/api/create-config",
+                    "tags": ["create-config"]
+                  },
+                  {
+                    "id": "create-server",
+                    "name": "Create Server",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-server",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/angular/angular-rspack/api/create-server",
+                    "tags": ["create-server"]
+                  }
+                ],
                 "isExternal": false,
                 "path": "/technologies/angular/angular-rspack/api",
                 "tags": []
@@ -3690,8 +3713,31 @@
                 "name": "API",
                 "description": "",
                 "mediaImage": "",
-                "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-config",
-                "itemList": [],
+                "file": "",
+                "itemList": [
+                  {
+                    "id": "create-config",
+                    "name": "Create Config",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-config",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/angular/angular-rsbuild/api/create-config",
+                    "tags": ["create-config"]
+                  },
+                  {
+                    "id": "create-server",
+                    "name": "Create Server",
+                    "description": "",
+                    "mediaImage": "",
+                    "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-server",
+                    "itemList": [],
+                    "isExternal": false,
+                    "path": "/technologies/angular/angular-rsbuild/api/create-server",
+                    "tags": ["create-server"]
+                  }
+                ],
                 "isExternal": false,
                 "path": "/technologies/angular/angular-rsbuild/api",
                 "tags": []
@@ -5876,8 +5922,31 @@
             "name": "API",
             "description": "",
             "mediaImage": "",
-            "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-config",
-            "itemList": [],
+            "file": "",
+            "itemList": [
+              {
+                "id": "create-config",
+                "name": "Create Config",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-config",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/angular/angular-rspack/api/create-config",
+                "tags": ["create-config"]
+              },
+              {
+                "id": "create-server",
+                "name": "Create Server",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-server",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/angular/angular-rspack/api/create-server",
+                "tags": ["create-server"]
+              }
+            ],
             "isExternal": false,
             "path": "/technologies/angular/angular-rspack/api",
             "tags": []
@@ -5899,8 +5968,31 @@
             "name": "API",
             "description": "",
             "mediaImage": "",
-            "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-config",
-            "itemList": [],
+            "file": "",
+            "itemList": [
+              {
+                "id": "create-config",
+                "name": "Create Config",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-config",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/angular/angular-rsbuild/api/create-config",
+                "tags": ["create-config"]
+              },
+              {
+                "id": "create-server",
+                "name": "Create Server",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-server",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/angular/angular-rsbuild/api/create-server",
+                "tags": ["create-server"]
+              }
+            ],
             "isExternal": false,
             "path": "/technologies/angular/angular-rsbuild/api",
             "tags": []
@@ -6260,8 +6352,31 @@
         "name": "API",
         "description": "",
         "mediaImage": "",
-        "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-config",
-        "itemList": [],
+        "file": "",
+        "itemList": [
+          {
+            "id": "create-config",
+            "name": "Create Config",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-config",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/angular/angular-rspack/api/create-config",
+            "tags": ["create-config"]
+          },
+          {
+            "id": "create-server",
+            "name": "Create Server",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-server",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/angular/angular-rspack/api/create-server",
+            "tags": ["create-server"]
+          }
+        ],
         "isExternal": false,
         "path": "/technologies/angular/angular-rspack/api",
         "tags": []
@@ -6387,11 +6502,56 @@
     "name": "API",
     "description": "",
     "mediaImage": "",
-    "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-config",
-    "itemList": [],
+    "file": "",
+    "itemList": [
+      {
+        "id": "create-config",
+        "name": "Create Config",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-config",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/angular/angular-rspack/api/create-config",
+        "tags": ["create-config"]
+      },
+      {
+        "id": "create-server",
+        "name": "Create Server",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-server",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/angular/angular-rspack/api/create-server",
+        "tags": ["create-server"]
+      }
+    ],
     "isExternal": false,
     "path": "/technologies/angular/angular-rspack/api",
     "tags": []
+  },
+  "/technologies/angular/angular-rspack/api/create-config": {
+    "id": "create-config",
+    "name": "Create Config",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-config",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/angular/angular-rspack/api/create-config",
+    "tags": ["create-config"]
+  },
+  "/technologies/angular/angular-rspack/api/create-server": {
+    "id": "create-server",
+    "name": "Create Server",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-server",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/angular/angular-rspack/api/create-server",
+    "tags": ["create-server"]
   },
   "/technologies/angular/angular-rsbuild": {
     "id": "angular-rsbuild",
@@ -6405,8 +6565,31 @@
         "name": "API",
         "description": "",
         "mediaImage": "",
-        "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-config",
-        "itemList": [],
+        "file": "",
+        "itemList": [
+          {
+            "id": "create-config",
+            "name": "Create Config",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-config",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/angular/angular-rsbuild/api/create-config",
+            "tags": ["create-config"]
+          },
+          {
+            "id": "create-server",
+            "name": "Create Server",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-server",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/angular/angular-rsbuild/api/create-server",
+            "tags": ["create-server"]
+          }
+        ],
         "isExternal": false,
         "path": "/technologies/angular/angular-rsbuild/api",
         "tags": []
@@ -6421,11 +6604,56 @@
     "name": "API",
     "description": "",
     "mediaImage": "",
-    "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-config",
-    "itemList": [],
+    "file": "",
+    "itemList": [
+      {
+        "id": "create-config",
+        "name": "Create Config",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-config",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/angular/angular-rsbuild/api/create-config",
+        "tags": ["create-config"]
+      },
+      {
+        "id": "create-server",
+        "name": "Create Server",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-server",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/angular/angular-rsbuild/api/create-server",
+        "tags": ["create-server"]
+      }
+    ],
     "isExternal": false,
     "path": "/technologies/angular/angular-rsbuild/api",
     "tags": []
+  },
+  "/technologies/angular/angular-rsbuild/api/create-config": {
+    "id": "create-config",
+    "name": "Create Config",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-config",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/angular/angular-rsbuild/api/create-config",
+    "tags": ["create-config"]
+  },
+  "/technologies/angular/angular-rsbuild/api/create-server": {
+    "id": "create-server",
+    "name": "Create Server",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-server",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/angular/angular-rsbuild/api/create-server",
+    "tags": ["create-server"]
   },
   "/technologies/react": {
     "id": "react",
