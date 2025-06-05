@@ -26,10 +26,10 @@ The official self-hosted cache packages are the easiest migration path if you've
 
 The following remote cache adapters are available:
 
-- [@nx/s3-cache](/nx-api/s3-cache): Cache is self-hosted on an Amazon S3 bucket
-- [@nx/gcs-cache](/nx-api/gcs-cache): Cache is self-hosted on Google Cloud storage
-- [@nx/azure-cache](/nx-api/azure-cache): Cache is self-hosted on Azure
-- [@nx/shared-fs-cache](/nx-api/shared-fs-cache): Cache is self-hosted on a shared file system location
+- [@nx/s3-cache](/reference/core-api/s3-cache): Cache is self-hosted on an Amazon S3 bucket
+- [@nx/gcs-cache](/reference/core-api/gcs-cache): Cache is self-hosted on Google Cloud storage
+- [@nx/azure-cache](/reference/core-api/azure-cache): Cache is self-hosted on Azure
+- [@nx/shared-fs-cache](/reference/core-api/shared-fs-cache): Cache is self-hosted on a shared file system location
 
 > Why require an activation key? It simply helps us know and support our users. If you prefer not to provide this information, you can also [build your own cache server](#build-your-own-caching-server).
 
@@ -57,7 +57,7 @@ As long as your server adheres to the OpenAPI spec, you can implement it in any 
   "openapi": "3.0.0",
   "info": {
     "title": "Nx custom remote cache specification.",
-    "description": "Nx is a build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.",
+    "description": "Nx is an AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.",
     "version": "1.0.0"
   },
   "paths": {

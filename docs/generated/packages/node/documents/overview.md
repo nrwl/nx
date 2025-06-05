@@ -93,5 +93,5 @@ For additional information on how to debug Node applications, see the [Node.js d
 
 ## More Documentation
 
-- [Using Cypress](/nx-api/cypress)
-- [Using Jest](/nx-api/jest)
+- [Using Cypress](/technologies/test-tools/cypress/api)
+- [Using Jest](/technologies/test-tools/jest/api)

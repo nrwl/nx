@@ -5,7 +5,7 @@ description: The Nx Powerpack Owners plugin provides the ability to define code 
 
 The `@nx/owners` plugin extends the CODEOWNERS functionality to allow you to define code ownership based on projects in addition to the standard file-based definitions. It leverages the [`nx sync`](/concepts/sync-generators) command to compile `owners` configuration settings from `nx.json` and project configuration files into valid CODEOWNERS files for [GitHub](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners), [Bitbucket](https://support.atlassian.com/bitbucket-cloud/docs/set-up-and-use-code-owners/) or [GitLab](https://docs.gitlab.com/ee/user/project/codeowners/).
 
-With this plugin, you can specify code ownership using the same project matcher syntax as [`nx run-many`](/nx-api/nx/documents/run-many#examples). This allows you to easily define rules for multiple projects that may not be located in the same directory. Also, the CODEOWNERS rules will not need to be revisited if a project location is changed or a new project is added.
+With this plugin, you can specify code ownership using the same project matcher syntax as [`nx run-many`](/reference/core-api/nx/documents/run-many#examples). This allows you to easily define rules for multiple projects that may not be located in the same directory. Also, the CODEOWNERS rules will not need to be revisited if a project location is changed or a new project is added.
 
 {% callout title="This plugin requires an active Nx Powerpack license" %}
 In order to use `@nx/owners`, you need to have an active Powerpack license. If you don't have a license or it has expired, the syncing process will stop working and you'll need to manually maintain your CODEOWNERS file.
@@ -65,7 +65,7 @@ It is also often helpful to add `nx sync` as a git push hook or git commit hook.
         "owners": ["@joelovesrust"],
         // specify either projects or files, not both
         // Can be any project specifier that could be used in `nx run-many`
-        // See https://nx.dev/nx-api/nx/documents/run-many
+        // See https://nx.dev/reference/core-api/nx/documents/run-many
         "projects": ["my-rust-app", "rust-*", "tag:rust"],
         // File globs
         "files": [".github/workflows/**/*"]
@@ -93,7 +93,7 @@ It is also often helpful to add `nx sync` as a git push hook or git commit hook.
         "owners": ["@joelovesrust"],
         // specify either projects or files, not both
         // Can be any project specifier that could be used in `nx run-many`
-        // See https://nx.dev/nx-api/nx/documents/run-many
+        // See https://nx.dev/reference/core-api/nx/documents/run-many
         "projects": ["my-rust-app", "rust-*", "tag:rust"],
         // File globs
         "files": [".github/workflows/**/*"]
@@ -123,7 +123,7 @@ If you are using GitLab, you can specify CODEOWNERS [sections](https://docs.gitl
         "owners": ["@joelovesrust"],
         // Specify either `projects` or `files`, not both
         // Can be any project specifier that could be used in `nx run-many`
-        // See https://nx.dev/nx-api/nx/documents/run-many
+        // See https://nx.dev/reference/core-api/nx/documents/run-many
         "projects": ["my-rust-app", "rust-*", "tag:rust"],
         // File globs
         "files": [".github/workflows/**/*"]

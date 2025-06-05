@@ -73,8 +73,8 @@ nx lint my-project
 
 ## Utils
 
-- [convert-to-flat-config](/nx-api/eslint/generators/convert-to-flat-config) - Converts the workspace's [ESLint](https://eslint.org/) configs to the new [Flat Config](https://eslint.org/blog/2022/08/new-config-system-part-2)
+- [convert-to-flat-config](/technologies/eslint/api/generators/convert-to-flat-config) - Converts the workspace's [ESLint](https://eslint.org/) configs to the new [Flat Config](https://eslint.org/blog/2022/08/new-config-system-part-2)
 
 ## ESLint plugin
 
-Read about our dedicated ESLint plugin - [eslint-plugin-nx](/nx-api/eslint-plugin/documents/overview).
+Read about our dedicated ESLint plugin - [eslint-plugin-nx](/technologies/eslint/eslint-plugin/api).

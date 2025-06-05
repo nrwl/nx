@@ -74,7 +74,7 @@ Also see this example repository with some more information: [https://github.com
 
 ## Simplifying Nx
 
-Nx follows a modular plugin architecture. There is the core part of Nx which has the main logic around managing the project graph, computation caching, hashing and more. On top of that we have a series of Nx provided plugins for some of the most common frameworks and libraries out there, like [TypeScript/Javascript](/nx-api/js), [Angular](/nx-api/angular), [React](/nx-api/react) & [React Native](/nx-api/react-native), [Next.js](/nx-api/next), [Nest.js](/nx-api/nest), [Node](/nx-api/node) and many more, not to forget about [all the community plugins](/community). We also have a [labs project section](https://github.com/nrwl/nx-labs) which is our incubator for potentially new, natively supported Nx plugins.
+Nx follows a modular plugin architecture. There is the core part of Nx which has the main logic around managing the project graph, computation caching, hashing and more. On top of that we have a series of Nx provided plugins for some of the most common frameworks and libraries out there, like [TypeScript/Javascript](/technologies/typescript/api), [Angular](/technologies/angular/api), [React](/technologies/react/api) & [React Native](/technologies/react/react-native/api), [Next.js](/technologies/react/next/api), [Nest.js](/technologies/node/nest/api), [Node](/technologies/node/api) and many more, not to forget about [all the community plugins](/community). We also have a [labs project section](https://github.com/nrwl/nx-labs) which is our incubator for potentially new, natively supported Nx plugins.
 
 This modular structure allows you to just use [Nx core without plugins](/getting-started/intro). An ideal approach if you want to add Nx to an [existing Lerna/Yarn/NPM/PNPM workspace](/recipes/adopting-nx/adding-to-monorepo). With v14 we made it even simpler s.t. now you only have a single `nx` package in your dependencies with the core setup.
 
@@ -250,7 +250,7 @@ Nx v14 ships with React 18 support for React DOM and React Native. The latter ha
 
 In addition to that, Expo and Expo Application Service support has been added which has lead already to some drastic speed improvements with some of our clients.
 
-Finally, it is the first version which ships the built-in module federation support for React as we've mentioned a couple of sections above. Check out the React package docs page and search for the `host` and `remote` generator: [/nx-api/react](/nx-api/react)
+Finally, it is the first version which ships the built-in module federation support for React as we've mentioned a couple of sections above. Check out the React package docs page and search for the `host` and `remote` generator: [/nx-api/react](/technologies/react/api)
 
 ## Angular
 
@@ -258,7 +258,7 @@ There have been a lot of highlights for the Nx Angular plugin since v13. Here ar
 
 - Support and migrations for Angular 13 (Angular v14 coming soon. We will release that as a minor upgrade in Nx once the Angular team releases v14)
 - Tailwind CSS support (generators, added support to library executors). Read [our blog detailed post](/blog/set-up-tailwind-css-with-angular-in-an-nx-workspace).
-- Single Component Application Modules (SCAM) generators for components, directives and pipes ([see our docs](/nx-api/angular))
+- Single Component Application Modules (SCAM) generators for components, directives and pipes ([see our docs](/technologies/angular/api))
 - Improved Angular CLI to Nx migration support. We invested quite some time refactoring our current migration support from the Angular CLI which not only will allow us to implement more migration scenarios in the future but it also provides better error messages and hints during the migration process. This also allowed us to add support for multi-project Angular CLI workspaces which can now be seamlessly migrated. Multi-application Angular CLI workspace support will be added soon.
 
 Finally, similar to React also Angular gets built-in support for Webpack Module federation and hence also Microfrontends within Nx. See the sections about Module Federation and Microservices for more info and links to the docs.

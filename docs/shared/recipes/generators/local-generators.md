@@ -121,4 +121,4 @@ Nx uses the paths from `tsconfig.base.json` when running plugins locally, but us
 
 ## Generator Utilities
 
-The [`@nx/devkit` package](/nx-api/devkit/documents/nx_devkit) provides many utility functions that can be used in generators to help with modifying files, reading and updating configuration files, and working with an Abstract Syntax Tree (AST).
+The [`@nx/devkit` package](/reference/core-api/devkit/documents/nx_devkit) provides many utility functions that can be used in generators to help with modifying files, reading and updating configuration files, and working with an Abstract Syntax Tree (AST).

@@ -30,12 +30,12 @@ export default function CustomApp({
       <FrontendObservability />
       <DefaultSeo
         title="Nx: Smart Repos · Fast Builds"
-        description="Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities."
+        description="An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Nx: Smart Repos · Fast Builds',
           description:
-            'Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.',
+            'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.',
           images: [
             {
               url: 'https://nx.dev/images/nx-media.jpg',
@@ -87,7 +87,7 @@ export default function CustomApp({
       </Link>
       <Component {...pageProps} />
       {/* <LiveStreamNotifier /> */}
-      <WebinarNotifier />
+      {/*<WebinarNotifier />*/}
 
       {/* All tracking scripts consolidated in GlobalScripts component */}
       <GlobalScripts

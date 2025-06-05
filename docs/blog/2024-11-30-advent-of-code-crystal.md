@@ -84,7 +84,7 @@ Sometimes the second part of the problem simply builds on top of the first. On t
 
 ### New Feature for 2.0.0: File Watching!
 
-We've also added file watching (using [`nx watch`](/nx-api/nx/documents/watch) behind the scenes!)
+We've also added file watching (using [`nx watch`](/reference/core-api/nx/documents/watch) behind the scenes!)
 
 Simply add `watch-` to the start of any of the commands and aliases listed above to start any of them in watch mode, so they automatically re-run as soon as any changes to the file system are detected! Example:
 

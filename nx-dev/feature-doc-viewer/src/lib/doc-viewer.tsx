@@ -72,14 +72,14 @@ export function DocViewer({
         title={vm.title + ' | Nx'}
         description={
           vm.description ??
-          'Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.'
+          'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.'
         }
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: vm.title,
           description:
             vm.description ??
-            'Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.',
+            'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.',
           images: [
             {
               url: `https://nx.dev/images/open-graph/${router.asPath

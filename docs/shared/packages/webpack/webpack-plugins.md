@@ -10,7 +10,7 @@ Nx provides two types of Webpack plugins:
 1. [_Basic_](#basic-plugins) plugins that work in a
    standard [webpack configuration](https://webpack.js.org/configuration/) file.
 2. [_Nx-enhanced_](#nxenhanced-plugins) plugins that work with
-   the [`@nx/webpack:webpack`](/nx-api/webpack/executors/webpack) executor.
+   the [`@nx/webpack:webpack`](/technologies/build-tools/webpack/api/executors/webpack) executor.
 
 The basic plugins are used in Nx 18 to provide seamless integration with the Webpack CLI. Prior to Nx 18, apps are
 generated with Nx-enhanced plugins and require `@nx/webpack:webpack` executor to be used.

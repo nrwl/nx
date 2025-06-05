@@ -103,7 +103,7 @@ Or more generically:
 
 - `{ciTargetName}--{path/to/test/file}`
 
-You can find more information on how to configure the Atomizer on the respective [Jest](/nx-api/jest#splitting-e2e-tests), [Cypress](/nx-api/cypress#nxcypress-configuration), [Playwright](/nx-api/playwright#nxplaywright-configuration), [Gradle](/nx-api/gradle/documents/overview#nxgradle-configuration) or follow [this recipe](/extending-nx/recipes/project-graph-plugins) to create your own inferred plugin.
+You can find more information on how to configure the Atomizer on the respective [Jest](/technologies/test-tools/jest/api#splitting-e2e-tests), [Cypress](/technologies/test-tools/cypress/api#nxcypress-configuration), [Playwright](/technologies/test-tools/playwright/api#nxplaywright-configuration), [Gradle](/technologies/java/introduction#nxgradle-configuration) or follow [this recipe](/extending-nx/recipes/project-graph-plugins) to create your own inferred plugin.
 
 ## Manual E2E Project Splitting
 

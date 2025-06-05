@@ -8,7 +8,7 @@ Let's create a custom rule which we can then publish to Nx Cloud. We will first 
 nx generate @nx/js:library cloud-conformance-rules
 ```
 
-The Nx Cloud distribution mechanism expects each rule to be created in a named subdirectory in the `src/` directory of our new project, and each rule directory to contain an `index.ts` and a `schema.json` file. You can read more about [creating a conformance rule](/nx-api/conformance/documents/create-conformance-rule) in the dedicated guide. For this recipe, we'll generate a default rule to use in the publishing process.
+The Nx Cloud distribution mechanism expects each rule to be created in a named subdirectory in the `src/` directory of our new project, and each rule directory to contain an `index.ts` and a `schema.json` file. You can read more about [creating a conformance rule](/reference/core-api/conformance/documents/create-conformance-rule) in the dedicated guide. For this recipe, we'll generate a default rule to use in the publishing process.
 
 ```shell
 nx g @nx/conformance:create-rule --name=test-cloud-rule --directory=cloud-conformance-rules/src --category=reliability --description="A test cloud rule" --reporter=non-project-files-reporter
@@ -18,7 +18,7 @@ nx g @nx/conformance:create-rule --name=test-cloud-rule --directory=cloud-confor
 If you get an error resolving the `@nx/conformance` plugin, you may need to add it. You can do this by running `nx add @nx/conformance` in your workspace.
 {% /callout %}
 
-We now have a valid implementation of a rule and we are ready to build it and publish it to Nx Cloud. The [`@nx/conformance` plugin](/nx-api/conformance) provides a [dedicated executor called `bundle-rules`](/nx-api/conformance/executors/bundle-rules) for creating appropriate build artifacts for this purpose. We will replace the existing build target and wire up that executor in our `cloud-conformance-rules` project's `project.json` file:
+We now have a valid implementation of a rule and we are ready to build it and publish it to Nx Cloud. The [`@nx/conformance` plugin](/reference/core-api/conformance) provides a [dedicated executor called `bundle-rules`](/reference/core-api/conformance/executors/bundle-rules) for creating appropriate build artifacts for this purpose. We will replace the existing build target and wire up that executor in our `cloud-conformance-rules` project's `project.json` file:
 
 ```jsonc {% fileName="cloud-conformance-rules/project.json" %}
 {
