@@ -7,6 +7,7 @@ import {
   BriebugIcon,
   LiveLoveAppIcon,
   NStudioIcon,
+  ZephyrCloudIcon,
 } from '@nx/nx-dev/ui-icons';
 import { useEffect, useMemo, useState } from 'react';
 import { Partner } from './partner';
@@ -78,6 +79,19 @@ export function PartnersList(): JSX.Element {
         location: 'US',
         tagline: "Craftsmanship perfected 'n' ways for your goals.",
         capabilities: ['Typescript', 'Swift', 'Kotlin', 'NativeScript'],
+      },
+      {
+        name: 'Zephyr Cloud',
+        logo: <ZephyrCloudIcon aria-hidden="true" className="mb-4 h-14" />,
+        href: 'https://zephyr-cloud.io/',
+        location: 'US',
+        tagline: 'The only sane way to do micro-frontends and mini-apps.',
+        capabilities: [
+          'Micro-frontends',
+          'Mini-apps',
+          'Deployment',
+          'Module Federation',
+        ],
       },
     ],
     []
