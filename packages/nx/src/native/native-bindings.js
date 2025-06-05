@@ -392,6 +392,7 @@ module.exports.hashArray = nativeBinding.hashArray
 module.exports.hashFile = nativeBinding.hashFile
 module.exports.installNxConsole = nativeBinding.installNxConsole
 module.exports.IS_WASM = nativeBinding.IS_WASM
+module.exports.isAiAgent = nativeBinding.isAiAgent
 module.exports.logDebug = nativeBinding.logDebug
 module.exports.parseTaskStatus = nativeBinding.parseTaskStatus
 module.exports.remove = nativeBinding.remove
