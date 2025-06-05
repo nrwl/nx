@@ -29,7 +29,7 @@ const IGNORED_RSPACK_WARNINGS = [
 const extensions = ['...', '.ts', '.tsx', '.mjs', '.js', '.jsx'];
 
 const extensionAlias = {
-  '.js': ['.ts', '.tsx', '.js', 'jsx'],
+  '.js': ['.ts', '.tsx', '.js', '.jsx'],
   '.mjs': ['.mts', '.mjs'],
   '.cjs': ['.cts', '.cjs'],
   '.jsx': ['.tsx', '.jsx'],

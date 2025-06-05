@@ -267,7 +267,7 @@ export function getNextConfig(
        */
       config.resolve.extensionAlias = {
         ...(config.resolve.extensionAlias || {}),
-        '.js': ['.ts', '.tsx', '.js', 'jsx'],
+        '.js': ['.ts', '.tsx', '.js', '.jsx'],
         '.mjs': ['.mts', '.mjs'],
         '.cjs': ['.cts', '.cjs'],
         '.jsx': ['.tsx', '.jsx'],

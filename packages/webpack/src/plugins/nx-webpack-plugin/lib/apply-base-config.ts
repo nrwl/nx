@@ -28,7 +28,7 @@ const IGNORED_WEBPACK_WARNINGS = [
 ];
 
 const extensionAlias = {
-  '.js': ['.ts', '.tsx', '.js', 'jsx'],
+  '.js': ['.ts', '.tsx', '.js', '.jsx'],
   '.mjs': ['.mts', '.mjs'],
   '.cjs': ['.cts', '.cjs'],
   '.jsx': ['.tsx', '.jsx'],
