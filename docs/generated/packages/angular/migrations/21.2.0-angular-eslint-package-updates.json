@@ -1,6 +1,6 @@
 {
   "name": "21.2.0-angular-eslint-package-updates",
-  "version": "21.2.0-beta.2",
+  "version": "21.2.0-beta.3",
   "requires": {
     "@angular/core": ">= 20.0.0 < 21.0.0",
     "typescript-eslint": "^8.0.0",

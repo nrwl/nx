@@ -305,7 +305,7 @@
     },
     "update-angular-cli-version-20-0-0": {
       "cli": "nx",
-      "version": "21.2.0-beta.2",
+      "version": "21.2.0-beta.3",
       "requires": {
         "@angular/core": ">=20.0.0"
       },
@@ -313,7 +313,7 @@
       "factory": "./src/migrations/update-21-2-0/update-angular-cli"
     },
     "migrate-provide-server-rendering-import": {
-      "version": "21.2.0-beta.2",
+      "version": "21.2.0-beta.3",
       "requires": {
         "@angular/core": ">=20.0.0"
       },
@@ -321,7 +321,7 @@
       "factory": "./src/migrations/update-21-2-0/migrate-provide-server-rendering-import"
     },
     "replace-provide-server-routing": {
-      "version": "21.2.0-beta.2",
+      "version": "21.2.0-beta.3",
       "requires": {
         "@angular/core": ">=20.0.0"
       },
@@ -329,7 +329,7 @@
       "factory": "./src/migrations/update-21-2-0/replace-provide-server-routing"
     },
     "set-generator-defaults-for-previous-style-guide": {
-      "version": "21.2.0-beta.2",
+      "version": "21.2.0-beta.3",
       "requires": {
         "@angular/core": ">=20.0.0"
       },
@@ -337,7 +337,7 @@
       "factory": "./src/migrations/update-21-2-0/set-generator-defaults-for-previous-style-guide"
     },
     "update-module-resolution": {
-      "version": "21.2.0-beta.2",
+      "version": "21.2.0-beta.3",
       "requires": {
         "@angular/core": ">=20.0.0"
       },
@@ -1667,7 +1667,7 @@
       }
     },
     "21.2.0": {
-      "version": "21.2.0-beta.2",
+      "version": "21.2.0-beta.3",
       "x-prompt": "Do you want to update the Angular version to v20?",
       "requires": {
         "@angular/core": ">=19.2.0 <20.0.0"
@@ -1732,7 +1732,7 @@
       }
     },
     "21.2.0-angular-eslint": {
-      "version": "21.2.0-beta.2",
+      "version": "21.2.0-beta.3",
       "requires": {
         "@angular/core": ">= 20.0.0 < 21.0.0",
         "typescript-eslint": "^8.0.0",
@@ -1746,7 +1746,7 @@
       }
     },
     "21.2.0-@angular-eslint": {
-      "version": "21.2.0-beta.2",
+      "version": "21.2.0-beta.3",
       "requires": {
         "@angular/core": ">= 20.0.0 < 21.0.0",
         "eslint": "^8.57.0 || ^9.0.0"
@@ -1787,7 +1787,7 @@
       }
     },
     "21.2.0-angular-rspack": {
-      "version": "21.2.0-beta.2",
+      "version": "21.2.0-beta.3",
       "packages": {
         "@nx/angular-rspack": {
           "version": "^21.1.0",
@@ -1796,7 +1796,7 @@
       }
     },
     "21.2.0-jest": {
-      "version": "21.2.0-beta.2",
+      "version": "21.2.0-beta.3",
       "requires": {
         "@angular/compiler-cli": ">=15.0.0 <21.0.0",
         "@angular/core": ">=15.0.0 <21.0.0",

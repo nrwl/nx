@@ -404,7 +404,7 @@
         "file": "generated/packages/angular/migrations/update-angular-cli-version-20-0-0.json",
         "hidden": false,
         "name": "update-angular-cli-version-20-0-0",
-        "version": "21.2.0-beta.2",
+        "version": "21.2.0-beta.3",
         "originalFilePath": "/packages/angular",
         "path": "/technologies/angular/api/migrations/update-angular-cli-version-20-0-0",
         "type": "migration"
@@ -414,7 +414,7 @@
         "file": "generated/packages/angular/migrations/migrate-provide-server-rendering-import.json",
         "hidden": false,
         "name": "migrate-provide-server-rendering-import",
-        "version": "21.2.0-beta.2",
+        "version": "21.2.0-beta.3",
         "originalFilePath": "/packages/angular",
         "path": "/technologies/angular/api/migrations/migrate-provide-server-rendering-import",
         "type": "migration"
@@ -424,7 +424,7 @@
         "file": "generated/packages/angular/migrations/replace-provide-server-routing.json",
         "hidden": false,
         "name": "replace-provide-server-routing",
-        "version": "21.2.0-beta.2",
+        "version": "21.2.0-beta.3",
         "originalFilePath": "/packages/angular",
         "path": "/technologies/angular/api/migrations/replace-provide-server-routing",
         "type": "migration"
@@ -434,7 +434,7 @@
         "file": "generated/packages/angular/migrations/set-generator-defaults-for-previous-style-guide.json",
         "hidden": false,
         "name": "set-generator-defaults-for-previous-style-guide",
-        "version": "21.2.0-beta.2",
+        "version": "21.2.0-beta.3",
         "originalFilePath": "/packages/angular",
         "path": "/technologies/angular/api/migrations/set-generator-defaults-for-previous-style-guide",
         "type": "migration"
@@ -444,7 +444,7 @@
         "file": "generated/packages/angular/migrations/update-module-resolution.json",
         "hidden": false,
         "name": "update-module-resolution",
-        "version": "21.2.0-beta.2",
+        "version": "21.2.0-beta.3",
         "originalFilePath": "/packages/angular",
         "path": "/technologies/angular/api/migrations/update-module-resolution",
         "type": "migration"
@@ -454,7 +454,7 @@
         "file": "generated/packages/angular/migrations/21.2.0-package-updates.json",
         "hidden": false,
         "name": "21.2.0-package-updates",
-        "version": "21.2.0-beta.2",
+        "version": "21.2.0-beta.3",
         "originalFilePath": "/packages/angular",
         "path": "/technologies/angular/api/migrations/21.2.0-package-updates",
         "type": "migration"
@@ -464,7 +464,7 @@
         "file": "generated/packages/angular/migrations/21.2.0-angular-eslint-package-updates.json",
         "hidden": false,
         "name": "21.2.0-angular-eslint-package-updates",
-        "version": "21.2.0-beta.2",
+        "version": "21.2.0-beta.3",
         "originalFilePath": "/packages/angular",
         "path": "/technologies/angular/api/migrations/21.2.0-angular-eslint-package-updates",
         "type": "migration"
@@ -474,7 +474,7 @@
         "file": "generated/packages/angular/migrations/21.2.0-@angular-eslint-package-updates.json",
         "hidden": false,
         "name": "21.2.0-@angular-eslint-package-updates",
-        "version": "21.2.0-beta.2",
+        "version": "21.2.0-beta.3",
         "originalFilePath": "/packages/angular",
         "path": "/technologies/angular/api/migrations/21.2.0-@angular-eslint-package-updates",
         "type": "migration"
@@ -484,7 +484,7 @@
         "file": "generated/packages/angular/migrations/21.2.0-angular-rspack-package-updates.json",
         "hidden": false,
         "name": "21.2.0-angular-rspack-package-updates",
-        "version": "21.2.0-beta.2",
+        "version": "21.2.0-beta.3",
         "originalFilePath": "/packages/angular",
         "path": "/technologies/angular/api/migrations/21.2.0-angular-rspack-package-updates",
         "type": "migration"
@@ -494,7 +494,7 @@
         "file": "generated/packages/angular/migrations/21.2.0-jest-package-updates.json",
         "hidden": false,
         "name": "21.2.0-jest-package-updates",
-        "version": "21.2.0-beta.2",
+        "version": "21.2.0-beta.3",
         "originalFilePath": "/packages/angular",
         "path": "/technologies/angular/api/migrations/21.2.0-jest-package-updates",
         "type": "migration"
@@ -4926,7 +4926,7 @@
         "file": "generated/packages/vite/migrations/21.2.0-package-updates.json",
         "hidden": false,
         "name": "21.2.0-package-updates",
-        "version": "21.2.0-beta.2",
+        "version": "21.2.0-beta.3",
         "originalFilePath": "/packages/vite",
         "path": "/technologies/build-tools/vite/api/migrations/21.2.0-package-updates",
         "type": "migration"

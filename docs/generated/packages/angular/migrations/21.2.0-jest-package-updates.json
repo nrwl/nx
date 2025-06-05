@@ -1,6 +1,6 @@
 {
   "name": "21.2.0-jest-package-updates",
-  "version": "21.2.0-beta.2",
+  "version": "21.2.0-beta.3",
   "requires": {
     "@angular/compiler-cli": ">=15.0.0 <21.0.0",
     "@angular/core": ">=15.0.0 <21.0.0",

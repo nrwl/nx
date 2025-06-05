@@ -1,6 +1,6 @@
 {
   "name": "21.2.0-package-updates",
-  "version": "21.2.0-beta.2",
+  "version": "21.2.0-beta.3",
   "x-prompt": "Do you want to update the Angular version to v20?",
   "requires": { "@angular/core": ">=19.2.0 <20.0.0" },
   "packages": {
