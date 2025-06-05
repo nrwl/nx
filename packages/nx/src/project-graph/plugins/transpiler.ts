@@ -1,12 +1,12 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path/posix';
-import { workspaceRoot } from '../../utils/workspace-root';
+import type * as ts from 'typescript';
 import {
   registerTranspiler,
   registerTsConfigPaths,
 } from '../../plugins/js/utils/register';
-import { readTsConfigOptions } from '../../plugins/js/utils/typescript';
-import type * as ts from 'typescript';
+import { readTsConfigWithoutFiles } from '../../plugins/js/utils/typescript';
+import { workspaceRoot } from '../../utils/workspace-root';
 
 export let unregisterPluginTSTranspiler: (() => void) | null = null;
 
@@ -25,16 +25,19 @@ export function registerPluginTSTranspiler() {
     return;
   }
 
-  const tsConfigOptions: Partial<ts.CompilerOptions> = tsConfigName
-    ? readTsConfigOptions(tsConfigName)
+  const tsConfig: Partial<ts.ParsedCommandLine> = tsConfigName
+    ? readTsConfigWithoutFiles(tsConfigName)
     : {};
   const cleanupFns = [
     registerTsConfigPaths(tsConfigName),
-    registerTranspiler({
-      experimentalDecorators: true,
-      emitDecoratorMetadata: true,
-      ...tsConfigOptions,
-    }),
+    registerTranspiler(
+      {
+        experimentalDecorators: true,
+        emitDecoratorMetadata: true,
+        ...tsConfig.options,
+      },
+      tsConfig.raw
+    ),
   ];
   unregisterPluginTSTranspiler = () => {
     cleanupFns.forEach((fn) => fn?.());
