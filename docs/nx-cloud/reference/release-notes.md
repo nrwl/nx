@@ -1,6 +1,6 @@
 # Enterprise Release Notes
 
-### 2025.03.6
+### 2025.06
 
 - Feat: Define your own custom resource classes (CPU, RAM etc.) for use with Nx Agents
   - See [configuration details](https://github.com/nrwl/nx-cloud-helm/blob/main/EXTERNAL-RESOURCE-CLASSES.md)
