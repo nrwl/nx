@@ -261,6 +261,17 @@ export function getNextConfig(
     },
     ...validNextConfig,
     webpack: (config, options) => {
+      /**
+       * To support ESM library export, we need to ensure the extensionAlias contains both `.js` and `.ts` extensions.
+       * This is because Webpack uses the `extensionAlias` to resolve the correct file extension when importing modules.
+       */
+      config.resolve.extensionAlias = {
+        ...(config.resolve.extensionAlias || {}),
+        '.js': ['.ts', '.tsx', '.js', '.jsx'],
+        '.mjs': ['.mts', '.mjs'],
+        '.cjs': ['.cts', '.cjs'],
+        '.jsx': ['.tsx', '.jsx'],
+      };
       /*
        * Update babel to support our monorepo setup.
        * The 'upward' mode allows the root babel.config.json and per-project .babelrc files to be picked up.
