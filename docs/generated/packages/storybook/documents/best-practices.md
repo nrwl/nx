@@ -53,8 +53,6 @@ If your project is [already configured](/technologies/test-tools/storybook/api),
 
 - [Vue stories generator](/technologies/vue/api/generators/stories)
 
-- [React Native stories generator](/technologies/react/react-native/api/generators/stories)
-
 The stories generator will read your inputs (if you’re using Angular), or your props (if you're using React), and will generate stories with the corresponding arguments/controls already prefilled.
 
 #### Storybook interaction tests

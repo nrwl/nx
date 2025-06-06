@@ -5206,14 +5206,14 @@
                     "tags": []
                   },
                   {
-                    "id": "storybook-7-setup",
-                    "name": "Storybook 7",
-                    "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
+                    "id": "storybook-9-setup",
+                    "name": "Storybook 9",
+                    "description": "This guide explains how you can set up Storybook version 9 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
                     "mediaImage": "",
-                    "file": "shared/packages/storybook/storybook-7-setup",
+                    "file": "shared/packages/storybook/storybook-9-setup",
                     "itemList": [],
                     "isExternal": false,
-                    "path": "/technologies/test-tools/storybook/recipes/storybook-7-setup",
+                    "path": "/technologies/test-tools/storybook/recipes/storybook-9-setup",
                     "tags": []
                   },
                   {
@@ -10140,14 +10140,14 @@
                 "tags": []
               },
               {
-                "id": "storybook-7-setup",
-                "name": "Storybook 7",
-                "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
+                "id": "storybook-9-setup",
+                "name": "Storybook 9",
+                "description": "This guide explains how you can set up Storybook version 9 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
                 "mediaImage": "",
-                "file": "shared/packages/storybook/storybook-7-setup",
+                "file": "shared/packages/storybook/storybook-9-setup",
                 "itemList": [],
                 "isExternal": false,
-                "path": "/technologies/test-tools/storybook/recipes/storybook-7-setup",
+                "path": "/technologies/test-tools/storybook/recipes/storybook-9-setup",
                 "tags": []
               },
               {
@@ -10736,14 +10736,14 @@
             "tags": []
           },
           {
-            "id": "storybook-7-setup",
-            "name": "Storybook 7",
-            "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
+            "id": "storybook-9-setup",
+            "name": "Storybook 9",
+            "description": "This guide explains how you can set up Storybook version 9 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
             "mediaImage": "",
-            "file": "shared/packages/storybook/storybook-7-setup",
+            "file": "shared/packages/storybook/storybook-9-setup",
             "itemList": [],
             "isExternal": false,
-            "path": "/technologies/test-tools/storybook/recipes/storybook-7-setup",
+            "path": "/technologies/test-tools/storybook/recipes/storybook-9-setup",
             "tags": []
           },
           {
@@ -10940,14 +10940,14 @@
         "tags": []
       },
       {
-        "id": "storybook-7-setup",
-        "name": "Storybook 7",
-        "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
+        "id": "storybook-9-setup",
+        "name": "Storybook 9",
+        "description": "This guide explains how you can set up Storybook version 9 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
         "mediaImage": "",
-        "file": "shared/packages/storybook/storybook-7-setup",
+        "file": "shared/packages/storybook/storybook-9-setup",
         "itemList": [],
         "isExternal": false,
-        "path": "/technologies/test-tools/storybook/recipes/storybook-7-setup",
+        "path": "/technologies/test-tools/storybook/recipes/storybook-9-setup",
         "tags": []
       },
       {
@@ -11109,15 +11109,15 @@
     "path": "/technologies/test-tools/storybook/recipes/best-practices",
     "tags": []
   },
-  "/technologies/test-tools/storybook/recipes/storybook-7-setup": {
-    "id": "storybook-7-setup",
-    "name": "Storybook 7",
-    "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
+  "/technologies/test-tools/storybook/recipes/storybook-9-setup": {
+    "id": "storybook-9-setup",
+    "name": "Storybook 9",
+    "description": "This guide explains how you can set up Storybook version 9 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
     "mediaImage": "",
-    "file": "shared/packages/storybook/storybook-7-setup",
+    "file": "shared/packages/storybook/storybook-9-setup",
     "itemList": [],
     "isExternal": false,
-    "path": "/technologies/test-tools/storybook/recipes/storybook-7-setup",
+    "path": "/technologies/test-tools/storybook/recipes/storybook-9-setup",
     "tags": []
   },
   "/technologies/test-tools/storybook/recipes/overview-react": {

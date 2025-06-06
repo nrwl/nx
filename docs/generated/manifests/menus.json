@@ -2548,30 +2548,6 @@
                             "disableCollapsible": false
                           },
                           {
-                            "id": "storybook-configuration",
-                            "path": "/technologies/react/react-native/api/generators/storybook-configuration",
-                            "name": "storybook-configuration",
-                            "children": [],
-                            "isExternal": false,
-                            "disableCollapsible": false
-                          },
-                          {
-                            "id": "component-story",
-                            "path": "/technologies/react/react-native/api/generators/component-story",
-                            "name": "component-story",
-                            "children": [],
-                            "isExternal": false,
-                            "disableCollapsible": false
-                          },
-                          {
-                            "id": "stories",
-                            "path": "/technologies/react/react-native/api/generators/stories",
-                            "name": "stories",
-                            "children": [],
-                            "isExternal": false,
-                            "disableCollapsible": false
-                          },
-                          {
                             "id": "upgrade-native",
                             "path": "/technologies/react/react-native/api/generators/upgrade-native",
                             "name": "upgrade-native",
@@ -4767,9 +4743,9 @@
                         "disableCollapsible": false
                       },
                       {
-                        "name": "Storybook 7",
-                        "path": "/technologies/test-tools/storybook/recipes/storybook-7-setup",
-                        "id": "storybook-7-setup",
+                        "name": "Storybook 9",
+                        "path": "/technologies/test-tools/storybook/recipes/storybook-9-setup",
+                        "id": "storybook-9-setup",
                         "isExternal": false,
                         "children": [],
                         "disableCollapsible": false
@@ -4934,14 +4910,6 @@
                             "disableCollapsible": false
                           },
                           {
-                            "id": "cypress-project",
-                            "path": "/technologies/test-tools/storybook/api/generators/cypress-project",
-                            "name": "cypress-project",
-                            "children": [],
-                            "isExternal": false,
-                            "disableCollapsible": false
-                          },
-                          {
                             "id": "convert-to-inferred",
                             "path": "/technologies/test-tools/storybook/api/generators/convert-to-inferred",
                             "name": "convert-to-inferred",
@@ -4950,17 +4918,17 @@
                             "disableCollapsible": false
                           },
                           {
-                            "id": "migrate-7",
-                            "path": "/technologies/test-tools/storybook/api/generators/migrate-7",
-                            "name": "migrate-7",
+                            "id": "migrate-8",
+                            "path": "/technologies/test-tools/storybook/api/generators/migrate-8",
+                            "name": "migrate-8",
                             "children": [],
                             "isExternal": false,
                             "disableCollapsible": false
                           },
                           {
-                            "id": "migrate-8",
-                            "path": "/technologies/test-tools/storybook/api/generators/migrate-8",
-                            "name": "migrate-8",
+                            "id": "migrate-9",
+                            "path": "/technologies/test-tools/storybook/api/generators/migrate-9",
+                            "name": "migrate-9",
                             "children": [],
                             "isExternal": false,
                             "disableCollapsible": false

@@ -481,7 +481,6 @@
                 }
               ]
             },
-
             {
               "name": "Enforce Module Boundaries",
               "id": "enforce-module-boundaries",
@@ -1510,7 +1509,6 @@
                     }
                   ]
                 },
-
                 {
                   "name": "Rsbuild",
                   "id": "rsbuild",
@@ -1638,10 +1636,10 @@
                           "file": "shared/packages/storybook/best-practices"
                         },
                         {
-                          "id": "storybook-7-setup",
-                          "name": "Storybook 7",
-                          "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
-                          "file": "shared/packages/storybook/storybook-7-setup"
+                          "id": "storybook-9-setup",
+                          "name": "Storybook 9",
+                          "description": "This guide explains how you can set up Storybook version 9 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
+                          "file": "shared/packages/storybook/storybook-9-setup"
                         },
                         {
                           "name": "Set up Storybook for React Projects",
@@ -3359,10 +3357,10 @@
               "file": "shared/packages/storybook/best-practices"
             },
             {
-              "id": "storybook-7-setup",
-              "name": "Storybook 7",
-              "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
-              "file": "shared/packages/storybook/storybook-7-setup"
+              "id": "storybook-9-setup",
+              "name": "Storybook 9",
+              "description": "This guide explains how you can set up Storybook version 9 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
+              "file": "shared/packages/storybook/storybook-9-setup"
             }
           ]
         },
