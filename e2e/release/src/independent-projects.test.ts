@@ -344,6 +344,12 @@ describe('nx release - independent projects', () => {
 
 
         "name": "@proj/{project-name}",
+        -   "version": "999.9.9-version-git-operations-test.2",
+        +   "version": "999.9.9-version-git-operations-test.3",
+        "scripts": {
+
+
+        "name": "@proj/{project-name}",
         -   "version": "999.9.9",
         +   "version": "999.9.9-version-git-operations-test.3",
         "scripts": {
@@ -352,12 +358,6 @@ describe('nx release - independent projects', () => {
         -     "@proj/{project-name}": "999.9.9-package.3"
         +     "@proj/{project-name}": "999.9.9-version-git-operations-test.3"
         }
-
-
-        "name": "@proj/{project-name}",
-        -   "version": "999.9.9-version-git-operations-test.2",
-        +   "version": "999.9.9-version-git-operations-test.3",
-        "scripts": {
 
 
         Skipped lock file update because {package-manager} workspaces are not enabled.
@@ -906,7 +906,7 @@ describe('nx release - independent projects', () => {
       expect(
         releaseOutput.match(new RegExp(`New version 1\.4\.1 written`, 'g'))
           .length
-      ).toEqual(1);
+      ).toEqual(2);
 
       expect(
         releaseOutput.match(new RegExp(`New version 1\.6\.1 written`, 'g'))
