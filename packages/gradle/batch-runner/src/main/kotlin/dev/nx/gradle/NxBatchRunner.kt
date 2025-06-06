@@ -43,7 +43,6 @@ fun main(args: Array<String>) {
     }
 
     val reportJson = Gson().toJson(results)
-    // logger.info("$reportJson")
     println(reportJson)
 
     val summary = results.values.groupBy { it.success }
