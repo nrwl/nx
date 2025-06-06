@@ -38,7 +38,7 @@ export default async function (globalConfig: Config.ConfigGlobals) {
       // Keep checking until the configured registry changes from default
       while (currentRegistry === defaultRegistry) {
         console.log(
-          'Waiting for registry configuration to change from default...'
+          `Waiting for registry configuration to change from default (${defaultRegistry})...`
         );
         await new Promise((resolve) => setTimeout(resolve, 250));
         currentRegistry = getCurrentRegistry();
