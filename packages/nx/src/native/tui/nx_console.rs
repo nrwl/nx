@@ -129,6 +129,10 @@ mod tests {
     fn test_vscode_without_askpass_confirmation() {
         let mut test_env = HashMap::new();
         test_env.insert("TERM_PROGRAM".to_string(), "vscode".to_string());
+        test_env.insert(
+            "VSCODE_GIT_ASKPASS_NODE".to_string(),
+            "some/path/with/vscode/in/it".to_string(),
+        );
         // No VSCODE_GIT_ASKPASS_NODE set or doesn't contain "vscode"
         assert_eq!(detect_editor(test_env), SupportedEditor::VSCode);
     }
