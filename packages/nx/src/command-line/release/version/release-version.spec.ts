@@ -873,6 +873,184 @@ describe('releaseVersionGenerator (ported tests)', () => {
           `);
         });
 
+        it('should not update dependents that depend on fixed versions, if "updateDependents" is "auto"', async () => {
+          // Supported package manager for workspace: protocol
+          mockDetectPackageManager.mockReturnValue('pnpm');
+
+          const {
+            nxReleaseConfig,
+            projectGraph,
+            releaseGroups,
+            releaseGroupToFilteredProjects,
+            filters,
+          } = await createNxReleaseConfigAndPopulateWorkspace(
+            tree,
+            `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - package-a@3.0.0 [js]
+            - package-b@4.1.0 [js]
+              -> depends on package-a(workspace:^)
+            - package-c@3.0.18 [js]
+              -> depends on package-a(2.4.0)
+            - package-d@6.12.8 [js]
+              -> depends on package-a(^3.0.0)
+        `,
+            {
+              version: {
+                preserveLocalDependencyProtocols: true,
+                // conventionalCommits: true,
+                // fallbackCurrentVersionResolver: 'disk',
+                specifierSource: 'prompt',
+                updateDependents: 'auto',
+              },
+            },
+            undefined,
+            {
+              // version only package-a
+              projects: ['package-a'],
+            }
+          );
+
+          expect(readJson(tree, 'package-a/package.json'))
+            .toMatchInlineSnapshot(`
+            {
+              "name": "package-a",
+              "version": "3.0.0",
+            }
+          `);
+          expect(readJson(tree, 'package-b/package.json'))
+            .toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "package-a": "workspace:^",
+              },
+              "name": "package-b",
+              "version": "4.1.0",
+            }
+          `);
+          expect(readJson(tree, 'package-c/package.json'))
+            .toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "package-a": "2.4.0",
+              },
+              "name": "package-c",
+              "version": "3.0.18",
+            }
+          `);
+          expect(readJson(tree, 'package-d/package.json'))
+            .toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "package-a": "^3.0.0",
+              },
+              "name": "package-d",
+              "version": "6.12.8",
+            }
+          `);
+
+          const result = await releaseVersionGeneratorForTest(tree, {
+            nxReleaseConfig,
+            projectGraph,
+            filters,
+            releaseGroups,
+            releaseGroupToFilteredProjects,
+            userGivenSpecifier: 'minor',
+          });
+          expect(result).toMatchInlineSnapshot(`
+            {
+              "callback": [Function],
+              "data": {
+                "package-a": {
+                  "currentVersion": "3.0.0",
+                  "dependentProjects": [
+                    {
+                      "dependencyCollection": "dependencies",
+                      "rawVersionSpec": "workspace:^",
+                      "source": "package-b",
+                      "target": "package-a",
+                      "type": "static",
+                    },
+                    {
+                      "dependencyCollection": "dependencies",
+                      "rawVersionSpec": "2.4.0",
+                      "source": "package-c",
+                      "target": "package-a",
+                      "type": "static",
+                    },
+                    {
+                      "dependencyCollection": "dependencies",
+                      "rawVersionSpec": "^3.0.0",
+                      "source": "package-d",
+                      "target": "package-a",
+                      "type": "static",
+                    },
+                  ],
+                  "newVersion": "3.1.0",
+                },
+                "package-b": {
+                  "currentVersion": "4.1.0",
+                  "dependentProjects": [],
+                  "newVersion": "4.1.1",
+                },
+                "package-c": {
+                  "currentVersion": "3.0.18",
+                  "dependentProjects": [],
+                  "newVersion": null,
+                },
+                "package-d": {
+                  "currentVersion": "6.12.8",
+                  "dependentProjects": [],
+                  "newVersion": "6.12.9",
+                },
+              },
+            }
+          `);
+
+          // package-a is bumped based on its own specifier of minor
+          expect(readJson(tree, 'package-a/package.json'))
+            .toMatchInlineSnapshot(`
+            {
+              "name": "package-a",
+              "version": "3.1.0",
+            }
+          `);
+          // package-b is bumped because its dependency on package-a uses workspace protocol
+          expect(readJson(tree, 'package-b/package.json'))
+            .toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "package-a": "workspace:^",
+              },
+              "name": "package-b",
+              "version": "4.1.1",
+            }
+          `);
+          // FIXME: this fails in new versioning
+          // package-c is NOT bumped because its dependency on package-a is fixed
+          expect(readJson(tree, 'package-c/package.json'))
+            .toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "package-a": "2.4.0",
+              },
+              "name": "package-c",
+              "version": "3.0.18",
+            }
+          `);
+          // package-d is bumped because its dependency on package-a allows for minor and patch updates
+          expect(readJson(tree, 'package-d/package.json'))
+            .toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "package-a": "^3.1.0",
+              },
+              "name": "package-d",
+              "version": "6.12.9",
+            }
+          `);
+        });
+
         it('should update dependents with a prepatch when creating a pre-release version', async () => {
           const {
             nxReleaseConfig,
