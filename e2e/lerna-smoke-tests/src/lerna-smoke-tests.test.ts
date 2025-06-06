@@ -19,7 +19,9 @@ expect.addSnapshotSerializer({
       .replace(/\s+\n/g, '\n')
       .replace(tmpLernaProjPath(), '')
       .replace('/private', '')
-      .replace('/packages/package-1', '');
+      .replace('/packages/package-1', '')
+      .replace(/^yarn run v\d+\.\d+\.\d+/gm, '')
+      .replace(/^Done in \d+\.\d+s\.\n?$/gm, '');
   },
   test(val: string) {
     return val != null && typeof val === 'string';
@@ -69,12 +71,12 @@ describe('Lerna Smoke Tests', () => {
         .replace('$ echo test-package-1', '> echo test-package-1');
       expect(result).toMatchInlineSnapshot(`
 
-                > package-1:print-name
-                > echo test-package-1
-                test-package-1
-                Lerna (powered by Nx)   Successfully ran target print-name for project package-1
+        > package-1:print-name
+        > echo test-package-1
+        test-package-1
+        Lerna (powered by Nx)   Successfully ran target print-name for project package-1
 
-            `);
+      `);
     }, 1000000);
   });
 });

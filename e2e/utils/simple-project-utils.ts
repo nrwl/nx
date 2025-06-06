@@ -3,8 +3,7 @@ import { backupManager } from './backup-manager';
 import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { runCLI, RunCmdOpts } from './command-utils';
 import * as isCI from 'is-ci';
-
-type PackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun';
+import { NxPackage, nxPackages, PackageManager } from './ types';
 
 // Global counter for test suite isolation
 let suiteId: string | undefined;
@@ -30,7 +29,7 @@ export async function newProject({
 }: {
   name?: string;
   packageManager?: PackageManager;
-  readonly packages?: Array<string>;
+  readonly packages?: NxPackage[];
   preset?: string;
 } = {}): Promise<string> {
   // Generate unique test ID
@@ -43,7 +42,7 @@ export async function newProject({
   const projName = await backupManager.createProject(
     {
       packageManager,
-      packages,
+      packages: packages || [...nxPackages],
       preset,
     },
     testRunId,
@@ -74,10 +73,6 @@ export function cleanupProject({
         runCLI('reset', opts);
       }
     } catch {} // ignore crashed daemon
-
-    try {
-      backupManager.cleanupOldBackups();
-    } catch {}
   }
 
   if (testRunId) {
