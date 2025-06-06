@@ -147,7 +147,7 @@ const targetAliases = {
   t: 'test',
 };
 
-function parseRunOneOptions(
+export function parseRunOneOptions(
   cwd: string,
   parsedArgs: { [k: string]: any },
   projectGraph: ProjectGraph,
@@ -177,14 +177,17 @@ function parseRunOneOptions(
     }
   } else if (parsedArgs.target) {
     target = parsedArgs.target;
-  } else if (
-    projectGraph.nodes[parsedArgs['project:target:configuration']]?.data
-      ?.targets?.run
-  ) {
-    target = 'run';
-    project = parsedArgs['project:target:configuration'];
-  } else {
-    target = parsedArgs['project:target:configuration'];
+  } else if (parsedArgs['project:target:configuration']) {
+    // If project:target:configuration exists but has no colon, check if it's a project with run target
+    if (
+      projectGraph.nodes[parsedArgs['project:target:configuration']]?.data
+        ?.targets?.run
+    ) {
+      target = 'run';
+      project = parsedArgs['project:target:configuration'];
+    } else {
+      target = parsedArgs['project:target:configuration'];
+    }
   }
   if (parsedArgs.project) {
     project = parsedArgs.project;
