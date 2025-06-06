@@ -954,7 +954,7 @@ Update packages in both groups with a mix #2
     );
 
     expect(versionResult).toContain(
-      `git add ${pkg5}/package.json ${pkg4}/package.json ${pkg3}/package.json ${pkg2}/package.json ${pkg1}/package.json`
+      `git add ${pkg1}/package.json ${pkg2}/package.json ${pkg3}/package.json ${pkg4}/package.json ${pkg5}/package.json`
     );
 
     expect(readdirSync(versionPlansDir).length).toEqual(2);
