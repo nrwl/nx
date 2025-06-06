@@ -697,6 +697,190 @@ To fix this you will either need to add a package.json file at that location, or
           `);
         });
 
+        it('should not update dependents that depend on fixed versions, if "updateDependents" is "auto"', async () => {
+          // Supported package manager for workspace: protocol
+          mockDetectPackageManager.mockReturnValue('pnpm');
+
+          projectGraph = createWorkspaceWithPackageDependencies(tree, {
+            'package-a': {
+              projectRoot: 'packages/package-a',
+              packageName: 'package-a',
+              version: '3.0.0',
+              packageJsonPath: 'packages/package-a/package.json',
+              localDependencies: [],
+            },
+            'package-b': {
+              projectRoot: 'packages/package-b',
+              packageName: 'package-b',
+              version: '4.1.0',
+              packageJsonPath: 'packages/package-b/package.json',
+              localDependencies: [
+                {
+                  projectName: 'package-a',
+                  dependencyCollection: 'dependencies',
+                  version: 'workspace:^',
+                },
+              ],
+            },
+            'package-c': {
+              projectRoot: 'packages/package-c',
+              packageName: 'package-c',
+              version: '3.0.18',
+              packageJsonPath: 'packages/package-c/package.json',
+              localDependencies: [
+                {
+                  projectName: 'package-a',
+                  dependencyCollection: 'dependencies',
+                  version: '2.4.0',
+                },
+              ],
+            },
+            'package-d': {
+              projectRoot: 'packages/package-d',
+              packageName: 'package-d',
+              version: '6.12.8',
+              packageJsonPath: 'packages/package-d/package.json',
+              localDependencies: [
+                {
+                  projectName: 'package-a',
+                  dependencyCollection: 'dependencies',
+                  version: '^3.0.0',
+                },
+              ],
+            },
+          });
+
+          expect(readJson(tree, 'packages/package-a/package.json'))
+            .toMatchInlineSnapshot(`
+            {
+              "name": "package-a",
+              "version": "3.0.0",
+            }
+          `);
+          expect(readJson(tree, 'packages/package-b/package.json'))
+            .toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "package-a": "workspace:^",
+              },
+              "name": "package-b",
+              "version": "4.1.0",
+            }
+          `);
+          expect(readJson(tree, 'packages/package-c/package.json'))
+            .toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "package-a": "2.4.0",
+              },
+              "name": "package-c",
+              "version": "3.0.18",
+            }
+          `);
+          expect(readJson(tree, 'packages/package-d/package.json'))
+            .toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "package-a": "^3.0.0",
+              },
+              "name": "package-d",
+              "version": "6.12.8",
+            }
+          `);
+
+          expect(
+            await releaseVersionGenerator(tree, {
+              projects: [projectGraph.nodes['package-a']],
+              projectGraph,
+              specifier: 'minor',
+              currentVersionResolver: 'disk',
+              specifierSource: 'prompt',
+              fallbackCurrentVersionResolver: 'disk',
+              releaseGroup: createReleaseGroup('independent'),
+              updateDependents: 'auto',
+              preserveLocalDependencyProtocols: true,
+            })
+          ).toMatchInlineSnapshot(`
+            {
+              "callback": [Function],
+              "data": {
+                "package-a": {
+                  "currentVersion": "3.0.0",
+                  "dependentProjects": [
+                    {
+                      "dependencyCollection": "dependencies",
+                      "rawVersionSpec": "workspace:^",
+                      "source": "package-b",
+                      "target": "package-a",
+                      "type": "static",
+                    },
+                    {
+                      "dependencyCollection": "dependencies",
+                      "rawVersionSpec": "^3.0.0",
+                      "source": "package-d",
+                      "target": "package-a",
+                      "type": "static",
+                    },
+                  ],
+                  "newVersion": "3.1.0",
+                },
+                "package-b": {
+                  "currentVersion": "4.1.0",
+                  "dependentProjects": [],
+                  "newVersion": "4.1.1",
+                },
+                "package-d": {
+                  "currentVersion": "6.12.8",
+                  "dependentProjects": [],
+                  "newVersion": "6.12.9",
+                },
+              },
+            }
+          `);
+
+          // package-a is bumped based on its own specifier of minor
+          expect(readJson(tree, 'packages/package-a/package.json'))
+            .toMatchInlineSnapshot(`
+            {
+              "name": "package-a",
+              "version": "3.1.0",
+            }
+          `);
+          // package-b is bumped because its dependency on package-a uses workspace protocol
+          expect(readJson(tree, 'packages/package-b/package.json'))
+            .toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "package-a": "workspace:^",
+              },
+              "name": "package-b",
+              "version": "4.1.1",
+            }
+          `);
+          // package-c is NOT bumped because its dependency on package-a is fixed
+          expect(readJson(tree, 'packages/package-c/package.json'))
+            .toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "package-a": "2.4.0",
+              },
+              "name": "package-c",
+              "version": "3.0.18",
+            }
+          `);
+          // package-d is bumped because its dependency on package-a allows for minor and patch updates
+          expect(readJson(tree, 'packages/package-d/package.json'))
+            .toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "package-a": "^3.1.0",
+              },
+              "name": "package-d",
+              "version": "6.12.9",
+            }
+          `);
+        });
+
         it('should update dependents with a prepatch when creating a pre-release version', async () => {
           expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
             '0.0.1'
