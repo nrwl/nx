@@ -1,9 +1,6 @@
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
-mod ipc_transport;
-pub mod messaging;
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SupportedEditor {
     VSCode,
@@ -19,7 +16,7 @@ pub fn get_current_editor() -> &'static SupportedEditor {
     CURRENT_EDITOR.get_or_init(|| detect_editor(HashMap::new()))
 }
 
-fn detect_editor(mut env_map: HashMap<String, String>) -> SupportedEditor {
+pub fn detect_editor(mut env_map: HashMap<String, String>) -> SupportedEditor {
     let term_editor = if let Some(term) = get_env_var("TERM_PROGRAM", &mut env_map) {
         let term_lower = term.to_lowercase();
         match term_lower.as_str() {

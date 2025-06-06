@@ -3,14 +3,14 @@ import { performance } from 'perf_hooks';
 import { commandsObject } from '../src/command-line/nx-commands';
 import { WorkspaceTypeAndRoot } from '../src/utils/find-workspace-root';
 import { stripIndents } from '../src/utils/strip-indents';
+import { ensureNxConsoleInstalled } from '../src/utils/nx-console-prompt';
 
 /**
  * Nx is being run inside a workspace.
  *
  * @param workspace Relevant local workspace properties
  */
-
-export function initLocal(workspace: WorkspaceTypeAndRoot) {
+export async function initLocal(workspace: WorkspaceTypeAndRoot) {
   process.env.NX_CLI_SET = 'true';
 
   try {
@@ -24,6 +24,11 @@ export function initLocal(workspace: WorkspaceTypeAndRoot) {
       handleAngularCLIFallbacks(workspace);
       return;
     }
+
+    // Ensure NxConsole is installed if the user has it configured.
+    try {
+      await ensureNxConsoleInstalled();
+    } catch {}
 
     const command = process.argv[2];
     if (command === 'run' || command === 'g' || command === 'generate') {

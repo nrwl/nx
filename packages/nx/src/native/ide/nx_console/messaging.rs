@@ -12,9 +12,9 @@ use jsonrpsee::{
 };
 
 use crate::native::{
+    ide::nx_console::ipc_transport::IpcTransport,
     tui::{
         components::tasks_list::{TaskItem, TaskStatus},
-        nx_console::ipc_transport::IpcTransport,
         pty::PtyInstance,
     },
     utils::socket_path::get_full_nx_console_socket_path,

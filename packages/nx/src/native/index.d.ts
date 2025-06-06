@@ -73,6 +73,12 @@ export declare class NxCache {
   checkCacheFsInSync(): boolean
 }
 
+export declare class NxConsolePreferences {
+  constructor(homeDir: string)
+  getAutoInstallPreference(): boolean | null
+  setAutoInstallPreference(autoInstall: boolean): void
+}
+
 export declare class NxTaskHistory {
   constructor(db: ExternalObject<NxDbConnection>)
   recordTaskRuns(taskRuns: Array<TaskRun>): void
@@ -147,6 +153,8 @@ export interface CachedResult {
   outputsPath: string
   size?: number
 }
+
+export declare export declare function canInstallNxConsole(): boolean
 
 export declare export declare function closeDbConnection(connection: ExternalObject<NxDbConnection>): void
 
@@ -235,11 +243,13 @@ export interface InputsInput {
   projects?: string | Array<string>
 }
 
+export declare export declare function installNxConsole(): void
+
 export const IS_WASM: boolean
 
-export declare export declare function logError(message: string): void
+export declare export declare function logDebug(message: string): void
 
-export declare export declare function logInfo(message: string): void
+export declare export declare function logError(message: string): void
 
 /** Stripped version of the NxJson interface for use in rust */
 export interface NxJson {

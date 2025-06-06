@@ -1,5 +1,6 @@
 mod find_matching_projects;
 mod get_mod_time;
+pub mod json;
 mod normalize_trait;
 pub mod path;
 pub mod socket_path;

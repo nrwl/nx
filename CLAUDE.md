@@ -1,10 +1,11 @@
 When responding to queries about this repository:
 
 1. Use the `nx_workspace` mcp tool for understanding the workspace architecture when appropriate
-2. Suggest relevant commands from the "Essential Commands" section when applicable
-3. Highlight Nx's focus on monorepos and its key features like smart task execution, code generation, and project graph analysis
-4. Mention the plugin ecosystem and support for various frameworks when relevant
-5. Emphasize the importance of running the full validation suite before committing changes
+2. When working in projects, use the `nx_project` mcp tool to analyze and understand the specific project structure and dependencies
+3. Suggest relevant commands from the "Essential Commands" section when applicable
+4. Highlight Nx's focus on monorepos and its key features like smart task execution, code generation, and project graph analysis
+5. Mention the plugin ecosystem and support for various frameworks when relevant
+6. Emphasize the importance of running the full validation suite before committing changes
 
 Always strive to provide accurate, helpful responses that align with the best practices and workflows described in this file.
 

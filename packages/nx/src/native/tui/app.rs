@@ -22,6 +22,7 @@ use crate::native::{
     tasks::types::{Task, TaskResult},
 };
 
+use super::action::Action;
 use super::components::Component;
 use super::components::countdown_popup::CountdownPopup;
 use super::components::help_popup::HelpPopup;
@@ -37,7 +38,7 @@ use super::pty::PtyInstance;
 use super::theme::THEME;
 use super::tui;
 use super::utils::normalize_newlines;
-use super::{action::Action, nx_console::messaging::NxConsoleMessageConnection};
+use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
 
 pub struct App {
     pub components: Vec<Box<dyn Component>>,
