@@ -1,5 +1,7 @@
 ## Examples
 
+Some examples
+
 {% tabs %}
 {% tab label="Simple Application" %}
 
