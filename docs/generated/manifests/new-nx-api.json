@@ -399,14 +399,14 @@
       }
     },
     "migrations": {
-      "/technologies/angular/api/migrations/update-angular-cli-version-20-0-0-rc-3": {
-        "description": "Update the @angular/cli package version to 20.0.0-rc.3.",
-        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-0-0-rc-3.json",
+      "/technologies/angular/api/migrations/update-angular-cli-version-20-0-0": {
+        "description": "Update the @angular/cli package version to ~20.0.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-0-0.json",
         "hidden": false,
-        "name": "update-angular-cli-version-20-0-0-rc-3",
-        "version": "21.2.0-beta.0",
+        "name": "update-angular-cli-version-20-0-0",
+        "version": "21.2.0-beta.3",
         "originalFilePath": "/packages/angular",
-        "path": "/technologies/angular/api/migrations/update-angular-cli-version-20-0-0-rc-3",
+        "path": "/technologies/angular/api/migrations/update-angular-cli-version-20-0-0",
         "type": "migration"
       },
       "/technologies/angular/api/migrations/migrate-provide-server-rendering-import": {
@@ -414,17 +414,17 @@
         "file": "generated/packages/angular/migrations/migrate-provide-server-rendering-import.json",
         "hidden": false,
         "name": "migrate-provide-server-rendering-import",
-        "version": "21.2.0-beta.0",
+        "version": "21.2.0-beta.3",
         "originalFilePath": "/packages/angular",
         "path": "/technologies/angular/api/migrations/migrate-provide-server-rendering-import",
         "type": "migration"
       },
       "/technologies/angular/api/migrations/replace-provide-server-routing": {
-        "description": "Replace `provideServerRouting` with `provideServerRendering` using `withRoutes`.",
+        "description": "Replace `provideServerRouting` and `provideServerRoutesConfig` with `provideServerRendering` using `withRoutes`.",
         "file": "generated/packages/angular/migrations/replace-provide-server-routing.json",
         "hidden": false,
         "name": "replace-provide-server-routing",
-        "version": "21.2.0-beta.0",
+        "version": "21.2.0-beta.3",
         "originalFilePath": "/packages/angular",
         "path": "/technologies/angular/api/migrations/replace-provide-server-routing",
         "type": "migration"
@@ -434,7 +434,7 @@
         "file": "generated/packages/angular/migrations/set-generator-defaults-for-previous-style-guide.json",
         "hidden": false,
         "name": "set-generator-defaults-for-previous-style-guide",
-        "version": "21.2.0-beta.0",
+        "version": "21.2.0-beta.3",
         "originalFilePath": "/packages/angular",
         "path": "/technologies/angular/api/migrations/set-generator-defaults-for-previous-style-guide",
         "type": "migration"
@@ -444,7 +444,7 @@
         "file": "generated/packages/angular/migrations/update-module-resolution.json",
         "hidden": false,
         "name": "update-module-resolution",
-        "version": "21.2.0-beta.0",
+        "version": "21.2.0-beta.3",
         "originalFilePath": "/packages/angular",
         "path": "/technologies/angular/api/migrations/update-module-resolution",
         "type": "migration"
@@ -454,9 +454,49 @@
         "file": "generated/packages/angular/migrations/21.2.0-package-updates.json",
         "hidden": false,
         "name": "21.2.0-package-updates",
-        "version": "21.2.0-beta.0",
+        "version": "21.2.0-beta.3",
         "originalFilePath": "/packages/angular",
         "path": "/technologies/angular/api/migrations/21.2.0-package-updates",
+        "type": "migration"
+      },
+      "/technologies/angular/api/migrations/21.2.0-angular-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.2.0-angular-eslint-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-angular-eslint-package-updates",
+        "version": "21.2.0-beta.3",
+        "originalFilePath": "/packages/angular",
+        "path": "/technologies/angular/api/migrations/21.2.0-angular-eslint-package-updates",
+        "type": "migration"
+      },
+      "/technologies/angular/api/migrations/21.2.0-@angular-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.2.0-@angular-eslint-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-@angular-eslint-package-updates",
+        "version": "21.2.0-beta.3",
+        "originalFilePath": "/packages/angular",
+        "path": "/technologies/angular/api/migrations/21.2.0-@angular-eslint-package-updates",
+        "type": "migration"
+      },
+      "/technologies/angular/api/migrations/21.2.0-angular-rspack-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.2.0-angular-rspack-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-angular-rspack-package-updates",
+        "version": "21.2.0-beta.3",
+        "originalFilePath": "/packages/angular",
+        "path": "/technologies/angular/api/migrations/21.2.0-angular-rspack-package-updates",
+        "type": "migration"
+      },
+      "/technologies/angular/api/migrations/21.2.0-jest-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.2.0-jest-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-jest-package-updates",
+        "version": "21.2.0-beta.3",
+        "originalFilePath": "/packages/angular",
+        "path": "/technologies/angular/api/migrations/21.2.0-jest-package-updates",
         "type": "migration"
       },
       "/technologies/angular/api/migrations/21.1.0-package-updates": {
@@ -4881,6 +4921,16 @@
       }
     },
     "migrations": {
+      "/technologies/build-tools/vite/api/migrations/21.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/vite/migrations/21.2.0-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-package-updates",
+        "version": "21.2.0-beta.3",
+        "originalFilePath": "/packages/vite",
+        "path": "/technologies/build-tools/vite/api/migrations/21.2.0-package-updates",
+        "type": "migration"
+      },
       "/technologies/build-tools/vite/api/migrations/21.1.2-package-updates": {
         "description": "",
         "file": "generated/packages/vite/migrations/21.1.2-package-updates.json",
