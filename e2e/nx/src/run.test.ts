@@ -476,9 +476,8 @@ describe('Nx Running Tests', () => {
       runCLI(`generate @nx/web:app apps/${myapp}`);
 
       // Project has no "run" target, so it should fail
-      expect(() => runCLI(`run ${myapp}`)).toThrow(
-        'Both project and target have to be specified'
-      );
+      const result = runCLI(`run ${myapp}`, { silenceError: true });
+      expect(result).toContain('Both project and target have to be specified');
     });
 
     describe('target defaults + executor specifications', () => {
