@@ -1,5 +1,6 @@
 import {
   ModuleFederationConfig,
+  normalizeProjectName,
   NxModuleFederationConfigOverride,
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
@@ -32,7 +33,7 @@ export async function withModuleFederationForSSR(
     config.plugins.push(
       new (require('@module-federation/enhanced').ModuleFederationPlugin)(
         {
-          name: options.name.replace(/-/g, '_'),
+          name: normalizeProjectName(options.name),
           filename: 'remoteEntry.js',
           exposes: options.exposes,
           remotes: mappedRemotes,
