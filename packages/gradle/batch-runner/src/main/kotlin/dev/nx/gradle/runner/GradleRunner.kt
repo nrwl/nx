@@ -128,7 +128,7 @@ fun runBuildLauncher(
   val globalEnd = System.currentTimeMillis()
   val maxEndTime = taskResults.values.map { it.endTime }.maxOrNull() ?: globalEnd
   val delta = globalEnd - maxEndTime
-  logger.info("build delta $delta")
+  logger.info("⏱️ Build completion timing gap: ${delta}ms (time between last task finish and build end)")
 
   finalizeTaskResults(
       tasks = tasks,
@@ -200,7 +200,7 @@ fun runTestLauncher(
   val globalEnd = System.currentTimeMillis()
   val maxEndTime = testEndTimes.values.maxOrNull() ?: globalEnd
   val delta = globalEnd - maxEndTime
-  logger.info("⏱️ Test launcher timing gap: ${delta}ms between last test completion and launcher finish")
+  logger.info("⏱️ Test completion timing gap: ${delta}ms (time between last test finish and test launcher end)")
 
   val taskResults = mutableMapOf<String, TaskResult>()
   tasks.forEach { (nxTaskId, taskConfig) ->
