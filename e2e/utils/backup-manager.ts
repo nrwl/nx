@@ -16,9 +16,9 @@ import { getPackageManagerCommand } from './command-utils';
 import { logInfo, logError } from './log-utils';
 import { performance } from 'node:perf_hooks';
 import { dump } from '@zkochan/js-yaml';
+import { NxPackage } from './ types';
 
 type PackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun';
-type NxPackage = string;
 type WorkspaceType = 'nx' | 'lerna';
 
 interface BackupConfig {
@@ -35,10 +35,6 @@ interface BackupContext {
   isTemporary: boolean;
 }
 
-/**
- * BackupManager handles workspace backup creation, reuse, and cleanup
- * with proper concurrency support and process isolation.
- */
 export class BackupManager {
   private static instance: BackupManager;
   private contexts = new Map<string, BackupContext>();
@@ -67,14 +63,12 @@ export class BackupManager {
     const projName = name || `proj-${testId}`;
     const projPath = `${e2eCwd}/${projName}`;
 
-    // Get or create backup
     const { backupPath, isTemporary } = await this.getOrCreateBackup(config);
 
-    // Copy backup to unique project directory
     await this.ensureDirectoryExists(path.dirname(projPath));
     copySync(backupPath, projPath);
 
-    // Store context for cleanup
+    // Necessary for clean up
     this.contexts.set(testId, {
       projName,
       projPath,
@@ -82,13 +76,9 @@ export class BackupManager {
       isTemporary,
     });
 
-    logInfo('BackupManager', `Created project ${projName} from backup`);
     return projName;
   }
 
-  /**
-   * Creates a new Lerna workspace by copying from backup or creating a fresh workspace
-   */
   async createLernaWorkspace(
     packageManager: PackageManager,
     testId: string,
@@ -97,17 +87,14 @@ export class BackupManager {
     const projName = name || `lerna-proj-${testId}`;
     const projPath = `${e2eCwd}/${projName}`;
 
-    // Get or create backup for Lerna workspace
     const { backupPath, isTemporary } = await this.getOrCreateBackup({
       packageManager,
       type: 'lerna',
     });
 
-    // Copy backup to unique project directory
     await this.ensureDirectoryExists(path.dirname(projPath));
     copySync(backupPath, projPath);
 
-    // Store context for cleanup
     this.contexts.set(testId, {
       projName,
       projPath,
@@ -115,79 +102,28 @@ export class BackupManager {
       isTemporary,
     });
 
-    logInfo('BackupManager', `Created Lerna workspace ${projName} from backup`);
     return projName;
   }
 
-  /**
-   * Cleans up a specific test's project and backup if needed
-   */
   cleanupProject(testId: string): void {
     const context = this.contexts.get(testId);
     if (!context) return;
 
     try {
-      // Always remove the project directory
       if (directoryExists(context.projPath)) {
         removeSync(context.projPath);
-        logInfo('BackupManager', `Cleaned up project: ${context.projName}`);
       }
 
       // Cleanup backup based on strategy
       if (context.backupPath && directoryExists(context.backupPath)) {
         if (this.shouldCleanupBackup(context)) {
           removeSync(context.backupPath);
-          logInfo(
-            'BackupManager',
-            `Cleaned up backup: ${path.basename(context.backupPath)}`
-          );
         }
       }
     } catch (error) {
       console.warn(`Failed to cleanup project ${testId}:`, error.message);
     } finally {
       this.contexts.delete(testId);
-    }
-  }
-
-  /**
-   * Cleans up all old backups (called periodically in CI)
-   */
-  cleanupOldBackups(): void {
-    const backupsDir = path.join(this.baseDir, 'backups');
-    if (!directoryExists(backupsDir)) return;
-
-    const entries = readdirSync(backupsDir);
-    const now = Date.now();
-    const maxAge = 3 * 60 * 60 * 1000; // 3 hours
-
-    for (const entry of entries) {
-      try {
-        const fullPath = path.join(backupsDir, entry);
-        const stats = statSync(fullPath);
-
-        if (!stats.isDirectory()) continue;
-
-        // In CI: only clean up our own process backups or very old ones
-        if (isCI) {
-          const isOurProcess = entry.includes(`-${this.processId}-`);
-          const isVeryOld = now - stats.mtimeMs > maxAge;
-
-          if (isOurProcess || isVeryOld) {
-            removeSync(fullPath);
-            console.warn(`🧹 Cleaned up old backup: ${entry}`);
-          }
-        } else {
-          // Local: clean up old backups
-          const isOld = now - stats.mtimeMs > maxAge;
-          if (isOld) {
-            removeSync(fullPath);
-            console.warn(`🧹 Cleaned up old backup: ${entry}`);
-          }
-        }
-      } catch {
-        // Ignore individual failures
-      }
     }
   }
 
@@ -286,10 +222,10 @@ export class BackupManager {
 
     try {
       if (type === 'lerna') {
-        // Create Lerna workspace
+        // Create Lerna
         await this.createLernaWorkspaceStructure(tempWorkspace, packageManager);
       } else {
-        // Create Nx workspace
+        // Create Nx
         const start = performance.mark('create-workspace:start');
         this.runCreateWorkspace(tempWorkspace, { preset, packageManager });
         const end = performance.mark('create-workspace:end');
@@ -425,7 +361,12 @@ export class BackupManager {
 
       // Install lerna (exactly as in original)
       const lernaVersion = getLatestLernaVersion();
-      const lernaInstallCommand = `${pm.addDev} lerna@${lernaVersion}${
+      const baseInstallCmd =
+        packageManager === 'npm'
+          ? 'npm install --legacy-peer-deps --ignore-scripts -D'
+          : pm.addDev;
+
+      const lernaInstallCommand = `${baseInstallCmd} lerna@${lernaVersion}${
         packageManager === 'pnpm'
           ? ' --workspace-root'
           : packageManager === 'yarn'
@@ -436,7 +377,10 @@ export class BackupManager {
       execSync(lernaInstallCommand, {
         cwd: workspaceDir,
         stdio: isVerbose() ? 'inherit' : 'pipe',
-        env: { CI: 'true', ...process.env },
+        env: {
+          CI: 'true',
+          ...process.env,
+        },
         encoding: 'utf-8',
       });
 
@@ -444,7 +388,10 @@ export class BackupManager {
       execSync(`${pm.runLerna} init`, {
         cwd: workspaceDir,
         stdio: isVerbose() ? 'inherit' : 'pipe',
-        env: { CI: 'true', ...process.env },
+        env: {
+          CI: 'true',
+          ...process.env,
+        },
         encoding: 'utf-8',
       });
 
@@ -460,10 +407,16 @@ export class BackupManager {
       }
 
       // Install dependencies (exactly as in original)
-      execSync(pm.install, {
+      const installCommand =
+        packageManager === 'npm' ? 'npm install --ignore-scripts' : pm.install;
+
+      execSync(installCommand, {
         cwd: workspaceDir,
         stdio: isVerbose() ? 'inherit' : 'pipe',
-        env: { CI: 'true', ...process.env },
+        env: {
+          CI: 'true',
+          ...process.env,
+        },
         encoding: 'utf-8',
       });
 

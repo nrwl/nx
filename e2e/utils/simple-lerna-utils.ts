@@ -15,8 +15,7 @@ import { e2eCwd } from './get-env-info';
 import { existsSync, readFileSync } from 'fs';
 import * as path from 'path';
 import { ensureDirSync, writeFileSync } from 'fs-extra';
-
-type PackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun';
+import { PackageManager } from './ types';
 
 // Global counter for test suite isolation
 let suiteId: string | undefined;
@@ -49,17 +48,6 @@ export function tmpLernaProjPath(path?: string): string {
 }
 
 /**
- * Get current test run ID from call stack or generate new one
- */
-function getCurrentTestRunId(): string {
-  if (process.env.TEST_RUN_ID) return process.env.TEST_RUN_ID;
-
-  const testId = `${getTestSuiteId()}-${randomUUID().slice(0, 6)}`;
-  process.env.TEST_RUN_ID = testId;
-  return testId;
-}
-
-/**
  * Executes Lerna CLI commands in the current workspace
  */
 export function runLernaCLI(command: string, opts?: RunCmdOpts): string {
@@ -69,10 +57,6 @@ export function runLernaCLI(command: string, opts?: RunCmdOpts): string {
   let packageManager: PackageManager = getSelectedPackageManager();
 
   try {
-    // Try to read package.json directly to detect workspace setup
-    const packageJsonPath = path.join(workspacePath, 'package.json');
-    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
-
     // Detect based on lock files and workspace setup
     if (existsSync(path.join(workspacePath, 'pnpm-workspace.yaml'))) {
       packageManager = 'pnpm';
@@ -101,6 +85,7 @@ export function runLernaCLI(command: string, opts?: RunCmdOpts): string {
     const logs = execSync(fullCommand, {
       cwd: workspacePath,
       env: {
+        NODE_ENV: process.env.NODE_ENV ?? 'test',
         CI: 'true',
         ...getStrippedEnvironmentVariables(),
         ...opts?.env,
@@ -148,7 +133,6 @@ export async function newLernaWorkspace({
   // Store test ID for cleanup
   process.env.TEST_RUN_ID = testRunId;
 
-  // Create Lerna workspace using BackupManager
   const projName = await backupManager.createLernaWorkspace(
     packageManager,
     testRunId,
@@ -158,31 +142,22 @@ export async function newLernaWorkspace({
   return projName;
 }
 
-/**
- * Simplified cleanup using BackupManager
- */
 export function cleanupLernaWorkspace({
   skipReset,
   ...opts
 }: RunCmdOpts & { skipReset?: boolean } = {}) {
   const testRunId = process.env.TEST_RUN_ID;
 
-  // Clean up the project and backup using BackupManager
   if (testRunId) {
     backupManager.cleanupProject(testRunId);
   }
 
-  // CI-specific cleanup
   if (isCI) {
     try {
       if (!skipReset) {
         runCLI('reset', opts);
       }
     } catch {} // ignore crashed daemon
-
-    try {
-      backupManager.cleanupOldBackups();
-    } catch {}
   }
 
   if (testRunId) {
