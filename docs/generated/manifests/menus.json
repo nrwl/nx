@@ -1690,7 +1690,24 @@
                     "path": "/technologies/angular/angular-rspack/api",
                     "id": "api",
                     "isExternal": false,
-                    "children": [],
+                    "children": [
+                      {
+                        "name": "Create Config",
+                        "path": "/technologies/angular/angular-rspack/api/create-config",
+                        "id": "create-config",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "Create Server",
+                        "path": "/technologies/angular/angular-rspack/api/create-server",
+                        "id": "create-server",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      }
+                    ],
                     "disableCollapsible": false
                   }
                 ],
@@ -1707,7 +1724,24 @@
                     "path": "/technologies/angular/angular-rsbuild/api",
                     "id": "api",
                     "isExternal": false,
-                    "children": [],
+                    "children": [
+                      {
+                        "name": "Create Config",
+                        "path": "/technologies/angular/angular-rsbuild/api/create-config",
+                        "id": "create-config",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "Create Server",
+                        "path": "/technologies/angular/angular-rsbuild/api/create-server",
+                        "id": "create-server",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      }
+                    ],
                     "disableCollapsible": false
                   }
                 ],

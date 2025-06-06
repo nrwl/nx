@@ -28,8 +28,10 @@ const IGNORED_WEBPACK_WARNINGS = [
 ];
 
 const extensionAlias = {
-  '.js': ['.ts', '.js'],
+  '.js': ['.ts', '.tsx', '.js', '.jsx'],
   '.mjs': ['.mts', '.mjs'],
+  '.cjs': ['.cts', '.cjs'],
+  '.jsx': ['.tsx', '.jsx'],
 };
 const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
 const mainFields = ['module', 'main'];
