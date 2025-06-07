@@ -4,7 +4,6 @@ import {
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
 import { connectToNxCloudIfExplicitlyAsked } from '../connect/connect-to-nx-cloud';
-import { performance } from 'perf_hooks';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
@@ -148,7 +147,7 @@ const targetAliases = {
   t: 'test',
 };
 
-function parseRunOneOptions(
+export function parseRunOneOptions(
   cwd: string,
   parsedArgs: { [k: string]: any },
   projectGraph: ProjectGraph,
@@ -176,8 +175,19 @@ function parseRunOneOptions(
       target = project;
       project = defaultProjectName;
     }
-  } else {
-    target = parsedArgs.target ?? parsedArgs['project:target:configuration'];
+  } else if (parsedArgs.target) {
+    target = parsedArgs.target;
+  } else if (parsedArgs['project:target:configuration']) {
+    // If project:target:configuration exists but has no colon, check if it's a project with run target
+    if (
+      projectGraph.nodes[parsedArgs['project:target:configuration']]?.data
+        ?.targets?.run
+    ) {
+      target = 'run';
+      project = parsedArgs['project:target:configuration'];
+    } else {
+      target = parsedArgs['project:target:configuration'];
+    }
   }
   if (parsedArgs.project) {
     project = parsedArgs.project;
@@ -185,6 +195,7 @@ function parseRunOneOptions(
   if (!project && defaultProjectName) {
     project = defaultProjectName;
   }
+
   if (!project || !target) {
     throw new Error(`Both project and target have to be specified`);
   }
