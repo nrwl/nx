@@ -4,8 +4,8 @@ import {
   SectionHeading,
   Strong,
   SectionDescription,
-} from '@nx/nx-dev/ui-common';
-import { ReactIcon } from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-common';
+import { ReactIcon } from '@nx/nx-dev-ui-icons';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { ReactElement } from 'react';
 

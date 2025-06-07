@@ -2,7 +2,9 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
-    "types": ["node"]
+    "types": ["node"],
+    "composite": true,
+    "declaration": true
   },
   "files": [
     "../../node_modules/@nx/react/typings/cssmodule.d.ts",

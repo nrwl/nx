@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { DefaultLayout } from '@nx/nx-dev/ui-common';
+import { DefaultLayout } from '@nx/nx-dev-ui-common';
 import { Hero } from '@nx/nx-dev/ui-ai-landing-page';
 import { ProblemStatement } from '@nx/nx-dev/ui-ai-landing-page';
 import { Features } from '@nx/nx-dev/ui-ai-landing-page';

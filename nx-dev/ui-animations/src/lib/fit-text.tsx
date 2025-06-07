@@ -1,6 +1,6 @@
 import { motion, useInView, useMotionValue, useTransform } from 'framer-motion';
 import { ComponentRef, ReactNode, useEffect, useRef, useCallback } from 'react';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 
 export function FitText({
   children,

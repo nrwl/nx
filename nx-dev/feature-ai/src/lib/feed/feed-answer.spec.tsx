@@ -24,7 +24,7 @@ jest.mock('@nx/graph/legacy/shared', () => {
   };
 });
 
-jest.mock('@nx/nx-dev/ui-primitives', () => {
+jest.mock('@nx/nx-dev-ui-primitives', () => {
   return {
     cx: jest.fn(() => null),
   };

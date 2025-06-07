@@ -11,9 +11,9 @@ import { Schema } from './schema';
 import { platform } from 'os';
 import { join, resolve } from 'path';
 import { readModulePackageJson } from 'nx/src/utils/package-json';
-import * as detectPort from 'detect-port';
 import { daemonClient } from 'nx/src/daemon/client/client';
 import { interpolate } from 'nx/src/tasks-runner/utils';
+const detectPort = require('detect-port');
 
 // platform specific command name
 const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';

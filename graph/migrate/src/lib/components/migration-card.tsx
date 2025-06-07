@@ -11,7 +11,7 @@ import {
   ListBulletIcon,
   PlayIcon,
 } from '@heroicons/react/24/outline';
-import { Pill } from '@nx/graph-internal/ui-project-details';
+import { Pill } from '@nx/graph-internal-ui-project-details';
 import {
   useState,
   forwardRef,

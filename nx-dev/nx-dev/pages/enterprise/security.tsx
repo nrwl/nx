@@ -5,7 +5,7 @@ import {
   DefaultLayout,
   Footer,
   Header,
-} from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev-ui-common';
 import {
   BuiltForEnterprise,
   CachePoisoningProtection,
@@ -15,7 +15,7 @@ import {
   SecurityCallToAction,
   SecurityHero,
   WhyCiSecurityMatters,
-} from '@nx/nx-dev/ui-enterprise';
+} from '@nx/nx-dev-ui-enterprise';
 import { type ReactElement } from 'react';
 
 export function EnterpriseSecurity(): ReactElement {

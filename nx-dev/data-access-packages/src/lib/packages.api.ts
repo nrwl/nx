@@ -1,12 +1,12 @@
-import { TagsApi } from '@nx/nx-dev/data-access-documents/node-only';
-import { DocumentMetadata } from '@nx/nx-dev/models-document';
+import { TagsApi } from '@nx/dev-data-access-documents/node-only';
+import { DocumentMetadata } from '@nx/nx-dev-models-document';
 import {
   FileMetadata,
   IntrinsicPackageMetadata,
   ProcessedPackageMetadata,
   SchemaMetadata,
-} from '@nx/nx-dev/models-package';
-import { readFileSync, lstatSync, readdirSync } from 'fs';
+} from '@nx/nx-dev-models-package';
+import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 
 interface StaticDocumentPaths {

@@ -1,10 +1,15 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/graph/client/spec",
     "module": "commonjs",
-    "types": ["jest", "node"],
-    "lib": ["DOM"]
+    "types": [
+      "jest",
+      "node"
+    ],
+    "lib": [
+      "DOM"
+    ]
   },
   "include": [
     "**/*.test.ts",

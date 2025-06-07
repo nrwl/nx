@@ -190,6 +190,13 @@
   "plugins": [
     "@monodon/rust",
     {
+      "plugin": "@nx/js/typescript",
+      "include": ["packages/js/**/*"],
+      "options": {
+        "build": true
+      }
+    },
+    {
       "plugin": "@nx/playwright/plugin",
       "options": {
         "targetName": "pw-e2e",

@@ -9,7 +9,7 @@ import {
   workspaceRoot,
   writeJson,
 } from '@nx/devkit';
-import * as chalk from 'chalk';
+import chalk = require('chalk');
 import { prompt } from 'enquirer';
 import { exec } from 'node:child_process';
 import { rm } from 'node:fs/promises';
@@ -35,7 +35,7 @@ import {
   validReleaseVersionPrefixes,
 } from 'nx/src/command-line/release/version-legacy';
 import { interpolate } from 'nx/src/tasks-runner/utils';
-import * as ora from 'ora';
+import ora = require('ora');
 import { ReleaseType, gt, inc, prerelease } from 'semver';
 import { updateLockFile } from '../../release/utils/update-lock-file';
 import { isLocallyLinkedPackageVersion } from '../../utils/is-locally-linked-package-version';
@@ -80,8 +80,7 @@ export async function releaseVersionGenerator(
       validReleaseVersionPrefixes.indexOf(options.versionPrefix) === -1
     ) {
       throw new Error(
-        `Invalid value for version.generatorOptions.versionPrefix: "${
-          options.versionPrefix
+        `Invalid value for version.generatorOptions.versionPrefix: "${options.versionPrefix
         }"
 
 Valid values are: ${validReleaseVersionPrefixes
@@ -105,7 +104,7 @@ Valid values are: ${validReleaseVersionPrefixes
     // Sort the projects topologically if update dependents is enabled
     const projects =
       updateDependents === 'never' ||
-      options.releaseGroup.projectsRelationship !== 'independent'
+        options.releaseGroup.projectsRelationship !== 'independent'
         ? options.projects
         : sortProjectsTopologically(options.projectGraph, options.projects);
     const projectToDependencyBumps = new Map<string, any>();
@@ -351,8 +350,7 @@ To fix this you will either need to add a package.json file at that location, or
             } else {
               logger.buffer(
                 // In this code path we know that latestMatchingGitTag is defined, because we are not relying on the fallbackCurrentVersionResolver, so we can safely use the non-null assertion operator
-                `📄 Using the current version ${currentVersion} already resolved from git tag "${
-                  latestMatchingGitTag!.tag
+                `📄 Using the current version ${currentVersion} already resolved from git tag "${latestMatchingGitTag!.tag
                 }".`
               );
             }
@@ -407,8 +405,8 @@ To fix this you will either need to add a package.json file at that location, or
             const previousVersionRef = latestMatchingGitTag
               ? latestMatchingGitTag.tag
               : options.fallbackCurrentVersionResolver === 'disk'
-              ? await getFirstGitCommit()
-              : undefined;
+                ? await getFirstGitCommit()
+                : undefined;
 
             if (!previousVersionRef) {
               // This should never happen since the checks above should catch if the current version couldn't be resolved
@@ -717,7 +715,7 @@ To fix this you will either need to add a package.json file at that location, or
         newVersion: null, // will stay as null in the final result in the case that no changes are detected
         dependentProjects:
           updateDependents === 'auto' &&
-          options.releaseGroup.projectsRelationship === 'independent'
+            options.releaseGroup.projectsRelationship === 'independent'
             ? allDependentProjects
             : dependentProjectsInCurrentBatch,
       };
@@ -752,24 +750,23 @@ To fix this you will either need to add a package.json file at that location, or
       if (allDependentProjects.length > 0) {
         const totalProjectsToUpdate =
           updateDependents === 'auto' &&
-          options.releaseGroup.projectsRelationship === 'independent'
+            options.releaseGroup.projectsRelationship === 'independent'
             ? allDependentProjects.length +
-              // Only count transitive dependents that aren't already direct dependents
-              transitiveLocalPackageDependents.filter(
-                (transitive) =>
-                  !allDependentProjects.some(
-                    (direct) => direct.source === transitive.source
-                  )
-              ).length -
-              // There are two entries per circular dep
-              circularDependencies.size / 2
+            // Only count transitive dependents that aren't already direct dependents
+            transitiveLocalPackageDependents.filter(
+              (transitive) =>
+                !allDependentProjects.some(
+                  (direct) => direct.source === transitive.source
+                )
+            ).length -
+            // There are two entries per circular dep
+            circularDependencies.size / 2
             : dependentProjectsInCurrentBatch.length;
         if (totalProjectsToUpdate > 0) {
           logger.buffer(
-            `✍️  Applying new version ${newVersion} to ${totalProjectsToUpdate} ${
-              totalProjectsToUpdate > 1
-                ? 'packages which depend'
-                : 'package which depends'
+            `✍️  Applying new version ${newVersion} to ${totalProjectsToUpdate} ${totalProjectsToUpdate > 1
+              ? 'packages which depend'
+              : 'package which depends'
             } on ${project.name}`
           );
         }
@@ -913,7 +910,7 @@ To fix this you will either need to add a package.json file at that location, or
             // (Unless using version plans and the dependent is not filtered out by --projects)
             forceVersionBump:
               options.specifierSource === 'version-plans' &&
-              projects.find((p) => p.name === dependentProject.source)
+                projects.find((p) => p.name === dependentProject.source)
                 ? false
                 : updateDependentsBump,
           });
@@ -1088,7 +1085,7 @@ class ProjectLogger {
   constructor(
     private projectName: string,
     private color: (typeof colors)[number]
-  ) {}
+  ) { }
 
   buffer(msg: string) {
     this.logs.push(msg);

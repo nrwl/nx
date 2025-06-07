@@ -1,5 +1,5 @@
 import { ExecException } from 'child_process';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { getNpmRegistry, getNpmTag, parseRegistryOptions } from './npm-config';

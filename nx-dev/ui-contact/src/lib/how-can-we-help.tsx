@@ -1,10 +1,10 @@
-import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
+import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 import {
   ArrowUpRightIcon,
   ChatBubbleLeftRightIcon,
   ChevronRightIcon,
 } from '@heroicons/react/24/outline';
-import { NxCloudIcon } from '@nx/nx-dev/ui-icons';
+import { NxCloudIcon } from '@nx/nx-dev-ui-icons';
 
 export function HowCanWeHelp(): JSX.Element {
   return (

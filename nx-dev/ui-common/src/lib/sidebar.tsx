@@ -6,9 +6,9 @@ import {
   TransitionChild,
 } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
-import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
-import { iconsMap } from '@nx/nx-dev/ui-references';
+import { AlgoliaSearch } from '@nx/nx-dev-feature-search';
+import { Menu, MenuItem, MenuSection } from '@nx/nx-dev-models-menu';
+import { iconsMap } from '@nx/nx-dev-ui-references';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -20,7 +20,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { NxIcon } from '@nx/nx-dev/ui-icons';
+import { NxIcon } from '@nx/nx-dev-ui-icons';
 
 export interface SidebarProps {
   menu: Menu;

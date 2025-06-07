@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import AppRouterAnalytics from './app-router-analytics';
 import GlobalScripts from './global-scripts';
-// import { LiveStreamNotifier } from '@nx/nx-dev/ui-common';
+// import { LiveStreamNotifier } from '@nx/nx-dev-ui-common';
 import '../styles/main.css';
 import { FrontendObservability } from '../lib/components/frontend-observability';
 
