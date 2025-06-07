@@ -9,7 +9,7 @@ import {
   Footer,
   Header,
   SectionHeading,
-} from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev-ui-common';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { useState } from 'react';

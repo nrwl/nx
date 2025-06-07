@@ -1,4 +1,4 @@
-import { MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
+import { MenuItem, MenuSection } from '@nx/nx-dev-models-menu';
 
 const COLLAPSIBLE_SECTIONS = ['concepts', 'recipes', 'enterprise'];
 

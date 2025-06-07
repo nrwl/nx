@@ -8,7 +8,7 @@ import {
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { TargetConfiguration } from '@nx/devkit';
-import { TerminalOutput } from '@nx/nx-dev/ui-fence';
+import { TerminalOutput } from '@nx/nx-dev-ui-fence';
 import { Tooltip } from '@nx/graph/legacy/tooltips';
 import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';
 

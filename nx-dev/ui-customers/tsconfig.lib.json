@@ -6,7 +6,9 @@
       "node",
       "@nx/react/typings/cssmodule.d.ts",
       "@nx/react/typings/image.d.ts"
-    ]
+    ],
+    "composite": true,
+    "declaration": true
   },
   "exclude": [
     "jest.config.ts",
@@ -25,5 +27,19 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "../ui-company/src/lib/layout.tsx"
+  ],
+  "references": [
+    {
+      "path": "../ui-common/tsconfig.lib.json"
+    },
+    {
+      "path": "../feature-analytics/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-enterprise/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-icons/tsconfig.lib.json"
+    }
   ]
 }

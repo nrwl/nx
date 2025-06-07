@@ -3,7 +3,9 @@
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
     "types": ["node"],
-    "lib": ["dom"]
+    "lib": ["dom"],
+    "composite": true,
+    "declaration": true
   },
   "files": [
     "../../node_modules/@nx/react/typings/cssmodule.d.ts",
@@ -20,5 +22,10 @@
     "**/*.test.jsx",
     "jest.config.ts"
   ],
-  "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"]
+  "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"],
+  "references": [
+    {
+      "path": "../ui-common/tsconfig.lib.json"
+    }
+  ]
 }

@@ -13,7 +13,7 @@ import {
   Security,
   TestimonialCarousel,
   VmwareTestimonial,
-} from '@nx/nx-dev/ui-enterprise';
+} from '@nx/nx-dev-ui-enterprise';
 import { ReactElement } from 'react';
 
 export function Enterprise(): ReactElement {

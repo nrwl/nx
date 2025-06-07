@@ -19,8 +19,8 @@ import {
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import chalk = require('chalk');
-import * as ora from 'ora';
-import * as open from 'open';
+const ora = require('ora');
+const open = require('open');
 
 export function onlyDefaultRunnerIsUsed(nxJson: NxJsonConfiguration) {
   const defaultRunner = nxJson.tasksRunnerOptions?.default?.runner;

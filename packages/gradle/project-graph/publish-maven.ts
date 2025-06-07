@@ -1,6 +1,6 @@
 import axios from 'axios';
 import * as fs from 'fs';
-import * as FormData from 'form-data';
+import FormData = require('form-data');
 
 function parseArgs() {
   const args = process.argv.slice(2);

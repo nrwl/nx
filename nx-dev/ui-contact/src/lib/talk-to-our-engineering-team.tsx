@@ -1,4 +1,4 @@
-import { SectionHeading, HubspotForm } from '@nx/nx-dev/ui-common';
+import { SectionHeading, HubspotForm } from '@nx/nx-dev-ui-common';
 import { type ReactElement } from 'react';
 import {
   CapitalOneIcon,
@@ -10,7 +10,7 @@ import {
   SiriusxmAlternateIcon,
   StorybookIcon,
   VmwareIcon,
-} from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-icons';
 
 export function TalkToOurEngineeringTeam(): ReactElement {
   return (

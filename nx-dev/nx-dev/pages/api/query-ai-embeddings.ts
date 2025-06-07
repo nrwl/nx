@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getTokenizedContext } from '../../lib/getTokenizedContext';
-import { ChatItem, CustomError } from '@nx/nx-dev/util-ai';
+import { ChatItem, CustomError } from '@nx/nx-dev-util-ai';
 
 export const config = {
   runtime: 'edge',

@@ -8,7 +8,7 @@ import {
   getOpenAI,
   getUserQuery,
   initializeChat,
-} from '@nx/nx-dev/util-ai';
+} from '@nx/nx-dev-util-ai';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
 import { NextRequest } from 'next/server';
 import OpenAI from 'openai';

@@ -1,12 +1,16 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/out-tsc/graph/ui-project-details",
+    "tsBuildInfoFile": "../../dist/out-tsc/graph/ui-project-details/tsconfig.lib.tsbuildinfo",
+    "declaration": true,
     "types": [
       "node",
       "@nx/react/typings/cssmodule.d.ts",
       "@nx/react/typings/image.d.ts"
-    ]
+    ],
+    "composite": true,
+    "noEmit": false
   },
   "exclude": [
     "jest.config.ts",
@@ -23,5 +27,13 @@
     "**/*.stories.jsx",
     "**/*.stories.tsx"
   ],
-  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"]
+  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
+  "references": [
+    {
+      "path": "../../nx-dev/ui-fence/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-code-block/tsconfig.lib.json"
+    }
+  ]
 }

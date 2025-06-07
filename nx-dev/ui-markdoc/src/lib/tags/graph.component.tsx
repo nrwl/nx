@@ -1,5 +1,5 @@
 'use client';
-import { useTheme } from '@nx/nx-dev/ui-theme';
+import { useTheme } from '@nx/nx-dev-ui-theme';
 import dynamic from 'next/dynamic';
 import { ReactElement, useEffect, useState } from 'react';
 

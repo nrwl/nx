@@ -1,5 +1,5 @@
 import { EnvelopeIcon } from '@heroicons/react/24/solid';
-import { DiscordIcon, SectionHeading } from '@nx/nx-dev/ui-common';
+import { DiscordIcon, SectionHeading } from '@nx/nx-dev-ui-common';
 import Link from 'next/link';
 
 export function ConnectWithUs(): JSX.Element {

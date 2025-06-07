@@ -5,7 +5,7 @@ import {
   ChevronDownIcon,
 } from '@heroicons/react/24/outline';
 import { useState } from 'react';
-import { Popover } from '@nx/graph/ui-common';
+import { Popover } from '@nx/graph-ui-common';
 import { PrimaryAction } from '../migrate';
 
 export interface MigrationDoneProps {

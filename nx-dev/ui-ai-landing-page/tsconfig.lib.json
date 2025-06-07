@@ -19,5 +19,19 @@
     "src/**/*.spec.jsx",
     "src/**/*.test.jsx"
   ],
-  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"]
+  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
+  "references": [
+    {
+      "path": "../ui-icons/tsconfig.lib.json"
+    },
+    {
+      "path": "../feature-analytics/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-primitives/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-common/tsconfig.lib.json"
+    }
+  ]
 }

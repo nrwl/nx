@@ -11,6 +11,8 @@
   "scripts": {
     "postinstall": "node ./bin/post-install"
   },
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts",
   "keywords": [
     "Monorepo",
     "Angular",

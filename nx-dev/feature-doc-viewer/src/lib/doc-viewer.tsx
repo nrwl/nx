@@ -2,17 +2,17 @@ import {
   categorizeRelatedDocuments,
   ProcessedDocument,
   RelatedDocument,
-} from '@nx/nx-dev/models-document';
-import { Breadcrumbs, Footer, GitHubStarWidget } from '@nx/nx-dev/ui-common';
-import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
+} from '@nx/nx-dev-models-document';
+import { Breadcrumbs, Footer, GitHubStarWidget } from '@nx/nx-dev-ui-common';
+import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { useRef, useState } from 'react';
 import { collectHeadings, TableOfContents } from './table-of-contents';
 import { RelatedDocumentsSection } from './related-documents-section';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
-import { FeedbackDialog } from '@nx/nx-dev/feature-feedback';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { FeedbackDialog } from '@nx/nx-dev-feature-feedback';
 
 export function DocViewer({
   document,

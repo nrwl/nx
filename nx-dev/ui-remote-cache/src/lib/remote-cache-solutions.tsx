@@ -4,8 +4,8 @@ import {
   CheckCircleIcon,
   ExclamationCircleIcon,
 } from '@heroicons/react/24/solid';
-import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev/ui-common';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev-ui-common';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 import Link from 'next/link';
 
 export function RemoteCacheSolutions(): ReactElement {

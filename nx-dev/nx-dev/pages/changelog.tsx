@@ -4,9 +4,9 @@ import {
   DocumentationHeader,
   Footer,
   SidebarContainer,
-} from '@nx/nx-dev/ui-common';
-import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
-import { cx } from '@nx/nx-dev/ui-primitives';
+} from '@nx/nx-dev-ui-common';
+import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { Octokit } from 'octokit';
@@ -15,7 +15,7 @@ import { changeLogApi } from '../lib/changelog.api';
 import { useNavToggle } from '../lib/navigation-toggle.effect';
 import { menusApi } from '../lib/menus.api';
 import { MenuItem } from '@nx/nx-dev/models-menu';
-import { getBasicNxSection } from '@nx/nx-dev/data-access-menu';
+import { getBasicNxSection } from '@nx/nx-dev-data-access-menu';
 import Link from 'next/link';
 
 interface ChangelogEntry {
