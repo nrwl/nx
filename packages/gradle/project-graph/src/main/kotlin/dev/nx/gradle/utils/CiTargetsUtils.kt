@@ -11,7 +11,21 @@ const val testCiTargetGroup = "verification"
 private val testFileNameRegex =
     Regex("^(?!(abstract|fake)).*?(Test)(s)?\\d*", RegexOption.IGNORE_CASE)
 
-private val classDeclarationRegex = Regex("""class\s+([A-Za-z_][A-Za-z0-9_]*)""")
+private val classDeclarationRegex =
+    Regex("""^\s*(?:@[\w]+)?\s*(class|object)\s+([A-Za-z_][A-Za-z0-9_]*)""")
+private val privateClassRegex = Regex("""\bprivate\s+(class|object)\s+([A-Za-z_][A-Za-z0-9_]*)""")
+
+// Essential annotations (most common subset)
+private val essentialTestAnnotations =
+    setOf(
+        "@Test",
+        "@TestTemplate",
+        "@ParameterizedTest",
+        "@RepeatedTest",
+        "@TestFactory",
+        "@org.junit.Test", // JUnit 4
+        "@org.testng.annotations.Test" // TestNG
+        )
 
 fun addTestCiTargets(
     testFiles: FileCollection,
@@ -31,15 +45,18 @@ fun addTestCiTargets(
   testFiles
       .filter { isTestFile(it, workspaceRoot) }
       .forEach { testFile ->
-        val className = getTestClassNameIfAnnotated(testFile) ?: return@forEach
+        val classNames = getAllVisibleClassesWithNestedAnnotation(testFile)
 
-        val targetName = "$ciTestTargetName--$className"
-        targets[targetName] =
-            buildTestCiTarget(
-                projectBuildPath, className, testFile, testTask, projectRoot, workspaceRoot)
-        targetGroups[testCiTargetGroup]?.add(targetName)
+        classNames?.forEach { className ->
+          val targetName = "$ciTestTargetName--$className"
+          targets[targetName] =
+              buildTestCiTarget(
+                  projectBuildPath, className, testFile, testTask, projectRoot, workspaceRoot)
+          targetGroups[testCiTargetGroup]?.add(targetName)
 
-        ciDependsOn.add(mapOf("target" to targetName, "projects" to "self", "params" to "forward"))
+          ciDependsOn.add(
+              mapOf("target" to targetName, "projects" to "self", "params" to "forward"))
+        }
       }
 
   testTask.logger.info("${testTask.path} generated CI targets: ${ciDependsOn.map { it["target"] }}")
@@ -56,21 +73,69 @@ fun addTestCiTargets(
   }
 }
 
-private fun getTestClassNameIfAnnotated(file: File): String? {
-  return file
-      .takeIf { it.exists() }
-      ?.readText()
-      ?.takeIf {
-        it.contains("@Test") || it.contains("@TestTemplate") || it.contains("@ParameterizedTest")
+private fun containsEssentialTestAnnotations(content: String): Boolean {
+  return essentialTestAnnotations.any { content.contains(it) }
+}
+
+/** This function return all class names and nested class names inside a file */
+fun getAllVisibleClassesWithNestedAnnotation(file: File): Set<String>? {
+  val content = file.takeIf { it.exists() }?.readText() ?: return null
+
+  val lines = content.lines()
+  val result = mutableSetOf<String>()
+  val classStack = mutableListOf<Pair<String, Int>>() // (className, indent)
+
+  var previousLine: String? = null
+
+  for (i in lines.indices) {
+    val line = lines[i]
+    val trimmed = line.trimStart()
+    val indent = line.indexOfFirst { !it.isWhitespace() }.takeIf { it >= 0 } ?: 0
+
+    // Skip private classes
+    if (privateClassRegex.containsMatchIn(trimmed)) continue
+
+    val match = classDeclarationRegex.find(trimmed)
+    if (match == null) {
+      previousLine = trimmed
+      continue
+    }
+
+    val className = match.groupValues.getOrNull(2)
+    if (className == null) {
+      previousLine = trimmed
+      continue
+    }
+    val isNested = classStack.isNotEmpty()
+    val isAnnotatedNested = previousLine?.trimStart()?.startsWith("@Nested") == true
+
+    // Top-level class (no indentation or same as outermost level)
+    if (indent == 0) {
+      // Exclude top-level @nested classes
+      if (!isAnnotatedNested) {
+        result.add(className)
       }
-      ?.let { content ->
-        val className = classDeclarationRegex.find(content)?.groupValues?.getOrNull(1)
-        return if (className != null && !className.startsWith("Fake")) {
-          className
-        } else {
-          null
-        }
+      classStack.clear()
+      classStack.add(className to indent)
+    } else {
+      // Maintain nesting stack
+      while (classStack.isNotEmpty() && indent <= classStack.last().second) {
+        classStack.removeLast()
       }
+
+      val parent = classStack.lastOrNull()?.first
+      if (isAnnotatedNested && parent != null) {
+        result.add("$parent\$$className")
+        result.remove(parent) // remove the parent class since child nested class is added
+      }
+
+      classStack.add(className to indent)
+    }
+
+    previousLine = trimmed
+  }
+
+  return result
 }
 
 fun ensureTargetGroupExists(targetGroups: TargetGroups, group: String) {
