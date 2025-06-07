@@ -406,7 +406,6 @@ export class BackupManager {
         );
       }
 
-      // Install dependencies (exactly as in original)
       const installCommand =
         packageManager === 'npm' ? 'npm install --ignore-scripts' : pm.install;
 
