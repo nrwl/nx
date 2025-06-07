@@ -55,6 +55,16 @@ const VALID_AUTHORS_FOR_LATEST = [
     });
   }
 
+  // For local releases, also run artifacts to ensure native packages contain the binary files
+  // This is crucial for e2e tests that rely on the local registry having working native packages
+  if (options.local) {
+    execSync('pnpm nx run-many --target=artifacts', {
+      stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
+      maxBuffer: LARGE_BUFFER,
+      windowsHide: false,
+    });
+  }
+
   const runNxReleaseVersion = () => {
     let versionCommand = `pnpm nx release version${
       options.version ? ` --specifier ${options.version}` : ''
