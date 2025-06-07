@@ -28,7 +28,17 @@ export class NxReporter implements Reporter {
     };
   }
 
+  /** Vitest ≥ 0.29 */
+  onTestRunEnd(files: any[], errors?: any) {
+    this._handleFinished(files, errors);
+  }
+  /** Vitest ≤ 0.28 */
   onFinished(files: File[], errors?: unknown[]) {
+    this._handleFinished(files, errors);
+  }
+
+  // --- private ----------------------------------------------------------
+  private _handleFinished(files: any[], errors?: any) {
     const hasErrors =
       files.some((f) => f.result?.state === 'fail') || errors?.length > 0;
     this.deferred.resolve(hasErrors);
