@@ -21,21 +21,21 @@ All libraries that we generate automatically have aliases created in the root-le
 }
 ```
 
-Hence we can easily import them into other libraries and our Angular application. As an example, let's use the pre-generated `ProductsComponent` component from our `libs/products` library.
+Hence we can easily import them into other libraries and our Angular application. As an example, let's use the pre-generated `Products` component from our `libs/products` library.
 
-You can see that the `ProductsComponent` is exported via the `index.ts` file of our `products` library so that other projects in the repository can use it. This is our public API with the rest of the workspace. Only export what's really necessary to be usable outside the library itself.
+You can see that the `Products` is exported via the `index.ts` file of our `products` library so that other projects in the repository can use it. This is our public API with the rest of the workspace. Only export what's really necessary to be usable outside the library itself.
 
 ```ts title="/libs/products/src/index.ts"
-export * from './lib/products/products.component';
+export * from './lib/products/products';
 ```
 
-We're ready to import it into our main application now. First (if you haven't already), let's set up the Angular router. Remove the `app-nx-welcome` component from `app.component.html`:
+We're ready to import it into our main application now. First (if you haven't already), let's set up the Angular router. Remove the `app-nx-welcome` component from `app.html`:
 
-```solution:/apps/angular-store/src/app/app.component.html title="/apps/angular-store/src/app/app.component.html"
+```solution:/apps/angular-store/src/app/app.html title="/apps/angular-store/src/app/app.html"
 
 ```
 
-Then we can add the `ProductsComponent` component to our `app.routes.ts` and render it via the routing mechanism whenever a user hits the `/products` route.
+Then we can add the `Products` component to our `app.routes.ts` and render it via the routing mechanism whenever a user hits the `/products` route.
 
 ```solution:/apps/angular-store/src/app/app.routes.ts title="/apps/angular-store/src/app/app.routes.ts" {10-14} collapse={15-19}
 
@@ -45,7 +45,7 @@ Serving your app (`npx nx serve angular-store`) and then navigating to `/product
 
 ![products route](/documentation/shared/tutorials/app-products-route.png)
 
-Let's apply the same for our `orders` library. Import the `OrdersComponent` from `libs/orders` into the `app.routes.ts` and render it via the routing mechanism whenever a user hits the `/orders` route
+Let's apply the same for our `orders` library. Import the `Orders` from `libs/orders` into the `app.routes.ts` and render it via the routing mechanism whenever a user hits the `/orders` route
 
 In the end, your `app.routes.ts` should look similar to this:
 
@@ -55,11 +55,11 @@ In the end, your `app.routes.ts` should look similar to this:
 
 Let's also show products in the `inventory` app.
 
-```solution:/apps/inventory/src/app/app.component.ts title="/apps/inventory/src/app/app.component.ts" {2,5}
+```solution:/apps/inventory/src/app/app.ts title="/apps/inventory/src/app/app.ts" {2,5}
 
 ```
 
-```solution:/apps/inventory/src/app/app.component.html title="/apps/inventory/src/app/app.component.html"
+```solution:/apps/inventory/src/app/app.html title="/apps/inventory/src/app/app.html"
 
 ```
 
