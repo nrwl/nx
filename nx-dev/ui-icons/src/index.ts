@@ -99,6 +99,7 @@ export * from './lib/partners/e-square';
 export * from './lib/partners/briebug';
 export * from './lib/partners/liveloveapp';
 export * from './lib/partners/nstudio';
+export * from './lib/partners/zephry-cloud';
 
 // PODCASTS
 export * from './lib/podcasts/amazon-music';
