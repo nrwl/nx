@@ -24,7 +24,8 @@
     "test": "nx run-many -t test",
     "e2e": "nx run-many -t e2e --projects ./e2e/*",
     "build:wasm": "rustup override set nightly-2025-05-09 && rustup target add wasm32-wasip1-threads && WASI_SDK_PATH=\"$(pwd)/wasi-sdk-23.0-x86_64-linux\" CMAKE_BUILD_PARALLEL_LEVEL=2 LIBSQLITE3_FLAGS=\"-DLONGDOUBLE_TYPE=double\" pnpm exec nx run-many -t build-native-wasm && rustup override unset",
-    "lint-pnpm-lock": "eslint pnpm-lock.yaml"
+    "lint-pnpm-lock": "eslint pnpm-lock.yaml",
+    "migrate-to-pnpm-version": "node ./scripts/migrate-to-pnpm-version.js"
   },
   "devDependencies": {
     "@actions/core": "^1.10.0",
@@ -158,6 +159,7 @@
     "@types/yargs": "17.0.10",
     "@types/yarnpkg__lockfile": "^1.1.5",
     "@typescript-eslint/eslint-plugin": "^8.29.0",
+    "@typescript-eslint/parser": "^8.29.0",
     "@typescript-eslint/rule-tester": "^8.29.0",
     "@typescript-eslint/type-utils": "^8.29.0",
     "@typescript-eslint/utils": "^8.29.0",
@@ -410,10 +412,14 @@
       "check-codeowners"
     ]
   },
-  "packageManager": "pnpm@9.8.0",
+  "packageManager": "pnpm@10.11.1",
   "pnpm": {
     "patchedDependencies": {
       "@tutorialkit/react": "patches/@tutorialkit__react.patch"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "nx"
+    ]
   }
 }
