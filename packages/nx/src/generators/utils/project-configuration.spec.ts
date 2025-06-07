@@ -173,6 +173,38 @@ describe('project configuration', () => {
     });
   });
 
+  it('should find projects created during generator run when called from callback', () => {
+    // Simulate what happens during a generator callback:
+    // 1. A project is created during generator execution
+    addProjectConfiguration(tree, 'test-proj', {
+      root: 'libs/test-proj',
+    });
+
+    // Verify the project is found before callback
+    let projects = getProjects(tree);
+    expect(projects.size).toEqual(1);
+    expect(projects.has('test-proj')).toBeTruthy();
+
+    // 2. Simulate changes being flushed to disk by modifying the tree
+    // to mark the file as UPDATE instead of CREATE
+    const projectJsonPath = 'libs/test-proj/project.json';
+    const projectJsonContent = tree.read(projectJsonPath, 'utf-8');
+
+    // Clear the tree and write the file again to simulate it being flushed
+    // This creates a scenario similar to what happens in callbacks
+    tree.write(projectJsonPath, projectJsonContent);
+
+    // 3. getProjects should still find the project even when it's marked as UPDATE
+    projects = getProjects(tree);
+    expect(projects.size).toEqual(1);
+    expect(projects.has('test-proj')).toBeTruthy();
+    expect(projects.get('test-proj')).toEqual({
+      $schema: '../../node_modules/nx/schemas/project-schema.json',
+      name: 'test-proj',
+      root: 'libs/test-proj',
+    });
+  });
+
   describe('without nx.json', () => {
     beforeEach(() => tree.delete('nx.json'));
 
