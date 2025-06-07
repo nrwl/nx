@@ -2,7 +2,7 @@
 // nx-ignore-next-line
 import { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
 // nx-ignore-next-line
-import { ProjectDetailsWrapper } from '@nx/graph-internal/project-details';
+import { ProjectDetailsWrapper } from '@nx/graph-internal-project-details';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { useFloating } from '@floating-ui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';

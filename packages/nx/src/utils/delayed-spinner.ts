@@ -1,4 +1,4 @@
-import * as ora from 'ora';
+import ora = require('ora');
 import { isCI } from './is-ci';
 
 export type DelayedSpinnerOptions = {

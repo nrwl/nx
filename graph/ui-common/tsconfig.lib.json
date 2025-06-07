@@ -1,8 +1,14 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
-    "types": ["node"]
+    "outDir": "../../dist/out-tsc/graph/ui-common",
+    "tsBuildInfoFile": "../../dist/out-tsc/graph/ui-common/tsconfig.lib.tsbuildinfo",
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "declarationMap": true,
+    "types": ["node"],
+    "composite": true,
+    "noEmit": false
   },
   "files": [
     "../../node_modules/@nx/react/typings/cssmodule.d.ts",
@@ -15,5 +21,5 @@
     "**/*.test.tsx",
     "jest.config.ts"
   ],
-  "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"]
+  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"]
 }

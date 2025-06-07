@@ -404,6 +404,14 @@
     "minimist": "^1.2.6",
     "underscore": "^1.12.1"
   },
+  "pnpm": {
+    "patchedDependencies": {
+      "@tutorialkit/react": "patches/@tutorialkit__react.patch"
+    },
+    "overrides": {
+      "nx": "21.2.0-beta.1"
+    }
+  },
   "nx": {
     "includedScripts": [
       "lint-pnpm-lock",

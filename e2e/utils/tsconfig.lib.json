@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "declaration": true,
+    "types": ["node", "jest"],
+    "composite": true,
+    "skipLibCheck": true,
+    "noImplicitAny": false,
+    "strict": false
+  },
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "jest.config.ts",
+    "global-setup.ts",
+    "global-teardown.ts"
+  ],
+  "include": ["**/*.ts", "**/*.js"],
+  "references": [
+    {
+      "path": "../../packages/nx/tsconfig.lib.json"
+    }
+  ]
+}

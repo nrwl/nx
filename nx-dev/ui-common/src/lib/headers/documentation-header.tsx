@@ -1,12 +1,12 @@
 'use client';
 import { Fragment, type MouseEvent, ReactElement } from 'react';
-import { NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev/ui-icons';
+import { NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev-ui-icons';
 import {
   Bars3Icon,
   ChevronDownIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
+import { AlgoliaSearch } from '@nx/nx-dev-feature-search';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';

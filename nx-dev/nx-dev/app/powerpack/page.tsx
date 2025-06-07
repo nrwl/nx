@@ -1,4 +1,4 @@
-import { ButtonLinkProps, DefaultLayout } from '@nx/nx-dev/ui-common';
+import { ButtonLinkProps, DefaultLayout } from '@nx/nx-dev-ui-common';
 import {
   CallToAction,
   Faq,

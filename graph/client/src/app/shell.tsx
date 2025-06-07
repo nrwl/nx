@@ -22,7 +22,7 @@ import {
 import { Dropdown, Spinner } from '@nx/graph/legacy/components';
 import { Tooltip } from '@nx/graph/legacy/tooltips';
 
-import { getSystemTheme, Theme, ThemePanel } from '@nx/graph-internal/ui-theme';
+import { getSystemTheme, Theme, ThemePanel } from '@nx/graph-internal-ui-theme';
 import classNames from 'classnames';
 import { useLayoutEffect, useState } from 'react';
 import {

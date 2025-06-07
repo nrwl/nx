@@ -18,7 +18,7 @@ import {
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import type { RspackPluginOptions } from '@nx/rspack/plugins/plugin';
+import type { RspackPluginOptions } from '@nx/rspack/plugin';
 import { prompt } from 'enquirer';
 import { relative, resolve } from 'path';
 import { join } from 'path/posix';

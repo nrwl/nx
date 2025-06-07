@@ -28,6 +28,7 @@
   "main": "./index",
   "types": "index.d.ts",
   "dependencies": {
+    "@nx/detox": "file:../detox",
     "@nx/devkit": "file:../devkit",
     "@nx/eslint": "file:../eslint",
     "@nx/jest": "file:../jest",

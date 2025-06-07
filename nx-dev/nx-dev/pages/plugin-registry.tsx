@@ -1,4 +1,4 @@
-import { getBasicNxSection } from '@nx/nx-dev/data-access-menu';
+import { getBasicNxSection } from '@nx/nx-dev-data-access-menu';
 import { MenuItem } from '@nx/nx-dev/models-menu';
 import {
   Breadcrumbs,
@@ -6,14 +6,14 @@ import {
   Footer,
   PluginType,
   SidebarContainer,
-} from '@nx/nx-dev/ui-common';
-import { PluginDirectory } from '@nx/nx-dev/ui-community';
+} from '@nx/nx-dev-ui-common';
+import { PluginDirectory } from '@nx/nx-dev-ui-community';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { menusApi } from '../lib/menus.api';
 import { useNavToggle } from '../lib/navigation-toggle.effect';
 import { nxNewPackagesApi } from '../lib/new-packages.api';
-import { ScrollableContent } from '@nx/ui-scrollable-content';
+import { ScrollableContent } from '@nx/nx-dev-ui-scrollable-content';
 
 declare const fetch: any;
 let qualityIndicators = require('./quality-indicators.json');

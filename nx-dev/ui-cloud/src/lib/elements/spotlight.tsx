@@ -1,4 +1,4 @@
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 
 export const Spotlight = ({
   className,

@@ -1,8 +1,8 @@
-import { FeedContainer } from '@nx/nx-dev/feature-ai';
-import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
+import { FeedContainer } from '@nx/nx-dev-feature-ai';
+import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev-ui-common';
 import { NextSeo } from 'next-seo';
 import { useNavToggle } from '../../lib/navigation-toggle.effect';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 
 export default function AiDocs(): JSX.Element {
   const { toggleNav, navIsOpen } = useNavToggle();

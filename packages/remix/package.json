@@ -32,6 +32,7 @@
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
     "@nx/react": "file:../react",
+    "@nx/workspace": "file:../workspace",
     "tslib": "^2.3.1",
     "@phenomnomnominal/tsquery": "~5.0.1"
   },

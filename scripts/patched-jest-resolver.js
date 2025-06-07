@@ -100,12 +100,22 @@ module.exports = function (path, options) {
     // Fallback to using typescript
     compilerSetup = compilerSetup || getCompilerSetup(options.rootDir);
     const { compilerOptions, host } = compilerSetup;
-    const name = ts.resolveModuleName(
+    const result = ts.resolveModuleName(
       path,
       join(options.basedir, 'fake-placeholder.ts'),
       compilerOptions,
       host
-    ).resolvedModule.resolvedFileName;
+    );
+    let name = result.resolvedModule.resolvedFileName;
+
+    // If TypeScript resolved to a .d.ts file, try to find the corresponding .js file
+    if (name.endsWith('.d.ts')) {
+      const jsFile = name.replace(/\.d\.ts$/, '.js');
+      if (fs.existsSync(jsFile)) {
+        name = jsFile;
+      }
+    }
+
     if (name.startsWith('..')) {
       return path_1.join(options.rootDir, name);
     } else {

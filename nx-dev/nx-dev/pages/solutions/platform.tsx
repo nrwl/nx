@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import { NextSeo } from 'next-seo';
-import { ButtonLinkProps, DefaultLayout } from '@nx/nx-dev/ui-common';
+import { ButtonLinkProps, DefaultLayout } from '@nx/nx-dev-ui-common';
 import {
   CostEfficientCompute,
   CustomerLogos,
@@ -12,7 +12,7 @@ import {
   SolutionsPlatformHero,
   SolutionsPlatformTestimonials,
   SolutionsTopCallToAction,
-} from '@nx/nx-dev/ui-enterprise';
+} from '@nx/nx-dev-ui-enterprise';
 import { type ReactElement } from 'react';
 
 export function EnterpriseSolutionsPlatform(): ReactElement {

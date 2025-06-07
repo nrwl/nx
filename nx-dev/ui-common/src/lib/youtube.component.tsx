@@ -1,6 +1,6 @@
 import { PlayCircleIcon, PlayIcon } from '@heroicons/react/24/solid';
 import { Schema } from '@markdoc/markdoc';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 
 export const youtube: Schema = {
   render: 'YouTube',

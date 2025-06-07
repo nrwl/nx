@@ -1,5 +1,5 @@
-import { getSchemaFromResult, Lookup } from '@nx/nx-dev/data-access-packages';
-import { JsonSchema, JsonSchema1 } from '@nx/nx-dev/models-package';
+import { getSchemaFromResult, Lookup } from '@nx/nx-dev-data-access-packages';
+import { JsonSchema, JsonSchema1 } from '@nx/nx-dev-models-package';
 import { getTypesFromEnum, isPrimitiveType } from './type-inference';
 
 function extractEnumDirectly(schema?: JsonSchema): JsonSchema1['enum'] {

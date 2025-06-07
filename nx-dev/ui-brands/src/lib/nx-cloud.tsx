@@ -3,8 +3,8 @@ import {
   ButtonLink,
   SectionDescription,
   SectionHeading,
-} from '@nx/nx-dev/ui-common';
-import { NxCloudIcon } from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-common';
+import { NxCloudIcon } from '@nx/nx-dev-ui-icons';
 
 export function NxCloudBrand() {
   return (
