@@ -95,6 +95,7 @@
     "@nx/playwright": "21.2.0-beta.4",
     "@nx/powerpack-license": "3.0.0",
     "@nx/react": "21.2.0-beta.4",
+    "@nx/rollup": "21.2.0-beta.4",
     "@nx/rsbuild": "21.2.0-beta.4",
     "@nx/rspack": "21.2.0-beta.4",
     "@nx/storybook": "21.2.0-beta.4",
@@ -403,6 +404,14 @@
   "resolutions": {
     "minimist": "^1.2.6",
     "underscore": "^1.12.1"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "@tutorialkit/react": "patches/@tutorialkit__react.patch"
+    },
+    "overrides": {
+      "nx": "21.2.0-beta.1"
+    }
   },
   "nx": {
     "includedScripts": [

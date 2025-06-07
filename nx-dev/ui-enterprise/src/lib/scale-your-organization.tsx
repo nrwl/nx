@@ -1,5 +1,5 @@
 import { ReactElement } from 'react';
-import { SectionHeading, Strong } from '@nx/nx-dev/ui-common';
+import { SectionHeading, Strong } from '@nx/nx-dev-ui-common';
 import Link from 'next/link';
 import { VisibilityAnimation } from './animations/visibility';
 import { ConformanceAnimation } from './animations/conformance';

@@ -1,4 +1,4 @@
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import Link from 'next/link';
 import { ComponentPropsWithoutRef, ElementType, ReactNode } from 'react';
 

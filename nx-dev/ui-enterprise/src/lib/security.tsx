@@ -4,7 +4,7 @@ import {
   ServerStackIcon,
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 import { ReactElement } from 'react';
 import Link from 'next/link';
 

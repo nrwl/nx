@@ -1,0 +1,11 @@
+{
+  "name": "@nx/graph-migrate",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@nx/graph-ui-common": "workspace:",
+    "@nx/graph-internal-ui-project-details": "workspace:"
+  }
+}

@@ -3,9 +3,11 @@
   "compilerOptions": {
     "moduleResolution": "node16",
     "module": "node16",
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/packages/angular",
     "declaration": true,
-    "types": ["node"]
+    "types": ["node"],
+    "composite": true,
+    "noEmit": false
   },
   "exclude": [
     "**/*.spec.ts",
@@ -19,5 +21,34 @@
     "mf/**/*",
     "testing/**/*"
   ],
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "**/*.json"],
+  "references": [
+    {
+      "path": "../nx/tsconfig.lib.json"
+    },
+    {
+      "path": "../workspace/tsconfig.lib.json"
+    },
+    {
+      "path": "../webpack/tsconfig.lib.json"
+    },
+    {
+      "path": "../web/tsconfig.lib.json"
+    },
+    {
+      "path": "../rspack/tsconfig.lib.json"
+    },
+    {
+      "path": "../module-federation/tsconfig.lib.json"
+    },
+    {
+      "path": "../js/tsconfig.lib.json"
+    },
+    {
+      "path": "../eslint/tsconfig.lib.json"
+    },
+    {
+      "path": "../devkit/tsconfig.lib.json"
+    }
+  ]
 }

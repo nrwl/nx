@@ -7,22 +7,19 @@ import {
   determineDefaultBase,
   determineNxCloud,
   determinePackageManager,
-} from 'create-nx-workspace/src/internal-utils/prompts';
-import {
   withAllPrompts,
   withGitOptions,
   withNxCloud,
   withOptions,
   withPackageManager,
-} from 'create-nx-workspace/src/internal-utils/yargs-options';
-import { createWorkspace, CreateWorkspaceOptions } from 'create-nx-workspace';
-import { output } from 'create-nx-workspace/src/utils/output';
-import { NxCloud } from 'create-nx-workspace/src/utils/nx/nx-cloud';
-import type { PackageManager } from 'create-nx-workspace/src/utils/package-manager';
-import {
+  createWorkspace,
+  CreateWorkspaceOptions,
+  output,
+  NxCloud,
+  PackageManager,
   messages,
   recordStat,
-} from 'create-nx-workspace/src/utils/nx/ab-testing';
+} from 'create-nx-workspace';
 
 export const yargsDecorator = {
   'Options:': `${pc.green(`Options`)}:`,

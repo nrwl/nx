@@ -1,0 +1,7 @@
+{
+  "name": "@nx/graph-internal-ui-theme",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts"
+}

@@ -11,8 +11,8 @@ import {
   MenuItems,
   Transition,
 } from '@headlessui/react';
-import { cx } from '@nx/nx-dev/ui-primitives';
-import { BlogPostDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
+import { cx } from '@nx/nx-dev-ui-primitives';
+import { BlogPostDataEntry } from '@nx/nx-dev-data-access-documents/node-only';
 
 export interface FiltersProps {
   blogs: BlogPostDataEntry[];

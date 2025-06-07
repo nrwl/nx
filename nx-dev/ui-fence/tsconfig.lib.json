@@ -1,13 +1,16 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/out-tsc/nx-dev/ui-fence",
+    "declaration": true,
     "types": [
       "node",
       "@nx/react/typings/cssmodule.d.ts",
       "@nx/react/typings/image.d.ts"
     ],
-    "lib": ["DOM", "es2019"]
+    "lib": ["DOM", "es2019"],
+    "composite": true,
+    "rootDir": "./src"
   },
   "exclude": [
     "jest.config.ts",

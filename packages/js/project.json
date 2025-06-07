@@ -4,6 +4,20 @@
   "sourceRoot": "packages/js/src",
   "projectType": "library",
   "targets": {
+    "copy-assets": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node scripts/copy-assets.js js",
+        "cwd": "{workspaceRoot}"
+      },
+      "configurations": {
+        "watch": {
+          "command": "node scripts/copy-assets.js js --watch",
+          "cwd": "{workspaceRoot}"
+        }
+      }
+    },
+
     "build-base": {
       "executor": "@nx/js:tsc",
       "options": {
@@ -44,7 +58,7 @@
         ]
       }
     },
-    "build": {
+    "build-1": {
       "outputs": ["{workspaceRoot}/build/packages/js/README.md"],
       "command": "node ./scripts/copy-readme.js js"
     }

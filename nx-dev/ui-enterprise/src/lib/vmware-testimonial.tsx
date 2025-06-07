@@ -1,6 +1,6 @@
 import { ReactElement } from 'react';
-import { VmwareIcon } from '@nx/nx-dev/ui-icons';
-import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
+import { VmwareIcon } from '@nx/nx-dev-ui-icons';
+import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 
 export function VmwareTestimonial(): ReactElement {

@@ -1,7 +1,7 @@
 import type { JSX, ReactNode, UIEvent } from 'react';
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 interface ScrollViewProps {
   children?: ReactNode;

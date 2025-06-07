@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { webinarApi } from '../../lib/webinar.api';
-import { DefaultLayout } from '@nx/nx-dev/ui-common';
+import { DefaultLayout } from '@nx/nx-dev-ui-common';
 import { Hero, WebinarList } from '@nx/nx-dev/ui-webinar';
 
 export const metadata: Metadata = {

@@ -1,15 +1,15 @@
-import { getBasicNxCloudSection } from '@nx/nx-dev/data-access-menu';
-import { DocViewer } from '@nx/nx-dev/feature-doc-viewer';
-import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev/models-document';
+import { getBasicNxCloudSection } from '@nx/nx-dev-data-access-menu';
+import { DocViewer } from '@nx/nx-dev-feature-doc-viewer';
+import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev-models-document';
 import { Menu, MenuItem } from '@nx/nx-dev/models-menu';
-import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
+import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev-ui-common';
 import { GetStaticProps } from 'next';
 import { ciApi } from '../../lib/ci.api';
 import { menusApi } from '../../lib/menus.api';
 import { useNavToggle } from '../../lib/navigation-toggle.effect';
 import { tagsApi } from '../../lib/tags.api';
 import { fetchGithubStarCount } from '../../lib/githubStars.api';
-import { ScrollableContent } from '@nx/ui-scrollable-content';
+import { ScrollableContent } from '@nx/nx-dev-ui-scrollable-content';
 
 export default function CloudRoot({
   document,

@@ -1,8 +1,8 @@
 import { HandRaisedIcon } from '@heroicons/react/24/outline';
 import { XCircleIcon } from '@heroicons/react/24/solid';
-import { getSchemaFromReference } from '@nx/nx-dev/data-access-packages';
-import { JsonSchema1, NxSchema } from '@nx/nx-dev/models-package';
-import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
+import { getSchemaFromReference } from '@nx/nx-dev-data-access-packages';
+import { JsonSchema1, NxSchema } from '@nx/nx-dev-models-package';
+import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { ReactNode, useState } from 'react';
@@ -11,7 +11,7 @@ import { SchemaViewModel } from './get-schema-view-model';
 import { SchemaEditor } from './schema-editor';
 import { SchemaViewer } from './schema-viewer';
 import { Heading2, Heading3 } from './ui/headings';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 
 function pathCleaner(path: string): string {
   return path.split('?')[0];

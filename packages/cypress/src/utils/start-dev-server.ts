@@ -11,7 +11,7 @@ import {
 } from '@nx/devkit';
 import { join } from 'path';
 import { CypressExecutorOptions } from '../executors/cypress/cypress.impl';
-import * as detectPort from 'detect-port';
+const detectPort = require('detect-port');
 import {
   getExecutorInformation,
   parseExecutor,

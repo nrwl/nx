@@ -1,6 +1,6 @@
 import { BlogAuthors } from '@nx/nx-dev/ui-blog';
 import Link from 'next/link';
-import type { PodcastDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
+import type { PodcastDataEntry } from '@nx/nx-dev-data-access-documents/node-only';
 
 export interface PodcastListItemProps {
   podcast: PodcastDataEntry;

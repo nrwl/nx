@@ -1,4 +1,4 @@
-import { ProcessedPackageMetadata } from '@nx/nx-dev/models-package';
+import { ProcessedPackageMetadata } from '@nx/nx-dev-models-package';
 
 export const pkg: ProcessedPackageMetadata = {
   description: '',

@@ -25,7 +25,7 @@
   "executors": "./executors.json",
   "dependencies": {
     "@nx/js": "file:../js",
-    "@nx/devkit": "file:../devkit",
+    "@nx/devkit": "workspace:",
     "@nx/web": "file:../web",
     "@nx/module-federation": "file:../module-federation",
     "@phenomnomnominal/tsquery": "~5.0.1",

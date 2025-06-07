@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/packages/remix/spec",
     "module": "commonjs",
     "types": ["jest", "node"],
     "resolveJsonModule": true
@@ -17,5 +17,10 @@
     "**/*.spec.jsx",
     "**/*.d.ts",
     "jest.config.ts"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    }
   ]
 }

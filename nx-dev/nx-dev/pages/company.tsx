@@ -1,8 +1,8 @@
 import { useRouter } from 'next/router';
 import { NextSeo } from 'next-seo';
-import { CoFounders, Hero, TheTeam, Layout } from '@nx/nx-dev/ui-company';
-import { CustomerLogos } from '@nx/nx-dev/ui-enterprise';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { CoFounders, Hero, TheTeam, Layout } from '@nx/nx-dev-ui-company';
+import { CustomerLogos } from '@nx/nx-dev-ui-enterprise';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 
 export function Company(): JSX.Element {
   const router = useRouter();
