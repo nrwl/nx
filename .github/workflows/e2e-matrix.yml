@@ -256,8 +256,6 @@ jobs:
           # Verify Xcode installation
           xcodebuild -version
           
-          # List available simulators
-          xcrun simctl list devices available
         timeout-minutes: 10
         continue-on-error: false
 
@@ -303,9 +301,6 @@ jobs:
           # Verify CoreSimulator service restarted
           pgrep -fl "CoreSimulator" || (echo "CoreSimulator service not running" && exit 1)
           
-          # Check simulator list is clean
-          xcrun simctl list devices
-          
           # Verify simulator runtime paths exist and are writable
           test -d ~/Library/Developer/CoreSimulator/Devices || (echo "Simulator devices directory missing" && exit 1)
           touch ~/Library/Developer/CoreSimulator/Devices/test || (echo "Simulator devices directory not writable" && exit 1)
@@ -348,6 +343,7 @@ jobs:
           NX_E2E_RUN_E2E: 'true'
           NX_CLOUD_NO_TIMEOUTS: 'true'
           NX_E2E_SKIP_CLEANUP: 'true'
+          NX_SKIP_NX_CACHE: 'true'
           NODE_OPTIONS: --max_old_space_size=8192
           SELECTED_PM: ${{ matrix.package_manager }}
           npm_config_registry: http://localhost:4872
@@ -373,6 +369,7 @@ jobs:
           NX_NATIVE_LOGGING: 'false'
           NX_E2E_RUN_E2E: 'true'
           NX_E2E_SKIP_CLEANUP: 'true'
+          NX_SKIP_NX_CACHE: 'true'
           NODE_OPTIONS: --max_old_space_size=8192
           SELECTED_PM: 'npm'
           npm_config_registry: http://localhost:4872
