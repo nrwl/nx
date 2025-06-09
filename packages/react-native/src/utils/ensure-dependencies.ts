@@ -10,7 +10,6 @@ import {
 } from '@nx/react/src/utils/versions';
 import {
   babelRuntimeVersion,
-  jestReactNativeVersion,
   reactNativeBabelPresetVersion,
   reactNativeCommunityCliVersion,
   reactNativeCommunityCliPlatformAndroidVersion,
@@ -18,8 +17,6 @@ import {
   reactNativeMetroConfigVersion,
   reactNativeSvgTransformerVersion,
   reactNativeSvgVersion,
-  reactTestRendererVersion,
-  testingLibraryJestNativeVersion,
   testingLibraryReactNativeVersion,
   typesNodeVersion,
   typesReactVersion,
@@ -37,14 +34,11 @@ export function ensureDependencies(tree: Tree): GeneratorCallback {
       '@react-native/babel-preset': reactNativeBabelPresetVersion,
       '@react-native/metro-config': reactNativeMetroConfigVersion,
       '@testing-library/react-native': testingLibraryReactNativeVersion,
-      '@testing-library/jest-native': testingLibraryJestNativeVersion,
       '@react-native-community/cli': reactNativeCommunityCliVersion,
       '@react-native-community/cli-platform-android':
         reactNativeCommunityCliPlatformAndroidVersion,
       '@react-native-community/cli-platform-ios':
         reactNativeCommunityCliPlatformIosVersion,
-      'jest-react-native': jestReactNativeVersion,
-      'react-test-renderer': reactTestRendererVersion,
       'react-native-svg-transformer': reactNativeSvgTransformerVersion,
       'react-native-svg': reactNativeSvgVersion,
       '@babel/preset-react': babelPresetReactVersion,
