@@ -1,0 +1,10 @@
+{
+  "name": "app",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "tmp": "^0.2.3",
+    "lodash": "^4.17.0",
+    "semver": "^7.3.0"
+  }
+}
