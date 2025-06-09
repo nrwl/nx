@@ -25,24 +25,33 @@ This plugin requires Java 17 or newer. Using older Java versions is unsupported 
 You can install Nx globally. Depending on your package manager, use one of the following commands:
 
 {% tabs %}
-{% tab label="Homebrew" %}
+{% tab label="npm" %}
+
+```shell
+npm add --global nx@latest
+```
+
+{% /tab %}
+{% tab label="Homebrew (macOS, Linux)" %}
 
 ```shell
 brew install nx
 ```
 
 {% /tab %}
-{% tab label="Chocolatey" %}
+{% tab label="Chocolatey (Windows)" %}
 
 ```shell
 choco install nx
 ```
 
 {% /tab %}
-{% tab label="npm" %}
+{% tab label="apt (Ubuntu)" %}
 
 ```shell
-npm add --global nx@latest
+sudo add-apt-repository ppa:nrwl/nx
+sudo apt update
+sudo apt install nx
 ```
 
 {% /tab %}
