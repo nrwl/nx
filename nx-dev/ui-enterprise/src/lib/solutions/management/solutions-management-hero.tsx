@@ -145,7 +145,7 @@ export function SolutionsManagementHero(): ReactElement {
               size="default"
               onClick={() =>
                 sendCustomEvent(
-                  'contact-sales-click',
+                  'subscribe-newsletter-click',
                   'solutions-engineering-hero',
                   'solutions-engineering'
                 )
