@@ -47,7 +47,8 @@ function adaptFunctionBasedTransformer(
   // Handle { before: Function } export (function-based plugin)
   if (plugin && typeof plugin.before === 'function') {
     return {
-      before: plugin.before,
+      before: (options: Record<string, unknown>, program: any) =>
+        plugin.before(options, program),
     };
   }
 
