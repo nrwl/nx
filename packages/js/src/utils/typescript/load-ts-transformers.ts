@@ -24,8 +24,13 @@ function detectTransformerFormat(plugin: any): TransformerFormat {
     return TransformerFormat.FUNCTION_EXPORT;
   }
 
-  // Check if it has a 'before' function export (function-based plugin pattern)
-  if (plugin && typeof plugin.before === 'function') {
+  // Check if it has a function export (function-based plugin pattern)
+  if (
+    plugin &&
+    (typeof plugin.before === 'function' ||
+      typeof plugin.after === 'function' ||
+      typeof plugin.afterDeclarations === 'function')
+  ) {
     return TransformerFormat.FUNCTION_EXPORT;
   }
 
@@ -44,12 +49,29 @@ function adaptFunctionBasedTransformer(
     };
   }
 
-  // Handle { before: Function } export (function-based plugin)
-  if (plugin && typeof plugin.before === 'function') {
-    return {
-      before: (options: Record<string, unknown>, program: any) =>
-        plugin.before(options, program),
-    };
+  // Handle object with function exports - adapt all available hooks
+  if (plugin && typeof plugin === 'object') {
+    const adapted: any = {};
+
+    if (typeof plugin.before === 'function') {
+      adapted.before = (options: Record<string, unknown>, program: any) =>
+        plugin.before(options, program);
+    }
+
+    if (typeof plugin.after === 'function') {
+      adapted.after = (options: Record<string, unknown>, program: any) =>
+        plugin.after(options, program);
+    }
+
+    if (typeof plugin.afterDeclarations === 'function') {
+      adapted.afterDeclarations = (
+        options: Record<string, unknown>,
+        program: any
+      ) => plugin.afterDeclarations(options, program);
+    }
+
+    // Return adapted hooks if any were found, otherwise return original plugin
+    return Object.keys(adapted).length > 0 ? adapted : plugin;
   }
 
   return plugin;
@@ -91,7 +113,18 @@ export function loadTsTransformers(
       const binaryPath = moduleResolver(name, {
         paths: nodeModulePaths,
       });
-      return require(binaryPath);
+      const loadedPlugin = require(binaryPath);
+      // Check if main export already has transformer hooks
+      if (
+        loadedPlugin &&
+        (loadedPlugin.before ||
+          loadedPlugin.after ||
+          loadedPlugin.afterDeclarations)
+      ) {
+        return loadedPlugin;
+      }
+      // Only fall back to .default if main export lacks transformer hooks
+      return loadedPlugin?.default ?? loadedPlugin;
     } catch (e) {
       logger.warn(`"${name}" plugin could not be found!`);
       return {};
@@ -103,7 +136,10 @@ export function loadTsTransformers(
     let plugin = pluginRefs[i];
 
     // Skip empty plugins (failed to load)
-    if (!plugin || Object.keys(plugin).length === 0) {
+    if (
+      !plugin ||
+      (typeof plugin !== 'function' && Object.keys(plugin).length === 0)
+    ) {
       continue;
     }
 
