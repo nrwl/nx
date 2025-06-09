@@ -22,7 +22,7 @@ env:
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   CYPRESS_INSTALL_BINARY: 0
   NODE_VERSION: 20.19.0
-  PNPM_VERSION: 10.11.1 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
+  PNPM_VERSION: 9.8.0 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
 
 jobs:
   # We first need to determine the version we are releasing, and if we need a custom repo or ref to use for the git checkout in subsequent steps.
@@ -142,7 +142,7 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
             build: |-
               set -e &&
-              npm i -g pnpm@10.11.1 --force &&
+              npm i -g pnpm@9.8.0 --force &&
               pnpm --version &&
               pnpm install --frozen-lockfile &&
               rustup target add aarch64-unknown-linux-gnu &&
@@ -152,7 +152,7 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
             build: |-
               set -e &&
-              npm i -g pnpm@10.11.1 --force &&
+              npm i -g pnpm@9.8.0 --force &&
               pnpm --version &&
               pnpm install --frozen-lockfile &&
               rustup target add x86_64-unknown-linux-musl &&
@@ -173,7 +173,7 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
             build: |-
               set -e &&
-              npm i -g pnpm@10.11.1 --force &&
+              npm i -g pnpm@9.8.0 --force &&
               pnpm --version &&
               pnpm install --frozen-lockfile &&
               rustup target add aarch64-unknown-linux-gnu &&
@@ -201,7 +201,7 @@ jobs:
             build: |-
               set -e &&
               rustup target add aarch64-unknown-linux-musl &&
-              npm i -g pnpm@10.11.1 --force &&
+              npm i -g pnpm@9.8.0 --force &&
               pnpm --version &&
               pnpm install --frozen-lockfile &&
               pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-musl
@@ -328,7 +328,7 @@ jobs:
             env
             whoami
             sudo pkg install -y -f node libnghttp2 www/npm git
-            sudo npm install --location=global --ignore-scripts pnpm@10.11.1
+            sudo npm install --location=global --ignore-scripts pnpm@9.8.0
             curl https://sh.rustup.rs -sSf --output rustup.sh
             sh rustup.sh -y --profile minimal --default-toolchain stable
             source "$HOME/.cargo/env"
