@@ -8,6 +8,8 @@ import { runLocalRelease } from '../../scripts/local-registry/populate-storage';
 
 let localRegistryProcess: ChildProcess | null = null;
 
+const defaultRegistry = 'https://registry.npmjs.org/';
+
 export default async function (globalConfig: Config.ConfigGlobals) {
   try {
     const isVerbose: boolean =
@@ -17,12 +19,6 @@ export default async function (globalConfig: Config.ConfigGlobals) {
      * For e2e-ci, e2e-local and macos-local-e2e we populate the verdaccio storage up front, but for other workflows we need
      * to run the full local release process before running tests.
      */
-    const prefixes = ['e2e-ci', 'e2e-macos-local', 'e2e-local'];
-    const requiresLocalRelease = !prefixes.some((prefix) =>
-      process.env.NX_TASK_TARGET_TARGET?.startsWith(prefix)
-    );
-
-    const defaultRegistry = 'https://registry.npmjs.org/';
     const authToken = 'secretVerdaccioToken';
 
     // Get the currently configured registry
@@ -56,28 +52,29 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     await configureRegistry(currentRegistry, listenAddress, port, authToken);
 
     /**
-     * Set the published version based on what has previously been loaded into the
-     * verdaccio storage.
+     * If we started a local registry, we need to publish the packages to it.
+     * Otherwise, wait until packages are published to the configured registry.
      */
-    if (!requiresLocalRelease) {
-      let publishedVersion = await getPublishedVersion();
-      console.log(`Testing Published version: Nx ${publishedVersion}`);
-      if (publishedVersion) {
-        process.env.PUBLISHED_VERSION = publishedVersion;
-      }
-    }
-
-    if (process.env.NX_E2E_SKIP_CLEANUP !== 'true' || !existsSync('./build')) {
-      if (!isCI) {
-        registerTsConfigPaths(join(__dirname, '../../tsconfig.base.json'));
-        const { e2eCwd } = await import('./get-env-info');
-        removeSync(e2eCwd);
-      }
-      if (requiresLocalRelease) {
+    if (localRegistryProcess) {
+      if (
+        process.env.NX_E2E_SKIP_CLEANUP !== 'true' ||
+        !existsSync('./build')
+      ) {
+        if (!isCI) {
+          registerTsConfigPaths(join(__dirname, '../../tsconfig.base.json'));
+          const { e2eCwd } = await import('./get-env-info');
+          removeSync(e2eCwd);
+        }
         console.log('Publishing packages to local registry');
         const publishVersion = process.env.PUBLISHED_VERSION ?? 'major';
         // Always show full release logs on CI, they should only happen once via e2e-ci
         await runLocalRelease(publishVersion, isCI || isVerbose);
+      }
+    } else {
+      let publishedVersion = await getPublishedVersion(currentRegistry);
+      console.log(`Testing Published version: Nx ${publishedVersion}`);
+      if (publishedVersion) {
+        process.env.PUBLISHED_VERSION = publishedVersion;
       }
     }
   } catch (err) {
@@ -197,14 +194,12 @@ async function configureRegistry(
   };
 }
 
-function getPublishedVersion(): Promise<string | undefined> {
-  execSync(`npm config get registry`, {
-    stdio: 'inherit',
-  });
+async function getNxVersionFromRegistry(
+  registry: string
+): Promise<string | undefined> {
   return new Promise((resolve) => {
-    // Resolve the published nx version from verdaccio
     exec(
-      'npm view nx@latest version',
+      `npm view nx@latest version --registry=${registry}`,
       {
         windowsHide: false,
       },
@@ -216,4 +211,61 @@ function getPublishedVersion(): Promise<string | undefined> {
       }
     );
   });
+}
+
+async function getPublishedVersion(
+  localRegistry: string,
+  maxAttempts: number = 600,
+  pollIntervalMs: number = 100
+): Promise<string | undefined> {
+  console.log('Waiting for Nx version to differ between registries...');
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const shouldLog = attempt % 10 === 0 || attempt === 1;
+
+    if (shouldLog) {
+      console.log(
+        `Attempt ${attempt}/${maxAttempts}: Checking registry versions...`
+      );
+    }
+
+    const [defaultVersion, localVersion] = await Promise.all([
+      getNxVersionFromRegistry(defaultRegistry),
+      getNxVersionFromRegistry(localRegistry),
+    ]);
+
+    if (shouldLog) {
+      console.log(
+        `Default registry (${defaultRegistry}): ${
+          defaultVersion || 'undefined'
+        }`
+      );
+      console.log(
+        `Local registry (${localRegistry}): ${localVersion || 'undefined'}`
+      );
+    }
+
+    // If local version exists and differs from default, we're ready
+    if (localVersion && defaultVersion && localVersion !== defaultVersion) {
+      console.log(
+        `✅ Version difference detected! Using local version: ${localVersion}`
+      );
+      return localVersion;
+    }
+
+    // If local version exists but default doesn't, we're also ready
+    if (localVersion && !defaultVersion) {
+      console.log(`✅ Local version available: ${localVersion}`);
+      return localVersion;
+    }
+
+    if (attempt < maxAttempts) {
+      console.log(`Waiting ${pollIntervalMs}ms before next check...`);
+      await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+    }
+  }
+
+  throw new Error(
+    `Timeout after ${maxAttempts} attempts. No local release of Nx was published.`
+  );
 }
