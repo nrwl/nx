@@ -257,7 +257,7 @@ ${
     }${
       processedWebinar.Status === 'Past - Ungated' &&
       processedWebinar['Link to Landing Page']
-        ? `{% call-to-action title="View the recording" url="${processedWebinar['Link to Landing Page']}" description="Watch on youtube" /%}`
+        ? `{% call-to-action title="View the recording" url="${processedWebinar['YouTube Link']}" description="Watch on youtube" /%}`
         : ''
     }
 `;

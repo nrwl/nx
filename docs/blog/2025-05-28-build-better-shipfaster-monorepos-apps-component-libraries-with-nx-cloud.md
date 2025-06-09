@@ -21,4 +21,4 @@ Unlock faster development and more efficient CI/CD workflows with Nx and Bitovi.
 
 Bitovi's Ilyass Elfouih and Nx's Jordan Powell will walk through a **real-world scenario** where a frontend team updates a shared component, faces a classic code owner approval challenge, and uses Nx Cloud to fix and validate the change without triggering a full test suite.
 
-{% call-to-action title="View the recording" url="https://bit.ly/4jQLCqp" description="Watch on youtube" /%}
+{% call-to-action title="View the recording" url="https://bit.ly/4kv5tfb" description="Watch on youtube" /%}
