@@ -15,10 +15,9 @@ const semverLessThan = require('semver/functions/lt');
 
 // Check node version
 if (semverLessThan(process.version, '20.19.0')) {
-  console.error(
-    'Please make sure that your installed Node version is greater than v20.19.0'
+  console.warn(
+    `Please make sure that your installed Node version (${process.version}) is greater than v20.19.0`
   );
-  process.exit(1);
 }
 
 // Check for pnpm version
