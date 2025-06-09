@@ -13,6 +13,7 @@ import { getDependencyConfigs } from 'nx/src/tasks-runner/utils';
 import { relative } from 'path';
 import { from, Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { assertBuilderPackageIsInstalled } from '../../executors/utilities/builder-package';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import {
   mergeCustomWebpackConfig,
@@ -57,7 +58,6 @@ export function executeWebpackBrowserBuilder(
     buildLibsFromSource,
     customWebpackConfig,
     indexHtmlTransformer,
-    indexFileTransformer,
     watchDependencies,
     ...delegateBuilderOptions
   } = options;
@@ -74,11 +74,9 @@ export function executeWebpackBrowserBuilder(
     );
   }
 
-  const normalizedIndexHtmlTransformer =
-    indexHtmlTransformer ?? indexFileTransformer;
   const pathToIndexFileTransformer =
-    normalizedIndexHtmlTransformer &&
-    joinPathFragments(context.workspaceRoot, normalizedIndexHtmlTransformer);
+    indexHtmlTransformer &&
+    joinPathFragments(context.workspaceRoot, indexHtmlTransformer);
   if (pathToIndexFileTransformer && !existsSync(pathToIndexFileTransformer)) {
     throw new Error(
       `File containing Index File Transformer function Not Found!\n Please ensure the path to the file containing the function is correct: \n${pathToIndexFileTransformer}`
@@ -101,6 +99,7 @@ export function executeWebpackBrowserBuilder(
     );
   }
 
+  assertBuilderPackageIsInstalled('@angular-devkit/build-angular');
   return from(import('@angular-devkit/build-angular')).pipe(
     switchMap(({ executeBrowserBuilder }) =>
       executeBrowserBuilder(delegateBuilderOptions, context as any, {

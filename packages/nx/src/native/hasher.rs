@@ -9,12 +9,16 @@ pub fn hash(content: &[u8]) -> String {
 
 #[napi]
 pub fn hash_array(input: Vec<Option<String>>) -> String {
-    let joined = input.iter().filter_map(|s| {
-        if s.is_none() {
-            trace!("Encountered None value in hash_array input: {:?}", input);
-        }
-        s.as_deref()
-    }).collect::<Vec<_>>().join(",");
+    let joined = input
+        .iter()
+        .filter_map(|s| {
+            if s.is_none() {
+                trace!("Encountered None value in hash_array input: {:?}", input);
+            }
+            s.as_deref()
+        })
+        .collect::<Vec<_>>()
+        .join(",");
     let content = joined.as_bytes();
     hash(content)
 }
@@ -41,9 +45,9 @@ pub fn hash_file_path<P: AsRef<Path>>(path: P) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use crate::native::hasher::{hash_file, hash_array};
-    use assert_fs::prelude::*;
+    use crate::native::hasher::{hash_array, hash_file};
     use assert_fs::TempDir;
+    use assert_fs::prelude::*;
 
     ///
     /// Setup a temporary directory to do testing in

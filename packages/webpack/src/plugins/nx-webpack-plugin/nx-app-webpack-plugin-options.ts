@@ -221,10 +221,10 @@ export interface NxAppWebpackPluginOptions {
    * Use tsconfig-paths-webpack-plugin to resolve modules using paths in the tsconfig file.
    */
   useTsconfigPaths?: boolean;
-  // TODO(v21): Make Sass Embedded the default in version 21.
   // TODO(v22): Remove in version 22.
   /**
    * The implementation of the SASS compiler to use. Can be either `sass` or `sass-embedded`. Defaults to `sass-embedded`.
+   * @deprecated Sass option will be removed in Nx 22. This option will also be removed in Nx 22 as it is no longer needed.
    */
   sassImplementation?: 'sass' | 'sass-embedded';
   /**

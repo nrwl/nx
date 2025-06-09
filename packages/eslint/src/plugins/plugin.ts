@@ -22,6 +22,7 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { gte } from 'semver';
+import type { ESLint as ESLintType } from 'eslint';
 import {
   baseEsLintConfigFile,
   BASE_ESLINT_CONFIG_FILENAMES,
@@ -134,7 +135,12 @@ const internalCreateNodes = async (
       );
       const hash = await calculateHashForCreateNodes(
         childProjectRoot,
-        options,
+        {
+          ...options,
+          // change this to bust the cache when making changes that would yield
+          // different results for the same hash
+          bust: 1,
+        },
         context,
         [...parentConfigs, join(childProjectRoot, '.eslintignore')]
       );
@@ -186,6 +192,7 @@ const internalCreateNodes = async (
 };
 
 const internalCreateNodesV2 = async (
+  ESLint: typeof ESLintType,
   configFilePath: string,
   options: EslintPluginOptions,
   context: CreateNodesContextV2,
@@ -195,10 +202,6 @@ const internalCreateNodesV2 = async (
   hashByRoot: Map<string, string>
 ): Promise<CreateNodesResult> => {
   const configDir = dirname(configFilePath);
-
-  const ESLint = await resolveESLintClass({
-    useFlatConfigOverrideVal: isFlatConfig(configFilePath),
-  });
   const eslintVersion = ESLint.version;
 
   const projects: CreateNodesResult['projects'] = {};
@@ -212,15 +215,21 @@ const internalCreateNodesV2 = async (
         return;
       }
 
-      const eslint = new ESLint({
-        cwd: join(context.workspaceRoot, projectRoot),
-      });
       let hasNonIgnoredLintableFiles = false;
-      for (const file of lintableFilesPerProjectRoot.get(projectRoot) ?? []) {
-        if (!(await eslint.isPathIgnored(join(context.workspaceRoot, file)))) {
-          hasNonIgnoredLintableFiles = true;
-          break;
+      if (configDir !== projectRoot || projectRoot === '.') {
+        const eslint = new ESLint({
+          cwd: join(context.workspaceRoot, projectRoot),
+        });
+        for (const file of lintableFilesPerProjectRoot.get(projectRoot) ?? []) {
+          if (
+            !(await eslint.isPathIgnored(join(context.workspaceRoot, file)))
+          ) {
+            hasNonIgnoredLintableFiles = true;
+            break;
+          }
         }
+      } else {
+        hasNonIgnoredLintableFiles = true;
       }
 
       if (!hasNonIgnoredLintableFiles) {
@@ -273,7 +282,12 @@ export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
     );
     const hashes = await calculateHashesForCreateNodes(
       projectRoots,
-      options,
+      {
+        ...options,
+        // change this to bust the cache when making changes that would yield
+        // different results for the same hash
+        bust: 1,
+      },
       context,
       projectRoots.map((root) => {
         const parentConfigs = eslintConfigFiles.filter((eslintConfig) =>
@@ -286,9 +300,16 @@ export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
       projectRoots.map((r, i) => [r, hashes[i]])
     );
     try {
+      if (eslintConfigFiles.length === 0) {
+        return [];
+      }
+      const ESLint = await resolveESLintClass({
+        useFlatConfigOverrideVal: isFlatConfig(eslintConfigFiles[0]),
+      });
       return await createNodesFromFiles(
         (configFile, options, context) =>
           internalCreateNodesV2(
+            ESLint,
             configFile,
             options,
             context,
@@ -482,14 +503,9 @@ function buildEslintTargets(
       'default',
       // Certain lint rules can be impacted by changes to dependencies
       '^default',
-      ...eslintConfigs.map((config) =>
-        `{workspaceRoot}/${config}`.replace(
-          `{workspaceRoot}/${projectRoot}`,
-          isRootProject ? '{projectRoot}/' : '{projectRoot}'
-        )
-      ),
+      ...eslintConfigs.map((config) => `{workspaceRoot}/${config}`),
       ...(existsSync(join(workspaceRoot, projectRoot, '.eslintignore'))
-        ? ['{projectRoot}/.eslintignore']
+        ? [join('{workspaceRoot}', projectRoot, '.eslintignore')]
         : []),
       '{workspaceRoot}/tools/eslint-rules/**/*',
       { externalDependencies: ['eslint'] },

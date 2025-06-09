@@ -1,16 +1,22 @@
-import { joinPathFragments, type Tree } from '@nx/devkit';
+import { joinPathFragments, readNxJson, type Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { Linter } from '@nx/eslint';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
 
+function arePluginsExplicitlyDisabled(host: Tree) {
+  const { useInferencePlugins } = readNxJson(host);
+  const addPluginEnvVar = process.env.NX_ADD_PLUGINS;
+  return useInferencePlugins === false || addPluginEnvVar === 'false';
+}
+
 export async function normalizeOptions(
   host: Tree,
-  options: Partial<Schema>
+  options: Partial<Schema>,
+  isRspack?: boolean
 ): Promise<NormalizedSchema> {
   await ensureRootProjectName(options as Schema, 'application');
   const { projectName: appProjectName, projectRoot: appProjectRoot } =
@@ -31,8 +37,12 @@ export async function normalizeOptions(
 
   const bundler = options.bundler ?? 'esbuild';
 
+  const addPlugin =
+    options.addPlugin ?? (!arePluginsExplicitlyDisabled(host) && isRspack);
+
   // Set defaults and then overwrite with user options
   return {
+    addPlugin,
     style: 'css',
     routing: true,
     inlineStyle: false,
@@ -40,7 +50,7 @@ export async function normalizeOptions(
     skipTests: options.unitTestRunner === UnitTestRunner.None,
     skipFormat: false,
     e2eTestRunner: E2eTestRunner.Playwright,
-    linter: Linter.EsLint,
+    linter: 'eslint',
     strict: true,
     standalone: true,
     directory: appProjectRoot,

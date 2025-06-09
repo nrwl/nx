@@ -9,7 +9,7 @@ type EslintExtensionSchema = {
 };
 
 /**
- * @deprecated Use tools from `@nx/eslint/src/generators/utils/eslint-file` instead
+ * @deprecated Use tools from `@nx/eslint/src/generators/utils/eslint-file` instead. It will be removed in Nx v22.
  */
 export const extendAngularEslintJson = (
   json: Linter.Config,
@@ -61,7 +61,7 @@ export const extendAngularEslintJson = (
 };
 
 /**
- * @deprecated Use {@link extendAngularEslintJson} instead
+ * @deprecated Use {@link extendAngularEslintJson} instead. It will be removed in Nx v22.
  */
 export function createEsLintConfiguration(
   tree: Tree,

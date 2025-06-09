@@ -1,7 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { names, readProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { applicationGenerator } from '../application/application';
 import type { Schema as ApplicationOptions } from '../application/schema';
@@ -58,7 +57,7 @@ export async function createStorybookTestWorkspaceForLib(
   await libraryGenerator(tree, {
     directory: libName,
     buildable: false,
-    linter: Linter.EsLint,
+    linter: 'eslint',
     publishable: false,
     simpleName: false,
     skipFormat: true,
@@ -74,17 +73,17 @@ export async function createStorybookTestWorkspaceForLib(
   });
 
   tree.write(
-    `${libName}/src/lib/test-button/test-button.component.ts`,
+    `${libName}/src/lib/test-button/test-button.ts`,
     `import { Component, Input } from '@angular/core';
 
 export type ButtonStyle = 'default' | 'primary' | 'accent';
 
 @Component({
   selector: 'proj-test-button',
-  templateUrl: './test-button.component.html',
-  styleUrls: ['./test-button.component.css']
+  templateUrl: './test-button.html',
+  styleUrls: ['./test-button.css']
 })
-export class TestButtonComponent {
+export class TestButton {
   @Input('buttonType') type = 'button';
   @Input() style: ButtonStyle = 'default';
   @Input() age?: number;
@@ -93,14 +92,14 @@ export class TestButtonComponent {
   );
 
   tree.write(
-    `${libName}/src/lib/test-button/test-button.component.html`,
+    `${libName}/src/lib/test-button/test-button.html`,
     `<button [attr.type]="type" [ngClass]="style"></button>`
   );
 
-  const modulePath = `${libName}/src/lib/${libName}.module.ts`;
+  const modulePath = `${libName}/src/lib/${libName}-module.ts`;
   tree.write(
     modulePath,
-    `import * as ButtonExports from './test-button/test-button.component';
+    `import * as ButtonExports from './test-button/test-button';
     ${tree.read(modulePath)}`
   );
 
@@ -120,18 +119,18 @@ export class TestButtonComponent {
 
   tree.write(
     `${libName}/src/lib/barrel/barrel-button/index.ts`,
-    `export * from './barrel-button.component';`
+    `export * from './barrel-button';`
   );
 
   tree.write(
-    `${libName}/src/lib/barrel/barrel.module.ts`,
+    `${libName}/src/lib/barrel/barrel-module.ts`,
     `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { BarrelButtonComponent } from './barrel-button';
+import { BarrelButton } from './barrel-button';
 
 @NgModule({
   imports: [CommonModule],
-  declarations: [BarrelButtonComponent],
+  declarations: [BarrelButton],
 })
 export class BarrelModule {}`
   );
@@ -159,15 +158,15 @@ export class BarrelModule {}`
   });
 
   tree.write(
-    `${libName}/src/lib/variable-declare/variable-declare.module.ts`,
+    `${libName}/src/lib/variable-declare/variable-declare-module.ts`,
     `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { VariableDeclareButtonComponent } from './variable-declare-button/variable-declare-button.component';
-import { VariableDeclareViewComponent } from './variable-declare-view/variable-declare-view.component';
+import { VariableDeclareButton } from './variable-declare-button/variable-declare-button';
+import { VariableDeclareView } from './variable-declare-view/variable-declare-view';
 
 const COMPONENTS = [
-  VariableDeclareButtonComponent,
-  VariableDeclareViewComponent
+  VariableDeclareButton,
+  VariableDeclareView
 ]
 
 @NgModule({
@@ -209,21 +208,21 @@ export class VariableDeclareModule {}`
   });
 
   tree.write(
-    `${libName}/src/lib/variable-spread-declare/variable-spread-declare.module.ts`,
+    `${libName}/src/lib/variable-spread-declare/variable-spread-declare-module.ts`,
     `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { VariableSpreadDeclareButtonComponent } from './variable-spread-declare-button/variable-spread-declare-button.component';
-import { VariableSpreadDeclareViewComponent } from './variable-spread-declare-view/variable-spread-declare-view.component';
-import { VariableSpreadDeclareAnotherviewComponent } from './variable-spread-declare-anotherview/variable-spread-declare-anotherview.component';
+import { VariableSpreadDeclareButton } from './variable-spread-declare-button/variable-spread-declare-button';
+import { VariableSpreadDeclareView } from './variable-spread-declare-view/variable-spread-declare-view';
+import { VariableSpreadDeclareAnotherview } from './variable-spread-declare-anotherview/variable-spread-declare-anotherview';
 
 const COMPONENTS = [
-  VariableSpreadDeclareButtonComponent,
-  VariableSpreadDeclareViewComponent
+  VariableSpreadDeclareButton,
+  VariableSpreadDeclareView
 ]
 
 @NgModule({
   imports: [CommonModule],
-  declarations: [...COMPONENTS, VariableSpreadDeclareAnotherviewComponent],
+  declarations: [...COMPONENTS, VariableSpreadDeclareAnotherview],
 })
 export class VariableSpreadDeclareModule {}`
   );
@@ -251,11 +250,11 @@ export class VariableSpreadDeclareModule {}`
   });
 
   tree.write(
-    `${libName}/src/lib/static-member-declarations/static-member-declarations.module.ts`,
+    `${libName}/src/lib/static-member-declarations/static-member-declarations-module.ts`,
     `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Cmp1Component } from './cmp1/cmp1.component';
-import { Cmp2Component } from './cmp2/cmp2.component';
+import { Cmp1 } from './cmp1/cmp1';
+import { Cmp2 } from './cmp2/cmp2';
 
 @NgModule({
   imports: [CommonModule],
@@ -263,7 +262,7 @@ import { Cmp2Component } from './cmp2/cmp2.component';
   exports: StaticMemberDeclarationsModule.COMPONENTS
 })
 export class StaticMemberDeclarationsModule {
-  static readonly COMPONENTS = [Cmp1Component, Cmp2Component];
+  static readonly COMPONENTS = [Cmp1, Cmp2];
 }`
   );
 
@@ -306,7 +305,7 @@ function generateModule(
   }
 
   const moduleNames = names(options.name);
-  const moduleFilePath = `${options.path}/${moduleNames.fileName}/${moduleNames.fileName}.module.ts`;
+  const moduleFilePath = `${options.path}/${moduleNames.fileName}/${moduleNames.fileName}-module.ts`;
 
   tree.write(
     moduleFilePath,

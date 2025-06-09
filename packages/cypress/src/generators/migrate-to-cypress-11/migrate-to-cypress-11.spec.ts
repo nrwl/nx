@@ -11,7 +11,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { installedCypressVersion } from '../../utils/cypress-version';
+import { getInstalledCypressMajorVersion } from '../../utils/versions';
 import { configurationGenerator } from '../configuration/configuration';
 import {
   createSupportFileImport,
@@ -21,13 +21,16 @@ import {
 } from './conversion.util';
 import { migrateCypressProject } from './migrate-to-cypress-11';
 
-jest.mock('../../utils/cypress-version');
+jest.mock('../../utils/versions', () => ({
+  ...jest.requireActual('../../utils/versions'),
+  getInstalledCypressMajorVersion: jest.fn(),
+}));
 
 describe('convertToCypressTen', () => {
   let tree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
+    ReturnType<typeof getInstalledCypressMajorVersion>
+  > = getInstalledCypressMajorVersion as never;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });

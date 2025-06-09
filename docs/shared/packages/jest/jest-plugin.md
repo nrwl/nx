@@ -19,26 +19,11 @@ Make sure to install the `@nx/jest` version that matches the version of `nx` in 
 
 In any Nx workspace, you can install `@nx/jest` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/jest
 ```
 
 This will install the correct version of `@nx/jest`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/jest` package with your package manager.
-
-```shell
-npm add -D @nx/jest
-```
-
-{% /tab %}
-{% /tabs %}
 
 #### Configuring @nx/jest/plugin for both E2E and Unit Tests
 
@@ -286,7 +271,7 @@ The Nx task options can be configured via the [project config file](/reference/p
 
 If you're using [inferred tasks](/concepts/inferred-tasks), or running Jest directly with the `nx:run-commands` executor, you can [provide the Jest args](/recipes/running-tasks/pass-args-to-commands) for the command you're running.
 
-If you're using the `@nx/jest:jest` executor, you can provide [the options the executor accepts](/nx-api/jest/executors/jest#options).
+If you're using the `@nx/jest:jest` executor, you can provide [the options the executor accepts](/technologies/test-tools/jest/api/executors/jest#options).
 
 ### Code Coverage
 

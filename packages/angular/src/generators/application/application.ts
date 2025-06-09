@@ -1,7 +1,10 @@
 import {
+  addDependenciesToPackageJson,
   formatFiles,
+  generateFiles,
   GeneratorCallback,
   installPackagesTask,
+  joinPathFragments,
   offsetFromRoot,
   readNxJson,
   Tree,
@@ -10,10 +13,16 @@ import {
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { convertToRspack } from '../convert-to-rspack/convert-to-rspack';
 import { angularInitGenerator } from '../init/init';
 import { setupSsr } from '../setup-ssr/setup-ssr';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
+import {
+  getInstalledAngularDevkitVersion,
+  getInstalledAngularVersionInfo,
+  versions,
+} from '../utils/version-utils';
 import {
   addE2e,
   addLinting,
@@ -22,11 +31,9 @@ import {
   addUnitTestRunner,
   createFiles,
   createProject,
-  enableStrictTypeChecking,
   normalizeOptions,
-  setApplicationStrictDefault,
   setGeneratorDefaults,
-  updateEditorTsConfig,
+  updateTsconfigFiles,
 } from './lib';
 import type { Schema } from './schema';
 
@@ -35,8 +42,12 @@ export async function applicationGenerator(
   schema: Partial<Schema>
 ): Promise<GeneratorCallback> {
   assertNotUsingTsSolutionSetup(tree, 'angular', 'application');
+  const isRspack = schema.bundler === 'rspack';
+  if (isRspack) {
+    schema.bundler = 'webpack';
+  }
 
-  const options = await normalizeOptions(tree, schema);
+  const options = await normalizeOptions(tree, schema, isRspack);
   const rootOffset = offsetFromRoot(options.appProjectRoot);
 
   await jsInitGenerator(tree, {
@@ -48,6 +59,7 @@ export async function applicationGenerator(
   await angularInitGenerator(tree, {
     ...options,
     skipFormat: true,
+    addPlugin: options.addPlugin,
   });
 
   if (!options.skipPackageJson) {
@@ -74,7 +86,7 @@ export async function applicationGenerator(
     options,
     options.e2eTestRunner !== 'none' ? e2ePort : options.port
   );
-  updateEditorTsConfig(tree, options);
+  updateTsconfigFiles(tree, options);
   setGeneratorDefaults(tree, options);
 
   if (options.rootProject) {
@@ -87,12 +99,6 @@ export async function applicationGenerator(
     addProxyConfig(tree, options);
   }
 
-  if (options.strict) {
-    enableStrictTypeChecking(tree, options);
-  } else {
-    setApplicationStrictDefault(tree, false);
-  }
-
   if (options.ssr) {
     await setupSsr(tree, {
       project: options.name,
@@ -100,6 +106,51 @@ export async function applicationGenerator(
       skipPackageJson: options.skipPackageJson,
       serverRouting: options.serverRouting,
     });
+  }
+
+  if (isRspack) {
+    await convertToRspack(tree, {
+      project: options.name,
+      skipInstall: options.skipPackageJson,
+      skipFormat: true,
+    });
+
+    if (options.ssr) {
+      generateFiles(
+        tree,
+        joinPathFragments(__dirname, './files/rspack-ssr'),
+        options.appProjectSourceRoot,
+        {
+          pathToDistFolder: joinPathFragments(
+            offsetFromRoot(options.appProjectRoot),
+            options.outputPath,
+            'browser'
+          ),
+          tmpl: '',
+        }
+      );
+    }
+  }
+
+  if (!options.skipPackageJson) {
+    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+    if (angularMajorVersion >= 20) {
+      const angularDevkitVersion =
+        getInstalledAngularDevkitVersion(tree) ??
+        versions(tree).angularDevkitVersion;
+
+      const devDependencies: Record<string, string> = {};
+      if (options.bundler === 'esbuild') {
+        devDependencies['@angular/build'] = angularDevkitVersion;
+      } else if (isRspack) {
+        devDependencies['@angular/build'] = angularDevkitVersion;
+        devDependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
+      } else {
+        devDependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
+      }
+
+      addDependenciesToPackageJson(tree, {}, devDependencies, undefined, true);
+    }
   }
 
   if (!options.skipFormat) {

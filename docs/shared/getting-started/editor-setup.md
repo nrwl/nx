@@ -1,9 +1,9 @@
 ---
-title: Editor Setup
+title: Editor Integration
 description: Learn how to set up your editor with Nx Console extensions to enhance your developer experience with features like task visualization, cache management, and generator UI.
 ---
 
-# Editor Setup
+# Editor Integration
 
 Nx Console editor extensions make your developer experience richer. The extensions
 

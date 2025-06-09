@@ -1,7 +1,8 @@
 {
-  "compilerOptions": {
-    "target": "es2022"<% if (disableModernClassFieldsBehavior) { %>,
-    "useDefineForClassFields": false<% } %>
+  "extends": "<%= rootTsConfig %>",
+  "compilerOptions": {},
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false
   },
   "files": [],
   "include": [],
@@ -9,6 +10,5 @@
     {
       "path": "./tsconfig.lib.json"
     }
-  ],
-  "extends": "<%= rootTsConfig %>"
+  ]
 }

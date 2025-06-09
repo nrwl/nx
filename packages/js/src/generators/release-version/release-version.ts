@@ -33,10 +33,11 @@ import {
   VersionData,
   deriveNewSemverVersion,
   validReleaseVersionPrefixes,
-} from 'nx/src/command-line/release/version';
+} from 'nx/src/command-line/release/version-legacy';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
 import { ReleaseType, gt, inc, prerelease } from 'semver';
+import { updateLockFile } from '../../release/utils/update-lock-file';
 import { isLocallyLinkedPackageVersion } from '../../utils/is-locally-linked-package-version';
 import { parseRegistryOptions } from '../../utils/npm-config';
 import { ReleaseVersionGeneratorSchema } from './schema';
@@ -45,7 +46,6 @@ import {
   resolveLocalPackageDependencies,
 } from './utils/resolve-local-package-dependencies';
 import { sortProjectsTopologically } from './utils/sort-projects-topologically';
-import { updateLockFile } from './utils/update-lock-file';
 
 function resolvePreIdSpecifier(currentSpecifier: string, preid?: string) {
   if (!currentSpecifier.startsWith('pre') && preid) {
@@ -103,7 +103,6 @@ Valid values are: ${validReleaseVersionPrefixes
     ) as ReleaseType;
 
     // Sort the projects topologically if update dependents is enabled
-    // TODO: maybe move this sorting to the command level?
     const projects =
       updateDependents === 'never' ||
       options.releaseGroup.projectsRelationship !== 'independent'
@@ -446,8 +445,6 @@ To fix this you will either need to add a package.json file at that location, or
               break;
             }
 
-            // TODO: reevaluate this prerelease logic/workflow for independent projects
-            //
             // Always assume that if the current version is a prerelease, then the next version should be a prerelease.
             // Users must manually graduate from a prerelease to a release by providing an explicit specifier.
             if (prerelease(currentVersion ?? '')) {
@@ -1003,7 +1000,7 @@ To fix this you will either need to add a package.json file at that location, or
     // Return the version data so that it can be leveraged by the overall version command
     return {
       data: versionData,
-      callback: async (tree, opts) => {
+      callback: async (tree, { generatorOptions, ...opts }) => {
         const changedFiles: string[] = [];
         const deletedFiles: string[] = [];
 
@@ -1012,7 +1009,13 @@ To fix this you will either need to add a package.json file at that location, or
         }
 
         const cwd = tree.root;
-        changedFiles.push(...(await updateLockFile(cwd, opts)));
+        changedFiles.push(
+          ...(await updateLockFile(cwd, {
+            ...opts,
+            useLegacyVersioning: true,
+            options: generatorOptions,
+          }))
+        );
         return { changedFiles, deletedFiles };
       },
     };
@@ -1044,7 +1047,8 @@ function createResolvePackageRoot(customPackageRoot?: string) {
       return projectNode.data.root;
     }
     if (projectNode.data.root === '.') {
-      // TODO This is a temporary workaround to fix NXC-574 until NXC-573 is resolved
+      // This is a temporary workaround to fix NXC-574 until NXC-573 is resolved.
+      // This has been fixed in "versioning v2"
       return projectNode.data.root;
     }
     return interpolate(customPackageRoot, {

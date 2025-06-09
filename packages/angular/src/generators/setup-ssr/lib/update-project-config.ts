@@ -48,6 +48,13 @@ export function updateProjectConfigForApplicationBuilder(
       delete outputPath.browser;
     } else {
       outputPath = outputPath.base;
+      if (buildTarget.outputs && buildTarget.outputs.length > 0) {
+        buildTarget.outputs = buildTarget.outputs.map((output) =>
+          output === '{options.outputPath.base}'
+            ? '{options.outputPath}'
+            : output
+        );
+      }
     }
   }
 
@@ -118,6 +125,7 @@ export function updateProjectConfigForBrowserBuilder(
   };
 
   projectConfig.targets['serve-ssr'] = {
+    continuous: true,
     executor: '@angular-devkit/build-angular:ssr-dev-server',
     configurations: {
       development: {

@@ -34,10 +34,10 @@ bootstrap({
 
 #### Parameters
 
-| Name      | Type                                                    |
-| :-------- | :------------------------------------------------------ |
-| `text`    | `string`                                                |
-| `changes` | [`StringChange`](../../devkit/documents/StringChange)[] |
+| Name      | Type                                                                  |
+| :-------- | :-------------------------------------------------------------------- |
+| `text`    | `string`                                                              |
+| `changes` | [`StringChange`](/reference/core-api/devkit/documents/StringChange)[] |
 
 #### Returns
 

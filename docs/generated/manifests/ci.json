@@ -479,7 +479,7 @@
   },
   "/ci/recipes": {
     "id": "recipes",
-    "name": "Recipes",
+    "name": "Guides",
     "description": "Learn how to set up Nx Cloud for your workspace.",
     "mediaImage": "",
     "file": "",

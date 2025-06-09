@@ -2,7 +2,7 @@
 title: 'Step-by-Step Guide to Creating an Expo Monorepo with Nx'
 slug: 'step-by-step-guide-to-creating-an-expo-monorepo-with-nx'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2023-08-24/IpM0kZdUNXoDWV4r8J5xXQ.png'
+cover_image: '/blog/images/2023-08-24/IpM0kZdUNXoDWV4r8J5xXQ.avif'
 tags: [nx, tutorial]
 description: A comprehensive tutorial on building a multi-app Expo monorepo using Nx, featuring shared UI components, navigation setup, and deployment configurations, demonstrated through the creation of two mobile apps.
 ---
@@ -294,7 +294,7 @@ If you want to create a build locally using your own infrastructure:
 npx nx build cats --local
 ```
 
-Here is the complete list of flags for the build command: [/nx-api/expo/executors/build](/nx-api/expo/executors/build).
+Here is the complete list of flags for the build command: [/technologies/react/expo/executors/build](/technologies/react/expo/api/executors/build).
 
 ## Submit to the App Store
 

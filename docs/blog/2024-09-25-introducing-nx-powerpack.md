@@ -3,7 +3,7 @@ title: Introducing Nx Powerpack
 slug: introducing-nx-powerpack
 authors: [Juri Strumpflohner]
 tags: [nx, release]
-cover_image: /blog/images/introducing-powerpack/thumbnail.png
+cover_image: /blog/images/introducing-powerpack/thumbnail.avif
 description: Introducing Nx Powerpack, a paid extension suite for enterprise use cases, ensuring Nx remains open source and existing features are free.
 ---
 
@@ -130,8 +130,8 @@ Read all about how to [configure Codeowners for your project in our docs](/nx-en
 
 We're releasing the `@nx/conformance` plugin in an early preview. This new package focuses specifically on the maintainability of your monorepo. It allows you to encode your organization's standards so they can be enforced automatically. In this first version, the workspace conformance package ships with:
 
-- [Enforce Module Boundaries](/nx-api/conformance#enforce-module-boundaries): Similar to the Nx ESLint [Enforce Module Boundaries rule](https://nx-dev-git-docs-powerpack-nrwl.vercel.app/features/enforce-module-boundaries), but enforces boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
-- [Ensure Owners](/nx-api/conformance#ensure-owners): Requires every project to have an owner defined for the `@nx/owners` plugin.
+- [Enforce Module Boundaries](/reference/core-api/conformance#enforce-module-boundaries): Similar to the Nx ESLint [Enforce Module Boundaries rule](/features/enforce-module-boundaries), but enforces boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
+- [Ensure Owners](/reference/core-api/conformance#ensure-owners): Requires every project to have an owner defined for the `@nx/owners` plugin.
 
 To get started, install the following package:
 

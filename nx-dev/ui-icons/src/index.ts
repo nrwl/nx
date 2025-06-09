@@ -2,6 +2,7 @@
 export * from './lib/ai/cursor';
 export * from './lib/ai/github-copilot';
 export * from './lib/ai/intellij-ai';
+export * from './lib/ai/model-context-protocol';
 
 // CI PROVIDERS
 export * from './lib/ci-providers/azure-devops';
@@ -88,6 +89,16 @@ export * from './lib/others/amazon-s3';
 export * from './lib/others/linux';
 export * from './lib/others/min-io';
 export * from './lib/others/windows';
+
+// PARTNERS
+export * from './lib/partners/bitovi';
+export * from './lib/partners/callstack';
+export * from './lib/partners/hero-devs';
+export * from './lib/partners/push-based';
+export * from './lib/partners/e-square';
+export * from './lib/partners/briebug';
+export * from './lib/partners/liveloveapp';
+export * from './lib/partners/nstudio';
 
 // PODCASTS
 export * from './lib/podcasts/amazon-music';

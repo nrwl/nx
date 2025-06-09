@@ -27,7 +27,7 @@ export function Hero(): ReactElement {
           <div className="mx-auto max-w-3xl px-6 pb-24 pt-36 lg:mx-0 lg:shrink-0 lg:px-8">
             {/*<p>*/}
             {/*  <a*/}
-            {/*    href="https://bit.ly/3XvOwIl"*/}
+            {/*    href="https://bit.ly/4jQLCqp"*/}
             {/*    title="See live event in details"*/}
             {/*    className="group/event-link inline-flex space-x-6"*/}
             {/*  >*/}
@@ -35,7 +35,7 @@ export function Hero(): ReactElement {
             {/*      Live event*/}
             {/*    </span>*/}
             {/*    <span className="inline-flex items-center space-x-2 text-sm/6 font-medium">*/}
-            {/*      <span>Webinar + live Q&A on March 19th</span>*/}
+            {/*      <span>Webinar + live Q&A on May 28th</span>*/}
             {/*      <ChevronRightIcon*/}
             {/*        aria-hidden="true"*/}
             {/*        className="size-5 transform transition-all group-hover/event-link:translate-x-1"*/}
@@ -49,9 +49,9 @@ export function Hero(): ReactElement {
               variant="display"
               className="mt-8 text-pretty tracking-tight"
             >
-              Solving the Performance Paradox,{' '}
+              Develop like an enterprise.{' '}
               <span className="rounded-lg bg-gradient-to-r from-pink-500 to-fuchsia-500 bg-clip-text text-transparent">
-                get speed and scale
+                Deliver like a startup.
               </span>
             </SectionHeading>
             <SectionHeading

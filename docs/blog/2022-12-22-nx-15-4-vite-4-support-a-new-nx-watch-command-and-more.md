@@ -2,7 +2,7 @@
 title: 'Nx 15.4 — Vite 4 Support, a new Nx Watch Command, and more!'
 slug: 'nx-15-4-vite-4-support-a-new-nx-watch-command-and-more'
 authors: ['Zack DeRose']
-cover_image: '/blog/images/2022-12-22/N4_XxtYFr-V2cF6fPoBO3g.png'
+cover_image: '/blog/images/2022-12-22/N4_XxtYFr-V2cF6fPoBO3g.avif'
 tags: [nx, release]
 description: Nx 15.4 adds Vite 4.0 support, new Watch command for file watching, webpack-less Cypress support, SSR for Module Federation, and parallel target execution improvements.
 ---
@@ -30,17 +30,17 @@ Nx 15.4 brings in the latest Vite major version following the Vite 4 release ear
 
 As the [Vite launch article](https://vitejs.dev/blog/announcing-vite4.html) mentions, we are investing in the Vite ecosystem, and now officially support a first-party Vite plugin. Nx 15.4 continues this investment with timely support for Vite 4, and we're excited to be a part of the Vite ecosystem and a part of bringing more value to our devs through Vite support!
 
-Projects already using our [@nrwl/vite plugin](/nx-api/vite) will be automatically upgraded to Vite 4 when they upgrade to the latest Nx version with the `nx migrate` command, and we've also simplified the configuration required to support Vite.
+Projects already using our [@nrwl/vite plugin](/technologies/build-tools/vite/api) will be automatically upgraded to Vite 4 when they upgrade to the latest Nx version with the `nx migrate` command, and we've also simplified the configuration required to support Vite.
 
 We've also spent some effort into making the conversion of existing projects to use Vite simpler, including:
 
 - the ability to choose which targets you want to convert
 - enhanced `vite.config.ts` file configuration
 - better DX with detailed messages during conversion
-- [better documentation around converting using our generator](/nx-api/vite/generators/configuration)
-- [adding a guide to our docs for converting manually](/recipes/vite/configure-vite)
+- [better documentation around converting using our generator](/technologies/build-tools/vite/api/generators/configuration)
+- [adding a guide to our docs for converting manually](/technologies/build-tools/vite/recipes/configure-vite)
 
-You can check out more details about our Vite plugin including how to add Vite and Vitest to your existing Nx workspace by visiting our docs at [nx.dev/nx-api/vite](/nx-api/vite)
+You can check out more details about our Vite plugin including how to add Vite and Vitest to your existing Nx workspace by visiting our docs at [nx.dev/technologies/build-tools/vite](/technologies/build-tools/vite/api)
 
 ## Nx Watch
 
@@ -96,7 +96,7 @@ Our existing `host` and `remote` Module Federation generators have an added `--s
 
 We've also added a new executor to allow you to serve the host server locally, along with all remote servers from a single command.
 
-Learn more about this new feature [in our docs](/recipes/react/module-federation-with-ssr)!
+Learn more about this new feature [in our docs](/technologies/react/recipes/module-federation-with-ssr)!
 
 ## Running Multiple Targets in Parallel for Multiple Projects
 

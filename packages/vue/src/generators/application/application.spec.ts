@@ -59,14 +59,6 @@ describe('application generator', () => {
       tree.read('test-e2e/playwright.config.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(listFiles(tree)).toMatchSnapshot();
-    expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
-      .toMatchInlineSnapshot(`
-      {
-        "dependsOn": [
-          "^build",
-        ],
-      }
-    `);
   });
 
   it('should set up project correctly for rsbuild', async () => {

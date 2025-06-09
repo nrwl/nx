@@ -23,26 +23,11 @@ Make sure to install the `@nx/web` version that matches the version of `nx` in y
 
 In any Nx workspace, you can install `@nx/web` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/web
 ```
 
 This will install the correct version of `@nx/web`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/web` package with your package manager.
-
-```shell
-npm add -D @nx/web
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Using the @nx/web Plugin
 
@@ -59,12 +44,12 @@ The application uses no framework and generates with web components. You can add
 To start the application in development mode, run `nx serve my-new-app`.
 
 {% callout type="note" title="React" %}
-If you are looking to add a React application, check out the [React plugin](/nx-api/react).
+If you are looking to add a React application, check out the [React plugin](/technologies/react/api).
 {% /callout %}
 
 ### Creating Libraries
 
-To create a generic TypeScript library (i.e. non-framework specific), use the [`@nx/js`](/nx-api/js) plugin.
+To create a generic TypeScript library (i.e. non-framework specific), use the [`@nx/js`](/technologies/typescript/api) plugin.
 
 ```shell
 nx g @nx/js:lib libs/my-new-lib
@@ -122,5 +107,5 @@ The library in `dist` is publishable to npm or a private registry.
 
 ## More Documentation
 
-- [Using Cypress](/nx-api/cypress)
-- [Using Jest](/nx-api/jest)
+- [Using Cypress](/technologies/test-tools/cypress/api)
+- [Using Jest](/technologies/test-tools/jest/api)

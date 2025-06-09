@@ -59,11 +59,11 @@ export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
  * parse it. The CLI will consume it and call the `.argv` to bootstrapped
  * the CLI. These command declarations needs to be in a different file
  * from the `.argv` call, so the object and it's relative scripts can
- * le executed correctly.
+ * be executed correctly.
  */
 export const commandsObject = yargs
   .parserConfiguration(parserConfiguration)
-  .usage(chalk.bold('Smart Monorepos · Fast CI'))
+  .usage(chalk.bold('Smart Repos · Fast Builds'))
   .demandCommand(1, '')
   .command(yargsRegisterCommand)
   .command(yargsAddCommand)

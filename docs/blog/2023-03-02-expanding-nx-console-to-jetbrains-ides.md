@@ -2,7 +2,7 @@
 title: 'Expanding Nx Console to JetBrains IDEs'
 slug: 'expanding-nx-console-to-jetbrains-ides'
 authors: ['Max Kless']
-cover_image: '/blog/images/2023-03-02/lEAhfd3d17hGichyT-oGbw.png'
+cover_image: '/blog/images/2023-03-02/lEAhfd3d17hGichyT-oGbw.avif'
 tags: [nx]
 description: Explore the technical journey of bringing Nx Console to JetBrains IDEs, featuring Language Server integration and Generate UI implementation for IntelliJ.
 ---
@@ -203,7 +203,7 @@ host apps and libraries in any language. With the newly released [**_Encapsulate
 The codebase contains both Typescript code for the VSCode extension and Kotlin code for the IntelliJ plugin. Currently,
 all the Kotlin code resides in a single app. Targets defined in `project.json` are available that wrap different gradle
 tasks like running a development instance, building or formatting the plugin using the
-[`nx:run-commands`](/nx-api/nx/executors/run-commands) executor.  
+[`nx:run-commands`](/reference/core-api/nx/executors/run-commands) executor.  
 Since the plugin depends on artifacts provided by other Nx apps (namely the `nxls` and `generate-ui`), we have also
 created gradle tasks that call Nx to build these dependencies under the hood. This roundabout way of calling one tool
 from the other (and back again) could definitely be improved and we might look into having a more straightforward

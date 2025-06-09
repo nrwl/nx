@@ -1,8 +1,8 @@
 import { addDependenciesToPackageJson, type Tree } from '@nx/devkit';
-import { gte } from 'semver';
 import {
+  getInstalledAngularDevkitVersion,
   getInstalledAngularVersionInfo,
-  getInstalledPackageVersionInfo,
+  getInstalledPackageVersion,
   versions,
 } from '../../utils/version-utils';
 
@@ -11,23 +11,28 @@ export function addDependencies(
   isUsingApplicationBuilder: boolean
 ): void {
   const pkgVersions = versions(tree);
-  const { version: angularVersion } = getInstalledAngularVersionInfo(tree);
 
   const dependencies: Record<string, string> = {
     '@angular/platform-server':
-      getInstalledPackageVersionInfo(tree, '@angular/platform-server')
-        ?.version ?? pkgVersions.angularVersion,
+      getInstalledPackageVersion(tree, '@angular/platform-server') ??
+      pkgVersions.angularVersion,
     express: pkgVersions.expressVersion,
   };
   const devDependencies: Record<string, string> = {
     '@types/express': pkgVersions.typesExpressVersion,
   };
 
-  dependencies['@angular/ssr'] =
-    getInstalledPackageVersionInfo(tree, '@angular-devkit/build-angular')
-      ?.version ?? pkgVersions.angularDevkitVersion;
-  if (!isUsingApplicationBuilder && gte(angularVersion, '17.1.0')) {
+  const angularDevkitVersion =
+    getInstalledAngularDevkitVersion(tree) ?? pkgVersions.angularDevkitVersion;
+  dependencies['@angular/ssr'] = angularDevkitVersion;
+
+  if (!isUsingApplicationBuilder) {
     devDependencies['browser-sync'] = pkgVersions.browserSyncVersion;
+  } else {
+    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+    if (angularMajorVersion >= 20) {
+      dependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
+    }
   }
 
   addDependenciesToPackageJson(tree, dependencies, devDependencies);

@@ -17,7 +17,14 @@ import {
   type TargetConfiguration,
 } from '@nx/devkit';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import {
+  existsSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  statSync,
+  unlinkSync,
+} from 'node:fs';
 import {
   basename,
   dirname,
@@ -82,12 +89,20 @@ type TsconfigCacheData = {
   hash: string;
   extendedFilesHash: string;
 };
+type TsconfigCache = {
+  version: number;
+  data: Record<string, TsconfigCacheData>;
+};
 
 let ts: typeof import('typescript');
 const pmc = getPackageManagerCommand();
 
-let tsConfigCache: Record<string, TsconfigCacheData>;
-const tsConfigCachePath = join(workspaceDataDirectory, 'tsconfig-files.hash');
+const TSCONFIG_CACHE_VERSION = 1;
+const TS_CONFIG_CACHE_PATH = join(
+  workspaceDataDirectory,
+  'tsconfig-files.hash'
+);
+let tsConfigCacheData: Record<string, TsconfigCacheData>;
 let cache: {
   fileHashes: Record<string, string>;
   rawFiles: Record<string, string>;
@@ -103,9 +118,37 @@ function readFromCache<T extends object>(cachePath: string): T {
     return {} as T;
   }
 }
+function readTsConfigCacheData(): Record<string, TsconfigCacheData> {
+  const cache = readFromCache<TsconfigCache>(TS_CONFIG_CACHE_PATH);
+
+  if (cache.version !== TSCONFIG_CACHE_VERSION) {
+    return {};
+  }
+
+  return cache.data;
+}
 
 function writeToCache<T extends object>(cachePath: string, data: T) {
-  writeJsonFile(cachePath, data, { spaces: 0 });
+  const maxAttempts = 5;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const unique = (Math.random().toString(16) + '00000000').slice(2, 10);
+    const tempPath = `${cachePath}.${process.pid}.${unique}.tmp`;
+    try {
+      writeJsonFile(tempPath, data, { spaces: 0 });
+      renameSync(tempPath, cachePath);
+      return;
+    } catch {
+      try {
+        unlinkSync(tempPath);
+      } catch {}
+    }
+  }
+}
+function writeTsConfigCache(data: Record<string, TsconfigCacheData>) {
+  writeToCache(TS_CONFIG_CACHE_PATH, {
+    version: TSCONFIG_CACHE_VERSION,
+    data,
+  });
 }
 
 /**
@@ -175,9 +218,8 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
       );
     } finally {
       writeToCache(targetsCachePath, targetsCache);
-      writeToCache(
-        tsConfigCachePath,
-        toRelativePaths(tsConfigCache, context.workspaceRoot)
+      writeTsConfigCache(
+        toRelativePaths(tsConfigCacheData, context.workspaceRoot)
       );
     }
   },
@@ -208,9 +250,8 @@ export const createNodes: CreateNodes<TscPluginOptions> = [
       context
     );
 
-    writeToCache(
-      tsConfigCachePath,
-      toRelativePaths(tsConfigCache, context.workspaceRoot)
+    writeTsConfigCache(
+      toRelativePaths(tsConfigCacheData, context.workspaceRoot)
     );
 
     return {
@@ -323,7 +364,7 @@ async function getConfigFileHash(
     ...(packageJson ? [hashObject(packageJson)] : []),
     // change this to bust the cache when making changes that would yield
     // different results for the same hash
-    hashObject({ bust: 2 }),
+    hashObject({ bust: 3 }),
   ]);
 }
 
@@ -615,11 +656,18 @@ function getInputs(
     return [input];
   };
 
+  const configDirTemplate = '${configDir}';
+  const substituteConfigDir = (p: string) =>
+    p.startsWith(configDirTemplate) ? p.replace(configDirTemplate, './') : p;
+
   projectTsConfigFiles.forEach(([configPath, config]) => {
     configFiles.add(configPath);
     const offset = relative(absoluteProjectRoot, dirname(configPath));
     (config.raw?.include ?? []).forEach((p: string) => {
-      const normalized = normalizeInput(join(offset, p), config);
+      const normalized = normalizeInput(
+        join(offset, substituteConfigDir(p)),
+        config
+      );
       normalized.forEach((input) => includePaths.add(input));
     });
 
@@ -632,11 +680,14 @@ function getInputs(
       const otherFilesInclude: string[] = [];
       projectTsConfigFiles.forEach(([path, c]) => {
         if (path !== configPath) {
-          otherFilesInclude.push(...(c.raw?.include ?? []));
+          otherFilesInclude.push(
+            ...(c.raw?.include ?? []).map(substituteConfigDir)
+          );
         }
       });
       const normalize = (p: string) => (p.startsWith('./') ? p.slice(2) : p);
-      config.raw.exclude.forEach((excludePath: string) => {
+      config.raw.exclude.forEach((e: string) => {
+        const excludePath = substituteConfigDir(e);
         if (
           !otherFilesInclude.some(
             (includePath) =>
@@ -1097,8 +1148,8 @@ function retrieveTsConfigFromCache(
 
   // we don't need to check the hash if it's in the cache, because we've already
   // checked it when we initially populated the cache
-  return tsConfigCache[relativePath]
-    ? tsConfigCache[relativePath].data
+  return tsConfigCacheData[relativePath]
+    ? tsConfigCacheData[relativePath].data
     : readTsConfigAndCache(tsConfigPath, workspaceRoot);
 }
 
@@ -1106,10 +1157,7 @@ function initializeTsConfigCache(
   configFilePaths: readonly string[],
   workspaceRoot: string
 ): void {
-  tsConfigCache = toAbsolutePaths(
-    readFromCache<Record<string, TsconfigCacheData>>(tsConfigCachePath),
-    workspaceRoot
-  );
+  tsConfigCacheData = toAbsolutePaths(readTsConfigCacheData(), workspaceRoot);
 
   // ensure hashes are checked and the cache is invalidated and populated as needed
   for (const configFilePath of configFilePaths) {
@@ -1127,15 +1175,17 @@ function readTsConfigAndCache(
 
   let extendedFilesHash: string;
   if (
-    tsConfigCache[relativePath] &&
-    tsConfigCache[relativePath].hash === hash
+    tsConfigCacheData[relativePath] &&
+    tsConfigCacheData[relativePath].hash === hash
   ) {
     extendedFilesHash = getExtendedFilesHash(
-      tsConfigCache[relativePath].data.extendedConfigFiles,
+      tsConfigCacheData[relativePath].data.extendedConfigFiles,
       workspaceRoot
     );
-    if (tsConfigCache[relativePath].extendedFilesHash === extendedFilesHash) {
-      return tsConfigCache[relativePath].data;
+    if (
+      tsConfigCacheData[relativePath].extendedFilesHash === extendedFilesHash
+    ) {
+      return tsConfigCacheData[relativePath].data;
     }
   }
 
@@ -1161,7 +1211,7 @@ function readTsConfigAndCache(
     workspaceRoot
   );
 
-  tsConfigCache[relativePath] = {
+  tsConfigCacheData[relativePath] = {
     data: {
       options: tsConfig.options,
       projectReferences: tsConfig.projectReferences,
@@ -1172,7 +1222,7 @@ function readTsConfigAndCache(
     extendedFilesHash,
   };
 
-  return tsConfigCache[relativePath].data;
+  return tsConfigCacheData[relativePath].data;
 }
 
 function getExtendedFilesHash(

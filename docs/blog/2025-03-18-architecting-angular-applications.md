@@ -158,7 +158,7 @@ It uses Nx for running and building your project. Nx relies on the Angular Devki
 }
 ```
 
-If you have an existing Angular CLI project, you can also [add Nx support to it](/recipes/angular/migration/angular) by running:
+If you have an existing Angular CLI project, you can also [add Nx support to it](/technologies/angular/migration/angular) by running:
 
 ```shell
 npx nx init

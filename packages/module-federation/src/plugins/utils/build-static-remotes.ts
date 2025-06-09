@@ -18,7 +18,7 @@ export async function buildStaticRemotes(
   const mappedLocationOfRemotes: Record<string, string> = {};
   for (const app of remotes) {
     mappedLocationOfRemotes[app] = `http${options.ssl ? 's' : ''}://${
-      options.host
+      options.host ?? 'localhost'
     }:${options.staticRemotesPort}/${staticRemotesConfig[app].urlSegment}`;
   }
 

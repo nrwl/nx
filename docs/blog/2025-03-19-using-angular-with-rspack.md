@@ -71,7 +71,7 @@ The steps are very simple:
 1. Run `nx migrate latest` to update your workspace to the latest version of Nx.
 2. Run `nx g @nx/angular:convert-to-rspack` to migrate your Angular application to Rspack.
 
-There is also a [guide in our documentation](/recipes/angular/rspack/migrate-from-webpack) that walks you through the process step-by-step.
+There is also a [guide in our documentation](/technologies/angular/angular-rspack/recipes/migrate-from-webpack) that walks you through the process step-by-step.
 Even if you're currently using the Angular CLI, it's as simple as first running `npx nx init` in your workspace and then running `npx nx g convert-to-rspack`.
 
 ## Using Angular Rspack
@@ -121,7 +121,7 @@ export default createConfig(
 
 {% callout type="deepdive" title="createConfig Information" %}
 The `createConfig` function is used to create an Rspack configuration object setup for Angular applications.
-You can read more about it [here](/nx-api/angular-rspack/documents/create-config).
+You can read more about it [here](/technologies/angular/angular-rspack/api).
 {% /callout %}
 
 ### Building and Serving your Application
@@ -206,15 +206,13 @@ Given that the primary goal for Angular Rspack is to provide a faster build syst
 
 The following are known limitations and missing features of Angular Rspack:
 
-- Static Site Generation (SSG) is not supported.
-- Angular's built-in support for Internationalization (i18n) is not supported.
+- Static Site Generation (SSG) is not supported. _**UPDATE**: As of Angular Rspack version 20.9, SSG is supported._
+- Angular's built-in support for Internationalization (i18n) is not supported. _**UPDATE**: As of Angular Rspack version 20.8, i18n is supported._
 - Server Routing is not supported - still experimental in Angular currently.
 - App Engine APIs are not supported - still experimental in Angular currently.
-- Optimization is not currently 1:1 with Angular's optimization - however, there are still great optimizations that are made.
-  - Styles optimization for `inline-critical` and `remove-special-comments` are not yet implemented.
-  - Inlining of fonts is not yet implemented.
-- Web Workers are not fully supported.
-- Hot Module Replacement (HMR) is partially supported.
+- Optimization is not currently 1:1 with Angular's optimization - however, there are still great optimizations that are made. _**UPDATE**: As of Angular Rspack version 21, Optimization is 1:1 with Angular's optimization._
+- Web Workers are not fully supported. _**UPDATE**: As of Angular Rspack version 20.8, Web Workers are supported._
+- Hot Module Replacement (HMR) is partially supported. _**UPDATE**: As of Angular Rspack version 21, HMR is supported._
 
 If you have any other missing features or limitations, please [let us know](https://github.com/nrwl/angular-rspack/issues/new).
 
@@ -228,7 +226,7 @@ Exciting times ahead! You can follow our progress by starring the [Angular Rspac
 
 ## Further Reading
 
-- [Nx Angular Rspack](/recipes/angular/rspack/introduction)
+- [Nx Angular Rspack](/technologies/angular/angular-rspack/introduction)
 - [Angular](https://angular.dev)
 - [Rspack](https://rspack.dev)
 - 🧠 [Nx Docs](/getting-started/intro)

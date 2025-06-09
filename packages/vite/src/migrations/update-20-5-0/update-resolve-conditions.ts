@@ -1,6 +1,6 @@
 import { formatFiles, visitNotIgnoredFiles, type Tree } from '@nx/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
-import { minimatch } from 'minimatch';
+import picomatch = require('picomatch');
 
 const REMIX_IMPORT_SELECTOR =
   'ImportDeclaration:has(StringLiteral[value=@remix-run/dev]),CallExpression:has(Identifier[name=require]) StringLiteral[value=@remix-run/dev]';
@@ -24,7 +24,7 @@ export default async function (tree: Tree) {
   const viteFiles = [];
 
   visitNotIgnoredFiles(tree, '', (filePath) => {
-    if (minimatch(filePath, '**/vite.*config*.{js,ts,mjs,mts,cjs,cts}')) {
+    if (picomatch('**/vite.*config*.{js,ts,mjs,mts,cjs,cts}')(filePath)) {
       viteFiles.push(filePath);
     }
   });

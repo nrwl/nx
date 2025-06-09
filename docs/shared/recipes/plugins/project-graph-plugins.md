@@ -29,7 +29,7 @@ You can register a plugin by adding it to the plugins array in `nx.json`:
 
 ## Adding New Nodes to the Project Graph
 
-You can add nodes to the project graph with [`createNodesV2`](/nx-api/devkit/documents/CreateNodesV2). This is the API that Nx uses under the hood to identify Nx projects coming from a `project.json` file or a `package.json` that's listed in a package manager's workspaces section.
+You can add nodes to the project graph with [`createNodesV2`](/reference/core-api/devkit/documents/CreateNodesV2). This is the API that Nx uses under the hood to identify Nx projects coming from a `project.json` file or a `package.json` that's listed in a package manager's workspaces section.
 
 ### Identifying Projects
 
@@ -180,7 +180,7 @@ External nodes are identified by a unique name, and if plugins identify an exter
 
 It's more common for plugins to create new dependencies. First-party code contained in the workspace is added to the project graph automatically. Whether your project contains TypeScript or say Java, both projects will be created in the same way. However, Nx does not know how to analyze Java sources, and that's what plugins can do.
 
-The shape of the [`createDependencies`](/nx-api/devkit/documents/CreateDependencies) function follows:
+The shape of the [`createDependencies`](/reference/core-api/devkit/documents/CreateDependencies) function follows:
 
 ```typescript
 export type CreateDependencies<T> = (

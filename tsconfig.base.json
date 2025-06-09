@@ -43,6 +43,8 @@
         "graph/ui-project-details/src/index.ts"
       ],
       "@nx/graph-internal/ui-theme": ["graph/ui-theme/src/index.ts"],
+      "@nx/graph-migrate": ["graph/migrate/src/index.ts"],
+      "@nx/graph/ui-common": ["graph/ui-common/src/index.ts"],
       "@nx/jest": ["packages/jest"],
       "@nx/jest/*": ["packages/jest/*"],
       "@nx/js": ["packages/js/src/index.ts"],
@@ -91,6 +93,9 @@
       "@nx/nx-dev/models-document": ["nx-dev/models-document/src/index.ts"],
       "@nx/nx-dev/models-menu": ["nx-dev/models-menu/src/index.ts"],
       "@nx/nx-dev/models-package": ["nx-dev/models-package/src/index.ts"],
+      "@nx/nx-dev/ui-ai-landing-page": [
+        "nx-dev/ui-ai-landing-page/src/index.ts"
+      ],
       "@nx/nx-dev/ui-animations": ["nx-dev/ui-animations/src/index.ts"],
       "@nx/nx-dev/ui-blog": ["nx-dev/ui-blog/src/index.ts"],
       "@nx/nx-dev/ui-brands": ["nx-dev/ui-brands/src/index.ts"],
@@ -112,10 +117,12 @@
       "@nx/nx-dev/ui-icons": ["nx-dev/ui-icons/src/index.ts"],
       "@nx/nx-dev/ui-markdoc": ["nx-dev/ui-markdoc/src/index.ts"],
       "@nx/nx-dev/ui-member-card": ["nx-dev/ui-member-card/src/index.ts"],
+      "@nx/nx-dev/ui-partners": ["nx-dev/ui-partners/src/index.ts"],
       "@nx/nx-dev/ui-podcast": ["nx-dev/ui-podcast/src/index.ts"],
       "@nx/nx-dev/ui-powerpack": ["nx-dev/ui-powerpack/src/index.ts"],
       "@nx/nx-dev/ui-pricing": ["nx-dev/ui-pricing/src/index.ts"],
       "@nx/nx-dev/ui-primitives": ["nx-dev/ui-primitives/src/index.ts"],
+      "@nx/nx-dev/ui-react": ["nx-dev/ui-react/src/index.ts"],
       "@nx/nx-dev/ui-references": ["nx-dev/ui-references/src/index.ts"],
       "@nx/nx-dev/ui-remote-cache": ["nx-dev/ui-remote-cache/src/index.ts"],
       "@nx/nx-dev/ui-sponsor-card": ["nx-dev/ui-sponsor-card/src/index.ts"],
@@ -141,6 +148,7 @@
       "@nx/rspack/*": ["packages/rspack/src/*"],
       "@nx/storybook": ["packages/storybook"],
       "@nx/storybook/*": ["packages/storybook/*"],
+      "@nx/tutorialkit": ["nx-dev/tutorialkit/src/index.ts"],
       "@nx/typedoc-theme": ["typedoc-theme/src/index.ts"],
       "@nx/ui-scrollable-content": [
         "nx-dev/ui-scrollable-content/src/index.ts"

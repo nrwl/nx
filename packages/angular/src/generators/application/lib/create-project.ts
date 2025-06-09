@@ -1,18 +1,139 @@
-import { addProjectConfiguration, joinPathFragments, Tree } from '@nx/devkit';
+import {
+  addProjectConfiguration,
+  joinPathFragments,
+  type ProjectConfiguration,
+  type Tree,
+} from '@nx/devkit';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import type { AngularProjectConfiguration } from '../../../utils/types';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 
 export function createProject(tree: Tree, options: NormalizedSchema) {
+  let project: ProjectConfiguration;
+
+  if (options.bundler === 'esbuild') {
+    project = createProjectForEsbuild(tree, options);
+  } else {
+    project = createProjectForWebpack(tree, options);
+  }
+
+  addProjectConfiguration(tree, options.name, project);
+}
+
+function createProjectForEsbuild(tree: Tree, options: NormalizedSchema) {
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
 
   const buildExecutor =
-    options.bundler === 'webpack'
-      ? '@angular-devkit/build-angular:browser'
+    angularMajorVersion >= 20
+      ? '@angular/build:application'
       : '@angular-devkit/build-angular:application';
-  const buildMainOptionName =
-    options.bundler === 'esbuild' ? 'browser' : 'main';
+
+  addBuildTargetDefaults(tree, buildExecutor);
+
+  let budgets = undefined;
+  if (options.strict) {
+    budgets = [
+      { type: 'initial', maximumWarning: '500kb', maximumError: '1mb' },
+      {
+        type: 'anyComponentStyle',
+        maximumWarning: '4kb',
+        maximumError: '8kb',
+      },
+    ];
+  } else {
+    budgets = [
+      { type: 'initial', maximumWarning: '2mb', maximumError: '5mb' },
+      {
+        type: 'anyComponentStyle',
+        maximumWarning: '6kb',
+        maximumError: '10kb',
+      },
+    ];
+  }
+
+  const inlineStyleLanguage =
+    options?.style !== 'css' ? options.style : undefined;
+
+  const project: AngularProjectConfiguration = {
+    name: options.name,
+    projectType: 'application',
+    prefix: options.prefix,
+    root: options.appProjectRoot,
+    sourceRoot: options.appProjectSourceRoot,
+    tags: options.parsedTags,
+    targets: {
+      build: {
+        executor: buildExecutor,
+        outputs: ['{options.outputPath}'],
+        options: {
+          outputPath: options.outputPath,
+          index:
+            angularMajorVersion >= 20
+              ? undefined
+              : `${options.appProjectSourceRoot}/index.html`,
+          browser: `${options.appProjectSourceRoot}/main.ts`,
+          polyfills: ['zone.js'],
+          tsConfig: joinPathFragments(
+            options.appProjectRoot,
+            'tsconfig.app.json'
+          ),
+          inlineStyleLanguage,
+          assets: [
+            {
+              glob: '**/*',
+              input: joinPathFragments(options.appProjectRoot, 'public'),
+            },
+          ],
+          styles: [`${options.appProjectSourceRoot}/styles.${options.style}`],
+        },
+        configurations: {
+          production: {
+            budgets,
+            outputHashing: 'all',
+          },
+          development: {
+            optimization: false,
+            extractLicenses: false,
+            sourceMap: true,
+          },
+        },
+        defaultConfiguration: 'production',
+      },
+      serve: {
+        continuous: true,
+        executor:
+          angularMajorVersion >= 20
+            ? '@angular/build:dev-server'
+            : '@angular-devkit/build-angular:dev-server',
+        options: options.port ? { port: options.port } : undefined,
+        configurations: {
+          production: {
+            buildTarget: `${options.name}:build:production`,
+          },
+          development: {
+            buildTarget: `${options.name}:build:development`,
+          },
+        },
+        defaultConfiguration: 'development',
+      },
+      'extract-i18n': {
+        executor:
+          angularMajorVersion >= 20
+            ? '@angular/build:extract-i18n'
+            : '@angular-devkit/build-angular:extract-i18n',
+        options: {
+          buildTarget: `${options.name}:build`,
+        },
+      },
+    },
+  };
+
+  return project;
+}
+
+function createProjectForWebpack(tree: Tree, options: NormalizedSchema) {
+  const buildExecutor = '@angular-devkit/build-angular:browser';
 
   addBuildTargetDefaults(tree, buildExecutor);
 
@@ -54,27 +175,20 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
         options: {
           outputPath: options.outputPath,
           index: `${options.appProjectSourceRoot}/index.html`,
-          [buildMainOptionName]: `${options.appProjectSourceRoot}/main.ts`,
+          main: `${options.appProjectSourceRoot}/main.ts`,
           polyfills: ['zone.js'],
           tsConfig: joinPathFragments(
             options.appProjectRoot,
             'tsconfig.app.json'
           ),
           inlineStyleLanguage,
-          assets:
-            angularMajorVersion >= 18
-              ? [
-                  {
-                    glob: '**/*',
-                    input: joinPathFragments(options.appProjectRoot, 'public'),
-                  },
-                ]
-              : [
-                  `${options.appProjectSourceRoot}/favicon.ico`,
-                  `${options.appProjectSourceRoot}/assets`,
-                ],
+          assets: [
+            {
+              glob: '**/*',
+              input: joinPathFragments(options.appProjectRoot, 'public'),
+            },
+          ],
           styles: [`${options.appProjectSourceRoot}/styles.${options.style}`],
-          scripts: [],
         },
         configurations: {
           production: {
@@ -82,23 +196,20 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
             outputHashing: 'all',
           },
           development: {
-            buildOptimizer: options.bundler === 'webpack' ? false : undefined,
+            buildOptimizer: false,
             optimization: false,
-            vendorChunk: options.bundler === 'webpack' ? true : undefined,
+            vendorChunk: true,
             extractLicenses: false,
             sourceMap: true,
-            namedChunks: options.bundler === 'webpack' ? true : undefined,
+            namedChunks: true,
           },
         },
         defaultConfiguration: 'production',
       },
       serve: {
+        continuous: true,
         executor: '@angular-devkit/build-angular:dev-server',
-        options: options.port
-          ? {
-              port: options.port,
-            }
-          : undefined,
+        options: options.port ? { port: options.port } : undefined,
         configurations: {
           production: {
             buildTarget: `${options.name}:build:production`,
@@ -118,5 +229,5 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
     },
   };
 
-  addProjectConfiguration(tree, options.name, project);
+  return project;
 }

@@ -1,16 +1,15 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { assertMinimumCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import { assertMinimumCypressVersion } from '@nx/cypress/src/utils/versions';
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { componentGenerator } from '../component/component';
 import { generateTestLibrary } from '../utils/testing';
 import { componentTestGenerator } from './component-test';
 import { EOL } from 'node:os';
 
-jest.mock('@nx/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/versions');
 
 describe('Angular Cypress Component Test Generator', () => {
   let tree: Tree;
@@ -28,7 +27,7 @@ describe('Angular Cypress Component Test Generator', () => {
     await generateTestLibrary(tree, {
       directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
-      linter: Linter.None,
+      linter: 'none',
       skipFormat: true,
     });
     await componentGenerator(tree, {
@@ -37,14 +36,14 @@ describe('Angular Cypress Component Test Generator', () => {
       skipFormat: true,
     });
     await componentTestGenerator(tree, {
-      componentName: 'MyLibComponent',
-      componentFileName: './my-lib.component',
+      componentName: 'MyLib',
+      componentFileName: './my-lib',
       project: 'my-lib',
       componentDir: 'src/lib/my-lib',
       skipFormat: true,
     });
     expect(
-      tree.read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
+      tree.read('my-lib/src/lib/my-lib/my-lib.cy.ts', 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -52,7 +51,7 @@ describe('Angular Cypress Component Test Generator', () => {
     await generateTestLibrary(tree, {
       directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
-      linter: Linter.None,
+      linter: 'none',
       skipFormat: true,
     });
     await componentGenerator(tree, {
@@ -106,7 +105,7 @@ export class MyLibComponent implements OnInit {
     await generateTestLibrary(tree, {
       directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
-      linter: Linter.None,
+      linter: 'none',
       skipFormat: true,
     });
     await componentGenerator(tree, {
@@ -159,7 +158,7 @@ export class MyLibComponent implements OnInit {
     await generateTestLibrary(tree, {
       directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
-      linter: Linter.None,
+      linter: 'none',
       skipFormat: true,
     });
 
@@ -190,7 +189,7 @@ export class MyLibComponent implements OnInit {
     await generateTestLibrary(tree, {
       directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
-      linter: Linter.None,
+      linter: 'none',
       skipFormat: true,
     });
 
@@ -201,11 +200,11 @@ export class MyLibComponent implements OnInit {
     });
 
     const expected = `import { TestBed } from '@angular/core/testing';
-import { MyLibComponent } from './my-lib.component';
+import { MyLib } from './my-lib';
 
-describe(MyLibComponent.name, () => {
+describe(MyLib.name, () => {
   beforeEach(() => {
-    TestBed.overrideComponent(MyLibComponent, {
+    TestBed.overrideComponent(MyLib, {
       add: {
         imports: [],
         providers: []
@@ -214,34 +213,34 @@ describe(MyLibComponent.name, () => {
   });
 
   it('renders', () => {
-    cy.mount(MyLibComponent);
+    cy.mount(MyLib);
   });
 });
 `;
 
     await componentTestGenerator(tree, {
-      componentName: 'MyLibComponent',
-      componentFileName: './my-lib.component',
+      componentName: 'MyLib',
+      componentFileName: './my-lib',
       project: 'my-lib',
       componentDir: 'src/lib/my-lib',
       skipFormat: true,
     });
     expect(
       tree
-        .read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
+        .read('my-lib/src/lib/my-lib/my-lib.cy.ts', 'utf-8')
         .replaceAll(EOL, '\n')
     ).toEqual(expected);
 
     await componentTestGenerator(tree, {
-      componentName: 'MyLibComponent',
-      componentFileName: './my-lib.component',
+      componentName: 'MyLib',
+      componentFileName: './my-lib',
       project: 'my-lib',
       componentDir: 'src/lib/my-lib',
       skipFormat: true,
     });
     expect(
       tree
-        .read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
+        .read('my-lib/src/lib/my-lib/my-lib.cy.ts', 'utf-8')
         .replaceAll(EOL, '\n')
     ).toEqual(expected);
   });

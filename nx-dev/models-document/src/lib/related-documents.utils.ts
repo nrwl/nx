@@ -44,7 +44,7 @@ export function categorizeRelatedDocuments(
     },
   ];
 
-  items.forEach((i) =>
+  items?.forEach((i) =>
     categories.forEach((c) => {
       if (c.matchers.some((m) => i.path.includes(m)))
         c.relatedDocuments.push(i);

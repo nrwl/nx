@@ -83,6 +83,7 @@ export const allowedWorkspaceExtensions = [
   'sync',
   'useLegacyCache',
   'maxCacheSize',
+  'tui',
 ] as const;
 
 if (!patched) {
@@ -109,6 +110,10 @@ if (!patched) {
   try {
     require('@angular-devkit/build-angular/src/utils/version').assertCompatibleAngularVersion =
       () => {};
+  } catch (e) {}
+
+  try {
+    require('@angular/build/private').assertCompatibleAngularVersion = () => {};
   } catch (e) {}
 
   patched = true;

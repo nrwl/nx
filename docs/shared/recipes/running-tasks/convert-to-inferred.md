@@ -61,7 +61,7 @@ We recommend that you check that the configurations are correct before continuin
 
 ## Understand the Migration Process
 
-The `convert-to-inferred` generator removes uses of executors from the corresponding plugin. For example, if `@nx/vite` is migrated, then uses of [`@nx/vite:build`](/nx-api/vite/executors/build), [`@nx/vite:dev-server`](/nx-api/vite/executors/dev-server), [`@nx/vite:preview-server`](/nx-api/vite/executors/preview-server), and [`@nx/vite:test`](/nx-api/vite/executors/test) executors will be removed.
+The `convert-to-inferred` generator removes uses of executors from the corresponding plugin. For example, if `@nx/vite` is migrated, then uses of [`@nx/vite:build`](/technologies/build-tools/vite/api/executors/build), [`@nx/vite:dev-server`](/technologies/build-tools/vite/api/executors/dev-server), [`@nx/vite:preview-server`](/technologies/build-tools/vite/api/executors/preview-server), and [`@nx/vite:test`](/technologies/build-tools/vite/api/executors/test) executors will be removed.
 
 Target and configuration names are maintained for each project in their `project.json` files. A target may be removed from `project.json` if everything is inferred--that is, options and configurations are not customized. To get the full project details (including all inferred tasks), run:
 
@@ -84,7 +84,8 @@ For example, if we migrated the `@nx/vite` plugin for a single app (i.e. `nx g @
         "serve": {
           "executor": "nx:run-commands",
           "options": {
-            "command": "vite dev"
+            "command": "vite dev",
+            "continuous": true
           }
         },
         "build": {
@@ -210,7 +211,7 @@ These plugins come with the [Atomizer](/ci/features/split-e2e-tasks) feature.
 
 The Atomizer splits potentially slow tasks into separate tasks per file. This feature along with [task distribution](/ci/features/distribute-task-execution) can speed up CI by distributing the split tasks among many agents.
 
-To enable Atomizer, make sure that you are [connected to Nx Cloud](/ci/intro/connect-to-nx-cloud), and that you have distribution enabled in CI. Some plugins require extra configuration to enable Atomizer, so check the [individual plugin documentation page](/nx-api) for more details.
+To enable Atomizer, make sure that you are [connected to Nx Cloud](/ci/intro/connect-to-nx-cloud), and that you have distribution enabled in CI. Some plugins require extra configuration to enable Atomizer, so check the [individual plugin documentation page](/plugin-registry) for more details.
 
 {% call-to-action title="Connect to Nx Cloud" icon="nxcloud" description="Enable task distribution and Atomizer" url="/ci/intro/connect-to-nx-cloud" /%}
 

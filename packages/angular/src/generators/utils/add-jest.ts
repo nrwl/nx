@@ -4,13 +4,15 @@ import {
   joinPathFragments,
   type Tree,
 } from '@nx/devkit';
-import { jestPresetAngularVersion, nxVersion } from '../../utils/versions';
+import { nxVersion } from '../../utils/versions';
+import { versions } from './version-utils';
 
 export type AddJestOptions = {
   name: string;
   projectRoot: string;
   skipPackageJson: boolean;
   strict: boolean;
+  addPlugin?: boolean;
 };
 
 export async function addJest(
@@ -20,10 +22,14 @@ export async function addJest(
   if (!options.skipPackageJson) {
     process.env.npm_config_legacy_peer_deps ??= 'true';
 
+    const pkgVersions = versions(tree);
     addDependenciesToPackageJson(
       tree,
-      {},
-      { 'jest-preset-angular': jestPresetAngularVersion },
+      {
+        // TODO(leo): jest-preset-angular still needs this until https://github.com/thymikee/jest-preset-angular/pull/3079 is merged
+        '@angular/platform-browser-dynamic': pkgVersions.angularVersion,
+      },
+      { 'jest-preset-angular': pkgVersions.jestPresetAngularVersion },
       undefined,
       true
     );
@@ -40,8 +46,8 @@ export async function addJest(
     skipSerializers: false,
     skipPackageJson: options.skipPackageJson,
     skipFormat: true,
-    addPlugin: false,
-    addExplicitTargets: true,
+    addPlugin: options.addPlugin ?? false,
+    addExplicitTargets: !options.addPlugin,
   });
 
   const setupFile = joinPathFragments(

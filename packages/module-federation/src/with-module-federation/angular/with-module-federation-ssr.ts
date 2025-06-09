@@ -11,6 +11,7 @@ export async function withModuleFederationForSSR(
   if (global.NX_GRAPH_CREATION) {
     return (config) => config;
   }
+  const isDevServer = process.env['WEBPACK_SERVE'];
 
   const { sharedLibraries, sharedDependencies, mappedRemotes } =
     await getModuleFederationConfig(options, {
@@ -27,7 +28,9 @@ export async function withModuleFederationForSSR(
       },
       optimization: {
         ...(config.optimization ?? {}),
-        runtimeChunk: false,
+        runtimeChunk: isDevServer
+          ? config.optimization?.runtimeChunk ?? undefined
+          : false,
       },
       resolve: {
         ...(config.resolve ?? {}),

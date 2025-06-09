@@ -1,4 +1,4 @@
-import type { Meta } from '@storybook/react';
+import type { Meta } from '@storybook/react-webpack5';
 import { ProjectDetails } from './project-details';
 import { ExpandedTargetsProvider } from '@nx/graph/legacy/shared';
 

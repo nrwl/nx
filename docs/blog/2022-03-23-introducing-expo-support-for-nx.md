@@ -2,7 +2,7 @@
 title: 'Introducing Expo Support for Nx'
 slug: 'introducing-expo-support-for-nx'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2022-03-23/yYc8g4ifk9RApSjAhQysag.png'
+cover_image: '/blog/images/2022-03-23/yYc8g4ifk9RApSjAhQysag.avif'
 tags: [nx, release]
 description: Introducing @nrwl/expo for seamless Expo integration in Nx monorepos, with a tutorial on building a poetry app using Expo's development tools.
 ---

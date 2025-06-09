@@ -2,7 +2,6 @@ node_modules
 /.idea
 /.fleet
 /.vscode
-/.cursor
 dist
 /build
 /coverage
@@ -22,6 +21,7 @@ jest.debug.config.js
 /graph/client/src/assets/generated-task-inputs
 /graph/client/src/assets/generated-source-maps
 /nx-dev/nx-dev/public/documentation
+/nx-dev/nx-dev/public/tutorials
 /nx-dev/nx-dev/public/images/open-graph
 **/tests/temp-db
 
@@ -37,6 +37,9 @@ out
 
 # Angular Cache
 .angular
+
+# Astro Cache
+.astro
 
 # Local dev files
 .env.local
@@ -62,3 +65,38 @@ target
 /wasi-sdk*
 
 vite.config.*.timestamp*
+
+storybook-static
+
+# Ignore Gradle project-specific cache directory
+.gradle
+.kotlin
+
+.claude/settings.local.json
+
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
+
+# Added by Claude Task Master
+# Logs
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+# Dependency directories
+node_modules/
+# Environment variables
+.env
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+# Task files
+tasks.json
+tasks/ 

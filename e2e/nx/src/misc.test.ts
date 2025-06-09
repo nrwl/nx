@@ -83,7 +83,7 @@ describe('Nx Commands', () => {
       runCLI(`generate @nx/web:app apps/${app}`);
       let url: string;
       let port: number;
-      const child_process = await runCommandUntil(
+      const childProcess = await runCommandUntil(
         `show project ${app} --web --open=false`,
         (output) => {
           console.log(output);
@@ -102,7 +102,68 @@ describe('Nx Commands', () => {
       // Check that url is alive
       const response = await fetch(url);
       expect(response.status).toEqual(200);
-      await killProcessAndPorts(child_process.pid, port);
+      await killProcessAndPorts(childProcess.pid, port);
+    }, 700000);
+
+    it('should find alternative port when default port is occupied', async () => {
+      const app = uniq('myapp');
+      runCLI(`generate @nx/web:app apps/${app}`);
+
+      const http = require('http');
+
+      // Create a server that occupies the default port 4211
+      const blockingServer = http.createServer((req, res) => {
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        res.end('blocking server');
+      });
+
+      await new Promise<void>((resolve) => {
+        blockingServer.listen(4211, '127.0.0.1', () => {
+          console.log('Blocking server started on port 4211');
+          resolve();
+        });
+      });
+
+      let url: string;
+      let port: number;
+      let foundAlternativePort = false;
+
+      try {
+        const childProcess = await runCommandUntil(
+          `show project ${app} --web --open=false`,
+          (output) => {
+            console.log(output);
+            // Should find alternative port and show message about port being in use
+            if (output.includes('Port 4211 was already in use, using port')) {
+              foundAlternativePort = true;
+            }
+            // output should contain 'Project graph started at http://127.0.0.1:{port}'
+            if (output.includes('Project graph started at http://')) {
+              const match = /https?:\/\/[\d.]+:(?<port>\d+)/.exec(output);
+              if (match) {
+                port = parseInt(match.groups.port);
+                url = match[0];
+                return true;
+              }
+            }
+            return false;
+          }
+        );
+
+        // Verify that an alternative port was found
+        expect(foundAlternativePort).toBe(true);
+        expect(port).not.toBe(4211);
+        expect(port).toBeGreaterThan(4211);
+
+        // Check that url is alive
+        const response = await fetch(url);
+        expect(response.status).toEqual(200);
+
+        await killProcessAndPorts(childProcess.pid, port);
+      } finally {
+        // Clean up the blocking server
+        blockingServer.close();
+      }
     }, 700000);
   });
 
@@ -339,7 +400,7 @@ describe('Nx Commands', () => {
 
   it('should show help if no command provided', () => {
     const output = runCLI('', { silenceError: true });
-    expect(output).toContain('Smart Monorepos · Fast CI');
+    expect(output).toContain('Smart Repos · Fast Builds');
     expect(output).toContain('Commands:');
   });
 });

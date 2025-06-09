@@ -39,7 +39,7 @@ Running this command will ask you a few questions about your workspace and then 
 process detects tools which are used in your workspace and suggests installing Nx plugins to integrate the tools you use
 with Nx. Running those tools through Nx will have caching enabled when possible, providing you with a faster alternative
 for running those tools. You can start with a few to see how it works and then add more with
-the [`nx add`](/nx-api/nx/documents/add) command later. You can also decide to add them all and get the full experience
+the [`nx add`](/reference/core-api/nx/documents/add) command later. You can also decide to add them all and get the full experience
 right
 away because adding plugins will not break your existing workflow.
 
@@ -107,7 +107,7 @@ the Nx Plugins in `nx.json`:
 ```
 
 Each plugin can accept options to customize the projects which they create. You can see more information about
-configuring the plugins on the [`@nx/next/plugin`](/nx-api/next) and [`@nx/eslint/plugin`](/nx-api/eslint) plugin pages.
+configuring the plugins on the [`@nx/next/plugin`](/technologies/react/next/api) and [`@nx/eslint/plugin`](/technologies/eslint/api) plugin pages.
 
 To view all available tasks, open the Project Details view with Nx Console or use the terminal to launch the project
 details in a browser window.
@@ -169,7 +169,8 @@ nx show project my-workspace --web
         "dev": {
           "options": {
             "cwd": ".",
-            "command": "next dev"
+            "command": "next dev",
+            "continuous": true
           },
           "executor": "nx:run-commands",
           "configurations": {},
@@ -180,7 +181,8 @@ nx show project my-workspace --web
         "start": {
           "options": {
             "cwd": ".",
-            "command": "next start"
+            "command": "next start",
+            "continuous": true
           },
           "dependsOn": ["build"],
           "executor": "nx:run-commands",
@@ -354,6 +356,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
+
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun

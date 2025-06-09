@@ -1,16 +1,16 @@
 {
   "generators": {
-    "update-17-2-1-webpack-config-setup": {
-      "cli": "nx",
-      "version": "17.2.1-beta.0",
-      "description": "Add webpack.config.js file when webpackConfig is not defined",
-      "implementation": "./src/migrations/update-17-2-1/webpack-config-setup"
-    },
     "update-19-6-3-proxy-config": {
       "cli": "nx",
       "version": "19.6.3-beta.0",
       "description": "Migrate proxy config files to match new format from webpack-dev-server v5.",
       "implementation": "./src/migrations/update-19-6-3/proxy-config"
+    },
+    "update-21-0-0-remove-isolated-config": {
+      "cli": "nx",
+      "version": "21.0.0-beta.11",
+      "description": "Remove isolatedConfig option for @nx/webpack:webpack",
+      "implementation": "./src/migrations/update-21-0-0/remove-isolated-config"
     }
   },
   "packageJsonUpdates": {
@@ -49,7 +49,7 @@
       "version": "20.7.1-beta.0",
       "packages": {
         "webpack": {
-          "version": "^5.98.0",
+          "version": "5.98.0",
           "alwaysAddToPackageJson": false
         },
         "webpack-dev-server": {

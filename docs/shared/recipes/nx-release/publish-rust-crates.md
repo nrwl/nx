@@ -9,6 +9,14 @@ This recipe guides you through versioning Rust libraries, generating changelogs,
 
 {% github-repository url="https://github.com/JamesHenry/release-js-and-rust" /%}
 
+{% callout type="caution" title="Currently requires legacy versioning" %}
+In Nx v21, the implementation details of versioning were rewritten to enhance flexibility and allow for better cross-ecosystem support. An automated migration was provided in Nx v21 to update your configuration to the new format when running `nx migrate`.
+
+During the lifecycle of Nx v21, you can still opt into the old versioning by setting `release.version.useLegacyVersioning` to `true`, which will keep the original configuration structure and behavior. In Nx v22, the legacy versioning implementation will be removed entirely, so this should only be done temporarily to ease the transition.
+
+Importantly, this recipe currently requires the use of legacy versioning, because the `@monodon/rust` plugin does not yet provide the necessary `VersionActions` implementation to support the new versioning behavior. This will be added in a minor release of Nx v21 and this recipe will be updated accordingly.
+{% /callout %}
+
 ## Initialize Nx Release in Your Workspace
 
 ### Install Nx
@@ -31,14 +39,18 @@ If you want to release all of the projects in your workspace, such as when deali
 
 If you have a mixed workspace in which you also have some applications, e2e testing projects or other things you don't want to release, you can configure `nx release` to target only the projects you want to release.
 
-Configure which projects to release by adding the `release.projects` property to nx.json. The value is an array of strings, and you can use any of the same specifiers that are supported by `nx run-many`'s [projects filtering](/nx-api/nx/documents/run-many), such as explicit project names, Nx tags, directories and glob patterns, including negation using the `!` character.
+Configure which projects to release by adding the `release.projects` property to nx.json. The value is an array of strings, and you can use any of the same specifiers that are supported by `nx run-many`'s [projects filtering](/reference/core-api/nx/documents/run-many), such as explicit project names, Nx tags, directories and glob patterns, including negation using the `!` character.
 
 For example, to release just the projects in the `crates` directory:
 
-```json nx.json
+```jsonc nx.json
 {
   "release": {
-    "projects": ["crates/*"]
+    "projects": ["crates/*"],
+    "version": {
+      // Legacy versioning is currently required for the @monodon/rust plugin, see the note above for more details
+      "useLegacyVersioning": true
+    }
   }
 }
 ```

@@ -364,7 +364,7 @@ npx nx g @nx/react:library libs/orders --unitTestRunner=vitest --bundler=none
 npx nx g @nx/react:library libs/shared/ui --unitTestRunner=vitest --bundler=none
 ```
 
-Note how we type out the full path in the `directory` flag to place the libraries into a subfolder. You can choose whatever folder structure you like to organize your projects. If you change your mind later, you can run the [move generator](/nx-api/workspace/generators/move) to move a project to a different folder.
+Note how we type out the full path in the `directory` flag to place the libraries into a subfolder. You can choose whatever folder structure you like to organize your projects. If you change your mind later, you can run the [move generator](/reference/core-api/workspace/generators/move) to move a project to a different folder.
 
 Running the above commands should lead to the following directory structure:
 
@@ -927,7 +927,7 @@ Nx comes with a generic mechanism that allows you to assign "tags" to projects. 
 }
 ```
 
-Then go to the `project.json` of your `products` library and assign the tags `type:feature` and `scope:products` to it.
+Then go to the `package.json` of your `products` library and assign the tags `type:feature` and `scope:products` to it.
 
 ```json {% fileName="libs/products/package.json" %}
 {
@@ -938,7 +938,7 @@ Then go to the `project.json` of your `products` library and assign the tags `ty
 }
 ```
 
-Finally, go to the `project.json` of the `shared-ui` library and assign the tags `type:ui` and `scope:shared` to it.
+Finally, go to the `package.json` of the `shared-ui` library and assign the tags `type:ui` and `scope:shared` to it.
 
 ```json {% fileName="libs/shared/ui/package.json" %}
 {
@@ -1124,6 +1124,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
@@ -1177,8 +1178,8 @@ Here's some things you can dive into next:
 
 - Learn more about the [underlying mental model of Nx](/concepts/mental-model)
 - Learn how to [migrate your React app to Nx](/recipes/adopting-nx/adding-to-existing-project)
-- [Learn how to setup Tailwind](/recipes/react/using-tailwind-css-in-react)
-- [Setup Storybook for our shared UI library](/recipes/storybook/overview-react)
+- [Learn how to setup Tailwind](/technologies/react/recipes/using-tailwind-css-in-react)
+- [Setup Storybook for our shared UI library](/technologies/test-tools/storybook/recipes/overview-react)
 
 Also, make sure you
 

@@ -176,6 +176,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
+
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
@@ -218,12 +220,12 @@ For more information about how Nx can improve your CI pipeline, check out one of
 
 Learn more about the advantages of Nx in the following guides:
 
-- [Using Cypress for e2e tests](/nx-api/cypress)
-- [Using Jest for unit tests](/nx-api/jest)
+- [Using Cypress for e2e tests](/technologies/test-tools/cypress/api)
+- [Using Jest for unit tests](/technologies/test-tools/jest/api)
 - [Computation Caching](/concepts/how-caching-works)
 - [Rebuilding and Retesting What is Affected](/ci/features/affected)
 - [Integrate with Editors](/getting-started/editor-setup)
-- [Advanced Angular Micro Frontends with Dynamic Module Federation](/recipes/angular/dynamic-module-federation-with-angular)
+- [Advanced Angular Micro Frontends with Dynamic Module Federation](/technologies/angular/recipes/dynamic-module-federation-with-angular)
 
 ## From Nx Console
 
@@ -238,8 +240,8 @@ Once the script has run, commit the changes. Reverting this commit will effectiv
 
 {% cards cols="1" mdCols="3" smCols="3" lgCols="3" %}
 
-{% card title="Nx and the Angular CLI" description="Differences between Nx and the Angular CLI" type="documentation" url="/nx-api/angular/documents/nx-and-angular" /%}
+{% card title="Nx and the Angular CLI" description="Differences between Nx and the Angular CLI" type="documentation" url="/technologies/angular/recipes/nx-and-angular" /%}
 
-{% card title="Multiple Angular Repositories to one Nx Workspace" description="Combine multiple Angular CLI workspaces into one Nx workspace" type="documentation" url="/recipes/angular/migration/angular-multiple" /%}
+{% card title="Multiple Angular Repositories to one Nx Workspace" description="Combine multiple Angular CLI workspaces into one Nx workspace" type="documentation" url="technologies/angular/migration/angular-multiple" /%}
 
 {% /cards %}

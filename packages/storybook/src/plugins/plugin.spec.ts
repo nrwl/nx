@@ -1,6 +1,6 @@
 import { CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import type { StorybookConfig } from '@storybook/types';
+import type { StorybookConfig } from 'storybook/internal/types';
 import { join } from 'node:path';
 import { createNodesV2 } from './plugin';
 
@@ -97,11 +97,16 @@ describe('@nx/storybook/plugin', () => {
                   },
                   "serve-storybook": {
                     "command": "storybook dev",
+                    "continuous": true,
                     "options": {
                       "cwd": "my-app",
                     },
                   },
                   "static-storybook": {
+                    "continuous": true,
+                    "dependsOn": [
+                      "build-storybook",
+                    ],
                     "executor": "@nx/web:file-server",
                     "options": {
                       "buildTarget": "build-storybook",
@@ -175,6 +180,7 @@ describe('@nx/storybook/plugin', () => {
                     ],
                   },
                   "serve-storybook": {
+                    "continuous": true,
                     "executor": "@storybook/angular:start-storybook",
                     "options": {
                       "browserTarget": "my-ng-app:build-storybook",
@@ -183,6 +189,10 @@ describe('@nx/storybook/plugin', () => {
                     },
                   },
                   "static-storybook": {
+                    "continuous": true,
+                    "dependsOn": [
+                      "build-storybook",
+                    ],
                     "executor": "@nx/web:file-server",
                     "options": {
                       "buildTarget": "build-storybook",
@@ -257,11 +267,16 @@ describe('@nx/storybook/plugin', () => {
                   },
                   "serve-storybook": {
                     "command": "storybook dev",
+                    "continuous": true,
                     "options": {
                       "cwd": "my-react-lib",
                     },
                   },
                   "static-storybook": {
+                    "continuous": true,
+                    "dependsOn": [
+                      "build-storybook",
+                    ],
                     "executor": "@nx/web:file-server",
                     "options": {
                       "buildTarget": "build-storybook",

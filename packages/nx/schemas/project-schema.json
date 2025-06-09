@@ -138,6 +138,11 @@
             "type": "boolean",
             "description": "Specifies if the given target should be cacheable"
           },
+          "continuous": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether this target runs continuously until stopped"
+          },
           "parallelism": {
             "type": "boolean",
             "default": true,

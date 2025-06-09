@@ -44,7 +44,7 @@ Also, here are some recipes that give you more details based on the technology s
 
 {% link-card title="Add to Any Project" appearance="small" url="/recipes/adopting-nx/adding-to-existing-project" icon="nx" /%}
 
-{% link-card title="Migrate from Angular CLI" appearance="small" url="/recipes/angular/migration/angular" icon="angular" /%}
+{% link-card title="Migrate from Angular CLI" appearance="small" url="technologies/angular/migration/angular" icon="angular" /%}
 
 {% link-card title="Import Projects into Your Nx Workspace" appearance="small" url="/recipes/adopting-nx/import-project" icon="ArrowDownOnSquareStackIcon" /%}
 
@@ -80,14 +80,14 @@ Also, here are some recipes that give you more details based on the technology s
 
 {% cards cols="3" lgCols="8" mdCols="6" smCols="5" moreLink="/showcase/example-repos" %}
 
-{% link-card title="Express" appearance="small" url="/nx-api/express" icon="express" /%}
-{% link-card title="Vue" appearance="small" url="/nx-api/vue" icon="vue" /%}
-{% link-card title="Next" appearance="small" url="/nx-api/next" icon="nextjs" /%}
-{% link-card title="Nuxt" appearance="small" url="/nx-api/nuxt" icon="nuxt" /%}
-{% link-card title="Nest" appearance="small" url="/nx-api/nest" icon="nestjs" /%}
-{% link-card title="Remix" appearance="small" url="/nx-api/remix" icon="remix" /%}
-{% link-card title="Expo" appearance="small" url="/nx-api/expo" icon="expo" /%}
-{% link-card title="React Native" appearance="small" url="/nx-api/react-native" icon="react" /%}
+{% link-card title="Express" appearance="small" url="/technologies/node/express" icon="express" /%}
+{% link-card title="Vue" appearance="small" url="/technologies/vue/introduction" icon="vue" /%}
+{% link-card title="Next" appearance="small" url="/technologies/react/next" icon="nextjs" /%}
+{% link-card title="Nuxt" appearance="small" url="/technologies/vue/nuxt/introduction" icon="nuxt" /%}
+{% link-card title="Nest" appearance="small" url="/technologies/node/nest" icon="nestjs" /%}
+{% link-card title="Remix" appearance="small" url="/technologies/react/remix" icon="remix" /%}
+{% link-card title="Expo" appearance="small" url="/technologies/react/expo" icon="expo" /%}
+{% link-card title="React Native" appearance="small" url="/technologies/react/react-native" icon="react" /%}
 {% link-card title="Fastify" appearance="small" url="/showcase/example-repos/mongo-fastify" icon="fastify" /%}
 {% link-card title="Svelte" appearance="small" url="/showcase/example-repos/add-svelte" icon="svelte" /%}
 {% link-card title="Solid" appearance="small" url="/showcase/example-repos/add-solid" icon="solid" /%}
@@ -98,12 +98,12 @@ Also, here are some recipes that give you more details based on the technology s
 {% link-card title="Rust" appearance="small" url="/showcase/example-repos/add-rust" icon="rust" /%}
 {% link-card title="Go" appearance="small" url="https://github.com/nrwl/nx-recipes/blob/main/go/README.md" icon="go" /%}
 {% link-card title=".NET" appearance="small" url="https://github.com/nrwl/nx-recipes/tree/main/dot-net-standalone" icon="dotnet" /%}
-{% link-card title="Cypress" appearance="small" url="/nx-api/cypress" icon="cypress" /%}
-{% link-card title="Playwright" appearance="small" url="/nx-api/playwright" icon="playwright" /%}
-{% link-card title="Vite" appearance="small" url="/nx-api/vite" icon="vite" /%}
-{% link-card title="Storybook" appearance="small" url="/nx-api/storybook" icon="storybook" /%}
-{% link-card title="Jest" appearance="small" url="/nx-api/jest" icon="jest" /%}
-{% link-card title="Rspack" appearance="small" url="/nx-api/rspack" icon="rspack" /%}
+{% link-card title="Cypress" appearance="small" url="/technologies/test-tools/cypress/introduction" icon="cypress" /%}
+{% link-card title="Playwright" appearance="small" url="/technologies/test-tools/playwright/introduction" icon="playwright" /%}
+{% link-card title="Vite" appearance="small" url="/technologies/build-tools/vite" icon="vite" /%}
+{% link-card title="Storybook" appearance="small" url="/technologies/test-tools/storybook" icon="storybook" /%}
+{% link-card title="Jest" appearance="small" url="/technologies/test-tools/jest/introduction" icon="jest" /%}
+{% link-card title="Rspack" appearance="small" url="/technologies/build-tools/rspack/introduction" icon="rspack" /%}
 
 {% /cards %}
 

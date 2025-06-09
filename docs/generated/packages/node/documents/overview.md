@@ -15,26 +15,11 @@ Make sure to install the `@nx/node` version that matches the version of `nx` in 
 
 In any Nx workspace, you can install `@nx/node` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/node
 ```
 
 This will install the correct version of `@nx/node`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/node` package with your package manager.
-
-```shell
-npm add -D @nx/node
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Using the @nx/node Plugin
 
@@ -108,5 +93,5 @@ For additional information on how to debug Node applications, see the [Node.js d
 
 ## More Documentation
 
-- [Using Cypress](/nx-api/cypress)
-- [Using Jest](/nx-api/jest)
+- [Using Cypress](/technologies/test-tools/cypress/api)
+- [Using Jest](/technologies/test-tools/jest/api)

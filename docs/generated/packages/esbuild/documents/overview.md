@@ -10,7 +10,7 @@ Why should you use this plugin?
 - _Fast_ builds using esbuild.
 - Type-checking using TypeScript, which esbuild does not handle.
 - Intelligent `package.json` output.
-- Additional [assets](/nx-api/esbuild/executors/esbuild#assets) for the output.
+- Additional [assets](/technologies/build-tools/esbuild/api/executors/esbuild#assets) for the output.
 
 ## Setting Up @nx/esbuild
 
@@ -22,26 +22,11 @@ Make sure to install the `@nx/esbuild` version that matches the version of `nx` 
 
 In any Nx workspace, you can install `@nx/esbuild` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/esbuild
 ```
 
 This will install the correct version of `@nx/esbuild`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/esbuild` package with your package manager.
-
-```shell
-npm add -D @nx/esbuild
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Using the @nx/esbuild Plugin
 
@@ -148,4 +133,4 @@ Extra API options for esbuild can be passed in the `esbuildOptions` object for y
 
 ## More Documentation
 
-- [Using JS](/nx-api/js)
+- [Using JS](/technologies/typescript/api)

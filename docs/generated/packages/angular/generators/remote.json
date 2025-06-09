@@ -42,6 +42,12 @@
         "type": "number",
         "description": "The port on which this app should be served."
       },
+      "bundler": {
+        "type": "string",
+        "description": "The bundler to use for the remote application.",
+        "default": "webpack",
+        "enum": ["webpack", "rspack"]
+      },
       "style": {
         "description": "The file extension to be used for style files.",
         "type": "string",
@@ -135,12 +141,6 @@
         "description": "Create an application with stricter type checking and build optimization options.",
         "default": true
       },
-      "standaloneConfig": {
-        "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-        "type": "boolean",
-        "default": true,
-        "x-deprecated": "Nx only supports standaloneConfig"
-      },
       "setParserOptionsProject": {
         "type": "boolean",
         "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
@@ -168,7 +168,7 @@
         "default": false
       },
       "serverRouting": {
-        "description": "Creates a server application using the Server Routing and App Engine APIs (Developer Preview). _Note: this is only supported in Angular versions >= 19.0.0_.",
+        "description": "Creates a server application using the Server Routing and App Engine APIs for application using the `application` builder (Developer Preview). _Note: this is only supported in Angular versions 19.x.x_. From Angular 20 onwards, SSR will always enable server routing when using the `application` builder.",
         "type": "boolean"
       },
       "typescriptConfiguration": {

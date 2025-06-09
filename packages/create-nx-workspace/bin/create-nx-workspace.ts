@@ -69,9 +69,8 @@ interface AngularArguments extends BaseArguments {
   standaloneApi: boolean;
   unitTestRunner: 'none' | 'jest' | 'vitest';
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
-  bundler: 'webpack' | 'esbuild';
+  bundler: 'webpack' | 'rspack' | 'esbuild';
   ssr: boolean;
-  serverRouting: boolean;
   prefix: string;
 }
 
@@ -869,9 +868,8 @@ async function determineAngularOptions(
   let appName: string;
   let unitTestRunner: undefined | 'none' | 'jest' | 'vitest' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
-  let bundler: undefined | 'webpack' | 'esbuild' = undefined;
+  let bundler: undefined | 'webpack' | 'rspack' | 'esbuild' = undefined;
   let ssr: undefined | boolean = undefined;
-  let serverRouting: undefined | boolean = undefined;
 
   const standaloneApi = parsedArgs.standaloneApi;
   const routing = parsedArgs.routing;
@@ -930,6 +928,10 @@ async function determineAngularOptions(
             message: 'esbuild [ https://esbuild.github.io/ ]',
           },
           {
+            name: 'rspack',
+            message: 'Rspack [ https://rspack.dev/ ]',
+          },
+          {
             name: 'webpack',
             message: 'Webpack [ https://webpack.js.org/ ]',
           },
@@ -975,8 +977,11 @@ async function determineAngularOptions(
     const reply = await enquirer.prompt<{ ssr: 'Yes' | 'No' }>([
       {
         name: 'ssr',
-        message:
-          'Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)?',
+        message: `Do you want to enable Server-Side Rendering (SSR)${
+          bundler !== 'rspack'
+            ? ' and Static Site Generation (SSG/Prerendering)?'
+            : '?'
+        }`,
         type: 'autocomplete',
         choices: [{ name: 'Yes' }, { name: 'No' }],
         initial: 1,
@@ -984,25 +989,6 @@ async function determineAngularOptions(
       },
     ]);
     ssr = reply.ssr === 'Yes';
-  }
-
-  if (parsedArgs.serverRouting !== undefined) {
-    serverRouting = parsedArgs.serverRouting;
-  } else if (ssr && bundler === 'esbuild') {
-    const reply = await enquirer.prompt<{ serverRouting: 'Yes' | 'No' }>([
-      {
-        name: 'serverRouting',
-        message:
-          'Would you like to use the Server Routing and App Engine APIs (Developer Preview) for this server application?',
-        type: 'autocomplete',
-        choices: [{ name: 'Yes' }, { name: 'No' }],
-        initial: 1,
-        skip: !parsedArgs.interactive || isCI(),
-      },
-    ]);
-    serverRouting = reply.serverRouting === 'Yes';
-  } else {
-    serverRouting = false;
   }
 
   unitTestRunner = await determineUnitTestRunner(parsedArgs);
@@ -1018,7 +1004,6 @@ async function determineAngularOptions(
     e2eTestRunner,
     bundler,
     ssr,
-    serverRouting,
     prefix,
   };
 }

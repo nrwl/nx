@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
   "title": "Schema for Module Federation Dev Server",
+  "continuous": true,
   "outputCapture": "direct-nodejs",
   "description": "Serves host [Module Federation](https://module-federation.io/) applications ([webpack](https://webpack.js.org/)-based) allowing to specify which remote applications should be served with the host.",
   "type": "object",
@@ -11,12 +12,6 @@
     }
   ],
   "properties": {
-    "browserTarget": {
-      "type": "string",
-      "description": "A browser builder target to serve in the format of `project:target[:configuration]`.",
-      "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$",
-      "x-deprecated": "Use 'buildTarget' instead. It will be removed in Nx v20."
-    },
     "buildTarget": {
       "type": "string",
       "description": "A build builder target to serve in the format of `project:target[:configuration]`.",
@@ -165,18 +160,11 @@
     },
     "buildLibsFromSource": {
       "type": "boolean",
-      "description": "Read buildable libraries from source instead of building them separately. If not set, it will take the value specified in the `browserTarget` options, or it will default to `true` if it's also not set in the `browserTarget` options.",
+      "description": "Read buildable libraries from source instead of building them separately. If not set, it will take the value specified in the `buildTarget` options, or it will default to `true` if it's also not set in the `buildTarget` options.",
       "x-priority": "important"
     }
   },
   "additionalProperties": false,
-  "anyOf": [
-    {
-      "required": ["buildTarget"]
-    },
-    {
-      "required": ["browserTarget"]
-    }
-  ],
+  "required": ["buildTarget"],
   "examplesFile": "../../../docs/module-federation-dev-server-examples.md"
 }

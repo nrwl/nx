@@ -13,6 +13,7 @@ export function setGeneratorDefaults(
     linter: options.linter,
     style: options.style,
     unitTestRunner: options.unitTestRunner,
+    strict: !options.strict ? false : undefined,
     ...(nxJson.generators['@nx/angular:application'] || {}),
   };
 

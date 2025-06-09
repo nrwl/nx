@@ -220,6 +220,14 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     );
   }
 
+  if (options.host && options.bundler === 'rspack') {
+    const projectConfig = readProjectConfiguration(host, options.projectName);
+    projectConfig.targets.serve ??= {};
+    projectConfig.targets.serve.dependsOn ??= [];
+    projectConfig.targets.serve.dependsOn.push(`${options.host}:serve`);
+    updateProjectConfiguration(host, options.projectName, projectConfig);
+  }
+
   if (options.host && options.dynamic) {
     const hostConfig = readProjectConfiguration(host, schema.host);
     const pathToMFManifest = joinPathFragments(

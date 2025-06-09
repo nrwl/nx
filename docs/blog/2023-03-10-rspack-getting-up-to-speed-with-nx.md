@@ -2,7 +2,7 @@
 title: 'Rspack — Getting up to speed with Nx'
 slug: 'rspack-getting-up-to-speed-with-nx'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2023-03-10/fWQ53mw2itEs3SGAOJVonQ.png'
+cover_image: '/blog/images/2023-03-10/fWQ53mw2itEs3SGAOJVonQ.avif'
 tags: [nx]
 description: Explore Nx's integration with Rspack, the Rust-based Webpack alternative that offers 5-10x faster compilation for React apps in your monorepo.
 ---
@@ -70,11 +70,11 @@ This creates a new application in your Nx monorepo that uses Rspack as the bundl
 Go and learn more on the
 
 - official Rspack website: [https://rspack.dev](https://rspack.dev/)
-- learn about the Nx Rspack plugin: [/nx-api/rspack](/nx-api/rspack)
+- learn about the Nx Rspack plugin: [/technologies/build-tools/rspack/introduction](/technologies/build-tools/rspack/api)
 
 ## Learn more
 
-- 🦀 [Rspack and Nx docs](/nx-api/rspack)
+- 🦀 [Rspack and Nx docs](/technologies/build-tools/rspack/api)
 - 🧠 [Nx Docs](/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)

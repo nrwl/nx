@@ -76,18 +76,24 @@ export function Faq(): ReactElement {
       ),
     },
     {
-      question: 'How will versioning be handled in the API specification?',
+      question: 'Is my self-hosted cache setup secure enough?',
       answerJson:
-        'Check out our RFC for more details: https://github.com/nrwl/nx/discussions/30548',
+        'Most self-hosted cache setups offer basic functionality but lack critical security features. Without enforced input validation, branch isolation, and real-time access control, self-hosted caches are vulnerable to cache poisoning, where compromised or unverified artifacts can silently pollute your builds. We recommend using Nx Cloud, which provides infrastructure-level protections, making it a safer choice for organizations in highly regulated industries.',
       answerUi: (
         <p>
-          Check out our RFC for more details:{' '}
+          Most self-hosted cache setups offer basic functionality but lack
+          critical security features. Without enforced input validation, branch
+          isolation, and real-time access control, self-hosted caches are
+          vulnerable to cache poisoning, where compromised or unverified
+          artifacts can silently pollute your builds. We recommend using Nx
+          Cloud, which provides infrastructure-level protections, making it a
+          safer choice for organizations in highly regulated industries.{' '}
           <Link
-            href="https://github.com/nrwl/nx/discussions/30548"
-            title="See documentation"
+            href="/enterprise/security"
+            title="Learn more"
             className="font-semibold"
           >
-            Nx Custom Self-Hosted Remote Cache
+            Learn more here.
           </Link>
         </p>
       ),

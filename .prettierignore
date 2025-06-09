@@ -13,6 +13,7 @@ packages/express/src/schematics/**/files/**/*.json
 packages/nest/src/schematics/**/files/**/*.json
 packages/react/src/schematics/**/files/**/*.json
 packages/jest/src/schematics/**/files/**/*.json
+packages/gradle/project-graph/build/**/*.*
 packages/nx/src/plugins/js/lock-file/__fixtures__/**/*.*
 packages/**/schematics/**/files/**/*.html
 packages/**/generators/**/files/**/*.html
@@ -48,3 +49,8 @@ CODEOWNERS
 
 /.nx/workspace-data
 /.nx/workflows/dynamic-changesets.yaml
+_files
+_solution
+
+# this file uses TS import attributes which the current prettier version does not support
+tools/documentation/create-embeddings/src/main.mts

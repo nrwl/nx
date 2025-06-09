@@ -26,6 +26,7 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        fetchFilter: tree:0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -170,6 +171,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       # This enables task distribution via Nx Cloud
@@ -215,6 +217,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       # This enables task distribution via Nx Cloud
@@ -267,6 +270,72 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        fetchFilter: tree:0
+      # Set Azure Devops CLI default settings
+      - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
+        displayName: 'Set default Azure DevOps organization and project'
+      # Get last successfull commit from Azure Devops CLI
+      - bash: |
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\\"ci.sourceSha\\"")
+          if [ -z "$LAST_SHA" ]
+          then
+            echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+          else
+            echo "Last successful commit SHA: $LAST_SHA"
+            echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+          fi
+        displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+
+      - script: npm install --prefix=$HOME/.local -g Bun
+        displayName: Install Bun
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Uncomment this line to enable task distribution
+      # - script: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      - script: bun install --no-cache
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - script: bun nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - script: bun nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
+"
+`;
+
+exports[`CI Workflow generator connected to nxCloud with bun should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
+"name: CI
+
+trigger:
+  - main
+pr:
+  - main
+
+variables:
+  CI: 'true'
+  \${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+  \${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(Build.SourceBranchName)
+    BASE_SHA: $(git rev-parse HEAD~1)
+  HEAD_SHA: $(git rev-parse HEAD)
+
+jobs:
+  - job: main
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: self
+        fetchDepth: 0
+        fetchFilter: tree:0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -306,6 +375,57 @@ jobs:
 `;
 
 exports[`CI Workflow generator connected to nxCloud with bun should generate bitbucket pipelines config 1`] = `
+"image: node:20
+
+clone:
+  depth: full
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: 'Build and test affected apps on Pull Requests'
+          script:
+            - export NX_BRANCH=$BITBUCKET_PR_ID
+
+            - npm install --prefix=$HOME/.local -g bun
+
+            # This enables task distribution via Nx Cloud
+            # Run this command as early as possible, before dependencies are installed
+            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+            # Uncomment this line to enable task distribution
+            # - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+            - bun install --no-cache
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # bun nx-cloud record -- echo Hello World
+            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+            - bun nx affected --base=origin/main -t lint test build
+
+  branches:
+    main:
+      - step:
+          name: 'Build and test affected apps on "main" branch changes'
+          script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
+            # This enables task distribution via Nx Cloud
+            # Run this command as early as possible, before dependencies are installed
+            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+            - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+            - npm install --prefix=$HOME/.local -g bun
+
+            - bun install --no-cache
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # - bun nx-cloud record -- echo Hello World
+            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+            - bun nx affected -t lint test build --base=HEAD~1
+"
+`;
+
+exports[`CI Workflow generator connected to nxCloud with bun should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
 "image: node:20
 
 clone:
@@ -397,6 +517,47 @@ workflows:
 "
 `;
 
+exports[`CI Workflow generator connected to nxCloud with bun should generate circleci CI config when packageManager is set to bun in package.json 1`] = `
+"version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.6.2
+
+jobs:
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+
+      - run:
+          name: Install Bun
+          command: npm install --prefix=$HOME/.local -g bun
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Uncomment this line to enable task distribution
+      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      - run: bun install --no-cache
+      - nx/set-shas:
+          main-branch-name: 'main'
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: bun nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - run: bun nx affected -t lint test build
+
+workflows:
+  version: 2
+
+  ci:
+    jobs:
+      - main
+"
+`;
+
 exports[`CI Workflow generator connected to nxCloud with bun should generate github CI config 1`] = `
 "name: CI
 
@@ -416,6 +577,49 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Uncomment this line to enable task distribution
+      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      - run: bun install --no-cache
+      - uses: nrwl/nx-set-shas@v4
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: bun nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - run: bun nx affected -t lint test build
+"
+`;
+
+exports[`CI Workflow generator connected to nxCloud with bun should generate github CI config when packageManager is defined in package.json 1`] = `
+"name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: tree:0
           fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v1
@@ -457,6 +661,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v1
@@ -536,6 +741,69 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        fetchFilter: tree:0
+      # Set Azure Devops CLI default settings
+      - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
+        displayName: 'Set default Azure DevOps organization and project'
+      # Get last successfull commit from Azure Devops CLI
+      - bash: |
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\\"ci.sourceSha\\"")
+          if [ -z "$LAST_SHA" ]
+          then
+            echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+          else
+            echo "Last successful commit SHA: $LAST_SHA"
+            echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+          fi
+        displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Uncomment this line to enable task distribution
+      # - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      - script: npm ci --legacy-peer-deps
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - script: npx nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
+"
+`;
+
+exports[`CI Workflow generator connected to nxCloud with npm should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
+"name: CI
+
+trigger:
+  - main
+pr:
+  - main
+
+variables:
+  CI: 'true'
+  \${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+  \${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(Build.SourceBranchName)
+    BASE_SHA: $(git rev-parse HEAD~1)
+  HEAD_SHA: $(git rev-parse HEAD)
+
+jobs:
+  - job: main
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: self
+        fetchDepth: 0
+        fetchFilter: tree:0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -572,6 +840,53 @@ jobs:
 `;
 
 exports[`CI Workflow generator connected to nxCloud with npm should generate bitbucket pipelines config 1`] = `
+"image: node:20
+
+clone:
+  depth: full
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: 'Build and test affected apps on Pull Requests'
+          script:
+            - export NX_BRANCH=$BITBUCKET_PR_ID
+
+            # This enables task distribution via Nx Cloud
+            # Run this command as early as possible, before dependencies are installed
+            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+            # Uncomment this line to enable task distribution
+            # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+            - npm ci --legacy-peer-deps
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # npx nx-cloud record -- echo Hello World
+            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+            - npx nx affected --base=origin/main -t lint test build
+
+  branches:
+    main:
+      - step:
+          name: 'Build and test affected apps on "main" branch changes'
+          script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
+            # This enables task distribution via Nx Cloud
+            # Run this command as early as possible, before dependencies are installed
+            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+            - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+            - npm ci --legacy-peer-deps
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # - npx nx-cloud record -- echo Hello World
+            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+            - npx nx affected -t lint test build --base=HEAD~1
+"
+`;
+
+exports[`CI Workflow generator connected to nxCloud with npm should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
 "image: node:20
 
 clone:
@@ -655,6 +970,43 @@ workflows:
 "
 `;
 
+exports[`CI Workflow generator connected to nxCloud with npm should generate circleci CI config when packageManager is set to npm in package.json 1`] = `
+"version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.6.2
+
+jobs:
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Uncomment this line to enable task distribution
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      - run: npm ci --legacy-peer-deps
+      - nx/set-shas:
+          main-branch-name: 'main'
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: npx nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - run: npx nx affected -t lint test build
+
+workflows:
+  version: 2
+
+  ci:
+    jobs:
+      - main
+"
+`;
+
 exports[`CI Workflow generator connected to nxCloud with npm should generate github CI config 1`] = `
 "name: CI
 
@@ -674,6 +1026,51 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
+          fetch-depth: 0
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Uncomment this line to enable task distribution
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - run: npm ci --legacy-peer-deps
+      - uses: nrwl/nx-set-shas@v4
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: npx nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - run: npx nx affected -t lint test build
+"
+`;
+
+exports[`CI Workflow generator connected to nxCloud with npm should generate github CI config when packageManager is defined in package.json 1`] = `
+"name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: tree:0
           fetch-depth: 0
 
       # This enables task distribution via Nx Cloud
@@ -717,6 +1114,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       # This enables task distribution via Nx Cloud
@@ -796,6 +1194,72 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        fetchFilter: tree:0
+      # Set Azure Devops CLI default settings
+      - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
+        displayName: 'Set default Azure DevOps organization and project'
+      # Get last successfull commit from Azure Devops CLI
+      - bash: |
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\\"ci.sourceSha\\"")
+          if [ -z "$LAST_SHA" ]
+          then
+            echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+          else
+            echo "Last successful commit SHA: $LAST_SHA"
+            echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+          fi
+        displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+
+      - script: npm install --prefix=$HOME/.local -g pnpm@8
+        displayName: Install PNPM
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Uncomment this line to enable task distribution
+      # - script: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      - script: pnpm install --frozen-lockfile
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - script: pnpm exec nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
+"
+`;
+
+exports[`CI Workflow generator connected to nxCloud with pnpm should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
+"name: CI
+
+trigger:
+  - main
+pr:
+  - main
+
+variables:
+  CI: 'true'
+  \${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+  \${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(Build.SourceBranchName)
+    BASE_SHA: $(git rev-parse HEAD~1)
+  HEAD_SHA: $(git rev-parse HEAD)
+
+jobs:
+  - job: main
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: self
+        fetchDepth: 0
+        fetchFilter: tree:0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -835,6 +1299,57 @@ jobs:
 `;
 
 exports[`CI Workflow generator connected to nxCloud with pnpm should generate bitbucket pipelines config 1`] = `
+"image: node:20
+
+clone:
+  depth: full
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: 'Build and test affected apps on Pull Requests'
+          script:
+            - export NX_BRANCH=$BITBUCKET_PR_ID
+
+            - npm install --prefix=$HOME/.local -g pnpm@8
+
+            # This enables task distribution via Nx Cloud
+            # Run this command as early as possible, before dependencies are installed
+            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+            # Uncomment this line to enable task distribution
+            # - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+            - pnpm install --frozen-lockfile
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # pnpm exec nx-cloud record -- echo Hello World
+            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+            - pnpm exec nx affected --base=origin/main -t lint test build
+
+  branches:
+    main:
+      - step:
+          name: 'Build and test affected apps on "main" branch changes'
+          script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
+            # This enables task distribution via Nx Cloud
+            # Run this command as early as possible, before dependencies are installed
+            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+            - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+            - npm install --prefix=$HOME/.local -g pnpm@8
+
+            - pnpm install --frozen-lockfile
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # - pnpm exec nx-cloud record -- echo Hello World
+            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+            - pnpm exec nx affected -t lint test build --base=HEAD~1
+"
+`;
+
+exports[`CI Workflow generator connected to nxCloud with pnpm should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
 "image: node:20
 
 clone:
@@ -926,6 +1441,47 @@ workflows:
 "
 `;
 
+exports[`CI Workflow generator connected to nxCloud with pnpm should generate circleci CI config when packageManager is set to pnpm in package.json 1`] = `
+"version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.6.2
+
+jobs:
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+
+      - run:
+          name: Install PNPM
+          command: npm install --prefix=$HOME/.local -g pnpm@8
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Uncomment this line to enable task distribution
+      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      - run: pnpm install --frozen-lockfile
+      - nx/set-shas:
+          main-branch-name: 'main'
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: pnpm exec nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - run: pnpm exec nx affected -t lint test build
+
+workflows:
+  version: 2
+
+  ci:
+    jobs:
+      - main
+"
+`;
+
 exports[`CI Workflow generator connected to nxCloud with pnpm should generate github CI config 1`] = `
 "name: CI
 
@@ -945,11 +1501,63 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
+        name: Install pnpm
         with:
-          version: 9
+          version: 9.8.0
+          run_install: false
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Uncomment this line to enable task distribution
+      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+      - uses: nrwl/nx-set-shas@v4
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: pnpm exec nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - run: pnpm exec nx affected -t lint test build
+"
+`;
+
+exports[`CI Workflow generator connected to nxCloud with pnpm should generate github CI config when packageManager is defined in package.json 1`] = `
+"name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: tree:0
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
@@ -992,11 +1600,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
+        name: Install pnpm
         with:
-          version: 9
+          version: 9.8.0
+          run_install: false
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
@@ -1077,6 +1688,69 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        fetchFilter: tree:0
+      # Set Azure Devops CLI default settings
+      - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
+        displayName: 'Set default Azure DevOps organization and project'
+      # Get last successfull commit from Azure Devops CLI
+      - bash: |
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\\"ci.sourceSha\\"")
+          if [ -z "$LAST_SHA" ]
+          then
+            echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+          else
+            echo "Last successful commit SHA: $LAST_SHA"
+            echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+          fi
+        displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Uncomment this line to enable task distribution
+      # - script: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      - script: yarn install --frozen-lockfile
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - script: yarn nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
+"
+`;
+
+exports[`CI Workflow generator connected to nxCloud with yarn should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
+"name: CI
+
+trigger:
+  - main
+pr:
+  - main
+
+variables:
+  CI: 'true'
+  \${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+  \${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(Build.SourceBranchName)
+    BASE_SHA: $(git rev-parse HEAD~1)
+  HEAD_SHA: $(git rev-parse HEAD)
+
+jobs:
+  - job: main
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: self
+        fetchDepth: 0
+        fetchFilter: tree:0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -1113,6 +1787,53 @@ jobs:
 `;
 
 exports[`CI Workflow generator connected to nxCloud with yarn should generate bitbucket pipelines config 1`] = `
+"image: node:20
+
+clone:
+  depth: full
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: 'Build and test affected apps on Pull Requests'
+          script:
+            - export NX_BRANCH=$BITBUCKET_PR_ID
+
+            # This enables task distribution via Nx Cloud
+            # Run this command as early as possible, before dependencies are installed
+            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+            # Uncomment this line to enable task distribution
+            # - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+            - yarn install --frozen-lockfile
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # yarn nx-cloud record -- echo Hello World
+            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+            - yarn nx affected --base=origin/main -t lint test build
+
+  branches:
+    main:
+      - step:
+          name: 'Build and test affected apps on "main" branch changes'
+          script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
+            # This enables task distribution via Nx Cloud
+            # Run this command as early as possible, before dependencies are installed
+            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+            - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+            - yarn install --frozen-lockfile
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # - yarn nx-cloud record -- echo Hello World
+            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+            - yarn nx affected -t lint test build --base=HEAD~1
+"
+`;
+
+exports[`CI Workflow generator connected to nxCloud with yarn should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
 "image: node:20
 
 clone:
@@ -1196,6 +1917,43 @@ workflows:
 "
 `;
 
+exports[`CI Workflow generator connected to nxCloud with yarn should generate circleci CI config when packageManager is set to yarn in package.json 1`] = `
+"version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.6.2
+
+jobs:
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Uncomment this line to enable task distribution
+      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      - run: yarn install --frozen-lockfile
+      - nx/set-shas:
+          main-branch-name: 'main'
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: yarn nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - run: yarn nx affected -t lint test build
+
+workflows:
+  version: 2
+
+  ci:
+    jobs:
+      - main
+"
+`;
+
 exports[`CI Workflow generator connected to nxCloud with yarn should generate github CI config 1`] = `
 "name: CI
 
@@ -1215,7 +1973,54 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Uncomment this line to enable task distribution
+      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'yarn'
+
+      - run: yarn install --frozen-lockfile
+      - uses: nrwl/nx-set-shas@v4
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: yarn nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - run: yarn nx affected -t lint test build
+"
+`;
+
+exports[`CI Workflow generator connected to nxCloud with yarn should generate github CI config when packageManager is defined in package.json 1`] = `
+"name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: tree:0
+          fetch-depth: 0
+
+      - run: corepack enable
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
@@ -1258,6 +2063,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       # This enables task distribution via Nx Cloud
@@ -1337,6 +2143,7 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        fetchFilter: tree:0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -1482,6 +2289,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       # This enables task distribution via Nx Cloud
@@ -1527,6 +2335,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       # This enables task distribution via Nx Cloud
@@ -1579,6 +2388,72 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        fetchFilter: tree:0
+      # Set Azure Devops CLI default settings
+      - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
+        displayName: 'Set default Azure DevOps organization and project'
+      # Get last successfull commit from Azure Devops CLI
+      - bash: |
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\\"ci.sourceSha\\"")
+          if [ -z "$LAST_SHA" ]
+          then
+            echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+          else
+            echo "Last successful commit SHA: $LAST_SHA"
+            echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+          fi
+        displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+
+      - script: npm install --prefix=$HOME/.local -g Bun
+        displayName: Install Bun
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+      # - script: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      - script: bun install --no-cache
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - script: bun nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - script: bun nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
+"
+`;
+
+exports[`CI Workflow generator not connected to nxCloud with bun should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
+"name: CI
+
+trigger:
+  - main
+pr:
+  - main
+
+variables:
+  CI: 'true'
+  \${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+  \${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(Build.SourceBranchName)
+    BASE_SHA: $(git rev-parse HEAD~1)
+  HEAD_SHA: $(git rev-parse HEAD)
+
+jobs:
+  - job: main
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: self
+        fetchDepth: 0
+        fetchFilter: tree:0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -1618,6 +2493,58 @@ jobs:
 `;
 
 exports[`CI Workflow generator not connected to nxCloud with bun should generate bitbucket pipelines config 1`] = `
+"image: node:20
+
+clone:
+  depth: full
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: 'Build and test affected apps on Pull Requests'
+          script:
+            - export NX_BRANCH=$BITBUCKET_PR_ID
+
+            - npm install --prefix=$HOME/.local -g bun
+
+            # This enables task distribution via Nx Cloud
+            # Run this command as early as possible, before dependencies are installed
+            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+            # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+            # - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+            - bun install --no-cache
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # bun nx-cloud record -- echo Hello World
+            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+            - bun nx affected --base=origin/main -t lint test build
+
+  branches:
+    main:
+      - step:
+          name: 'Build and test affected apps on "main" branch changes'
+          script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
+            # This enables task distribution via Nx Cloud
+            # Run this command as early as possible, before dependencies are installed
+            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+            # Connect your workspace by running "nx connect" and uncomment this
+            # - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+            - npm install --prefix=$HOME/.local -g bun
+
+            - bun install --no-cache
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # - bun nx-cloud record -- echo Hello World
+            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+            - bun nx affected -t lint test build --base=HEAD~1
+"
+`;
+
+exports[`CI Workflow generator not connected to nxCloud with bun should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
 "image: node:20
 
 clone:
@@ -1710,6 +2637,47 @@ workflows:
 "
 `;
 
+exports[`CI Workflow generator not connected to nxCloud with bun should generate circleci CI config when packageManager is set to bun in package.json 1`] = `
+"version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.6.2
+
+jobs:
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+
+      - run:
+          name: Install Bun
+          command: npm install --prefix=$HOME/.local -g bun
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      - run: bun install --no-cache
+      - nx/set-shas:
+          main-branch-name: 'main'
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: bun nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - run: bun nx affected -t lint test build
+
+workflows:
+  version: 2
+
+  ci:
+    jobs:
+      - main
+"
+`;
+
 exports[`CI Workflow generator not connected to nxCloud with bun should generate github CI config 1`] = `
 "name: CI
 
@@ -1729,6 +2697,49 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      - run: bun install --no-cache
+      - uses: nrwl/nx-set-shas@v4
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: bun nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - run: bun nx affected -t lint test build
+"
+`;
+
+exports[`CI Workflow generator not connected to nxCloud with bun should generate github CI config when packageManager is defined in package.json 1`] = `
+"name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: tree:0
           fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v1
@@ -1770,6 +2781,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v1
@@ -1849,6 +2861,69 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        fetchFilter: tree:0
+      # Set Azure Devops CLI default settings
+      - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
+        displayName: 'Set default Azure DevOps organization and project'
+      # Get last successfull commit from Azure Devops CLI
+      - bash: |
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\\"ci.sourceSha\\"")
+          if [ -z "$LAST_SHA" ]
+          then
+            echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+          else
+            echo "Last successful commit SHA: $LAST_SHA"
+            echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+          fi
+        displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+      # - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      - script: npm ci --legacy-peer-deps
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - script: npx nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
+"
+`;
+
+exports[`CI Workflow generator not connected to nxCloud with npm should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
+"name: CI
+
+trigger:
+  - main
+pr:
+  - main
+
+variables:
+  CI: 'true'
+  \${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+  \${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(Build.SourceBranchName)
+    BASE_SHA: $(git rev-parse HEAD~1)
+  HEAD_SHA: $(git rev-parse HEAD)
+
+jobs:
+  - job: main
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: self
+        fetchDepth: 0
+        fetchFilter: tree:0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -1885,6 +2960,54 @@ jobs:
 `;
 
 exports[`CI Workflow generator not connected to nxCloud with npm should generate bitbucket pipelines config 1`] = `
+"image: node:20
+
+clone:
+  depth: full
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: 'Build and test affected apps on Pull Requests'
+          script:
+            - export NX_BRANCH=$BITBUCKET_PR_ID
+
+            # This enables task distribution via Nx Cloud
+            # Run this command as early as possible, before dependencies are installed
+            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+            # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+            # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+            - npm ci --legacy-peer-deps
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # npx nx-cloud record -- echo Hello World
+            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+            - npx nx affected --base=origin/main -t lint test build
+
+  branches:
+    main:
+      - step:
+          name: 'Build and test affected apps on "main" branch changes'
+          script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
+            # This enables task distribution via Nx Cloud
+            # Run this command as early as possible, before dependencies are installed
+            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+            # Connect your workspace by running "nx connect" and uncomment this
+            # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+            - npm ci --legacy-peer-deps
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # - npx nx-cloud record -- echo Hello World
+            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+            - npx nx affected -t lint test build --base=HEAD~1
+"
+`;
+
+exports[`CI Workflow generator not connected to nxCloud with npm should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
 "image: node:20
 
 clone:
@@ -1969,6 +3092,43 @@ workflows:
 "
 `;
 
+exports[`CI Workflow generator not connected to nxCloud with npm should generate circleci CI config when packageManager is set to npm in package.json 1`] = `
+"version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.6.2
+
+jobs:
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      - run: npm ci --legacy-peer-deps
+      - nx/set-shas:
+          main-branch-name: 'main'
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: npx nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - run: npx nx affected -t lint test build
+
+workflows:
+  version: 2
+
+  ci:
+    jobs:
+      - main
+"
+`;
+
 exports[`CI Workflow generator not connected to nxCloud with npm should generate github CI config 1`] = `
 "name: CI
 
@@ -1988,6 +3148,51 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
+          fetch-depth: 0
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - run: npm ci --legacy-peer-deps
+      - uses: nrwl/nx-set-shas@v4
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: npx nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - run: npx nx affected -t lint test build
+"
+`;
+
+exports[`CI Workflow generator not connected to nxCloud with npm should generate github CI config when packageManager is defined in package.json 1`] = `
+"name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: tree:0
           fetch-depth: 0
 
       # This enables task distribution via Nx Cloud
@@ -2031,6 +3236,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       # This enables task distribution via Nx Cloud
@@ -2110,6 +3316,72 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        fetchFilter: tree:0
+      # Set Azure Devops CLI default settings
+      - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
+        displayName: 'Set default Azure DevOps organization and project'
+      # Get last successfull commit from Azure Devops CLI
+      - bash: |
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\\"ci.sourceSha\\"")
+          if [ -z "$LAST_SHA" ]
+          then
+            echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+          else
+            echo "Last successful commit SHA: $LAST_SHA"
+            echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+          fi
+        displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+
+      - script: npm install --prefix=$HOME/.local -g pnpm@8
+        displayName: Install PNPM
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+      # - script: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      - script: pnpm install --frozen-lockfile
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - script: pnpm exec nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
+"
+`;
+
+exports[`CI Workflow generator not connected to nxCloud with pnpm should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
+"name: CI
+
+trigger:
+  - main
+pr:
+  - main
+
+variables:
+  CI: 'true'
+  \${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+  \${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(Build.SourceBranchName)
+    BASE_SHA: $(git rev-parse HEAD~1)
+  HEAD_SHA: $(git rev-parse HEAD)
+
+jobs:
+  - job: main
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: self
+        fetchDepth: 0
+        fetchFilter: tree:0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -2149,6 +3421,58 @@ jobs:
 `;
 
 exports[`CI Workflow generator not connected to nxCloud with pnpm should generate bitbucket pipelines config 1`] = `
+"image: node:20
+
+clone:
+  depth: full
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: 'Build and test affected apps on Pull Requests'
+          script:
+            - export NX_BRANCH=$BITBUCKET_PR_ID
+
+            - npm install --prefix=$HOME/.local -g pnpm@8
+
+            # This enables task distribution via Nx Cloud
+            # Run this command as early as possible, before dependencies are installed
+            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+            # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+            # - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+            - pnpm install --frozen-lockfile
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # pnpm exec nx-cloud record -- echo Hello World
+            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+            - pnpm exec nx affected --base=origin/main -t lint test build
+
+  branches:
+    main:
+      - step:
+          name: 'Build and test affected apps on "main" branch changes'
+          script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
+            # This enables task distribution via Nx Cloud
+            # Run this command as early as possible, before dependencies are installed
+            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+            # Connect your workspace by running "nx connect" and uncomment this
+            # - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+            - npm install --prefix=$HOME/.local -g pnpm@8
+
+            - pnpm install --frozen-lockfile
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # - pnpm exec nx-cloud record -- echo Hello World
+            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+            - pnpm exec nx affected -t lint test build --base=HEAD~1
+"
+`;
+
+exports[`CI Workflow generator not connected to nxCloud with pnpm should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
 "image: node:20
 
 clone:
@@ -2241,6 +3565,47 @@ workflows:
 "
 `;
 
+exports[`CI Workflow generator not connected to nxCloud with pnpm should generate circleci CI config when packageManager is set to pnpm in package.json 1`] = `
+"version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.6.2
+
+jobs:
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+
+      - run:
+          name: Install PNPM
+          command: npm install --prefix=$HOME/.local -g pnpm@8
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      - run: pnpm install --frozen-lockfile
+      - nx/set-shas:
+          main-branch-name: 'main'
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: pnpm exec nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - run: pnpm exec nx affected -t lint test build
+
+workflows:
+  version: 2
+
+  ci:
+    jobs:
+      - main
+"
+`;
+
 exports[`CI Workflow generator not connected to nxCloud with pnpm should generate github CI config 1`] = `
 "name: CI
 
@@ -2260,11 +3625,63 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
+        name: Install pnpm
         with:
-          version: 9
+          version: 9.8.0
+          run_install: false
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+      - uses: nrwl/nx-set-shas@v4
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: pnpm exec nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - run: pnpm exec nx affected -t lint test build
+"
+`;
+
+exports[`CI Workflow generator not connected to nxCloud with pnpm should generate github CI config when packageManager is defined in package.json 1`] = `
+"name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: tree:0
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
@@ -2307,11 +3724,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
+        name: Install pnpm
         with:
-          version: 9
+          version: 9.8.0
+          run_install: false
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
@@ -2392,6 +3812,69 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        fetchFilter: tree:0
+      # Set Azure Devops CLI default settings
+      - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
+        displayName: 'Set default Azure DevOps organization and project'
+      # Get last successfull commit from Azure Devops CLI
+      - bash: |
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\\"ci.sourceSha\\"")
+          if [ -z "$LAST_SHA" ]
+          then
+            echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+          else
+            echo "Last successful commit SHA: $LAST_SHA"
+            echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+          fi
+        displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+      # - script: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      - script: yarn install --frozen-lockfile
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - script: yarn nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
+"
+`;
+
+exports[`CI Workflow generator not connected to nxCloud with yarn should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
+"name: CI
+
+trigger:
+  - main
+pr:
+  - main
+
+variables:
+  CI: 'true'
+  \${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+  \${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(Build.SourceBranchName)
+    BASE_SHA: $(git rev-parse HEAD~1)
+  HEAD_SHA: $(git rev-parse HEAD)
+
+jobs:
+  - job: main
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: self
+        fetchDepth: 0
+        fetchFilter: tree:0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -2428,6 +3911,54 @@ jobs:
 `;
 
 exports[`CI Workflow generator not connected to nxCloud with yarn should generate bitbucket pipelines config 1`] = `
+"image: node:20
+
+clone:
+  depth: full
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: 'Build and test affected apps on Pull Requests'
+          script:
+            - export NX_BRANCH=$BITBUCKET_PR_ID
+
+            # This enables task distribution via Nx Cloud
+            # Run this command as early as possible, before dependencies are installed
+            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+            # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+            # - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+            - yarn install --frozen-lockfile
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # yarn nx-cloud record -- echo Hello World
+            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+            - yarn nx affected --base=origin/main -t lint test build
+
+  branches:
+    main:
+      - step:
+          name: 'Build and test affected apps on "main" branch changes'
+          script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
+            # This enables task distribution via Nx Cloud
+            # Run this command as early as possible, before dependencies are installed
+            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+            # Connect your workspace by running "nx connect" and uncomment this
+            # - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+            - yarn install --frozen-lockfile
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # - yarn nx-cloud record -- echo Hello World
+            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+            - yarn nx affected -t lint test build --base=HEAD~1
+"
+`;
+
+exports[`CI Workflow generator not connected to nxCloud with yarn should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
 "image: node:20
 
 clone:
@@ -2512,6 +4043,43 @@ workflows:
 "
 `;
 
+exports[`CI Workflow generator not connected to nxCloud with yarn should generate circleci CI config when packageManager is set to yarn in package.json 1`] = `
+"version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.6.2
+
+jobs:
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      - run: yarn install --frozen-lockfile
+      - nx/set-shas:
+          main-branch-name: 'main'
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: yarn nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - run: yarn nx affected -t lint test build
+
+workflows:
+  version: 2
+
+  ci:
+    jobs:
+      - main
+"
+`;
+
 exports[`CI Workflow generator not connected to nxCloud with yarn should generate github CI config 1`] = `
 "name: CI
 
@@ -2531,7 +4099,54 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'yarn'
+
+      - run: yarn install --frozen-lockfile
+      - uses: nrwl/nx-set-shas@v4
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: yarn nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - run: yarn nx affected -t lint test build
+"
+`;
+
+exports[`CI Workflow generator not connected to nxCloud with yarn should generate github CI config when packageManager is defined in package.json 1`] = `
+"name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: tree:0
+          fetch-depth: 0
+
+      - run: corepack enable
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
@@ -2574,6 +4189,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       # This enables task distribution via Nx Cloud

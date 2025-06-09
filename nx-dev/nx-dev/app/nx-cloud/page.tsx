@@ -1,6 +1,7 @@
 import {
   AgentNumberOverTime,
   AutomatedAgentsManagement,
+  EnhancedSecurity,
   EnhancedWithAi,
   FasterAndCheaper,
   Hero,
@@ -33,7 +34,7 @@ export const metadata: Metadata = {
         url: 'https://nx.dev/socials/nx-media.png',
         width: 800,
         height: 421,
-        alt: 'Nx: Smart Monorepos · Fast CI',
+        alt: 'Nx: Smart Repos · Fast Builds',
         type: 'image/jpeg',
       },
     ],
@@ -60,6 +61,9 @@ export default function NxCloudPage(): ReactElement {
 
       <div className="mt-32 lg:mt-56">
         <FasterAndCheaper />
+      </div>
+      <div className="mt-32 lg:mt-56">
+        <EnhancedSecurity />
       </div>
       <div className="mt-32 lg:mt-56">
         <UnderstandWorkspace />

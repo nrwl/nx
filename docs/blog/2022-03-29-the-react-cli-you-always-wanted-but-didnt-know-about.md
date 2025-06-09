@@ -2,7 +2,7 @@
 title: "The React CLI you always wanted but didn't know about"
 slug: 'the-react-cli-you-always-wanted-but-didnt-know-about'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-03-29/YR6QUEZel3nlNcTo6Pdlwg.png'
+cover_image: '/blog/images/2022-03-29/YR6QUEZel3nlNcTo6Pdlwg.avif'
 tags: [nx]
 description: Discover Nx as a powerful CLI for React development with built-in project generation, build tools, and pre-configured integrations for modern tooling.
 ---
@@ -129,7 +129,7 @@ Many of these generators come with a rich set of flags. For example, passing `--
 
 **How do we find all these generators though?** There are different options:
 
-- **Nx documentation** — use the search function there or just navigate the docs. All the reference pages are structured like `nx.dev/packages/<packagename>`. As an example for React that would look like: [/nx-api/react](/nx-api/react).
+- **Nx documentation** — use the search function there or just navigate the docs. All the reference pages are structured like `nx.dev/packages/<packagename>`. As an example for React that would look like: [/nx-api/react](/technologies/react/api).
 - `npx nx list` - lists a set of installed plugins as well as other available plugins that can be installed. To get a list of generators for a specific plugin - say for the `@nrwl/react` plugin - run `npx nx list @nrwl/react`. Similarly, you can then run `npx nx g @nrwl/react:lib --help` to get help for a particular generator
 
 However, the absolute easiest way to explore the potential and even use Nx if you are not the "terminal type of person" is [Nx Console](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console)! I'll go a bit deeper into that in a later section.
@@ -152,7 +152,7 @@ Let's have a closer look.
 
 The Nx core team strongly believes in the benefits of TypeScript (in fact, check out the [new Nx and TypeScript setup](/getting-started/intro)). As such, by default every project is automatically set up and configured to use TypeScript, making sure builds, as well as IDEs, are able to properly pick up TypeScript definitions. All without you having to worry about it.
 
-Now, if you really want to use pure JavaScript you totally can. Just pass the `--js` when running a generator. Read [more on the docs](/recipes/tips-n-tricks/js-and-ts).
+Now, if you really want to use pure JavaScript you totally can. Just pass the `--js` when running a generator. Read [more on the docs](/technologies/typescript/recipes/js-and-ts).
 
 ## ESLint preconfigured!
 
@@ -273,7 +273,7 @@ One of the advantages of using Nx over — say CRA or a custom starter template 
 
 Just to mention an example: when upgrading Nx to v13, all Nx users automatically got migrated to Webpack 5.
 
-This is possible with Nx's [migrate command](/nx-api/nx/documents/migrate) that allows you to keep up to date with your framework in a mostly automated fashion. Whenever you upgrade Nx, you run
+This is possible with Nx's [migrate command](/reference/core-api/nx/documents/migrate) that allows you to keep up to date with your framework in a mostly automated fashion. Whenever you upgrade Nx, you run
 
 ```shell
 npx nx migrate latest
@@ -346,7 +346,7 @@ Here's the `project.json` for our `happynrwl` React application. I clipped out t
 }
 ```
 
-As you can see, all these "targets" (`build`, `serve`,...) have a so-called `options` property that allows you to configure how the target behaves. The actual configuration is abstracted behind the "[Nx Executor](/concepts/executors-and-configurations)", in our case `@nrwl/web:webpack`. You can find the details of how to configure that on the Nx docs in the CLI reference for the `@nrwl/web` package: [/nx-api/webpack/executors/webpack](/nx-api/webpack/executors/webpack).
+As you can see, all these "targets" (`build`, `serve`,...) have a so-called `options` property that allows you to configure how the target behaves. The actual configuration is abstracted behind the "[Nx Executor](/concepts/executors-and-configurations)", in our case `@nrwl/web:webpack`. You can find the details of how to configure that on the Nx docs in the CLI reference for the `@nrwl/web` package: [/nx-api/webpack/executors/webpack](/technologies/build-tools/webpack/api/executors/webpack).
 
 To read more about how the `project.json`, its executors, and configuration options are structured, check out the official docs: [/reference/project-configuration](/reference/project-configuration).
 
@@ -356,8 +356,8 @@ Nx's extensibility and customizability have really no limits, allowing it to rea
 
 - [Custom workspace executors](/extending-nx/recipes/local-executors)
 - [Custom workspace generators](/extending-nx/recipes/local-generators)
-- [Create Nx plugins](/nx-api/plugin)
-- Control the entire workspace setup with [custom presets](/nx-api/plugin)
+- [Create Nx plugins](/reference/core-api/plugin)
+- Control the entire workspace setup with [custom presets](/reference/core-api/plugin)
 
 ## Q: Can I customize my Webpack config used to build my React app?
 

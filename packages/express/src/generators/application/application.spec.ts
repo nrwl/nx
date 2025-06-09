@@ -197,7 +197,9 @@ describe('app', () => {
             "targets": {
               "build": {
                 "configurations": {
-                  "development": {},
+                  "development": {
+                    "outputHashing": "none",
+                  },
                   "production": {},
                 },
                 "defaultConfiguration": "production",
@@ -229,6 +231,7 @@ describe('app', () => {
                     "buildTarget": "@proj/myapp:build:production",
                   },
                 },
+                "continuous": true,
                 "defaultConfiguration": "development",
                 "dependsOn": [
                   "build",
@@ -365,7 +368,9 @@ describe('app', () => {
           "targets": {
             "build": {
               "configurations": {
-                "development": {},
+                "development": {
+                  "outputHashing": "none",
+                },
                 "production": {},
               },
               "defaultConfiguration": "production",
@@ -397,6 +402,7 @@ describe('app', () => {
                   "buildTarget": "@proj/myapp:build:production",
                 },
               },
+              "continuous": true,
               "defaultConfiguration": "development",
               "dependsOn": [
                 "build",

@@ -2,7 +2,7 @@
 title: What's new in Nx 15?
 slug: 'whats-new-in-nx-15'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-10-14/ReZPz_brTiYN84yvR7Hi2w.png'
+cover_image: '/blog/images/2022-10-14/ReZPz_brTiYN84yvR7Hi2w.avif'
 tags: [nx, release]
 description: 'Explore the major features and improvements introduced in Nx version 15, including enhanced performance and developer experience.'
 ---
@@ -215,7 +215,7 @@ Cypress v10 also comes with [Component Testing](https://docs.cypress.io/guides/c
 npx nx g @nrwl/react:cypress-component-configuration --project=your-projectnpx nx g @nrwl/angular:cypress-component-configuration --project=your-project
 ```
 
-Read more here: [/recipes/cypress/cypress-component-testing](/recipes/cypress/cypress-component-testing)
+Read more here: [/technologies/test-tools/cypress/recipes/cypress-component-testing](/technologies/test-tools/cypress/recipes/cypress-component-testing)
 
 ## Angular: Improved Angular CLI Migrations and Standalone Components
 
@@ -223,7 +223,7 @@ We landed generators to support Angular developers in leveraging the new standal
 
 {% tweet url="https://twitter.com/NxDevTools/status/1567513106380894215" /%}
 
-In addition, we improved the migration support for moving projects from the Angular CLI to an Nx workspace. Whether for a single Angular CLI project or to consolidate multiple Angular CLI projects into a single Nx workspace. Please read all about it here: [/recipes/angular/migration/angular](/recipes/angular/migration/angular)
+In addition, we improved the migration support for moving projects from the Angular CLI to an Nx workspace. Whether for a single Angular CLI project or to consolidate multiple Angular CLI projects into a single Nx workspace. Please read all about it here: [/technologies/angular/migration/angular](/technologies/angular/migration/angular)
 
 ## Easily add Nx to an existing repository
 

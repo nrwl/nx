@@ -62,6 +62,7 @@ describe('application generator', () => {
                 "buildTarget": "my-node-app:build:production",
               },
             },
+            "continuous": true,
             "defaultConfiguration": "development",
             "dependsOn": [
               "build",
@@ -89,17 +90,27 @@ describe('application generator', () => {
     });
 
     expect(tree.exists(`${appDirectory}/src/main.ts`)).toBeTruthy();
-    expect(
-      tree.exists(`${appDirectory}/src/app/app.controller.spec.ts`)
-    ).toBeTruthy();
+
     expect(
       tree.exists(`${appDirectory}/src/app/app.controller.ts`)
     ).toBeTruthy();
     expect(tree.exists(`${appDirectory}/src/app/app.module.ts`)).toBeTruthy();
+    expect(tree.exists(`${appDirectory}/src/app/app.service.ts`)).toBeTruthy();
+  });
+
+  it('should generate spec files when unitTestRunner is jest', async () => {
+    await applicationGenerator(tree, {
+      directory: appDirectory,
+      unitTestRunner: 'jest',
+      addPlugin: true,
+    });
+
+    expect(
+      tree.exists(`${appDirectory}/src/app/app.controller.spec.ts`)
+    ).toBeTruthy();
     expect(
       tree.exists(`${appDirectory}/src/app/app.service.spec.ts`)
     ).toBeTruthy();
-    expect(tree.exists(`${appDirectory}/src/app/app.service.ts`)).toBeTruthy();
   });
 
   it('should configure tsconfig correctly', async () => {
@@ -242,6 +253,7 @@ describe('application generator', () => {
                     "buildTarget": "@proj/myapp:build:production",
                   },
                 },
+                "continuous": true,
                 "defaultConfiguration": "development",
                 "dependsOn": [
                   "build",
@@ -407,6 +419,7 @@ describe('application generator', () => {
                   "buildTarget": "@proj/myapp:build:production",
                 },
               },
+              "continuous": true,
               "defaultConfiguration": "development",
               "dependsOn": [
                 "build",
@@ -441,6 +454,7 @@ describe('application generator', () => {
             "e2e": {
               "dependsOn": [
                 "@proj/myapp:build",
+                "@proj/myapp:serve",
               ],
               "executor": "@nx/jest:jest",
               "options": {

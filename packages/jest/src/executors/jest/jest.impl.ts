@@ -27,6 +27,7 @@ export async function jestExecutor(
   process.env['TS_NODE_COMPILER_OPTIONS'] = JSON.stringify({
     ...(existingValue ? JSON.parse(existingValue) : {}),
     moduleResolution: 'Node10',
+    module: 'commonjs',
     customConditions: null,
   });
 

@@ -13,7 +13,6 @@ import {
 import { convertToFlatConfigGenerator } from './generator';
 import { ConvertToFlatConfigGeneratorSchema } from './schema';
 import { lintProjectGenerator } from '../lint-project/lint-project';
-import { Linter } from '../utils/linter';
 import { eslintrcVersion } from '../../utils/versions';
 import { dump } from '@zkochan/js-yaml';
 
@@ -54,7 +53,7 @@ describe('convert-to-flat-config generator', () => {
     it('should update dependencies', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
       });
@@ -70,7 +69,7 @@ describe('convert-to-flat-config generator', () => {
             "@nx/eslint-plugin": "0.0.1",
             "eslint": "^9.8.0",
             "eslint-config-prettier": "^10.0.0",
-            "typescript-eslint": "^8.19.0"
+            "typescript-eslint": "^8.29.0"
           }
         }
         "
@@ -80,7 +79,7 @@ describe('convert-to-flat-config generator', () => {
     it('should convert json successfully', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'cjs',
@@ -106,7 +105,7 @@ describe('convert-to-flat-config generator', () => {
     it('should convert yaml successfully', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         eslintFilePatterns: ['**/*.ts'],
         project: 'test-lib',
         setParserOptionsProject: false,
@@ -137,7 +136,7 @@ describe('convert-to-flat-config generator', () => {
     it('should convert yml successfully', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         eslintFilePatterns: ['**/*.ts'],
         project: 'test-lib',
         setParserOptionsProject: false,
@@ -168,7 +167,7 @@ describe('convert-to-flat-config generator', () => {
     it('should add plugin extends', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'cjs',
@@ -273,7 +272,7 @@ describe('convert-to-flat-config generator', () => {
     it('should add global eslintignores', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
       });
@@ -289,7 +288,7 @@ describe('convert-to-flat-config generator', () => {
     it('should handle custom eslintignores', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'cjs',
@@ -319,7 +318,7 @@ describe('convert-to-flat-config generator', () => {
     it('should add settings', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'cjs',
@@ -338,7 +337,7 @@ describe('convert-to-flat-config generator', () => {
     it('should add env configuration', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'cjs',
@@ -358,7 +357,7 @@ describe('convert-to-flat-config generator', () => {
     it('should add global configuration', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'cjs',
@@ -377,7 +376,7 @@ describe('convert-to-flat-config generator', () => {
     it('should add global and env configuration', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'cjs',
@@ -399,7 +398,7 @@ describe('convert-to-flat-config generator', () => {
     it('should add plugins', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'cjs',
@@ -421,7 +420,7 @@ describe('convert-to-flat-config generator', () => {
     it('should add parser', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'cjs',
@@ -438,7 +437,7 @@ describe('convert-to-flat-config generator', () => {
     it('should add linter options', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'cjs',
@@ -517,7 +516,7 @@ describe('convert-to-flat-config generator', () => {
     it('should convert project if target is defined via plugin as string', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'cjs',
@@ -546,7 +545,7 @@ describe('convert-to-flat-config generator', () => {
     it('should convert project if target is defined via plugin as object', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'cjs',
@@ -586,7 +585,7 @@ describe('convert-to-flat-config generator', () => {
       });
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
 
         project: 'dx-assets-ui',
         setParserOptionsProject: false,
@@ -666,7 +665,7 @@ describe('convert-to-flat-config generator', () => {
     it('should update dependencies', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'mjs',
@@ -683,7 +682,7 @@ describe('convert-to-flat-config generator', () => {
             "@nx/eslint-plugin": "0.0.1",
             "eslint": "^9.8.0",
             "eslint-config-prettier": "^10.0.0",
-            "typescript-eslint": "^8.19.0"
+            "typescript-eslint": "^8.29.0"
           }
         }
         "
@@ -693,7 +692,7 @@ describe('convert-to-flat-config generator', () => {
     it('should convert json successfully', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'mjs',
@@ -719,7 +718,7 @@ describe('convert-to-flat-config generator', () => {
     it('should convert yaml successfully', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         eslintFilePatterns: ['**/*.ts'],
         project: 'test-lib',
         setParserOptionsProject: false,
@@ -750,7 +749,7 @@ describe('convert-to-flat-config generator', () => {
     it('should convert yml successfully', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         eslintFilePatterns: ['**/*.ts'],
         project: 'test-lib',
         setParserOptionsProject: false,
@@ -781,7 +780,7 @@ describe('convert-to-flat-config generator', () => {
     it('should add plugin extends', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'mjs',
@@ -888,7 +887,7 @@ describe('convert-to-flat-config generator', () => {
     it('should add global eslintignores', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
       });
@@ -904,7 +903,7 @@ describe('convert-to-flat-config generator', () => {
     it('should handle custom eslintignores', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'mjs',
@@ -934,7 +933,7 @@ describe('convert-to-flat-config generator', () => {
     it('should add settings', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'mjs',
@@ -953,7 +952,7 @@ describe('convert-to-flat-config generator', () => {
     it('should add env configuration', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'mjs',
@@ -973,7 +972,7 @@ describe('convert-to-flat-config generator', () => {
     it('should add global configuration', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'mjs',
@@ -992,7 +991,7 @@ describe('convert-to-flat-config generator', () => {
     it('should add global and env configuration', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'mjs',
@@ -1014,7 +1013,7 @@ describe('convert-to-flat-config generator', () => {
     it('should add plugins', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'mjs',
@@ -1036,7 +1035,7 @@ describe('convert-to-flat-config generator', () => {
     it('should add parser', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'mjs',
@@ -1053,7 +1052,7 @@ describe('convert-to-flat-config generator', () => {
     it('should add linter options', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'mjs',
@@ -1134,7 +1133,7 @@ describe('convert-to-flat-config generator', () => {
     it('should convert project if target is defined via plugin as string', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'mjs',
@@ -1163,7 +1162,7 @@ describe('convert-to-flat-config generator', () => {
     it('should convert project if target is defined via plugin as object', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'mjs',
@@ -1203,7 +1202,7 @@ describe('convert-to-flat-config generator', () => {
       });
       await lintProjectGenerator(tree, {
         skipFormat: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
 
         project: 'dx-assets-ui',
         setParserOptionsProject: false,

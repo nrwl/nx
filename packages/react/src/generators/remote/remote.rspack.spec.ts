@@ -1,9 +1,14 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { ProjectGraph, readJson, readNxJson } from '@nx/devkit';
+import {
+  ProjectGraph,
+  readJson,
+  readNxJson,
+  readProjectConfiguration,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import remote from './remote';
+import host from '../host/host';
 import { getRootTsConfigPathInTree } from '@nx/js';
 
 jest.mock('@nx/devkit', () => {
@@ -100,13 +105,44 @@ describe('remote generator', () => {
   });
 
   describe('bundler=rspack', () => {
+    it('should set up continuous tasks when host is provided', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await host(tree, {
+        directory: 'test/host',
+        name: 'host',
+        skipFormat: true,
+        bundler: 'rspack',
+        e2eTestRunner: 'cypress',
+        linter: 'eslint',
+        unitTestRunner: 'jest',
+        style: 'css',
+      });
+
+      await remote(tree, {
+        directory: 'test/remote',
+        name: 'remote',
+        devServerPort: 4201,
+        e2eTestRunner: 'cypress',
+        linter: 'eslint',
+        skipFormat: true,
+        style: 'css',
+        unitTestRunner: 'jest',
+        typescriptConfiguration: false,
+        bundler: 'rspack',
+        host: 'host',
+      });
+
+      const remoteProject = readProjectConfiguration(tree, 'remote');
+      expect(remoteProject.targets.serve.dependsOn).toEqual(['host:serve']);
+    });
+
     it('should create the remote with the correct config files', async () => {
       const tree = createTreeWithEmptyWorkspace();
       await remote(tree, {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
@@ -138,7 +174,7 @@ describe('remote generator', () => {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
@@ -171,7 +207,7 @@ describe('remote generator', () => {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: false,
         style: 'css',
         unitTestRunner: 'jest',
@@ -198,7 +234,7 @@ describe('remote generator', () => {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
@@ -215,7 +251,7 @@ describe('remote generator', () => {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
@@ -233,7 +269,7 @@ describe('remote generator', () => {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
@@ -255,7 +291,7 @@ describe('remote generator', () => {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         style: 'css',
         unitTestRunner: 'jest',
@@ -280,7 +316,7 @@ describe('remote generator', () => {
         directory: 'test',
         devServerPort: 4201,
         e2eTestRunner: 'cypress',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: false,
         style: 'css',
         unitTestRunner: 'jest',
@@ -307,7 +343,7 @@ describe('remote generator', () => {
           devServerPort: 4209,
           dynamic: true,
           e2eTestRunner: 'cypress',
-          linter: Linter.EsLint,
+          linter: 'eslint',
           skipFormat: false,
           style: 'css',
           unitTestRunner: 'jest',
@@ -325,7 +361,7 @@ describe('remote generator', () => {
           directory: 'test/my-app',
           devServerPort: 4209,
           e2eTestRunner: 'cypress',
-          linter: Linter.EsLint,
+          linter: 'eslint',
           skipFormat: false,
           style: 'css',
           unitTestRunner: 'jest',

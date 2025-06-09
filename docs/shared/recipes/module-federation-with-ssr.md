@@ -140,6 +140,6 @@ To serve the `store` application and watch for changes on the `checkout` applica
 
 To learn more about Module Federation, we have some resources you might find useful:
 
-- [Concepts: Nx Module Federation Technical Overview](/concepts/module-federation/nx-module-federation-technical-overview)
-- [Guide: Faster Builds with Module Federation](/concepts/module-federation/faster-builds-with-module-federation)
+- [Concepts: Nx Module Federation Technical Overview](/technologies/module-federation/concepts/nx-module-federation-technical-overview)
+- [Guide: Faster Builds with Module Federation](/technologies/module-federation/concepts/faster-builds-with-module-federation)
 - [Video: Speed up your Angular serve and build times with Module Federation and Nx](https://www.youtube.com/watch?v=JkcaGzhRjkc)

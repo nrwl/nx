@@ -3,7 +3,7 @@ title: 'Run Tasks'
 description: 'Learn how to use Nx task runner to efficiently manage and execute tasks across multiple projects in your monorepo, including parallel execution and caching.'
 ---
 
-# Run Tasks
+# Tasks
 
 {% youtube src="https://youtu.be/aEdfYiA5U34" title="Run tasks with Nx" /%}
 
@@ -14,7 +14,7 @@ In a monorepo setup, you don't just run tasks for a single project; you might ha
 - only run tasks for **projects affected by a given change**
 - **speed up task execution** with [caching](/features/cache-task-results)
 
-## Defining Tasks
+## Define Tasks
 
 Nx tasks can be created from existing `package.json` scripts, [inferred from tooling configuration files](/concepts/inferred-tasks), or defined in a `project.json` file. Nx combines these three sources to determine the tasks for a particular project.
 
@@ -94,11 +94,17 @@ Learn more about [inferred tasks here](/concepts/inferred-tasks).
 
 The [project configuration docs](/reference/project-configuration) has the details for all the available configuration options.
 
-## Running Tasks
+## Run Tasks
 
 Nx uses the following syntax:
 
 ![Syntax for Running Tasks in Nx](/shared/images/run-target-syntax.svg)
+
+{% callout type="note" title="Terminal UI" %}
+
+In Nx 21, task output is displayed in an [interactive terminal UI](/recipes/running-tasks/terminal-ui) that allows you to actively choose which task output to display, search through the list of tasks and display multiple tasks side by side.
+
+{% /callout %}
 
 ### Run a Single Task
 
@@ -132,7 +138,7 @@ npx nx run-many -t build lint test -p header footer
 
 Nx parallelizes these tasks, ensuring they **run in the correct order based on their dependencies** and [task pipeline configuration](/concepts/task-pipeline-configuration). You can also [control how many tasks run in parallel at once](/recipes/running-tasks/run-tasks-in-parallel).
 
-Learn more about the [run-many](/nx-api/nx/documents/run-many) command.
+Learn more about the [run-many](/reference/core-api/nx/documents/run-many) command.
 
 ### Run Tasks on Projects Affected by a PR
 
@@ -244,7 +250,7 @@ Sometimes, you need tasks that apply to the entire codebase rather than a single
 
 > Note the `nx: {}` property on the `package.json`. This is necessary to inform Nx about this root-level project. The property can also be expanded to specify cache inputs and outputs.
 
-If you want Nx to cache the task, but prefer to use npm (or pnpm/yarn) to run the script (i.e. `npm run docs`) you can use the [nx exec](/nx-api/nx/documents/exec) command:
+If you want Nx to cache the task, but prefer to use npm (or pnpm/yarn) to run the script (i.e. `npm run docs`) you can use the [nx exec](/reference/core-api/nx/documents/exec) command:
 
 ```json {% fileName="package.json" %}
 {

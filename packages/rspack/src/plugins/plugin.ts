@@ -182,9 +182,7 @@ async function createRspackTargets(
   const isTsConfig = ['.ts', '.cts', '.mts'].includes(extname(configFilePath));
   if (isTsConfig) {
     // https://rspack.dev/config/#using-ts-node
-    const existingValue = process.env['TS_NODE_COMPILER_OPTIONS'];
     env['TS_NODE_COMPILER_OPTIONS'] = JSON.stringify({
-      ...(existingValue ? JSON.parse(existingValue) : {}),
       module: 'CommonJS',
       moduleResolution: 'Node10',
       customConditions: null,
@@ -220,6 +218,7 @@ async function createRspackTargets(
   };
 
   targets[options.serveTargetName] = {
+    continuous: true,
     command: `rspack serve`,
     options: {
       cwd: projectRoot,
@@ -229,6 +228,7 @@ async function createRspackTargets(
   };
 
   targets[options.previewTargetName] = {
+    continuous: true,
     command: `rspack serve`,
     options: {
       cwd: projectRoot,
@@ -238,6 +238,8 @@ async function createRspackTargets(
   };
 
   targets[options.serveStaticTargetName] = {
+    dependsOn: [`${options.buildTargetName}`],
+    continuous: true,
     executor: '@nx/web:file-server',
     options: {
       buildTarget: options.buildTargetName,

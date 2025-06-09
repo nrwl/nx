@@ -2,7 +2,7 @@
 title: 'Setting up Module Federation with Server-Side Rendering for Angular'
 slug: 'setting-up-module-federation-with-server-side-rendering-for-angular'
 authors: ['Colum Ferry']
-cover_image: '/blog/images/2023-01-10/kyMChnJ-X6jK9sbuaOdOiw.png'
+cover_image: '/blog/images/2023-01-10/kyMChnJ-X6jK9sbuaOdOiw.avif'
 tags: [nx, tutorial]
 description: Learn how to implement Webpack Module Federation with Server-Side Rendering in Angular applications using Nx for improved performance and micro-frontend architecture.
 ---
@@ -13,7 +13,7 @@ This technology has enabled a much cleaner approach to Micro Frontend Architectu
 
 Nx offers great out-of-the-box support and developer experience for Module Federation for Angular and React. You can learn more about it from the resources below:
 
-📄 [Module Federation Recipes on Nx](/recipes/module-federation)  
+📄 [Module Federation Recipes on Nx](/technologies/module-federation/recipes)
 📺 [Speed up your Angular serve and build times with Module Federation and Nx](https://www.youtube.com/watch?v=JkcaGzhRjkc)
 
 However, until now, it has only supported Client-Side Rendering (CSR). Essentially it worked only for Single Page Applications (SPAs). While this is still valuable, it is becoming ever more apparent that Server-Side Rendering (SSR) is becoming the de-facto standard for building web applications, due to the multitude of benefits it provides.
@@ -56,7 +56,7 @@ Answer with the following:
 
 When your workspace is created, run `cd myorg`.
 
-Next, we will need to install the [Official Nx Angular Plugin](/nx-api/angular):
+Next, we will need to install the [Official Nx Angular Plugin](/technologies/angular/api):
 
 ```
 npm install @nrwl/angular

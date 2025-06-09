@@ -20,7 +20,7 @@ Read more in our [documentation](/recipes/running-tasks/self-hosted-caching).
 
 ### Migrating from `@nx-aws-plugin`
 
-If you've been using the `@nx-aws-plugin/nx-aws-cache` community plugin, you should be easily able to migrate to the free [Nx S3 cache plugin](/nx-api/s3-cache). The specific modification depends on your repository's configuration.
+If you've been using the `@nx-aws-plugin/nx-aws-cache` community plugin, you should be easily able to migrate to the free [Nx S3 cache plugin](/reference/core-api/s3-cache). The specific modification depends on your repository's configuration.
 
 The following is one example, where a custom tasks runner configuration in `nx.json` will be removed:
 

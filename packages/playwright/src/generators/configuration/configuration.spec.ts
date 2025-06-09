@@ -110,5 +110,27 @@ describe('Playwright e2e configuration', () => {
         "
       `);
     });
+
+    it('should ignore Playwright output files in eslint config if used', async () => {
+      tree.write('eslint.config.mjs', `export default [{ ignores: [] }];`);
+      writeJson(tree, 'apps/myapp/package.json', {
+        name: '@proj/myapp',
+      });
+      writeJson(tree, 'apps/myapp/tsconfig.json', {
+        include: [],
+        files: [],
+        references: [],
+      });
+
+      await configGenerator(tree, {
+        project: '@proj/myapp',
+        linter: 'eslint',
+      });
+
+      expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchInlineSnapshot(`
+        "export default [{ ignores: ['**/test-output'] }];
+        "
+      `);
+    });
   });
 });

@@ -5,11 +5,11 @@ description: Explore how Nx supports Micro Frontend architecture with Module Fed
 
 # Micro Frontend Architecture
 
-Nx provides out-of-the-box [Module Federation](/concepts/module-federation/faster-builds-with-module-federation) support to both
+Nx provides out-of-the-box [Module Federation](/technologies/module-federation/concepts/faster-builds-with-module-federation) support to both
 React and Angular. The Micro Frontend (MFE) architecture builds on top of Module Federation by providing _independent
 deployability_.
 
-If you have not read the [Module Federation guide](/concepts/module-federation/faster-builds-with-module-federation)
+If you have not read the [Module Federation guide](/technologies/module-federation/concepts/faster-builds-with-module-federation)
 yet, we recommend that you read it
 before continuing with this MFE guide.
 
@@ -24,7 +24,7 @@ of MFEs and decide whether it makes sense for your own teams.
   logic that breaks compatibility with remotes.
 
 If you are looking at optimizing builds and do not need independent deployments, we recommend reading our guide on
-[Faster Builds with Module Federation](/concepts/module-federation/faster-builds-with-module-federation).
+[Faster Builds with Module Federation](/technologies/module-federation/concepts/faster-builds-with-module-federation).
 
 If you need to use MFEs, keep reading, and we'll examine the architecture and strategies to deal with shared libraries
 and
@@ -38,7 +38,7 @@ With MFE architecture, a large application is split into:
 2. **Remote** applications, which handle a single domain or feature.
 
 In a normal Module Federation setup,
-we [recommend setting up implicit dependencies](/concepts/module-federation/faster-builds-with-module-federation#architectural-overview)
+we [recommend setting up implicit dependencies](/technologies/module-federation/concepts/faster-builds-with-module-federation#architectural-overview)
 from the host application to remote applications. However, in an MFE architecture you _do not_ want these dependencies
 to exist between host and remotes.
 
@@ -97,7 +97,7 @@ in case of a bad deployment.
 ## Shared libraries
 
 Since deployments with MFEs are not atomic, there is a chance that shared libraries -- both external (npm) and workspace --
-between the host and remotes are mismatched. The default the Nx setup configures all libraries as singletons, which requires
+between the host and remotes are mismatched. The default Nx setup configures all libraries as singletons, which requires
 that all affected applications be deployed for any given changeset, and makes à la carte deployments riskier.
 
 There are mitigation strategies that can minimize mismatch errors. One such strategy is to share as little as possible

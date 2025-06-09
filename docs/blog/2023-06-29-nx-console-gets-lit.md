@@ -2,7 +2,7 @@
 title: Nx Console gets Lit
 slug: 'nx-console-gets-lit'
 authors: [Max Kless]
-cover_image: '/blog/images/2023-06-29/featured_img.webp'
+cover_image: '/blog/images/2023-06-29/featured_img.avif'
 tags: [nx, nx-console]
 description: Nx Console's Generate UI rebuilt with Lit for a faster, more maintainable experience across VSCode and JetBrains IDEs.
 ---
@@ -274,7 +274,7 @@ Using it, you get the native look, a11y, and theme-aware styling for free! Thank
 
 One big upside of using a webview is the huge Javascript ecosystem is available to you! To make sure that no regressions are introduced later on, we use [Cypress](https://www.cypress.io/). We can mock the editor communication and provide different schemas, make sure the form is rendered correctly and the right messages are sent back to the IDE.
 
-While there's no particular Lit integration for Cypress, the tool itself is framework agnostic so it still works perfectly fine. Using the [`@nx/cypress`](/nx-api/cypress) executors did most of the work for us so setup was pretty quick too.
+While there's no particular Lit integration for Cypress, the tool itself is framework agnostic so it still works perfectly fine. Using the [`@nx/cypress`](/technologies/test-tools/cypress/api) executors did most of the work for us so setup was pretty quick too.
 
 ### Results: Comparing Performance
 
@@ -610,7 +610,7 @@ Using it, you get the native look, a11y, and theme-aware styling for free! Thank
 
 One big upside of using a webview is the huge Javascript ecosystem is available to you! To make sure that no regressions are introduced later on, we use [Cypress](https://www.cypress.io/). We can mock the editor communication and provide different schemas, make sure the form is rendered correctly and the right messages are sent back to the IDE.
 
-While there’s no particular Lit integration for Cypress, the tool itself is framework agnostic so it still works perfectly fine. Using the [`@nx/cypress`](/nx-api/cypress) executors did most of the work for us so setup was pretty quick too.
+While there’s no particular Lit integration for Cypress, the tool itself is framework agnostic so it still works perfectly fine. Using the [`@nx/cypress`](/technologies/test-tools/cypress/api) executors did most of the work for us so setup was pretty quick too.
 
 ### Results: Comparing Performance
 

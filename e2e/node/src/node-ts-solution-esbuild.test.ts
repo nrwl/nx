@@ -61,6 +61,7 @@ describe('Node Esbuild Applications', () => {
     updateJson('tsconfig.base.json', (json) => {
       json.compilerOptions.moduleResolution = 'node';
       json.compilerOptions.module = 'esnext';
+      delete json.compilerOptions.customConditions;
       return json;
     });
 

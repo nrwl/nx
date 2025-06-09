@@ -28,7 +28,7 @@ interface Schema {
   nextAppDir?: boolean;
   nextSrcDir?: boolean;
   linter?: Linter | LinterType;
-  bundler?: 'vite' | 'webpack';
+  bundler?: 'vite' | 'webpack' | 'rspack';
   standaloneApi?: boolean;
   routing?: boolean;
   useReactRouter?: boolean;
@@ -36,7 +36,6 @@ interface Schema {
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   e2eTestRunner?: 'cypress' | 'playwright' | 'detox' | 'jest' | 'none';
   ssr?: boolean;
-  serverRouting?: boolean;
   prefix?: string;
   useGitHub?: boolean;
   nxCloud?: 'yes' | 'skip' | 'circleci' | 'github';
