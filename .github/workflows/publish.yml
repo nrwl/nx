@@ -117,6 +117,8 @@ jobs:
   build:
     needs: [ resolve-required-data ]
     if: ${{ github.repository_owner == 'nrwl' }}
+    env:
+      NODE_VERSION: 20.19.0
     strategy:
       fail-fast: false
       matrix:
@@ -142,6 +144,9 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
             build: |-
               set -e &&
+              npm i -g n &&
+              n ${NODE_VERSION} &&
+              node --version &&
               npm i -g pnpm@10.11.1 --force &&
               pnpm --version &&
               pnpm install --frozen-lockfile &&
@@ -152,6 +157,9 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
             build: |-
               set -e &&
+              npm i -g n &&
+              n ${NODE_VERSION} &&
+              node --version &&
               npm i -g pnpm@10.11.1 --force &&
               pnpm --version &&
               pnpm install --frozen-lockfile &&
@@ -173,6 +181,9 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
             build: |-
               set -e &&
+              npm i -g n &&
+              n ${NODE_VERSION} &&
+              node --version &&
               npm i -g pnpm@10.11.1 --force &&
               pnpm --version &&
               pnpm install --frozen-lockfile &&
@@ -200,6 +211,9 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
             build: |-
               set -e &&
+              npm i -g n &&
+              n ${NODE_VERSION} &&
+              node --version &&
               rustup target add aarch64-unknown-linux-musl &&
               npm i -g pnpm@10.11.1 --force &&
               pnpm --version &&
@@ -210,7 +224,7 @@ jobs:
             setup: |-
               rustup target add aarch64-pc-windows-msvc
             build: pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
-    name: stable - ${{ matrix.settings.target }} - node@18
+    name: stable - ${{ matrix.settings.target }} - node@20.19.0
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@v4
