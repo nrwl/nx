@@ -392,7 +392,6 @@ module.exports.hashFile = nativeBinding.hashFile
 module.exports.installNxConsole = nativeBinding.installNxConsole
 module.exports.IS_WASM = nativeBinding.IS_WASM
 module.exports.logDebug = nativeBinding.logDebug
-module.exports.logError = nativeBinding.logError
 module.exports.parseTaskStatus = nativeBinding.parseTaskStatus
 module.exports.remove = nativeBinding.remove
 module.exports.restoreTerminal = nativeBinding.restoreTerminal
