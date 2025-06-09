@@ -69,7 +69,7 @@ function normalizeDependencies(packageJson: PackageJson, graph: ProjectGraph) {
   return combinedDependencies;
 }
 
-function findNodeMatchingVersion(
+export function findNodeMatchingVersion(
   graph: ProjectGraph,
   packageName: string,
   versionExpr: string
@@ -146,6 +146,11 @@ function rehoistNodes(
       }
     }
   });
+
+  if (!packagesToRehoist.size) {
+    return;
+  }
+
   // invert dependencies for easier traversal back
   const invertedGraph = reverse(builder.graph);
   const invBuilder = new ProjectGraphBuilder(invertedGraph, {});

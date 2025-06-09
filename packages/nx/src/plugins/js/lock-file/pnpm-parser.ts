@@ -26,6 +26,7 @@ import {
 } from '../../../config/project-graph';
 import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
+import { findNodeMatchingVersion } from './project-graph-pruning';
 
 // we use key => node map to avoid duplicate work when parsing keys
 let keyMap = new Map<string, Set<ProjectGraphExternalNode>>();
@@ -407,7 +408,7 @@ export function stringifyPnpmLockfile(
   const rootSnapshot = mapRootSnapshot(
     packageJson,
     packages,
-    graph.externalNodes,
+    graph,
     +lockfileVersion
   );
   const snapshots = mapSnapshots(
@@ -567,7 +568,7 @@ function versionIsAlias(
 function mapRootSnapshot(
   packageJson: NormalizedPackageJson,
   packages: PackageSnapshots,
-  nodes: Record<string, ProjectGraphExternalNode>,
+  graph: ProjectGraph,
   lockfileVersion: number
 ): ProjectSnapshot {
   const snapshot: ProjectSnapshot = { specifiers: {} };
@@ -581,7 +582,16 @@ function mapRootSnapshot(
       Object.keys(packageJson[depType]).forEach((packageName) => {
         const version = packageJson[depType][packageName];
         const node =
-          nodes[`npm:${packageName}@${version}`] || nodes[`npm:${packageName}`];
+          graph.externalNodes[`npm:${packageName}@${version}`] ||
+          (graph.externalNodes[`npm:${packageName}`] &&
+          graph.externalNodes[`npm:${packageName}`].data.version === version
+            ? graph.externalNodes[`npm:${packageName}`]
+            : findNodeMatchingVersion(graph, packageName, version));
+        if (!node) {
+          throw new Error(
+            `Could not find external node for package ${packageName}@${version}.`
+          );
+        }
         snapshot.specifiers[packageName] = version;
         // peer dependencies are mapped to dependencies
         let section = depType === 'peerDependencies' ? 'dependencies' : depType;
