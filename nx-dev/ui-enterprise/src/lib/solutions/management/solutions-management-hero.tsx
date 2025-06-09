@@ -130,8 +130,8 @@ export function SolutionsManagementHero(): ReactElement {
               onClick={() =>
                 sendCustomEvent(
                   'contact-sales-click',
-                  'solutions-engineering-hero',
-                  'solutions-engineering'
+                  'solutions-management-hero',
+                  'solutions-management'
                 )
               }
             >
@@ -146,8 +146,8 @@ export function SolutionsManagementHero(): ReactElement {
               onClick={() =>
                 sendCustomEvent(
                   'subscribe-newsletter-click',
-                  'solutions-engineering-hero',
-                  'solutions-engineering'
+                  'solutions-management-hero',
+                  'solutions-management'
                 )
               }
             >
