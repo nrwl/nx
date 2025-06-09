@@ -8,7 +8,7 @@ This generator allows you to convert an Inline SCAM to a Standalone Component. I
 
 ```bash
 
-nx g @nx/angular:scam-to-standalone --component=libs/mylib/src/lib/myscam/myscam.component.ts --project=mylib
+nx g @nx/angular:scam-to-standalone --component=libs/mylib/src/lib/myscam/myscam.ts --project=mylib
 
 ```
 

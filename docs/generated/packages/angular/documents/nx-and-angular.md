@@ -88,23 +88,27 @@ The single-project workspace setup follows a similar structure to what the Angul
 
 ```plaintext
 └─ myngapp
-   ├─ ...
+   ├─ public
+   │  └─ favicon.ico
    ├─ src
    │  ├─ app
-   │  │  ├─ app.component.css
-   │  │  ├─ app.component.html
-   │  │  ├─ app.component.spec.ts
-   │  │  ├─ app.component.ts
-   │  │  └─ app.module.ts
-   │  ├─ assets
-   │  ├─ favicon.ico
+   │  │  ├─ app.config.ts
+   │  │  ├─ app.css
+   │  │  ├─ app.html
+   │  │  ├─ app.routes.ts
+   │  │  ├─ app.spec.ts
+   │  │  ├─ app.ts
+   │  │  └─ nx-welcome.ts
    │  ├─ index.html
    │  ├─ main.ts
-   │  └─ styles.css
+   │  ├─ styles.css
+   │  └─ test-setup.ts
    ├─ nx.json
    ├─ package.json
    ├─ project.json
-   ├─ ...
+   ├─ tsconfig.app.json
+   ├─ tsconfig.json
+   └─ tsconfig.spec.json
 ```
 
 ### project.json vs angular.json
