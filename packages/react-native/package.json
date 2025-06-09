@@ -38,8 +38,8 @@
     "enhanced-resolve": "^5.8.3",
     "glob": "7.1.4",
     "ignore": "^5.0.4",
-    "metro-config": "~0.80.4",
-    "metro-resolver": "~0.80.4",
+    "metro-config": "~0.82.4",
+    "metro-resolver": "~0.82.4",
     "picocolors": "^1.1.0",
     "tsconfig-paths": "^4.1.2",
     "tslib": "^2.3.0"

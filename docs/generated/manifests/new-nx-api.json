@@ -1981,6 +1981,26 @@
       }
     },
     "migrations": {
+      "/technologies/react/expo/api/migrations/update-21-2-0-remove-deprecated-deps": {
+        "description": "Remove deprecated dependencies from package.json",
+        "file": "generated/packages/expo/migrations/update-21-2-0-remove-deprecated-deps.json",
+        "hidden": false,
+        "name": "update-21-2-0-remove-deprecated-deps",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/expo",
+        "path": "/technologies/react/expo/api/migrations/update-21-2-0-remove-deprecated-deps",
+        "type": "migration"
+      },
+      "/technologies/react/expo/api/migrations/21.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/expo/migrations/21.2.0-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-package-updates",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/expo",
+        "path": "/technologies/react/expo/api/migrations/21.2.0-package-updates",
+        "type": "migration"
+      },
       "/technologies/react/expo/api/migrations/20.3.0-package-updates": {
         "description": "",
         "file": "generated/packages/expo/migrations/20.3.0-package-updates.json",
@@ -4356,6 +4376,26 @@
       }
     },
     "migrations": {
+      "/technologies/react/react-native/api/migrations/update-21-2-0-remove-deprecated-deps": {
+        "description": "Remove deprecated dependencies from package.json",
+        "file": "generated/packages/react-native/migrations/update-21-2-0-remove-deprecated-deps.json",
+        "hidden": false,
+        "name": "update-21-2-0-remove-deprecated-deps",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/react-native",
+        "path": "/technologies/react/react-native/api/migrations/update-21-2-0-remove-deprecated-deps",
+        "type": "migration"
+      },
+      "/technologies/react/react-native/api/migrations/21.2.0-beta.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/react-native/migrations/21.2.0-beta.0-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-beta.0-package-updates",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/react-native",
+        "path": "/technologies/react/react-native/api/migrations/21.2.0-beta.0-package-updates",
+        "type": "migration"
+      },
       "/technologies/react/react-native/api/migrations/20.3.0-package-updates": {
         "description": "",
         "file": "generated/packages/react-native/migrations/20.3.0-package-updates.json",

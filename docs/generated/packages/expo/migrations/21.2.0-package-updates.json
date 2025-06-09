@@ -1,0 +1,54 @@
+{
+  "name": "21.2.0-package-updates",
+  "version": "21.2.0-beta.0",
+  "packages": {
+    "expo": { "version": "~53.0.10", "alwaysAddToPackageJson": false },
+    "expo-splash-screen": {
+      "version": "~0.30.9",
+      "alwaysAddToPackageJson": false
+    },
+    "expo-status-bar": { "version": "~2.2.3", "alwaysAddToPackageJson": false },
+    "@expo/cli": { "version": "~0.24.14", "alwaysAddToPackageJson": false },
+    "babel-preset-expo": {
+      "version": "~13.2.0",
+      "alwaysAddToPackageJson": false
+    },
+    "react": { "version": "19.0.0", "alwaysAddToPackageJson": false },
+    "react-dom": { "version": "19.0.0", "alwaysAddToPackageJson": false },
+    "@types/react": { "version": "~19.0.10", "alwaysAddToPackageJson": false },
+    "react-native": { "version": "~0.79.3", "alwaysAddToPackageJson": false },
+    "react-native-web": {
+      "version": "~0.20.0",
+      "alwaysAddToPackageJson": false
+    },
+    "@expo/metro-config": {
+      "version": "~0.20.14",
+      "alwaysAddToPackageJson": false
+    },
+    "@expo/metro-runtime": {
+      "version": "~5.0.4",
+      "alwaysAddToPackageJson": false
+    },
+    "react-native-svg-transformer": {
+      "version": "~1.5.1",
+      "alwaysAddToPackageJson": false
+    },
+    "react-native-svg": {
+      "version": "~15.11.2",
+      "alwaysAddToPackageJson": false
+    },
+    "@testing-library/react-native": {
+      "version": "~13.2.0",
+      "alwaysAddToPackageJson": false
+    },
+    "jest-expo": { "version": "~53.0.7", "alwaysAddToPackageJson": false },
+    "@babel/runtime": { "version": "7.27.6", "alwaysAddToPackageJson": false }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/expo",
+  "schema": null,
+  "type": "migration"
+}
