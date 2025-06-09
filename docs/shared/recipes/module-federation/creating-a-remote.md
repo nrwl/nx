@@ -17,12 +17,12 @@ Angular application(s).
 
 ## Generating a Remote
 
-To generate a remote application in your workspace, run the following command:
+To generate a remote application in your workspace, cd into the right folder and run the following command:
 
 {% tabs %}
 {% tab label="React" %}
 
-```{% command="nx g @nx/react:remote apps/react/myremote" %}
+```{% command="nx g @nx/react:remote --name=myremote" %}
 NX  Generating @nx/react:remote
 
 CREATE apps/react/myremote/src/app/app.spec.tsx
