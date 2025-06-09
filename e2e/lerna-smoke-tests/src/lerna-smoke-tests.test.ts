@@ -4,12 +4,12 @@
  */
 
 import {
+  cleanupProject,
   newLernaWorkspace,
-  cleanupLernaWorkspace,
   runLernaCLI,
-  tmpLernaProjPath,
+  tmpProjPath,
   updateJson,
-} from '@nx/e2e/utils/simple-lerna-utils';
+} from '@nx/e2e/utils';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -17,11 +17,9 @@ expect.addSnapshotSerializer({
       .replace(/(\r\n|\n)+/g, '\n')
       .replace(/\n\s+/g, '\n')
       .replace(/\s+\n/g, '\n')
-      .replace(tmpLernaProjPath(), '')
+      .replace(tmpProjPath(), '')
       .replace('/private', '')
-      .replace('/packages/package-1', '')
-      .replace(/^yarn run v\d+\.\d+\.\d+/gm, '')
-      .replace(/^Done in \d+\.\d+s\.\n?$/gm, '');
+      .replace('/packages/package-1', '');
   },
   test(val: string) {
     return val != null && typeof val === 'string';
@@ -29,8 +27,8 @@ expect.addSnapshotSerializer({
 });
 
 describe('Lerna Smoke Tests', () => {
-  beforeAll(async () => await newLernaWorkspace());
-  afterAll(() => cleanupLernaWorkspace({ skipReset: true }));
+  beforeAll(() => newLernaWorkspace());
+  afterAll(() => cleanupProject({ skipReset: true }));
 
   // `lerna repair` builds on top of `nx repair` and runs all of its generators
   describe('lerna repair', () => {
@@ -71,12 +69,12 @@ describe('Lerna Smoke Tests', () => {
         .replace('$ echo test-package-1', '> echo test-package-1');
       expect(result).toMatchInlineSnapshot(`
 
-        > package-1:print-name
-        > echo test-package-1
-        test-package-1
-        Lerna (powered by Nx)   Successfully ran target print-name for project package-1
+                > package-1:print-name
+                > echo test-package-1
+                test-package-1
+                Lerna (powered by Nx)   Successfully ran target print-name for project package-1
 
-      `);
+            `);
     }, 1000000);
   });
 });
