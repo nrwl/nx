@@ -33,6 +33,7 @@ import {
   NormalizedSchema,
 } from './lib';
 
+// bump
 function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
   if (options.isUsingTsSolutionConfig) {
     return;
