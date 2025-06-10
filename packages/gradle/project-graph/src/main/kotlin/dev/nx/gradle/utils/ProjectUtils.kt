@@ -79,7 +79,6 @@ fun processTargetsForProject(
 
   val ciTestTargetName = targetNameOverrides["ciTestTargetName"]
   val ciIntTestTargetName = targetNameOverrides["ciIntTestTargetName"]
-  val ciCheckTargetName = targetNameOverrides.getOrDefault("ciCheckTargetName", "check-ci")
   val testTargetName = targetNameOverrides.getOrDefault("testTargetName", "test")
   val intTestTargetName = targetNameOverrides.getOrDefault("intTestTargetName", "intTest")
 
@@ -138,6 +137,7 @@ fun processTargetsForProject(
             ciIntTestTargetName!!)
       }
 
+      val ciCheckTargetName = targetNameOverrides.getOrDefault("ciCheckTargetName", "check-ci")
       if (task.name == "check") {
         val replacedDependencies =
             (target["dependsOn"] as? List<*>)?.map { dep ->
@@ -153,16 +153,44 @@ fun processTargetsForProject(
               }
             } ?: emptyList()
 
-        val newTarget: MutableMap<String, Any?> =
-            mutableMapOf(
-                "dependsOn" to replacedDependencies,
-                "executor" to "nx:noop",
-                "cache" to true,
-                "metadata" to getMetadata("Runs Gradle Check in CI", projectBuildPath, "check"))
+        if (atomized) {
+          val newTarget: MutableMap<String, Any?> =
+              mutableMapOf(
+                  "dependsOn" to replacedDependencies,
+                  "executor" to "nx:noop",
+                  "cache" to true,
+                  "metadata" to getMetadata("Runs Gradle Check in CI", projectBuildPath, "check"))
 
-        targets[ciCheckTargetName] = newTarget
-        ensureTargetGroupExists(targetGroups, testCiTargetGroup)
-        targetGroups[testCiTargetGroup]?.add(ciCheckTargetName)
+          targets[ciCheckTargetName] = newTarget
+          ensureTargetGroupExists(targetGroups, testCiTargetGroup)
+          targetGroups[testCiTargetGroup]?.add(ciCheckTargetName)
+        }
+      }
+
+      if (task.name == "build") {
+        val ciBuildTargetName = targetNameOverrides.getOrDefault("ciBuildTargetName", "build-ci")
+        val replacedDependencies =
+            (target["dependsOn"] as? List<*>)?.map { dep ->
+              val dependsOn = dep.toString()
+              if (dependsOn == "${project.name}:check" && atomized) {
+                "${project.name}:$ciCheckTargetName"
+              } else {
+                dep
+              }
+            } ?: emptyList()
+
+        if (atomized) {
+          val newTarget: MutableMap<String, Any?> =
+              mutableMapOf(
+                  "dependsOn" to replacedDependencies,
+                  "executor" to "nx:noop",
+                  "cache" to true,
+                  "metadata" to getMetadata("Runs Gradle Build in CI", projectBuildPath, "build"))
+
+          targets[ciBuildTargetName] = newTarget
+          ensureTargetGroupExists(targetGroups, "build")
+          targetGroups["build"]?.add(ciBuildTargetName)
+        }
       }
 
       logger.info("$now ${project.name}: Processed task ${task.path}")

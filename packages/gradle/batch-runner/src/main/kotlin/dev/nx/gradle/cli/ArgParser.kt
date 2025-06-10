@@ -4,7 +4,6 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import dev.nx.gradle.data.GradleTask
 import dev.nx.gradle.data.NxBatchOptions
-import dev.nx.gradle.util.logger
 
 fun parseArgs(args: Array<String>): NxBatchOptions {
   val argMap = mutableMapOf<String, String>()
@@ -33,20 +32,15 @@ fun parseArgs(args: Array<String>): NxBatchOptions {
       argMap["--excludeTasks"]?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }
           ?: emptyList()
 
+  val excludeTestTasks =
+      argMap["--excludeTestTasks"]?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }
+          ?: emptyList()
+
   return NxBatchOptions(
       workspaceRoot = argMap["--workspaceRoot"] ?: "",
       tasks = tasksMap,
       args = argMap["--args"] ?: "",
       quiet = argMap["--quiet"]?.toBoolean() ?: false,
-      excludeTasks = excludeTasks)
-}
-
-fun configureLogger(quiet: Boolean) {
-  if (quiet) {
-    logger.setLevel(java.util.logging.Level.OFF)
-    logger.useParentHandlers = false
-    logger.handlers.forEach { it.level = java.util.logging.Level.OFF }
-  } else {
-    logger.setLevel(java.util.logging.Level.INFO)
-  }
+      excludeTasks = excludeTasks,
+      excludeTestTasks = excludeTestTasks)
 }

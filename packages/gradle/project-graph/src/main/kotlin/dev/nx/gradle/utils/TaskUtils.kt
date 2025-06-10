@@ -161,7 +161,7 @@ fun getOutputsForTask(task: Task, projectRoot: String, workspaceRoot: String): L
  */
 fun getDependsOnForTask(
     task: Task,
-    dependencies: MutableSet<Dependency>?,
+    dependencies: MutableSet<Dependency>?, // Assuming Dependency class is defined elsewhere
     targetNameOverrides: Map<String, String> = emptyMap()
 ): List<String>? {
 
@@ -187,19 +187,30 @@ fun getDependsOnForTask(
   }
 
   return try {
-    // get depends on using taskDependencies.getDependencies(task) because task.dependsOn has
-    // missing deps
-    val dependsOn =
+    // 1. Get dependencies from task.taskDependencies.getDependencies(task)
+    val dependsOnFromTaskDependencies: Set<Task> =
         try {
-          task.taskDependencies.getDependencies(null)
+          task.taskDependencies.getDependencies(task)
         } catch (e: Exception) {
           task.logger.info("Error calling getDependencies for ${task.path}: ${e.message}")
           task.logger.debug("Stack trace:", e)
-          emptySet<Task>()
+          emptySet<Task>() // If it fails, return an empty set to be combined later
         }
 
-    if (dependsOn.isNotEmpty()) {
-      return mapTasksToNames(dependsOn)
+    // 2. Get dependencies from task.dependsOn and filter for Task instances
+    val dependsOnFromDependsOnProperty: Set<Task> = task.dependsOn.filterIsInstance<Task>().toSet()
+
+    // 3. Combine the two sets of dependencies
+    val combinedDependsOn = dependsOnFromTaskDependencies.union(dependsOnFromDependsOnProperty)
+
+    task.logger.info(
+        "Dependencies from taskDependencies.getDependencies for $task: $dependsOnFromTaskDependencies")
+    task.logger.info(
+        "Dependencies from task.dependsOn property for $task: $dependsOnFromDependsOnProperty")
+    task.logger.info("Combined dependencies for $task: $combinedDependsOn")
+
+    if (combinedDependsOn.isNotEmpty()) {
+      return mapTasksToNames(combinedDependsOn)
     }
 
     null
