@@ -256,8 +256,6 @@ jobs:
           # Verify Xcode installation
           xcodebuild -version
           
-          # List available simulators
-          xcrun simctl list devices available
         timeout-minutes: 10
         continue-on-error: false
 
@@ -302,9 +300,6 @@ jobs:
         run: |
           # Verify CoreSimulator service restarted
           pgrep -fl "CoreSimulator" || (echo "CoreSimulator service not running" && exit 1)
-          
-          # Check simulator list is clean
-          xcrun simctl list devices
           
           # Verify simulator runtime paths exist and are writable
           test -d ~/Library/Developer/CoreSimulator/Devices || (echo "Simulator devices directory missing" && exit 1)
