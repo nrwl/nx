@@ -35,13 +35,11 @@ export async function ensureNxConsoleInstalled() {
 async function promptForNxConsoleInstallation(): Promise<boolean> {
   try {
     output.log({
-      title:
-        "Enhance your developer experience with Nx Console, Nx's official editor extension",
+      title: "Install Nx's official editor extension to:",
       bodyLines: [
         '- Enable your AI assistant to do more by understanding your workspace',
         '- Add IntelliSense for Nx configuration files',
         '- Explore your workspace visually',
-        '- Generate code and execute tasks interactively',
       ],
     });
 
