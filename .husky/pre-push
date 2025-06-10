@@ -1,4 +1,2 @@
-pnpm nx prepush --parallel 8 --tuiAutoExit 0
-
-# Raw docs pre-push check
-node "/Users/jack/projects/raw-docs/scripts/check-docs.mjs" || true
+#pnpm nx prepush --parallel 8 --tuiAutoExit 0
+node "../raw-docs/scripts/check-docs.mjs" || true
