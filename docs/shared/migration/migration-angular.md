@@ -220,8 +220,8 @@ For more information about how Nx can improve your CI pipeline, check out one of
 
 Learn more about the advantages of Nx in the following guides:
 
-- [Using Cypress for e2e tests](/technologies/test-tools/cypress/api)
-- [Using Jest for unit tests](/technologies/test-tools/jest/api)
+- [Using Cypress for e2e tests](/technologies/test-tools/cypress/introduction)
+- [Using Jest for unit tests](/technologies/test-tools/jest/introduction)
 - [Computation Caching](/concepts/how-caching-works)
 - [Rebuilding and Retesting What is Affected](/ci/features/affected)
 - [Integrate with Editors](/getting-started/editor-setup)

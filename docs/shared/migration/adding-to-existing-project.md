@@ -107,7 +107,7 @@ the Nx Plugins in `nx.json`:
 ```
 
 Each plugin can accept options to customize the projects which they create. You can see more information about
-configuring the plugins on the [`@nx/next/plugin`](/technologies/react/next/api) and [`@nx/eslint/plugin`](/technologies/eslint/api) plugin pages.
+configuring the plugins on the [`@nx/next/plugin`](/technologies/react/next/introduction) and [`@nx/eslint/plugin`](/technologies/eslint/introduction) plugin pages.
 
 To view all available tasks, open the Project Details view with Nx Console or use the terminal to launch the project
 details in a browser window.

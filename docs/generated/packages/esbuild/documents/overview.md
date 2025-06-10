@@ -133,4 +133,4 @@ Extra API options for esbuild can be passed in the `esbuildOptions` object for y
 
 ## More Documentation
 
-- [Using JS](/technologies/typescript/api)
+- [Using JS](/technologies/typescript/introduction)

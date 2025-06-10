@@ -44,12 +44,12 @@ The application uses no framework and generates with web components. You can add
 To start the application in development mode, run `nx serve my-new-app`.
 
 {% callout type="note" title="React" %}
-If you are looking to add a React application, check out the [React plugin](/technologies/react/api).
+If you are looking to add a React application, check out the [React plugin](/technologies/react/introduction).
 {% /callout %}
 
 ### Creating Libraries
 
-To create a generic TypeScript library (i.e. non-framework specific), use the [`@nx/js`](/technologies/typescript/api) plugin.
+To create a generic TypeScript library (i.e. non-framework specific), use the [`@nx/js`](/technologies/typescript/introduction) plugin.
 
 ```shell
 nx g @nx/js:lib libs/my-new-lib
@@ -107,5 +107,5 @@ The library in `dist` is publishable to npm or a private registry.
 
 ## More Documentation
 
-- [Using Cypress](/technologies/test-tools/cypress/api)
-- [Using Jest](/technologies/test-tools/jest/api)
+- [Using Cypress](/technologies/test-tools/cypress/introduction)
+- [Using Jest](/technologies/test-tools/jest/introduction)

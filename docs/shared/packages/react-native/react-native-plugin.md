@@ -194,5 +194,5 @@ The build artifacts will be located under `<your app folder>/android/app/build`.
 
 ## More Documentation
 
-- [Using Detox](/technologies/test-tools/detox/api)
-- [Using Jest](/technologies/test-tools/jest/api)
+- [Using Detox](/technologies/test-tools/detox/introduction)
+- [Using Jest](/technologies/test-tools/jest/introduction)

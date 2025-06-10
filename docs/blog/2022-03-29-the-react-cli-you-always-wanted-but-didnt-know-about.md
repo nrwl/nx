@@ -129,7 +129,7 @@ Many of these generators come with a rich set of flags. For example, passing `--
 
 **How do we find all these generators though?** There are different options:
 
-- **Nx documentation** — use the search function there or just navigate the docs. All the reference pages are structured like `nx.dev/packages/<packagename>`. As an example for React that would look like: [/nx-api/react](/technologies/react/api).
+- **Nx documentation** — use the search function there or just navigate the docs. All the reference pages are structured like `nx.dev/packages/<packagename>`. As an example for React that would look like: [/technologies/react/api](/technologies/react/api).
 - `npx nx list` - lists a set of installed plugins as well as other available plugins that can be installed. To get a list of generators for a specific plugin - say for the `@nrwl/react` plugin - run `npx nx list @nrwl/react`. Similarly, you can then run `npx nx g @nrwl/react:lib --help` to get help for a particular generator
 
 However, the absolute easiest way to explore the potential and even use Nx if you are not the "terminal type of person" is [Nx Console](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console)! I'll go a bit deeper into that in a later section.

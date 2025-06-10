@@ -31,7 +31,7 @@ Want a more visual and guided way to migrate? Check out the [Migrate UI](/recipe
 
 Nx knows where its configuration files are located and ensures they match the expected format. This automated update process, commonly referred to as "migration," becomes even **more powerful when you leverage [Nx plugins](/plugin-registry)**. Each plugin can provide migrations for its area of competency.
 
-For example, the [Nx React plugin](/technologies/react/api) knows where to look for React and Nx specific configuration files and knows how to apply certain changes when updating to a given version of React.
+For example, the [Nx React plugin](/technologies/react/introduction) knows where to look for React and Nx specific configuration files and knows how to apply certain changes when updating to a given version of React.
 
 In the example below, the React plugin defines a migration script (`./src/migrations/.../add-babel-core`) that runs when upgrading to Nx `16.7.0-beta.2` (or higher).
 

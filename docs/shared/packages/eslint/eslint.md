@@ -77,4 +77,4 @@ nx lint my-project
 
 ## ESLint plugin
 
-Read about our dedicated ESLint plugin - [eslint-plugin-nx](/technologies/eslint/eslint-plugin/api).
+Read about our dedicated ESLint plugin - [eslint-plugin-nx](/technologies/eslint/eslint-plugin).
