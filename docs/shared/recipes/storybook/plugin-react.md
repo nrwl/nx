@@ -8,7 +8,7 @@ description: This guide explains how to set up Storybook for React projects in y
 This guide will walk you through setting up [Storybook](https://storybook.js.org) for React projects in your Nx workspace.
 
 {% callout type="warning" title="Set up Storybook in your workspace" %}
-You first need to set up Storybook for your Nx workspace, if you haven't already. You can read the [Storybook plugin overview guide](/technologies/test-tools/storybook/api) to get started.
+You first need to set up Storybook for your Nx workspace, if you haven't already. You can read the [Storybook plugin overview guide](/technologies/test-tools/storybook/introduction) to get started.
 {% /callout %}
 
 ## Generate Storybook Configuration for a React project

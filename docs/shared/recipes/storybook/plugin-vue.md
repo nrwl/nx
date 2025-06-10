@@ -8,7 +8,7 @@ description: This guide explains how to set up Storybook for Vue and Nuxt projec
 This guide will walk you through setting up [Storybook](https://storybook.js.org) for Vue and Nuxt projects in your Nx workspace.
 
 {% callout type="warning" title="Set up Storybook in your workspace" %}
-You first need to set up Storybook for your Nx workspace, if you haven't already. You can read the [Storybook plugin overview guide](/technologies/test-tools/storybook/api) to get started.
+You first need to set up Storybook for your Nx workspace, if you haven't already. You can read the [Storybook plugin overview guide](/technologies/test-tools/storybook/introduction) to get started.
 {% /callout %}
 
 ## Generate Storybook Configuration for a Vue or Nuxt project

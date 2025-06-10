@@ -62,7 +62,7 @@ The `buildTargetName`, `previewTargetName`, `serveTargetName` and `serveStaticTa
 
 ### Generate a new project using Rspack
 
-You can generate a [React](/technologies/react/api) application that uses Rspack. The [`@nx/react:app`](/technologies/react/api/generators/application) generator accepts the `bundler` option, where you can pass `rspack`. This will generate a new application configured to use Rspack, and it will also install all the necessary dependencies, including the `@nx/rspack` plugin.
+You can generate a [React](/technologies/react/introduction) application that uses Rspack. The [`@nx/react:app`](/technologies/react/api/generators/application) generator accepts the `bundler` option, where you can pass `rspack`. This will generate a new application configured to use Rspack, and it will also install all the necessary dependencies, including the `@nx/rspack` plugin.
 
 To generate a React application using Rspack, run the following:
 

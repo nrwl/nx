@@ -30,7 +30,7 @@ Nx 15.4 brings in the latest Vite major version following the Vite 4 release ear
 
 As the [Vite launch article](https://vitejs.dev/blog/announcing-vite4.html) mentions, we are investing in the Vite ecosystem, and now officially support a first-party Vite plugin. Nx 15.4 continues this investment with timely support for Vite 4, and we're excited to be a part of the Vite ecosystem and a part of bringing more value to our devs through Vite support!
 
-Projects already using our [@nrwl/vite plugin](/technologies/build-tools/vite/api) will be automatically upgraded to Vite 4 when they upgrade to the latest Nx version with the `nx migrate` command, and we've also simplified the configuration required to support Vite.
+Projects already using our [@nrwl/vite plugin](/technologies/build-tools/vite/introduction) will be automatically upgraded to Vite 4 when they upgrade to the latest Nx version with the `nx migrate` command, and we've also simplified the configuration required to support Vite.
 
 We've also spent some effort into making the conversion of existing projects to use Vite simpler, including:
 
@@ -40,7 +40,7 @@ We've also spent some effort into making the conversion of existing projects to 
 - [better documentation around converting using our generator](/technologies/build-tools/vite/api/generators/configuration)
 - [adding a guide to our docs for converting manually](/technologies/build-tools/vite/recipes/configure-vite)
 
-You can check out more details about our Vite plugin including how to add Vite and Vitest to your existing Nx workspace by visiting our docs at [nx.dev/technologies/build-tools/vite](/technologies/build-tools/vite/api)
+You can check out more details about our Vite plugin including how to add Vite and Vitest to your existing Nx workspace by visiting our docs at [nx.dev/technologies/build-tools/vite/introduction](/technologies/build-tools/vite/introduction)
 
 ## Nx Watch
 

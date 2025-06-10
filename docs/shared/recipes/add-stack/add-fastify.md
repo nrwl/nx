@@ -93,7 +93,7 @@ Now when you serve your API, you'll see the content from the library being displ
 
 ## More Documentation
 
-- [@nx/node](/technologies/node/api)
+- [@nx/node](/technologies/node/introduction)
 - [Using Mongo with Fastify](/showcase/example-repos/mongo-fastify)
 - [Using Redis with Fastify](/showcase/example-repos/redis-fastify)
 - [Using Postgres with Fastify](/showcase/example-repos/postgres-fastify)

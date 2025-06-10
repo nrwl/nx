@@ -136,6 +136,6 @@ The library in `dist` is publishable to npm or a private registry.
 ## More Documentation
 
 - [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
-- [Using Cypress](/technologies/test-tools/cypress/api)
-- [Using Jest](/technologies/test-tools/jest/api)
+- [Using Cypress](/technologies/test-tools/cypress/introduction)
+- [Using Jest](/technologies/test-tools/jest/introduction)
 - [Using Storybook](/technologies/test-tools/storybook/recipes/overview-react)

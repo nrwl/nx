@@ -147,7 +147,7 @@ Previously when you created a new React application with the Nx `@nrwl/react` pl
 
 It was for a good reason, but at the same time, it is a thin line to walk between giving more flexibility and ensuring integrity and consistency (not to speak about features such as [automated code migrations](/features/automate-updating-dependencies)). We wrote a [blog post about it last week](/blog/configuration-files-and-potholes-in-your-codebase).
 
-Inspired by our new [Vite setup](/technologies/build-tools/vite/api), which allows for a more modular configuration in the `vite.config.ts`, we wanted to bring some of the same flexibility to our Webpack setup as well. As such, now every Nx Webpack setup (e.g. a new React + Webpack based app) have a `webpack.config.js` in the project root. Old project are automatically migrated to this new setup.
+Inspired by our new [Vite setup](/technologies/build-tools/vite/introduction), which allows for a more modular configuration in the `vite.config.ts`, we wanted to bring some of the same flexibility to our Webpack setup as well. As such, now every Nx Webpack setup (e.g. a new React + Webpack based app) have a `webpack.config.js` in the project root. Old project are automatically migrated to this new setup.
 
 ![](/blog/images/2023-02-16/emRP2gF7umWc4UE-.avif)
 

@@ -264,7 +264,7 @@ Features like
 - offering [remote caching abilities](/ci/features/remote-cache) on CI
 - offering [task distribution across machines (Nx Agents)](/ci/features/distribute-task-execution)
 
-And, Nx already uses fast, modern tooling like [ESBuild](/technologies/build-tools/esbuild/api), [Vite](/technologies/build-tools/vite/api), Vitest and [Rspack](/technologies/build-tools/rspack/api) for non-Angular stacks. So once Angular is ready to use these tools, Nx will also be ready.
+And, Nx already uses fast, modern tooling like [ESBuild](/technologies/build-tools/esbuild/introduction), [Vite](/technologies/build-tools/vite/introduction), Vitest and [Rspack](/technologies/build-tools/rspack/introduction) for non-Angular stacks. So once Angular is ready to use these tools, Nx will also be ready.
 
 ### Editor Integration
 
