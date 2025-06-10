@@ -4,11 +4,11 @@
     "name": "Getting Started",
     "description": "Get started with basic information, concepts and tutorials.",
     "mediaImage": "",
-    "file": "",
+    "file": "shared/getting-started/quick-start",
     "itemList": [
       {
         "id": "intro",
-        "name": "Intro to Nx",
+        "name": "Introduction",
         "description": "",
         "mediaImage": "",
         "file": "shared/getting-started/intro",
@@ -29,15 +29,26 @@
         "tags": []
       },
       {
-        "id": "why-nx",
-        "name": "Why Nx?",
+        "id": "start-new-project",
+        "name": "Start a new project",
         "description": "",
         "mediaImage": "",
-        "file": "shared/getting-started/why-nx",
+        "file": "shared/getting-started/start-new-project",
         "itemList": [],
         "isExternal": false,
-        "path": "/getting-started/why-nx",
+        "path": "/getting-started/start-new-project",
         "tags": []
+      },
+      {
+        "id": "adding-to-existing",
+        "name": "Add to existing project",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/getting-started/start-with-existing-project",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/getting-started/adding-to-existing",
+        "tags": ["init"]
       },
       {
         "id": "editor-setup",
@@ -49,6 +60,17 @@
         "isExternal": false,
         "path": "/getting-started/editor-setup",
         "tags": ["editor-setup"]
+      },
+      {
+        "id": "ai-integration",
+        "name": "AI Integration",
+        "description": "Learn about how to integrate Nx with your favorite AI assistant.",
+        "mediaImage": "",
+        "file": "shared/getting-started/ai-setup",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/getting-started/ai-integration",
+        "tags": ["ai-integration"]
       },
       {
         "id": "tutorials",
@@ -113,7 +135,7 @@
   },
   "/getting-started/intro": {
     "id": "intro",
-    "name": "Intro to Nx",
+    "name": "Introduction",
     "description": "",
     "mediaImage": "",
     "file": "shared/getting-started/intro",
@@ -133,16 +155,27 @@
     "path": "/getting-started/installation",
     "tags": []
   },
-  "/getting-started/why-nx": {
-    "id": "why-nx",
-    "name": "Why Nx?",
+  "/getting-started/start-new-project": {
+    "id": "start-new-project",
+    "name": "Start a new project",
     "description": "",
     "mediaImage": "",
-    "file": "shared/getting-started/why-nx",
+    "file": "shared/getting-started/start-new-project",
     "itemList": [],
     "isExternal": false,
-    "path": "/getting-started/why-nx",
+    "path": "/getting-started/start-new-project",
     "tags": []
+  },
+  "/getting-started/adding-to-existing": {
+    "id": "adding-to-existing",
+    "name": "Add to existing project",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/getting-started/start-with-existing-project",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/getting-started/adding-to-existing",
+    "tags": ["init"]
   },
   "/getting-started/editor-setup": {
     "id": "editor-setup",
@@ -154,6 +187,17 @@
     "isExternal": false,
     "path": "/getting-started/editor-setup",
     "tags": ["editor-setup"]
+  },
+  "/getting-started/ai-integration": {
+    "id": "ai-integration",
+    "name": "AI Integration",
+    "description": "Learn about how to integrate Nx with your favorite AI assistant.",
+    "mediaImage": "",
+    "file": "shared/getting-started/ai-setup",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/getting-started/ai-integration",
+    "tags": ["ai-integration"]
   },
   "/getting-started/tutorials": {
     "id": "tutorials",

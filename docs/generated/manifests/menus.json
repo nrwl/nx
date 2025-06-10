@@ -9,7 +9,7 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Intro to Nx",
+            "name": "Introduction",
             "path": "/getting-started/intro",
             "id": "intro",
             "isExternal": false,
@@ -25,9 +25,17 @@
             "disableCollapsible": false
           },
           {
-            "name": "Why Nx?",
-            "path": "/getting-started/why-nx",
-            "id": "why-nx",
+            "name": "Start a new project",
+            "path": "/getting-started/start-new-project",
+            "id": "start-new-project",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Add to existing project",
+            "path": "/getting-started/adding-to-existing",
+            "id": "adding-to-existing",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -36,6 +44,14 @@
             "name": "Editor Integration",
             "path": "/getting-started/editor-setup",
             "id": "editor-setup",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "AI Integration",
+            "path": "/getting-started/ai-integration",
+            "id": "ai-integration",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false

@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: Learn how to install Nx in a new workspace, add it to an existing repository, install it globally, or set it up in a non-JavaScript repository with step-by-step instructions.
+description: Install Nx globally via npm, Homebrew, Chocolatey, or apt. Add Nx to existing repos with nx init and keep dependencies updated automatically.
 ---
 
 # Installation
@@ -42,9 +42,9 @@ sudo apt install nx
 {% /tab %}
 {% /tabs %}
 
-## Adding Nx Into Your Repository
+## Adding Nx to Your Repository
 
-To add Nx to an existing repository run:
+To add Nx to an existing repository, run:
 
 ```shell
 nx init
@@ -80,7 +80,7 @@ To avoid potential issues, it is [recommended to update one major version of Nx 
 
 ## Tutorials
 
-Try one of these tutorials for a full walkthrough of what to do after you install Nx
+Try one of these tutorials for a full walkthrough of what to do after you install Nx:
 
 - [TypeScript Monorepo Tutorial](/getting-started/tutorials/typescript-packages-tutorial)
 - [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
