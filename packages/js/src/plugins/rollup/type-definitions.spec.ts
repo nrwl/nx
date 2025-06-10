@@ -54,8 +54,17 @@ describe('typeDefinitions', () => {
     (async function testPlugin() {
       await plugin.generateBundle.call(mockContext, mockOpts, mockBundle);
 
-      mockEmitFile.mock.calls.forEach(([{ fileName }]) => {
-        expect(fileName).toBe('index.d.ts');
+      // Verify the correct .d.ts filenames are generated for different file formats
+      const expectedFileNames = [
+        'index.d.ts', // from index.js
+        'index.d.ts', // from index.cjs
+        'index.d.ts', // from index.mjs
+        'index.d.ts', // from index.cjs.js
+        'index.d.ts', // from index.mjs.js
+      ];
+
+      mockEmitFile.mock.calls.forEach(([{ fileName }], index) => {
+        expect(fileName).toBe(expectedFileNames[index]);
       });
     })();
   });

@@ -16,7 +16,7 @@ export function updatePackageJson(
   },
   packageJson: PackageJson
 ) {
-  const jsFileRegex = /(\.(cjs|esm))*\.(m|c)*js$/;
+  const jsFileRegex = /(\.cjs|\.mjs|\.esm\.js|\.cjs\.js|\.mjs\.js|\.js)$/;
   const hasEsmFormat = options.format.includes('esm');
   const hasCjsFormat = options.format.includes('cjs');
 
