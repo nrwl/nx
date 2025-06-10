@@ -168,8 +168,8 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       📦  @proj/{project-name}@0.0.3
       === Tarball Contents ===
       XXB README.md
+      XXB dist/index.d.ts
       XXB dist/index.esm.css
-      XXB dist/index.esm.d.ts
       XXB dist/index.esm.js
       XXX.XXX kb dist/README.md
       XXB dist/src/index.d.ts
