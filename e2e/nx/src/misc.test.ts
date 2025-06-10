@@ -501,6 +501,15 @@ describe('migrate', () => {
                       }},
                     }
                   });
+                } else if (packageName === 'nx-token-migration-package') {
+                  return Promise.resolve({
+                    version: '2.0.0',
+                    generators: {
+                      'some-migration': {
+                        version: '2.0.0'
+                      }
+                    }
+                  });
                 } else {
                   return Promise.resolve({version: '9.0.0'});
                 }
@@ -699,6 +708,154 @@ describe('migrate', () => {
     });
 
     expect(output).toContain(`Migrations file 'migrations.json' doesn't exist`);
+  });
+
+  it('should handle Nx tokens correctly in Angular CLI migration schematics', () => {
+    const app1 = uniq('app1');
+
+    updateFile(
+      `apps/${app1}/project.json`,
+      JSON.stringify(
+        {
+          name: app1,
+          projectType: 'application',
+          sourceRoot: `apps/${app1}/src`,
+          prefix: 'app',
+          targets: {
+            build: {
+              outputs: ['{options.outputPath}'],
+              executor: '@angular/build:application',
+              options: {
+                outputPath: '{workspaceRoot}/dist/{projectName}',
+                browser: '{projectRoot}/src/main.ts',
+                polyfills: ['zone.js'],
+                tsConfig: '{projectRoot}/tsconfig.app.json',
+                assets: [
+                  {
+                    glob: '**/*',
+                    input: '{projectRoot}/public',
+                  },
+                ],
+                styles: [
+                  '{projectRoot}/src/styles.css',
+                  '{workspaceRoot}/shared/styles.css',
+                ],
+              },
+            },
+          },
+        },
+        null,
+        2
+      )
+    );
+
+    // Create an Angular CLI migration schematic that reads and modifies the angular.json (Nx project.json)
+    updateFile(
+      `./node_modules/nx-token-migration-package/package.json`,
+      JSON.stringify({
+        name: 'nx-token-migration-package',
+        version: '1.0.0',
+        'ng-update': {
+          migrations: './migrations.json',
+        },
+      })
+    );
+    updateFile(
+      `./node_modules/nx-token-migration-package/migrations.json`,
+      JSON.stringify({
+        schematics: {
+          'some-migration': {
+            version: '2.0.0',
+            factory: './some-migration',
+            description: 'A description of the migration',
+          },
+        },
+      })
+    );
+    // Create a migration schematic that validates Nx tokens are properly resolved
+    updateFile(
+      `./node_modules/nx-token-migration-package/some-migration.js`,
+      `
+        const { readWorkspace, writeWorkspace } = require('@schematics/angular/utility');
+
+        exports.default = function migration() {
+          return async function (host) {
+            const workspace = await readWorkspace(host);
+            const project = workspace.projects.get('${app1}');
+            const buildTarget = project.targets.get('build');
+
+            // write the build target data to a file to verify it outside of the migration
+            host.create('project-data.json', JSON.stringify(buildTarget, null, 2));
+
+            // make some changes to verify to the build target to verify how it's written
+            // back to the project.json file
+            buildTarget.options.outputPath = 'dist/apps/${app1}';
+            buildTarget.options.styles = ['apps/${app1}/src/base_styles.css', 'shared/styles.css'];
+
+            writeWorkspace(host, workspace);
+          };
+        };
+      `
+    );
+
+    // Run the migration
+    const output = runCLI(
+      'migrate nx-token-migration-package@2.0.0 --from="nx-token-migration-package@1.0.0"',
+      {
+        env: {
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      }
+    );
+    runCLI('migrate --run-migrations=migrations.json', {
+      env: {
+        NX_MIGRATE_SKIP_INSTALL: 'true',
+        NX_MIGRATE_USE_LOCAL: 'true',
+      },
+      verbose: true,
+    });
+
+    // Verify that the Angular CLI migration schematic read the build target
+    // with the Nx tokens resolved to actual values
+    const angularJsonBuildTarget = readJson('project-data.json');
+    expect(angularJsonBuildTarget.options).toStrictEqual({
+      outputPath: `dist/${app1}`,
+      browser: `apps/${app1}/src/main.ts`,
+      polyfills: ['zone.js'],
+      tsConfig: `apps/${app1}/tsconfig.app.json`,
+      assets: [
+        {
+          glob: '**/*',
+          input: `apps/${app1}/public`,
+        },
+      ],
+      styles: [`apps/${app1}/src/styles.css`, 'shared/styles.css'],
+    });
+    // Verify that the project.json file has been updated with the new values
+    // and the Nx tokens have been restored where appropriate
+    const projectJson = readJson(`apps/${app1}/project.json`);
+    expect(projectJson.targets.build.options).toStrictEqual({
+      // this was changed, so only the {workspaceRoot} token is restored
+      outputPath: `{workspaceRoot}/dist/apps/${app1}`,
+      // these were all unchanged, so the Nx tokens are restored
+      browser: '{projectRoot}/src/main.ts',
+      polyfills: ['zone.js'],
+      tsConfig: '{projectRoot}/tsconfig.app.json',
+      assets: [
+        {
+          glob: '**/*',
+          input: '{projectRoot}/public',
+        },
+      ],
+      styles: [
+        // this was changed, but it still starts with {projectRoot}, so the
+        // {projectRoot} token is restored
+        '{projectRoot}/src/base_styles.css',
+        // this was unchanged, so the {workspaceRoot} token is restored
+        '{workspaceRoot}/shared/styles.css',
+      ],
+    });
   });
 });
 
