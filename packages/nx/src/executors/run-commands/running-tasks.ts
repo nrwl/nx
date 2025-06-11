@@ -19,6 +19,7 @@ import {
   LARGE_BUFFER,
   NormalizedRunCommandsOptions,
   RunCommandsCommandOptions,
+  RunCommandsOptions,
 } from './run-commands.impl';
 
 export class ParallelRunningTasks implements RunningTask {
@@ -450,7 +451,8 @@ export async function runSingleCommandWithPseudoTerminal(
     normalized.env,
     normalized.streamOutput,
     pseudoTerminal ? normalized.isTTY : false,
-    normalized.envFile
+    normalized.envFile,
+    normalized.readyWhenStatus
   );
   registerProcessListener(pseudoTtyProcess, pseudoTerminal);
   return pseudoTtyProcess;
@@ -464,13 +466,15 @@ async function createProcessWithPseudoTty(
   env: Record<string, string>,
   streamOutput: boolean = true,
   tty: boolean,
-  envFile?: string
+  envFile?: string,
+  readyWhenStatus?: RunCommandsOptions['readyWhenStatus']
 ) {
   return pseudoTerminal.runCommand(commandConfig.command, {
     cwd,
     jsEnv: processEnv(color, cwd, env, envFile),
     quiet: !streamOutput,
     tty,
+    readyWhenStatus,
   });
 }
 
