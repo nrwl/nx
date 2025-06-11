@@ -1009,6 +1009,14 @@
                     "name": "executors",
                     "children": [
                       {
+                        "id": "copy-workspace-modules",
+                        "path": "/technologies/typescript/api/executors/copy-workspace-modules",
+                        "name": "copy-workspace-modules",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
                         "id": "tsc",
                         "path": "/technologies/typescript/api/executors/tsc",
                         "name": "tsc",

@@ -1,6 +1,11 @@
 {
   "$schema": "https://json-schema.org/schema",
   "executors": {
+    "copy-workspace-modules": {
+      "implementation": "./src/executors/copy-workspace-modules/copy-workspace-modules",
+      "schema": "./src/executors/copy-workspace-modules/schema.json",
+      "description": "Copies Workspace Modules into the output directory after a build to prepare it for use with Docker or alternatives."
+    },
     "tsc": {
       "implementation": "./src/executors/tsc/tsc.impl",
       "batchImplementation": "./src/executors/tsc/tsc.batch-impl",
