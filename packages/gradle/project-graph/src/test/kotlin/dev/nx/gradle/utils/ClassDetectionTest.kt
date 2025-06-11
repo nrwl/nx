@@ -9,6 +9,10 @@ class ClassDetectionTest {
   fun `detects top-level and annotated nested classes only`() {
     val kotlinSource =
         """
+            import some.package
+            
+            package real.package
+            
             class ClassA {
               @Nested
               class ClassB
@@ -18,6 +22,10 @@ class ClassDetectionTest {
               private class ClassD
             }
 
+            internal class ClassU
+
+            public abstract class ClassV
+            
             @Nested
             class ClassX // not nested — should be ignored
 
@@ -36,7 +44,11 @@ class ClassDetectionTest {
     val result = getAllVisibleClassesWithNestedAnnotation(tempFile)
 
     // Expected output
-    val expected = mapOf("ClassAClassB" to "ClassA\$ClassB", "ClassZ" to "ClassZ")
+    val expected =
+        mapOf(
+            "ClassAClassB" to "real.package.ClassA\$ClassB",
+            "ClassU" to "real.package.ClassU",
+            "ClassZ" to "real.package.ClassZ")
 
     assertEquals(expected, result)
   }
