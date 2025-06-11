@@ -43,13 +43,13 @@ describe('Rollup Plugin', () => {
     );
     rmDist();
     runCLI(`build ${myPkg}`);
-    checkFilesExist(`dist/libs/${myPkg}/index.cjs.d.ts`);
+    checkFilesExist(`dist/libs/${myPkg}/index.d.ts`);
     expect(readJson(`dist/libs/${myPkg}/package.json`).exports).toEqual({
       '.': {
         module: './index.esm.js',
         import: './index.cjs.mjs',
         default: './index.cjs.js',
-        types: './index.esm.d.ts',
+        types: './index.d.ts',
       },
       './package.json': './package.json',
     });
@@ -139,7 +139,7 @@ describe('Rollup Plugin', () => {
     checkFilesExist(`dist/libs/${myPkg}/index.esm.js.map`);
     checkFilesExist(`dist/libs/${myPkg}/index.cjs.js`);
     checkFilesExist(`dist/libs/${myPkg}/index.cjs.js.map`);
-    checkFilesExist(`dist/libs/${myPkg}/index.cjs.d.ts`);
+    checkFilesExist(`dist/libs/${myPkg}/index.d.ts`);
     checkFilesExist(`dist/libs/${myPkg}/foo.esm.js`);
     checkFilesExist(`dist/libs/${myPkg}/foo.esm.js.map`);
     checkFilesExist(`dist/libs/${myPkg}/foo.cjs.js`);
@@ -154,19 +154,19 @@ describe('Rollup Plugin', () => {
         module: './index.esm.js',
         import: './index.cjs.mjs',
         default: './index.cjs.js',
-        types: './index.esm.d.ts',
+        types: './index.d.ts',
       },
       './bar': {
         module: './bar.esm.js',
         import: './bar.cjs.mjs',
         default: './bar.cjs.js',
-        types: './bar.esm.d.ts',
+        types: './bar.d.ts',
       },
       './foo': {
         module: './foo.esm.js',
         import: './foo.cjs.mjs',
         default: './foo.cjs.js',
-        types: './foo.esm.d.ts',
+        types: './foo.d.ts',
       },
     });
   });
