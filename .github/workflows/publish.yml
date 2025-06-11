@@ -241,7 +241,7 @@ jobs:
                 echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
                 apk add --no-cache curl xz
             
-                curl -fsSL https://unofficial-builds.nodejs.org/download/release/v22.16.0/node-v22.16.0-linux-musl.tar.xz -o node.tar.xz
+                curl -fsSL https://unofficial-builds.nodejs.org/download/release/v22.16.0/node-v22.16.0-linux-x64-musl.tar.xz -o node.tar.xz
                 tar -xJf node.tar.xz
                 mv node-v22.16.0-linux-musl /usr/local/node
             
