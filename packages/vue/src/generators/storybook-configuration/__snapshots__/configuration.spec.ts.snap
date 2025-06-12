@@ -117,24 +117,3 @@ export const Primary = {
 };
 "
 `;
-
-exports[`vue:storybook-configuration should generate stories for components without interaction tests 2`] = `
-"import type { Meta, StoryObj } from '@storybook/vue3';
-import myComponent from './my-component.vue';
-
-const meta: Meta<typeof myComponent> = {
-  component: myComponent,
-  title: 'myComponent',
-};
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Primary = {
-  args: {
-    name: 'name',
-    displayAge: false,
-    age: 0,
-  },
-};
-"
-`;
