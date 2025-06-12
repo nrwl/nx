@@ -62,7 +62,7 @@ export const isbotVersion = '^3.6.5';
 export const corsVersion = '~2.8.5';
 export const typesCorsVersion = '~2.8.12';
 export const moduleFederationNodeVersion = '^2.6.26';
-export const moduleFederationEnhancedVersion = '^0.9.0';
+export const moduleFederationEnhancedVersion = '^0.15.0';
 
 // style preprocessors
 export const lessVersion = '3.12.2';
