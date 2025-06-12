@@ -31,7 +31,7 @@ export async function getRspackE2EWebServerInfo(
       defaultServeTargetName: 'serve',
       defaultServeStaticTargetName: 'preview',
       defaultE2EWebServerAddress: `http://localhost:${e2ePort}`,
-      defaultE2ECiBaseUrl: 'http://localhost:4200',
+      defaultE2ECiBaseUrl: `http://localhost:${e2ePort}`,
       defaultE2EPort: e2ePort,
     },
     isPluginBeingAdded

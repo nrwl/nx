@@ -54,6 +54,7 @@ export async function setupViteConfiguration(
       inSourceTests: options.inSourceTests,
       rollupOptionsExternal: ["'react'", "'react-dom'", "'react/jsx-runtime'"],
       port: options.port,
+      previewPort: options.port,
       ...(options.useReactRouter
         ? reactRouterFrameworkConfig
         : baseReactConfig),

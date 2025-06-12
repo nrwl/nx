@@ -263,11 +263,16 @@ async function createWebpackTargets(
     dependsOn: [options.buildTargetName],
     executor: '@nx/web:file-server',
     options: {
-      port: webpackConfig.devServer?.port,
       buildTarget: options.buildTargetName,
       spa: true,
     },
   };
+
+  // for `convert-to-inferred` we need to leave the port undefined or the options will not match
+  if (webpackConfig.devServer?.port && webpackConfig.devServer?.port !== 4200) {
+    targets[options.serveStaticTargetName].options.port =
+      webpackConfig.devServer.port;
+  }
 
   if (isTsSolutionSetup) {
     targets[options.buildTargetName].syncGenerators = [

@@ -2053,5 +2053,104 @@ describe('app', () => {
         "
       `);
     });
+
+    it('should generate vite app with cypress using custom port', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        directory: 'my-app',
+        bundler: 'vite',
+        e2eTestRunner: 'cypress',
+        port: 9000,
+      });
+
+      const cypressConfig = appTree.read(
+        'my-app-e2e/cypress.config.ts',
+        'utf-8'
+      );
+      expect(cypressConfig).toContain("baseUrl: 'http://localhost:9000'");
+    });
+
+    it('should generate vite app with playwright using custom port', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        directory: 'my-app',
+        bundler: 'vite',
+        e2eTestRunner: 'playwright',
+        port: 9000,
+      });
+
+      const playwrightConfig = appTree.read(
+        'my-app-e2e/playwright.config.ts',
+        'utf-8'
+      );
+      expect(playwrightConfig).toContain("|| 'http://localhost:9000'");
+      expect(playwrightConfig).toContain("url: 'http://localhost:9000'");
+    });
+
+    it('should generate webpack app with cypress using custom port', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        directory: 'my-app',
+        bundler: 'webpack',
+        e2eTestRunner: 'cypress',
+        port: 9000,
+      });
+
+      const cypressConfig = appTree.read(
+        'my-app-e2e/cypress.config.ts',
+        'utf-8'
+      );
+      expect(cypressConfig).toContain("baseUrl: 'http://localhost:9000'");
+    });
+
+    it('should generate webpack app with playwright using custom port', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        directory: 'my-app',
+        bundler: 'webpack',
+        e2eTestRunner: 'playwright',
+        port: 9000,
+      });
+
+      const playwrightConfig = appTree.read(
+        'my-app-e2e/playwright.config.ts',
+        'utf-8'
+      );
+      expect(playwrightConfig).toContain("|| 'http://localhost:9000'");
+      expect(playwrightConfig).toContain("url: 'http://localhost:9000'");
+    });
+
+    it('should generate rspack app with cypress using custom port', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        directory: 'my-app',
+        bundler: 'rspack',
+        e2eTestRunner: 'cypress',
+        port: 9000,
+      });
+
+      const cypressConfig = appTree.read(
+        'my-app-e2e/cypress.config.ts',
+        'utf-8'
+      );
+      expect(cypressConfig).toContain("baseUrl: 'http://localhost:9000'");
+    });
+
+    it('should generate rspack app with playwright using custom port', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        directory: 'my-app',
+        bundler: 'rspack',
+        e2eTestRunner: 'playwright',
+        port: 9000,
+      });
+
+      const playwrightConfig = appTree.read(
+        'my-app-e2e/playwright.config.ts',
+        'utf-8'
+      );
+      expect(playwrightConfig).toContain("|| 'http://localhost:9000'");
+      expect(playwrightConfig).toContain("url: 'http://localhost:9000'");
+    });
   });
 });

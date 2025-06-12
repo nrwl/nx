@@ -24,7 +24,7 @@ describe('Build React applications and libraries with Rspack', () => {
 
   it('should generate app with custom port', async () => {
     const appName = uniq('app');
-    const customPort = 9000;
+    const customPort = 8081;
 
     runCLI(
       `generate @nx/react:app ${appName} --bundler=rspack --port=${customPort} --unit-test-runner=vitest --no-interactive --skipFormat --linter=eslint --e2eTestRunner=playwright`

@@ -242,11 +242,16 @@ async function createRspackTargets(
     continuous: true,
     executor: '@nx/web:file-server',
     options: {
-      port: rspackConfig.devServer?.port,
       buildTarget: options.buildTargetName,
       spa: true,
     },
   };
+
+  // for `convert-to-inferred` we need to leave the port undefined or the options will not match
+  if (rspackConfig.devServer?.port && rspackConfig.devServer?.port !== 4200) {
+    targets[options.serveStaticTargetName].options.port =
+      rspackConfig.devServer.port;
+  }
 
   if (isTsSolutionSetup) {
     targets[options.buildTargetName].syncGenerators = [

@@ -25,7 +25,7 @@ describe('Build React applications and libraries with Webpack', () => {
 
   it('should generate app with custom port', async () => {
     const appName = uniq('app');
-    const customPort = 8080;
+    const customPort = 8081;
 
     runCLI(
       `generate @nx/react:app apps/${appName} --bundler=webpack --port=${customPort} --unitTestRunner=none --no-interactive --e2eTestRunner=playwright`
