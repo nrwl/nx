@@ -147,6 +147,7 @@ export class PseudoTerminal {
 
 export class PseudoTtyProcess implements RunningTask {
   isAlive = true;
+  private initPromise: Promise<any>;
 
   private exitCallbacks: Array<(code: number) => void> = [];
   private outputCallbacks: Array<(output: string) => void> = [];
@@ -158,7 +159,7 @@ export class PseudoTtyProcess implements RunningTask {
     private childProcess: ChildProcess,
     private readyWhenStatus?: RunCommandsOptions['readyWhenStatus']
   ) {
-    this.handleChildProcesses();
+    this.initPromise = this.handleChildProcesses();
   }
 
   async handleChildProcesses() {
@@ -172,6 +173,7 @@ export class PseudoTtyProcess implements RunningTask {
           this.childProcess.cleanup();
           this.exitCallbacks.forEach((cb) => cb(0));
           res({ success: true, code: 0, terminalOutput: this.terminalOutput });
+          return;
         }
         this.terminalOutput += output;
         this.outputCallbacks.forEach((cb) => cb(output));
