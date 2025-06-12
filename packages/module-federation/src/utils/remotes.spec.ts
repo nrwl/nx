@@ -74,9 +74,7 @@ describe('mapRemotes', () => {
   it('should map array remotes using aliases for scoped names', () => {
     expect(
       mapRemotes(
-        [
-          ['@nx-mf/remote', 'http://localhost:4201/remoteEntry.js'],
-        ],
+        [['@nx-mf/remote', 'http://localhost:4201/remoteEntry.js']],
         'js',
         (remote) => remote,
         true

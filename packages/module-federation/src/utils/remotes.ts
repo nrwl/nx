@@ -115,9 +115,7 @@ export function mapRemotesForSSR(
       mappedRemotes[mfRemoteName] = `${mfRemoteName}@${finalRemoteUrl}`;
     } else if (typeof remote === 'string') {
       const mfRemoteName = normalizeProjectName(remote);
-      mappedRemotes[remote] = `${mfRemoteName}@${determineRemoteUrl(
-        remote
-      )}`;
+      mappedRemotes[remote] = `${mfRemoteName}@${determineRemoteUrl(remote)}`;
     }
   }
 

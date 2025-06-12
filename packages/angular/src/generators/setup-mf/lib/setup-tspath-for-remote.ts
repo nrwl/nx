@@ -13,7 +13,9 @@ export function setupTspathForRemote(tree: Tree, options: NormalizedOptions) {
 
   const exportName = options.standalone ? 'Routes' : 'Module';
 
-  addTsConfigPath(tree, `${normalizeProjectName(options.appName)}/${exportName}`, [
-    joinPathFragments(project.root, exportPath),
-  ]);
+  addTsConfigPath(
+    tree,
+    `${normalizeProjectName(options.appName)}/${exportName}`,
+    [joinPathFragments(project.root, exportPath)]
+  );
 }
