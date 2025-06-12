@@ -24,15 +24,22 @@ describe('Build React applications and libraries with Rspack', () => {
 
   it('should generate app with custom port', async () => {
     const appName = uniq('app');
-    const customPort = 5000;
+    const customPort = 9000;
 
     runCLI(
-      `generate @nx/react:app ${appName} --bundler=rspack --port=${customPort} --unit-test-runner=vitest --no-interactive --skipFormat --linter=eslint`
+      `generate @nx/react:app ${appName} --bundler=rspack --port=${customPort} --unit-test-runner=vitest --no-interactive --skipFormat --linter=eslint --e2eTestRunner=playwright`
     );
 
-    // Check that the rspack config contains the custom port
     const rspackConfig = readFile(`${appName}/rspack.config.js`);
     expect(rspackConfig).toContain(`port: ${customPort}`);
+
+    if (runE2ETests()) {
+      const e2eResults = runCLI(`e2e ${appName}-e2e`, {
+        verbose: true,
+      });
+      expect(e2eResults).toContain('Successfully ran target e2e for project');
+      expect(await killPorts()).toBeTruthy();
+    }
   }, 300_000);
 
   it('should be able to use Rspack to build and test apps', async () => {
