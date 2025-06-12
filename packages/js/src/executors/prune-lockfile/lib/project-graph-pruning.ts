@@ -13,18 +13,30 @@ export function pruneProjectGraph(
   packageJson: PackageJson
 ) {
   const builder = new ProjectGraphBuilder();
-
-  const combinedDependencies = normalizeDependencies(packageJson, graph);
-
-  addNodesAndDependencies(graph, combinedDependencies, builder);
+  const projectNode = findWorkspaceModule(packageJson.name, graph);
+  builder.addNode(projectNode);
+  const combinedDependencies = normalizeDependencies(
+    packageJson,
+    graph,
+    builder
+  );
+  const updatedGraph = builder.getUpdatedProjectGraph();
+  addNodesAndDependencies(updatedGraph, combinedDependencies, builder);
   // for NPM (as well as the graph consistency)
   // we need to distinguish between hoisted and non-hoisted dependencies
-  rehoistNodes(graph, combinedDependencies, builder);
+  rehoistNodes(updatedGraph, combinedDependencies, builder);
 
-  return builder.getUpdatedProjectGraph();
+  return {
+    updatedGraph: builder.getUpdatedProjectGraph(),
+    combinedDependencies,
+  };
 }
 
-function normalizeDependencies(packageJson: PackageJson, graph: ProjectGraph) {
+function normalizeDependencies(
+  packageJson: PackageJson,
+  graph: ProjectGraph,
+  builder: ProjectGraphBuilder
+) {
   const {
     dependencies,
     devDependencies,
@@ -42,18 +54,24 @@ function normalizeDependencies(packageJson: PackageJson, graph: ProjectGraph) {
   Object.entries(combinedDependencies).forEach(
     ([packageName, versionRange]) => {
       if (graph.externalNodes[`npm:${packageName}@${versionRange}`]) {
+        const node = graph.externalNodes[`npm:${packageName}@${versionRange}`];
+        builder.addExternalNode(node);
+        addDependencyNodeToBuilder(packageName, graph, builder);
         return;
       }
       if (
         graph.externalNodes[`npm:${packageName}`] &&
         graph.externalNodes[`npm:${packageName}`].data.version === versionRange
       ) {
+        addDependencyNodeToBuilder(packageName, graph, builder);
         return;
       }
       // otherwise we need to find the correct version
       const node = findNodeMatchingVersion(graph, packageName, versionRange);
       if (node) {
         combinedDependencies[packageName] = node.data.version;
+        builder.addExternalNode(node);
+        addDependencyNodeToBuilder(packageName, graph, builder);
       } else {
         // The node cannot be found in graph.externalNodes, it could be a workspace package
         const isWorkspaceModule = findWorkspaceModule(packageName, graph);
@@ -61,6 +79,14 @@ function normalizeDependencies(packageJson: PackageJson, graph: ProjectGraph) {
           combinedDependencies[
             packageName
           ] = `file:./workspace_modules/${packageName}`;
+          builder.addExternalNode({
+            name: `npm:${packageName}`,
+            type: 'nx_js_wm',
+            data: {
+              packageName: `${packageName}`,
+              version: `file:./workspace_modules/${packageName}`,
+            },
+          });
           return;
         }
         throw new Error(
@@ -81,6 +107,28 @@ function findWorkspaceModule(packageName: string, projectGraph: ProjectGraph) {
   for (const [projectName, project] of Object.entries(projectGraph.nodes)) {
     if (project.data.metadata.js.packageName === packageName) {
       return project;
+    }
+  }
+}
+
+function addDependencyNodeToBuilder(
+  packageName: string,
+  graph: ProjectGraph,
+  builder: ProjectGraphBuilder
+) {
+  const node = graph.externalNodes[`npm:${packageName}`];
+  if (node && !builder.graph.externalNodes[`npm:${packageName}`]) {
+    builder.addExternalNode(node);
+  }
+  if (graph.dependencies[`npm:${packageName}`]) {
+    for (const dep of graph.dependencies[`npm:${packageName}`]) {
+      builder.graph.dependencies[`npm:${packageName}`] ??= [];
+      builder.graph.dependencies[`npm:${packageName}`].push(dep);
+      addDependencyNodeToBuilder(
+        dep.target.replace('npm:', ''),
+        graph,
+        builder
+      );
     }
   }
 }

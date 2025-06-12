@@ -176,7 +176,7 @@ export function getLockFileName(packageManager: PackageManager): string {
   throw new Error(`Unknown package manager: ${packageManager}`);
 }
 
-function getLockFilePath(packageManager: PackageManager): string {
+export function getLockFilePath(packageManager: PackageManager): string {
   if (packageManager === 'yarn') {
     return YARN_LOCK_PATH;
   }
@@ -212,26 +212,22 @@ function getLockFilePath(packageManager: PackageManager): string {
 export function createLockFile(
   packageJson: PackageJson,
   graph: ProjectGraph,
-  packageManager: PackageManager = detectPackageManager(workspaceRoot),
-  pruneProjectGraphFn: (
-    graph: ProjectGraph,
-    packageJson: PackageJson
-  ) => ProjectGraph = pruneProjectGraph
+  packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): string {
   const normalizedPackageJson = normalizePackageJson(packageJson);
   const content = readFileSync(getLockFilePath(packageManager), 'utf8');
 
   try {
     if (packageManager === 'yarn') {
-      const prunedGraph = pruneProjectGraphFn(graph, packageJson);
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
       return stringifyYarnLockfile(prunedGraph, content, normalizedPackageJson);
     }
     if (packageManager === 'pnpm') {
-      const prunedGraph = pruneProjectGraphFn(graph, packageJson);
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
       return stringifyPnpmLockfile(prunedGraph, content, normalizedPackageJson);
     }
     if (packageManager === 'npm') {
-      const prunedGraph = pruneProjectGraphFn(graph, packageJson);
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
       return stringifyNpmLockfile(prunedGraph, content, normalizedPackageJson);
     }
     if (packageManager === 'bun') {
