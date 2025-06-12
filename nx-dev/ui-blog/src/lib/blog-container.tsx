@@ -25,14 +25,19 @@ export interface BlogContainerProps {
   tags: string[];
 }
 
-// first five blog posts contain potentially pinned plus the last published ones. They
-// should be sorted by date (not just all pinned first)
+// first five blog posts should prioritize pinned posts, then show recent posts
+// excluding any posts that have specific slugs we want to deprioritize
 export function sortFirstFivePosts(
   posts: BlogPostDataEntry[]
 ): BlogPostDataEntry[] {
-  return posts
-    .slice(0, 5)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  // Separate posts: pinned-able posts first
+  const allowedPinnedPosts = posts.filter((p) => p.pinned !== false);
+
+  allowedPinnedPosts.sort(
+    (a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf()
+  );
+
+  return allowedPinnedPosts.slice(0, 5);
 }
 
 export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
@@ -66,8 +71,15 @@ export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
   );
 
   function updateBlogPosts() {
-    setFirstFiveBlogs(sortFirstFivePosts(filteredList));
-    setRemainingBlogs(filteredList.length > 5 ? filteredList.slice(5) : []);
+    const firstFive = sortFirstFivePosts(filteredList);
+    setFirstFiveBlogs(firstFive);
+
+    // Get the remaining blogs, sorted by date (unpinned posts after the first 5)
+    const firstFiveSlugs = new Set(firstFive.map((post) => post.slug));
+    const remaining = filteredList
+      .filter((post) => !firstFiveSlugs.has(post.slug))
+      .sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf());
+    setRemainingBlogs(remaining);
   }
 
   useEffect(() => updateBlogPosts(), [filteredList]);
@@ -130,9 +142,15 @@ function initializeFilters(
 ) {
   const filterBy = searchParams.get('filterBy');
 
+  const firstFive = sortFirstFivePosts(blogPosts);
+  const firstFiveSlugs = new Set(firstFive.map((post) => post.slug));
+  const remaining = blogPosts
+    .filter((post) => !firstFiveSlugs.has(post.slug))
+    .sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf());
+
   const defaultState = {
-    initialFirstFive: sortFirstFivePosts(blogPosts),
-    initialRest: blogPosts.slice(5),
+    initialFirstFive: firstFive,
+    initialRest: remaining,
     initialSelectedFilterHeading: 'All Blogs',
     initialSelectedFilter: 'All',
   };
@@ -145,9 +163,17 @@ function initializeFilters(
 
   const initialFilter = ALL_TOPICS.find((filter) => filter.value === filterBy);
 
+  const filteredFirstFive = sortFirstFivePosts(result);
+  const filteredFirstFiveSlugs = new Set(
+    filteredFirstFive.map((post) => post.slug)
+  );
+  const filteredRemaining = result
+    .filter((post) => !filteredFirstFiveSlugs.has(post.slug))
+    .sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf());
+
   return {
-    initialFirstFive: sortFirstFivePosts(result),
-    initialRest: result.length > 5 ? result.slice(5) : [],
+    initialFirstFive: filteredFirstFive,
+    initialRest: filteredRemaining,
     initialSelectedFilterHeading: initialFilter?.heading || 'All Blogs',
     initialSelectedFilter: initialFilter?.value || 'All',
   };
