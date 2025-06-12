@@ -5,7 +5,7 @@ import { ChildProcess, IS_WASM, RustPseudoTerminal } from '../native';
 import { PseudoIPCServer } from './pseudo-ipc';
 import { RunningTask } from './running-tasks/running-task';
 import { codeToSignal } from '../utils/exit-codes';
-import { RunCommandsOptions } from '../executors/run-commands/run-commands.impl';
+import { NormalizedRunCommandsOptions } from '../executors/run-commands/run-commands.impl';
 
 // Register single event listeners for all pseudo-terminal instances
 const pseudoTerminalShutdownCallbacks: Array<(s: number) => void> = [];
@@ -75,7 +75,7 @@ export class PseudoTerminal {
       jsEnv?: Record<string, string>;
       quiet?: boolean;
       tty?: boolean;
-      readyWhenStatus?: RunCommandsOptions['readyWhenStatus'];
+      readyWhenStatus?: NormalizedRunCommandsOptions['readyWhenStatus'];
     } = {}
   ) {
     const cp = new PseudoTtyProcess(
@@ -86,9 +86,9 @@ export class PseudoTerminal {
         jsEnv,
         execArgv,
         quiet,
-        tty,
-        readyWhenStatus
-      )
+        tty
+      ),
+      readyWhenStatus
     );
     this.childProcesses.add(cp);
     return cp;
@@ -147,7 +147,7 @@ export class PseudoTerminal {
 
 export class PseudoTtyProcess implements RunningTask {
   isAlive = true;
-  private initPromise: Promise<any>;
+  private initChildProcessesPromise: Promise<any>;
 
   private exitCallbacks: Array<(code: number) => void> = [];
   private outputCallbacks: Array<(output: string) => void> = [];
@@ -157,9 +157,9 @@ export class PseudoTtyProcess implements RunningTask {
   constructor(
     public rustPseudoTerminal: RustPseudoTerminal,
     private childProcess: ChildProcess,
-    private readyWhenStatus?: RunCommandsOptions['readyWhenStatus']
+    private readyWhenStatus?: NormalizedRunCommandsOptions['readyWhenStatus']
   ) {
-    this.initPromise = this.handleChildProcesses();
+    this.initChildProcessesPromise = this.handleChildProcesses();
   }
 
   async handleChildProcesses() {
