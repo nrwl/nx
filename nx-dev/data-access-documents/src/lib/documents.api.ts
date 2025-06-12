@@ -5,9 +5,10 @@ import {
   type RelatedDocument,
 } from '@nx/nx-dev/models-document';
 import { type ProcessedPackageMetadata } from '@nx/nx-dev/models-package';
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { type TagsApi } from './tags.api';
+import { extractFrontmatter } from '@nx/nx-dev/ui-markdoc';
 
 interface StaticDocumentPaths {
   params: { segments: string[] };
@@ -282,11 +283,36 @@ export class DocumentsApi {
 
   generateDocumentIndexTemplate(document: DocumentMetadata): string {
     const cardsTemplate = document.itemList
-      .map((i) => ({
-        title: i.name,
-        description: i.description ?? '',
-        url: i.path,
-      }))
+      .map((i) => {
+        // Try to get description from frontmatter first
+        let description = i.description ?? '';
+
+        // Get the document metadata to find the file path
+        // i.path might already have a leading slash or might not, so we need to check both
+        const itemDocument =
+          this.manifest[i.path] || this.manifest[this.getManifestKey(i.path)];
+
+        if (itemDocument && itemDocument.file) {
+          const filePath = this.getFilePath(`${itemDocument.file}.md`);
+          if (existsSync(filePath)) {
+            try {
+              const content = readFileSync(filePath, 'utf8');
+              const frontmatter = extractFrontmatter(content);
+              // Use frontmatter description if available, otherwise fall back to map.json description
+              description = frontmatter.description || description;
+            } catch (e) {
+              // If there's an error reading the file, fall back to the original description
+              console.warn(`Could not read frontmatter from ${filePath}:`, e);
+            }
+          }
+        }
+
+        return {
+          title: i.name,
+          description,
+          url: i.path,
+        };
+      })
       .map(
         (card) =>
           `{% card title="${card.title}" description="${
