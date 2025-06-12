@@ -258,7 +258,6 @@ async function createWebpackTargets(
     },
   };
 
-  console.log('>>>>>', webpackConfig)
   targets[options.serveStaticTargetName] = {
     continuous: true,
     dependsOn: [options.buildTargetName],
