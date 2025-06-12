@@ -261,9 +261,12 @@
     {
       "plugin": "@nx/gradle",
       "options": {
-        "testTargetName": "test",
+        "testTargetName": "test-kt",
+        "ciTestTargetName": "test-ci",
         "classesTargetName": "classes",
-        "buildTargetName": "build"
+        "buildTargetName": "build",
+        "ktfmtCheckTargetName": "lint",
+        "ktfmtFormatTargetName": "format-kt"
       }
     }
   ],

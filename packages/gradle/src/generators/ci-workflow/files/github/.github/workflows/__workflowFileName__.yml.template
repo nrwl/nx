@@ -36,7 +36,7 @@ jobs:
           architecture: x64
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       - uses: nrwl/nx-set-shas@v4
 <% for (const command of commands) { %>

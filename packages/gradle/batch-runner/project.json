@@ -3,14 +3,5 @@
   "$schema": "node_modules/nx/schemas/project-schema.json",
   "projectRoot": "packages/gradle/batch-runner",
   "sourceRoot": "packages/gradle/batch-runner/src",
-  "targets": {
-    "lint": {
-      "command": "nx ktfmtCheck gradle-batch-runner",
-      "cache": true
-    },
-    "format": {
-      "command": "nx ktfmtFormat gradle-batch-runner",
-      "cache": true
-    }
-  }
+  "targets": {}
 }
