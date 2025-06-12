@@ -12,4 +12,5 @@ export interface ViteConfigurationGeneratorSchema {
   // Internal options
   addPlugin?: boolean;
   projectType?: 'application' | 'library';
+  previewPort?: number;
 }

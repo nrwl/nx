@@ -379,6 +379,7 @@ export interface ViteConfigFileOptions {
   setupFile?: string;
   useEsmExtension?: boolean;
   port?: number;
+  previewPort?: number;
 }
 
 export function createOrEditViteConfig(
@@ -511,7 +512,7 @@ ${
     : options.includeLib
     ? ''
     : `  preview:{
-    port: 4300,
+    port: ${options.previewPort ?? 4300},
     host: 'localhost',
   },`;
 

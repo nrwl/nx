@@ -1892,7 +1892,7 @@ describe('app', () => {
             host: 'localhost',
           },
           preview:{
-            port: 4300,
+            port: 9000,
             host: 'localhost',
           },
           plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],

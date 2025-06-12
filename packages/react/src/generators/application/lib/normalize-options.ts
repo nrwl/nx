@@ -87,7 +87,7 @@ export async function normalizeOptions<T extends Schema = Schema>(
   normalized.unitTestRunner = normalized.unitTestRunner ?? 'jest';
   normalized.e2eTestRunner = normalized.e2eTestRunner ?? 'playwright';
   normalized.inSourceTests = normalized.minimal || normalized.inSourceTests;
-  normalized.devServerPort ??= findFreePort(host);
+  normalized.devServerPort ??= options.port ?? findFreePort(host);
   normalized.minimal = normalized.minimal ?? false;
 
   return normalized;
