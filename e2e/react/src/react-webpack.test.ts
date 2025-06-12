@@ -21,6 +21,19 @@ describe('Build React applications and libraries with Webpack', () => {
     cleanupProject();
   });
 
+  it('should generate app with custom port', async () => {
+    const appName = uniq('app');
+    const customPort = 8080;
+
+    runCLI(
+      `generate @nx/react:app apps/${appName} --bundler=webpack --port=${customPort} --unitTestRunner=none --no-interactive`
+    );
+
+    // Check that the webpack config contains the custom port
+    const webpackConfig = readFile(`apps/${appName}/webpack.config.js`);
+    expect(webpackConfig).toContain(`port: ${customPort}`);
+  }, 300_000);
+
   // Regression test: https://github.com/nrwl/nx/issues/21773
   it('should support SVGR and SVG asset in the same project', async () => {
     const appName = uniq('app');

@@ -1866,4 +1866,192 @@ describe('app', () => {
       );
     });
   });
+
+  describe('--port', () => {
+    it('should generate app with custom port for vite', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        directory: 'my-app',
+        bundler: 'vite',
+        port: 9000,
+      });
+
+      const viteConfig = appTree.read('my-app/vite.config.ts', 'utf-8');
+      expect(viteConfig).toMatchInlineSnapshot(`
+        "/// <reference types='vitest' />
+        import { defineConfig } from 'vite';
+        import react from '@vitejs/plugin-react';
+        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+        export default defineConfig(() => ({
+          root: __dirname,
+          cacheDir: '../node_modules/.vite/my-app',
+          server:{
+            port: 9000,
+            host: 'localhost',
+          },
+          preview:{
+            port: 4300,
+            host: 'localhost',
+          },
+          plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+          // Uncomment this if you are using workers.
+          // worker: {
+          //  plugins: [ nxViteTsPaths() ],
+          // },
+          build: {
+            outDir: '../dist/my-app',
+            emptyOutDir: true,
+            reportCompressedSize: true,
+            commonjsOptions: {
+              transformMixedEsModules: true,
+            },
+          },
+        }));
+        "
+      `);
+    });
+
+    it('should generate app with custom port for webpack', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        directory: 'my-app',
+        bundler: 'webpack',
+        port: 9000,
+      });
+
+      const webpackConfig = appTree.read('my-app/webpack.config.js', 'utf-8');
+      expect(webpackConfig).toMatchInlineSnapshot(`
+        "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+        const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
+        const { join } = require('path');
+
+        module.exports = {
+          output: {
+            path: join(__dirname, '../dist/my-app'),
+          },
+          devServer: {
+            port: 9000,
+            historyApiFallback: {
+              index: '/index.html',
+              disableDotRule: true,
+              htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+            },
+          },
+          plugins: [
+            new NxAppWebpackPlugin({
+              tsConfig: './tsconfig.app.json',
+              compiler: 'babel',
+              main: './src/main.tsx',
+              index: './src/index.html',
+              baseHref: '/',
+              assets: ["./src/favicon.ico","./src/assets"],
+              styles: ["./src/styles.css"],
+              outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+              optimization: process.env['NODE_ENV'] === 'production',
+            }),
+            new NxReactWebpackPlugin({
+              // Uncomment this line if you don't want to use SVGR
+              // See: https://react-svgr.com/
+              // svgr: false
+            }),
+          ],
+        };
+        "
+      `);
+    });
+
+    it('should generate app with custom port for rspack', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        directory: 'my-app',
+        bundler: 'rspack',
+        port: 9000,
+      });
+
+      const rspackConfig = appTree.read('my-app/rspack.config.js', 'utf-8');
+      expect(rspackConfig).toMatchInlineSnapshot(`
+        "const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+        const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+        const { join } = require('path');
+
+        module.exports = {
+          output: {
+            path: join(__dirname, '../dist/my-app'),
+          },
+          devServer: {
+            port: 9000,
+            historyApiFallback: {
+              index: '/index.html',
+              disableDotRule: true,
+              htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+            },
+          },
+          plugins: [
+            new NxAppRspackPlugin({
+              tsConfig: './tsconfig.app.json',
+              main: './src/main.tsx',
+              index: './src/index.html',
+              baseHref: '/',
+              assets: ["./src/favicon.ico","./src/assets"],
+              styles: ["./src/styles.css"],
+              outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+              optimization: process.env['NODE_ENV'] === 'production',
+            }),
+            new NxReactRspackPlugin({
+              // Uncomment this line if you don't want to use SVGR
+              // See: https://react-svgr.com/
+              // svgr: false
+            }),
+          ],
+        };
+        "
+      `);
+    });
+
+    it('should use default port when not specified', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        directory: 'my-app',
+        bundler: 'vite',
+      });
+
+      const viteConfig = appTree.read('my-app/vite.config.ts', 'utf-8');
+      expect(viteConfig).toMatchInlineSnapshot(`
+        "/// <reference types='vitest' />
+        import { defineConfig } from 'vite';
+        import react from '@vitejs/plugin-react';
+        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+        export default defineConfig(() => ({
+          root: __dirname,
+          cacheDir: '../node_modules/.vite/my-app',
+          server:{
+            port: 4200,
+            host: 'localhost',
+          },
+          preview:{
+            port: 4300,
+            host: 'localhost',
+          },
+          plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+          // Uncomment this if you are using workers.
+          // worker: {
+          //  plugins: [ nxViteTsPaths() ],
+          // },
+          build: {
+            outDir: '../dist/my-app',
+            emptyOutDir: true,
+            reportCompressedSize: true,
+            commonjsOptions: {
+              transformMixedEsModules: true,
+            },
+          },
+        }));
+        "
+      `);
+    });
+  });
 });

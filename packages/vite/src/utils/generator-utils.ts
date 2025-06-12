@@ -378,6 +378,7 @@ export interface ViteConfigFileOptions {
   coverageProvider?: 'v8' | 'istanbul' | 'custom';
   setupFile?: string;
   useEsmExtension?: boolean;
+  port?: number;
 }
 
 export function createOrEditViteConfig(
@@ -501,7 +502,7 @@ ${
     : options.includeLib
     ? ''
     : `  server:{
-    port: 4200,
+    port: ${options.port ?? 4200},
     host: 'localhost',
   },`;
 

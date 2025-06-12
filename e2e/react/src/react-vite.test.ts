@@ -2,6 +2,7 @@ import {
   checkFilesExist,
   cleanupProject,
   newProject,
+  readFile,
   runCLI,
   runCLIAsync,
   uniq,
@@ -55,6 +56,22 @@ describe('Build React applications and libraries with Vite', () => {
     expect(appLintResults.combinedOutput).toContain(
       'Successfully ran target lint'
     );
+
+    await runCLIAsync(`build ${viteApp}`);
+    checkFilesExist(`dist/apps/${viteApp}/index.html`);
+  }, 300_000);
+
+  it('should generate app with custom port', async () => {
+    const viteApp = uniq('viteapp');
+    const customPort = 3000;
+
+    runCLI(
+      `generate @nx/react:app apps/${viteApp} --bundler=vite --port=${customPort} --unitTestRunner=vitest --no-interactive --linter=eslint`
+    );
+
+    // Check that the vite config contains the custom port
+    const viteConfig = readFile(`apps/${viteApp}/vite.config.ts`);
+    expect(viteConfig).toContain(`port: ${customPort}`);
 
     await runCLIAsync(`build ${viteApp}`);
     checkFilesExist(`dist/apps/${viteApp}/index.html`);
