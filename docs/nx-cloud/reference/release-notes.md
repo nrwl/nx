@@ -1,5 +1,9 @@
 # Enterprise Release Notes
 
+### 2025.06.1
+
+- Fix: GitHub connection issue on nx-api startup when Nx Agents are active
+
 ### 2025.06
 
 - Feat: Define your own custom resource classes (CPU, RAM etc.) for use with Nx Agents
