@@ -21,7 +21,7 @@ env:
   DEBUG: napi:*
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   CYPRESS_INSTALL_BINARY: 0
-  NODE_VERSION: 20.19.0
+  NODE_VERSION: 22.16.0
   PNPM_VERSION: 10.11.1 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
 
 jobs:
@@ -140,23 +140,50 @@ jobs:
           - host: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
-            build: |-
-              set -e &&
-              npm i -g pnpm@10.11.1 --force &&
-              pnpm --version &&
-              pnpm install --frozen-lockfile &&
-              rustup target add aarch64-unknown-linux-gnu &&
+            build: |
+              set -e
+              apt-get update
+
+              curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+              apt-get install -y nodejs=22.16.0-1nodesource1
+            
+              export PATH="/usr/local/bin:$PATH"
+              node --version
+              npm --version
+            
+              npm i -g pnpm@${PNPM_VERSION} --force
+              pnpm --version
+            
+              pnpm install --frozen-lockfile
+              rustup target add x86_64-unknown-linux-gnu
               pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-gnu
           - host: ubuntu-latest
             target: x86_64-unknown-linux-musl
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
-            build: |-
-              set -e &&
-              npm i -g pnpm@10.11.1 --force &&
-              pnpm --version &&
-              pnpm install --frozen-lockfile &&
-              rustup target add x86_64-unknown-linux-musl &&
-              pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-musl
+            build: |
+              bash -c "
+                set -e
+                echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
+                apk add --no-cache curl xz
+
+                curl -fsSL https://unofficial-builds.nodejs.org/download/release/v22.16.0/node-v22.16.0-linux-x64-musl.tar.xz -o node.tar.xz
+                tar -xJf node.tar.xz
+                mv node-v22.16.0-linux-x64-musl /usr/local/node
+            
+                export PATH=\"/usr/local/node/bin:\$PATH\"
+            
+                echo Node: \$(node -v)
+                echo NPM: \$(npm -v)
+            
+                # Install PNPM
+                npm i -g pnpm@${PNPM_VERSION} --force
+                pnpm --version
+            
+                # Install deps and run native build
+                pnpm install --frozen-lockfile
+                rustup target add x86_64-unknown-linux-musl
+                pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-musl
+              "
           - host: macos-13
             target: aarch64-apple-darwin
             setup: |-
@@ -171,12 +198,22 @@ jobs:
           - host: ubuntu-latest
             target: aarch64-unknown-linux-gnu
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
-            build: |-
-              set -e &&
-              npm i -g pnpm@10.11.1 --force &&
-              pnpm --version &&
-              pnpm install --frozen-lockfile &&
-              rustup target add aarch64-unknown-linux-gnu &&
+            build: |
+              set -e
+              apt-get update
+            
+              curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+              apt-get install -y nodejs=22.16.0-1nodesource1
+            
+              export PATH="/usr/local/bin:$PATH"
+              node --version
+              npm --version
+            
+              npm i -g pnpm@${PNPM_VERSION} --force
+              pnpm --version
+            
+              pnpm install --frozen-lockfile
+              rustup target add aarch64-unknown-linux-gnu
               pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-gnu
           - host: ubuntu-latest
             target: armv7-unknown-linux-gnueabihf
@@ -198,19 +235,36 @@ jobs:
           - host: ubuntu-latest
             target: aarch64-unknown-linux-musl
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
-            build: |-
-              set -e &&
-              rustup target add aarch64-unknown-linux-musl &&
-              npm i -g pnpm@10.11.1 --force &&
-              pnpm --version &&
-              pnpm install --frozen-lockfile &&
-              pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-musl
+            build: |
+              bash -c "
+                set -e
+                echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
+                apk add --no-cache curl xz
+            
+                curl -fsSL https://unofficial-builds.nodejs.org/download/release/v22.16.0/node-v22.16.0-linux-x64-musl.tar.xz -o node.tar.xz
+                tar -xJf node.tar.xz
+                mv node-v22.16.0-linux-x64-musl /usr/local/node
+            
+                export PATH=\"/usr/local/node/bin:\$PATH\"
+            
+                echo Node: \$(node -v)
+                echo NPM: \$(npm -v)
+            
+                # Install PNPM
+                npm i -g pnpm@${PNPM_VERSION} --force
+                pnpm --version
+            
+                # Install deps and run native build
+                pnpm install --frozen-lockfile
+                rustup target add aarch64-unknown-linux-musl  
+                pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-musl  
+              "
           - host: windows-latest
             target: aarch64-pc-windows-msvc
             setup: |-
               rustup target add aarch64-pc-windows-msvc
             build: pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
-    name: stable - ${{ matrix.settings.target }} - node@18
+    name: stable - ${{ matrix.settings.target }} - node@22.16.0
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@v4
@@ -318,11 +372,12 @@ jobs:
           RUSTUP_IO_THREADS: 1
           NX_PREFER_TS_NODE: true
           PLAYWRIGHT_BROWSERS_PATH: 0
+          NODE_VERSION: 22.16.0
         with:
           operating_system: freebsd
           version: '14.0'
           architecture: x86-64
-          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH
+          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH NODE_VERSION
           shell: bash
           run: |
             env
