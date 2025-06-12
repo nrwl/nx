@@ -258,11 +258,13 @@ async function createWebpackTargets(
     },
   };
 
+  console.log('>>>>>', webpackConfig)
   targets[options.serveStaticTargetName] = {
     continuous: true,
     dependsOn: [options.buildTargetName],
     executor: '@nx/web:file-server',
     options: {
+      port: webpackConfig.devServer?.port,
       buildTarget: options.buildTargetName,
       spa: true,
     },

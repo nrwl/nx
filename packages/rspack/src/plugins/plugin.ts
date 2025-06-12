@@ -242,6 +242,7 @@ async function createRspackTargets(
     continuous: true,
     executor: '@nx/web:file-server',
     options: {
+      port: rspackConfig.devServer?.port,
       buildTarget: options.buildTargetName,
       spa: true,
     },
