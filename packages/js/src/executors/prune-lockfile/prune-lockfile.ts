@@ -7,17 +7,17 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
-import { type PruneLockfileOptions } from './schema';
 import { existsSync, lstatSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import { type PackageJson } from 'nx/src/utils/package-json';
-
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import {
   createLockFile,
   getLockFileName,
 } from 'nx/src/plugins/js/lock-file/lock-file';
+import { type PruneLockfileOptions } from './schema';
+import { pruneProjectGraph } from './lib';
 
 export default async function pruneLockfileExecutor(
   schema: PruneLockfileOptions,
@@ -41,7 +41,12 @@ export default async function pruneLockfileExecutor(
 function createPrunedLockfile(packageJson: PackageJson, graph: ProjectGraph) {
   const packageManager = detectPackageManager(workspaceRoot);
   const lockfileName = getLockFileName(packageManager);
-  const lockfile = createLockFile(packageJson, graph, packageManager);
+  const lockfile = createLockFile(
+    packageJson,
+    graph,
+    packageManager,
+    pruneProjectGraph
+  );
   return {
     lockfileName,
     lockfile,

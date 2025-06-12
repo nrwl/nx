@@ -212,22 +212,26 @@ function getLockFilePath(packageManager: PackageManager): string {
 export function createLockFile(
   packageJson: PackageJson,
   graph: ProjectGraph,
-  packageManager: PackageManager = detectPackageManager(workspaceRoot)
+  packageManager: PackageManager = detectPackageManager(workspaceRoot),
+  pruneProjectGraphFn: (
+    graph: ProjectGraph,
+    packageJson: PackageJson
+  ) => ProjectGraph = pruneProjectGraph
 ): string {
   const normalizedPackageJson = normalizePackageJson(packageJson);
   const content = readFileSync(getLockFilePath(packageManager), 'utf8');
 
   try {
     if (packageManager === 'yarn') {
-      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const prunedGraph = pruneProjectGraphFn(graph, packageJson);
       return stringifyYarnLockfile(prunedGraph, content, normalizedPackageJson);
     }
     if (packageManager === 'pnpm') {
-      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const prunedGraph = pruneProjectGraphFn(graph, packageJson);
       return stringifyPnpmLockfile(prunedGraph, content, normalizedPackageJson);
     }
     if (packageManager === 'npm') {
-      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const prunedGraph = pruneProjectGraphFn(graph, packageJson);
       return stringifyNpmLockfile(prunedGraph, content, normalizedPackageJson);
     }
     if (packageManager === 'bun') {

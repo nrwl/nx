@@ -96,7 +96,7 @@ export function findNodeMatchingVersion(
   return nodes.find((n) => satisfies(n.data.version, versionExpr));
 }
 
-function addNodesAndDependencies(
+export function addNodesAndDependencies(
   graph: ProjectGraph,
   packageJsonDeps: Record<string, string>,
   builder: ProjectGraphBuilder
@@ -125,7 +125,7 @@ function traverseNode(
   });
 }
 
-function rehoistNodes(
+export function rehoistNodes(
   graph: ProjectGraph,
   packageJsonDeps: Record<string, string>,
   builder: ProjectGraphBuilder
