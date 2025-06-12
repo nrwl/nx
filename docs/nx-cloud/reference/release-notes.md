@@ -2,7 +2,7 @@
 
 ### 2025.06.1
 
-- Fix: GitHub connection issue on nx-api startup when Nx Agents are acrivated
+- Fix: GitHub connection issue on nx-api startup when Nx Agents are activate
 
 ### 2025.06
 
