@@ -2296,6 +2296,15 @@
         "path": "/technologies/typescript/api/executors/node",
         "type": "executor"
       },
+      "/technologies/typescript/api/executors/prune-lockfile": {
+        "description": "Creates a pruned lockfile based on the project dependencies and places it into the output directory.",
+        "file": "generated/packages/js/executors/prune-lockfile.json",
+        "hidden": false,
+        "name": "prune-lockfile",
+        "originalFilePath": "/packages/js/src/executors/prune-lockfile/schema.json",
+        "path": "/technologies/typescript/api/executors/prune-lockfile",
+        "type": "executor"
+      },
       "/technologies/typescript/api/executors/release-publish": {
         "description": "DO NOT INVOKE DIRECTLY WITH `nx run`. Use `nx release publish` instead.",
         "file": "generated/packages/js/executors/release-publish.json",

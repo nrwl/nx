@@ -125,6 +125,7 @@
           - [tsc](/technologies/typescript/api/executors/tsc)
           - [swc](/technologies/typescript/api/executors/swc)
           - [node](/technologies/typescript/api/executors/node)
+          - [prune-lockfile](/technologies/typescript/api/executors/prune-lockfile)
           - [release-publish](/technologies/typescript/api/executors/release-publish)
           - [verdaccio](/technologies/typescript/api/executors/verdaccio)
         - [generators](/technologies/typescript/api/generators)
