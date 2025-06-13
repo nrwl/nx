@@ -1005,6 +1005,10 @@ impl App {
                                         in_progress && pty.can_be_interactive();
                                     terminal_pane_data.pty = Some(pty.clone());
                                     has_pty = true;
+                                } else {
+                                    // Clear PTY data when switching to a task that doesn't have a PTY instance
+                                    terminal_pane_data.pty = None;
+                                    terminal_pane_data.can_be_interactive = false;
                                 }
 
                                 let is_focused = match self.focus {
