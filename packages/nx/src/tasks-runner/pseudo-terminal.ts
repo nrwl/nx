@@ -5,7 +5,11 @@ import { ChildProcess, IS_WASM, RustPseudoTerminal } from '../native';
 import { PseudoIPCServer } from './pseudo-ipc';
 import { RunningTask } from './running-tasks/running-task';
 import { codeToSignal } from '../utils/exit-codes';
-import { NormalizedRunCommandsOptions } from '../executors/run-commands/run-commands.impl';
+
+type ReadyWhenStatus = {
+  stringToMatch: string;
+  found: boolean;
+};
 
 // Register single event listeners for all pseudo-terminal instances
 const pseudoTerminalShutdownCallbacks: Array<(s: number) => void> = [];
@@ -75,7 +79,7 @@ export class PseudoTerminal {
       jsEnv?: Record<string, string>;
       quiet?: boolean;
       tty?: boolean;
-      readyWhenStatus?: NormalizedRunCommandsOptions['readyWhenStatus'];
+      readyWhenStatus?: ReadyWhenStatus[];
     } = {}
   ) {
     const cp = new PseudoTtyProcess(
@@ -157,7 +161,7 @@ export class PseudoTtyProcess implements RunningTask {
   constructor(
     public rustPseudoTerminal: RustPseudoTerminal,
     private childProcess: ChildProcess,
-    private readyWhenStatus?: NormalizedRunCommandsOptions['readyWhenStatus']
+    private readyWhenStatus?: ReadyWhenStatus[]
   ) {
     this.initChildProcessesPromise = this.handleChildProcesses();
   }
@@ -186,6 +190,7 @@ export class PseudoTtyProcess implements RunningTask {
         this.childProcess.cleanup();
 
         this.exitCallbacks.forEach((cb) => cb(code));
+        res({ success: true, code, terminalOutput: this.terminalOutput });
       });
     });
   }
@@ -224,7 +229,7 @@ export class PseudoTtyProcess implements RunningTask {
   }
 }
 
-function isReady(readyWhenStatus, output) {
+function isReady(readyWhenStatus: ReadyWhenStatus[], output: string) {
   if (output) {
     for (const readyWhenElement of readyWhenStatus) {
       if (output.toString().indexOf(readyWhenElement.stringToMatch) > -1) {
