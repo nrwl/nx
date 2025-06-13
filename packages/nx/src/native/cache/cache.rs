@@ -432,3 +432,74 @@ fn underlying_io_error_kind(error: &anyhow::Error) -> Option<std::io::ErrorKind>
     }
     None
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use assert_fs::TempDir;
+    use napi::bindgen_prelude::External;
+    use rusqlite::{Connection, params};
+
+    fn create_cache(workspace: &TempDir) -> anyhow::Result<NxCache> {
+        let cache_dir = workspace.path().join("cache");
+        let conn = Connection::open_in_memory()?;
+        let db = NxDbConnection::new(conn);
+
+        NxCache::new(
+            workspace.path().to_string_lossy().into(),
+            cache_dir.to_string_lossy().into(),
+            External::new(db),
+            Some(false),
+            Some(0),
+        )
+    }
+
+    #[test]
+    fn check_cache_fs_reports_out_of_sync_when_dirs_exist_without_db_entries() -> anyhow::Result<()>
+    {
+        let workspace = TempDir::new()?;
+        let mut cache = create_cache(&workspace)?;
+
+        std::fs::create_dir_all(cache.cache_path.join("12345"))?;
+
+        assert!(!cache.check_cache_fs_in_sync()?);
+        Ok(())
+    }
+
+    #[test]
+    fn check_cache_fs_returns_true_when_no_dirs_or_entries() -> anyhow::Result<()> {
+        let workspace = TempDir::new()?;
+        let cache = create_cache(&workspace)?;
+        assert!(cache.check_cache_fs_in_sync()?);
+        Ok(())
+    }
+
+    #[test]
+    fn try_and_retry_retries_until_success() {
+        let mut attempts = 0;
+        let result = try_and_retry(|| {
+            attempts += 1;
+            if attempts < 3 {
+                Err(anyhow::anyhow!("fail"))
+            } else {
+                Ok(42)
+            }
+        })
+        .unwrap();
+
+        assert_eq!(result, 42);
+        assert_eq!(attempts, 3);
+    }
+
+    #[test]
+    fn try_and_retry_errors_after_max_attempts() {
+        let mut attempts = 0;
+        let result = try_and_retry(|| {
+            attempts += 1;
+            Err(anyhow::anyhow!("fail"))
+        });
+
+        assert!(result.is_err());
+        assert_eq!(attempts, 6);
+    }
+}
