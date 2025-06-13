@@ -1,10 +1,12 @@
 - Nx
 
   - [Getting Started](/getting-started)
-    - [Intro to Nx](/getting-started/intro)
+    - [Introduction](/getting-started/intro)
     - [Installation](/getting-started/installation)
-    - [Why Nx?](/getting-started/why-nx)
+    - [Start a new project](/getting-started/start-new-project)
+    - [Add to existing project](/getting-started/adding-to-existing)
     - [Editor Integration](/getting-started/editor-setup)
+    - [AI Integration](/getting-started/ai-integration)
     - [Tutorials](/getting-started/tutorials)
       - [TypeScript Monorepo](/getting-started/tutorials/typescript-packages-tutorial)
       - [React Monorepo](/getting-started/tutorials/react-monorepo-tutorial)

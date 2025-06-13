@@ -12,9 +12,10 @@
           "name": "Getting Started",
           "id": "getting-started",
           "description": "Get started with basic information, concepts and tutorials.",
+          "file": "shared/getting-started/quick-start",
           "itemList": [
             {
-              "name": "Intro to Nx",
+              "name": "Introduction",
               "id": "intro",
               "file": "shared/getting-started/intro"
             },
@@ -24,9 +25,15 @@
               "file": "shared/getting-started/installation"
             },
             {
-              "name": "Why Nx?",
-              "id": "why-nx",
-              "file": "shared/getting-started/why-nx"
+              "name": "Start a new project",
+              "id": "start-new-project",
+              "file": "shared/getting-started/start-new-project"
+            },
+            {
+              "name": "Add to existing project",
+              "id": "adding-to-existing",
+              "tags": ["init"],
+              "file": "shared/getting-started/start-with-existing-project"
             },
             {
               "name": "Editor Integration",
@@ -34,6 +41,13 @@
               "id": "editor-setup",
               "tags": ["editor-setup"],
               "file": "shared/getting-started/editor-setup"
+            },
+            {
+              "name": "AI Integration",
+              "description": "Learn about how to integrate Nx with your favorite AI assistant.",
+              "id": "ai-integration",
+              "tags": ["ai-integration"],
+              "file": "shared/getting-started/ai-setup"
             },
             {
               "name": "Tutorials",
@@ -2487,6 +2501,7 @@
           "name": "Intro",
           "id": "intro",
           "description": "Learn about basic Nx Cloud knowledge.",
+          "file": "nx-cloud/intro/ci-with-nx",
           "itemList": [
             {
               "name": "CI with Nx",

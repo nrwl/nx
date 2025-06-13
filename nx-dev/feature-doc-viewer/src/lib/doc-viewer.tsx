@@ -25,7 +25,7 @@ export function DocViewer({
 }): JSX.Element {
   const router = useRouter();
   const hideTableOfContent =
-    router.asPath.includes('/getting-started/intro') ||
+    router.asPath.endsWith('/getting-started') ||
     router.asPath.includes('/ci/intro/ci-with-nx') ||
     router.asPath.includes('/extending-nx/intro/getting-started') ||
     router.asPath.includes('/nx-api/devkit') ||

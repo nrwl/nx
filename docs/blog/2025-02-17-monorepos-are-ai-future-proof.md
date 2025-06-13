@@ -140,7 +140,7 @@ And this is just the beginning. While Nx already understands your local monorepo
 
 ## Try It Out Yourself
 
-If you want to test this out, [create a new Nx workspace](/getting-started/intro#try-nx-yourself) and make sure you have [Nx Console](/getting-started/editor-setup) installed or updated to the latest version.
+If you want to test this out, [create a new Nx workspace](/getting-started/start-new-project) and make sure you have [Nx Console](/getting-started/editor-setup) installed or updated to the latest version.
 
 > If you already have an existing NPM/Yarn/PNPM workspace, you can add Nx with `nx init`. Check out [our free course](/courses/pnpm-nx-next) to learn more.
 

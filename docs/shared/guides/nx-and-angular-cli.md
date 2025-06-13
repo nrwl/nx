@@ -10,7 +10,7 @@ src="https://www.youtube.com/embed/bwPkz4MrPDI?si=OLPUENWXLkQ9GRtR"
 title="Nx vs Angular CLI - The Showdown"
 width="100%" /%}
 
-Nx evolved from being an extension of the Angular CLI to a [fully standalone CLI working with multiple frameworks](/getting-started/why-nx#how-does-nx-work). As a result, adopting Nx as an Angular user is relatively straightforward. This guide explores some of the similarities and in particular, added benefits of using Nx over the Angular CLI for your Angular project.
+Nx evolved from being an extension of the Angular CLI to a [fully standalone CLI working with multiple frameworks](/getting-started/intro#start-small-extend-as-you-grow). As a result, adopting Nx as an Angular user is relatively straightforward. This guide explores some of the similarities and in particular, added benefits of using Nx over the Angular CLI for your Angular project.
 
 ## TL;DR: Why should I use Nx for my Angular project?
 
@@ -397,9 +397,9 @@ Learn more about the [graph features here](/features/explore-graph).
 
 ### Extensible and Customizable: Make it fit your own needs
 
-Nx is [built to be extensible](/getting-started/why-nx#how-does-nx-work). Just like the [packages published by the Nx core team](/plugin-registry) you can create your own Nx plugins by [extending Nx](/extending-nx/intro/getting-started). This can be as simple as using [run-commands](/reference/core-api/nx/executors/run-commands) to integrate custom commands into the project configuration or as complex as [creating your own local executor](/extending-nx/recipes/local-executors).
+Nx is [built to be extensible](/getting-started/intro#start-small-extend-as-you-grow). Just like the [packages published by the Nx core team](/plugin-registry) you can create your own Nx plugins by [extending Nx](/extending-nx/intro/getting-started). This can be as simple as using [run-commands](/reference/core-api/nx/executors/run-commands) to integrate custom commands into the project configuration or as complex as [creating your own local executor](/extending-nx/recipes/local-executors).
 
-And if you ever need to expand beyond Angular or diversify your stack, you can still keep using Nx, which is [battle-tested with many different technologies](/getting-started/intro#pick-your-stack).
+And if you ever need to expand beyond Angular or diversify your stack, you can still keep using Nx, which is [battle-tested with many different technologies](/technologies).
 
 ## Migrate from the Angular CLI?
 

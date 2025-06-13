@@ -4,7 +4,7 @@
     "name": "Intro",
     "description": "Learn about basic Nx Cloud knowledge.",
     "mediaImage": "",
-    "file": "",
+    "file": "nx-cloud/intro/ci-with-nx",
     "itemList": [
       {
         "id": "ci-with-nx",

@@ -31,8 +31,6 @@ Features we'll use in this monorepo:
 - [Scaffold new code with generators](/features/generate-code)
 - [Updates dependencies with automated migrations](/features/automate-updating-dependencies)
 
-Visit our ["Why Nx" page](/getting-started/why-nx) for more details.
-
 ## Final Code
 
 Here's the source code of the final result for this tutorial.
