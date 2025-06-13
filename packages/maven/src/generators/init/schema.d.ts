@@ -3,4 +3,4 @@ export interface InitGeneratorSchema {
   skipPackageJson?: boolean;
   keepExistingVersions?: boolean;
   updatePackageScripts?: boolean;
-} 
+}

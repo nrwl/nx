@@ -43,9 +43,11 @@ export async function parsePomXml(
       }
 
       const projectInfo: MavenProjectInfo = {
-        groupId: project.groupId?.[0] || project.parent?.[0]?.groupId?.[0] || '',
+        groupId:
+          project.groupId?.[0] || project.parent?.[0]?.groupId?.[0] || '',
         artifactId: project.artifactId?.[0] || '',
-        version: project.version?.[0] || project.parent?.[0]?.version?.[0] || '',
+        version:
+          project.version?.[0] || project.parent?.[0]?.version?.[0] || '',
         packaging: project.packaging?.[0] || 'jar',
       };
 
@@ -73,4 +75,4 @@ export async function parsePomXml(
   }
 
   return report;
-} 
+}

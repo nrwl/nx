@@ -1,0 +1,17 @@
+{
+  "name": "maven-project-graph",
+  "$schema": "node_modules/nx/schemas/project-schema.json",
+  "projectRoot": "packages/maven/project-graph",
+  "sourceRoot": "packages/maven/project-graph/src",
+  "targets": {
+    "package": {
+      "command": "mvn package",
+      "options": {
+        "cwd": "{projectRoot}"
+      },
+      "inputs": ["{projectRoot}/src/**", "{projectRoot}/pom.xml"],
+      "outputs": ["{projectRoot}/target"],
+      "cache": true
+    }
+  }
+}

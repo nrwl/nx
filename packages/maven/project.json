@@ -1,6 +1,7 @@
 {
   "name": "maven",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "root": "packages/maven",
   "sourceRoot": "packages/maven/src",
   "projectType": "library",
   "targets": {
@@ -12,9 +13,24 @@
       }
     },
     "build-base": {
+      "dependsOn": [
+        "^build-base",
+        "build-native",
+        "maven-project-graph:package"
+      ],
       "executor": "@nx/js:tsc",
       "options": {
         "assets": [
+          {
+            "input": "packages/maven",
+            "glob": "**/*.jar",
+            "output": "/"
+          },
+          {
+            "input": "packages/maven",
+            "glob": "**/*.class",
+            "output": "/"
+          },
           {
             "input": "packages/maven",
             "glob": "**/@(files|files-angular)/**",
