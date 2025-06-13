@@ -600,7 +600,11 @@ function mapRootSnapshot(
             `Could not find external node for package ${packageName}@${version}.`
           );
         }
-        if (node.type === 'nx_js_wm') {
+        if (
+          version.startsWith('workspace:') ||
+          version.startsWith('file:') ||
+          version.startsWith('link:')
+        ) {
           for (const [importerPath, importerSnapshot] of Object.entries(
             rootImporters
           )) {

@@ -12,9 +12,11 @@ import { dirname, join } from 'path';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import { type PackageJson } from 'nx/src/utils/package-json';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
+import {
+  getLockFileName,
+  createLockFile,
+} from 'nx/src/plugins/js/lock-file/lock-file';
 import { type PruneLockfileOptions } from './schema';
-import { createLockFile } from './lib';
 
 export default async function pruneLockfileExecutor(
   schema: PruneLockfileOptions,
@@ -23,14 +25,14 @@ export default async function pruneLockfileExecutor(
   logger.log('Pruning lockfile...');
   const outputDirectory = getOutputDir(schema, context);
   const packageJson = getPackageJson(schema, context);
-  const { lockfileName, lockFile, updatedPackageJson } = createPrunedLockfile(
+  const { lockfileName, lockFile } = createPrunedLockfile(
     packageJson,
     context.projectGraph
   );
   writeFileSync(join(outputDirectory, lockfileName), lockFile);
   writeFileSync(
     join(outputDirectory, 'package.json'),
-    JSON.stringify(updatedPackageJson, null, 2)
+    JSON.stringify(packageJson, null, 2)
   );
   logger.log('Lockfile pruned.');
   logger.log('Success!');
@@ -42,15 +44,23 @@ export default async function pruneLockfileExecutor(
 function createPrunedLockfile(packageJson: PackageJson, graph: ProjectGraph) {
   const packageManager = detectPackageManager(workspaceRoot);
   const lockfileName = getLockFileName(packageManager);
-  const { packageJson: updatedPackageJson, lockFile } = createLockFile(
-    packageJson,
-    graph,
-    packageManager
-  );
+  const lockFile = createLockFile(packageJson, graph, packageManager);
+
+  for (const [pkgName, pkgVersion] of Object.entries(
+    packageJson.dependencies ?? {}
+  )) {
+    if (
+      pkgVersion.startsWith('workspace:') ||
+      pkgVersion.startsWith('file:') ||
+      pkgVersion.startsWith('link:')
+    ) {
+      packageJson.dependencies[pkgName] = `file:./workspace_modules/${pkgName}`;
+    }
+  }
+
   return {
     lockfileName,
     lockFile,
-    updatedPackageJson,
   };
 }
 

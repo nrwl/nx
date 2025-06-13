@@ -398,6 +398,7 @@ export function stringifyNpmLockfile(
   const { lockfileVersion } = JSON.parse(rootLockFileContent) as NpmLockFile;
 
   const mappedPackages = mapSnapshots(rootLockFile, graph);
+  const workspaceModules = mapWorkspaceModules(packageJson);
 
   const output: NpmLockFile = {
     name: packageJson.name || rootLockFile.name,
@@ -408,13 +409,31 @@ export function stringifyNpmLockfile(
     output.requires = rootLockFile.requires;
   }
   if (lockfileVersion > 1) {
-    output.packages = mapV3Snapshots(mappedPackages, packageJson);
+    const packages = mapV3Snapshots(mappedPackages, packageJson);
+    output.packages = { ...packages, ...workspaceModules };
   }
   if (lockfileVersion < 3) {
-    output.dependencies = mapV1Snapshots(mappedPackages);
+    const dependencies = mapV1Snapshots(mappedPackages);
+    output.dependencies = { ...dependencies, ...workspaceModules };
   }
 
   return JSON.stringify(output, null, 2);
+}
+
+function mapWorkspaceModules(packageJson: NormalizedPackageJson) {
+  const output: Record<string, NpmDependencyV3 & NpmDependencyV1> = {};
+  for (const [pkgName, pkgVersion] of Object.entries(
+    packageJson.dependencies
+  )) {
+    if (pkgVersion.startsWith('workspace:') || pkgVersion.startsWith('file:')) {
+      output[pkgName] = {
+        version: `file:./workspace_modules/${pkgName}}`,
+        resolved: `workspace_modules/${pkgName}`,
+        link: true,
+      };
+    }
+  }
+  return output;
 }
 
 function mapV3Snapshots(
@@ -489,20 +508,7 @@ function mapSnapshots(
 
   // add first level children
   Object.values(graph.externalNodes).forEach((node) => {
-    if (node.type === 'nx_js_wm') {
-      const mappedWorkspaceModulePackage = mapWorkspaceModulePackage(
-        rootLockFile,
-        node
-      );
-      remappedPackages.set(
-        mappedWorkspaceModulePackage.path,
-        mappedWorkspaceModulePackage
-      );
-      visitedNodes.set(node, {
-        packagePaths: new Set([mappedWorkspaceModulePackage.path]),
-        unresolvedParents: new Set(),
-      });
-    } else if (node.name === `npm:${node.data.packageName}`) {
+    if (node.name === `npm:${node.data.packageName}`) {
       const mappedPackage = mapPackage(
         rootLockFile,
         node.data.packageName,
@@ -535,41 +541,6 @@ function mapSnapshots(
     remappedPackagesArray = Array.from(remappedPackages.values());
   }
   return remappedPackagesArray.sort((a, b) => a.path.localeCompare(b.path));
-}
-
-function mapWorkspaceModulePackage(
-  rootLockFile: NpmLockFile,
-  node: ProjectGraphExternalNode,
-  parentPath = ''
-): MappedPackage {
-  const lockfileVersion = rootLockFile.lockfileVersion;
-
-  let valueV3, valueV1;
-
-  valueV1 =
-    lockfileVersion < 3
-      ? {
-          version: node.data.version,
-          resolved: `workspace_modules/${node.data.packageName}`,
-          link: true,
-        }
-      : undefined;
-
-  valueV3 =
-    lockfileVersion > 1
-      ? {
-          version: node.data.version,
-          resolved: `workspace_modules/${node.data.packageName}`,
-          link: true,
-        }
-      : undefined;
-
-  return {
-    path: parentPath + `node_modules/${node.data.packageName}`,
-    name: node.data.packageName,
-    valueV1,
-    valueV3,
-  };
 }
 
 function mapPackage(

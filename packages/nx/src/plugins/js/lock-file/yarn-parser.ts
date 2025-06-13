@@ -619,7 +619,10 @@ function findOriginalKeys(
     if (!keys.some((k) => k.startsWith(`${node.data.packageName}@`))) {
       continue;
     }
-    if (node.type === 'nx_js_wm') {
+    if (
+      snapshot.version.startsWith('file:') ||
+      snapshot.version.startsWith('workspace:')
+    ) {
       return [[`${node.data.packageName}@${node.data.version}`], snapshot];
     }
     if (
