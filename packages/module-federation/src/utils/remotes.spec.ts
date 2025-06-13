@@ -55,4 +55,32 @@ describe('mapRemotes', () => {
       remote3: 'remote3@http://localhost:4203/mf-manifest.json',
     });
   });
+
+  it('should map string remotes using aliases for scoped names', () => {
+    expect(
+      mapRemotes(
+        ['@nx-mf/remote'],
+        'js',
+        (remote) => {
+          return `http://localhost:3001/remoteEntry.js`;
+        },
+        true
+      )
+    ).toEqual({
+      '@nx-mf/remote': '_nx_mf_remote@http://localhost:3001/remoteEntry.js',
+    });
+  });
+
+  it('should map array remotes using aliases for scoped names', () => {
+    expect(
+      mapRemotes(
+        [['@nx-mf/remote', 'http://localhost:4201/remoteEntry.js']],
+        'js',
+        (remote) => remote,
+        true
+      )
+    ).toEqual({
+      '@nx-mf/remote': '_nx_mf_remote@http://localhost:4201/remoteEntry.js',
+    });
+  });
 });
