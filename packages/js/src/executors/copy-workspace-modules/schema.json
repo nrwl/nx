@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "title": "Copy Workspace Modules",
+  "description": "Copies Workspace Modules into the output directory after a build to prepare it for use with Docker or alternatives.",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "buildTarget": {
+      "type": "string",
+      "description": "The build target that produces the output directory to transform.",
+      "default": "build"
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "The output path to transform. Usually inferred from the outputs of the buildTarget."
+    }
+  },
+  "required": ["buildTarget"]
+}

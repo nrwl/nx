@@ -2250,6 +2250,15 @@
     "root": "/packages/js",
     "source": "/packages/js/src",
     "executors": {
+      "/technologies/typescript/api/executors/copy-workspace-modules": {
+        "description": "Copies Workspace Modules into the output directory after a build to prepare it for use with Docker or alternatives.",
+        "file": "generated/packages/js/executors/copy-workspace-modules.json",
+        "hidden": false,
+        "name": "copy-workspace-modules",
+        "originalFilePath": "/packages/js/src/executors/copy-workspace-modules/schema.json",
+        "path": "/technologies/typescript/api/executors/copy-workspace-modules",
+        "type": "executor"
+      },
       "/technologies/typescript/api/executors/tsc": {
         "description": "Build a project using TypeScript.",
         "file": "generated/packages/js/executors/tsc.json",
