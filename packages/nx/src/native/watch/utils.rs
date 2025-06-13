@@ -79,3 +79,60 @@ pub(super) fn transform_event(watch_event: &Event) -> Option<Event> {
         None
     }
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use assert_fs::prelude::*;
+    use assert_fs::TempDir;
+    use watchexec_events::{filekind::{FileEventKind, CreateKind}, FileType, Source, Tag, Event};
+    use std::collections::HashMap;
+
+    #[test]
+    fn get_ignore_files_finds_gitignores() {
+        let temp = TempDir::new().unwrap();
+        temp.child(".gitignore").write_str("node_modules\n").unwrap();
+        temp.child("nested").child(".gitignore").write_str("dist\n").unwrap();
+        temp.child("node_modules").child(".gitignore").write_str("ignored\n").unwrap();
+
+        let files = get_ignore_files(true, temp.path().to_str().unwrap()).unwrap();
+        let mut names = files
+            .iter()
+            .map(|f| f.path.strip_prefix(temp.path()).unwrap().to_string_lossy().into_owned())
+            .collect::<Vec<_>>();
+        names.sort();
+        assert_eq!(names, vec![".gitignore", "nested/.gitignore"]);
+    }
+
+    #[test]
+    fn get_nx_ignore_detects_file() {
+        let temp = TempDir::new().unwrap();
+        temp.child(".nxignore").write_str("dist\n").unwrap();
+        let res = get_nx_ignore(temp.path());
+        assert!(res.is_some());
+    }
+
+    #[test]
+    fn transform_event_canonicalizes_paths() {
+        if !cfg!(target_os = "linux") {
+            return;
+        }
+        let temp = TempDir::new().unwrap();
+        let real = temp.child("real.txt");
+        real.touch().unwrap();
+        let link = temp.child("link.txt");
+        link.symlink_to_file(real.path()).unwrap();
+
+        let event = Event {
+            tags: vec![
+                Tag::Path { path: link.path().to_path_buf(), file_type: Some(FileType::File) },
+                Tag::FileEventKind(FileEventKind::Create(CreateKind::File)),
+                Tag::Source(Source::Filesystem),
+            ],
+            metadata: HashMap::new(),
+        };
+
+        let transformed = transform_event(&event).unwrap();
+        let (p, _) = transformed.paths().next().unwrap();
+        assert_eq!(p, real.path());
+    }
+}

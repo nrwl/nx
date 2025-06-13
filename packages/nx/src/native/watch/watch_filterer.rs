@@ -160,3 +160,74 @@ pub(super) async fn create_filter(
         nx_ignore,
     })
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use assert_fs::prelude::*;
+    use assert_fs::TempDir;
+    use std::collections::HashMap;
+
+    fn make_event(path: &std::path::Path) -> Event {
+        Event {
+            tags: vec![
+                Tag::Path {
+                    path: path.to_path_buf(),
+                    file_type: Some(FileType::File),
+                },
+                Tag::FileEventKind(FileEventKind::Create(CreateKind::File)),
+                Tag::Source(Source::Filesystem),
+            ],
+            metadata: HashMap::new(),
+        }
+    }
+
+    #[tokio::test]
+    async fn filter_event_respects_ignore_files() {
+        let temp = TempDir::new().unwrap();
+        temp.child(".gitignore").write_str("git-ignored.txt\n").unwrap();
+        temp
+            .child(".nxignore")
+            .write_str("nx-ignored.txt\n!nx-whitelisted.txt\n").unwrap();
+        temp.child("git-ignored.txt").touch().unwrap();
+        temp.child("nx-ignored.txt").touch().unwrap();
+        temp.child("nx-whitelisted.txt").touch().unwrap();
+        temp.child("glob-ignored.txt").touch().unwrap();
+        temp.child("normal.txt").touch().unwrap();
+
+        let filterer = create_filter(
+            temp.path().to_str().unwrap(),
+            &["glob-ignored.txt".to_string()],
+            true,
+        )
+        .await
+        .unwrap();
+
+        let git_event = make_event(&temp.child("git-ignored.txt"));
+        assert!(!filterer.filter_event(&git_event, Priority::default()));
+
+        let nx_event = make_event(&temp.child("nx-ignored.txt"));
+        assert!(!filterer.filter_event(&nx_event, Priority::default()));
+
+        let whitelist_event = make_event(&temp.child("nx-whitelisted.txt"));
+        assert!(filterer.filter_event(&whitelist_event, Priority::default()));
+
+        let glob_event = make_event(&temp.child("glob-ignored.txt"));
+        assert!(!filterer.filter_event(&glob_event, Priority::default()));
+
+        let normal_event = make_event(&temp.child("normal.txt"));
+        assert!(filterer.filter_event(&normal_event, Priority::default()));
+    }
+
+    #[tokio::test]
+    async fn create_filter_respects_use_ignore_flag() {
+        let temp = TempDir::new().unwrap();
+        temp.child(".gitignore").write_str("git-ignored.txt\n").unwrap();
+        temp.child("git-ignored.txt").touch().unwrap();
+
+        let filterer = create_filter(temp.path().to_str().unwrap(), &[], false)
+            .await
+            .unwrap();
+        let event = make_event(&temp.child("git-ignored.txt"));
+        assert!(filterer.filter_event(&event, Priority::default()));
+    }
+}
