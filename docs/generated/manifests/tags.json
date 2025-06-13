@@ -1,4 +1,41 @@
 {
+  "init": [
+    {
+      "description": "",
+      "file": "shared/getting-started/start-with-existing-project",
+      "id": "adding-to-existing",
+      "name": "Add to existing project",
+      "path": "/getting-started/adding-to-existing"
+    },
+    {
+      "description": "",
+      "file": "shared/migration/adding-to-monorepo",
+      "id": "adding-to-monorepo",
+      "name": "NPM/Yarn/PNPM workspaces",
+      "path": "/recipes/adopting-nx/adding-to-monorepo"
+    },
+    {
+      "description": "",
+      "file": "shared/migration/adding-to-existing-project",
+      "id": "adding-to-existing-project",
+      "name": "Add to any Project",
+      "path": "/recipes/adopting-nx/adding-to-existing-project"
+    },
+    {
+      "description": "",
+      "file": "shared/migration/migration-angular",
+      "id": "angular",
+      "name": "Migrating from Angular CLI",
+      "path": "/technologies/angular/migration/angular"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/init",
+      "id": "init",
+      "name": "init",
+      "path": "/reference/core-api/nx/documents/init"
+    }
+  ],
   "editor-setup": [
     {
       "description": "Learn about Nx Console, an extension for VS Code and WebStorm. (formerly Editor Setup)",
@@ -48,6 +85,15 @@
       "id": "console-migrate-ui",
       "name": "Migrate UI",
       "path": "/recipes/nx-console/console-migrate-ui"
+    }
+  ],
+  "ai-integration": [
+    {
+      "description": "Learn about how to integrate Nx with your favorite AI assistant.",
+      "file": "shared/getting-started/ai-setup",
+      "id": "ai-integration",
+      "name": "AI Integration",
+      "path": "/getting-started/ai-integration"
     }
   ],
   "run-tasks": [
@@ -815,36 +861,6 @@
       "id": "self-hosted-caching",
       "name": "Self-Host the Remote Cache",
       "path": "/recipes/running-tasks/self-hosted-caching"
-    }
-  ],
-  "init": [
-    {
-      "description": "",
-      "file": "shared/migration/adding-to-monorepo",
-      "id": "adding-to-monorepo",
-      "name": "NPM/Yarn/PNPM workspaces",
-      "path": "/recipes/adopting-nx/adding-to-monorepo"
-    },
-    {
-      "description": "",
-      "file": "shared/migration/adding-to-existing-project",
-      "id": "adding-to-existing-project",
-      "name": "Add to any Project",
-      "path": "/recipes/adopting-nx/adding-to-existing-project"
-    },
-    {
-      "description": "",
-      "file": "shared/migration/migration-angular",
-      "id": "angular",
-      "name": "Migrating from Angular CLI",
-      "path": "/technologies/angular/migration/angular"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/init",
-      "id": "init",
-      "name": "init",
-      "path": "/reference/core-api/nx/documents/init"
     }
   ],
   "import": [

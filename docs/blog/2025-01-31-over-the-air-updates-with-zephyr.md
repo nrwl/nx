@@ -60,7 +60,7 @@ Beyond just mitigating risk of changing dependencies that can cause runtime erro
 
 If you sprinkle [Nx Cloud](/ci/intro/why-nx-cloud) on top - you can ensure your CI remains fast as you scale out your application through [Nx Replay](/ci/features/remote-cache#use-remote-caching-nx-replay) and [Nx Agents](/ci/features/distribute-task-execution). Increased scalability does not come with an increased maintenance cost of managing CI machines manually thanks to declarative [config files](/ci/recipes/set-up/monorepo-ci-github-actions).
 
-You can learn more about Why to use Nx beyond Module Federation support [here](/getting-started/why-nx).
+You can learn more about Why to use Nx beyond Module Federation support [here](/getting-started/intro).
 
 ## Setting up a Super App with Nx
 

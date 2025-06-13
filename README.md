@@ -35,7 +35,7 @@ npx create-nx-workspace
 npx nx init
 ```
 
-to add Nx to your existing workspace to get faster task scheduling, caching and more. More [in the docs](https://nx.dev/getting-started/intro#try-nx-yourself).
+to add Nx to your existing workspace to get faster task scheduling, caching and more. More [in the docs](https://nx.dev/getting-started/intro).
 
 ## Learn about CI with Nx Cloud
 

@@ -66,7 +66,8 @@ export class BlogApi {
           : null,
         tags: frontmatter.tags ?? [],
         reposts: frontmatter.reposts ?? [],
-        pinned: frontmatter.pinned ?? false,
+        // Do not default to 'false' so you can 'unpin' a blog post
+        pinned: frontmatter.pinned ?? null,
         ogImage: image,
         ogImageType: type,
         filePath,

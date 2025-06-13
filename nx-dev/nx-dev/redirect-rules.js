@@ -1033,13 +1033,6 @@ const coreFeatureAndConceptsRefactoring = {
     '/recipes/running-tasks/configure-inputs',
 };
 
-/*
- * For AI Chat to make sure old URLs are not broken (added 2023-09-14)
- */
-const aiChat = {
-  // '/ai': '/ai-chat',
-};
-
 // rename nx/linter to eslint
 const eslintRename = {
   '/nx-api/linter': '/nx-api/eslint',
@@ -1473,6 +1466,10 @@ const nxModuleFederationConceptsRedirects = {
     '/technologies/module-federation/concepts/:slug*',
 };
 
+const gettingStartedRedirects = {
+  '/getting-started/why-nx': '/getting-started/intro',
+};
+
 /**
  * Public export API
  */
@@ -1498,7 +1495,6 @@ module.exports = {
   pluginsToExtendNx,
   latestRecipesRefactoring,
   coreFeatureRefactoring: coreFeatureAndConceptsRefactoring,
-  aiChat,
   eslintRename,
   removedDeprecatedUrls,
   troubleshootingOutOfRecipes,
@@ -1513,4 +1509,5 @@ module.exports = {
   nxApiRedirects,
   nxRecipesRedirects,
   nxModuleFederationConceptsRedirects,
+  gettingStartedRedirects,
 };
