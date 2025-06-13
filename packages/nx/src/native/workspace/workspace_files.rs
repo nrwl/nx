@@ -87,3 +87,36 @@ fn transform_root_map(root_map: HashMap<String, String>) -> hashbrown::HashMap<P
         .map(|(project_root, project_name)| (PathBuf::from(project_root), project_name))
         .collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn groups_files_by_project_and_global() {
+        let project_root_map = HashMap::from([
+            ("apps/app".to_string(), "app".to_string()),
+            ("libs/lib".to_string(), "lib".to_string()),
+        ]);
+
+        let files = vec![
+            FileData {
+                file: "apps/app/file1.txt".into(),
+                hash: "1".into(),
+            },
+            FileData {
+                file: "libs/lib/libfile.txt".into(),
+                hash: "2".into(),
+            },
+            FileData {
+                file: "root.txt".into(),
+                hash: "3".into(),
+            },
+        ];
+
+        let result = get_files(project_root_map, files).unwrap();
+        assert_eq!(result.project_file_map["app"].len(), 1);
+        assert_eq!(result.project_file_map["lib"].len(), 1);
+        assert_eq!(result.global_files.len(), 1);
+    }
+}

@@ -423,3 +423,160 @@ impl Drop for WorkspaceContext {
         drop(fw);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use assert_fs::TempDir;
+    use assert_fs::prelude::*;
+    use std::collections::HashMap;
+
+    fn setup_fs() -> (TempDir, TempDir) {
+        let workspace = TempDir::new().unwrap();
+        workspace.child("a.txt").write_str("a").unwrap();
+        workspace
+            .child("dir")
+            .child("b.txt")
+            .write_str("b")
+            .unwrap();
+        workspace
+            .child("dir")
+            .child("sub")
+            .child("c.txt")
+            .write_str("c")
+            .unwrap();
+
+        let cache = TempDir::new().unwrap();
+        std::fs::create_dir_all(cache.path()).unwrap();
+
+        (workspace, cache)
+    }
+
+    #[test]
+    fn incremental_update_updates_and_deletes_files() {
+        let (workspace, cache) = setup_fs();
+
+        let ctx = WorkspaceContext::new(
+            workspace.path().to_string_lossy().into(),
+            cache.path().to_string_lossy().into(),
+        );
+
+        // wait for files to be gathered
+        ctx.all_file_data();
+
+        workspace
+            .child("dir")
+            .child("b.txt")
+            .write_str("bb")
+            .unwrap();
+        workspace.child("new.txt").write_str("new").unwrap();
+        workspace.child("a.txt").remove_file().unwrap();
+
+        let updated = ctx.incremental_update(vec!["dir/b.txt", "new.txt"], vec!["a.txt"]);
+
+        assert_eq!(updated.len(), 2);
+        assert!(updated.contains_key("dir/b.txt"));
+        assert!(updated.contains_key("new.txt"));
+
+        let files: Vec<String> = ctx.all_file_data().into_iter().map(|f| f.file).collect();
+        assert!(files.contains(&"dir/b.txt".to_string()));
+        assert!(files.contains(&"dir/sub/c.txt".to_string()));
+        assert!(files.contains(&"new.txt".to_string()));
+        assert!(!files.contains(&"a.txt".to_string()));
+    }
+
+    #[test]
+    fn update_project_files_modifies_maps() {
+        let (workspace, cache) = setup_fs();
+
+        let ctx = WorkspaceContext::new(
+            workspace.path().to_string_lossy().into(),
+            cache.path().to_string_lossy().into(),
+        );
+
+        let project_root_mappings = HashMap::from([
+            ("apps/app".to_string(), "app".to_string()),
+            ("libs/lib".to_string(), "lib".to_string()),
+        ]);
+
+        let project_files = HashMap::from([
+            (
+                "app".to_string(),
+                vec![
+                    FileData {
+                        file: "apps/app/file1.txt".into(),
+                        hash: "old1".into(),
+                    },
+                    FileData {
+                        file: "apps/app/file2.txt".into(),
+                        hash: "old2".into(),
+                    },
+                ],
+            ),
+            (
+                "lib".to_string(),
+                vec![FileData {
+                    file: "libs/lib/libfile.txt".into(),
+                    hash: "old3".into(),
+                }],
+            ),
+        ]);
+
+        let global_files = vec![
+            FileData {
+                file: "global1.txt".into(),
+                hash: "g1".into(),
+            },
+            FileData {
+                file: "global2.txt".into(),
+                hash: "g2".into(),
+            },
+        ];
+
+        let updated_files = HashMap::from([
+            ("apps/app/file1.txt".to_string(), "new1".to_string()),
+            ("libs/lib/libfile.txt".to_string(), "new3".to_string()),
+            ("new_global.txt".to_string(), "ng".to_string()),
+        ]);
+
+        let deleted_files = vec!["apps/app/file2.txt", "global2.txt"];
+
+        let result = ctx.update_project_files(
+            project_root_mappings,
+            External::new(project_files.clone()),
+            External::new(global_files.clone()),
+            updated_files,
+            deleted_files,
+        );
+
+        let proj_map = result.file_map.project_file_map;
+        let app_files = proj_map.get("app").unwrap();
+        assert_eq!(app_files.len(), 1);
+        assert_eq!(app_files[0].file, "apps/app/file1.txt");
+        assert_eq!(app_files[0].hash, "new1");
+
+        let lib_files = proj_map.get("lib").unwrap();
+        assert_eq!(lib_files[0].hash, "new3");
+
+        let global = result.file_map.non_project_files;
+        let names: Vec<String> = global.iter().map(|f| f.file.clone()).collect();
+        assert!(names.contains(&"global1.txt".to_string()));
+        assert!(names.contains(&"new_global.txt".to_string()));
+        assert!(!names.contains(&"global2.txt".to_string()));
+    }
+
+    #[test]
+    fn get_files_in_directory_returns_children() {
+        let (workspace, cache) = setup_fs();
+
+        let ctx = WorkspaceContext::new(
+            workspace.path().to_string_lossy().into(),
+            cache.path().to_string_lossy().into(),
+        );
+        ctx.all_file_data();
+
+        let mut files = ctx.get_files_in_directory("dir".to_string());
+        files.sort();
+        assert_eq!(files, vec!["dir/b.txt", "dir/sub/c.txt"]);
+    }
+}
