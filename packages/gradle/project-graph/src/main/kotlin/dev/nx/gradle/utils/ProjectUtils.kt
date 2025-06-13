@@ -84,8 +84,8 @@ fun processTargetsForProject(
 
   val testTasks = project.getTasksByName("test", false)
   val intTestTasks = project.getTasksByName("intTest", false)
-  val hasCiTestTarget = ciTestTargetName != null && testTasks.isNotEmpty()
-  val hasCiIntTestTarget = ciIntTestTargetName != null && intTestTasks.isNotEmpty()
+  val hasCiTestTarget = ciTestTargetName != null && testTasks.isNotEmpty() && atomized
+  val hasCiIntTestTarget = ciIntTestTargetName != null && intTestTasks.isNotEmpty() && atomized
 
   project.tasks.forEach { task ->
     try {
@@ -111,7 +111,7 @@ fun processTargetsForProject(
 
       targets[taskName] = target
 
-      if (hasCiTestTarget && task.name.startsWith("compileTest") && atomized) {
+      if (hasCiTestTarget && task.name.startsWith("compileTest")) {
         addTestCiTargets(
             task.inputs.sourceFiles,
             projectBuildPath,
@@ -124,7 +124,7 @@ fun processTargetsForProject(
             ciTestTargetName!!)
       }
 
-      if (hasCiIntTestTarget && task.name.startsWith("compileIntTest") && atomized) {
+      if (hasCiIntTestTarget && task.name.startsWith("compileIntTest")) {
         addTestCiTargets(
             task.inputs.sourceFiles,
             projectBuildPath,
@@ -137,23 +137,22 @@ fun processTargetsForProject(
             ciIntTestTargetName!!)
       }
 
-      val ciCheckTargetName = targetNameOverrides.getOrDefault("ciCheckTargetName", "check-ci")
-      if (task.name == "check") {
-        val replacedDependencies =
-            (target["dependsOn"] as? List<*>)?.map { dep ->
-              val dependsOn = dep.toString()
-              if (hasCiTestTarget && dependsOn == "${project.name}:$testTargetName" && atomized) {
-                "${project.name}:$ciTestTargetName"
-              } else if (hasCiIntTestTarget &&
-                  dependsOn == "${project.name}:$intTestTargetName" &&
-                  atomized) {
-                "${project.name}:$ciIntTestTargetName"
-              } else {
-                dep
-              }
-            } ?: emptyList()
+      if (ciTestTargetName != null || ciIntTestTargetName != null) {
+        val ciCheckTargetName = targetNameOverrides.getOrDefault("ciCheckTargetName", "check-ci")
+        if (task.name == "check") {
+          val replacedDependencies =
+              (target["dependsOn"] as? List<*>)?.map { dep ->
+                val dependsOn = dep.toString()
+                if (hasCiTestTarget && dependsOn == "${project.name}:$testTargetName") {
+                  "${project.name}:$ciTestTargetName"
+                } else if (hasCiIntTestTarget &&
+                    dependsOn == "${project.name}:$intTestTargetName") {
+                  "${project.name}:$ciIntTestTargetName"
+                } else {
+                  dep
+                }
+              } ?: emptyList()
 
-        if (atomized) {
           val newTarget: MutableMap<String, Any?> =
               mutableMapOf(
                   "dependsOn" to replacedDependencies,
@@ -165,21 +164,19 @@ fun processTargetsForProject(
           ensureTargetGroupExists(targetGroups, testCiTargetGroup)
           targetGroups[testCiTargetGroup]?.add(ciCheckTargetName)
         }
-      }
 
-      if (task.name == "build") {
-        val ciBuildTargetName = targetNameOverrides.getOrDefault("ciBuildTargetName", "build-ci")
-        val replacedDependencies =
-            (target["dependsOn"] as? List<*>)?.map { dep ->
-              val dependsOn = dep.toString()
-              if (dependsOn == "${project.name}:check" && atomized) {
-                "${project.name}:$ciCheckTargetName"
-              } else {
-                dep
-              }
-            } ?: emptyList()
+        if (task.name == "build") {
+          val ciBuildTargetName = targetNameOverrides.getOrDefault("ciBuildTargetName", "build-ci")
+          val replacedDependencies =
+              (target["dependsOn"] as? List<*>)?.map { dep ->
+                val dependsOn = dep.toString()
+                if (dependsOn == "${project.name}:check") {
+                  "${project.name}:$ciCheckTargetName"
+                } else {
+                  dep
+                }
+              } ?: emptyList()
 
-        if (atomized) {
           val newTarget: MutableMap<String, Any?> =
               mutableMapOf(
                   "dependsOn" to replacedDependencies,
@@ -199,5 +196,6 @@ fun processTargetsForProject(
     }
   }
 
+  logger.info("Final targets in processTargetsForProject: $targets")
   return GradleTargets(targets, targetGroups, externalNodes)
 }
