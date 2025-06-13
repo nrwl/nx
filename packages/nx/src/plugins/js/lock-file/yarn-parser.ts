@@ -578,7 +578,12 @@ function getPackageJsonVersion(
   node: ProjectGraphExternalNode
 ): string {
   const { packageName, version } = node.data;
-
+  if (
+    dependencies[packageName]?.startsWith('workspace:') ||
+    dependencies[packageName]?.startsWith('file:')
+  ) {
+    return `file:./workspace_modules/${packageName}`;
+  }
   if (dependencies[packageName]) {
     const patchRegex = new RegExp(`^patch:${packageName}@(.*)|#.*$`);
     // extract the version from the patch or use the full version
@@ -621,9 +626,14 @@ function findOriginalKeys(
     }
     if (
       snapshot.version.startsWith('file:') ||
-      snapshot.version.startsWith('workspace:')
+      snapshot.version.startsWith('workspace:') ||
+      keys[0].includes('@file:')
     ) {
-      return [[`${node.data.packageName}@${node.data.version}`], snapshot];
+      const packageName = keys[0].split('@file:')[0];
+      return [
+        [`${packageName}@file:./workspace_modules/${packageName}`],
+        snapshot,
+      ];
     }
     if (
       isStandardPackage(snapshot, node.data.version) ||

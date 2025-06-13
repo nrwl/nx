@@ -59,6 +59,12 @@ function normalizeDependencies(packageJson: PackageJson, graph: ProjectGraph) {
       const node = findNodeMatchingVersion(graph, packageName, versionRange);
       if (node) {
         combinedDependencies[packageName] = node.data.version;
+      } else if (
+        versionRange.startsWith('workspace:') ||
+        versionRange.startsWith('file:')
+      ) {
+        // workspace module, leave as is
+        combinedDependencies[packageName] = versionRange;
       } else {
         throw new Error(
           `Pruned lock file creation failed. The following package was not found in the root lock file: ${packageName}@${versionRange}`
