@@ -4,6 +4,7 @@ import { dirname, extname, isAbsolute, relative, resolve } from 'node:path';
 import { type PackageManagerCommands } from 'nx/src/utils/package-manager';
 import { join } from 'path';
 import { type ParsedCommandLine } from 'typescript';
+import picomatch = require('picomatch');
 
 export type ExtendedConfigFile = {
   filePath: string;
@@ -77,22 +78,53 @@ export function isValidPackageJsonBuildConfig(
   const outDir = tsConfig.options.outFile
     ? dirname(tsConfig.options.outFile)
     : tsConfig.options.outDir;
-  const resolvedOutDir = outDir
-    ? resolve(workspaceRoot, resolvedProjectPath, outDir)
-    : undefined;
+
+  let resolvedOutDir: string | undefined;
+  if (outDir) {
+    const potentialOutDir = resolve(workspaceRoot, resolvedProjectPath, outDir);
+    const projectAbsolutePath = resolve(workspaceRoot, resolvedProjectPath);
+    const relativePath = relative(projectAbsolutePath, potentialOutDir);
+
+    if (!relativePath.startsWith('..')) {
+      resolvedOutDir = potentialOutDir;
+    }
+  }
 
   const isPathSourceFile = (path: string): boolean => {
+    const normalizedPath = isAbsolute(path)
+      ? resolve(path)
+      : resolve(workspaceRoot, resolvedProjectPath, path);
+
     if (resolvedOutDir) {
-      const pathToCheck = resolve(workspaceRoot, resolvedProjectPath, path);
-      return !pathToCheck.startsWith(resolvedOutDir);
+      // If the path is within the outDir, we assume it's not a source file.
+      const relativePath = relative(resolvedOutDir, normalizedPath);
+      if (!relativePath.startsWith('..')) {
+        return false;
+      }
     }
 
-    const ext = extname(path);
-    // Check that the file extension is a TS file extension. As the source files are in the same directory as the output files.
-    return ['.ts', '.tsx', '.cts', '.mts'].includes(ext);
+    // If no include patterns, TypeScript includes all TS files by default
+    const include = tsConfig.raw?.include;
+    if (!include || !Array.isArray(include)) {
+      const ext = extname(path);
+      const tsExtensions = ['.ts', '.tsx', '.cts', '.mts'];
+      if (tsExtensions.includes(ext)) {
+        return true;
+      }
+    }
+
+    const projectAbsolutePath = resolve(workspaceRoot, resolvedProjectPath);
+    const relativeToProject = relative(projectAbsolutePath, normalizedPath);
+
+    for (const pattern of include) {
+      if (picomatch(pattern)(relativeToProject)) {
+        return true;
+      }
+    }
+
+    return false;
   };
 
-  // Checks if the value is a path within the `src` directory.
   const containsInvalidPath = (
     value: string | Record<string, string>
   ): boolean => {
