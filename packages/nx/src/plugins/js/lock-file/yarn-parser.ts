@@ -619,6 +619,9 @@ function findOriginalKeys(
     if (!keys.some((k) => k.startsWith(`${node.data.packageName}@`))) {
       continue;
     }
+    if (node.type === 'nx_js_wm') {
+      return [[`${node.data.packageName}@${node.data.version}`], snapshot];
+    }
     if (
       isStandardPackage(snapshot, node.data.version) ||
       isBerryAlias(snapshot, node.data.version) ||
