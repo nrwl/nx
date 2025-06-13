@@ -152,6 +152,7 @@ export async function viteConfigurationGeneratorInternal(
               : `import react from '@vitejs/plugin-react'`,
           ],
           plugins: ['react()'],
+          port: schema.port,
         },
         false,
         undefined

@@ -33,7 +33,10 @@ describe('@nx/rspack', () => {
       'my-app/project.json',
       JSON.stringify({ name: 'my-app' })
     );
-    tempFs.createFileSync('my-app/rspack.config.ts', `export default {};`);
+    tempFs.createFileSync(
+      'my-app/rspack.config.ts',
+      `export default { devServer: { port: 9000 } };`
+    );
     tempFs.createFileSync('package-lock.json', `{}`);
   });
 
@@ -132,6 +135,7 @@ describe('@nx/rspack', () => {
                     "executor": "@nx/web:file-server",
                     "options": {
                       "buildTarget": "build",
+                      "port": 9000,
                       "spa": true,
                     },
                   },

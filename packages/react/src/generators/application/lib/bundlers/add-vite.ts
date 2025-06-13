@@ -42,6 +42,7 @@ export async function setupViteConfiguration(
     skipFormat: true,
     addPlugin: options.addPlugin,
     projectType: 'application',
+    port: options.port,
   });
   tasks.push(viteTask);
   createOrEditViteConfig(
@@ -52,6 +53,8 @@ export async function setupViteConfiguration(
       includeVitest: options.unitTestRunner === 'vitest',
       inSourceTests: options.inSourceTests,
       rollupOptionsExternal: ["'react'", "'react-dom'", "'react/jsx-runtime'"],
+      port: options.port,
+      previewPort: options.port,
       ...(options.useReactRouter
         ? reactRouterFrameworkConfig
         : baseReactConfig),
