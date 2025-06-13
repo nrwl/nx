@@ -264,9 +264,7 @@
         "testTargetName": "test-kt",
         "ciTestTargetName": "test-ci",
         "classesTargetName": "classes",
-        "buildTargetName": "build-kt",
-        "ktfmtCheckTargetName": "lint-kt",
-        "ktfmtFormatTargetName": "format-kt"
+        "buildTargetName": "build-kt"
       }
     }
   ],
