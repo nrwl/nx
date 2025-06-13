@@ -165,32 +165,28 @@ export class PseudoTtyProcess implements RunningTask {
     this.handleChildProcesses();
   }
 
-  async handleChildProcesses() {
-    return new Promise((res) => {
-      this.childProcess.onOutput((output) => {
-        if (
-          this.readyWhenStatus?.length &&
-          isReady(this.readyWhenStatus, output)
-        ) {
-          this.isAlive = false;
-          this.childProcess.cleanup();
-          this.exitCallbacks.forEach((cb) => cb(0));
-          res({ success: true, code: 0, terminalOutput: this.terminalOutput });
-          return;
-        }
-        this.terminalOutput += output;
-        this.outputCallbacks.forEach((cb) => cb(output));
-      });
-
-      this.childProcess.onExit((message) => {
+  handleChildProcesses() {
+    this.childProcess.onOutput((output) => {
+      if (
+        this.readyWhenStatus?.length &&
+        isReady(this.readyWhenStatus, output)
+      ) {
         this.isAlive = false;
-
-        const code = messageToCode(message);
         this.childProcess.cleanup();
+        this.exitCallbacks.forEach((cb) => cb(0));
+        return;
+      }
+      this.terminalOutput += output;
+      this.outputCallbacks.forEach((cb) => cb(output));
+    });
 
-        this.exitCallbacks.forEach((cb) => cb(code));
-        res({ success: true, code, terminalOutput: this.terminalOutput });
-      });
+    this.childProcess.onExit((message) => {
+      this.isAlive = false;
+
+      const code = messageToCode(message);
+      this.childProcess.cleanup();
+
+      this.exitCallbacks.forEach((cb) => cb(code));
     });
   }
 
