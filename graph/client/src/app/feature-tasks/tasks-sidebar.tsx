@@ -19,6 +19,7 @@ import { Dropdown } from '@nx/graph/legacy/components';
 import { useRouteConstructor } from '@nx/graph/legacy/shared';
 import { useCurrentPath } from '../hooks/use-current-path';
 import { ShowHideAll } from '../ui-components/show-hide-all';
+import { useTaskGraphLazyLoading } from '../hooks/use-task-graph-lazy-loading';
 import { createTaskName } from '../util';
 
 export function TasksSidebar() {
@@ -38,8 +39,33 @@ export function TasksSidebar() {
   const routeData = useRouteLoaderData(
     'selectedTarget'
   ) as TaskGraphClientResponse;
-  const { taskGraphs, errors } = routeData;
+
+  // Use the new lazy loading hook
+  const {
+    taskGraphs: lazyTaskGraphs,
+    loadTaskGraph,
+    errors: lazyErrors,
+    metadata,
+    hasTaskGraph,
+    isTaskLoading,
+  } = useTaskGraphLazyLoading(params.selectedWorkspaceId || '', routeData);
+
+  // Merge legacy and lazy loaded data
+  const taskGraphs = { ...(routeData.taskGraphs || {}), ...lazyTaskGraphs };
+  const errors = { ...(routeData.errors || {}), ...lazyErrors };
+
   let { projects, targets } = selectedWorkspaceRouteData;
+
+  // If we have metadata, use it to build the targets list more efficiently
+  if (metadata) {
+    const allTargets = new Set<string>();
+    metadata.projects.forEach((project) => {
+      project.targets.forEach((target) => {
+        allTargets.add(target.name);
+      });
+    });
+    targets = Array.from(allTargets).sort();
+  }
 
   const selectedTarget = params['selectedTarget'] ?? targets[0];
 
@@ -160,9 +186,9 @@ export function TasksSidebar() {
     graphService.handleTaskEvent({
       type: 'notifyTaskGraphSetProjects',
       projects: selectedWorkspaceRouteData.projects,
-      taskGraphs,
+      taskGraphs: routeData.taskGraphs || {},
     });
-  }, [selectedWorkspaceRouteData]);
+  }, [selectedWorkspaceRouteData, routeData.taskGraphs]);
 
   useEffect(() => {
     if (groupByProject) {
@@ -177,6 +203,28 @@ export function TasksSidebar() {
       });
     }
   }, [searchParams]);
+
+  // Lazy load task graphs for selected projects
+  useEffect(() => {
+    const loadTaskGraphs = async () => {
+      for (const projectName of selectedProjects) {
+        if (
+          !hasTaskGraph(projectName, selectedTarget) &&
+          !isTaskLoading(projectName, selectedTarget)
+        ) {
+          await loadTaskGraph(projectName, selectedTarget);
+        }
+      }
+    };
+
+    loadTaskGraphs();
+  }, [
+    selectedProjects,
+    selectedTarget,
+    hasTaskGraph,
+    isTaskLoading,
+    loadTaskGraph,
+  ]);
 
   useEffect(() => {
     graphService.handleTaskEvent({
@@ -225,6 +273,7 @@ export function TasksSidebar() {
         selectedTarget={selectedTarget}
         toggleProject={toggleProject}
         errors={errors}
+        isTaskLoading={isTaskLoading}
       >
         <label
           htmlFor="selectedTarget"

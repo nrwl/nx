@@ -62,7 +62,46 @@ const taskDataLoader = async (selectedWorkspaceId: string) => {
     (graph) => graph.id === selectedWorkspaceId
   );
 
-  return await projectGraphDataService.getTaskGraph(workspaceInfo.taskGraphUrl);
+  // Use the new task graph metadata endpoint for faster initial loading
+  const metadataUrl = workspaceInfo.taskGraphUrl.replace(
+    'task-graph.json',
+    'task-graph-metadata.json'
+  );
+  try {
+    const metadata = await fetch(metadataUrl).then((res) => res.json());
+    return {
+      taskGraphs: {},
+      plans: {},
+      errors: {},
+      metadata, // Include metadata for UI tree building
+    };
+  } catch {
+    // Fallback to legacy behavior if metadata endpoint is not available
+    return await projectGraphDataService.getTaskGraph(
+      workspaceInfo.taskGraphUrl
+    );
+  }
+};
+
+// New function to lazy load specific task graphs
+const loadSpecificTaskGraph = async (
+  selectedWorkspaceId: string,
+  projectName: string,
+  targetName: string,
+  configuration?: string
+) => {
+  const workspaceInfo = appConfig.workspaces.find(
+    (graph) => graph.id === selectedWorkspaceId
+  );
+
+  const url = new URL(workspaceInfo.taskGraphUrl);
+  url.searchParams.set('project', projectName);
+  url.searchParams.set('target', targetName);
+  if (configuration) {
+    url.searchParams.set('configuration', configuration);
+  }
+
+  return await fetch(url.toString()).then((res) => res.json());
 };
 
 const sourceMapsLoader = async (selectedWorkspaceId: string) => {
@@ -172,6 +211,9 @@ const childRoutes: RouteObject[] = [
     ],
   },
 ];
+
+// Export the lazy loading function for use in components
+export { loadSpecificTaskGraph };
 
 export const devRoutes: RouteObject[] = [
   {
