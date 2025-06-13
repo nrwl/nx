@@ -13,4 +13,4 @@ pluginManagement {
   }
 }
 
-rootProject.name = "project-graph"
+rootProject.name = "gradle-project-graph"
