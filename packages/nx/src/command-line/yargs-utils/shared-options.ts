@@ -416,7 +416,7 @@ function concurrency(val: string | number) {
   }
 
   const maxCores = availableParallelism?.() ?? cpus().length;
-  parallel = maxCores * parallel * 100;
+  parallel = maxCores * parallel;
   return Math.max(1, Math.floor(parallel));
 }
 
