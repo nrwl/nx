@@ -9,11 +9,11 @@ Sync generators are generators that are used to ensure that your file system is 
 
 ## Create a new Sync Generator
 
-You can create a new sync generator by hand or use the built-in generator that Nx provides via the `@nx/plugin`.
+You can create a new sync generator by hand or use the built-in generator that Nx provides via the `@nx/plugin` package.
 
 ### Step 1: Add @nx/plugin
 
-Make sure you have the `@nx/plugin` installed or add it to your workspace:
+Make sure you have `@nx/plugin` installed or add it to your workspace:
 
 ```shell
 nx add @nx/plugin
@@ -27,7 +27,7 @@ Create a new local plugin where we can add our new sync generator. You can also 
 nx g @nx/plugin:plugin tools/my-plugin
 ```
 
-### Step 3: Scaffold a new Sync generator
+### Step 3: Scaffold a new sync generator
 
 Create a sync generator the same way you would [create any generator](/extending-nx/recipes/local-generators).
 
@@ -138,7 +138,7 @@ export default mySyncGenerator;
 To register a generator as a sync generator for a particular task, add the generator to the `syncGenerators` property of the task configuration.
 
 {% callout type="info" title="Important: Package.json Configuration" %}
-For projects using inferred targets (no project.json file), the sync generators must be registered inside the `nx` property in package.json, not at the root level.
+For projects using [inferred targets](/concepts/inferred-tasks) (no project.json file), the sync generators must be registered inside the `nx` property in package.json, not at the root level.
 {% /callout %}
 
 {% tabs %}
