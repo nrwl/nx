@@ -410,11 +410,26 @@ const coerceTuiAutoExit = (value: string) => {
 };
 
 function concurrency(val: string | number) {
-  let parallel = typeof val === 'number' ? val : parseInt(val);
-
-  if (typeof val === 'string' && val.at(-1) === '%') {
-    const maxCores = availableParallelism?.() ?? cpus().length;
-    parallel = (maxCores * parallel) / 100;
+  let parallel = typeof val === 'number' ? val : stringToNumber(val);
+  if (parallel >= 1) {
+    return Math.floor(parallel)
   }
+
+  const maxCores = availableParallelism?.() ?? cpus().length;
+  parallel = maxCores * parallel * 100;
   return Math.max(1, Math.floor(parallel));
+}
+
+function stringToNumber(input: string): number {
+  const percentMatch = input.match(/^(\d+\.?\d*)%$/);
+  if (percentMatch) {
+      return parseFloat(percentMatch[1]) / 100;
+  }
+
+  const numericMatch = input.match(/^-?\d+\.?\d*$/);
+  if (numericMatch) {
+      return parseFloat(input);
+  }
+
+  return 1;
 }
