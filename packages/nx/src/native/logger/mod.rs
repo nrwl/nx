@@ -109,7 +109,7 @@ pub(crate) fn enable_logger() {
         .event_format(NxLogFormatter)
         .with_filter(
             EnvFilter::try_from_env("NX_NATIVE_LOGGING")
-                .unwrap_or_else(|_| EnvFilter::new("nx::native=info")),
+                .unwrap_or_else(|_| EnvFilter::new("nx::native=trace")),
         );
 
     let registry = tracing_subscriber::registry()

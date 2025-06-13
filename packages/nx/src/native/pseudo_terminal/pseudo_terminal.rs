@@ -101,23 +101,27 @@ impl PseudoTerminal {
 
             'read_loop: loop {
                 if let Ok(len) = reader.read(&mut buf) {
+                    // trace!("Read {} bytes from pty", len);
                     if len == 0 {
-                        break;
+                        // trace!("Was going to break read loop");
+                        continue;
                     }
+                    trace!("Read {} bytes from pty", len);
                     stdout_tx_clone
                         .send(String::from_utf8_lossy(&buf[0..len]).to_string())
                         .ok();
                     let quiet = quiet_clone.load(Ordering::Relaxed);
                     trace!("Quiet: {}", quiet);
                     debug!("Read {} bytes", len);
-                    if is_within_nx_tui {
-                        if let Ok(mut parser) = parser_clone.write() {
-                            if is_within_nx_tui {
-                                trace!("Processing data via vt100 for use in tui");
-                                parser.process(&buf[..len]);
-                            }
+                    // parser.process(&buf[..len]);
+                    // if is_within_nx_tui {
+                    if let Ok(mut parser) = parser_clone.write() {
+                        if is_within_nx_tui {
+                            trace!("Processing data via vt100 for use in tui");
+                            parser.process(&buf[..len]);
                         }
                     }
+                    // }
 
                     if !quiet {
                         let mut logged_interrupted_error = false;
@@ -174,7 +178,7 @@ impl PseudoTerminal {
     }
 
     pub fn run_command(
-        &mut self,
+        mut self,
         command: String,
         command_dir: Option<String>,
         js_env: Option<HashMap<String, String>>,
@@ -273,6 +277,7 @@ impl PseudoTerminal {
             };
         });
 
+        drop(self.pty_pair.master);
         trace!("Returning ChildProcess");
         Ok(ChildProcess::new(
             self.parser.clone(),
@@ -316,20 +321,40 @@ fn command_builder() -> CommandBuilder {
 
 #[cfg(all(test, windows))]
 mod tests {
+    use crate::native::logger::enable_logger;
+
     use super::*;
 
     #[test]
     fn can_run_commands() {
-        let mut i = 0;
-        let mut pseudo_terminal = PseudoTerminal::default().unwrap();
-        while i < 10 {
-            println!("Running {}", i);
-            let cp1 = pseudo_terminal
-                .run_command(String::from("whoami"), None, None, None, None, None)
-                .unwrap();
-            cp1.wait_receiver.recv().unwrap();
-            i += 1;
-        }
-        drop(pseudo_terminal);
+        enable_logger();
+        let mut pseudo_terminal = PseudoTerminal::new(Default::default()).unwrap();
+        let mut cp1 = pseudo_terminal
+            .run_command(
+                String::from("echo 'Hello World!'"),
+                None,
+                None,
+                None,
+                Some(false),
+                None,
+                None,
+            )
+            .unwrap();
+        cp1.wait_receiver.recv().unwrap();
+
+        let a = cp1
+            .get_parser_and_writer()
+            .0
+            .read()
+            .unwrap()
+            .screen()
+            .all_contents_formatted()
+            .escape_ascii()
+            .to_string();
+
+        dbg!(a);
+
+        // cp1.
+        // drop(pseudo_terminal);
     }
 }
