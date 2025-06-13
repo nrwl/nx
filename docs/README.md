@@ -88,7 +88,7 @@ The documentation website [nx.dev](https://nx.dev) is using custom Markdown synt
 Callouts are available to get the attention of the reader on some specific type of information.
 
 ```markdown
-{% callout type="caution|check|note|warning" title="string" %}
+{% callout type="announcement|caution|check|note|warning" title="string" %}
 Your content goes here.
 {% /callout %}
 ```
