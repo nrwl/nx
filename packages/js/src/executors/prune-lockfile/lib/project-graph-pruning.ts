@@ -87,6 +87,13 @@ function normalizeDependencies(
               version: `file:./workspace_modules/${packageName}`,
             },
           });
+          for (const dep of graph.dependencies[`${packageName}`]) {
+            addDependencyNodeToBuilder(
+              dep.target.replace('npm:', ''),
+              graph,
+              builder
+            );
+          }
           return;
         }
         throw new Error(

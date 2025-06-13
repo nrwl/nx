@@ -23,11 +23,15 @@ export default async function pruneLockfileExecutor(
   logger.log('Pruning lockfile...');
   const outputDirectory = getOutputDir(schema, context);
   const packageJson = getPackageJson(schema, context);
-  const { lockfileName, lockfile } = createPrunedLockfile(
+  const { lockfileName, lockFile, updatedPackageJson } = createPrunedLockfile(
     packageJson,
     context.projectGraph
   );
-  writeFileSync(join(outputDirectory, lockfileName), lockfile);
+  writeFileSync(join(outputDirectory, lockfileName), lockFile);
+  writeFileSync(
+    join(outputDirectory, 'package.json'),
+    JSON.stringify(updatedPackageJson, null, 2)
+  );
   logger.log('Lockfile pruned.');
   logger.log('Success!');
   return {
@@ -38,10 +42,15 @@ export default async function pruneLockfileExecutor(
 function createPrunedLockfile(packageJson: PackageJson, graph: ProjectGraph) {
   const packageManager = detectPackageManager(workspaceRoot);
   const lockfileName = getLockFileName(packageManager);
-  const lockfile = createLockFile(packageJson, graph, packageManager);
+  const { packageJson: updatedPackageJson, lockFile } = createLockFile(
+    packageJson,
+    graph,
+    packageManager
+  );
   return {
     lockfileName,
-    lockfile,
+    lockFile,
+    updatedPackageJson,
   };
 }
 

@@ -23,7 +23,7 @@ export function createLockFile(
   packageJson: PackageJson,
   graph: ProjectGraph,
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
-): string {
+): { packageJson: PackageJson; lockFile: string } {
   const normalizedPackageJson = normalizePackageJson(packageJson);
   const content = readFileSync(getLockFilePath(packageManager), 'utf8');
 
@@ -35,7 +35,14 @@ export function createLockFile(
         normalizedPackageJson,
         combinedDependencies
       );
-      return stringifyYarnLockfile(prunedGraph, content, updatedPackageJson);
+      return {
+        packageJson: updatedPackageJson,
+        lockFile: stringifyYarnLockfile(
+          prunedGraph,
+          content,
+          updatedPackageJson
+        ),
+      };
     }
     if (packageManager === 'pnpm') {
       const { updatedGraph: prunedGraph, combinedDependencies } =
@@ -44,7 +51,14 @@ export function createLockFile(
         normalizedPackageJson,
         combinedDependencies
       );
-      return stringifyPnpmLockfile(prunedGraph, content, updatedPackageJson);
+      return {
+        packageJson: updatedPackageJson,
+        lockFile: stringifyPnpmLockfile(
+          prunedGraph,
+          content,
+          updatedPackageJson
+        ),
+      };
     }
     if (packageManager === 'npm') {
       const { updatedGraph: prunedGraph, combinedDependencies } =
@@ -53,7 +67,14 @@ export function createLockFile(
         normalizedPackageJson,
         combinedDependencies
       );
-      return stringifyNpmLockfile(prunedGraph, content, updatedPackageJson);
+      return {
+        packageJson: updatedPackageJson,
+        lockFile: stringifyNpmLockfile(
+          prunedGraph,
+          content,
+          updatedPackageJson
+        ),
+      };
     }
     if (packageManager === 'bun') {
       output.log({
@@ -80,7 +101,7 @@ export function createLockFile(
       bodyLines: errorBodyLines(e, additionalInfo),
     });
 
-    return content;
+    return { packageJson: normalizedPackageJson, lockFile: content };
   }
 }
 
