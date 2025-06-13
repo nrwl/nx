@@ -252,6 +252,9 @@ export declare export declare function installNxConsole(): void
 
 export const IS_WASM: boolean
 
+/** Detects if the current process is being run by an AI agent like Claude, Cursor, or Codex */
+export declare export declare function isAiAgent(): boolean
+
 export declare export declare function logDebug(message: string): void
 
 /** Stripped version of the NxJson interface for use in rust */
