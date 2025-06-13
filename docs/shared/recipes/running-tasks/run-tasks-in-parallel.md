@@ -15,6 +15,8 @@ You can also set parallel based on the percentage of the number of logical CPUs.
 
 ```shell
 npx nx build myapp --parallel=50%
+# or
+npx nx build myapp --parallel=0.5
 ```
 
 Note, you can also change the default in `nx.json`, like this:
