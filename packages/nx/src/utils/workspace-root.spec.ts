@@ -102,4 +102,113 @@ describe('workspaceRootInner', () => {
       '/home/workspace'
     );
   });
+
+  it('should find workspace root from package.json with nx dependency', () => {
+    jest
+      .spyOn(fileUtils, 'fileExists')
+      .mockImplementation((p) =>
+        ['/home/workspace/package.json'].includes(p.toString())
+      );
+    jest.spyOn(fileUtils, 'readJsonFile').mockImplementation((path) => {
+      if (path === '/home/workspace/package.json') {
+        return {
+          name: 'my-workspace',
+          dependencies: {
+            nx: '^17.0.0',
+          },
+        };
+      }
+      throw new Error('File not found');
+    });
+
+    expect(workspaceRootInner('/home/workspace', null)).toEqual(
+      '/home/workspace'
+    );
+  });
+
+  it('should find workspace root from package.json with nx devDependency', () => {
+    jest
+      .spyOn(fileUtils, 'fileExists')
+      .mockImplementation((p) =>
+        ['/home/workspace/package.json'].includes(p.toString())
+      );
+    jest.spyOn(fileUtils, 'readJsonFile').mockImplementation((path) => {
+      if (path === '/home/workspace/package.json') {
+        return {
+          name: 'my-workspace',
+          devDependencies: {
+            nx: '^17.0.0',
+          },
+        };
+      }
+      throw new Error('File not found');
+    });
+
+    expect(workspaceRootInner('/home/workspace', null)).toEqual(
+      '/home/workspace'
+    );
+  });
+
+  it('should find workspace root from package.json with nx peerDependency', () => {
+    jest
+      .spyOn(fileUtils, 'fileExists')
+      .mockImplementation((p) =>
+        ['/home/workspace/package.json'].includes(p.toString())
+      );
+    jest.spyOn(fileUtils, 'readJsonFile').mockImplementation((path) => {
+      if (path === '/home/workspace/package.json') {
+        return {
+          name: 'my-workspace',
+          peerDependencies: {
+            nx: '^17.0.0',
+          },
+        };
+      }
+      throw new Error('File not found');
+    });
+
+    expect(workspaceRootInner('/home/workspace', null)).toEqual(
+      '/home/workspace'
+    );
+  });
+
+  it('should continue search if package.json exists but has no nx dependency', () => {
+    jest
+      .spyOn(fileUtils, 'fileExists')
+      .mockImplementation((p) =>
+        [
+          '/home/workspace/package.json',
+          '/home/node_modules/nx/package.json',
+        ].includes(p.toString())
+      );
+    jest.spyOn(fileUtils, 'readJsonFile').mockImplementation((path) => {
+      if (path === '/home/workspace/package.json') {
+        return {
+          name: 'my-workspace',
+          dependencies: {
+            react: '^18.0.0',
+          },
+        };
+      }
+      throw new Error('File not found');
+    });
+
+    expect(workspaceRootInner('/home/workspace', null)).toEqual('/home');
+  });
+
+  it('should continue search if package.json cannot be read', () => {
+    jest
+      .spyOn(fileUtils, 'fileExists')
+      .mockImplementation((p) =>
+        [
+          '/home/workspace/package.json',
+          '/home/node_modules/nx/package.json',
+        ].includes(p.toString())
+      );
+    jest.spyOn(fileUtils, 'readJsonFile').mockImplementation(() => {
+      throw new Error('Cannot read file');
+    });
+
+    expect(workspaceRootInner('/home/workspace', null)).toEqual('/home');
+  });
 });

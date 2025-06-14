@@ -1,5 +1,6 @@
 import * as path from 'path';
-import { fileExists } from './fileutils';
+import { fileExists, readJsonFile } from './fileutils';
+import { PackageJson } from './package-json';
 
 /**
  * The root of the workspace
@@ -27,12 +28,30 @@ export function workspaceRootInner(
 
   if (matches.some((x) => fileExists(x))) {
     return dir;
+  }
 
-    // This handles the case where we have a workspace which uses npm / yarn / pnpm
-    // workspaces, and has a project which contains Nx in its dependency tree.
-    // e.g. packages/my-lib/package.json contains @nx/devkit, which references Nx and is
-    // thus located in //packages/my-lib/node_modules/nx/package.json
-  } else if (fileExists(path.join(dir, 'node_modules', 'nx', 'package.json'))) {
+  // Check if package.json exists and contains nx in dependencies
+  const packageJsonPath = path.join(dir, 'package.json');
+  if (fileExists(packageJsonPath)) {
+    try {
+      const packageJson = readJsonFile<PackageJson>(packageJsonPath);
+      if (
+        packageJson.dependencies?.['nx'] ||
+        packageJson.devDependencies?.['nx'] ||
+        packageJson.peerDependencies?.['nx']
+      ) {
+        return dir;
+      }
+    } catch {
+      // If we can't read package.json, continue with other checks
+    }
+  }
+
+  // This handles the case where we have a workspace which uses npm / yarn / pnpm
+  // workspaces, and has a project which contains Nx in its dependency tree.
+  // e.g. packages/my-lib/package.json contains @nx/devkit, which references Nx and is
+  // thus located in //packages/my-lib/node_modules/nx/package.json
+  if (fileExists(path.join(dir, 'node_modules', 'nx', 'package.json'))) {
     return workspaceRootInner(path.dirname(dir), dir);
   } else {
     return workspaceRootInner(path.dirname(dir), candidateRoot);
