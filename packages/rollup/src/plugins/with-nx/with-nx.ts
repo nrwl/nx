@@ -86,7 +86,7 @@ export function withNx(
       : createTmpTsConfig(
           options.tsConfig,
           workspaceRoot,
-          projectRoot,
+          projectNode.data.root,
           dependencies
         );
   const tsConfigFile = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
