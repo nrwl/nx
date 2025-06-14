@@ -7,7 +7,14 @@ export const callout: Schema = {
     type: {
       type: 'String',
       default: 'note',
-      matches: ['caution', 'check', 'note', 'warning', 'deepdive'],
+      matches: [
+        'announcement',
+        'caution',
+        'check',
+        'note',
+        'warning',
+        'deepdive',
+      ],
       errorLevel: 'critical',
     },
     title: {
