@@ -48,6 +48,10 @@ These tokens behave differently when dealing with nested projects:
 For example, in a structure like `packages/parent/nested-child/`, using `{projectRoot}/**/*` for the `parent` project will exclude files from `nested-child`, while `{workspaceRoot}/packages/parent/**/*` will include them.
 {% /callout %}
 
+{% callout type="info" title="Gitignored Files Are Excluded" %}
+Files that are listed in `.gitignore` are automatically excluded from inputs. Nx will not consider gitignored files when computing the hash for tasks, so changes to ignored files will not invalidate the cache.
+{% /callout %}
+
 Prefixing a source file input with `!` will exclude the files matching the pattern from the set of files used to calculate the hash.
 Prefixing a source file input with `^` means this entry applies to the project dependencies of the project, not the project itself.
 
