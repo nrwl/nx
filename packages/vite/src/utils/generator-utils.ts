@@ -518,7 +518,7 @@ ${
 
   const workerOption = `  // Uncomment this if you are using workers.
   // worker: {
-  //  plugins: [ nxViteTsPaths() ],
+  //   plugins: () => [ nxViteTsPaths() ],
   // },`;
 
   const cacheDir = `cacheDir: '${normalizedJoinPaths(
