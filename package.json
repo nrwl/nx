@@ -86,6 +86,7 @@
     "@nx/esbuild": "21.2.0-beta.4",
     "@nx/eslint": "21.2.0-beta.4",
     "@nx/eslint-plugin": "21.2.0-beta.4",
+    "@nx/gradle": "21.2.0-beta.4",
     "@nx/jest": "21.2.0-beta.4",
     "@nx/js": "21.2.0-beta.4",
     "@nx/key": "2.0.1",
