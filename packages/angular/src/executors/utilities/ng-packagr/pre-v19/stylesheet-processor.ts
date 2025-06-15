@@ -9,7 +9,7 @@
 import { workspaceRoot } from '@nx/devkit';
 import browserslist from 'browserslist';
 import { existsSync } from 'fs';
-import { colors } from 'ng-packagr/src/lib/utils/color';
+import { colors } from 'ng-packagr/lib/utils/color';
 import { dirname, join } from 'path';
 
 const maxWorkersVariable = process.env['NG_BUILD_MAX_WORKERS'];
