@@ -18,6 +18,7 @@ ${pc.bold('sudo xcode-select --switch /Applications/Xcode.app')}
 
 /**
  * Run pod install on ios directory
+ * @deprecated This should be removed as Expo runs this automatically on `run-ios`
  * @param iosDirectory ios directory that contains Podfile
  * @returns resolve with 0 if not error, reject with error otherwise
  */
