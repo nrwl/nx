@@ -13,22 +13,17 @@ import {
 
 describe('@nx/js:copy-workspace-modules', () => {
   let scope: string;
-  let previousPackageManager: string;
 
   beforeAll(() => {
-    previousPackageManager = process.env.SELECTED_PM;
-    // Use pnpm to properly test workspace: protocol dependencies
-    process.env.SELECTED_PM = 'pnpm';
-
     scope = newProject({
       packages: ['@nx/node', '@nx/js'],
       preset: 'ts',
+      packageManager: 'pnpm',
     });
   });
 
   afterAll(() => {
     cleanupProject();
-    process.env.SELECTED_PM = previousPackageManager;
   });
 
   it('should copy a single workspace library to build output directory', async () => {

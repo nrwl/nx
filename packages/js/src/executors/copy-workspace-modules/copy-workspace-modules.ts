@@ -75,6 +75,8 @@ function getProjectForWorkspaceModule(
       return project;
     }
   }
+
+  throw new Error(`Could not find project for workspace module: ${pkgName}`);
 }
 
 function createWorkspaceModules(outputDirectory: string) {
