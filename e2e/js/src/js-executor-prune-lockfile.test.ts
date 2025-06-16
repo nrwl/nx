@@ -58,7 +58,6 @@ describe('js:prune-lockfile executor', () => {
         };
         return json;
       });
-      console.log(tmpProjPath());
       runCommand(`${packageManager} install`);
 
       runCLI(`build ${nodeapp}`);
