@@ -589,17 +589,6 @@ function mapRootSnapshot(
     if (packageJson[depType]) {
       Object.keys(packageJson[depType]).forEach((packageName) => {
         const version = packageJson[depType][packageName];
-        const node =
-          graph.externalNodes[`npm:${packageName}@${version}`] ||
-          (graph.externalNodes[`npm:${packageName}`] &&
-          graph.externalNodes[`npm:${packageName}`].data.version === version
-            ? graph.externalNodes[`npm:${packageName}`]
-            : findNodeMatchingVersion(graph, packageName, version));
-        if (!node) {
-          throw new Error(
-            `Could not find external node for package ${packageName}@${version}.`
-          );
-        }
         if (
           version.startsWith('workspace:') ||
           version.startsWith('file:') ||
@@ -630,6 +619,17 @@ function mapRootSnapshot(
             }
           }
         } else {
+          const node =
+            graph.externalNodes[`npm:${packageName}@${version}`] ||
+            (graph.externalNodes[`npm:${packageName}`] &&
+            graph.externalNodes[`npm:${packageName}`].data.version === version
+              ? graph.externalNodes[`npm:${packageName}`]
+              : findNodeMatchingVersion(graph, packageName, version));
+          if (!node) {
+            throw new Error(
+              `Could not find external node for package ${packageName}@${version}.`
+            );
+          }
           snapshot.specifiers[packageName] = version;
           // peer dependencies are mapped to dependencies
           let section =

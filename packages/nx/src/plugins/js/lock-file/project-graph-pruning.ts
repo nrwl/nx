@@ -1,6 +1,7 @@
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
+  ProjectGraphProjectNode,
 } from '../../../config/project-graph';
 import { satisfies, gte } from 'semver';
 import { PackageJson } from '../../../utils/package-json';
@@ -111,7 +112,17 @@ export function addNodesAndDependencies(
     const node =
       graph.externalNodes[`npm:${name}@${version}`] ||
       graph.externalNodes[`npm:${name}`];
-    traverseNode(graph, builder, node);
+    if (node) {
+      traverseNode(graph, builder, node);
+    } else if (
+      version.startsWith('workspace:') ||
+      version.startsWith('file:') ||
+      version.startsWith('link:')
+    ) {
+      // Workspace Node
+      const node = graph.nodes[name];
+      traverseWorkspaceNode(graph, builder, node);
+    }
   });
 }
 
@@ -128,6 +139,19 @@ function traverseNode(
     const depNode = graph.externalNodes[dep.target];
     traverseNode(graph, builder, depNode);
     builder.addStaticDependency(node.name, dep.target);
+  });
+}
+
+function traverseWorkspaceNode(
+  graph: ProjectGraph,
+  builder: ProjectGraphBuilder,
+  node: ProjectGraphProjectNode
+) {
+  graph.dependencies[node.name]?.forEach((dep) => {
+    const depNode = graph.externalNodes[dep.target];
+    if (depNode) {
+      traverseNode(graph, builder, depNode);
+    }
   });
 }
 
