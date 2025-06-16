@@ -440,7 +440,7 @@ function mapWorkspaceModules(
       }
 
       output[`node_modules/${pkgName}`] = {
-        version: `file:./workspace_modules/${pkgName}}`,
+        version: `file:./workspace_modules/${pkgName}`,
         resolved: `workspace_modules/${pkgName}`,
         link: true,
       };
