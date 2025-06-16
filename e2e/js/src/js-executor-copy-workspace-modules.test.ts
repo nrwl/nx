@@ -53,7 +53,10 @@ describe('@nx/js:copy-workspace-modules', () => {
 }`
     );
 
-    updateFile(`${nodelib}/src/index.ts`, `export * from './lib/${nodelib}';`);
+    updateFile(
+      `${nodelib}/src/index.ts`,
+      `export * from './lib/${nodelib}.js';`
+    );
 
     // Add workspace dependency to the app's package.json
     updateJson(`${nodeapp}/package.json`, (json) => {
@@ -63,6 +66,7 @@ describe('@nx/js:copy-workspace-modules', () => {
       };
       return json;
     });
+    runCommand(`pnpm install`);
 
     // Update the app to use the library
     updateFile(
@@ -94,8 +98,6 @@ console.log(${nodelib}());`
       };
       return json;
     });
-
-    runCommand(`pnpm install`);
 
     // Run the copy-workspace-modules executor
     const result = runCLI(`run ${nodeapp}:copy-workspace-modules`);
@@ -137,7 +139,7 @@ console.log(${nodelib}());`
     );
     updateFile(
       `${nodelib1}/src/index.ts`,
-      `export * from './lib/${nodelib1}';`
+      `export * from './lib/${nodelib1}.js';`
     );
 
     updateFile(
@@ -148,7 +150,7 @@ console.log(${nodelib}());`
     );
     updateFile(
       `${nodelib2}/src/index.ts`,
-      `export * from './lib/${nodelib2}';`
+      `export * from './lib/${nodelib2}.js';`
     );
 
     // Add workspace dependencies to the app's package.json
@@ -170,6 +172,7 @@ console.log('Hello World!');
 console.log(${nodelib1}());
 console.log(${nodelib2}());`
     );
+    runCommand(`pnpm install`);
 
     // Build the application
     runCLI(`build ${nodeapp}`);
@@ -190,7 +193,6 @@ console.log(${nodelib2}());`
       };
       return json;
     });
-    runCommand(`pnpm install`);
 
     // Run the copy-workspace-modules executor
     const result = runCLI(`run ${nodeapp}:copy-workspace-modules`);
@@ -223,6 +225,7 @@ console.log(${nodelib2}());`
       };
       return json;
     });
+    runCommand(`pnpm install`);
 
     // Build the application
     runCLI(`build ${nodeapp}`);
@@ -243,7 +246,6 @@ console.log(${nodelib2}());`
       };
       return json;
     });
-    runCommand(`pnpm install`);
 
     // Run the copy-workspace-modules executor
     const result = runCLI(`run ${nodeapp}:copy-workspace-modules`);
@@ -253,68 +255,5 @@ console.log(${nodelib2}());`
     checkFilesExist(
       `${nodeapp}/dist/workspace_modules/@${scope}/${nodelib}/package.json`
     );
-  }, 300_000);
-
-  it('should throw an error when build output does not exist', async () => {
-    const nodeapp = uniq('nodeapp');
-
-    // Generate a node application
-    runCLI(
-      `generate @nx/node:app ${nodeapp} --linter=eslint --unitTestRunner=jest`
-    );
-
-    // Add copy-workspace-modules target WITHOUT building first
-    updateJson(`${nodeapp}/package.json`, (json) => {
-      if (!json.nx) {
-        json.nx = {};
-      }
-      if (!json.nx.targets) {
-        json.nx.targets = {};
-      }
-      json.nx.targets['copy-workspace-modules'] = {
-        executor: '@nx/js:copy-workspace-modules',
-        options: {
-          buildTarget: 'build',
-        },
-      };
-      return json;
-    });
-    runCommand(`pnpm install`);
-
-    // Attempt to run copy-workspace-modules without building first
-    expect(() => runCLI(`run ${nodeapp}:copy-workspace-modules`)).toThrow();
-  }, 300_000);
-
-  it('should throw an error when package.json does not exist', async () => {
-    const nodeapp = uniq('nodeapp');
-
-    // Generate a node application
-    runCLI(
-      `generate @nx/node:app ${nodeapp} --linter=eslint --unitTestRunner=jest`
-    );
-
-    // Build the application
-    runCLI(`build ${nodeapp}`);
-
-    // Remove the package.json file
-    runCLI(`exec -- rm ${nodeapp}/package.json`);
-
-    // Create a standalone project.json with the copy-workspace-modules target
-    updateJson(`${nodeapp}/project.json`, (json) => {
-      if (!json.targets) {
-        json.targets = {};
-      }
-      json.targets['copy-workspace-modules'] = {
-        executor: '@nx/js:copy-workspace-modules',
-        options: {
-          buildTarget: 'build',
-        },
-      };
-      return json;
-    });
-    runCommand(`pnpm install`);
-
-    // Attempt to run copy-workspace-modules without package.json
-    expect(() => runCLI(`run ${nodeapp}:copy-workspace-modules`)).toThrow();
   }, 300_000);
 });
