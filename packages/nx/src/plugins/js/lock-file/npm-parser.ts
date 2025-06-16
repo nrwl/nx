@@ -398,7 +398,7 @@ export function stringifyNpmLockfile(
   const { lockfileVersion } = JSON.parse(rootLockFileContent) as NpmLockFile;
 
   const mappedPackages = mapSnapshots(rootLockFile, graph);
-  const workspaceModules = mapWorkspaceModules(packageJson);
+  const workspaceModules = mapWorkspaceModules(packageJson, rootLockFile);
 
   const output: NpmLockFile = {
     name: packageJson.name || rootLockFile.name,
@@ -420,16 +420,34 @@ export function stringifyNpmLockfile(
   return JSON.stringify(output, null, 2);
 }
 
-function mapWorkspaceModules(packageJson: NormalizedPackageJson) {
+function mapWorkspaceModules(
+  packageJson: NormalizedPackageJson,
+  rootLockFile: NpmLockFile
+) {
   const output: Record<string, NpmDependencyV3 & NpmDependencyV1> = {};
   for (const [pkgName, pkgVersion] of Object.entries(
     packageJson.dependencies
   )) {
     if (pkgVersion.startsWith('workspace:') || pkgVersion.startsWith('file:')) {
-      output[pkgName] = {
+      let workspaceModuleDefinition: NpmDependencyV3 & NpmDependencyV1;
+      for (const [depName, depSnapshot] of Object.entries(
+        rootLockFile.packages || rootLockFile.dependencies
+      )) {
+        if (depSnapshot.name === pkgName) {
+          workspaceModuleDefinition = depSnapshot;
+          break;
+        }
+      }
+
+      output[`node_modules/${pkgName}`] = {
         version: `file:./workspace_modules/${pkgName}}`,
         resolved: `workspace_modules/${pkgName}`,
         link: true,
+      };
+      output[`workspace_modules/${pkgName}`] = {
+        name: pkgName,
+        version: `0.0.1`,
+        dependencies: workspaceModuleDefinition.dependencies,
       };
     }
   }
@@ -441,13 +459,27 @@ function mapV3Snapshots(
   packageJson: NormalizedPackageJson
 ): Record<string, NpmDependencyV3> {
   const output: Record<string, NpmDependencyV3> = {};
-  output[''] = packageJson;
+  const mappedPackageJson = mapPackageJsonWithWorkspaceModules(packageJson);
+  output[''] = mappedPackageJson;
 
   mappedPackages.forEach((p) => {
     output[p.path] = p.valueV3;
   });
 
   return output;
+}
+
+function mapPackageJsonWithWorkspaceModules(
+  packageJson: NormalizedPackageJson
+) {
+  for (const [pkgName, pkgVersion] of Object.entries(
+    packageJson.dependencies
+  )) {
+    if (pkgVersion.startsWith('workspace:') || pkgVersion.startsWith('file:')) {
+      packageJson.dependencies[pkgName] = `workspace_modules/${pkgName}`;
+    }
+  }
+  return packageJson;
 }
 
 function mapV1Snapshots(
