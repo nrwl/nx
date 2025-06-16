@@ -288,6 +288,9 @@ export const getStaticProps: GetStaticProps = async ({
           githubStarsCount: await fetchGithubStarCount(),
         },
         menu,
+        relatedDocuments: tagsApi
+          .getAssociatedItemsFromTags(document.tags)
+          .filter((item) => item.path !== '/' + params.segments.join('/')), // Remove currently displayed item
       },
     };
   } catch (e) {
