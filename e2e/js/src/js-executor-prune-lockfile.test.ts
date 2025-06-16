@@ -34,7 +34,7 @@ describe('js:prune-lockfile executor', () => {
       process.env.SELECTED_PM = previousPackageManager;
     });
 
-    it('should prune lockfile with workspace module -- pnpm', () => {
+    it('should prune lockfile with workspace module', () => {
       const nodeapp = uniq('nodeapp');
       const nodelib = uniq('nodelib');
 
