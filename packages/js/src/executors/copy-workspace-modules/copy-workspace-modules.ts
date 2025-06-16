@@ -20,24 +20,9 @@ export default async function copyWorkspaceModules(
   const outputDirectory = getOutputDir(schema, context);
   const packageJson = getPackageJson(schema, context);
   createWorkspaceModules(outputDirectory);
-  const updatedPackageJson = handleWorkspaceModules(
-    outputDirectory,
-    packageJson,
-    context.projectGraph
-  );
-  writeFileSync(
-    join(outputDirectory, 'package.json'),
-    JSON.stringify(trimPackageJson(updatedPackageJson), null, 2)
-  );
+  handleWorkspaceModules(outputDirectory, packageJson, context.projectGraph);
   logger.log('Success!');
   return { success: true };
-}
-
-function trimPackageJson(packageJson: Record<string, unknown>) {
-  if (packageJson.nx) {
-    delete packageJson.nx;
-  }
-  return packageJson;
 }
 
 function handleWorkspaceModules(
@@ -71,12 +56,9 @@ function handleWorkspaceModules(
         filter: (src) => !src.includes('node_modules'),
         recursive: true,
       });
-      packageJson.dependencies[pkgName] = `file:./workspace_modules/${pkgName}`;
       logger.verbose(`Copied ${pkgName} successfully.`);
     }
   }
-
-  return packageJson;
 }
 
 function getProjectForWorkspaceModule(
