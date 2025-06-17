@@ -21,7 +21,7 @@ import { getLockFileName } from '@nx/js';
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { minimatch } from 'minimatch';
 import { readdirSync } from 'node:fs';
-import { dirname, join, parse, relative, resolve } from 'node:path';
+import { dirname, join, parse, posix, relative, resolve } from 'node:path';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
@@ -31,7 +31,6 @@ const pmc = getPackageManagerCommand();
 export interface PlaywrightPluginOptions {
   targetName?: string;
   ciTargetName?: string;
-  reportAggregatorTargetName?: string;
   mergeOutputs?: boolean;
   atomizedBlobReportOutputDir?: string;
 }
@@ -39,7 +38,6 @@ export interface PlaywrightPluginOptions {
 interface NormalizedOptions {
   targetName: string;
   ciTargetName: string;
-  reportAggregatorTargetName: string;
   mergeOutputs: boolean;
   atomizedBlobReportOutputDir: string;
 }
@@ -349,6 +347,7 @@ async function buildPlaywrightTargets(
     targets[options.ciTargetName] = {
       cache: ciBaseTargetConfig.cache,
       inputs: ciBaseTargetConfig.inputs,
+      outputs: ciBaseTargetConfig.outputs,
       metadata: {
         technologies: ['playwright'],
         description: 'Runs Playwright Tests in CI',
@@ -370,79 +369,27 @@ async function buildPlaywrightTargets(
         deleteAtomizedBlobReportOutputTask;
       ciTargetGroup.push(deleteAtomizedBlobReportOutputTaskName);
 
-      // create the report aggregator task
-      const jsonReporterMetadata = getJsonReporterMetadata(
-        reporterOutputs,
-        options.atomizedBlobReportOutputDir
-      );
-      const { commands, envVars, extraOutputs } =
-        getReportAggregatorTaskCommandsAndEnvVars(
-          options.atomizedBlobReportOutputDir,
-          reporterOutputs,
-          jsonReporterMetadata
-        );
-      const outputs = Array.from(
-        new Set([
-          ...ciBaseTargetConfig.outputs,
-          ...extraOutputs.map((output) =>
-            normalizeOutput(output, context.workspaceRoot, projectRoot)
-          ),
-        ])
-      );
-
-      targets[options.reportAggregatorTargetName] = {
-        cache: ciBaseTargetConfig.cache,
-        inputs: ciBaseTargetConfig.inputs,
-        outputs,
-        dependsOn: dependsOn.map((d: TargetDependencyConfig) => ({
+      // update the ci target
+      targets[options.ciTargetName].dependsOn = dependsOn.map(
+        (d: TargetDependencyConfig) => ({
           ...d,
           skipOnFailure: false,
-        })),
-        options: { cwd: '{projectRoot}' },
-        metadata: {
-          technologies: ['playwright'],
-          description: 'Aggregates Playwright Test Results from Atomized Tasks',
-          help: {
-            command: `${pmc.exec} playwright merge-reports --help`,
-            example: { options: { reporter: 'list' } },
-          },
-        },
-      };
-      if (commands.length > 1) {
-        targets[options.reportAggregatorTargetName].executor =
-          'nx:run-commands';
-        targets[options.reportAggregatorTargetName].options.commands = commands;
-      } else {
-        targets[options.reportAggregatorTargetName].command = commands[0];
-      }
-
-      if (Object.keys(envVars).length) {
-        targets[options.reportAggregatorTargetName].options.env = envVars;
-      }
-      ciTargetGroup.push(options.reportAggregatorTargetName);
-
-      // update the ci target
-      targets[options.ciTargetName].outputs = outputs;
-      targets[options.ciTargetName].dependsOn = [
-        {
-          target: options.reportAggregatorTargetName,
-          projects: 'self',
-          params: 'forward',
-        },
-      ];
-
-      targets[options.ciTargetName].command = getStatusCheckCommand(
-        jsonReporterMetadata.jsonReportFile,
-        jsonReporterMetadata.isTempJsonReport,
-        dependsOn.length
+        })
       );
+      targets[options.ciTargetName].executor = 'nx:run-commands';
       targets[options.ciTargetName].options = {
+        commands: [
+          `playwright merge-reports ${
+            options.atomizedBlobReportOutputDir
+          } --config=${posix.relative(projectRoot, configFilePath)}`,
+          getStatusCheckCommand(options.atomizedBlobReportOutputDir),
+        ],
         cwd: '{projectRoot}',
+        parallel: false,
       };
     } else {
       targets[options.ciTargetName].executor = 'nx:noop';
       targets[options.ciTargetName].dependsOn = dependsOn;
-      targets[options.ciTargetName].outputs = ciBaseTargetConfig.outputs;
     }
 
     if (!webserverCommandTasks.length) {
@@ -493,8 +440,6 @@ function normalizeOptions(options: PlaywrightPluginOptions): NormalizedOptions {
     ...options,
     targetName: options?.targetName ?? 'e2e',
     ciTargetName: options?.ciTargetName ?? 'e2e-ci',
-    reportAggregatorTargetName:
-      options?.reportAggregatorTargetName ?? 'e2e-ci-report-aggregator',
     mergeOutputs: options?.mergeOutputs ?? true,
     atomizedBlobReportOutputDir:
       options?.atomizedBlobReportOutputDir ?? '.nx-atomized-blob-reports',
@@ -712,76 +657,8 @@ function normalizeOutput(
   return joinPathFragments('{projectRoot}', pathRelativeToProjectRoot);
 }
 
-function getReportAggregatorTaskCommandsAndEnvVars(
-  blobReportOutput: string,
-  reporterOutputs: Array<ReporterOutput>,
-  jsonReporterMetadata: JsonReporterMetadata
-): {
-  commands: string[];
-  envVars: Record<string, string>;
-  extraOutputs: string[];
-} {
-  const commands: string[] = [];
-  const normalizedReporterOutputs = [...reporterOutputs];
-
-  const { jsonReporterOutput, jsonReportFile, isTempJsonReport } =
-    jsonReporterMetadata;
-  if (jsonReporterOutput) {
-    jsonReporterOutput[1] = jsonReportFile;
-  } else {
-    normalizedReporterOutputs.push(['json', jsonReportFile]);
-  }
-
-  // Add merge commands for configured reporters
-  for (const [reporter] of normalizedReporterOutputs) {
-    commands.push(
-      `playwright merge-reports ${blobReportOutput} --reporter=${reporter}`
-    );
-  }
-
-  const envVars = getReporterEnvVars(normalizedReporterOutputs);
-
-  return {
-    commands,
-    envVars,
-    extraOutputs: !isTempJsonReport ? [jsonReportFile] : [],
-  };
-}
-
-type JsonReporterMetadata = {
-  jsonReporterOutput: ReporterOutput;
-  jsonReportFile: string;
-  isTempJsonReport: boolean;
-};
-
-function getJsonReporterMetadata(
-  reporterOutputs: Array<ReporterOutput>,
-  blobReportOutput: string
-): JsonReporterMetadata {
-  let jsonReporterOutput = reporterOutputs.find(([r]) => r === 'json');
-  let isTempJsonReport = false;
-  let jsonReportFile: string;
-  if (jsonReporterOutput) {
-    jsonReportFile =
-      jsonReporterOutput[1] ?? join(blobReportOutput, 'merged-results.json');
-  } else {
-    jsonReportFile = join(blobReportOutput, 'merged-results.json');
-    isTempJsonReport = true;
-  }
-
-  return { jsonReporterOutput, jsonReportFile, isTempJsonReport };
-}
-
-function getStatusCheckCommand(
-  jsonReportFile: string,
-  shouldRemoveJsonReportFile: boolean,
-  testSuiteCount: number
-): string {
-  return `node -e "const fs=require('fs');try{const r=JSON.parse(fs.readFileSync('${jsonReportFile}','utf8'));const failed=r.stats.unexpected>0||r.suites.length!==${testSuiteCount};console.log('\\n',failed?'❌':'✅','Test suite',failed?'failed.':'passed!','\\n');process.exit(failed?1:0);}catch(e){console.error('❌Failed to read test report:',e.message);process.exit(1);}${
-    shouldRemoveJsonReportFile
-      ? `finally{try{fs.unlinkSync('${jsonReportFile}');}catch{}}`
-      : ''
-  }"`;
+function getStatusCheckCommand(atomizedBlobReportOutputDir: string): string {
+  return `node -e "const fs=require('fs');let suites=0,hasFailed=false;try{const d='${atomizedBlobReportOutputDir}';for(const f of fs.readdirSync(d)){if(!f.endsWith('.jsonl'))continue;const lines=fs.readFileSync(\\\`\\\${d}/\\\${f}\\\`,'utf8').trim().split('\\n');let l=lines.at(-1);if(!/\\"method\\":\\"onEnd\\"/.test(l))l=lines.find(l=>/\\"method\\":\\"onEnd\\"/.test(l));if(!l)continue;const e=JSON.parse(l);suites++;hasFailed||=e.params.result.status==='failed';}const failed=hasFailed||suites!==3;console.log('\\n',failed?'❌':'✅','Test suite',failed?'failed.':'passed!','\\n');process.exit(failed?1:0);}catch(e){console.error('❌ Failed to read test report:',e.message);process.exit(1);}"`;
 }
 
 function getAtomizedTaskOutputEnvVars(
