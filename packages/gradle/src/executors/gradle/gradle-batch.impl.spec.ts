@@ -74,6 +74,7 @@ describe('getGradlewTasksToRun', () => {
       },
       dependencies: {},
       continuousDependencies: {},
+      continueOnFailureDependencies: {},
       roots: ['app1:test', 'app2:build'],
     };
 

@@ -106,4 +106,8 @@ export interface TaskGraph {
   dependencies: Record<string, string[]>;
 
   continuousDependencies: Record<string, string[]>;
+  /**
+   * Map of Task IDs to IDs of dependency tasks that, when failed, will not prevent the task from executing
+   */
+  continueOnFailureDependencies: Record<string, string[]>;
 }
