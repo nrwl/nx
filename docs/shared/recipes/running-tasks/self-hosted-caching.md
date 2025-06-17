@@ -10,7 +10,13 @@ Nx offers different ways to enable self-hosted remote caching for your workspace
 - **Using the official Nx packages** that come with ready-to-use adapters for AWS S3, GCP, Azure, and more.
 - **Build your own cache server** by following the Nx Remote Caching OpenAPI spec.
 
-{% callout type="note" title="Free managed remote cache with Nx Cloud" %}
+{% callout type="warning" title="Bucket-based caches are vulnerable to poisoning and often prohibited in organizations" %}
+
+CREEP (CVE-2025-36852) is a critical vulnerability in bucket-based self-hosted remote caches. It lets attackers with PR access poison production builds via a race condition during artifact creation—before security checks can catch it. [Learn more](/blog/cve-2025-36852-critical-cache-poisoning-vulnerability-creep)
+
+{% /callout %}
+
+{% callout type="note" title="Free & secure managed remote cache with Nx Cloud" %}
 
 Note, you can get started for free with a **fully managed remote caching powered by Nx Cloud**. It comes with a generous Hobby plan that is enough for most small teams. [Learn more here](/nx-cloud).
 

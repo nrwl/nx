@@ -15,9 +15,9 @@ If you are an enterprise and **data privacy and security is a concern**, [reach 
 
 {% /callout %}
 
-{% callout type="info" title="Self-hosted caching is now free" %}
+{% callout type="warning" title="Bucket-based caches are vulnerable to poisoning and often prohibited in organizations" %}
 
-Self-hosted caching is **now free for everyone** to use.
+CREEP (CVE-2025-36852) is a critical vulnerability in bucket-based self-hosted remote caches. It lets attackers with PR access poison production builds via a race condition during artifact creation—before security checks can catch it. [Learn more](/blog/cve-2025-36852-critical-cache-poisoning-vulnerability-creep)
 
 {% /callout %}
 
