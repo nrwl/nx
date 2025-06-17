@@ -46,6 +46,7 @@ describe('@nx/playwright/plugin', () => {
       ['playwright.config.js'],
       {
         targetName: 'e2e',
+        mergeOutputs: false,
       },
       context
     );
@@ -159,6 +160,7 @@ describe('@nx/playwright/plugin', () => {
       ['playwright.config.js'],
       {
         targetName: 'e2e',
+        mergeOutputs: false,
       },
       context
     );
@@ -210,7 +212,6 @@ describe('@nx/playwright/plugin', () => {
                     },
                     "outputs": [
                       "{projectRoot}/test-results",
-                      "{projectRoot}/playwright-report",
                       "{projectRoot}/test-results/report.json",
                       "{projectRoot}/test-results/html",
                     ],
@@ -246,7 +247,6 @@ describe('@nx/playwright/plugin', () => {
                     },
                     "outputs": [
                       "{projectRoot}/test-results",
-                      "{projectRoot}/playwright-report",
                       "{projectRoot}/test-results/report.json",
                       "{projectRoot}/test-results/html",
                     ],
@@ -286,6 +286,7 @@ describe('@nx/playwright/plugin', () => {
       {
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
+        mergeOutputs: false,
       },
       context
     );
@@ -457,6 +458,7 @@ describe('@nx/playwright/plugin', () => {
       {
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
+        mergeOutputs: false,
       },
       context
     );
@@ -669,6 +671,7 @@ describe('@nx/playwright/plugin', () => {
       {
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
+        mergeOutputs: false,
       },
       context
     );
