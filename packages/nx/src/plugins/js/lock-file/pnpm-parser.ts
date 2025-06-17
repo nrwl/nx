@@ -28,6 +28,7 @@ import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { findNodeMatchingVersion } from './project-graph-pruning';
 import { join } from 'path';
+import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 
 // we use key => node map to avoid duplicate work when parsing keys
 let keyMap = new Map<string, Set<ProjectGraphExternalNode>>();
@@ -578,6 +579,7 @@ function mapRootSnapshot(
   graph: ProjectGraph,
   lockfileVersion: number
 ) {
+  const workspaceModules = getWorkspacePackagesFromGraph(graph);
   const snapshot: ProjectSnapshot = { specifiers: {} };
   const importers: Record<string, string> = {};
   [
@@ -589,11 +591,7 @@ function mapRootSnapshot(
     if (packageJson[depType]) {
       Object.keys(packageJson[depType]).forEach((packageName) => {
         const version = packageJson[depType][packageName];
-        if (
-          version.startsWith('workspace:') ||
-          version.startsWith('file:') ||
-          version.startsWith('link:')
-        ) {
+        if (workspaceModules.has(packageName)) {
           for (const [importerPath, importerSnapshot] of Object.entries(
             rootImporters
           )) {

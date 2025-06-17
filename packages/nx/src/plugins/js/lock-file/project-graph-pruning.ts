@@ -18,10 +18,19 @@ export function pruneProjectGraph(
   prunedPackageJson: PackageJson
 ): ProjectGraph {
   const builder = new ProjectGraphBuilder();
+  const workspacePackages = getWorkspacePackagesFromGraph(graph);
+  const combinedDependencies = normalizeDependencies(
+    prunedPackageJson,
+    graph,
+    workspacePackages
+  );
 
-  const combinedDependencies = normalizeDependencies(prunedPackageJson, graph);
-
-  addNodesAndDependencies(graph, combinedDependencies, builder);
+  addNodesAndDependencies(
+    graph,
+    combinedDependencies,
+    workspacePackages,
+    builder
+  );
   // for NPM (as well as the graph consistency)
   // we need to distinguish between hoisted and non-hoisted dependencies
   rehoistNodes(graph, combinedDependencies, builder);
@@ -31,8 +40,11 @@ export function pruneProjectGraph(
 
 // ensure that dependency ranges from package.json (e.g. ^1.0.0)
 // are replaced with the actual version based on the available nodes (e.g. 1.0.1)
-function normalizeDependencies(packageJson: PackageJson, graph: ProjectGraph) {
-  const workspacePackages = getWorkspacePackagesFromGraph(graph);
+function normalizeDependencies(
+  packageJson: PackageJson,
+  graph: ProjectGraph,
+  workspacePackages: Map<string, ProjectGraphProjectNode>
+) {
   const {
     dependencies,
     devDependencies,
@@ -105,6 +117,7 @@ export function findNodeMatchingVersion(
 export function addNodesAndDependencies(
   graph: ProjectGraph,
   packageJsonDeps: Record<string, string>,
+  workspacePackages: Map<string, ProjectGraphProjectNode>,
   builder: ProjectGraphBuilder
 ) {
   Object.entries(packageJsonDeps).forEach(([name, version]) => {
@@ -113,13 +126,10 @@ export function addNodesAndDependencies(
       graph.externalNodes[`npm:${name}`];
     if (node) {
       traverseNode(graph, builder, node);
-    } else if (
-      version.startsWith('workspace:') ||
-      version.startsWith('file:') ||
-      version.startsWith('link:')
-    ) {
+    } else if (workspacePackages.has(name)) {
       // Workspace Node
       const node = graph.nodes[name];
+      builder.addNode(node);
       traverseWorkspaceNode(graph, builder, node);
     }
   });
