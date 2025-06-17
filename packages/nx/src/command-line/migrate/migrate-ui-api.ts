@@ -453,20 +453,14 @@ export function killMigrationProcess(
 
     // Check if this is the currently running migration and kill the process
     if (currentMigrationId === migrationId && currentMigrationProcess) {
-      if (process.platform === 'win32') {
-        execSync(`taskkill /f /t /pid ${currentMigrationProcess.pid}`, {
-          stdio: 'ignore',
-        });
-      } else {
-        currentMigrationProcess.kill('SIGTERM');
-        // Some processes may not respond to SIGTERM immediately,
-        // so we give it a short timeout before forcefully killing it
-        setTimeout(() => {
-          if (currentMigrationProcess && !currentMigrationProcess.killed) {
-            currentMigrationProcess.kill('SIGKILL');
-          }
-        }, 2000);
-      }
+      currentMigrationProcess.kill('SIGTERM');
+      // Some processes may not respond to SIGTERM immediately,
+      // so we give it a short timeout before forcefully killing it
+      setTimeout(() => {
+        if (currentMigrationProcess && !currentMigrationProcess.killed) {
+          currentMigrationProcess.kill('SIGKILL');
+        }
+      }, 2000);
     }
 
     return true;
