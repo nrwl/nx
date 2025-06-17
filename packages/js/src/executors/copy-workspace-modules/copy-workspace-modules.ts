@@ -8,9 +8,10 @@ import {
 } from '@nx/devkit';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import { type CopyWorkspaceModulesOptions } from './schema';
-import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'path';
 import { lstatSync } from 'fs';
+import { getWorkspacePackagesFromGraph } from '../../utils/package-json/get-workspace-packages-from-graph';
 
 export default async function copyWorkspaceModules(
   schema: CopyWorkspaceModulesOptions,
@@ -35,16 +36,12 @@ function handleWorkspaceModules(
   if (!packageJson.dependencies) {
     return;
   }
+  const workspaceModules = getWorkspacePackagesFromGraph(projectGraph);
 
-  for (const [pkgName, pkgVersion] of Object.entries(
-    packageJson.dependencies
-  )) {
-    if (pkgVersion.startsWith('workspace:') || pkgVersion.startsWith('file:')) {
+  for (const [pkgName] of Object.entries(packageJson.dependencies)) {
+    if (workspaceModules.has(pkgName)) {
       logger.verbose(`Copying ${pkgName}.`);
-      const workspaceModuleProject = getProjectForWorkspaceModule(
-        pkgName,
-        projectGraph
-      );
+      const workspaceModuleProject = workspaceModules.get(pkgName);
       const workspaceModuleRoot = workspaceModuleProject.data.root;
       const newWorkspaceModulePath = join(
         outputDirectory,
@@ -59,24 +56,6 @@ function handleWorkspaceModules(
       logger.verbose(`Copied ${pkgName} successfully.`);
     }
   }
-}
-
-function getProjectForWorkspaceModule(
-  pkgName: string,
-  projectGraph: ProjectGraph
-) {
-  let maybeProjectNode = projectGraph.nodes[pkgName];
-  if (maybeProjectNode) {
-    return maybeProjectNode;
-  }
-
-  for (const [projectName, project] of Object.entries(projectGraph.nodes)) {
-    if (project.data.metadata.js.packageName === pkgName) {
-      return project;
-    }
-  }
-
-  throw new Error(`Could not find project for workspace module: ${pkgName}`);
 }
 
 function createWorkspaceModules(outputDirectory: string) {
