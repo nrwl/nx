@@ -10,6 +10,15 @@ assignment-rules:
         parallelism: 1
 
   - projects:
+      - gradle-batch-runner
+      - gradle-project-graph
+    targets:
+      - '*'
+    run-on:
+      - agent: linux-extra-large
+        parallelism: 1
+
+  - projects:
       - nx-dev
     targets:
       - build*

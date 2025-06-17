@@ -14,4 +14,4 @@ pluginManagement {
   }
 }
 
-rootProject.name = "batch-runner"
+rootProject.name = "gradle-batch-runner"
