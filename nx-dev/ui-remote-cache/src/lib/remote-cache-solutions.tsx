@@ -20,6 +20,37 @@ export function RemoteCacheSolutions(): ReactElement {
             Free remote caching solutions for any team.
           </SectionHeading>
         </header>
+
+        <div className="mx-auto mt-12 max-w-3xl">
+          <div className="overflow-hidden rounded-lg bg-gradient-to-r from-slate-800 to-slate-900 text-white shadow-lg dark:from-slate-200 dark:to-slate-100 dark:text-black">
+            <div className="flex items-center gap-3 px-4 py-3">
+              <span className="rounded bg-amber-500 px-2 py-0.5 text-xs font-semibold text-slate-900">
+                SECURITY
+              </span>
+              <span className="text-sm">
+                New vulnerability discovered in self-hosted cache solutions
+              </span>
+            </div>
+
+            <div className="border-t border-slate-700 px-4 pb-3 text-sm text-slate-300 dark:border-slate-200 dark:text-slate-700">
+              <p className="mt-3">
+                CVE-2025-36852 (CREEP) affects all self-hosted remote cache
+                implementations. <strong>Severity: 9.4/10</strong>
+              </p>
+              <p className="mt-2">
+                Managed services like Nx Cloud have protections in place.{' '}
+                <Link
+                  href="/blog/cve-2025-36852-critical-cache-poisoning-vulnerability-creep"
+                  title="Read about CVE CREEP"
+                  className="text-blue-500"
+                >
+                  Read the full advisory →
+                </Link>
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div className="mt-24 flow-root">
           <div className="-mt-16 grid max-w-full grid-cols-1 gap-12 sm:mx-auto lg:mt-0 lg:grid-cols-3 xl:-mx-4">
             {/* NX CLOUD */}
