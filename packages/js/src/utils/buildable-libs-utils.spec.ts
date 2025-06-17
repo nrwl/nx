@@ -430,6 +430,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
         'lib4:build': [],
       },
       continuousDependencies: {},
+      continueOnFailureDependencies: {},
       roots: [],
       tasks: {
         'lib1:build': {
@@ -611,6 +612,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
         'lib4:build-base': [],
       },
       continuousDependencies: {},
+      continueOnFailureDependencies: {},
       roots: [],
       tasks: {
         'lib1:build': {
@@ -768,6 +770,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
     const taskGraph: TaskGraph = {
       dependencies: {},
       continuousDependencies: {},
+      continueOnFailureDependencies: {},
       roots: [],
       tasks: {},
     };
