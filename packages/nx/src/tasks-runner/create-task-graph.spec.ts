@@ -92,6 +92,7 @@ describe('createTaskGraph', () => {
       tasks: {},
       dependencies: {},
       continuousDependencies: {},
+      continueOnFailureDependencies: {},
     });
   });
 
@@ -126,6 +127,9 @@ describe('createTaskGraph', () => {
         'app1:test': [],
       },
       continuousDependencies: {
+        'app1:test': [],
+      },
+      continueOnFailureDependencies: {
         'app1:test': [],
       },
     });
@@ -174,6 +178,10 @@ describe('createTaskGraph', () => {
         'lib1:test': [],
       },
       continuousDependencies: {
+        'app1:test': [],
+        'lib1:test': [],
+      },
+      continueOnFailureDependencies: {
         'app1:test': [],
         'lib1:test': [],
       },
@@ -336,6 +344,10 @@ describe('createTaskGraph', () => {
         'lib1:compile:libDefault': [],
         'lib2:compile': [],
       },
+      continueOnFailureDependencies: {
+        'lib1:compile:libDefault': [],
+        'lib2:compile': [],
+      },
     });
 
     const compileApp = createTaskGraph(
@@ -400,6 +412,11 @@ describe('createTaskGraph', () => {
         'lib2:compile:ci': [],
       },
       continuousDependencies: {
+        'app1:compile:ci': [],
+        'lib1:compile:libDefault': [],
+        'lib2:compile:ci': [],
+      },
+      continueOnFailureDependencies: {
         'app1:compile:ci': [],
         'lib1:compile:libDefault': [],
         'lib2:compile:ci': [],
@@ -490,6 +507,10 @@ describe('createTaskGraph', () => {
         'app1:compile': [],
         'lib3:compile': [],
       },
+      continueOnFailureDependencies: {
+        'app1:compile': [],
+        'lib3:compile': [],
+      },
       roots: ['lib3:compile'],
       tasks: {
         'app1:compile': {
@@ -555,6 +576,9 @@ describe('createTaskGraph', () => {
       continuousDependencies: {
         'app1:test': [],
       },
+      continueOnFailureDependencies: {
+        'app1:test': [],
+      },
     });
   });
 
@@ -589,6 +613,9 @@ describe('createTaskGraph', () => {
         'app1:test': [],
       },
       continuousDependencies: {
+        'app1:test': [],
+      },
+      continueOnFailureDependencies: {
         'app1:test': [],
       },
     });
@@ -752,6 +779,12 @@ describe('createTaskGraph', () => {
         'lib1:compile': [],
         'lib2:compile': [],
       },
+      continueOnFailureDependencies: {
+        'app1:compile': [],
+        'app1:precompile': [],
+        'lib1:compile': [],
+        'lib2:compile': [],
+      },
     });
   });
 
@@ -834,6 +867,12 @@ describe('createTaskGraph', () => {
         'lib1:compile': [],
       },
       continuousDependencies: {
+        'app1:compile': [],
+        'app1:precompile': [],
+        'app1:precompile2': [],
+        'lib1:compile': [],
+      },
+      continueOnFailureDependencies: {
         'app1:compile': [],
         'app1:precompile': [],
         'app1:precompile2': [],
@@ -954,6 +993,12 @@ describe('createTaskGraph', () => {
         'lib1:serve': [],
         'lib1:compile': [],
       },
+      continueOnFailureDependencies: {
+        'app1:serve': [],
+        'app1:compile': [],
+        'lib1:serve': [],
+        'lib1:compile': [],
+      },
     });
   });
 
@@ -1036,6 +1081,12 @@ describe('createTaskGraph', () => {
         'lib1:compile': [],
       },
       continuousDependencies: {
+        'app1:compile': [],
+        'app1:precompile': [],
+        'app1:precompile2': [],
+        'lib1:compile': [],
+      },
+      continueOnFailureDependencies: {
         'app1:compile': [],
         'app1:precompile': [],
         'app1:precompile2': [],
@@ -1192,6 +1243,12 @@ describe('createTaskGraph', () => {
         'lib3:compile': [],
       },
       continuousDependencies: {
+        'app1:compile': [],
+        'lib1:compile': [],
+        'lib2:compile': [],
+        'lib3:compile': [],
+      },
+      continueOnFailureDependencies: {
         'app1:compile': [],
         'lib1:compile': [],
         'lib2:compile': [],
@@ -1371,6 +1428,13 @@ describe('createTaskGraph', () => {
         'app1:compile': [],
         'infra2:apply': [],
       },
+      continueOnFailureDependencies: {
+        'infra1:apply': [],
+        'app2:compile': [],
+        'coreInfra:apply': [],
+        'app1:compile': [],
+        'infra2:apply': [],
+      },
     });
   });
 
@@ -1446,6 +1510,10 @@ describe('createTaskGraph', () => {
         'app1:test': ['app1:compile'],
       },
       continuousDependencies: {
+        'app1:compile': [],
+        'app1:test': [],
+      },
+      continueOnFailureDependencies: {
         'app1:compile': [],
         'app1:test': [],
       },
@@ -1596,6 +1664,12 @@ describe('createTaskGraph', () => {
         'lib3:build': [],
         'lib4:build': [],
       },
+      continueOnFailureDependencies: {
+        'lib1:build': [],
+        'lib2:build': [],
+        'lib3:build': [],
+        'lib4:build': [],
+      },
     });
   });
 
@@ -1722,6 +1796,11 @@ describe('createTaskGraph', () => {
         'lib2:build': [],
         'lib4:build': [],
       },
+      continueOnFailureDependencies: {
+        'lib1:build': [],
+        'lib2:build': [],
+        'lib4:build': [],
+      },
     });
   });
 
@@ -1789,6 +1868,9 @@ describe('createTaskGraph', () => {
         'lib1:build': [],
       },
       continuousDependencies: {
+        'lib1:build': [],
+      },
+      continueOnFailureDependencies: {
         'lib1:build': [],
       },
     });
@@ -1918,6 +2000,11 @@ describe('createTaskGraph', () => {
         'lib2:build': [],
         'lib4:build': [],
       },
+      continueOnFailureDependencies: {
+        'lib1:build': [],
+        'lib2:build': [],
+        'lib4:build': [],
+      },
     });
   });
 
@@ -2025,6 +2112,10 @@ describe('createTaskGraph', () => {
         'lib1:build': [],
         'lib2:build': [],
       },
+      continueOnFailureDependencies: {
+        'lib1:build': [],
+        'lib2:build': [],
+      },
     });
   });
 
@@ -2126,6 +2217,10 @@ describe('createTaskGraph', () => {
         'app1:compile': [],
         'app3:compile': [],
       },
+      continueOnFailureDependencies: {
+        'app1:compile': [],
+        'app3:compile': [],
+      },
     });
   });
 
@@ -2221,6 +2316,10 @@ describe('createTaskGraph', () => {
         'app3:compile': [],
       },
       continuousDependencies: {
+        'app1:compile': [],
+        'app3:compile': [],
+      },
+      continueOnFailureDependencies: {
         'app1:compile': [],
         'app3:compile': [],
       },
@@ -2355,6 +2454,12 @@ describe('createTaskGraph', () => {
         'lib2:dep2': [],
       },
       continuousDependencies: {
+        'app1:lint': [],
+        'app1:test': [],
+        'lib2:dep': [],
+        'lib2:dep2': [],
+      },
+      continueOnFailureDependencies: {
         'app1:lint': [],
         'app1:test': [],
         'lib2:dep': [],
@@ -2526,6 +2631,9 @@ describe('createTaskGraph', () => {
       continuousDependencies: {
         'app1:compile': [],
       },
+      continueOnFailureDependencies: {
+        'app1:compile': [],
+      },
     });
 
     const taskGraph2 = createTaskGraph(
@@ -2577,6 +2685,10 @@ describe('createTaskGraph', () => {
         'app2:compile': [],
       },
       continuousDependencies: {
+        'app1:compile': [],
+        'app2:compile': [],
+      },
+      continueOnFailureDependencies: {
         'app1:compile': [],
         'app2:compile': [],
       },
@@ -3098,6 +3210,10 @@ describe('createTaskGraph', () => {
         'app1:compile': [],
         'app4:precompile': [],
       },
+      continueOnFailureDependencies: {
+        'app1:compile': [],
+        'app4:precompile': [],
+      },
     });
 
     taskGraph = createTaskGraph(
@@ -3162,6 +3278,11 @@ describe('createTaskGraph', () => {
         'app4:precompile': [],
       },
       continuousDependencies: {
+        'app2:compile': [],
+        'app3:compile': [],
+        'app4:precompile': [],
+      },
+      continueOnFailureDependencies: {
         'app2:compile': [],
         'app3:compile': [],
         'app4:precompile': [],
@@ -3310,6 +3431,159 @@ describe('createTaskGraph', () => {
       'app6:compile': [],
       'app7:compile': ['app8:precompile'],
       'app8:precompile': [],
+    });
+  });
+
+  describe('skipOnFailure dependencies', () => {
+    it('should maintain backwards compatibility (default skipOnFailure: true)', () => {
+      const projectGraph: ProjectGraph = {
+        nodes: {
+          app1: {
+            name: 'app1',
+            type: 'app',
+            data: {
+              root: 'app1-root',
+              targets: {
+                build: {
+                  executor: 'nx:run-commands',
+                  dependsOn: ['test'], // default behavior - no skipOnFailure specified
+                },
+                test: {
+                  executor: 'nx:run-commands',
+                },
+              },
+            },
+          },
+        },
+        dependencies: {},
+      };
+
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['app1'],
+        ['build'],
+        undefined,
+        {}
+      );
+
+      expect(taskGraph.continueOnFailureDependencies).toEqual({
+        'app1:build': [],
+        'app1:test': [],
+      });
+      expect(taskGraph.dependencies).toEqual({
+        'app1:build': ['app1:test'],
+        'app1:test': [],
+      });
+    });
+
+    it('should track continue-on-failure dependencies when skipOnFailure is false', () => {
+      const projectGraph: ProjectGraph = {
+        nodes: {
+          app1: {
+            name: 'app1',
+            type: 'app',
+            data: {
+              root: 'app1-root',
+              targets: {
+                build: {
+                  executor: 'nx:run-commands',
+                  dependsOn: [
+                    {
+                      target: 'test',
+                      skipOnFailure: false, // continue even if test fails
+                    },
+                  ],
+                },
+                test: {
+                  executor: 'nx:run-commands',
+                },
+              },
+            },
+          },
+        },
+        dependencies: {},
+      };
+
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['app1'],
+        ['build'],
+        undefined,
+        {}
+      );
+
+      expect(taskGraph.continueOnFailureDependencies).toEqual({
+        'app1:build': ['app1:test'],
+        'app1:test': [],
+      });
+      expect(taskGraph.dependencies).toEqual({
+        'app1:build': ['app1:test'],
+        'app1:test': [],
+      });
+    });
+
+    it('should handle mixed dependency types correctly', () => {
+      const projectGraph: ProjectGraph = {
+        nodes: {
+          app1: {
+            name: 'app1',
+            type: 'app',
+            data: {
+              root: 'app1-root',
+              targets: {
+                build: {
+                  executor: 'nx:run-commands',
+                  dependsOn: [
+                    'lint', // default: skipOnFailure: true
+                    {
+                      target: 'test',
+                      skipOnFailure: false, // continue even if test fails
+                    },
+                    {
+                      target: 'docs-build',
+                      skipOnFailure: true, // explicit skipOnFailure: true
+                    },
+                  ],
+                },
+                lint: {
+                  executor: 'nx:run-commands',
+                },
+                test: {
+                  executor: 'nx:run-commands',
+                },
+                'docs-build': {
+                  executor: 'nx:run-commands',
+                },
+              },
+            },
+          },
+        },
+        dependencies: {},
+      };
+
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['app1'],
+        ['build'],
+        undefined,
+        {}
+      );
+
+      expect(taskGraph.continueOnFailureDependencies).toEqual({
+        'app1:build': ['app1:test'], // only test should continue on failure
+        'app1:lint': [],
+        'app1:test': [],
+        'app1:docs-build': [],
+      });
+      expect(taskGraph.dependencies).toEqual({
+        'app1:build': ['app1:lint', 'app1:test', 'app1:docs-build'],
+        'app1:lint': [],
+        'app1:test': [],
+        'app1:docs-build': [],
+      });
     });
   });
 });

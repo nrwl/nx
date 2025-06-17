@@ -394,7 +394,10 @@ async function buildPlaywrightTargets(
         cache: ciBaseTargetConfig.cache,
         inputs: ciBaseTargetConfig.inputs,
         outputs,
-        dependsOn,
+        dependsOn: dependsOn.map((d: TargetDependencyConfig) => ({
+          ...d,
+          skipOnFailure: false,
+        })),
         options: { cwd: '{projectRoot}' },
         metadata: {
           technologies: ['playwright'],

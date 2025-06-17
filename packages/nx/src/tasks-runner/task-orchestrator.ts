@@ -71,6 +71,8 @@ export class TaskOrchestrator {
     this.options.captureStderr
   );
   private reverseTaskDeps = calculateReverseDeps(this.taskGraph);
+  private continueOnFailureDependencies =
+    this.taskGraph.continueOnFailureDependencies || {};
 
   private initializingTaskIds = new Set(this.initiatingTasks.map((t) => t.id));
 
@@ -952,12 +954,28 @@ export class TaskOrchestrator {
           } else {
             // only mark the packages that depend on the current task as skipped
             // other tasks will continue to execute
-            this.complete(
-              this.reverseTaskDeps[taskId].map((depTaskId) => ({
-                taskId: depTaskId,
-                status: 'skipped',
-              }))
-            );
+            const dependentsToSkip = [];
+            const allDependents = this.reverseTaskDeps[taskId] || [];
+
+            for (const dependentTaskId of allDependents) {
+              const continueOnFailureDeps =
+                this.continueOnFailureDependencies[dependentTaskId] || [];
+
+              // If this failed task is marked as continue-on-failure for the dependent,
+              // don't skip the dependent task
+              if (!continueOnFailureDeps.includes(taskId)) {
+                dependentsToSkip.push(dependentTaskId);
+              }
+            }
+
+            if (dependentsToSkip.length > 0) {
+              this.complete(
+                dependentsToSkip.map((depTaskId) => ({
+                  taskId: depTaskId,
+                  status: 'skipped',
+                }))
+              );
+            }
           }
         }
       }

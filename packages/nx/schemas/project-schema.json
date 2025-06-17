@@ -102,6 +102,11 @@
                       "description": "Configuration for params handling.",
                       "enum": ["ignore", "forward"],
                       "default": "ignore"
+                    },
+                    "skipOnFailure": {
+                      "type": "boolean",
+                      "description": "Whether to skip the parent task when this dependency fails. Set to `false` to continue execution despite dependency failure.",
+                      "default": true
                     }
                   },
                   "oneOf": [

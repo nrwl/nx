@@ -7,6 +7,7 @@
 - [dependencies](/reference/core-api/devkit/documents/TargetDependencyConfig#dependencies): boolean
 - [params](/reference/core-api/devkit/documents/TargetDependencyConfig#params): "ignore" | "forward"
 - [projects](/reference/core-api/devkit/documents/TargetDependencyConfig#projects): string | string[]
+- [skipOnFailure](/reference/core-api/devkit/documents/TargetDependencyConfig#skiponfailure): boolean
 - [target](/reference/core-api/devkit/documents/TargetDependencyConfig#target): string
 
 ## Properties
@@ -34,6 +35,21 @@ Configuration for params handling.
 
 A list of projects that have `target`.
 Should not be specified together with `dependencies`.
+
+---
+
+### skipOnFailure
+
+• `Optional` **skipOnFailure**: `boolean`
+
+Whether to skip the parent task when this dependency fails.
+Set to `false` to continue execution despite dependency failure.
+
+**`Default`**
+
+```ts
+true;
+```
 
 ---
 

@@ -437,6 +437,7 @@ describe('utils', () => {
       });
       expect(result).toEqual({
         target: 'build',
+        skipOnFailure: true,
       });
     });
 
@@ -455,6 +456,7 @@ describe('utils', () => {
       });
       expect(result).toEqual({
         target: 'build',
+        skipOnFailure: true,
       });
     });
 
@@ -466,6 +468,7 @@ describe('utils', () => {
       expect(result).toEqual({
         target: 'build',
         dependencies: true,
+        skipOnFailure: true,
       });
     });
 
@@ -485,6 +488,7 @@ describe('utils', () => {
       expect(result).toEqual({
         target: 'build',
         projects: ['project'],
+        skipOnFailure: true,
       });
     });
 
@@ -495,6 +499,7 @@ describe('utils', () => {
       });
       expect(result).toEqual({
         target: 'target:with:colons',
+        skipOnFailure: true,
       });
     });
 
@@ -528,10 +533,12 @@ describe('utils', () => {
         {
           target: 'build-css',
           projects: ['project'],
+          skipOnFailure: true,
         },
         {
           target: 'build-js',
           projects: ['project'],
+          skipOnFailure: true,
         },
       ]);
     });
@@ -591,14 +598,17 @@ describe('utils', () => {
         {
           target: 'build-css',
           dependencies: true,
+          skipOnFailure: true,
         },
         {
           target: 'build-js',
           dependencies: true,
+          skipOnFailure: true,
         },
         {
           target: 'build-python',
           dependencies: true,
+          skipOnFailure: true,
         },
       ]);
     });
@@ -646,6 +656,7 @@ describe('utils', () => {
         {
           target: 'build:one',
           projects: ['foo'],
+          skipOnFailure: true,
         },
       ]);
 
@@ -653,6 +664,7 @@ describe('utils', () => {
         {
           target: 'build:two',
           projects: ['foo'],
+          skipOnFailure: true,
         },
       ]);
 
@@ -662,6 +674,7 @@ describe('utils', () => {
         {
           target: 'build:one',
           projects: ['bar'],
+          skipOnFailure: true,
         },
       ]);
 
@@ -669,6 +682,7 @@ describe('utils', () => {
         {
           target: 'build:two',
           projects: ['bar'],
+          skipOnFailure: true,
         },
       ]);
 
