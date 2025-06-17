@@ -31,6 +31,12 @@ export function pruneProjectGraph(
     workspacePackages,
     builder
   );
+
+  for (const nodeName of workspacePackages.keys()) {
+    const node = graph.nodes[nodeName];
+    builder.addNode(node);
+  }
+
   // for NPM (as well as the graph consistency)
   // we need to distinguish between hoisted and non-hoisted dependencies
   rehoistNodes(graph, combinedDependencies, builder);
@@ -129,7 +135,6 @@ export function addNodesAndDependencies(
     } else if (workspacePackages.has(name)) {
       // Workspace Node
       const node = graph.nodes[name];
-      builder.addNode(node);
       traverseWorkspaceNode(graph, builder, node);
     }
   });
