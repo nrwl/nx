@@ -7,6 +7,7 @@ import { satisfies, gte } from 'semver';
 import { PackageJson } from '../../../utils/package-json';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 import { reverse } from '../../../project-graph/operators';
+import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 
 /**
  * Prune project graph's external nodes and their dependencies
@@ -31,6 +32,7 @@ export function pruneProjectGraph(
 // ensure that dependency ranges from package.json (e.g. ^1.0.0)
 // are replaced with the actual version based on the available nodes (e.g. 1.0.1)
 function normalizeDependencies(packageJson: PackageJson, graph: ProjectGraph) {
+  const workspacePackages = getWorkspacePackagesFromGraph(graph);
   const {
     dependencies,
     devDependencies,
@@ -60,10 +62,7 @@ function normalizeDependencies(packageJson: PackageJson, graph: ProjectGraph) {
       const node = findNodeMatchingVersion(graph, packageName, versionRange);
       if (node) {
         combinedDependencies[packageName] = node.data.version;
-      } else if (
-        versionRange.startsWith('workspace:') ||
-        versionRange.startsWith('file:')
-      ) {
+      } else if (workspacePackages.has(packageName)) {
         // workspace module, leave as is
         combinedDependencies[packageName] = versionRange;
       } else {

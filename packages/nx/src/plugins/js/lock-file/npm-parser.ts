@@ -11,9 +11,11 @@ import {
   DependencyType,
   ProjectGraph,
   ProjectGraphExternalNode,
+  ProjectGraphProjectNode,
 } from '../../../config/project-graph';
 import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
+import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 
 /**
  * NPM
@@ -396,9 +398,14 @@ export function stringifyNpmLockfile(
 ): string {
   const rootLockFile = JSON.parse(rootLockFileContent) as NpmLockFile;
   const { lockfileVersion } = JSON.parse(rootLockFileContent) as NpmLockFile;
+  const workspaceModulesFromGraph = getWorkspacePackagesFromGraph(graph);
 
   const mappedPackages = mapSnapshots(rootLockFile, graph);
-  const workspaceModules = mapWorkspaceModules(packageJson, rootLockFile);
+  const workspaceModules = mapWorkspaceModules(
+    packageJson,
+    rootLockFile,
+    workspaceModulesFromGraph
+  );
 
   const output: NpmLockFile = {
     name: packageJson.name || rootLockFile.name,
@@ -422,13 +429,14 @@ export function stringifyNpmLockfile(
 
 function mapWorkspaceModules(
   packageJson: NormalizedPackageJson,
-  rootLockFile: NpmLockFile
+  rootLockFile: NpmLockFile,
+  workspaceModules: Map<string, ProjectGraphProjectNode>
 ) {
   const output: Record<string, NpmDependencyV3 & NpmDependencyV1> = {};
   for (const [pkgName, pkgVersion] of Object.entries(
     packageJson.dependencies
   )) {
-    if (pkgVersion.startsWith('workspace:') || pkgVersion.startsWith('file:')) {
+    if (workspaceModules.has(pkgName)) {
       let workspaceModuleDefinition: NpmDependencyV3 & NpmDependencyV1;
       for (const [depName, depSnapshot] of Object.entries(
         rootLockFile.packages || rootLockFile.dependencies
