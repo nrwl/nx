@@ -92,7 +92,7 @@ const { writeFileSync } = require('fs');
 
 async function main() {
   const outputDir = 'dist'; // You can replace this with the output directory you want to use
-  // Detect the package manager you are using (npm, yarn, pnpm)
+  // Detect the package manager you are using (npm, yarn, pnpm, bun)
   const pm = detectPackageManager();
   let projectGraph = readCachedProjectGraph();
   if (!projectGraph) {
@@ -137,7 +137,7 @@ Then to run the script, update your `package.json` to include the following:
 
 Now, you can run `npm run custom-build` to build your application and generate the `package.json` and lock file.
 
-You can replace _npm_ with _yarn_ or _pnpm_ if you are using those package managers.
+You can replace _npm_ with _yarn_, _pnpm_, or _bun_ if you are using those package managers.
 
 {% /tab %}
 
