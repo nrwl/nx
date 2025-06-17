@@ -3,46 +3,53 @@ import {
   currentMigrationCanLeaveReview,
   currentMigrationHasChanges,
   currentMigrationHasFailed,
+  currentMigrationHasSucceeded,
   currentMigrationIsSkipped,
+  currentMigrationIsRunning,
 } from './selectors';
 
 export const guards = {
   canStartRunningCurrentMigration: (ctx: AutomaticMigrationState) => {
     return (
       !!ctx.currentMigration &&
-      !ctx.currentMigrationRunning &&
-      ((!currentMigrationHasFailed(ctx) && !currentMigrationHasChanges(ctx)) ||
+      !currentMigrationIsRunning(ctx) &&
+      !currentMigrationIsSkipped(ctx) &&
+      // Allow running if migration is not completed
+      // stopped migrations can be restarted via the UI, Nx-console will handle the state change
+      !currentMigrationHasFailed(ctx) &&
+      !currentMigrationHasChanges(ctx)
+    );
+  },
+
+  currentMigrationIsDone: (ctx: AutomaticMigrationState) => {
+    return (
+      !!ctx.currentMigration &&
+      !currentMigrationIsRunning(ctx) &&
+      ((currentMigrationHasSucceeded(ctx) &&
+        currentMigrationCanLeaveReview(ctx)) ||
         currentMigrationIsSkipped(ctx))
     );
   },
-  currentMigrationIsDone: (ctx: AutomaticMigrationState) => {
-    if (!ctx.currentMigration) {
-      return false;
-    }
 
-    return (
-      !!ctx.currentMigration &&
-      !ctx.currentMigrationRunning &&
-      currentMigrationCanLeaveReview(ctx)
-    );
-  },
   currentMigrationCanLeaveReview: (ctx: AutomaticMigrationState) =>
     currentMigrationCanLeaveReview(ctx),
+
   lastMigrationIsDone: (ctx: AutomaticMigrationState) => {
-    if (!ctx.migrations) {
-      return false;
-    }
-    const currentMigrationIndex = ctx.migrations.findIndex(
-      (migration) => migration.id === ctx.currentMigration?.id
+    if (!ctx.migrations || !ctx.currentMigration) return false;
+
+    const currentIndex = ctx.migrations.findIndex(
+      (m) => m.id === ctx.currentMigration?.id
     );
+
     return (
-      currentMigrationIndex === ctx.migrations.length - 1 &&
+      currentIndex === ctx.migrations.length - 1 &&
       currentMigrationCanLeaveReview(ctx)
     );
   },
+
   needsReview: (ctx: AutomaticMigrationState) => {
     return (
-      !ctx.currentMigrationRunning &&
+      !currentMigrationIsRunning(ctx) &&
       !guards.canStartRunningCurrentMigration(ctx)
     );
   },
