@@ -12,10 +12,13 @@ private val testFileNameRegex =
     Regex("^(?!(abstract|fake)).*?(Test)(s)?\\d*", RegexOption.IGNORE_CASE)
 
 private val packageDeclarationRegex =
-    Regex("""package\s+([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)""")
+    Regex(
+        """^\s*package\s+([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)""",
+        RegexOption.MULTILINE)
 private val classDeclarationRegex =
-    Regex("""^\s*(?:@[\w]+)?\s*(class|object)\s+([A-Za-z_][A-Za-z0-9_]*)""")
-private val privateClassRegex = Regex("""\bprivate\s+(class|object)\s+([A-Za-z_][A-Za-z0-9_]*)""")
+    Regex(
+        """^\s*(?:@[\w]+\s*)*(?:public|protected|internal|open|sealed|final|data|enum|annotation)?\s*(class)\s+([A-Za-z_][A-Za-z0-9_]*)""")
+private val privateClassRegex = Regex("""\bprivate\s+class\s+([A-Za-z_][A-Za-z0-9_]*)""")
 
 // Essential annotations (most common subset)
 private val essentialTestAnnotations =
