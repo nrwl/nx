@@ -14,6 +14,10 @@ Project graph plugins are able to add new nodes or dependencies to the project g
 - [createNodesV2](#adding-new-nodes-to-the-project-graph): This tuple allows a plugin to tell Nx information about projects that are identified by a given file.
 - [createDependencies](#adding-new-dependencies-to-the-project-graph): This function allows a plugin to tell Nx about dependencies between projects.
 
+{% callout type="warning" title="Disable the Nx Daemon during development" %}
+When developing project graph plugins, disable the [Nx Daemon](/concepts/nx-daemon) by setting `NX_DAEMON=false`. The daemon caches your plugin code, so changes to your plugin won't be reflected until the daemon restarts.
+{% /callout %}
+
 ## Adding Plugins to Workspace
 
 You can register a plugin by adding it to the plugins array in `nx.json`:
@@ -356,8 +360,6 @@ This functionality is available in Nx 17 or higher.
 ## Visualizing the Project Graph
 
 You can then visualize the project graph as described [here](/features/explore-graph). However, there is a cache that Nx uses to avoid recalculating the project graph as much as possible. As you develop your project graph plugin, it might be a good idea to set the following environment variable to disable the project graph cache: `NX_CACHE_PROJECT_GRAPH=false`.
-
-It might also be a good idea to ensure that the dep graph is not running on the nx daemon by setting `NX_DAEMON=false`, as this will ensure you will be able to see any `console.log` statements you add as you're developing.
 
 <!-- TODO (@AgentEnder): update the nx-go-project-graph-plugin to v2 API and re-add this section -->
 <!-- ## Example Project Graph Plugin
