@@ -29,13 +29,13 @@ export default async function pruneLockfileExecutor(
     packageJson,
     context.projectGraph
   );
-  writeFileSync(join(outputDirectory, lockfileName), lockFile);
+  const lockfileOutputPath = join(outputDirectory, lockfileName);
+  writeFileSync(lockfileOutputPath, lockFile);
   writeFileSync(
     join(outputDirectory, 'package.json'),
     JSON.stringify(packageJson, null, 2)
   );
-  logger.log('Lockfile pruned.');
-  logger.log('Success!');
+  logger.log(`Lockfile pruned: ${lockfileOutputPath}`);
   return {
     success: true,
   };
