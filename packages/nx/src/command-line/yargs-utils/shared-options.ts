@@ -317,6 +317,11 @@ export function withOutputStyleOption<T>(
       type: 'string',
       choices,
     })
+    .option('tui', {
+      describe: 'Enable or disable the Nx Terminal UI.',
+      type: 'boolean',
+      conflicts: 'outputStyle',
+    })
     .middleware([
       (args) => {
         const useTui = shouldUseTui(readNxJson(), args as NxArgs);
@@ -328,7 +333,7 @@ export function withOutputStyleOption<T>(
         }
         process.env.NX_TUI = useTui.toString();
       },
-    ]) as Argv<T & { outputStyle: OutputStyle }>;
+    ]) as Argv<T & { outputStyle: OutputStyle; tui: boolean }>;
 }
 
 export function withRunOneOptions(yargs: Argv) {
