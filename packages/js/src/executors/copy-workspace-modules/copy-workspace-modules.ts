@@ -11,7 +11,8 @@ import { type CopyWorkspaceModulesOptions } from './schema';
 import { cpSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'path';
 import { lstatSync } from 'fs';
-import { getWorkspacePackagesFromGraph } from '../../utils/package-json/get-workspace-packages-from-graph';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+import { getWorkspacePackagesFromGraph } from 'nx/src/plugins/js/utils/get-workspace-packages-from-graph';
 
 export default async function copyWorkspaceModules(
   schema: CopyWorkspaceModulesOptions,
