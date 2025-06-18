@@ -3,9 +3,7 @@ title: Overview of the Nx powerpack-conformance Plugin
 description: The Nx Powerpack Conformance plugin provides the ability to write and apply rules for your workspace
 ---
 
-# @nx/conformance
-
-The `@nx/conformance` plugin allows [Nx Powerpack](/powerpack) users to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability** and **security**.
+The `@nx/conformance` plugin allows [Nx Powerpack](/powerpack) and [Nx Enterprise](/enterprise) users to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability** and **security**.
 
 The conformance plugin allows you to encode your own organization's standards so that they can be enforced automatically. Conformance rules can also complement linting tools by enforcing that those tools are configured in the recommended way. The rules are written in TypeScript but can be applied to any language in the codebase or focus entirely on configuration files.
 
@@ -14,8 +12,8 @@ The plugin also provides the following pre-written rules:
 - [**Enforce Project Boundaries**](#enforce-project-boundaries): Similar to the Nx [ESLint Enforce Module Boundaries rule](/features/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
 - [**Ensure Owners**](#ensure-owners): Require every project to have an owner defined for the [`@nx/owners` plugin](/reference/core-api/owners)
 
-{% callout title="This plugin requires an active Nx Powerpack license" %}
-In order to use `@nx/conformance`, you need to have an active Powerpack license. If you don't have a license or it has expired, the `nx conformance` command will fail.
+{% callout title="This plugin requires an active Nx Powerpack or Nx Enterprise license" %}
+In order to use `@nx/conformance`, you need to have an active Powerpack or [Nx Enterprise license](/enterprise). If you don't have a license or it has expired, the `nx conformance` command will fail.
 {% /callout %}
 
 ## Set Up @nx/conformance
