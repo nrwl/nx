@@ -15,23 +15,38 @@ import { basename, dirname, join } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 
 interface ExpandedBuildTargetOptions {
-  name?: string;
+  name: string;
 }
-type BuildTargetOptions = string | ExpandedBuildTargetOptions;
+type BuildTargetOptions = string | Partial<ExpandedBuildTargetOptions>;
 
 interface ExpandedRunTargetOptions {
-  name?: string;
+  name: string;
 }
-type RunTargetOptions = string | ExpandedRunTargetOptions;
+type RunTargetOptions = string | Partial<ExpandedRunTargetOptions>;
+
+interface DockerPushRegistryOptions {
+  registryUrl: string;
+  repositoryName: string;
+  tag: string;
+}
+
+interface ExpandedPushTargetOptions extends Partial<DockerPushRegistryOptions> {
+  name: string;
+  environments: Record<string, DockerPushRegistryOptions>;
+}
+
+type PushTargetOptions = string | Partial<ExpandedPushTargetOptions>;
 
 export interface DockerPluginOptions {
   buildTarget?: BuildTargetOptions;
   runTarget?: RunTargetOptions;
+  pushTarget?: PushTargetOptions;
 }
 
 interface NormalizedDockerPluginOptions {
   buildTarget: ExpandedBuildTargetOptions;
   runTarget: ExpandedRunTargetOptions;
+  pushTarget: ExpandedPushTargetOptions;
 }
 
 type DockerTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
@@ -155,6 +170,55 @@ async function createDockerTargets(
     },
   };
 
+  let customRegistryTag = `${options.pushTarget.tag}`;
+  if (options.pushTarget.repositoryName) {
+    customRegistryTag = `${options.pushTarget.repositoryName}:${customRegistryTag}`;
+  }
+  if (options.pushTarget.registryUrl) {
+    customRegistryTag = `${options.pushTarget.registryUrl}/${customRegistryTag}`;
+  }
+  targets[`docker:prepush`] = {
+    dependsOn: [options.buildTarget.name],
+    command: `docker tag ${imageTag} ${customRegistryTag}`,
+    options: {
+      cwd: projectRoot,
+    },
+    inputs: [
+      ...('production' in namedInputs
+        ? ['production', '^production']
+        : ['default', '^default']),
+    ],
+    metadata: {
+      technologies: ['docker'],
+      description: `Run Docker tag to retag existing image for pushing to registry.`,
+      help: {
+        command: `docker tag --help`,
+        example: {},
+      },
+    },
+  };
+
+  targets[options.pushTarget.name] = {
+    dependsOn: [`docker:prepush`],
+    command: `docker push ${customRegistryTag}`,
+    options: {
+      cwd: projectRoot,
+    },
+    inputs: [
+      ...('production' in namedInputs
+        ? ['production', '^production']
+        : ['default', '^default']),
+    ],
+    metadata: {
+      technologies: ['docker'],
+      description: `Run Docker push to push image to registry.`,
+      help: {
+        command: `docker push --help`,
+        example: {},
+      },
+    },
+  };
+
   return { targets, metadata: {} };
 }
 
@@ -164,6 +228,7 @@ function normalizePluginOptions(
   return {
     buildTarget: normalizeBuildTarget(options),
     runTarget: normalizeRunTarget(options),
+    pushTarget: normalizePushTarget(options),
   };
 }
 
@@ -180,7 +245,7 @@ function normalizeBuildTarget({
     };
   } else {
     return {
-      name: buildTarget.name,
+      name: buildTarget.name ?? 'docker:build',
     };
   }
 }
@@ -198,7 +263,37 @@ function normalizeRunTarget({
     };
   } else {
     return {
-      name: runTarget.name,
+      name: runTarget.name ?? 'docker:run',
+    };
+  }
+}
+
+function normalizePushTarget({
+  pushTarget,
+}: DockerPluginOptions): ExpandedPushTargetOptions {
+  if (!pushTarget) {
+    return {
+      name: 'docker:push',
+      registryUrl: undefined,
+      repositoryName: undefined,
+      tag: 'latest',
+      environments: undefined,
+    };
+  } else if (typeof pushTarget === 'string') {
+    return {
+      name: pushTarget,
+      registryUrl: undefined,
+      repositoryName: undefined,
+      tag: 'latest',
+      environments: undefined,
+    };
+  } else {
+    return {
+      name: pushTarget.name ?? 'docker:push',
+      registryUrl: pushTarget.registryUrl ?? undefined,
+      repositoryName: pushTarget.repositoryName ?? undefined,
+      tag: pushTarget.tag ?? 'latest',
+      environments: pushTarget.environments ?? undefined,
     };
   }
 }
