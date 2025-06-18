@@ -11,7 +11,7 @@ import {
 } from 'yaml';
 import { rm } from 'node:fs/promises';
 import { dirname, join, relative } from 'path';
-import { gte, lt, parse } from 'semver';
+import { gte, lt, parse, satisfies } from 'semver';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
 
@@ -44,6 +44,12 @@ export interface PackageManagerCommands {
   run: (script: string, args?: string) => string;
   // Make this required once bun adds programatically support for reading config https://github.com/oven-sh/bun/issues/7140
   getRegistryUrl?: string;
+  publish: (
+    packageRoot: string,
+    registry: string,
+    registryConfigKey: string,
+    tag: string
+  ) => string;
 }
 
 /**
@@ -130,17 +136,28 @@ export function getPackageManagerCommand(
         getRegistryUrl: useBerry
           ? 'yarn config get npmRegistryServer'
           : 'yarn config get registry',
+        publish: (packageRoot, registry, registryConfigKey, tag) =>
+          `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
       };
     },
     pnpm: () => {
-      let modernPnpm: boolean, includeDoubleDashBeforeArgs: boolean;
+      let modernPnpm: boolean,
+        includeDoubleDashBeforeArgs: boolean,
+        allowRegistryConfigKey: boolean;
       try {
         const pnpmVersion = getPackageManagerVersion('pnpm', root);
         modernPnpm = gte(pnpmVersion, '6.13.0');
         includeDoubleDashBeforeArgs = lt(pnpmVersion, '7.0.0');
+        // Support for --@scope:registry was added in pnpm v10.5.0 and backported to v9.15.7.
+        // Versions >=10.0.0 and <10.5.0 do NOT support this CLI option.
+        allowRegistryConfigKey = satisfies(
+          pnpmVersion,
+          '>=9.15.7 <10.0.0 || >=10.5.0'
+        );
       } catch {
         modernPnpm = true;
         includeDoubleDashBeforeArgs = true;
+        allowRegistryConfigKey = false;
       }
 
       const isPnpmWorkspace = existsSync(join(root, 'pnpm-workspace.yaml'));
@@ -163,6 +180,10 @@ export function getPackageManagerCommand(
           }`,
         list: 'pnpm ls --depth 100',
         getRegistryUrl: 'pnpm config get registry',
+        publish: (packageRoot, registry, registryConfigKey, tag) =>
+          `pnpm publish "${packageRoot}" --json --"${
+            allowRegistryConfigKey ? registryConfigKey : 'registry'
+          }=${registry}" --tag=${tag} --no-git-checks`,
       };
     },
     npm: () => {
@@ -182,6 +203,8 @@ export function getPackageManagerCommand(
           `npm run ${script}${args ? ' -- ' + args : ''}`,
         list: 'npm ls',
         getRegistryUrl: 'npm config get registry',
+        publish: (packageRoot, registry, registryConfigKey, tag) =>
+          `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
       };
     },
     bun: () => {
@@ -197,6 +220,9 @@ export function getPackageManagerCommand(
         dlx: 'bunx',
         run: (script: string, args: string) => `bun run ${script} -- ${args}`,
         list: 'bun pm ls',
+        // Unlike npm, bun publish does not support a custom registryConfigKey option
+        publish: (packageRoot, registry, registryConfigKey, tag) =>
+          `bun publish --cwd="${packageRoot}" --json --registry="${registry}" --tag=${tag}`,
       };
     },
   };
