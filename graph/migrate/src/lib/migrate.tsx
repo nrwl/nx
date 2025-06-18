@@ -17,10 +17,7 @@ import {
   MigrationSettingsPanel,
   AutomaticMigration,
 } from './components';
-import {
-  currentMigrationIsStopped,
-  currentMigrationHasFailed,
-} from './state/automatic/selectors';
+import { getCurrentMigrationType } from './state/automatic/selectors';
 
 export interface MigrateUIProps {
   migrations: MigrationDetailsWithId[];
@@ -86,11 +83,13 @@ export function MigrateUI(props: MigrateUIProps) {
   const isDone = useSelector(actor, (state) => state.matches('done'));
   const isInit = useSelector(actor, (state) => state.matches('init'));
   const isRunning = useSelector(actor, (state) => state.matches('running'));
-  const isCurrentMigrationStopped = useSelector(actor, (state) =>
-    currentMigrationIsStopped(state.context)
+  const isCurrentMigrationStopped = useSelector(
+    actor,
+    (state) => getCurrentMigrationType(state.context) === 'stopped'
   );
-  const isCurrentMigrationFailed = useSelector(actor, (state) =>
-    currentMigrationHasFailed(state.context)
+  const isCurrentMigrationFailed = useSelector(
+    actor,
+    (state) => getCurrentMigrationType(state.context) === 'failed'
   );
 
   const isNeedReview = useSelector(actor, (state) =>

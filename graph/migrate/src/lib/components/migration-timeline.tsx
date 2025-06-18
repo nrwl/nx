@@ -27,10 +27,7 @@ import type {
 } from '../state/automatic/types';
 import { useSelector } from '@xstate/react';
 import {
-  isMigrationFailed,
-  isMigrationSkipped,
-  isMigrationStopped,
-  isMigrationSuccessful,
+  getMigrationType,
   isMigrationRunning,
 } from '../state/automatic/selectors';
 
@@ -599,21 +596,25 @@ function MigrationStateCircle({
   let textColor = '';
   let Icon = null;
 
-  const isSkipped = useSelector(actor, (state) =>
-    isMigrationSkipped(state.context, migration.id)
+  const isSkipped = useSelector(
+    actor,
+    (state) => getMigrationType(state.context, migration.id) === 'skipped'
   );
 
   const isRunning = useSelector(actor, (state) =>
     isMigrationRunning(state.context, migration.id)
   );
-  const isStopped = useSelector(actor, (state) =>
-    isMigrationStopped(state.context, migration.id)
+  const isStopped = useSelector(
+    actor,
+    (state) => getMigrationType(state.context, migration.id) === 'stopped'
   );
-  const isFailed = useSelector(actor, (state) =>
-    isMigrationFailed(state.context, migration.id)
+  const isFailed = useSelector(
+    actor,
+    (state) => getMigrationType(state.context, migration.id) === 'failed'
   );
-  const isSuccess = useSelector(actor, (state) =>
-    isMigrationSuccessful(state.context, migration.id)
+  const isSuccess = useSelector(
+    actor,
+    (state) => getMigrationType(state.context, migration.id) === 'successful'
   );
   // Check if this migration is in the completed migrations
 

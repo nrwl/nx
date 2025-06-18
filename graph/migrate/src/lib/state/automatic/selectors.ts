@@ -16,83 +16,36 @@ export function findFirstIncompleteMigration(
   );
 }
 
-export function currentMigrationHasSucceeded(ctx: AutomaticMigrationState) {
-  if (!ctx.currentMigration) {
-    return false;
-  }
-  return isMigrationSuccessful(ctx, ctx.currentMigration.id);
+export function getMigrationType(
+  ctx: AutomaticMigrationState,
+  migrationId: string
+) {
+  return ctx.nxConsoleMetadata?.completedMigrations?.[migrationId]?.type;
+}
+
+export function getCurrentMigrationType(ctx: AutomaticMigrationState) {
+  if (!ctx.currentMigration) return undefined;
+  return getMigrationType(ctx, ctx.currentMigration.id);
+}
+
+export function getMigrationCompletedData(
+  ctx: AutomaticMigrationState,
+  migrationId: string
+) {
+  return ctx.nxConsoleMetadata?.completedMigrations?.[migrationId];
+}
+
+export function getCurrentMigrationCompletedData(ctx: AutomaticMigrationState) {
+  if (!ctx.currentMigration) return undefined;
+  return getMigrationCompletedData(ctx, ctx.currentMigration.id);
 }
 
 export function currentMigrationHasChanges(ctx: AutomaticMigrationState) {
-  if (!ctx.currentMigration) {
-    return false;
-  }
-  const completed =
-    ctx.nxConsoleMetadata?.completedMigrations?.[ctx.currentMigration?.id];
+  const completed = getCurrentMigrationCompletedData(ctx);
   return (
     completed?.type === 'successful' &&
     (completed.changedFiles?.length ?? 0) > 0
   );
-}
-
-export function isMigrationSuccessful(
-  ctx: AutomaticMigrationState,
-  migrationId: string
-) {
-  return (
-    ctx.nxConsoleMetadata?.completedMigrations?.[migrationId]?.type ===
-    'successful'
-  );
-}
-
-export function isMigrationFailed(
-  ctx: AutomaticMigrationState,
-  migrationId: string
-) {
-  return (
-    ctx.nxConsoleMetadata?.completedMigrations?.[migrationId]?.type === 'failed'
-  );
-}
-
-export function isMigrationSkipped(
-  ctx: AutomaticMigrationState,
-  migrationId: string
-) {
-  return (
-    ctx.nxConsoleMetadata?.completedMigrations?.[migrationId]?.type ===
-    'skipped'
-  );
-}
-
-export function isMigrationStopped(
-  ctx: AutomaticMigrationState,
-  migrationId: string
-) {
-  return (
-    ctx.nxConsoleMetadata?.completedMigrations?.[migrationId]?.type ===
-    'stopped'
-  );
-}
-
-export function currentMigrationIsSkipped(ctx: AutomaticMigrationState) {
-  if (!ctx.currentMigration) {
-    return false;
-  }
-  return isMigrationSkipped(ctx, ctx.currentMigration.id);
-}
-
-export function currentMigrationHasFailed(ctx: AutomaticMigrationState) {
-  if (!ctx.currentMigration) {
-    return false;
-  }
-  return isMigrationFailed(ctx, ctx.currentMigration.id);
-}
-
-export function currentMigrationIsStopped(ctx: AutomaticMigrationState) {
-  if (!ctx.currentMigration) {
-    return false;
-  }
-  return isMigrationStopped(ctx, ctx.currentMigration.id);
 }
 
 export function currentMigrationIsReviewed(ctx: AutomaticMigrationState) {
@@ -103,10 +56,11 @@ export function currentMigrationIsReviewed(ctx: AutomaticMigrationState) {
 }
 
 export function currentMigrationCanLeaveReview(ctx: AutomaticMigrationState) {
+  const type = getCurrentMigrationType(ctx);
   return (
     currentMigrationIsReviewed(ctx) ||
-    currentMigrationIsSkipped(ctx) ||
-    (currentMigrationHasSucceeded(ctx) && !currentMigrationHasChanges(ctx))
+    type === 'skipped' ||
+    (type === 'successful' && !currentMigrationHasChanges(ctx))
   );
 }
 
@@ -120,8 +74,6 @@ export function isMigrationRunning(
 }
 
 export function currentMigrationIsRunning(ctx: AutomaticMigrationState) {
-  if (!ctx.currentMigration) {
-    return false;
-  }
+  if (!ctx.currentMigration) return false;
   return isMigrationRunning(ctx, ctx.currentMigration.id);
 }

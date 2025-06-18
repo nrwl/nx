@@ -1,33 +1,32 @@
 import { AutomaticMigrationState } from './types';
 import {
+  getCurrentMigrationType,
   currentMigrationCanLeaveReview,
   currentMigrationHasChanges,
-  currentMigrationHasFailed,
-  currentMigrationHasSucceeded,
-  currentMigrationIsSkipped,
   currentMigrationIsRunning,
 } from './selectors';
 
 export const guards = {
   canStartRunningCurrentMigration: (ctx: AutomaticMigrationState) => {
+    const type = getCurrentMigrationType(ctx);
     return (
       !!ctx.currentMigration &&
       !currentMigrationIsRunning(ctx) &&
-      !currentMigrationIsSkipped(ctx) &&
+      !(type === 'skipped') &&
       // Allow running if migration is not completed
       // stopped migrations can be restarted via the UI, Nx-console will handle the state change
-      !currentMigrationHasFailed(ctx) &&
+      !(type === 'failed') &&
       !currentMigrationHasChanges(ctx)
     );
   },
 
   currentMigrationIsDone: (ctx: AutomaticMigrationState) => {
+    const type = getCurrentMigrationType(ctx);
     return (
       !!ctx.currentMigration &&
       !currentMigrationIsRunning(ctx) &&
-      ((currentMigrationHasSucceeded(ctx) &&
-        currentMigrationCanLeaveReview(ctx)) ||
-        currentMigrationIsSkipped(ctx))
+      ((type === 'successful' && currentMigrationCanLeaveReview(ctx)) ||
+        type === 'skipped')
     );
   },
 

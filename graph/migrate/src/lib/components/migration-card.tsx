@@ -28,11 +28,8 @@ import type {
 import { useSelector } from '@xstate/react';
 import {
   currentMigrationHasChanges,
-  isMigrationFailed,
+  getMigrationType,
   isMigrationRunning,
-  isMigrationSkipped,
-  isMigrationStopped,
-  isMigrationSuccessful,
 } from '../state/automatic/selectors';
 
 export interface MigrationCardHandle {
@@ -127,17 +124,21 @@ export const MigrationCard = forwardRef<
   const nextSteps =
     migrationResult?.type === 'successful' ? migrationResult.nextSteps : [];
 
-  const isSucceeded = useSelector(actor, (state) =>
-    isMigrationSuccessful(state.context, migration.id)
+  const isSucceeded = useSelector(
+    actor,
+    (state) => getMigrationType(state.context, migration.id) === 'successful'
   );
-  const isFailed = useSelector(actor, (state) =>
-    isMigrationFailed(state.context, migration.id)
+  const isFailed = useSelector(
+    actor,
+    (state) => getMigrationType(state.context, migration.id) === 'failed'
   );
-  const isSkipped = useSelector(actor, (state) =>
-    isMigrationSkipped(state.context, migration.id)
+  const isSkipped = useSelector(
+    actor,
+    (state) => getMigrationType(state.context, migration.id) === 'skipped'
   );
-  const isStopped = useSelector(actor, (state) =>
-    isMigrationStopped(state.context, migration.id)
+  const isStopped = useSelector(
+    actor,
+    (state) => getMigrationType(state.context, migration.id) === 'stopped'
   );
   const hasChanges = useSelector(actor, (state) =>
     currentMigrationHasChanges(state.context)

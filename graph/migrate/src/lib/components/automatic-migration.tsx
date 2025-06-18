@@ -6,9 +6,7 @@ import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate
 import { useSelector } from '@xstate/react';
 import {
   currentMigrationHasChanges,
-  currentMigrationHasFailed,
-  currentMigrationHasSucceeded,
-  currentMigrationIsStopped,
+  getCurrentMigrationType,
 } from '../state/automatic/selectors';
 import { MigrationTimeline } from './migration-timeline';
 import { Interpreter } from 'xstate';
@@ -46,15 +44,18 @@ export function AutomaticMigration(props: {
     (migration) => migration.id === currentMigration?.id
   );
 
-  const currentMigrationFailed = useSelector(props.actor, (state) =>
-    currentMigrationHasFailed(state.context)
+  const currentMigrationFailed = useSelector(
+    props.actor,
+    (state) => getCurrentMigrationType(state.context) === 'failed'
   );
 
-  const isCurrentMigrationStopped = useSelector(props.actor, (state) =>
-    currentMigrationIsStopped(state.context)
+  const isCurrentMigrationStopped = useSelector(
+    props.actor,
+    (state) => getCurrentMigrationType(state.context) === 'stopped'
   );
-  const currentMigrationSuccess = useSelector(props.actor, (state) =>
-    currentMigrationHasSucceeded(state.context)
+  const currentMigrationSuccess = useSelector(
+    props.actor,
+    (state) => getCurrentMigrationType(state.context) === 'successful'
   );
 
   const currentMigrationChanges = useSelector(props.actor, (state) =>
