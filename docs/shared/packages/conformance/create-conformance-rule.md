@@ -1,6 +1,6 @@
 ---
 title: Create a Conformance Rule
-description: Learn how to create custom conformance rules for Nx Powerpack to enforce standards and best practices across your Nx workspace.
+description: Learn how to create custom conformance rules for Nx Powerpack and Nx Enterprise to enforce standards and best practices across your Nx workspace.
 ---
 
 # Create a Conformance Rule
