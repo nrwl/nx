@@ -10,7 +10,7 @@ import { angularDevkitVersion } from '../../utils/versions';
 import { getProjectsFilteredByDependencies } from '../utils/projects';
 
 export default async function (tree: Tree) {
-  const projects = await getProjectsFilteredByDependencies(tree, [
+  const projects = await getProjectsFilteredByDependencies([
     'npm:@angular/platform-server',
   ]);
 
@@ -19,8 +19,8 @@ export default async function (tree: Tree) {
   }
 
   let isSsrInstalled = false;
-  for (const { project } of projects) {
-    visitNotIgnoredFiles(tree, project.root, (file) => {
+  for (const graphNode of projects) {
+    visitNotIgnoredFiles(tree, graphNode.data.root, (file) => {
       if (!file.endsWith('.ts') || file.endsWith('.d.ts')) {
         return;
       }
