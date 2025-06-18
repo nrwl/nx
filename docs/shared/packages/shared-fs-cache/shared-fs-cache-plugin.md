@@ -7,10 +7,6 @@ description: The @nx/shared-fs-cache plugin enables you to use a shared file sys
 
 The `@nx/shared-fs-cache` plugin enables you to host your remote cache on a shared file system directory. While you're responsible for implementing the actual directory sharing mechanism, the plugin configures Nx to read from both your local cache and the shared directory.
 
-{% callout type="warning" title="Potential Cache Poisoning" %}
-Using a shared file system folder for remote caching introduces the risk of [cache poisoning](/troubleshooting/unknown-local-cache). To mitigate this risk, consider using [Nx Replay](/ci/features/remote-cache) instead.
-{% /callout %}
-
 {% callout type="deepdive" title="Free managed remote cache with Nx Cloud" %}
 
 Note, you can get started for free with a **fully managed remote caching powered by Nx Cloud**. It comes with a generous Hobby plan that is enough for most small teams. [Learn more here](/nx-cloud).
@@ -21,9 +17,9 @@ If you are an enterprise and **data privacy and security is a concern**, [reach 
 
 {% /callout %}
 
-{% callout type="info" title="Self-hosted caching is now free" %}
+{% callout type="warning" title="Bucket-based caches are vulnerable to poisoning and often prohibited in organizations" %}
 
-Self-hosted caching is **now free for everyone** to use.
+CREEP (CVE-2025-36852) is a critical vulnerability in bucket-based self-hosted remote caches. It lets attackers with PR access poison production builds via a race condition during artifact creation—before security checks can catch it. [Learn more](/blog/cve-2025-36852-critical-cache-poisoning-vulnerability-creep)
 
 {% /callout %}
 
