@@ -1,14 +1,16 @@
 import {
   checkFilesExist,
-  cleanupProject,
   getSelectedPackageManager,
   packageInstall,
   readJson,
   runCLI,
   runCommand,
-  runCreateWorkspace,
-  uniq,
 } from '@nx/e2e/utils';
+import {
+  createNxWorkspace,
+  cleanupProject,
+  uniq,
+} from '@nx/e2e/utils/simple-project-utils';
 
 describe('create-nx-workspace --preset=npm', () => {
   const wsName = uniq('npm');
@@ -21,7 +23,7 @@ describe('create-nx-workspace --preset=npm', () => {
     // which fails due to files no longer being available
     process.env.NX_PROJECT_GLOB_CACHE = 'false';
 
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'npm',
       packageManager: getSelectedPackageManager(),
     });

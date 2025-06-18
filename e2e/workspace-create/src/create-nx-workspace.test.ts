@@ -1,7 +1,6 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
-  cleanupProject,
   e2eCwd,
   expectCodeIsFormatted,
   expectNoAngularDevkit,
@@ -10,9 +9,12 @@ import {
   packageManagerLockFile,
   readJson,
   runCommand,
-  runCreateWorkspace,
-  uniq,
 } from '@nx/e2e/utils';
+import {
+  createNxWorkspace,
+  cleanupProject,
+  uniq,
+} from '@nx/e2e/utils/simple-project-utils';
 import { readFileSync } from 'fs';
 import { existsSync, mkdirSync, rmSync } from 'fs-extra';
 
@@ -24,7 +26,7 @@ describe('create-nx-workspace', () => {
   it('should create a workspace with a single angular app at the root without routing', () => {
     const wsName = uniq('angular');
 
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'angular-standalone',
       appName: wsName,
       style: 'css',
@@ -46,7 +48,7 @@ describe('create-nx-workspace', () => {
   it('should create a workspace with a single angular app at the root using standalone APIs', () => {
     const wsName = uniq('angular');
 
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'angular-standalone',
       appName: wsName,
       style: 'css',
@@ -68,7 +70,7 @@ describe('create-nx-workspace', () => {
   it('should create a workspace with a single react app with vite at the root', () => {
     const wsName = uniq('react');
 
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'react-standalone',
       appName: wsName,
       style: 'css',
@@ -87,7 +89,7 @@ describe('create-nx-workspace', () => {
   it('should create a workspace with a single react app with webpack and playwright at the root', () => {
     const wsName = uniq('react');
 
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'react-standalone',
       appName: wsName,
       style: 'css',
@@ -105,7 +107,7 @@ describe('create-nx-workspace', () => {
 
   it('should be able to create an empty workspace built for apps', () => {
     const wsName = uniq('apps');
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'apps',
       packageManager,
     });
@@ -117,7 +119,7 @@ describe('create-nx-workspace', () => {
 
   it('should be able to create an empty workspace with npm capabilities', () => {
     const wsName = uniq('npm');
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'npm',
       packageManager,
     });
@@ -128,7 +130,7 @@ describe('create-nx-workspace', () => {
 
   it('should be able to create an empty workspace with ts/js capabilities', () => {
     const wsName = uniq('ts');
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'ts',
       packageManager,
     });
@@ -140,7 +142,7 @@ describe('create-nx-workspace', () => {
   it('should be able to create an angular workspace', () => {
     const wsName = uniq('angular');
     const appName = uniq('app');
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'angular-monorepo',
       style: 'css',
       appName,
@@ -160,7 +162,7 @@ describe('create-nx-workspace', () => {
     const wsName = uniq('angular-1-test');
     const appName = uniq('app');
     expect(() =>
-      runCreateWorkspace(wsName, {
+      createNxWorkspace(wsName, {
         preset: 'angular-monorepo',
         style: 'css',
         appName,
@@ -179,7 +181,7 @@ describe('create-nx-workspace', () => {
     const wsName = uniq('react');
     const appName = uniq('app');
 
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'react-monorepo',
       style: 'css',
       appName,
@@ -199,7 +201,7 @@ describe('create-nx-workspace', () => {
     const wsName = uniq('react');
     const appName = uniq('app');
 
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'react-monorepo',
       style: 'css',
       appName,
@@ -218,7 +220,7 @@ describe('create-nx-workspace', () => {
   it('should be able to create a react workspace without options and --no-interactive', () => {
     const wsName = uniq('react');
 
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'react-monorepo',
     });
 
@@ -233,7 +235,7 @@ describe('create-nx-workspace', () => {
   it('should be able to create an next workspace', () => {
     const wsName = uniq('next');
     const appName = uniq('app');
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'next',
       style: 'css',
       appName,
@@ -252,7 +254,7 @@ describe('create-nx-workspace', () => {
   it('should be able to create a nextjs standalone workspace using app router', () => {
     const wsName = uniq('next');
     const appName = uniq('app');
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'nextjs-standalone',
       style: 'css',
       nextAppDir: true,
@@ -271,7 +273,7 @@ describe('create-nx-workspace', () => {
   it('should be able to create a nextjs standalone workspace using pages router', () => {
     const wsName = uniq('next');
     const appName = uniq('app');
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'nextjs-standalone',
       style: 'css',
       nextAppDir: false,
@@ -290,7 +292,7 @@ describe('create-nx-workspace', () => {
   it('should be able to create an web-components workspace', () => {
     const wsName = uniq('web-components');
     const appName = uniq('app');
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'web-components',
       style: 'css',
       appName,
@@ -304,7 +306,7 @@ describe('create-nx-workspace', () => {
   it('should be able to create an express workspace', () => {
     const wsName = uniq('express');
     const appName = uniq('app');
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'express',
       docker: false,
       appName,
@@ -318,7 +320,7 @@ describe('create-nx-workspace', () => {
   it('should be able to create react-native workspace', () => {
     const wsName = uniq('react-native');
     const appName = uniq('app');
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'react-native',
       appName,
       packageManager: 'npm',
@@ -332,7 +334,7 @@ describe('create-nx-workspace', () => {
   it('should be able to create an expo workspace', () => {
     const wsName = uniq('expo');
     const appName = uniq('app');
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'expo',
       appName,
       packageManager: 'npm',
@@ -345,7 +347,7 @@ describe('create-nx-workspace', () => {
 
   it('should be able to create a workspace with a custom base branch and HEAD', () => {
     const wsName = uniq('branch');
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'apps',
       base: 'main',
       packageManager,
@@ -354,7 +356,7 @@ describe('create-nx-workspace', () => {
 
   it('should be able to create a workspace with custom commit information', () => {
     const wsName = uniq('branch');
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'apps',
       extraArgs:
         '--commit.name="John Doe" --commit.email="myemail@test.com" --commit.message="Custom commit message!"',
@@ -365,7 +367,7 @@ describe('create-nx-workspace', () => {
   it('should be able to create a nest workspace', () => {
     const wsName = uniq('nest');
     const appName = uniq('app');
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'nest',
       docker: false,
       appName,
@@ -377,23 +379,28 @@ describe('create-nx-workspace', () => {
   it('should respect package manager preference', () => {
     const wsName = uniq('pm');
 
-    process.env.YARN_REGISTRY = `http://localhost:4872`;
+    process.env.YARN_REGISTRY = `http://localhost:4873`;
+    process.env.npm_config_registry = `http://localhost:4873`;
     process.env.SELECTED_PM = 'npm';
 
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'apps',
       packageManager: 'npm',
     });
 
     checkFilesDoNotExist('yarn.lock');
     checkFilesExist('package-lock.json');
+
+    // Restore environment variables
     process.env.SELECTED_PM = packageManager;
+    process.env.npm_config_registry = `http://localhost:4873`; // Should already be set by global setup
+    process.env.YARN_REGISTRY = `http://localhost:4873`; // Should already be set by global setup
   });
 
   describe('Use detected package manager', () => {
     function setupProject(envPm: 'npm' | 'yarn' | 'pnpm' | 'bun') {
       process.env.SELECTED_PM = envPm;
-      runCreateWorkspace(uniq('pm'), {
+      createNxWorkspace(uniq('pm'), {
         preset: 'apps',
         packageManager: envPm,
         useDetectedPm: true,
@@ -457,7 +464,7 @@ describe('create-nx-workspace', () => {
   it('should create a workspace with a single vue app at the root', () => {
     const wsName = uniq('vue');
 
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'vue-standalone',
       appName: wsName,
       style: 'css',
@@ -476,7 +483,7 @@ describe('create-nx-workspace', () => {
   it('should be able to create a vue monorepo', () => {
     const wsName = uniq('vue');
     const appName = uniq('app');
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'vue-monorepo',
       appName,
       style: 'css',
@@ -489,7 +496,7 @@ describe('create-nx-workspace', () => {
   it('should create a workspace with a single nuxt app at the root', () => {
     const wsName = uniq('nuxt');
 
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'nuxt-standalone',
       appName: wsName,
       style: 'css',
@@ -508,7 +515,7 @@ describe('create-nx-workspace', () => {
   it('should be able to create a nuxt monorepo', () => {
     const wsName = uniq('nuxt');
     const appName = uniq('app');
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'nuxt',
       appName,
       style: 'css',
@@ -529,7 +536,7 @@ describe('create-nx-workspace parent folder', () => {
   it('should handle spaces in workspace path', () => {
     mkdirSync(tmpDir, { recursive: true });
 
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'apps',
       packageManager,
       cwd: tmpDir,
@@ -559,7 +566,7 @@ describe('create-nx-workspace yarn berry', () => {
   it('should create a workspace with yarn berry', () => {
     wsName = uniq('apps');
 
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'apps',
       packageManager: 'yarn',
       cwd: tmpDir,
@@ -579,7 +586,7 @@ describe('create-nx-workspace yarn berry', () => {
   it('should create a js workspace with yarn berry', () => {
     wsName = uniq('ts');
 
-    runCreateWorkspace(wsName, {
+    createNxWorkspace(wsName, {
       preset: 'ts',
       packageManager: 'yarn',
       cwd: tmpDir,

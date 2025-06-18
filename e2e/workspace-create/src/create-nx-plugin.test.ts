@@ -1,24 +1,26 @@
 import {
   checkFilesExist,
-  cleanupProject,
   getSelectedPackageManager,
   packageManagerLockFile,
   runCLI,
-  runCreatePlugin,
-  uniq,
 } from '@nx/e2e/utils';
+import {
+  createNxPlugin,
+  cleanupProject,
+  uniq,
+} from '@nx/e2e/utils/simple-project-utils';
 
 describe('create-nx-plugin', () => {
   const packageManager = getSelectedPackageManager() || 'pnpm';
 
   afterEach(() => cleanupProject());
 
-  it('should be able to create a plugin repo build a plugin', () => {
+  it('should be able to create a plugin repo build a plugin', async () => {
     const pluginName = uniq('plugin');
     const generatorName = uniq('generator');
     const executorName = uniq('executor');
 
-    runCreatePlugin(pluginName, {
+    await createNxPlugin(pluginName, {
       packageManager,
       extraArgs: `--createPackageName=false`,
     });
@@ -52,10 +54,10 @@ describe('create-nx-plugin', () => {
     );
   });
 
-  it('should be able to create a repo with create workspace cli', () => {
+  it('should be able to create a repo with create workspace cli', async () => {
     const pluginName = uniq('plugin');
 
-    runCreatePlugin(pluginName, {
+    await createNxPlugin(pluginName, {
       packageManager,
       extraArgs: `--createPackageName=create-${pluginName}-package`,
     });

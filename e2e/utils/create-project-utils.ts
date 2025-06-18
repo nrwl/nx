@@ -264,10 +264,10 @@ export function runCreateWorkspace(
   // Needed for bun workarounds, see below
   const registry = execSync('npm config get registry').toString().trim();
 
-  let command = `${pm.createWorkspace} ${name} --preset=${preset} --nxCloud=skip --no-interactive`;
+  let command = `${pm.createWorkspace} "${name}" --preset=${preset} --nxCloud=skip --no-interactive`;
 
   if (appName) {
-    command += ` --appName=${appName}`;
+    command += ` --appName="${appName}"`;
   }
   if (style) {
     command += ` --style=${style}`;
@@ -322,7 +322,7 @@ export function runCreateWorkspace(
   }
 
   if (framework) {
-    command += ` --framework=${framework}`;
+    command += ` --framework="${framework}"`;
   }
 
   if (extraArgs) {
@@ -338,7 +338,7 @@ export function runCreateWorkspace(
   }
 
   if (prefix !== undefined) {
-    command += ` --prefix=${prefix}`;
+    command += ` --prefix="${prefix}"`;
   }
 
   try {
@@ -668,6 +668,10 @@ export function newWrappedNxWorkspace({
 
 export function getProjectName(): string {
   return projName;
+}
+
+export function setProjectName(name: string): void {
+  projName = name;
 }
 
 export function tmpProjPath(path?: string) {

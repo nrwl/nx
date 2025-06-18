@@ -26,6 +26,8 @@ interface BackupConfig {
   packages?: Array<NxPackage>;
   preset?: string;
   type?: WorkspaceType;
+  extraArgs?: string;
+  useDetectedPm?: boolean;
 }
 
 interface BackupContext {
@@ -103,6 +105,24 @@ export class BackupManager {
     });
 
     return projName;
+  }
+
+  /**
+   * Get the project path for a given test ID
+   */
+  getProjectPath(testId: string): string {
+    const context = this.contexts.get(testId);
+    if (!context) {
+      throw new Error(`No project context found for test ID: ${testId}`);
+    }
+    return context.projPath;
+  }
+
+  /**
+   * Register a project context manually (for plugin workspaces)
+   */
+  registerProject(testId: string, context: BackupContext): void {
+    this.contexts.set(testId, context);
   }
 
   cleanupProject(testId: string): void {
@@ -224,8 +244,29 @@ export class BackupManager {
       if (type === 'lerna') {
         // Create Lerna
         await this.createLernaWorkspaceStructure(tempWorkspace, packageManager);
+      } else if (preset === 'plugin') {
+        // Create Nx plugin
+        const start = performance.mark('create-plugin:start');
+        this.runCreatePlugin(tempWorkspace, {
+          packageManager,
+          extraArgs: config.extraArgs,
+          useDetectedPm: config.useDetectedPm,
+        });
+        const end = performance.mark('create-plugin:end');
+
+        if (isVerbose()) {
+          const measure = performance.measure(
+            'create-plugin',
+            start.name,
+            end.name
+          );
+          logInfo(
+            'BackupManager',
+            `Plugin creation took ${measure.duration / 1000}s`
+          );
+        }
       } else {
-        // Create Nx
+        // Create Nx workspace
         const start = performance.mark('create-workspace:start');
         this.runCreateWorkspace(tempWorkspace, { preset, packageManager });
         const end = performance.mark('create-workspace:end');
@@ -458,6 +499,39 @@ export class BackupManager {
       cwd: path.dirname(workspaceDir),
       stdio: isVerbose() ? 'inherit' : 'pipe',
       env: { CI: 'true', ...process.env },
+      encoding: 'utf-8',
+    });
+  }
+
+  private runCreatePlugin(
+    workspaceDir: string,
+    options: {
+      packageManager: PackageManager;
+      extraArgs?: string;
+      useDetectedPm?: boolean;
+    }
+  ): void {
+    const pm = getPackageManagerCommand({
+      packageManager: options.packageManager,
+    });
+    const pluginName = path.basename(workspaceDir);
+
+    let command = `${
+      pm.runUninstalledPackage
+    } create-nx-plugin@${getPublishedVersion()} ${pluginName} --nxCloud=skip --no-interactive`;
+
+    if (options.packageManager && !options.useDetectedPm) {
+      command += ` --package-manager=${options.packageManager}`;
+    }
+
+    if (options.extraArgs) {
+      command += ` ${options.extraArgs}`;
+    }
+
+    execSync(command, {
+      cwd: path.dirname(workspaceDir),
+      stdio: isVerbose() ? 'inherit' : 'pipe',
+      env: process.env,
       encoding: 'utf-8',
     });
   }
