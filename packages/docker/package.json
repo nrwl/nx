@@ -1,0 +1,30 @@
+{
+  "name": "@nx/docker",
+  "description": "The Nx Plugin for Docker to aid in containerizing projects.",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "publicConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/docker"
+  },
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "keywords": [
+    "Monorepo",
+    "Docker",
+    "Containers"
+  ],
+  "author": "Colum Ferry",
+  "license": "MIT",
+  "homepage": "https://nx.dev",
+  "main": "index.js",
+  "dependencies": {
+    "@nx/devkit": "file:../devkit",
+    "tslib": "^2.3.0"
+  }
+}
