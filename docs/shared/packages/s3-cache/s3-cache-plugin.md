@@ -3,6 +3,8 @@ title: Overview of the Nx S3 Cache Plugin
 description: The @nx/s3-cache plugin enables you to use an Amazon S3 bucket to host your remote cache for efficient build caching across your team.
 ---
 
+# @nx/s3-cache
+
 The `@nx/s3-cache` plugin enables you to self-host your remote cache on an [Amazon S3](https://aws.amazon.com/s3) bucket.
 
 {% callout type="deepdive" title="Free managed remote cache with Nx Cloud" %}

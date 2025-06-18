@@ -3,6 +3,8 @@ title: Overview of the Nx Cypress Plugin
 description: The Nx Plugin for Cypress contains executors and generators that support e2e testing with Cypress. This page also explains how to configure Cypress on your Nx workspace.
 ---
 
+# @nx/cypress
+
 Cypress is a test runner built for the modern web. It has a lot of great features:
 
 - Time travel

@@ -3,6 +3,8 @@ title: Overview of the Nx Rspack Plugin
 description: The Nx Plugin for Rspack contains executors, generators, and utilities for managing Rspack projects in an Nx Workspace.
 ---
 
+# @nx/rspack
+
 The Nx Plugin for Rspack contains executors, generators, and utilities for managing Rspack projects in an Nx Workspace.
 
 ## Setting Up @nx/rspack

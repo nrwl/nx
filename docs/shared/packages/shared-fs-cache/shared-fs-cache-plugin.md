@@ -3,6 +3,8 @@ title: Overview of the Nx Shared File System Cache Plugin
 description: The @nx/shared-fs-cache plugin enables you to use a shared file system directory to host your remote cache for efficient build caching across your team.
 ---
 
+# @nx/shared-fs-cache
+
 The `@nx/shared-fs-cache` plugin enables you to host your remote cache on a shared file system directory. While you're responsible for implementing the actual directory sharing mechanism, the plugin configures Nx to read from both your local cache and the shared directory.
 
 {% callout type="warning" title="Potential Cache Poisoning" %}

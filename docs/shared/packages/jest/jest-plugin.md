@@ -3,6 +3,8 @@ title: Overview of the Nx Jest Plugin
 description: The Nx Plugin for Jest contains executors and generators that support testing projects using Jest. This page also explains how to configure Jest on your Nx workspace.
 ---
 
+# @nx/jest
+
 [Jest](https://jestjs.io/) is an open source test runner created by Facebook. It has a lot of great features:
 
 - Immersive watch mode for providing near instant feedback when developing tests.

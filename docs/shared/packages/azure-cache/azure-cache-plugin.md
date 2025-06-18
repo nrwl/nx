@@ -3,6 +3,8 @@ title: Overview of the Nx Azure Cache Plugin
 description: The @nx/azure-cache plugin enables you to use Azure Storage to host your remote cache for efficient build caching across your team.
 ---
 
+# @nx/azure-cache
+
 The `@nx/azure-cache` plugin enables you to self-host your remote cache on [Azure Storage](https://azure.microsoft.com/en-us/products/storage/blobs).
 
 {% callout type="deepdive" title="Free managed remote cache with Nx Cloud" %}
