@@ -22,13 +22,6 @@ import { setupWorkspaceContext } from '../src/utils/workspace-context';
 import { daemonClient } from '../src/daemon/client/client';
 import { removeDbConnections } from '../src/utils/db-connection';
 
-// In case Nx Cloud forcibly exits while the TUI is running, ensure the terminal is restored etc.
-process.on('exit', (...args) => {
-  if (typeof globalThis.tuiOnProcessExit === 'function') {
-    globalThis.tuiOnProcessExit(...args);
-  }
-});
-
 async function main() {
   if (
     process.argv[2] !== 'report' &&
