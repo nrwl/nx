@@ -16,7 +16,6 @@ import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 
 interface ExpandedBuildTargetOptions {
   name?: string;
-  setImageName?: boolean;
 }
 
 type BuildTargetOptions = string | ExpandedBuildTargetOptions;
@@ -105,15 +104,14 @@ async function createDockerTargets(
   options: NormalizedDockerPluginOptions,
   context: CreateNodesContext
 ) {
+  const imageTag = projectRoot.replace(/^[\\/]/, '').replace(/[\\/\s]+/g, '-');
   const namedInputs = getNamedInputs(projectRoot, context);
   const targets: Record<string, TargetConfiguration> = {};
   targets[options.buildTarget.name] = {
     command: `docker build .`,
     options: {
       cwd: projectRoot,
-      args: options.buildTarget.setImageName
-        ? [`--tag ${basename(projectRoot)}`]
-        : [],
+      args: [`--tag ${imageTag}`],
     },
     inputs: [
       ...('production' in namedInputs
@@ -147,17 +145,14 @@ function normalizeBuildTarget({
   if (!buildTarget) {
     return {
       name: 'docker:build',
-      setImageName: true,
     };
   } else if (typeof buildTarget === 'string') {
     return {
       name: buildTarget,
-      setImageName: true,
     };
   } else {
     return {
       name: buildTarget.name,
-      setImageName: buildTarget.setImageName,
     };
   }
 }
