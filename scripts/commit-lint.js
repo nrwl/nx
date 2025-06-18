@@ -43,7 +43,7 @@ if (!gitMessage) {
 const allowedTypes = types.map((type) => type.value).join('|');
 const allowedScopes = scopes.map((scope) => scope.value).join('|');
 
-const commitMsgRegex = `(${allowedTypes})\\((${allowedScopes})\\)!?:\\s(([a-z0-9:\-\s])+)`;
+const commitMsgRegex = `(${allowedTypes})\\((${allowedScopes})\\)!?:\\s(([a-z0-9:\\-\\s])+)`;
 
 const matchCommit = new RegExp(commitMsgRegex, 'g').test(gitMessage);
 const matchRevert = /Revert/gi.test(gitMessage);
