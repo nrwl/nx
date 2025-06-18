@@ -26,10 +26,10 @@ The official self-hosted cache packages are the easiest migration path if you've
 
 The following remote cache adapters are available:
 
-- [@nx/s3-cache](/reference/core-api/s3-cache): Cache is self-hosted on an Amazon S3 bucket
-- [@nx/gcs-cache](/reference/core-api/gcs-cache): Cache is self-hosted on Google Cloud storage
-- [@nx/azure-cache](/reference/core-api/azure-cache): Cache is self-hosted on Azure
-- [@nx/shared-fs-cache](/reference/core-api/shared-fs-cache): Cache is self-hosted on a shared file system location
+- [@nx/s3-cache](/reference/core-api/s3-cache/overview): Cache is self-hosted on an Amazon S3 bucket
+- [@nx/gcs-cache](/reference/core-api/gcs-cache/overview): Cache is self-hosted on Google Cloud storage
+- [@nx/azure-cache](/reference/core-api/azure-cache/overview): Cache is self-hosted on Azure
+- [@nx/shared-fs-cache](/reference/core-api/shared-fs-cache/overview): Cache is self-hosted on a shared file system location
 
 > Why require an activation key? It simply helps us know and support our users. If you prefer not to provide this information, you can also [build your own cache server](#build-your-own-caching-server).
 
