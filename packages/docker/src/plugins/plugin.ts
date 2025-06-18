@@ -17,15 +17,21 @@ import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 interface ExpandedBuildTargetOptions {
   name?: string;
 }
-
 type BuildTargetOptions = string | ExpandedBuildTargetOptions;
+
+interface ExpandedRunTargetOptions {
+  name?: string;
+}
+type RunTargetOptions = string | ExpandedRunTargetOptions;
 
 export interface DockerPluginOptions {
   buildTarget?: BuildTargetOptions;
+  runTarget?: RunTargetOptions;
 }
 
 interface NormalizedDockerPluginOptions {
   buildTarget: ExpandedBuildTargetOptions;
+  runTarget: ExpandedRunTargetOptions;
 }
 
 type DockerTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
@@ -128,6 +134,27 @@ async function createDockerTargets(
     },
   };
 
+  targets[options.runTarget.name] = {
+    dependsOn: [options.buildTarget.name],
+    command: `docker run ${imageTag}`,
+    options: {
+      cwd: projectRoot,
+    },
+    inputs: [
+      ...('production' in namedInputs
+        ? ['production', '^production']
+        : ['default', '^default']),
+    ],
+    metadata: {
+      technologies: ['docker'],
+      description: `Run Docker run`,
+      help: {
+        command: `docker run --help`,
+        example: {},
+      },
+    },
+  };
+
   return { targets, metadata: {} };
 }
 
@@ -136,6 +163,7 @@ function normalizePluginOptions(
 ): NormalizedDockerPluginOptions {
   return {
     buildTarget: normalizeBuildTarget(options),
+    runTarget: normalizeRunTarget(options),
   };
 }
 
@@ -153,6 +181,24 @@ function normalizeBuildTarget({
   } else {
     return {
       name: buildTarget.name,
+    };
+  }
+}
+
+function normalizeRunTarget({
+  runTarget,
+}: DockerPluginOptions): ExpandedRunTargetOptions {
+  if (!runTarget) {
+    return {
+      name: 'docker:run',
+    };
+  } else if (typeof runTarget === 'string') {
+    return {
+      name: runTarget,
+    };
+  } else {
+    return {
+      name: runTarget.name,
     };
   }
 }
