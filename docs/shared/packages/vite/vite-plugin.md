@@ -3,6 +3,8 @@ title: Overview of the Nx Vite Plugin
 description: The Nx Plugin for Vite contains executors and generators that support building applications using Vite. This page also explains how to configure Vite on your Nx workspace.
 ---
 
+# @nx/vite
+
 The Nx plugin for [Vite](https://vitejs.dev/) and [Vitest](https://vitest.dev/).
 
 [Vite.js](https://vitejs.dev/) is a build tool that aims to provide a faster and leaner development experience for modern web projects.

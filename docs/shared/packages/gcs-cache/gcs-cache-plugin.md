@@ -3,6 +3,8 @@ title: Overview of the Nx GCS Cache Plugin
 description: The @nx/gcs-cache plugin enables you to use Google Cloud Storage to host your remote cache for efficient build caching across your team.
 ---
 
+# @nx/gcs-cache
+
 The `@nx/gcs-cache` plugin enables you to self-host your remote cache on [Google Cloud Storage](https://cloud.google.com/storage).
 
 {% callout type="deepdive" title="Free managed remote cache with Nx Cloud" %}
