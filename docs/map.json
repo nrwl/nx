@@ -2827,6 +2827,31 @@
                       "id": "publish-conformance-rules-to-nx-cloud",
                       "tags": ["conformance"],
                       "file": "nx-cloud/enterprise/conformance/publish-conformance-rules-to-nx-cloud"
+                    },
+                    {
+                      "name": "Conformance Rule Examples",
+                      "id": "examples",
+                      "tags": ["conformance"],
+                      "file": "nx-cloud/enterprise/conformance/examples"
+                    }
+                  ]
+                },
+                {
+                  "name": "Polygraph",
+                  "id": "polygraph",
+                  "description": "Polygraph features for visualizing dependencies and enforcing standards across multiple repositories",
+                  "itemList": [
+                    {
+                      "name": "Overview",
+                      "id": "overview",
+                      "tags": ["polygraph"],
+                      "file": "dnx-cloud/enterprise/polygraph/overview"
+                    },
+                    {
+                      "name": "Metadata Only Workspaces",
+                      "id": "metadata-only-workspace",
+                      "tags": ["polygraph"],
+                      "file": "nx-cloud/enterprise/polygraph/metadata-only-workspace"
                     }
                   ]
                 }

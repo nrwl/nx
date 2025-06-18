@@ -1475,6 +1475,13 @@
       "id": "publish-conformance-rules-to-nx-cloud",
       "name": "Publish Conformance Rules to Nx Cloud",
       "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud"
+    },
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/conformance/examples",
+      "id": "examples",
+      "name": "Conformance Rule Examples",
+      "path": "/ci/recipes/enterprise/conformance/examples"
     }
   ],
   "owners": [
@@ -1610,6 +1617,22 @@
       "id": "overview",
       "name": "Single Tenant Nx Cloud Hosting",
       "path": "/ci/recipes/enterprise/single-tenant/overview"
+    }
+  ],
+  "polygraph": [
+    {
+      "description": "",
+      "file": "dnx-cloud/enterprise/polygraph/overview",
+      "id": "overview",
+      "name": "Overview",
+      "path": "/ci/recipes/enterprise/polygraph/overview"
+    },
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/polygraph/metadata-only-workspace",
+      "id": "metadata-only-workspace",
+      "name": "Metadata Only Workspaces",
+      "path": "/ci/recipes/enterprise/polygraph/metadata-only-workspace"
     }
   ],
   "docker": [
