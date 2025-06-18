@@ -876,10 +876,55 @@
                 "isExternal": false,
                 "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
                 "tags": ["conformance"]
+              },
+              {
+                "id": "examples",
+                "name": "Conformance Rule Examples",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/conformance/examples",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/conformance/examples",
+                "tags": ["conformance"]
               }
             ],
             "isExternal": false,
             "path": "/ci/recipes/enterprise/conformance",
+            "tags": []
+          },
+          {
+            "id": "polygraph",
+            "name": "Polygraph",
+            "description": "Polygraph features for visualizing dependencies and enforcing standards across multiple repositories",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "description": "",
+                "mediaImage": "",
+                "file": "dnx-cloud/enterprise/polygraph/overview",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/polygraph/overview",
+                "tags": ["polygraph"]
+              },
+              {
+                "id": "metadata-only-workspace",
+                "name": "Metadata Only Workspaces",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/polygraph/metadata-only-workspace",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/polygraph/metadata-only-workspace",
+                "tags": ["polygraph"]
+              }
+            ],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/polygraph",
             "tags": []
           }
         ],
@@ -1549,10 +1594,55 @@
             "isExternal": false,
             "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
             "tags": ["conformance"]
+          },
+          {
+            "id": "examples",
+            "name": "Conformance Rule Examples",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/conformance/examples",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/conformance/examples",
+            "tags": ["conformance"]
           }
         ],
         "isExternal": false,
         "path": "/ci/recipes/enterprise/conformance",
+        "tags": []
+      },
+      {
+        "id": "polygraph",
+        "name": "Polygraph",
+        "description": "Polygraph features for visualizing dependencies and enforcing standards across multiple repositories",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "description": "",
+            "mediaImage": "",
+            "file": "dnx-cloud/enterprise/polygraph/overview",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/polygraph/overview",
+            "tags": ["polygraph"]
+          },
+          {
+            "id": "metadata-only-workspace",
+            "name": "Metadata Only Workspaces",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/polygraph/metadata-only-workspace",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/polygraph/metadata-only-workspace",
+            "tags": ["polygraph"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/polygraph",
         "tags": []
       }
     ],
@@ -1754,6 +1844,17 @@
         "isExternal": false,
         "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
         "tags": ["conformance"]
+      },
+      {
+        "id": "examples",
+        "name": "Conformance Rule Examples",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/conformance/examples",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/conformance/examples",
+        "tags": ["conformance"]
       }
     ],
     "isExternal": false,
@@ -1781,6 +1882,73 @@
     "isExternal": false,
     "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
     "tags": ["conformance"]
+  },
+  "/ci/recipes/enterprise/conformance/examples": {
+    "id": "examples",
+    "name": "Conformance Rule Examples",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/conformance/examples",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/conformance/examples",
+    "tags": ["conformance"]
+  },
+  "/ci/recipes/enterprise/polygraph": {
+    "id": "polygraph",
+    "name": "Polygraph",
+    "description": "Polygraph features for visualizing dependencies and enforcing standards across multiple repositories",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "overview",
+        "name": "Overview",
+        "description": "",
+        "mediaImage": "",
+        "file": "dnx-cloud/enterprise/polygraph/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/polygraph/overview",
+        "tags": ["polygraph"]
+      },
+      {
+        "id": "metadata-only-workspace",
+        "name": "Metadata Only Workspaces",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/polygraph/metadata-only-workspace",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/polygraph/metadata-only-workspace",
+        "tags": ["polygraph"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/polygraph",
+    "tags": []
+  },
+  "/ci/recipes/enterprise/polygraph/overview": {
+    "id": "overview",
+    "name": "Overview",
+    "description": "",
+    "mediaImage": "",
+    "file": "dnx-cloud/enterprise/polygraph/overview",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/polygraph/overview",
+    "tags": ["polygraph"]
+  },
+  "/ci/recipes/enterprise/polygraph/metadata-only-workspace": {
+    "id": "metadata-only-workspace",
+    "name": "Metadata Only Workspaces",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/polygraph/metadata-only-workspace",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/polygraph/metadata-only-workspace",
+    "tags": ["polygraph"]
   },
   "/ci/recipes/other": {
     "id": "other",

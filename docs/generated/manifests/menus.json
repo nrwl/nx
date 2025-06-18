@@ -7207,6 +7207,39 @@
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
+                  },
+                  {
+                    "name": "Conformance Rule Examples",
+                    "path": "/ci/recipes/enterprise/conformance/examples",
+                    "id": "examples",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Polygraph",
+                "path": "/ci/recipes/enterprise/polygraph",
+                "id": "polygraph",
+                "isExternal": false,
+                "children": [
+                  {
+                    "name": "Overview",
+                    "path": "/ci/recipes/enterprise/polygraph/overview",
+                    "id": "overview",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Metadata Only Workspaces",
+                    "path": "/ci/recipes/enterprise/polygraph/metadata-only-workspace",
+                    "id": "metadata-only-workspace",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
                   }
                 ],
                 "disableCollapsible": false
