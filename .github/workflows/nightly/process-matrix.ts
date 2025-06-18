@@ -34,12 +34,12 @@ export type MatrixItem = {
 // TODO: Extract Slack groups into named groups for easier maintenance
 const matrixData: MatrixData = {
   coreProjects: [
-    { name: 'e2e-lerna-smoke-tests', codeowners: 'S04TNCVEETS', is_golden: true },
+    // { name: 'e2e-lerna-smoke-tests', codeowners: 'S04TNCVEETS', is_golden: true },
     // { name: 'e2e-js', codeowners: 'S04SJ6HHP0X', is_golden: true },
     // { name: 'e2e-nx-init', codeowners: 'S04SYHYKGNP', is_golden: true },
     // { name: 'e2e-nx', codeowners: 'S04SYHYKGNP', is_golden: true },
     // { name: 'e2e-release', codeowners: 'S04SYHYKGNP', is_golden: true },
-    // { name: 'e2e-workspace-create', codeowners: 'S04SYHYKGNP', is_golden: true },
+    { name: 'e2e-workspace-create', codeowners: 'S04SYHYKGNP', is_golden: true },
   ],
   projects: [
     // { name: 'e2e-angular', codeowners: 'S04SS457V38' },
