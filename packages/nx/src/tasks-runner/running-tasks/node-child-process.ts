@@ -9,6 +9,7 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
   private terminalOutput: string = '';
   private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
     [];
+  private outputCallbacks: Array<(output: string) => void> = [];
 
   private exitCode: number;
 
@@ -53,17 +54,29 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
         process.send(message);
       }
     });
-
     this.childProcess.stdout.on('data', (chunk) => {
-      this.terminalOutput += chunk.toString();
+      const output = chunk.toString();
+      this.terminalOutput += output;
+      // Stream output to TUI via callbacks
+      for (const cb of this.outputCallbacks) {
+        cb(output);
+      }
     });
     this.childProcess.stderr.on('data', (chunk) => {
-      this.terminalOutput += chunk.toString();
+      const output = chunk.toString();
+      this.terminalOutput += output;
+      // Stream output to TUI via callbacks
+      for (const cb of this.outputCallbacks) {
+        cb(output);
+      }
     });
   }
-
   onExit(cb: (code: number, terminalOutput: string) => void) {
     this.exitCallbacks.push(cb);
+  }
+
+  onOutput(cb: (output: string) => void) {
+    this.outputCallbacks.push(cb);
   }
 
   async getResults(): Promise<{ code: number; terminalOutput: string }> {
@@ -85,11 +98,18 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
       this.childProcess.send(message);
     }
   }
-
   public kill(signal?: NodeJS.Signals) {
     if (this.childProcess.connected) {
       this.childProcess.kill(signal);
     }
+  }
+
+  /**
+   * Returns true if this task can provide progressive output for TUI display.
+   * NodeChildProcessWithNonDirectOutput can stream output but doesn't support interactivity.
+   */
+  public canProvideProgressiveOutput(): boolean {
+    return true;
   }
 }
 
