@@ -93,6 +93,7 @@
     "@nx/key": "3.0.0",
     "@nx/next": "21.2.0-beta.4",
     "@nx/playwright": "21.2.0-beta.4",
+    "@nx/powerpack-license": "3.0.0",
     "@nx/react": "21.2.0-beta.4",
     "@nx/rsbuild": "21.2.0-beta.4",
     "@nx/rspack": "21.2.0-beta.4",

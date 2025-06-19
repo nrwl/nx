@@ -366,6 +366,9 @@ importers:
       '@nx/playwright':
         specifier: 21.2.0-beta.4
         version: 21.2.0-beta.4(@babel/traverse@7.27.1)(@playwright/test@1.47.1)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.21)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@zkochan/js-yaml@0.0.7)(eslint@8.57.0)(nx@21.2.0-beta.4(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.21)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.8.3)(verdaccio@6.0.5(encoding@0.1.13)(typanion@3.14.0))
+      '@nx/powerpack-license':
+        specifier: 3.0.0
+        version: 3.0.0
       '@nx/react':
         specifier: 21.2.0-beta.4
         version: 21.2.0-beta.4(@babel/traverse@7.27.1)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.21)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/helpers@0.5.11)(@zkochan/js-yaml@0.0.7)(bufferutil@4.0.7)(esbuild@0.25.0)(eslint@8.57.0)(next@14.2.28(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.47.1)(babel-plugin-macros@3.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.55.0))(nx@21.2.0-beta.4(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.21)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3)(verdaccio@6.0.5(encoding@0.1.13)(typanion@3.14.0))(webpack-cli@5.1.4)(webpack@5.99.8)
@@ -5929,6 +5932,10 @@ packages:
     peerDependenciesMeta:
       '@playwright/test':
         optional: true
+
+  '@nx/powerpack-license@3.0.0':
+    resolution: {integrity: sha512-3/VnpG4RWe8Pw7EDIxPMuMUuiZXYcTjMa4YYtm21NQ8owWlHarJZ9psHjVCshVjkLSq7Z5LjPUDZJbpw+OqHXw==}
+    engines: {node: '>= 10'}
 
   '@nx/react@21.2.0-beta.4':
     resolution: {integrity: sha512-z+A03nEZ4Htbqhep753t5XKHhfffkBrFWK+rUTDaR3/kZI0MmFj/cAgvaiIV+izBXgnIhOctSRi+TZBRQR5JPA==}
@@ -26190,6 +26197,12 @@ snapshots:
       - supports-color
       - typescript
       - verdaccio
+
+  '@nx/powerpack-license@3.0.0':
+    dependencies:
+      '@nx/key': 3.0.0
+    transitivePeerDependencies:
+      - debug
 
   '@nx/react@21.2.0-beta.4(@babel/traverse@7.27.1)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.21)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/helpers@0.5.11)(@zkochan/js-yaml@0.0.7)(bufferutil@4.0.7)(esbuild@0.25.0)(eslint@8.57.0)(next@14.2.28(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.47.1)(babel-plugin-macros@3.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.55.0))(nx@21.2.0-beta.4(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.21)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3)(verdaccio@6.0.5(encoding@0.1.13)(typanion@3.14.0))(webpack-cli@5.1.4)(webpack@5.99.8)':
     dependencies:
