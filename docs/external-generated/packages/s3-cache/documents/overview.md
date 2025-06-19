@@ -3,6 +3,8 @@ title: Overview of the Nx S3 Cache Plugin
 description: The @nx/s3-cache plugin enables you to use an Amazon S3 bucket to host your remote cache for efficient build caching across your team.
 ---
 
+# @nx/s3-cache
+
 The `@nx/s3-cache` plugin enables you to self-host your remote cache on an [Amazon S3](https://aws.amazon.com/s3) bucket.
 
 {% callout type="deepdive" title="Free managed remote cache with Nx Cloud" %}
@@ -14,9 +16,9 @@ If you are an enterprise and **data privacy and security is a concern**, [reach 
 **Are you an OSS project?** Nx Cloud is free for OSS. [Reach out here](/pricing#oss).
 {% /callout %}
 
-{% callout type="info" title="Self-hosted caching is now free" %}
+{% callout type="warning" title="Bucket-based caches are vulnerable to poisoning and often prohibited in organizations" %}
 
-Self-hosted caching is **now free for everyone** to use.
+CREEP (CVE-2025-36852) is a critical vulnerability in bucket-based self-hosted remote caches. It lets attackers with PR access poison production builds via a race condition during artifact creation—before security checks can catch it. [Learn more](/blog/cve-2025-36852-critical-cache-poisoning-vulnerability-creep)
 
 {% /callout %}
 
@@ -156,7 +158,7 @@ Below is an example on how to connect to MinIO:
     "forcePathStyle": true,
     "accessKeyId": "abc1234",
     "secretAccessKey": "4321cba",
-    "disableChecksum": true
+    "disableChecksum: true
   }
 }
 ```

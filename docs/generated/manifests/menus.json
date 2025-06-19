@@ -5944,6 +5944,14 @@
                         "children": [],
                         "isExternal": false,
                         "disableCollapsible": false
+                      },
+                      {
+                        "id": "preset",
+                        "path": "/reference/core-api/conformance/generators/preset",
+                        "name": "preset",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
                       }
                     ],
                     "isExternal": false,
