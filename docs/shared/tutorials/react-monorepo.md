@@ -35,12 +35,12 @@ Features we'll use in this monorepo:
 
 Here's the source code of the final result for this tutorial.
 
-{% github-repository url="<https://github.com/nrwl/nx-recipes/tree/main/react-monorepo>" /%}
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/react-monorepo" /%}
 
 <!-- {% stackblitz-button url="github.com/nrwl/nx-recipes/tree/main/react-standalone?file=README.md" /%} -->
 
 {% youtube
-src="<https://www.youtube.com/embed/gc4N7kxiA50>"
+src="https://www.youtube.com/embed/gc4N7kxiA50"
 title="Nx React Monorepo Tutorial Walkthrough"
 /%}
 

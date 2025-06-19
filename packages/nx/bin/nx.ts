@@ -22,13 +22,6 @@ import { setupWorkspaceContext } from '../src/utils/workspace-context';
 import { daemonClient } from '../src/daemon/client/client';
 import { removeDbConnections } from '../src/utils/db-connection';
 
-// In case Nx Cloud forcibly exits while the TUI is running, ensure the terminal is restored etc.
-process.on('exit', (...args) => {
-  if (typeof globalThis.tuiOnProcessExit === 'function') {
-    globalThis.tuiOnProcessExit(...args);
-  }
-});
-
 async function main() {
   if (
     process.argv[2] !== 'report' &&
@@ -97,7 +90,7 @@ async function main() {
     }
 
     if (!localNx) {
-      handleMissingLocalInstallation();
+      handleMissingLocalInstallation(workspace ? workspace.dir : null);
     }
 
     // this file is already in the local workspace
@@ -180,9 +173,11 @@ function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
   });
 }
 
-function handleMissingLocalInstallation() {
+function handleMissingLocalInstallation(detectedWorkspaceRoot: string | null) {
   output.error({
-    title: `Could not find Nx modules in this workspace.`,
+    title: detectedWorkspaceRoot
+      ? `Could not find Nx modules at "${detectedWorkspaceRoot}".`
+      : `Could not find Nx modules in this workspace.`,
     bodyLines: [`Have you run ${chalk.bold.white(`npm/yarn install`)}?`],
   });
   process.exit(1);

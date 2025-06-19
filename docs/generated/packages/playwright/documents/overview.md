@@ -3,6 +3,8 @@ title: Overview of the Nx Playwright Plugin
 description: The Nx Plugin for Playwright contains executors and generators that support e2e testing with Playwright. This page also explains how to configure Playwright on your Nx workspace.
 ---
 
+# @nx/playwright
+
 Playwright is a modern web test runner. With included features such as:
 
 - Cross browser support, including mobile browsers

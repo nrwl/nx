@@ -7,6 +7,10 @@ description: Learn how to create and register sync generators in Nx to ensure yo
 
 Sync generators are generators that are used to ensure that your file system is in the correct state before a task is run or the CI process is started. From a technical perspective, a sync generator is no different from any other generator, but it has some additional performance considerations and needs to be registered in a particular way.
 
+{% callout type="warning" title="Disable the Nx Daemon during development" %}
+When developing the Nx sync generator, disable the [Nx Daemon](/concepts/nx-daemon) by setting `NX_DAEMON=false`. The daemon caches your plugin code, so changes to your plugin won't be reflected until the daemon restarts.
+{% /callout %}
+
 ## Create a new Sync Generator
 
 You can create a new sync generator by hand or use the built-in generator that Nx provides via the `@nx/plugin` package.

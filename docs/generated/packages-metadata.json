@@ -2250,6 +2250,16 @@
     ],
     "migrations": [
       {
+        "description": "Change dev.nx.gradle.project-graph to version 0.1.2 in build file",
+        "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-2.json",
+        "hidden": false,
+        "name": "change-plugin-version-0-1-2",
+        "version": "21.3.0-beta.0",
+        "originalFilePath": "/packages/gradle",
+        "path": "gradle/migrations/change-plugin-version-0-1-2",
+        "type": "migration"
+      },
+      {
         "description": "Change dev.nx.gradle.project-graph to version 0.1.0 in build file",
         "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-0.json",
         "hidden": false,
@@ -2445,6 +2455,15 @@
       }
     ],
     "executors": [
+      {
+        "description": "Copies Workspace Modules into the output directory after a build to prepare it for use with Docker or alternatives.",
+        "file": "generated/packages/js/executors/copy-workspace-modules.json",
+        "hidden": false,
+        "name": "copy-workspace-modules",
+        "originalFilePath": "/packages/js/src/executors/copy-workspace-modules/schema.json",
+        "path": "js/executors/copy-workspace-modules",
+        "type": "executor"
+      },
       {
         "description": "Build a project using TypeScript.",
         "file": "generated/packages/js/executors/tsc.json",

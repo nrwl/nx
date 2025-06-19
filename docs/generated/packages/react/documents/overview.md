@@ -4,6 +4,8 @@ description: Learn how to use the @nx/react plugin to create and manage React ap
 keywords: [react]
 ---
 
+# @nx/react
+
 The React plugin contains executors and generators for managing React applications and libraries within an Nx workspace.
 It provides:
 

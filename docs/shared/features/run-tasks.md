@@ -218,7 +218,7 @@ However, you need to specify for which targets this ordering is important. In th
 }
 ```
 
-This means that if we run `nx build myreactapp`, Nx will first execute `build` on `modules-shared-ui` and `modules-products` before running `build` on `myreactapp`.
+This means that if we run `nx build myreactapp`, Nx will first execute `build` on `shared-ui` and `feat-products` before running `build` on `myreactapp`.
 
 You can define these task dependencies globally for your workspace in `nx.json` or individually in each project's `project.json` file.
 

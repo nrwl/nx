@@ -121,6 +121,7 @@
         - [Use JavaScript instead TypeScript](/technologies/typescript/recipes/js-and-ts)
       - [API](/technologies/typescript/api)
         - [executors](/technologies/typescript/api/executors)
+          - [copy-workspace-modules](/technologies/typescript/api/executors/copy-workspace-modules)
           - [tsc](/technologies/typescript/api/executors/tsc)
           - [swc](/technologies/typescript/api/executors/swc)
           - [node](/technologies/typescript/api/executors/node)

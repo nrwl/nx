@@ -3,6 +3,8 @@ title: Overview of the Nx Nuxt Plugin
 description: The Nx Plugin for Nuxt contains generators for managing Nuxt applications within a Nx workspace. This page also explains how to configure Nuxt on your Nx workspace.
 ---
 
+# @nx/nuxt
+
 The Nx plugin for [Nuxt](https://nuxt.com/).
 
 ## Setting up a new Nx workspace with @nx/nuxt

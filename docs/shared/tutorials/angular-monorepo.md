@@ -33,18 +33,18 @@ Visit our ["Nx and the Angular CLI" page](/technologies/angular/recipes/nx-and-a
 
 Here's the source code of the final result for this tutorial.
 
-{% github-repository url="<https://github.com/nrwl/nx-recipes/tree/main/angular-monorepo>" /%}
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/angular-monorepo" /%}
 
 <!-- {% stackblitz-button url="github.com/nrwl/nx-recipes/tree/main/angular-standalone?file=README.md" /%} -->
 
 {% youtube
-src="<https://www.youtube.com/embed/ZzTP4bVJEnI>"
+src="https://www.youtube.com/embed/ZzTP4bVJEnI"
 title="Nx Angular Monorepo Tutorial Walkthrough"
 /%}
 
 ## Creating a new Angular Monorepo
 
-{% video-link link="<https://youtu.be/ZzTP4bVJEnI?t=90>" /%}
+{% video-link link="https://youtu.be/ZzTP4bVJEnI?t=90" /%}
 
 Create a new Angular monorepo with the following command:
 
@@ -108,7 +108,7 @@ The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx 
 
 ## Serving the App
 
-{% video-link link="<https://youtu.be/ZzTP4bVJEnI?t=138>" /%}
+{% video-link link="https://youtu.be/ZzTP4bVJEnI?t=138" /%}
 
 To serve your new Angular application, just run:
 
@@ -125,7 +125,7 @@ Nx uses the following syntax to run tasks:
 
 ### Manually Defined Tasks
 
-{% video-link link="<https://youtu.be/ZzTP4bVJEnI?t=160>" /%}
+{% video-link link="https://youtu.be/ZzTP4bVJEnI?t=160" /%}
 
 The project tasks are defined in the `project.json` file.
 
@@ -182,7 +182,7 @@ Learn more about how to [run tasks with Nx](/features/run-tasks). We'll [revisit
 
 ## Adding Another Application
 
-{% video-link link="<https://youtu.be/ZzTP4bVJEnI?t=182>" /%}
+{% video-link link="https://youtu.be/ZzTP4bVJEnI?t=182" /%}
 
 Nx plugins usually provide [generators](/features/generate-code) that allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/angular` plugin provides, run the following command and inspect the output:
 
@@ -272,7 +272,7 @@ npx nx g @nx/angular:app apps/inventory --port=4201
 
 ## Sharing Code with Local Libraries
 
-{% video-link link="<https://youtu.be/ZzTP4bVJEnI?t=232>" /%}
+{% video-link link="https://youtu.be/ZzTP4bVJEnI?t=232" /%}
 
 When you develop your Angular application, usually all your logic sits in the `app` folder. Ideally separated by various folder names which represent your "domains". As your app grows, however, the app becomes more and more monolithic and the code is unable to be shared with other applications.
 
@@ -307,7 +307,7 @@ Nx allows you to separate this logic into "local libraries". The main benefits i
 
 ### Creating Local Libraries
 
-{% video-link link="<https://youtu.be/ZzTP4bVJEnI?t=254>" /%}
+{% video-link link="https://youtu.be/ZzTP4bVJEnI?t=254" /%}
 
 Let's assume our domain areas include `products`, `orders` and some more generic design system components, called `ui`. We can generate a new library for each of these areas using the Angular library generator:
 
@@ -492,7 +492,7 @@ export class App {
 
 ## Visualizing your Project Structure
 
-{% video-link link="<https://youtu.be/ZzTP4bVJEnI?t=364>" /%}
+{% video-link link="https://youtu.be/ZzTP4bVJEnI?t=364" /%}
 
 Nx automatically detects the dependencies between the various parts of your workspace and builds a [project graph](/features/explore-graph). This graph is used by Nx to perform various optimizations such as determining the correct order of execution when running tasks like `npx nx build`, identifying [affected projects](/features/run-tasks#run-tasks-on-projects-affected-by-a-pr) and more. Interestingly you can also visualize it.
 
@@ -597,7 +597,7 @@ Exercise for you: change the codebase such that `shared-ui` is used by `orders` 
 
 ## Testing and Linting
 
-{% video-link link="<https://youtu.be/ZzTP4bVJEnI?t=410>" /%}
+{% video-link link="https://youtu.be/ZzTP4bVJEnI?t=410" /%}
 
 Our current setup not only has targets for serving and building the Angular application, but also has targets for unit testing, e2e testing and linting. The `test` and `lint` targets are defined in the application `project.json` file, while the `e2e` target is [inferred from the `apps/angular-store-e2e/cypress.config.ts` file](#inferred-tasks). We can use the same syntax as before to run these tasks:
 
@@ -609,7 +609,7 @@ npx nx e2e angular-store-e2e # runs e2e tests for the angular-store
 
 ### Inferred Tasks
 
-{% video-link link="<https://youtu.be/ZzTP4bVJEnI?t=424>" /%}
+{% video-link link="https://youtu.be/ZzTP4bVJEnI?t=424" /%}
 
 Nx identifies available tasks for your project from [tooling configuration files](/concepts/inferred-tasks), `package.json` scripts and the targets defined in `project.json`. All tasks from the `angular-store` project are defined in its `project.json` file, but the companion `angular-store-e2e` project has its tasks inferred from configuration files. To view the tasks that Nx has detected, look in the [Nx Console](/getting-started/editor-setup), [Project Details View](/recipes/nx-console/console-project-details) or run:
 
@@ -902,7 +902,7 @@ Not all tasks might be cacheable though. You can [configure which tasks are cach
 
 ### Testing Affected Projects
 
-{% video-link link="<https://youtu.be/ZzTP4bVJEnI?t=551>" /%}
+{% video-link link="https://youtu.be/ZzTP4bVJEnI?t=551" /%}
 
 Commit your changes to git.
 
@@ -1026,7 +1026,7 @@ npx nx graph --affected
 
 ## Building the Apps for Deployment
 
-{% video-link link="<https://youtu.be/ZzTP4bVJEnI?t=608>" /%}
+{% video-link link="https://youtu.be/ZzTP4bVJEnI?t=608" /%}
 
 If you're ready and want to ship your applications, you can build them using
 
@@ -1075,7 +1075,7 @@ npx nx affected -t deploy
 
 ## Imposing Constraints with Module Boundary Rules
 
-{% video-link link="<https://youtu.be/ZzTP4bVJEnI?t=663>" /%}
+{% video-link link="https://youtu.be/ZzTP4bVJEnI?t=663" /%}
 
 Once you modularize your codebase you want to make sure that the libs are not coupled to each other in an uncontrolled way. Here are some examples of how we might want to guard our small demo workspace:
 
@@ -1243,7 +1243,7 @@ Learn more about how to [enforce module boundaries](/features/enforce-module-bou
 Make sure you have completed the previous sections of this tutorial before starting this one. If you want a clean starting point, you can check out the [reference code](https://github.com/nrwl/nx-recipes/tree/main/angular-monorepo) as a starting point.
 {% /callout %}
 
-{% video-link link="<https://youtu.be/ZzTP4bVJEnI?t=791>" /%}
+{% video-link link="https://youtu.be/ZzTP4bVJEnI?t=791" /%}
 
 This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
