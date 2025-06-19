@@ -3,7 +3,7 @@
   "description": "The Nx Plugin for Docker to aid in containerizing projects.",
   "version": "0.0.1",
   "type": "commonjs",
-  "publicConfig": {
+  "publishConfig": {
     "access": "public"
   },
   "repository": {
@@ -23,6 +23,15 @@
   "license": "MIT",
   "homepage": "https://nx.dev",
   "main": "index.js",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./package.json": {
+      "default": "./package.json"
+    }
+  },
   "dependencies": {
     "@nx/devkit": "file:../devkit",
     "tslib": "^2.3.0"
