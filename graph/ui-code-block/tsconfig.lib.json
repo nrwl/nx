@@ -1,12 +1,16 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/out-tsc/graph/ui-code-block",
+    "tsBuildInfoFile": "../../dist/out-tsc/graph/ui-code-block/tsconfig.lib.tsbuildinfo",
+    "declaration": true,
     "types": [
       "node",
       "@nx/react/typings/cssmodule.d.ts",
       "@nx/react/typings/image.d.ts"
-    ]
+    ],
+    "composite": true,
+    "noEmit": false
   },
   "exclude": [
     "jest.config.ts",

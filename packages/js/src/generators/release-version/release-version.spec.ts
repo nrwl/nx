@@ -21,7 +21,7 @@ jest.mock('@nx/devkit', () => {
 
 import { ProjectGraph, Tree, output, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import * as enquirer from 'enquirer';
+import enquirer = require('enquirer');
 import { ReleaseGroupWithName } from 'nx/src/command-line/release/config/filter-release-groups';
 import { releaseVersionGenerator } from './release-version';
 import { createWorkspaceWithPackageDependencies } from './test-utils/create-workspace-with-package-dependencies';
@@ -325,7 +325,6 @@ To fix this you will either need to add a package.json file at that location, or
   describe('independent release group', () => {
     describe('specifierSource: prompt', () => {
       it(`should appropriately prompt for each project independently and apply the version updates across all package.json files`, async () => {
-        // @ts-expect-error read-only property
         enquirer.prompt = jest
           .fn()
           // First project will be minor

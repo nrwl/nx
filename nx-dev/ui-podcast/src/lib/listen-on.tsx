@@ -3,7 +3,7 @@ import {
   ApplePodcastsIcon,
   IHeartRadioIcon,
   SpotifyIcon,
-} from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-icons';
 
 export function ListenOn(): JSX.Element {
   const platforms = [

@@ -1,7 +1,7 @@
 'use client';
 import { FC, RefObject, useEffect, useId, useState } from 'react';
 import { motion, TargetAndTransition } from 'framer-motion';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 
 export interface AnimatedCurvedBeamProps {
   className?: string;

@@ -1,4 +1,4 @@
-import { SectionHeading, Strong, TextLink } from '@nx/nx-dev/ui-common';
+import { SectionHeading, Strong, TextLink } from '@nx/nx-dev-ui-common';
 import { ReactElement } from 'react';
 import {
   AngularIcon,
@@ -11,7 +11,7 @@ import {
   ReactIcon,
   StorybookIcon,
   TypeScriptIcon,
-} from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-icons';
 import Image from 'next/image';
 
 export function MonorepoAiSupport(): ReactElement {

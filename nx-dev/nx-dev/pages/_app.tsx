@@ -1,4 +1,4 @@
-import { sendPageViewEvent } from '@nx/nx-dev/feature-analytics';
+import { sendPageViewEvent } from '@nx/nx-dev-feature-analytics';
 import { DefaultSeo } from 'next-seo';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
@@ -7,7 +7,7 @@ import Script from 'next/script';
 import { useEffect } from 'react';
 import '../styles/main.css';
 import Link from 'next/link';
-import { WebinarNotifier } from '@nx/nx-dev/ui-common';
+import { WebinarNotifier } from '@nx/nx-dev-ui-common';
 import { FrontendObservability } from '../lib/components/frontend-observability';
 import GlobalScripts from '../app/global-scripts';
 

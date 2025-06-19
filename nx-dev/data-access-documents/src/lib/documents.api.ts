@@ -3,12 +3,12 @@ import {
   type DocumentMetadata,
   type ProcessedDocument,
   type RelatedDocument,
-} from '@nx/nx-dev/models-document';
-import { type ProcessedPackageMetadata } from '@nx/nx-dev/models-package';
-import { readdirSync, readFileSync, existsSync } from 'node:fs';
+} from '@nx/nx-dev-models-document';
+import { type ProcessedPackageMetadata } from '@nx/nx-dev-models-package';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { type TagsApi } from './tags.api';
-import { extractFrontmatter } from '@nx/nx-dev/ui-markdoc';
+import { extractFrontmatter } from '@nx/nx-dev-ui-markdoc';
 
 interface StaticDocumentPaths {
   params: { segments: string[] };

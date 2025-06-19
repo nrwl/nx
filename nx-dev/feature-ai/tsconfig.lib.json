@@ -2,8 +2,14 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
-    "types": ["node"],
-    "lib": ["dom"]
+    "types": [
+      "node"
+    ],
+    "lib": [
+      "dom"
+    ],
+    "composite": true,
+    "declaration": true
   },
   "files": [
     "../../node_modules/@nx/react/typings/cssmodule.d.ts",
@@ -16,5 +22,27 @@
     "**/*.test.tsx",
     "jest.config.ts"
   ],
-  "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"]
+  "include": [
+    "**/*.js",
+    "**/*.jsx",
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "references": [
+    {
+      "path": "../feature-analytics/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-common/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-markdoc/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-primitives/tsconfig.lib.json"
+    },
+    {
+      "path": "../util-ai/tsconfig.lib.json"
+    }
+  ],
 }

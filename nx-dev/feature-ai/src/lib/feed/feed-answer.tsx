@@ -2,10 +2,10 @@ import {
   HandThumbDownIcon,
   HandThumbUpIcon,
 } from '@heroicons/react/24/outline';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { useMemo, useState } from 'react';
 import { ChatGptLogo } from './chat-gpt-logo';
-import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
+import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
 
 // Exported for tests
 export function normalizeContent(content: string): string {

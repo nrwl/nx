@@ -1,4 +1,4 @@
-import { Member, MemberCard } from '@nx/nx-dev/ui-member-card';
+import { Member, MemberCard } from '@nx/nx-dev-ui-member-card';
 
 export function Speakers(speakers: Array<Member>) {
   function chunkList<ITEM>(itemList: ITEM[], chunkSize: number): Array<ITEM[]> {

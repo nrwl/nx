@@ -1,4 +1,4 @@
-import { DefaultLayout } from '@nx/nx-dev/ui-common';
+import { DefaultLayout } from '@nx/nx-dev-ui-common';
 import {
   Hero,
   LernaBrand,

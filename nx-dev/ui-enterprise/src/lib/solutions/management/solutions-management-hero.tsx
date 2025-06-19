@@ -3,9 +3,9 @@ import { ButtonLink, SectionHeading, VideoModal } from '@nx/nx-dev/ui-common';
 import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
 import { EnvelopeIcon, PlayIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
-import { UkgIcon } from '@nx/nx-dev/ui-icons';
-import { cx } from '@nx/nx-dev/ui-primitives';
-import { MovingBorder } from '@nx/nx-dev/ui-animations';
+import { UkgIcon } from '@nx/nx-dev-ui-icons';
+import { cx } from '@nx/nx-dev-ui-primitives';
+import { MovingBorder } from '@nx/nx-dev-ui-animations';
 import { motion } from 'framer-motion';
 import { WebinarSection } from '../../webinar-section';
 

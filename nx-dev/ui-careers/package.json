@@ -1,0 +1,11 @@
+{
+  "name": "@nx-dev/nx-dev-ui-careers",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@nx/nx-dev-data-access-careers": "file:../data-access-careers",
+    "@nx/nx-dev-ui-common": "file:../ui-common"
+  }
+}

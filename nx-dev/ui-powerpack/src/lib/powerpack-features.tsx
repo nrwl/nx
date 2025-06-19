@@ -13,8 +13,8 @@ import {
   SectionHeading,
   Strong,
   TextLink,
-} from '@nx/nx-dev/ui-common';
-import { cx } from '@nx/nx-dev/ui-primitives';
+} from '@nx/nx-dev-ui-common';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { AnimatedCurvedBeam } from '@nx/nx-dev/ui-animations';
 import {
   CircleStackIcon,
@@ -27,7 +27,7 @@ import {
   GoogleCloudIcon,
   MinIOIcon,
   NxIcon,
-} from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-icons';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 

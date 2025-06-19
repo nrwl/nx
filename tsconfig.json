@@ -1,0 +1,8 @@
+{
+  "compileOnSave": false,
+  "include": [],
+  "files": [],
+  "exclude": ["node_modules", "tmp"],
+  "references": [],
+  "extends": "./tsconfig.base.json"
+}
