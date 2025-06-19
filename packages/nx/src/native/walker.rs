@@ -176,6 +176,7 @@ where
     let mut walker = WalkBuilder::new(&directory);
     walker.require_git(false);
     walker.hidden(false);
+    walker.parents(false);
     walker.git_ignore(use_ignores);
     if use_ignores {
         walker.add_custom_ignore_filename(".nxignore");
@@ -314,5 +315,21 @@ nested/child-two/
                 "v1/packages/pkg-b/pkg-b.txt"
             )
         );
+    }
+
+    #[test]
+    fn is_unaffected_by_parent_gitignore() {
+        let parent_temp = assert_fs::TempDir::new().unwrap();
+        parent_temp.child(".gitignore").write_str("*").unwrap();
+        parent_temp.child("workspace/file1.txt").write_str("test").unwrap();
+        parent_temp.child("workspace/project.json").write_str("test").unwrap();
+
+        let workspace_path = parent_temp.path().join("workspace");
+        let mut files: Vec<_> = nx_walker(&workspace_path, true)
+            .map(|f| f.normalized_path)
+            .collect();
+        files.sort();
+
+        assert_eq!(files, vec!["file1.txt".to_string(), "project.json".to_string()]);
     }
 }
