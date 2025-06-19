@@ -1482,6 +1482,27 @@
       "id": "examples",
       "name": "Conformance Rule Examples",
       "path": "/ci/recipes/enterprise/conformance/examples"
+    },
+    {
+      "description": "Enterprise features for visualizing dependencies and enforcing standards across multiple repositories",
+      "file": "nx-cloud/enterprise/polygraph",
+      "id": "polygraph",
+      "name": "Polygraph",
+      "path": "/ci/recipes/enterprise/polygraph"
+    },
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/metadata-only-workspace",
+      "id": "metadata-only-workspace",
+      "name": "Metadata Only Workspaces",
+      "path": "/ci/recipes/enterprise/metadata-only-workspace"
+    },
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/custom-workflows",
+      "id": "custom-workflows",
+      "name": "Custom Workflows",
+      "path": "/ci/recipes/enterprise/custom-workflows"
     }
   ],
   "owners": [
@@ -1621,18 +1642,57 @@
   ],
   "polygraph": [
     {
-      "description": "",
-      "file": "dnx-cloud/enterprise/polygraph/overview",
-      "id": "overview",
-      "name": "Overview",
-      "path": "/ci/recipes/enterprise/polygraph/overview"
+      "description": "Enterprise features for visualizing dependencies and enforcing standards across multiple repositories",
+      "file": "nx-cloud/enterprise/polygraph",
+      "id": "polygraph",
+      "name": "Polygraph",
+      "path": "/ci/recipes/enterprise/polygraph"
     },
     {
       "description": "",
-      "file": "nx-cloud/enterprise/polygraph/metadata-only-workspace",
+      "file": "nx-cloud/enterprise/metadata-only-workspace",
       "id": "metadata-only-workspace",
       "name": "Metadata Only Workspaces",
-      "path": "/ci/recipes/enterprise/polygraph/metadata-only-workspace"
+      "path": "/ci/recipes/enterprise/metadata-only-workspace"
+    },
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/custom-workflows",
+      "id": "custom-workflows",
+      "name": "Custom Workflows",
+      "path": "/ci/recipes/enterprise/custom-workflows"
+    }
+  ],
+  "workspace-graph": [
+    {
+      "description": "Enterprise features for visualizing dependencies and enforcing standards across multiple repositories",
+      "file": "nx-cloud/enterprise/polygraph",
+      "id": "polygraph",
+      "name": "Polygraph",
+      "path": "/ci/recipes/enterprise/polygraph"
+    },
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/metadata-only-workspace",
+      "id": "metadata-only-workspace",
+      "name": "Metadata Only Workspaces",
+      "path": "/ci/recipes/enterprise/metadata-only-workspace"
+    },
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/custom-workflows",
+      "id": "custom-workflows",
+      "name": "Custom Workflows",
+      "path": "/ci/recipes/enterprise/custom-workflows"
+    }
+  ],
+  "custom-workflows": [
+    {
+      "description": "Enterprise features for visualizing dependencies and enforcing standards across multiple repositories",
+      "file": "nx-cloud/enterprise/polygraph",
+      "id": "polygraph",
+      "name": "Polygraph",
+      "path": "/ci/recipes/enterprise/polygraph"
     }
   ],
   "docker": [
