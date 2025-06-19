@@ -188,9 +188,20 @@ impl AppLifeCycle {
 
         debug!("Initialized Terminal UI");
 
-        // Set tick and frame rates
-        tui.tick_rate(10.0);
-        tui.frame_rate(60.0);
+        // Set tick and frame rates with Windows-specific optimizations
+        #[cfg(target_os = "windows")]
+        {
+            // Lower rates for Windows due to terminal performance limitations
+            tui.tick_rate(4.0); // Reduced from 10.0
+            tui.frame_rate(20.0); // Reduced from 60.0
+        }
+
+        #[cfg(not(target_os = "windows"))]
+        {
+            // Keep higher rates for Mac/Linux which handle them well
+            tui.tick_rate(10.0);
+            tui.frame_rate(60.0);
+        }
 
         // Initialize action channel
         let (action_tx, mut action_rx) = tokio::sync::mpsc::unbounded_channel();

@@ -70,6 +70,8 @@ pub struct App {
     debug_mode: bool,
     debug_state: TuiWidgetState,
     console_messenger: Option<NxConsoleMessageConnection>,
+    #[cfg(target_os = "windows")]
+    last_render_time: Option<std::time::Instant>, // Windows-specific render throttling
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -138,6 +140,8 @@ impl App {
             debug_mode: false,
             debug_state: TuiWidgetState::default().set_default_display_level(LevelFilter::Debug),
             console_messenger: None,
+            #[cfg(target_os = "windows")]
+            last_render_time: None,
         })
     }
 
@@ -840,6 +844,19 @@ impl App {
                 debug!("Debug mode: {}", self.debug_mode);
             }
             Action::Render => {
+                #[cfg(target_os = "windows")]
+                {
+                    // Windows-specific render throttling to improve performance
+                    let now = std::time::Instant::now();
+                    if let Some(last_render) = self.last_render_time {
+                        // Skip render if less than 50ms have passed since last render
+                        if now.duration_since(last_render).as_millis() < 50 {
+                            return;
+                        }
+                    }
+                    self.last_render_time = Some(now);
+                }
+
                 tui.draw(|f| {
                     let area = f.area();
                     // Cache the frame area if it's never been set before (will be updated in subsequent resize events if necessary)
@@ -1125,6 +1142,25 @@ impl App {
 
     fn recalculate_layout_areas(&mut self) {
         if let Some(frame_area) = self.frame_area {
+            #[cfg(target_os = "windows")]
+            {
+                // Windows optimization: Only recalculate if layout areas haven't been set yet
+                // or if there's a significant change that would affect layout
+                if self.layout_areas.is_some() {
+                    // On Windows, be more conservative about layout recalculation to improve performance
+                    let current_areas = self.layout_manager.calculate_layout(frame_area);
+                    if let Some(existing_areas) = &self.layout_areas {
+                        // Only update if there's a meaningful difference in layout
+                        let needs_update = existing_areas.task_list != current_areas.task_list
+                            || existing_areas.terminal_panes != current_areas.terminal_panes;
+                        if needs_update {
+                            self.layout_areas = Some(current_areas);
+                        }
+                        return;
+                    }
+                }
+            }
+
             self.layout_areas = Some(self.layout_manager.calculate_layout(frame_area));
         }
     }
@@ -1454,8 +1490,14 @@ impl App {
             }
         }
 
-        // Set a new timer for 200ms from now
-        self.resize_debounce_timer = Some(now + 200);
+        // Set a debounce timer with platform-specific delays
+        #[cfg(target_os = "windows")]
+        let debounce_ms = 500; // Longer delay for Windows
+
+        #[cfg(not(target_os = "windows"))]
+        let debounce_ms = 200; // Original delay for Mac/Linux
+
+        self.resize_debounce_timer = Some(now + debounce_ms);
 
         // Process the resize
         self.handle_pty_resize()
