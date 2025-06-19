@@ -104,8 +104,8 @@ export function uniq(prefix: string): string {
 }
 
 /**
- * Create an Nx plugin workspace using the backup manager approach
- * This creates a standalone plugin workspace using our new project creation system
+ * Create an Nx plugin workspace using create-nx-plugin
+ * This creates a plugin workspace and integrates with the simple project utils system
  */
 export async function createNxPlugin(
   name: string,
@@ -119,30 +119,33 @@ export async function createNxPlugin(
     useDetectedPm?: boolean;
   } = {}
 ): Promise<string> {
-  // Generate unique test ID
-  const testRunId = `${getTestSuiteId()}-${randomUUID().slice(0, 8)}`;
+  // Import the original runCreatePlugin function and use it directly
+  const { runCreatePlugin, getProjectName } = require('./create-project-utils');
 
-  // Store test ID for cleanup
+  runCreatePlugin(name, {
+    packageManager,
+    extraArgs,
+    useDetectedPm,
+  });
+
+  // Get the actual project name that was set by runCreatePlugin
+  const actualProjectName = getProjectName();
+
+  // Generate test ID for cleanup integration using actual project name
+  const testRunId = `${getTestSuiteId()}-${randomUUID().slice(0, 8)}`;
   process.env.TEST_RUN_ID = testRunId;
 
-  // Create plugin workspace using BackupManager with special plugin config
-  const pluginProjName = await backupManager.createProject(
-    {
-      packageManager,
-      packages: [], // Plugin workspaces don't need pre-installed packages
-      preset: 'plugin', // This will be a special case in backup manager
-      extraArgs, // Pass through extra arguments
-      useDetectedPm, // Pass through useDetectedPm flag
-    },
-    testRunId,
-    name
-  );
+  // Register with backup manager for cleanup using the actual project name
+  const { e2eCwd } = require('./get-env-info');
+  const pluginProjectPath = `${e2eCwd}/${actualProjectName}`;
+  backupManager.registerProject(testRunId, {
+    projName: actualProjectName,
+    projPath: pluginProjectPath,
+    backupPath: undefined,
+    isTemporary: true,
+  });
 
-  // Set global projName for compatibility with legacy utils (tmpProjPath, etc.)
-  const { setProjectName } = require('./create-project-utils');
-  setProjectName(pluginProjName);
-
-  return pluginProjName;
+  return actualProjectName;
 }
 
 /**

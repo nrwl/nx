@@ -244,27 +244,6 @@ export class BackupManager {
       if (type === 'lerna') {
         // Create Lerna
         await this.createLernaWorkspaceStructure(tempWorkspace, packageManager);
-      } else if (preset === 'plugin') {
-        // Create Nx plugin
-        const start = performance.mark('create-plugin:start');
-        this.runCreatePlugin(tempWorkspace, {
-          packageManager,
-          extraArgs: config.extraArgs,
-          useDetectedPm: config.useDetectedPm,
-        });
-        const end = performance.mark('create-plugin:end');
-
-        if (isVerbose()) {
-          const measure = performance.measure(
-            'create-plugin',
-            start.name,
-            end.name
-          );
-          logInfo(
-            'BackupManager',
-            `Plugin creation took ${measure.duration / 1000}s`
-          );
-        }
       } else {
         // Create Nx workspace
         const start = performance.mark('create-workspace:start');
@@ -499,39 +478,6 @@ export class BackupManager {
       cwd: path.dirname(workspaceDir),
       stdio: isVerbose() ? 'inherit' : 'pipe',
       env: { CI: 'true', ...process.env },
-      encoding: 'utf-8',
-    });
-  }
-
-  private runCreatePlugin(
-    workspaceDir: string,
-    options: {
-      packageManager: PackageManager;
-      extraArgs?: string;
-      useDetectedPm?: boolean;
-    }
-  ): void {
-    const pm = getPackageManagerCommand({
-      packageManager: options.packageManager,
-    });
-    const pluginName = path.basename(workspaceDir);
-
-    let command = `${
-      pm.runUninstalledPackage
-    } create-nx-plugin@${getPublishedVersion()} ${pluginName} --nxCloud=skip --no-interactive`;
-
-    if (options.packageManager && !options.useDetectedPm) {
-      command += ` --package-manager=${options.packageManager}`;
-    }
-
-    if (options.extraArgs) {
-      command += ` ${options.extraArgs}`;
-    }
-
-    execSync(command, {
-      cwd: path.dirname(workspaceDir),
-      stdio: isVerbose() ? 'inherit' : 'pipe',
-      env: process.env,
       encoding: 'utf-8',
     });
   }

@@ -379,8 +379,6 @@ describe('create-nx-workspace', () => {
   it('should respect package manager preference', () => {
     const wsName = uniq('pm');
 
-    process.env.YARN_REGISTRY = `http://localhost:4873`;
-    process.env.npm_config_registry = `http://localhost:4873`;
     process.env.SELECTED_PM = 'npm';
 
     createNxWorkspace(wsName, {
@@ -393,8 +391,6 @@ describe('create-nx-workspace', () => {
 
     // Restore environment variables
     process.env.SELECTED_PM = packageManager;
-    process.env.npm_config_registry = `http://localhost:4873`; // Should already be set by global setup
-    process.env.YARN_REGISTRY = `http://localhost:4873`; // Should already be set by global setup
   });
 
   describe('Use detected package manager', () => {

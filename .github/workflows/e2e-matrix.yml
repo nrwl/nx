@@ -345,8 +345,8 @@ jobs:
           NX_E2E_SKIP_CLEANUP: 'true'
           NODE_OPTIONS: --max_old_space_size=8192
           SELECTED_PM: ${{ matrix.package_manager }}
-          npm_config_registry: http://localhost:4872
-          YARN_REGISTRY: http://localhost:4872
+          npm_config_registry: http://localhost:4873
+          YARN_REGISTRY: http://localhost:4873
           CI: true
   
       - name: Run e2e tests with npm (macOS)
@@ -370,8 +370,8 @@ jobs:
           NX_E2E_SKIP_CLEANUP: 'true'
           NODE_OPTIONS: --max_old_space_size=8192
           SELECTED_PM: 'npm'
-          npm_config_registry: http://localhost:4872
-          YARN_REGISTRY: http://localhost:4872
+          npm_config_registry: http://localhost:4873
+          YARN_REGISTRY: http://localhost:4873
           DEVELOPER_DIR: '/Applications/Xcode.app/Contents/Developer'
           CI: true
 
