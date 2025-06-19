@@ -48,12 +48,12 @@ const MIN_BOTTOM_SPACING: u16 = 4; // Minimum space between Pag, Cloud, Help
 /// Represents an individual task with its current state and execution details.
 pub struct TaskItem {
     // Public to aid with sorting utility and testing
-    pub name: String,
-    duration: String,
-    cache_status: String,
+    pub name: Arc<str>,
+    duration: String,       // Keep as String since it's frequently updated
+    cache_status: Arc<str>, // Cache status is mostly immutable
     // Public to aid with sorting utility and testing
     pub status: TaskStatus,
-    pub terminal_output: String,
+    pub terminal_output: String, // Keep as String since it can be large and updated
     pub continuous: bool,
     start_time: Option<i64>,
     // Public to aid with sorting utility and testing
@@ -78,7 +78,7 @@ impl Clone for TaskItem {
 impl TaskItem {
     pub fn new(name: String, continuous: bool) -> Self {
         Self {
-            name,
+            name: name.into(),
             duration: if continuous {
                 "Continuous".to_string()
             } else {
@@ -86,9 +86,9 @@ impl TaskItem {
             },
             cache_status: if continuous {
                 // We know upfront that the cache status will not be applicable
-                CACHE_STATUS_NOT_APPLICABLE.to_string()
+                CACHE_STATUS_NOT_APPLICABLE.to_string().into()
             } else {
-                CACHE_STATUS_NOT_YET_KNOWN.to_string()
+                CACHE_STATUS_NOT_YET_KNOWN.to_string().into()
             },
             status: TaskStatus::NotStarted,
             continuous,
@@ -102,14 +102,16 @@ impl TaskItem {
         self.status = status;
         // Update the cache_status label that gets printed in the UI
         if self.continuous {
-            self.cache_status = CACHE_STATUS_NOT_APPLICABLE.to_string();
+            self.cache_status = CACHE_STATUS_NOT_APPLICABLE.to_string().into();
         } else {
             self.cache_status = match status {
-                TaskStatus::InProgress => CACHE_STATUS_NOT_YET_KNOWN.to_string(),
-                TaskStatus::LocalCacheKeptExisting => CACHE_STATUS_LOCAL_KEPT_EXISTING.to_string(),
-                TaskStatus::LocalCache => CACHE_STATUS_LOCAL.to_string(),
-                TaskStatus::RemoteCache => CACHE_STATUS_REMOTE.to_string(),
-                _ => CACHE_STATUS_NOT_APPLICABLE.to_string(),
+                TaskStatus::InProgress => CACHE_STATUS_NOT_YET_KNOWN.to_string().into(),
+                TaskStatus::LocalCacheKeptExisting => {
+                    CACHE_STATUS_LOCAL_KEPT_EXISTING.to_string().into()
+                }
+                TaskStatus::LocalCache => CACHE_STATUS_LOCAL.to_string().into(),
+                TaskStatus::RemoteCache => CACHE_STATUS_REMOTE.to_string().into(),
+                _ => CACHE_STATUS_NOT_APPLICABLE.to_string().into(),
             }
         }
     }
@@ -186,6 +188,7 @@ pub struct TasksList {
     pinned_tasks: [Option<String>; 2],
     initiating_tasks: HashSet<String>,
     run_mode: RunMode,
+    sort_dirty: bool, // Flag to track when sorting is needed
 }
 
 impl TasksList {
@@ -224,6 +227,7 @@ impl TasksList {
             pinned_tasks: [None, None],
             initiating_tasks,
             run_mode,
+            sort_dirty: false,
         };
 
         // Sort tasks to populate task selection list
@@ -461,7 +465,7 @@ impl TasksList {
 
         // Apply filter
         if self.filter_text.is_empty() {
-            self.filtered_names = self.tasks.iter().map(|t| t.name.clone()).collect();
+            self.filtered_names = self.tasks.iter().map(|t| t.name.to_string()).collect();
         } else {
             self.filtered_names = self
                 .tasks
@@ -471,7 +475,7 @@ impl TasksList {
                         .to_lowercase()
                         .contains(&self.filter_text.to_lowercase())
                 })
-                .map(|t| t.name.clone())
+                .map(|t| t.name.to_string())
                 .collect();
         }
 
@@ -506,6 +510,13 @@ impl TasksList {
     }
 
     pub fn sort_tasks(&mut self) {
+        // Only sort if we actually need to
+        if !self.sort_dirty {
+            return;
+        }
+
+        self.sort_dirty = false;
+
         // Set the appropriate selection mode based on our current state
         let should_track_by_name = self.spacebar_mode;
         let mode = if should_track_by_name {
@@ -530,7 +541,7 @@ impl TasksList {
         sort_task_items(&mut self.tasks, &highlighted_tasks);
 
         // Update filtered indices to match new order
-        self.filtered_names = self.tasks.iter().map(|t| t.name.clone()).collect();
+        self.filtered_names = self.tasks.iter().map(|t| t.name.to_string()).collect();
 
         if !self.filter_text.is_empty() {
             // Apply filter but don't sort again
@@ -542,7 +553,7 @@ impl TasksList {
                         .to_lowercase()
                         .contains(&self.filter_text.to_lowercase())
                 })
-                .map(|t| t.name.clone())
+                .map(|t| t.name.to_string())
                 .collect();
         }
 
@@ -633,14 +644,14 @@ impl TasksList {
                 task_item.update_status(TaskStatus::InProgress);
             }
         }
-        self.sort_tasks();
+        self.sort_dirty = true;
     }
 
     /// Updates a task's status and triggers a sort of the list.
     pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
         if let Some(task_item) = self.tasks.iter_mut().find(|t| t.name == task_id) {
             task_item.update_status(status);
-            self.sort_tasks();
+            self.sort_dirty = true;
         }
     }
 
@@ -661,7 +672,7 @@ impl TasksList {
                 }
             }
         }
-        self.sort_tasks();
+        self.sort_dirty = true;
     }
 
     fn generate_empty_row(&self, has_narrow_area_width: bool) -> Row {
@@ -1381,6 +1392,11 @@ impl Component for TasksList {
     }
 
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) -> Result<()> {
+        // Sort tasks if needed before rendering
+        if self.sort_dirty {
+            self.sort_tasks();
+        }
+
         // --- 1. Calculate Context ---
         let has_narrow_area_width = area.width < 90;
         let filter_is_active = self.filter_mode || !self.filter_text.is_empty();

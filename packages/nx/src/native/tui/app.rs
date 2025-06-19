@@ -198,13 +198,25 @@ impl App {
     }
 
     pub fn print_task_terminal_output(&mut self, task_id: String, output: String) {
+        // Optimization: For large outputs (>10KB), batch them to reduce processing overhead
+        const LARGE_OUTPUT_THRESHOLD: usize = 10 * 1024; // 10KB
+
         // Tasks run within a pseudo-terminal always have a pty instance and do not need a new one
         // Tasks not run within a pseudo-terminal need a new pty instance to print output
         if !self.pty_instances.contains_key(&task_id) {
             let pty = PtyInstance::non_interactive();
 
+            // For large outputs, only process the last portion to avoid performance issues
+            let processed_output = if output.len() > LARGE_OUTPUT_THRESHOLD {
+                // Keep last 8KB of output plus truncation indicator
+                let truncate_at = output.len() - (8 * 1024);
+                format!("...[output truncated]...\n{}", &output[truncate_at..])
+            } else {
+                output
+            };
+
             // Add ANSI escape sequence to hide cursor at the end of output, it would be confusing to have it visible when a task is a cache hit
-            let output_with_hidden_cursor = format!("{}\x1b[?25l", output);
+            let output_with_hidden_cursor = format!("{}\x1b[?25l", processed_output);
             Self::write_output_to_parser(&pty, output_with_hidden_cursor);
 
             self.register_pty_instance(&task_id, pty);
