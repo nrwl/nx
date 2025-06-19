@@ -17,7 +17,7 @@ Polygraph is Nx Cloud's suite of enterprise features designed to help organizati
 All of this can be enabled with **Zero-friction adoption** for existing repositories without requiring teams to adopt Nx or modify their workflows. With these tools, a platform engineering team is able to affect positive change across 100+ repos quickly in automated fashion, instead of being stuck with manual processes taking multiple months.
 
 {% callout type="note" title="Nx Enterprise" %}
-Polygraph features require an Nx Enterprise license. [Reach out to the team](/contact/sales?utm-campagin=polygraph) if you're interested in exploring enterprise!
+Polygraph features require an Nx Enterprise license. [Reach out to the team](/contact/sales?utm_source=nx.dev&utm_campaign=polygraph) if you're interested in exploring enterprise!
 {%/callout %}
 
 ## Use Cases
