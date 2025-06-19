@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+  <style>
+    * {
+      stroke: #0F172A;
+    }
+    @media (prefers-color-scheme: dark) {
+      * {
+        stroke: #F1F5F9;
+      }
+    }
+  </style>
+  <path d="M22.167 7.167v-2.5a2.5 2.5 0 0 0-2.5-2.5h-15a2.5 2.5 0 0 0-2.5 2.5v15a2.5 2.5 0 0 0 2.5 2.5h2.5m15-15c-2.76 0-5 2.24-5 5s-2.24 5-5 5-5 2.24-5 5m15-15V19.59a2.577 2.577 0 0 1-2.576 2.576H7.167" stroke-width="2"/>
+</svg>

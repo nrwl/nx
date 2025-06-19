@@ -4,6 +4,10 @@
  * work well for content-centric websites.
  */
 
+@import 'tailwindcss';
+
+@custom-variant dark (&:is([data-theme="dark"] *));
+
 /* You can override the default Infima variables here. */
 :root {
   --ifm-color-primary: #2e8555;
@@ -27,4 +31,58 @@
   --ifm-color-primary-lighter: #32d8b4;
   --ifm-color-primary-lightest: #4fddbf;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+svg {
+  shape-rendering: auto;
+  text-rendering: optimizeLegibility;
+}
+
+@font-face {
+  src: url('/fonts/InputMono-Regular.woff2') format('woff2'),
+    url('/fonts/InputMono-Regular.woff') format('woff');
+  font-family: 'InputMono';
+  font-style: normal;
+  font-weight: normal;
+  font-display: swap;
+}
+.font-input-mono {
+  font-family: 'InputMono', monospace;
+}
+code,
+pre,
+.prose code,
+.prose pre {
+  font-family: 'InputMono', monospace;
+}
+
+/*
+  General CSS rules for markdown iframes and img
+ */
+iframe[src*='youtube'] {
+  aspect-ratio: 16 / 9;
+}
+
+.prose iframe:not(.not-prose):not(.not-prose *),
+.prose img:not(.not-prose):not(.not-prose *) {
+  display: block;
+  margin: 2rem auto;
+}
+
+.prose iframe:not(.not-prose):not(.not-prose *) {
+  width: 100%;
+  max-width: 560px;
+}
+
+.prose img:not(.not-prose):not(.not-prose *) {
+  width: max-content;
+}
+
+.prose iframe:not(.not-prose):not(.not-prose *)[src^="https://staging.nx.app"],
+.prose iframe:not(.not-prose):not(.not-prose *)[src^="https://nx.app"]
+{
+  height: 80vh;
+  max-width: 100%;
+  overflow: hidden;
+  width: 100%;
 }

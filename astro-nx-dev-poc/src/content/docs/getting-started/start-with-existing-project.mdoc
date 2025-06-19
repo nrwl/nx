@@ -1,0 +1,40 @@
+---
+title: Start with an existing project
+description: Add Nx to any existing project with a single command. Start with Nx Core and gradually adopt plugins, CI integrations, and other capabilities.
+sidebar:
+  order: 4
+  label: Add to existing project
+---
+
+In many situations, you have an existing codebase and want to improve it with Nx using an **incremental adoption approach**.
+
+Thanks to [Nx's modular architecture](/getting-started/intro), you can start with just **Nx Core** and then gradually add [technology-specific plugins](/technologies), [CI integrations](/ci), or other capabilities as your requirements evolve.
+
+Getting started is remarkably simple. You can add Nx to any existing project with a single command:
+
+```shell {% frame="none" %}
+nx init
+```
+
+{% aside type="note" title="Global Installs" %}
+Make sure you have [Nx installed globally](/getting-started/installation) or use `npx` if you're in a JavaScript environment
+{% /aside %}
+
+This command automatically detects your underlying workspace structure, whether it's a monorepo, a single project, or something in between. Nx will then ask you a series of targeted questions about your setup and preferences, using your answers to auto-configure itself seamlessly into your existing workspace. This intelligent setup process ensures you get the benefits of Nx with minimal configuration changes or disruption to your current development workflow.
+
+Here are some guides that give you more details based on the technology stack you're using:
+
+{% cardgrid %}
+
+{% linkcard title="Add to Existing Monorepo" 
+href="/recipes/adopting-nx/adding-to-monorepo" %}
+{% /linkcard %}
+{% linkcard title="Add to Any Project"  href="/recipes/adopting-nx/adding-to-existing-project" /%}
+
+{% linkcard title="Migrate from Angular CLI" href="technologies/angular/migration/angular" /%}
+
+{% linkcard title="Import Projects into Your Nx Workspace" href="/recipes/adopting-nx/import-project" /%}
+
+{% /cardgrid %}
+
+{% linkcard title="See more options" href="/recipes/adopting-nx" /%}

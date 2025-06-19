@@ -1,0 +1,144 @@
+---
+title: '@nx/js Migrations'
+description: 'Complete reference for all @nx/js migration commands'
+sidebar_label: Migrations
+---
+
+# @nx/js Migrations
+
+The @nx/js plugin provides various migrations to help you update your js projects and dependencies within your Nx workspace.
+Below is a complete reference for all available migrations and their details.
+
+## Available Migrations
+
+### `update-19.0.0`
+
+Update dependencies to version 19.0.0
+
+**Version:** `19.0.0`
+
+#### Package Updates
+
+This migration updates the following packages:
+
+| Package    | Version   | Type     |
+| ---------- | --------- | -------- |
+| `@swc/cli` | `~0.3.12` | packages |
+
+### `update-19.2.0`
+
+Update dependencies to version 19.2.0
+
+**Version:** `19.2.0`
+
+#### Package Updates
+
+This migration updates the following packages:
+
+| Package              | Version   | Type     |
+| -------------------- | --------- | -------- |
+| `@swc/core`          | `~1.5.7`  | packages |
+| `@swc/helpers`       | `~0.5.11` | packages |
+| `@swc-node/register` | `~1.9.1`  | packages |
+
+### `update-19.5.1`
+
+Update dependencies to version 19.5.1
+
+**Version:** `19.5.1`
+
+#### Package Updates
+
+This migration updates the following packages:
+
+| Package      | Version          | Type     |
+| ------------ | ---------------- | -------- |
+| `typescript` | `>=5.4.0 <5.5.0` | requires |
+| `typescript` | `~5.5.2`         | packages |
+
+### `update-20.2.0`
+
+Update dependencies to version 20.2.0
+
+**Version:** `20.2.0`
+
+#### Package Updates
+
+This migration updates the following packages:
+
+| Package      | Version          | Type     |
+| ------------ | ---------------- | -------- |
+| `typescript` | `>=5.5.0 <5.6.0` | requires |
+| `typescript` | `~5.6.2`         | packages |
+
+### `update-20.4.0`
+
+Update dependencies to version 20.4.0
+
+**Version:** `20.4.0`
+
+#### Package Updates
+
+This migration updates the following packages:
+
+| Package      | Version          | Type     |
+| ------------ | ---------------- | -------- |
+| `typescript` | `>=5.6.0 <5.7.0` | requires |
+| `typescript` | `~5.7.2`         | packages |
+
+### `update-20.5.0`
+
+Update dependencies to version 20.5.0
+
+**Version:** `20.5.0`
+
+#### Package Updates
+
+This migration updates the following packages:
+
+| Package     | Version  | Type     |
+| ----------- | -------- | -------- |
+| `verdaccio` | `^6.0.5` | packages |
+
+### `update-20.7.1-beta.0`
+
+Update dependencies to version 20.7.1-beta.0
+
+**Version:** `20.7.1-beta.0`
+
+#### Package Updates
+
+This migration updates the following packages:
+
+| Package    | Version  | Type     |
+| ---------- | -------- | -------- |
+| `@swc/cli` | `~0.6.0` | packages |
+
+### `update-21.2.0`
+
+Update dependencies to version 21.2.0
+
+**Version:** `21.2.0`
+
+#### Package Updates
+
+This migration updates the following packages:
+
+| Package      | Version          | Type     |
+| ------------ | ---------------- | -------- |
+| `typescript` | `>=5.7.0 <5.8.0` | requires |
+| `typescript` | `~5.8.2`         | packages |
+
+## Running Migrations
+
+To run a specific migration:
+
+```bash
+nx migrate @nx/js@&lt;version&gt;
+```
+
+To see what migrations are available:
+
+```bash
+nx migrate @nx/js@latest --dry-run
+```

@@ -1,0 +1,43 @@
+/* Custom styles for Nx documentation */
+
+/* Custom font for code blocks */
+@font-face {
+  font-family: 'Input Mono';
+  src: url('/fonts/InputMono-Regular.woff2') format('woff2'),
+    url('/fonts/InputMono-Regular.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Apply custom font to code elements */
+code,
+pre,
+.astro-code {
+  font-family: 'Input Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+
+/* Additional custom styles can be added here */
+
+/* Anchor link styles for headings */
+.anchor-link {
+  opacity: 0;
+  text-decoration: none;
+  margin-left: 0.5em;
+  font-weight: normal;
+  color: var(--sl-color-gray-3);
+  transition: opacity 0.2s ease;
+}
+
+h1:hover .anchor-link,
+h2:hover .anchor-link,
+h3:hover .anchor-link,
+h4:hover .anchor-link,
+h5:hover .anchor-link,
+h6:hover .anchor-link {
+  opacity: 1;
+}
+
+.anchor-link:hover {
+  color: var(--sl-color-accent);
+}
