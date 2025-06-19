@@ -126,13 +126,13 @@ async function createDockerTargets(
   context: CreateNodesContext
 ) {
   const imageTag = projectRoot.replace(/^[\\/]/, '').replace(/[\\/\s]+/g, '-');
-  const ociOutputPath = `${imageTag}-oci`;
+  const ociOutputPath = `${imageTag}.oci`;
 
   const namedInputs = getNamedInputs(projectRoot, context);
   const targets: Record<string, TargetConfiguration> = {};
 
   targets[options.buildTarget.name] = {
-    command: `docker build .`,
+    command: `mkdir -p .docker-images && docker build .`,
     cache: true,
     options: {
       cwd: projectRoot,
