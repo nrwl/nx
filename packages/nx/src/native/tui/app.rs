@@ -229,8 +229,29 @@ impl App {
             .as_ref()
             .and_then(|c| c.end_running_tasks());
 
-        // If the user has interacted with the app, or auto-exit is disabled, do nothing
+        self.dispatch_action(Action::EndCommand);
+    }
+
+    // Internal method to handle Action::EndCommand
+    fn handle_end_command(&mut self) {
+        // If the user has interacted with the app or auto-exit is disabled, do nothing
         if self.user_has_interacted || !self.tui_config.auto_exit.should_exit_automatically() {
+            return;
+        }
+
+        let failed_task_names = self.get_failed_task_names();
+        // If there are more than 1 failed tasks, do not auto-exit
+        if failed_task_names.len() > 1 {
+            // If there are no visible panes (e.g. run one would have a pane open by default), focus the first failed task
+            if !self.has_visible_panes() {
+                self.selection_manager
+                    .lock()
+                    .unwrap()
+                    .select_task(failed_task_names.first().unwrap().clone());
+
+                // Display the task logs but keep focus on the task list to allow the user to navigate the failed tasks
+                self.toggle_output_visibility();
+            }
             return;
         }
 
@@ -1070,6 +1091,9 @@ impl App {
                     trace!("No console connection available");
                 }
             }
+            Action::EndCommand => {
+                self.handle_end_command();
+            }
             _ => {}
         }
 
@@ -1136,6 +1160,22 @@ impl App {
     /// Checks if the current view has any visible output panes.
     fn has_visible_panes(&self) -> bool {
         self.pane_tasks.iter().any(|t| t.is_some())
+    }
+
+    /// Returns the names of tasks that have failed.
+    fn get_failed_task_names(&self) -> Vec<String> {
+        self.components
+            .iter()
+            .find_map(|c| c.as_any().downcast_ref::<TasksList>())
+            .map(|tasks_list| {
+                tasks_list
+                    .tasks
+                    .iter()
+                    .filter(|task| task.status == TaskStatus::Failure)
+                    .map(|task| task.name.clone())
+                    .collect()
+            })
+            .unwrap_or_else(Vec::new)
     }
 
     /// Clears all output panes and resets their associated state.
