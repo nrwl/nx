@@ -68,7 +68,7 @@ const config: Config = {
       } satisfies Preset.Options,
     ],
   ],
-
+  plugins: [['./src/plugins/tailwind.ts', {}]],
   themeConfig: {
     // Replace with your project's social card
     image: 'img/docusaurus-social-card.jpg',

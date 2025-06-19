@@ -24,6 +24,9 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.10",
+    "@tailwindcss/postcss": "^4.1.10",
     "@docusaurus/module-type-aliases": "3.8.1",
     "@docusaurus/tsconfig": "3.8.1",
     "@docusaurus/types": "3.8.1",

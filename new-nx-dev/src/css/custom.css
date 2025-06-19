@@ -4,6 +4,11 @@
  * work well for content-centric websites.
  */
 
+@import "tailwindcss";
+
+@custom-variant dark (&:is([data-theme="dark"] *));
+
+
 /* You can override the default Infima variables here. */
 :root {
   --ifm-color-primary: #2e8555;
