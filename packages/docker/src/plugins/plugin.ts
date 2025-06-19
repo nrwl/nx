@@ -126,14 +126,23 @@ async function createDockerTargets(
   context: CreateNodesContext
 ) {
   const imageTag = projectRoot.replace(/^[\\/]/, '').replace(/[\\/\s]+/g, '-');
+  const ociOutputPath = `${imageTag}-oci`;
+
   const namedInputs = getNamedInputs(projectRoot, context);
   const targets: Record<string, TargetConfiguration> = {};
+
   targets[options.buildTarget.name] = {
     command: `docker build .`,
+    cache: true,
     options: {
       cwd: projectRoot,
-      args: [`--tag ${imageTag}`],
+      args: [
+        `--tag ${imageTag}`,
+        `--output type=image,name=${imageTag}`,
+        `--output type=oci,dest=${ociOutputPath},name=${imageTag}`,
+      ],
     },
+    outputs: [`{projectRoot}/${ociOutputPath}`],
     inputs: [
       ...('production' in namedInputs
         ? ['production', '^production']
@@ -149,8 +158,29 @@ async function createDockerTargets(
     },
   };
 
-  targets[options.runTarget.name] = {
+  targets[`docker:load`] = {
     dependsOn: [options.buildTarget.name],
+    command: `docker load -i ${ociOutputPath}`,
+    options: {
+      cwd: projectRoot,
+    },
+    inputs: [
+      ...('production' in namedInputs
+        ? ['production', '^production']
+        : ['default', '^default']),
+    ],
+    metadata: {
+      technologies: ['docker'],
+      description: `Run Docker load`,
+      help: {
+        command: `docker load --help`,
+        example: {},
+      },
+    },
+  };
+
+  targets[options.runTarget.name] = {
+    dependsOn: [`docker:load`],
     command: `docker run ${imageTag}`,
     options: {
       cwd: projectRoot,
@@ -178,7 +208,7 @@ async function createDockerTargets(
     customRegistryTag = `${options.pushTarget.registryUrl}/${customRegistryTag}`;
   }
   targets[`docker:prepush`] = {
-    dependsOn: [options.buildTarget.name],
+    dependsOn: [`docker:load`],
     command: `docker tag ${imageTag} ${customRegistryTag}`,
     options: {
       cwd: projectRoot,
