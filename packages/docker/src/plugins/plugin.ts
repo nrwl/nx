@@ -132,7 +132,7 @@ async function createDockerTargets(
   const targets: Record<string, TargetConfiguration> = {};
 
   targets[options.buildTarget.name] = {
-    command: `mkdir -p .docker-images && docker build .`,
+    command: `docker build .`,
     cache: true,
     options: {
       cwd: projectRoot,
