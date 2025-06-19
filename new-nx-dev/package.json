@@ -1,5 +1,5 @@
 {
-  "name": "poc-docu-nx-dev",
+  "name": "poc-nx-dev",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -43,6 +43,5 @@
   },
   "engines": {
     "node": ">=18.0"
-  },
-  "nx": {}
+  }
 }
