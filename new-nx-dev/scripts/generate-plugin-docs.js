@@ -66,6 +66,33 @@ function parseGenerators(pluginPath) {
   return generators;
 }
 
+function parseExecutors(pluginPath) {
+  const executorsJsonPath = path.join(pluginPath, 'executors.json');
+  
+  if (!fs.existsSync(executorsJsonPath)) {
+    return null; // Plugin might not have executors
+  }
+
+  const executorsJson = JSON.parse(fs.readFileSync(executorsJsonPath, 'utf-8'));
+  const executors = new Map();
+
+  for (const [name, config] of Object.entries(executorsJson.executors || {})) {
+    // Skip hidden executors
+    if (config.hidden) {
+      continue;
+    }
+
+    const schemaPath = path.join(pluginPath, config.schema);
+    
+    if (fs.existsSync(schemaPath)) {
+      const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf-8'));
+      executors.set(name, { config, schema });
+    }
+  }
+
+  return executors;
+}
+
 function getPropertyType(property) {
   if (property.type) {
     if (Array.isArray(property.type)) {
@@ -108,7 +135,7 @@ function getPropertyDefault(property) {
   return '';
 }
 
-function generateMarkdown(pluginName, generators) {
+function generateGeneratorsMarkdown(pluginName, generators) {
   const packageName = `@nx/${pluginName}`;
   let markdown = `---
 title: "${packageName} Generators"
@@ -240,6 +267,98 @@ nx generate ${packageName}:<generator> --help
   return markdown;
 }
 
+function generateExecutorsMarkdown(pluginName, executors) {
+  const packageName = `@nx/${pluginName}`;
+  let markdown = `---
+title: "${packageName} Executors"
+description: "Complete reference for all ${packageName} executor commands"
+sidebar_label: Executors
+---
+
+# ${packageName} Executors
+
+The ${packageName} plugin provides various executors to run tasks on your ${pluginName} projects within your Nx workspace.
+Below is a complete reference for all available executors and their options.
+
+## Available Executors
+`;
+
+  // Sort executors alphabetically
+  const sortedExecutors = Array.from(executors.entries()).sort(([a], [b]) => a.localeCompare(b));
+
+  for (const [name, { config, schema }] of sortedExecutors) {
+    markdown += `
+### \`${name}\`
+`;
+
+    if (schema.description || config.description) {
+      markdown += `${escapeForMdx(schema.description || config.description)}\n\n`;
+    }
+
+    markdown += `**Usage:**
+\`\`\`bash
+nx run &lt;project&gt;:${name} [options]
+\`\`\`
+`;
+
+    if (config.aliases && config.aliases.length > 0) {
+      markdown += `
+**Aliases:** ${config.aliases.map(a => `\`${a}\``).join(', ')}
+`;
+    }
+
+    const properties = schema.properties || {};
+    
+    if (Object.keys(properties).length > 0) {
+      markdown += `
+#### Options
+
+| Option | Type | Description | Default |
+|--------|------|-------------|---------|`;
+
+      // Sort properties alphabetically, but put required ones first
+      const required = schema.required || [];
+      const sortedProperties = Object.entries(properties).sort(([a], [b]) => {
+        const aRequired = required.includes(a);
+        const bRequired = required.includes(b);
+        
+        if (aRequired && !bRequired) return -1;
+        if (!aRequired && bRequired) return 1;
+        
+        return a.localeCompare(b);
+      });
+
+      for (const [propName, property] of sortedProperties) {
+        const type = getPropertyType(property);
+        const description = escapeForMdx(property.description || '');
+        const defaultValue = getPropertyDefault(property);
+        const isRequired = required.includes(propName);
+        
+        let optionName = `\`--${propName}\``;
+        if (isRequired) {
+          optionName += ' **[required]**';
+        }
+
+        markdown += `\n| ${optionName} | ${type} | ${description} | ${defaultValue} |`;
+      }
+
+      markdown += '\n';
+    }
+  }
+
+  markdown += `
+## Getting Help
+
+You can get help for any executor by adding the \`--help\` flag:
+
+\`\`\`bash
+nx run &lt;project&gt;:&lt;executor&gt; --help
+\`\`\`
+`;
+
+  return markdown;
+}
+
 function main() {
   console.log('Generating plugin documentation...');
   
@@ -261,31 +380,46 @@ function main() {
     
     try {
       const generators = parseGenerators(pluginPath);
+      const executors = parseExecutors(pluginPath);
       
-      if (!generators) {
-        console.log(`⚠️  Skipping ${pluginName} - no generators.json found`);
+      if (!generators && !executors) {
+        console.log(`⚠️  Skipping ${pluginName} - no generators.json or executors.json found`);
         skipCount++;
         continue;
       }
       
-      if (generators.size === 0) {
-        console.log(`⚠️  Skipping ${pluginName} - no visible generators found`);
+      const hasGenerators = generators && generators.size > 0;
+      const hasExecutors = executors && executors.size > 0;
+      
+      if (!hasGenerators && !hasExecutors) {
+        console.log(`⚠️  Skipping ${pluginName} - no visible generators or executors found`);
         skipCount++;
         continue;
       }
 
-      // Generate markdown
-      const markdown = generateMarkdown(pluginName, generators);
-      
       // Create output directory
       const outputDir = path.join(__dirname, '..', OUTPUT_BASE_DIR, pluginName);
       fs.mkdirSync(outputDir, { recursive: true });
       
-      // Write markdown file
-      const outputPath = path.join(outputDir, 'generators.md');
-      fs.writeFileSync(outputPath, markdown);
+      let generatedFiles = [];
       
-      console.log(`✅ Generated documentation for ${pluginName} (${generators.size} generators)`);
+      // Generate generators documentation if we have generators
+      if (hasGenerators) {
+        const generatorsMarkdown = generateGeneratorsMarkdown(pluginName, generators);
+        const generatorsOutputPath = path.join(outputDir, 'generators.md');
+        fs.writeFileSync(generatorsOutputPath, generatorsMarkdown);
+        generatedFiles.push(`${generators.size} generators`);
+      }
+      
+      // Generate executors documentation if we have executors
+      if (hasExecutors) {
+        const executorsMarkdown = generateExecutorsMarkdown(pluginName, executors);
+        const executorsOutputPath = path.join(outputDir, 'executors.md');
+        fs.writeFileSync(executorsOutputPath, executorsMarkdown);
+        generatedFiles.push(`${executors.size} executors`);
+      }
+      
+      console.log(`✅ Generated documentation for ${pluginName} (${generatedFiles.join(', ')})`);
       successCount++;
     } catch (error) {
       console.error(`❌ Error processing ${pluginName}:`, error.message);
