@@ -93,6 +93,45 @@ function parseExecutors(pluginPath) {
   return executors;
 }
 
+function parseMigrations(pluginPath) {
+  const migrationsJsonPath = path.join(pluginPath, 'migrations.json');
+  
+  if (!fs.existsSync(migrationsJsonPath)) {
+    return null; // Plugin might not have migrations
+  }
+
+  const migrationsJson = JSON.parse(fs.readFileSync(migrationsJsonPath, 'utf-8'));
+  const migrations = new Map();
+
+  // Handle migrations in generators/schematics format
+  for (const [migrationName, migrationConfig] of Object.entries(migrationsJson.generators || migrationsJson.schematics || {})) {
+    migrations.set(migrationName, { 
+      version: migrationConfig.version || 'unknown', 
+      config: migrationConfig,
+      packageJsonUpdates: migrationConfig.packageJsonUpdates || {},
+      factory: migrationConfig.factory || migrationConfig.implementation,
+      requires: migrationConfig.requires
+    });
+  }
+
+  // Also check for packageJsonUpdates at the root level
+  if (migrationsJson.packageJsonUpdates) {
+    for (const [version, updates] of Object.entries(migrationsJson.packageJsonUpdates)) {
+      const migrationName = `update-${version}`;
+      if (!migrations.has(migrationName)) {
+        migrations.set(migrationName, {
+          version,
+          config: { description: `Update dependencies to version ${version}` },
+          packageJsonUpdates: updates,
+          factory: null
+        });
+      }
+    }
+  }
+
+  return migrations;
+}
+
 function getPropertyType(property) {
   if (property.type) {
     if (Array.isArray(property.type)) {
@@ -359,6 +398,114 @@ nx run &lt;project&gt;:&lt;executor&gt; --help
   return markdown;
 }
 
+function generateMigrationsMarkdown(pluginName, migrations) {
+  const packageName = `@nx/${pluginName}`;
+  let markdown = `---
+title: "${packageName} Migrations"
+description: "Complete reference for all ${packageName} migration commands"
+sidebar_label: Migrations
+---
+
+# ${packageName} Migrations
+
+The ${packageName} plugin provides various migrations to help you update your ${pluginName} projects and dependencies within your Nx workspace.
+Below is a complete reference for all available migrations and their details.
+
+## Available Migrations
+`;
+
+  // Sort migrations by version, then by name
+  const sortedMigrations = Array.from(migrations.entries()).sort(([a, dataA], [b, dataB]) => {
+    // First sort by version
+    const versionComparison = dataA.version.localeCompare(dataB.version, undefined, { numeric: true });
+    if (versionComparison !== 0) return versionComparison;
+    // Then by migration name
+    return a.localeCompare(b);
+  });
+
+  for (const [name, { version, config, packageJsonUpdates, factory, requires }] of sortedMigrations) {
+    markdown += `
+### \`${name}\`
+`;
+
+    if (config.description) {
+      markdown += `${escapeForMdx(config.description)}\n\n`;
+    }
+
+    markdown += `**Version:** \`${version}\`\n\n`;
+
+    if (factory) {
+      markdown += `**Implementation:** \`${factory}\`\n\n`;
+    }
+
+    // Show package.json updates if any
+    if (packageJsonUpdates && Object.keys(packageJsonUpdates).length > 0) {
+      markdown += `#### Package Updates
+
+This migration updates the following packages:
+
+| Package | Version | Type |
+|---------|---------|------|`;
+
+      for (const [packageType, packages] of Object.entries(packageJsonUpdates)) {
+        if (typeof packages === 'object' && packages !== null) {
+          for (const [packageName, versionSpec] of Object.entries(packages)) {
+            let version = versionSpec;
+            if (typeof versionSpec === 'object') {
+              version = versionSpec.version || JSON.stringify(versionSpec);
+            }
+            markdown += `\n| \`${packageName}\` | \`${version}\` | ${packageType} |`;
+          }
+        }
+      }
+
+      markdown += '\n';
+    }
+
+    // Show if migration requires manual steps
+    if (requires || config.requires) {
+      const requiresData = requires || config.requires;
+      markdown += `
+#### Requirements
+
+This migration requires the following:
+
+`;
+      if (typeof requiresData === 'object' && !Array.isArray(requiresData)) {
+        // Handle object format like {"cypress": ">=14.0.0"}
+        for (const [packageName, versionSpec] of Object.entries(requiresData)) {
+          markdown += `- \`${packageName}\` ${versionSpec}\n`;
+        }
+      } else if (Array.isArray(requiresData)) {
+        for (const requirement of requiresData) {
+          markdown += `- ${escapeForMdx(requirement)}\n`;
+        }
+      } else {
+        markdown += `- ${escapeForMdx(requiresData)}\n`;
+      }
+      markdown += '\n';
+    }
+  }
+
+  markdown += `
+## Running Migrations
+
+To run a specific migration:
+
+\`\`\`bash
+nx migrate ${packageName}@&lt;version&gt;
+\`\`\`
+
+To see what migrations are available:
+
+\`\`\`bash
+nx migrate ${packageName}@latest --dry-run
+\`\`\`
+`;
+
+  return markdown;
+}
+
 function main() {
   console.log('Generating plugin documentation...');
   
@@ -381,18 +528,20 @@ function main() {
     try {
       const generators = parseGenerators(pluginPath);
       const executors = parseExecutors(pluginPath);
+      const migrations = parseMigrations(pluginPath);
       
-      if (!generators && !executors) {
-        console.log(`⚠️  Skipping ${pluginName} - no generators.json or executors.json found`);
+      if (!generators && !executors && !migrations) {
+        console.log(`⚠️  Skipping ${pluginName} - no generators.json, executors.json, or migrations.json found`);
         skipCount++;
         continue;
       }
       
       const hasGenerators = generators && generators.size > 0;
       const hasExecutors = executors && executors.size > 0;
+      const hasMigrations = migrations && migrations.size > 0;
       
-      if (!hasGenerators && !hasExecutors) {
-        console.log(`⚠️  Skipping ${pluginName} - no visible generators or executors found`);
+      if (!hasGenerators && !hasExecutors && !hasMigrations) {
+        console.log(`⚠️  Skipping ${pluginName} - no visible generators, executors, or migrations found`);
         skipCount++;
         continue;
       }
@@ -417,6 +566,14 @@ function main() {
         const executorsOutputPath = path.join(outputDir, 'executors.md');
         fs.writeFileSync(executorsOutputPath, executorsMarkdown);
         generatedFiles.push(`${executors.size} executors`);
+      }
+      
+      // Generate migrations documentation if we have migrations
+      if (hasMigrations) {
+        const migrationsMarkdown = generateMigrationsMarkdown(pluginName, migrations);
+        const migrationsOutputPath = path.join(outputDir, 'migrations.md');
+        fs.writeFileSync(migrationsOutputPath, migrationsMarkdown);
+        generatedFiles.push(`${migrations.size} migrations`);
       }
       
       console.log(`✅ Generated documentation for ${pluginName} (${generatedFiles.join(', ')})`);
