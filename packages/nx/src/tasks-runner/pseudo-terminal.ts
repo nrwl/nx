@@ -174,7 +174,7 @@ export class PseudoTtyProcess implements RunningTask {
         this.isAlive = false;
         this.childProcess.cleanup();
         this.exitCallbacks.forEach((cb) => cb(0));
-        return;
+        return { success: true, code: 0, terminalOutput: this.terminalOutput };
       }
       this.terminalOutput += output;
       this.outputCallbacks.forEach((cb) => cb(output));
@@ -187,6 +187,7 @@ export class PseudoTtyProcess implements RunningTask {
       this.childProcess.cleanup();
 
       this.exitCallbacks.forEach((cb) => cb(code));
+      return { success: true, code, terminalOutput: this.terminalOutput };
     });
   }
 
