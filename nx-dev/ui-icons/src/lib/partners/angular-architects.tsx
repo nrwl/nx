@@ -111,8 +111,8 @@ export const AngularArchitectsIcon: FC<SVGProps<SVGSVGElement>> = (props) => {
           y2="11.4289"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#EA35EC" />
-          <stop offset="1" stop-color="#EA33EC" />
+          <stop stopColor="#EA35EC" />
+          <stop offset="1" stopColor="#EA33EC" />
         </linearGradient>
         <linearGradient
           id="paint1_linear_1_21"
@@ -122,8 +122,8 @@ export const AngularArchitectsIcon: FC<SVGProps<SVGSVGElement>> = (props) => {
           y2="79.8637"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#EA35EC" />
-          <stop offset="1" stop-color="#D931F2" />
+          <stop stopColor="#EA35EC" />
+          <stop offset="1" stopColor="#D931F2" />
         </linearGradient>
         <linearGradient
           id="paint2_linear_1_21"
@@ -133,8 +133,8 @@ export const AngularArchitectsIcon: FC<SVGProps<SVGSVGElement>> = (props) => {
           y2="79.8637"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#EA35EC" />
-          <stop offset="1" stop-color="#EA33EC" />
+          <stop stopColor="#EA35EC" />
+          <stop offset="1" stopColor="#EA33EC" />
         </linearGradient>
         <image
           id="image0_1_21"
