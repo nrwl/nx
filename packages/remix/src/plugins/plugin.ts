@@ -25,16 +25,27 @@ import { existsSync, readdirSync, readFileSync } from 'fs';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { normalizeOptions } from 'nx/src/utils/normalize-options';
 
 export interface RemixPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;
   startTargetName?: string;
   typecheckTargetName?: string;
+  serveStaticTargetName?: string;
   buildDepsTargetName?: string;
   watchDepsTargetName?: string;
-  serveStaticTargetName?: string;
 }
+
+const defaultOptions: RemixPluginOptions = {
+  buildTargetName: 'build',
+  devTargetName: 'dev',
+  startTargetName: 'start',
+  typecheckTargetName: 'typecheck',
+  serveStaticTargetName: 'serve-static',
+  buildDepsTargetName: 'build-deps',
+  watchDepsTargetName: 'watch-deps',
+};
 
 const pmc = getPackageManagerCommand();
 
@@ -65,9 +76,11 @@ const remixConfigGlob = '**/{remix,vite}.config.{js,cjs,mjs,ts,cts,mts}';
 export const createNodesV2: CreateNodesV2<RemixPluginOptions> = [
   remixConfigGlob,
   async (configFilePaths, options, context) => {
-    const optionsHash = hashObject(options);
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
+    const optionsHash = hashObject(normalizedOptions);
     const cachePath = join(workspaceDataDirectory, `remix-${optionsHash}.hash`);
     const targetsCache = readTargetsCache(cachePath);
+    const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -76,10 +89,10 @@ export const createNodesV2: CreateNodesV2<RemixPluginOptions> = [
             options,
             context,
             targetsCache,
-            _isUsingTsSolutionSetup()
+            isUsingTsSolutionSetup
           ),
         configFilePaths,
-        options,
+        normalizedOptions,
         context
       );
     } finally {
@@ -94,12 +107,14 @@ export const createNodes: CreateNodes<RemixPluginOptions> = [
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
+    const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
     return createNodesInternal(
       configFilePath,
-      options,
+      normalizedOptions,
       context,
       {},
-      _isUsingTsSolutionSetup()
+      isUsingTsSolutionSetup
     );
   },
 ];
@@ -121,8 +136,6 @@ async function createNodesInternal(
   ) {
     return {};
   }
-
-  options = normalizeOptions(options);
 
   const remixCompiler = determineIsRemixVite(
     configFilePath,
@@ -430,17 +443,6 @@ async function getBuildPaths(
       assetsBuildDirectory: 'build/client',
     };
   }
-}
-
-function normalizeOptions(options: RemixPluginOptions) {
-  options ??= {};
-  options.buildTargetName ??= 'build';
-  options.devTargetName ??= 'dev';
-  options.startTargetName ??= 'start';
-  options.typecheckTargetName ??= 'typecheck';
-  options.serveStaticTargetName ??= 'serve-static';
-
-  return options;
 }
 
 function determineIsRemixVite(configFilePath: string, workspaceRoot: string) {

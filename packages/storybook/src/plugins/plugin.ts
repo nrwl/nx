@@ -17,6 +17,7 @@ import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync, readFileSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { normalizeOptions } from 'nx/src/utils/normalize-options';
 import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import type { StorybookConfig } from 'storybook/internal/types';
@@ -29,6 +30,13 @@ export interface StorybookPluginOptions {
   staticStorybookTargetName?: string;
   testStorybookTargetName?: string;
 }
+
+const defaultOptions: Required<StorybookPluginOptions> = {
+  buildStorybookTargetName: 'build-storybook',
+  serveStorybookTargetName: 'storybook',
+  staticStorybookTargetName: 'static-storybook',
+  testStorybookTargetName: 'test-storybook',
+};
 
 function readTargetsCache(
   cachePath: string
@@ -55,7 +63,7 @@ const storybookConfigGlob = '**/.storybook/main.{js,ts,mjs,mts,cjs,cts}';
 export const createNodesV2: CreateNodesV2<StorybookPluginOptions> = [
   storybookConfigGlob,
   async (configFilePaths, options, context) => {
-    const normalizedOptions = normalizeOptions(options);
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
     const optionsHash = hashObject(normalizedOptions);
     const cachePath = join(
       workspaceDataDirectory,
@@ -65,13 +73,8 @@ export const createNodesV2: CreateNodesV2<StorybookPluginOptions> = [
 
     try {
       return await createNodesFromFiles(
-        (configFile, _, context) =>
-          createNodesInternal(
-            configFile,
-            normalizedOptions,
-            context,
-            targetsCache
-          ),
+        (configFile, options, context) =>
+          createNodesInternal(configFile, options, context, targetsCache),
         configFilePaths,
         normalizedOptions,
         context
@@ -88,12 +91,8 @@ export const createNodes: CreateNodes<StorybookPluginOptions> = [
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
-    return createNodesInternal(
-      configFilePath,
-      normalizeOptions(options),
-      context,
-      {}
-    );
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
+    return createNodesInternal(configFilePath, normalizedOptions, context, {});
   },
 ];
 
@@ -402,20 +401,6 @@ function getOutputs(): string[] {
   ];
 
   return outputs;
-}
-
-function normalizeOptions(
-  options: StorybookPluginOptions
-): Required<StorybookPluginOptions> {
-  return {
-    buildStorybookTargetName:
-      options.buildStorybookTargetName ?? 'build-storybook',
-    serveStorybookTargetName: options.serveStorybookTargetName ?? 'storybook',
-    testStorybookTargetName:
-      options.testStorybookTargetName ?? 'test-storybook',
-    staticStorybookTargetName:
-      options.staticStorybookTargetName ?? 'static-storybook',
-  };
 }
 
 function buildProjectName(
