@@ -23,6 +23,7 @@ import type { PlaywrightTestConfig } from '@playwright/test';
 import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
 import { minimatch } from 'minimatch';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { normalizeOptions } from 'nx/src/utils/normalize-options';
 import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { hashObject } from 'nx/src/hasher/file-hasher';
@@ -34,11 +35,10 @@ export interface PlaywrightPluginOptions {
   ciTargetName?: string;
 }
 
-interface NormalizedOptions {
-  targetName: string;
-  ciTargetName?: string;
-}
-
+const defaultOptions: Required<PlaywrightPluginOptions> = {
+  targetName: 'e2e',
+  ciTargetName: 'e2e-ci',
+};
 type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
 function readTargetsCache(
@@ -64,7 +64,8 @@ const playwrightConfigGlob = '**/playwright.config.{js,ts,cjs,cts,mjs,mts}';
 export const createNodesV2: CreateNodesV2<PlaywrightPluginOptions> = [
   playwrightConfigGlob,
   async (configFilePaths, options, context) => {
-    const optionsHash = hashObject(options);
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
+    const optionsHash = hashObject(normalizedOptions);
     const cachePath = join(
       workspaceDataDirectory,
       `playwright-${optionsHash}.hash`
@@ -75,7 +76,7 @@ export const createNodesV2: CreateNodesV2<PlaywrightPluginOptions> = [
         (configFile, options, context) =>
           createNodesInternal(configFile, options, context, targetsCache),
         configFilePaths,
-        options,
+        normalizedOptions,
         context
       );
     } finally {
@@ -94,7 +95,8 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
-    return createNodesInternal(configFile, options, context, {});
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
+    return createNodesInternal(configFile, normalizedOptions, context, {});
   },
 ];
 
@@ -115,11 +117,9 @@ async function createNodesInternal(
     return {};
   }
 
-  const normalizedOptions = normalizeOptions(options);
-
   const hash = await calculateHashForCreateNodes(
     projectRoot,
-    normalizedOptions,
+    options,
     context,
     [getLockFileName(detectPackageManager(context.workspaceRoot))]
   );
@@ -365,14 +365,6 @@ function createMatcher(pattern: string | RegExp | Array<string | RegExp>) {
       }
     };
   }
-}
-
-function normalizeOptions(options: PlaywrightPluginOptions): NormalizedOptions {
-  return {
-    ...options,
-    targetName: options?.targetName ?? 'e2e',
-    ciTargetName: options?.ciTargetName ?? 'e2e-ci',
-  };
 }
 
 function getTestOutput(playwrightConfig: PlaywrightTestConfig): string {

@@ -18,6 +18,7 @@ import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { normalizeOptions } from 'nx/src/utils/normalize-options';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
@@ -35,6 +36,12 @@ export interface NextPluginOptions {
   buildDepsTargetName?: string;
   watchDepsTargetName?: string;
 }
+
+const defaultOptions: NextPluginOptions = {
+  buildTargetName: 'build',
+  devTargetName: 'dev',
+  startTargetName: 'start',
+};
 
 const pmc = getPackageManagerCommand();
 
@@ -67,16 +74,16 @@ export const createDependencies: CreateDependencies = () => {
 export const createNodesV2: CreateNodesV2<NextPluginOptions> = [
   nextConfigBlob,
   async (configFiles, options, context) => {
-    const optionsHash = hashObject(options);
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
+    const optionsHash = hashObject(normalizedOptions);
     const cachePath = join(workspaceDataDirectory, `next-${optionsHash}.json`);
     const targetsCache = readTargetsCache(cachePath);
-
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
           createNodesInternal(configFile, options, context, targetsCache),
         configFiles,
-        options,
+        normalizedOptions,
         context
       );
     } finally {
@@ -96,13 +103,14 @@ export const createNodes: CreateNodes<NextPluginOptions> = [
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 21, this will change to the createNodesV2 API.'
     );
 
-    const optionsHash = hashObject(options);
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
+    const optionsHash = hashObject(normalizedOptions);
     const cachePath = join(workspaceDataDirectory, `next-${optionsHash}.json`);
     const targetsCache = readTargetsCache(cachePath);
 
     const result = await createNodesInternal(
       configFilePath,
-      options,
+      normalizedOptions,
       context,
       targetsCache
     );
@@ -130,7 +138,6 @@ async function createNodesInternal(
   ) {
     return {};
   }
-  options = normalizeOptions(options);
 
   const hash = await calculateHashForCreateNodes(
     projectRoot,
@@ -273,15 +280,6 @@ function getNextConfig(
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 
   return loadConfigFile(resolvedPath);
-}
-
-function normalizeOptions(options: NextPluginOptions): NextPluginOptions {
-  options ??= {};
-  options.buildTargetName ??= 'build';
-  options.devTargetName ??= 'dev';
-  options.startTargetName ??= 'start';
-  options.serveStaticTargetName ??= 'serve-static';
-  return options;
 }
 
 function getInputs(

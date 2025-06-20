@@ -13,6 +13,7 @@ import {
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { normalizeOptions } from 'nx/src/utils/normalize-options';
 import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getLockFileName } from '@nx/js';
@@ -34,6 +35,14 @@ export interface RsbuildPluginOptions {
   watchDepsTargetName?: string;
 }
 
+const defaultOptions: RsbuildPluginOptions = {
+  buildTargetName: 'build',
+  devTargetName: 'dev',
+  previewTargetName: 'preview',
+  inspectTargetName: 'inspect',
+  typecheckTargetName: 'typecheck',
+};
+
 type RsbuildTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
 function readTargetsCache(cachePath: string): Record<string, RsbuildTargets> {
@@ -52,7 +61,8 @@ const rsbuildConfigGlob = '**/rsbuild.config.{js,ts,mjs,mts,cjs,cts}';
 export const createNodesV2: CreateNodesV2<RsbuildPluginOptions> = [
   rsbuildConfigGlob,
   async (configFilePaths, options, context) => {
-    const optionsHash = hashObject(options);
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
+    const optionsHash = hashObject(normalizedOptions);
     const cachePath = join(
       workspaceDataDirectory,
       `rsbuild-${optionsHash}.hash`
@@ -70,7 +80,7 @@ export const createNodesV2: CreateNodesV2<RsbuildPluginOptions> = [
             isUsingTsSolutionSetup
           ),
         configFilePaths,
-        options,
+        normalizedOptions,
         context
       );
     } finally {
@@ -99,10 +109,9 @@ async function createNodesInternal(
   const tsConfigFiles =
     siblingFiles.filter((p) => minimatch(p, 'tsconfig*{.json,.*.json}')) ?? [];
 
-  const normalizedOptions = normalizeOptions(options);
   const hash = await calculateHashForCreateNodes(
     projectRoot,
-    { ...normalizedOptions, isUsingTsSolutionSetup },
+    { ...options, isUsingTsSolutionSetup },
     context,
     [getLockFileName(detectPackageManager(context.workspaceRoot))]
   );
@@ -110,7 +119,7 @@ async function createNodesInternal(
   targetsCache[hash] ??= await createRsbuildTargets(
     configFilePath,
     projectRoot,
-    normalizedOptions,
+    options,
     tsConfigFiles,
     isUsingTsSolutionSetup,
     context
@@ -306,14 +315,4 @@ function normalizeOutputPath(
       }
     }
   }
-}
-
-function normalizeOptions(options: RsbuildPluginOptions): RsbuildPluginOptions {
-  options ??= {};
-  options.buildTargetName ??= 'build';
-  options.devTargetName ??= 'dev';
-  options.previewTargetName ??= 'preview';
-  options.inspectTargetName ??= 'inspect';
-  options.typecheckTargetName ??= 'typecheck';
-  return options;
 }

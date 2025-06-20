@@ -16,11 +16,28 @@ import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { normalizeOptions } from 'nx/src/utils/normalize-options';
 import { getLockFileName } from '@nx/js';
 import { dirname, isAbsolute, join, relative } from 'path';
 import { existsSync, readdirSync } from 'fs';
 import { loadNuxtKitDynamicImport } from '../utils/executor-utils';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
+
+export interface NuxtPluginOptions {
+  buildTargetName?: string;
+  serveTargetName?: string;
+  serveStaticTargetName?: string;
+  buildStaticTargetName?: string;
+  buildDepsTargetName?: string;
+  watchDepsTargetName?: string;
+}
+
+const defaultOptions: NuxtPluginOptions = {
+  buildTargetName: 'build',
+  serveTargetName: 'serve',
+  serveStaticTargetName: 'serve-static',
+  buildStaticTargetName: 'build-static',
+};
 
 const cachePath = join(workspaceDataDirectory, 'nuxt.hash');
 const targetsCache = readTargetsCache();
@@ -42,23 +59,15 @@ function writeTargetsToCache() {
   });
 }
 
-export interface NuxtPluginOptions {
-  buildTargetName?: string;
-  serveTargetName?: string;
-  serveStaticTargetName?: string;
-  buildStaticTargetName?: string;
-  buildDepsTargetName?: string;
-  watchDepsTargetName?: string;
-}
-
 export const createNodesV2: CreateNodesV2<NuxtPluginOptions> = [
   '**/nuxt.config.{js,ts,mjs,mts,cjs,cts}',
   async (files, options, context) => {
     //TODO(@nrwl/nx-vue-reviewers): This should batch hashing like our other plugins.
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
     const result = await createNodesFromFiles(
       createNodes[1],
       files,
-      options,
+      normalizedOptions,
       context
     );
     writeTargetsToCache();
@@ -79,18 +88,18 @@ export const createNodes: CreateNodes<NuxtPluginOptions> = [
       return {};
     }
 
-    options = normalizeOptions(options);
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
 
     const hash = await calculateHashForCreateNodes(
       projectRoot,
-      options,
+      normalizedOptions,
       context,
       [getLockFileName(detectPackageManager(context.workspaceRoot))]
     );
     targetsCache[hash] ??= await buildNuxtTargets(
       configFilePath,
       projectRoot,
-      options,
+      normalizedOptions,
       context
     );
 
@@ -295,13 +304,4 @@ function normalizeOutputPath(
       }
     }
   }
-}
-
-function normalizeOptions(options: NuxtPluginOptions): NuxtPluginOptions {
-  options ??= {};
-  options.buildTargetName ??= 'build';
-  options.serveTargetName ??= 'serve';
-  options.serveStaticTargetName ??= 'serve-static';
-  options.buildStaticTargetName ??= 'build-static';
-  return options;
 }

@@ -17,6 +17,7 @@ import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { normalizeOptions } from 'nx/src/utils/normalize-options';
 import { hashObject } from 'nx/src/devkit-internals';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
@@ -27,6 +28,12 @@ export interface DetoxPluginOptions {
   buildDepsTargetName?: string;
   watchDepsTargetName?: string;
 }
+
+const defaultOptions: DetoxPluginOptions = {
+  buildTargetName: 'build',
+  startTargetName: 'start',
+  testTargetName: 'test',
+};
 
 const pmc = getPackageManagerCommand();
 
@@ -53,16 +60,17 @@ function writeTargetsToCache(
 export const createNodesV2: CreateNodesV2<DetoxPluginOptions> = [
   '**/{detox.config,.detoxrc}.{json,js}',
   async (configFiles, options, context) => {
-    const optionsHash = hashObject(options);
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
+    const optionsHash = hashObject(normalizedOptions);
     const cachePath = join(workspaceDataDirectory, `expo-${optionsHash}.hash`);
     const targetsCache = readTargetsCache(cachePath);
 
     try {
       return await createNodesFromFiles(
-        (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache),
+        (configFile, nodeOptions, context) =>
+          createNodesInternal(configFile, nodeOptions, context, targetsCache),
         configFiles,
-        options,
+        normalizedOptions,
         context
       );
     } finally {
@@ -74,13 +82,14 @@ export const createNodesV2: CreateNodesV2<DetoxPluginOptions> = [
 export const createNodes: CreateNodes<DetoxPluginOptions> = [
   '**/{detox.config,.detoxrc}.{json,js}',
   async (configFilePath, options, context) => {
-    const optionsHash = hashObject(options);
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
+    const optionsHash = hashObject(normalizedOptions);
     const cachePath = join(workspaceDataDirectory, `detox-${optionsHash}.hash`);
 
     const targetsCache = readTargetsCache(cachePath);
     const result = await createNodesInternal(
       configFilePath,
-      options,
+      normalizedOptions,
       context,
       targetsCache
     );
@@ -100,7 +109,6 @@ async function createNodesInternal(
     Record<string, TargetConfiguration<DetoxPluginOptions>>
   >
 ): Promise<CreateNodesResult> {
-  options = normalizeOptions(options);
   const projectRoot = dirname(configFile);
 
   const hash = await calculateHashForCreateNodes(
@@ -170,12 +178,4 @@ function getInputs(
       externalDependencies: ['detox'],
     },
   ];
-}
-
-function normalizeOptions(options: DetoxPluginOptions): DetoxPluginOptions {
-  options ??= {};
-  options.buildTargetName ??= 'build';
-  options.startTargetName ??= 'start';
-  options.testTargetName ??= 'test';
-  return options;
 }

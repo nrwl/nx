@@ -18,6 +18,7 @@ import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { normalizeOptions } from 'nx/src/utils/normalize-options';
 import { hashObject } from 'nx/src/devkit-internals';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
@@ -35,6 +36,19 @@ export interface ExpoPluginOptions {
   buildDepsTargetName?: string;
   watchDepsTargetName?: string;
 }
+
+const defaultOptions: ExpoPluginOptions = {
+  startTargetName: 'start',
+  serveTargetName: 'serve',
+  runIosTargetName: 'run-ios',
+  runAndroidTargetName: 'run-android',
+  exportTargetName: 'export',
+  prebuildTargetName: 'prebuild',
+  installTargetName: 'install',
+  buildTargetName: 'build',
+  submitTargetName: 'submit',
+};
+
 const pmc = getPackageManagerCommand();
 
 function readTargetsCache(
@@ -60,7 +74,9 @@ function writeTargetsToCache(
 export const createNodesV2: CreateNodesV2<ExpoPluginOptions> = [
   '**/app.{json,config.js,config.ts}',
   async (configFiles, options, context) => {
-    const optionsHash = hashObject(options);
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
+
+    const optionsHash = hashObject(normalizedOptions);
     const cachePath = join(workspaceDataDirectory, `expo-${optionsHash}.hash`);
     const targetsCache = readTargetsCache(cachePath);
 
@@ -69,7 +85,7 @@ export const createNodesV2: CreateNodesV2<ExpoPluginOptions> = [
         (configFile, options, context) =>
           createNodesInternal(configFile, options, context, targetsCache),
         configFiles,
-        options,
+        normalizedOptions,
         context
       );
     } finally {
@@ -84,12 +100,18 @@ export const createNodes: CreateNodes<ExpoPluginOptions> = [
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
 
-    const optionsHash = hashObject(options);
+    const optionsHash = hashObject(normalizedOptions);
     const cachePath = join(workspaceDataDirectory, `expo-${optionsHash}.hash`);
     const targetsCache = readTargetsCache(cachePath);
 
-    return createNodesInternal(configFilePath, options, context, targetsCache);
+    return createNodesInternal(
+      configFilePath,
+      normalizedOptions,
+      context,
+      targetsCache
+    );
   },
 ];
 
@@ -102,7 +124,6 @@ async function createNodesInternal(
     Record<string, TargetConfiguration<ExpoPluginOptions>>
   >
 ): Promise<CreateNodesResult> {
-  options = normalizeOptions(options);
   const projectRoot = dirname(configFile);
 
   // Do not create a project if package.json or project.json or metro.config.js isn't there.
@@ -234,18 +255,4 @@ function getOutputs(projectRoot: string, dir: string) {
   } else {
     return `{workspaceRoot}/${projectRoot}/${dir}`;
   }
-}
-
-function normalizeOptions(options: ExpoPluginOptions): ExpoPluginOptions {
-  options ??= {};
-  options.startTargetName ??= 'start';
-  options.serveTargetName ??= 'serve';
-  options.runIosTargetName ??= 'run-ios';
-  options.runAndroidTargetName ??= 'run-android';
-  options.exportTargetName ??= 'export';
-  options.prebuildTargetName ??= 'prebuild';
-  options.installTargetName ??= 'install';
-  options.buildTargetName ??= 'build';
-  options.submitTargetName ??= 'submit';
-  return options;
 }

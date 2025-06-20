@@ -28,6 +28,7 @@ import { minimatch } from 'minimatch';
 import { hashObject } from 'nx/src/devkit-internals';
 import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { normalizeOptions } from 'nx/src/utils/normalize-options';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import { getInstalledJestMajorVersion } from '../utils/version-utils';
@@ -53,6 +54,10 @@ export interface JestPluginOptions {
   disableJestRuntime?: boolean;
 }
 
+const defaultOptions: JestPluginOptions = {
+  targetName: 'test',
+};
+
 type JestTargets = Awaited<ReturnType<typeof buildJestTargets>>;
 
 function readTargetsCache(cachePath: string): Record<string, JestTargets> {
@@ -71,7 +76,8 @@ const jestConfigGlob = '**/jest.config.{cjs,mjs,js,cts,mts,ts}';
 export const createNodesV2: CreateNodesV2<JestPluginOptions> = [
   jestConfigGlob,
   async (configFiles, options, context) => {
-    const optionsHash = hashObject(options);
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
+    const optionsHash = hashObject(normalizedOptions);
     const cachePath = join(workspaceDataDirectory, `jest-${optionsHash}.hash`);
     const targetsCache = readTargetsCache(cachePath);
     // Cache jest preset(s) to avoid penalties of module load times. Most of jest configs will use the same preset.
@@ -80,7 +86,6 @@ export const createNodesV2: CreateNodesV2<JestPluginOptions> = [
     const packageManagerWorkspacesGlob = combineGlobPatterns(
       getGlobPatternsFromPackageManagerWorkspaces(context.workspaceRoot)
     );
-    options = normalizeOptions(options);
 
     const { roots: projectRoots, configFiles: validConfigFiles } =
       configFiles.reduce(
@@ -110,7 +115,7 @@ export const createNodesV2: CreateNodesV2<JestPluginOptions> = [
 
     const hashes = await calculateHashesForCreateNodes(
       projectRoots,
-      options,
+      normalizedOptions,
       context
     );
 
@@ -141,7 +146,7 @@ export const createNodesV2: CreateNodesV2<JestPluginOptions> = [
           };
         },
         validConfigFiles,
-        options,
+        normalizedOptions,
         context
       );
     } finally {
@@ -177,13 +182,12 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
     ) {
       return {};
     }
-
-    options = normalizeOptions(options);
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
 
     const { targets, metadata } = await buildJestTargets(
       configFilePath,
       projectRoot,
-      options,
+      normalizedOptions,
       context,
       {}
     );
@@ -647,12 +651,6 @@ function getOutputs(
   }
 
   return outputs;
-}
-
-function normalizeOptions(options: JestPluginOptions): JestPluginOptions {
-  options ??= {};
-  options.targetName ??= 'test';
-  return options;
 }
 
 let resolvedJestPaths: Record<string, string>;

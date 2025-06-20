@@ -21,6 +21,7 @@ import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-
 import { existsSync, readdirSync } from 'fs';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { normalizeOptions } from 'nx/src/utils/normalize-options';
 import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import { readWebpackOptions } from '../utils/webpack/read-webpack-options';
 import { resolveUserDefinedWebpackConfig } from '../utils/webpack/resolve-user-defined-webpack-config';
@@ -36,6 +37,15 @@ export interface WebpackPluginOptions {
   buildDepsTargetName?: string;
   watchDepsTargetName?: string;
 }
+
+const defaultOptions: Required<WebpackPluginOptions> = {
+  buildTargetName: 'build',
+  serveTargetName: 'serve',
+  serveStaticTargetName: 'serve-static',
+  previewTargetName: 'preview',
+  buildDepsTargetName: 'build-deps',
+  watchDepsTargetName: 'watch-deps',
+};
 
 type WebpackTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
@@ -62,13 +72,13 @@ const webpackConfigGlob = '**/webpack.config.{js,ts,mjs,cjs}';
 export const createNodesV2: CreateNodesV2<WebpackPluginOptions> = [
   webpackConfigGlob,
   async (configFilePaths, options, context) => {
-    const optionsHash = hashObject(options);
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
+    const optionsHash = hashObject(normalizedOptions);
     const cachePath = join(
       workspaceDataDirectory,
       `webpack-${optionsHash}.hash`
     );
     const targetsCache = readTargetsCache(cachePath);
-    const normalizedOptions = normalizeOptions(options);
     const isTsSolutionSetup = isUsingTsSolutionSetup();
     try {
       return await createNodesFromFiles(
@@ -96,7 +106,7 @@ export const createNodes: CreateNodes<WebpackPluginOptions> = [
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
-    const normalizedOptions = normalizeOptions(options);
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
     return createNodesInternal(
       configFilePath,
       normalizedOptions,
@@ -329,17 +339,4 @@ function normalizeOutputPath(
       }
     }
   }
-}
-
-function normalizeOptions(
-  options: WebpackPluginOptions
-): Required<WebpackPluginOptions> {
-  return {
-    buildTargetName: options?.buildTargetName ?? 'build',
-    serveTargetName: options?.serveTargetName ?? 'serve',
-    serveStaticTargetName: options?.serveStaticTargetName ?? 'serve-static',
-    previewTargetName: options?.previewTargetName ?? 'preview',
-    buildDepsTargetName: 'build-deps',
-    watchDepsTargetName: 'watch-deps',
-  };
 }

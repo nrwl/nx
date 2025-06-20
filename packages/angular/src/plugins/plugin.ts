@@ -19,10 +19,15 @@ import { dirname, join, relative } from 'node:path';
 import * as posix from 'node:path/posix';
 import { hashObject } from 'nx/src/devkit-internals';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { normalizeOptions } from 'nx/src/utils/normalize-options';
 
 export interface AngularPluginOptions {
   targetNamePrefix?: string;
 }
+
+const defaultOptions: Required<AngularPluginOptions> = {
+  targetNamePrefix: '',
+};
 
 type AngularProjects = Record<
   string,
@@ -93,7 +98,8 @@ function writeProjectsToCache(
 export const createNodesV2: CreateNodesV2<AngularPluginOptions> = [
   '**/angular.json',
   async (configFiles, options, context) => {
-    const optionsHash = hashObject(options);
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
+    const optionsHash = hashObject(normalizedOptions);
     const cachePath = join(
       workspaceDataDirectory,
       `angular-${optionsHash}.hash`
@@ -104,7 +110,7 @@ export const createNodesV2: CreateNodesV2<AngularPluginOptions> = [
         (configFile, options, context) =>
           createNodesInternal(configFile, options, context, projectsCache),
         configFiles,
-        options,
+        normalizedOptions,
         context
       );
     } finally {
@@ -148,7 +154,7 @@ async function createNodesInternal(
 
 async function buildAngularProjects(
   configFilePath: string,
-  options: AngularPluginOptions,
+  options: Required<AngularPluginOptions>,
   angularWorkspaceRoot: string,
   context: CreateNodesContextV2
 ): Promise<AngularProjects> {
@@ -175,9 +181,7 @@ async function buildAngularProjects(
     for (const [angularTargetName, angularTarget] of Object.entries(
       projectTargets
     )) {
-      const nxTargetName = options?.targetNamePrefix
-        ? `${options.targetNamePrefix}${angularTargetName}`
-        : angularTargetName;
+      const nxTargetName = `${options.targetNamePrefix}${angularTargetName}`;
       const externalDependencies = ['@angular/cli'];
 
       targets[nxTargetName] = {

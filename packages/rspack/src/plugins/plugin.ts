@@ -16,6 +16,7 @@ import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-
 import { existsSync, readdirSync } from 'fs';
 import { hashArray, hashFile, hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { normalizeOptions } from 'nx/src/utils/normalize-options';
 import { dirname, extname, isAbsolute, join, relative, resolve } from 'path';
 import { readRspackOptions } from '../utils/read-rspack-options';
 import { resolveUserDefinedRspackConfig } from '../utils/resolve-user-defined-rspack-config';
@@ -29,6 +30,13 @@ export interface RspackPluginOptions {
   buildDepsTargetName?: string;
   watchDepsTargetName?: string;
 }
+
+const defaultOptions: RspackPluginOptions = {
+  buildTargetName: 'build',
+  serveTargetName: 'serve',
+  serveStaticTargetName: 'serve-static',
+  previewTargetName: 'preview',
+};
 
 type RspackTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
@@ -60,7 +68,8 @@ const rspackConfigGlob = '**/rspack.config.{js,ts,mjs,mts,cjs,cts}';
 export const createNodesV2: CreateNodesV2<RspackPluginOptions> = [
   rspackConfigGlob,
   async (configFilePaths, options, context) => {
-    const optionsHash = hashObject(options);
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
+    const optionsHash = hashObject(normalizedOptions);
     const cachePath = join(
       workspaceDataDirectory,
       `rspack-${optionsHash}.hash`
@@ -78,9 +87,11 @@ export const createNodesV2: CreateNodesV2<RspackPluginOptions> = [
             isTsSolutionSetup
           ),
         configFilePaths,
-        options,
+        normalizedOptions,
         context
       );
+    } catch (e) {
+      //
     } finally {
       writeTargetsToCache(cachePath, targetsCache);
     }
@@ -111,8 +122,6 @@ async function createNodesInternal(
     );
   }
 
-  const normalizedOptions = normalizeOptions(options);
-
   const lockFileHash =
     hashFile(
       join(
@@ -134,7 +143,7 @@ async function createNodesInternal(
   targetsCache[hash] ??= await createRspackTargets(
     configFilePath,
     projectRoot,
-    normalizedOptions,
+    options,
     context,
     isTsSolutionSetup
   );
@@ -277,15 +286,6 @@ async function createRspackTargets(
   );
 
   return { targets, metadata: {} };
-}
-
-function normalizeOptions(options: RspackPluginOptions): RspackPluginOptions {
-  options ??= {};
-  options.buildTargetName ??= 'build';
-  options.serveTargetName ??= 'serve';
-  options.previewTargetName ??= 'preview';
-  options.serveStaticTargetName ??= 'serve-static';
-  return options;
 }
 
 function normalizeOutputPath(
