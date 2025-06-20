@@ -1,11 +1,6 @@
 import { useRouter } from 'next/router';
 import { NextSeo } from 'next-seo';
-import {
-  ButtonLinkProps,
-  DefaultLayout,
-  Footer,
-  Header,
-} from '@nx/nx-dev/ui-common';
+import { ButtonLinkProps, DefaultLayout } from '@nx/nx-dev/ui-common';
 import {
   BuiltForEnterprise,
   CachePoisoningProtection,
