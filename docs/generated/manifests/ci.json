@@ -876,17 +876,6 @@
                 "isExternal": false,
                 "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
                 "tags": ["conformance"]
-              },
-              {
-                "id": "examples",
-                "name": "Conformance Rule Examples",
-                "description": "",
-                "mediaImage": "",
-                "file": "nx-cloud/enterprise/conformance/examples",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/ci/recipes/enterprise/conformance/examples",
-                "tags": ["conformance"]
               }
             ],
             "isExternal": false,
@@ -902,12 +891,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/ci/recipes/enterprise/polygraph",
-            "tags": [
-              "polygraph",
-              "conformance",
-              "workspace-graph",
-              "custom-workflows"
-            ]
+            "tags": ["polygraph"]
           },
           {
             "id": "metadata-only-workspace",
@@ -918,7 +902,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/ci/recipes/enterprise/metadata-only-workspace",
-            "tags": ["polygraph", "conformance", "workspace-graph"]
+            "tags": ["polygraph"]
           },
           {
             "id": "custom-workflows",
@@ -929,7 +913,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/ci/recipes/enterprise/custom-workflows",
-            "tags": ["polygraph", "conformance", "workspace-graph"]
+            "tags": ["polygraph"]
           }
         ],
         "isExternal": false,
@@ -1598,17 +1582,6 @@
             "isExternal": false,
             "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
             "tags": ["conformance"]
-          },
-          {
-            "id": "examples",
-            "name": "Conformance Rule Examples",
-            "description": "",
-            "mediaImage": "",
-            "file": "nx-cloud/enterprise/conformance/examples",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/ci/recipes/enterprise/conformance/examples",
-            "tags": ["conformance"]
           }
         ],
         "isExternal": false,
@@ -1624,12 +1597,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/ci/recipes/enterprise/polygraph",
-        "tags": [
-          "polygraph",
-          "conformance",
-          "workspace-graph",
-          "custom-workflows"
-        ]
+        "tags": ["polygraph"]
       },
       {
         "id": "metadata-only-workspace",
@@ -1640,7 +1608,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/ci/recipes/enterprise/metadata-only-workspace",
-        "tags": ["polygraph", "conformance", "workspace-graph"]
+        "tags": ["polygraph"]
       },
       {
         "id": "custom-workflows",
@@ -1651,7 +1619,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/ci/recipes/enterprise/custom-workflows",
-        "tags": ["polygraph", "conformance", "workspace-graph"]
+        "tags": ["polygraph"]
       }
     ],
     "isExternal": false,
@@ -1852,17 +1820,6 @@
         "isExternal": false,
         "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
         "tags": ["conformance"]
-      },
-      {
-        "id": "examples",
-        "name": "Conformance Rule Examples",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/enterprise/conformance/examples",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/recipes/enterprise/conformance/examples",
-        "tags": ["conformance"]
       }
     ],
     "isExternal": false,
@@ -1891,17 +1848,6 @@
     "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
     "tags": ["conformance"]
   },
-  "/ci/recipes/enterprise/conformance/examples": {
-    "id": "examples",
-    "name": "Conformance Rule Examples",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/enterprise/conformance/examples",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/recipes/enterprise/conformance/examples",
-    "tags": ["conformance"]
-  },
   "/ci/recipes/enterprise/polygraph": {
     "id": "polygraph",
     "name": "Polygraph",
@@ -1911,7 +1857,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/recipes/enterprise/polygraph",
-    "tags": ["polygraph", "conformance", "workspace-graph", "custom-workflows"]
+    "tags": ["polygraph"]
   },
   "/ci/recipes/enterprise/metadata-only-workspace": {
     "id": "metadata-only-workspace",
@@ -1922,7 +1868,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/recipes/enterprise/metadata-only-workspace",
-    "tags": ["polygraph", "conformance", "workspace-graph"]
+    "tags": ["polygraph"]
   },
   "/ci/recipes/enterprise/custom-workflows": {
     "id": "custom-workflows",
@@ -1933,7 +1879,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/recipes/enterprise/custom-workflows",
-    "tags": ["polygraph", "conformance", "workspace-graph"]
+    "tags": ["polygraph"]
   },
   "/ci/recipes/other": {
     "id": "other",

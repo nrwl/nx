@@ -2827,12 +2827,6 @@
                       "id": "publish-conformance-rules-to-nx-cloud",
                       "tags": ["conformance"],
                       "file": "nx-cloud/enterprise/conformance/publish-conformance-rules-to-nx-cloud"
-                    },
-                    {
-                      "name": "Conformance Rule Examples",
-                      "id": "examples",
-                      "tags": ["conformance"],
-                      "file": "nx-cloud/enterprise/conformance/examples"
                     }
                   ]
                 },

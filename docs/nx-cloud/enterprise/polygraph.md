@@ -10,9 +10,9 @@ Polygraph is Nx Cloud's suite of enterprise features designed to help organizati
 
 ## Features
 
-- **Cross-repository visibility** through the [Workspace Graph](/ci/enterprise/polygraph#workspace-graph)
-- **Organizational standards enforcement** via [Conformance](/ci/enterprise/polygraph#conformance) rules
-- **Automated compliance checking** across all repositories powered by [Custom Workflows](/ci/enterprise/polygraph#custom-workflows)
+- **Cross-repository visibility** through the [Workspace Graph](#workspace-graph)
+- **Organizational standards enforcement** via [Conformance](#conformance) rules
+- **Automated compliance checking** across all repositories powered by [Custom Workflows](#custom-workflows)
 
 All of this can be enabled with **Zero-friction adoption** for existing repositories without requiring teams to adopt Nx or modify their workflows. With these tools, a platform engineering team is able to affect positive change across 100+ repos quickly in automated fashion, instead of being stuck with manual processes taking multiple months.
 
@@ -79,16 +79,16 @@ Custom workflows enable proactive monitoring and automated compliance checking, 
 ## Metadata Only Workspaces
 
 Gain quick visibility across your organizations repositories without needing to migrate each repository as an Nx Workspace.
-Easily onboard any repository as a **metadata-only** to immediately start contributing to the [Workspace Graph](/ci/enterprise/polygraph#workspace-graph).
-Metadata-only workspaces can still leverage [custom workflows](/ci/enterprise/polygraph#custom-workflows) and [conformance rules](/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud).
+Easily onboard any repository as a **metadata-only** to immediately start contributing to the [Workspace Graph](#workspace-graph).
+Metadata-only workspaces can still leverage [custom workflows](/ci/recipes/enterprise/polygraph#custom-workflows) and [conformance rules](/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud).
 
-Read more about [onboarding a metadata only workspace](/ci/enterprise/metadata-only-workspaces).
+Read more about [onboarding a workspace as metadata-only](/ci/recipes/enterprise/metadata-only-workspace).
 
 ## FAQ
 
 **Q: Do I need to migrate other teams to Nx to use Polygraph?**
 
-No, Polygraph works with any repository through [metadata-only workspaces](/ci/enterprise/metadata-only-workspaces).
+No, Polygraph works with any repository through [metadata-only workspaces](/ci/recipes/enterprise/metadata-only-workspace).
 
 **Q: How does pricing work?**
 

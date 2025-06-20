@@ -869,7 +869,6 @@
       - [Conformance](/ci/recipes/enterprise/conformance)
         - [Configure Conformance Rules in Nx Cloud](/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud)
         - [Publish Conformance Rules to Nx Cloud](/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud)
-        - [Conformance Rule Examples](/ci/recipes/enterprise/conformance/examples)
       - [Polygraph](/ci/recipes/enterprise/polygraph)
       - [Metadata Only Workspaces](/ci/recipes/enterprise/metadata-only-workspace)
       - [Custom Workflows](/ci/recipes/enterprise/custom-workflows)

@@ -7207,14 +7207,6 @@
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
-                  },
-                  {
-                    "name": "Conformance Rule Examples",
-                    "path": "/ci/recipes/enterprise/conformance/examples",
-                    "id": "examples",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
                   }
                 ],
                 "disableCollapsible": false
