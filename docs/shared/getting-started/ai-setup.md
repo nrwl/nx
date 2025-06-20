@@ -15,7 +15,7 @@ Make sure you have **Nx Console** [installed in your editor](/getting-started/ed
 
 ![VS Code showing the Nx MCP installation prompt](/blog/images/articles/copilot-mcp-install.avif)
 
-If you miss the notification, you can manually run the configuration by opening the command palette (`Ctrl/Cmd + Shift + P`) and running `nx.configureMcpServer`.
+If you miss the notification, you can manually run the configuration by opening the command palette (`Ctrl/Cmd + Shift + P`) and running `nx.configureMcpServer` (`Nx: Setup MCP Server` in JetBrains IDEs).
 
 ### Manual Setup for Other AI Clients
 
