@@ -103,14 +103,6 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
       this.childProcess.kill(signal);
     }
   }
-
-  /**
-   * Returns true if this task can provide progressive output for TUI display.
-   * NodeChildProcessWithNonDirectOutput can stream output but doesn't support interactivity.
-   */
-  public canProvideProgressiveOutput(): boolean {
-    return true;
-  }
 }
 
 function addPrefixTransformer(prefix?: string) {
