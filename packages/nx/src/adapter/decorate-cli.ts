@@ -1,9 +1,11 @@
+// TODO(v22): remove this file
+
 import { readFileSync, writeFileSync } from 'fs';
 import { output } from '../utils/output';
 
 export function decorateCli() {
   output.warn({
-    title: `Decoration of the Angular CLI is deprecated and will be removed in a future version`,
+    title: `Decoration of the Angular CLI is deprecated and will be removed in Nx v22`,
     bodyLines: [
       `Please replace usage of "ng <command>" in any scripts, particularly for CI, with "nx <command>"`,
     ],
