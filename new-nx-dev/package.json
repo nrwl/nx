@@ -30,12 +30,18 @@
     "@docusaurus/tsconfig": "3.8.1",
     "@docusaurus/types": "3.8.1",
     "@tailwindcss/postcss": "^4.1.10",
+    "@types/fs-extra": "^11.0.4",
     "docusaurus-plugin-typedoc": "^1.4.0",
+    "fs-extra": "^11.3.0",
+    "import-fresh": "^3.3.1",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.10",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "typedoc": "^0.28.5",
     "typedoc-plugin-markdown": "^4.6.4",
-    "typescript": "~5.6.2"
+    "typescript": "~5.6.2",
+    "yargs": "^18.0.0"
   },
   "browserslist": {
     "production": [
