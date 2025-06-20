@@ -1,4 +1,5 @@
 import { readJsonSync } from 'fs-extra';
+import { workspaceRoot } from '@nx/devkit';
 import { outputFileSync } from 'fs-extra';
 import { join } from 'path';
 import { register as registerTsConfigPaths } from 'tsconfig-paths';
@@ -33,15 +34,26 @@ function getCommands(command: any) {
   return command.getInternalMethods().getCommandInstance().getCommandHandlers();
 }
 
-async function parseCommand(name: string, command: any): Promise<ParsedCommand> {
+async function parseCommand(
+  name: string,
+  command: any
+): Promise<ParsedCommand> {
   // If it's not a function, return a stripped down version
-  if (!(command.builder && command.builder.constructor && command.builder.call && command.builder.apply)) {
+  if (
+    !(
+      command.builder &&
+      command.builder.constructor &&
+      command.builder.call &&
+      command.builder.apply
+    )
+  ) {
     return {
       name,
       command: command.original || name,
-      description: command.description || command.describe || command.desc || '',
+      description:
+        command.description || command.describe || command.desc || '',
       aliases: [],
-      options: []
+      options: [],
     };
   }
 
@@ -49,16 +61,21 @@ async function parseCommand(name: string, command: any): Promise<ParsedCommand> 
   const builder = await command.builder(
     importFresh('yargs')().getInternalMethods().reset()
   );
-  
-  const builderDescriptions = builder.getInternalMethods().getUsageInstance().getDescriptions();
+
+  const builderDescriptions = builder
+    .getInternalMethods()
+    .getUsageInstance()
+    .getDescriptions();
   const builderOptions = builder.getOptions();
   const builderDefaultOptions = builderOptions.default;
   const builderAutomatedOptions = builderOptions.defaultDescription;
   const builderDeprecatedOptions = builder.getDeprecatedOptions();
   const builderOptionsChoices = builderOptions.choices;
-  
+
   const builderOptionTypes = YargsTypes.reduce((acc, type) => {
-    builderOptions[type].forEach((option: any) => (acc = { ...acc, [option]: type }));
+    builderOptions[type].forEach(
+      (option: any) => (acc = { ...acc, [option]: type })
+    );
     return acc;
   }, {});
 
@@ -66,7 +83,9 @@ async function parseCommand(name: string, command: any): Promise<ParsedCommand> 
   const options: ParsedCommandOption[] = Object.keys(builderDescriptions)
     .map((key) => ({
       name: [key, ...(builderOptions.alias[key] || [])],
-      description: builderDescriptions[key] ? builderDescriptions[key].replace('__yargsString__:', '') : '',
+      description: builderDescriptions[key]
+        ? builderDescriptions[key].replace('__yargsString__:', '')
+        : '',
       default: builderDefaultOptions[key] ?? builderAutomatedOptions[key],
       type: (builderOptionTypes as any)[key] || 'string',
       choices: builderOptionsChoices[key],
@@ -80,76 +99,99 @@ async function parseCommand(name: string, command: any): Promise<ParsedCommand> 
     command: command.original ? command.original.replace('$0', name) : name,
     description: command.description || command.describe || command.desc || '',
     aliases: [],
-    options
+    options,
   };
 }
 
-function generateCLIOverviewPage(commands: Record<string, ParsedCommand>, outputDir: string) {
+function generateCLIOverviewPage(
+  commands: Record<string, ParsedCommand>,
+  outputDir: string
+) {
   const commandNames = Object.keys(commands).sort();
-  
+
   const content = `---
-title: CLI Commands
+title: Nx CLI Commands
 description: Complete reference for all Nx CLI commands
 ---
 
 # Nx CLI Commands
 
-Nx provides a comprehensive set of CLI commands to help you manage your workspace. Below is a complete reference of all available commands.
+The Nx command line has various subcommands and options to help you manage your Nx workspace and run tasks efficiently. 
+Below is a complete reference for all available commands and their options.
+You can run nx --help to view all available options. 
 
 ## Available Commands
 
-${commandNames.map(cmdName => {
-  const cmd = commands[cmdName];
-  let section = `### \`nx ${cmdName}\`
+${commandNames
+  .map((cmdName) => {
+    const cmd = commands[cmdName];
+    let section = `### \`nx ${cmdName}\`
 
 ${cmd.description || 'No description available'}
 
-${cmd.aliases && cmd.aliases.length > 0 ? `**Aliases:** ${cmd.aliases.map(alias => `\`${alias}\``).join(', ')}
+${
+  cmd.aliases && cmd.aliases.length > 0
+    ? `**Aliases:** ${cmd.aliases.map((alias) => `\`${alias}\``).join(', ')}
 
-` : ''}**Usage:**
+`
+    : ''
+}**Usage:**
 \`\`\`bash
 nx ${cmd.command || cmdName}
 \`\`\`
 `;
 
-  // Add options table if there are options
-  if (cmd.options && cmd.options.length > 0) {
-    section += '\n#### Options\n\n';
-    section += '| Option | Type | Description | Default |\n';
-    section += '|--------|------|-------------|---------|\\n';
-    
-    const sortedOptions = cmd.options.sort((a, b) => a.name[0].localeCompare(b.name[0]));
-    
-    for (const option of sortedOptions) {
-      const optionNames = option.name.map(n => `\`--${n}\``).join(', ');
-      let description = option.description || 'No description';
-      
-      // Add alias information
-      if (option.name.length > 1) {
-        const aliases = option.name.slice(1).map(a => `\`-${a}\``).join(', ');
-        description += ` (alias: ${aliases})`;
-      }
-      
-      // Add deprecation warning
-      if (option.deprecated) {
-        description += ` **⚠️ Deprecated**${option.deprecated !== true ? `: ${option.deprecated}` : ''}`;
-      }
-      
-      // Add choices if available
-      if (option.choices && option.choices.length > 0) {
-        description += ` (choices: ${option.choices.map(c => `\`${c}\``).join(', ')})`;
-      }
-      
-      const defaultValue = option.default !== undefined ? `\`${JSON.stringify(option.default).replace(/"/g, '')}\`` : '';
-      
-      section += `| ${optionNames} | ${option.type} | ${description} | ${defaultValue} |\\n`;
-    }
-    
-    section += '\n';
-  }
+    // Add options table if there are options
+    if (cmd.options && cmd.options.length > 0) {
+      section += '\n#### Options\n\n';
+      section += '| Option | Type | Description | Default |\n';
+      section += '|--------|------|-------------|---------|\n';
 
-  return section;
-}).join('\n')}
+      const sortedOptions = cmd.options.sort((a, b) =>
+        a.name[0].localeCompare(b.name[0])
+      );
+
+      for (const option of sortedOptions) {
+        const optionNames = option.name.map((n) => `\`--${n}\``).join(', ');
+        let description = option.description || 'No description';
+
+        // Add alias information
+        if (option.name.length > 1) {
+          const aliases = option.name
+            .slice(1)
+            .map((a) => `\`-${a}\``)
+            .join(', ');
+          description += ` (alias: ${aliases})`;
+        }
+
+        // Add deprecation warning
+        if (option.deprecated) {
+          description += ` **⚠️ Deprecated**${
+            option.deprecated !== true ? `: ${option.deprecated}` : ''
+          }`;
+        }
+
+        // Add choices if available
+        if (option.choices && option.choices.length > 0) {
+          description += ` (choices: ${option.choices
+            .map((c) => `\`${c}\``)
+            .join(', ')})`;
+        }
+
+        const defaultValue =
+          option.default !== undefined
+            ? `\`${JSON.stringify(option.default).replace(/"/g, '')}\``
+            : '';
+
+        section += `| ${optionNames} | ${option.type} | ${description} | ${defaultValue} |\n`;
+      }
+
+      section += '\n';
+    }
+
+    return section;
+  })
+  .join('\n')}
 
 ## Getting Help
 
@@ -165,43 +207,48 @@ nx <command> --help
 
 async function generateCLIDocs() {
   console.log('🔍 Analyzing Nx CLI commands...');
-  
+
   // Register TypeScript paths from the base config (same as legacy script)
   const config = readJsonSync(
-    join(__dirname, '../../tsconfig.base.json')
+    join(workspaceRoot, 'tsconfig.base.json')
   ).compilerOptions;
   registerTsConfigPaths(config);
 
   console.log('📁 Using yargs command object...');
-  
+
   // Import the commandsObject from the nx-commands file (same as legacy script)
-  const nxCommandsPath = join(__dirname, '../../packages/nx/src/command-line/nx-commands');
+  const nxCommandsPath = join(
+    workspaceRoot,
+    'packages/nx/src/command-line/nx-commands'
+  );
   const { commandsObject } = importFresh(nxCommandsPath);
-  
+
   // Get all commands from yargs
   const nxCommands = getCommands(commandsObject);
-  
+
   // Commands to exclude from documentation (same as legacy script)
   const sharedCommands = ['generate', 'exec'];
-  const hiddenCommands = [
-    '$0',
-    'conformance',
-    'conformance:check',
-  ];
-  
+  const hiddenCommands = ['$0', 'conformance', 'conformance:check'];
+
   const commands: Record<string, ParsedCommand> = {};
-  
+
   // Parse each command
   for (const [name, commandConfig] of Object.entries(nxCommands)) {
     if (sharedCommands.includes(name) || hiddenCommands.includes(name)) {
       continue;
     }
-    
+
     // Check if command has description (same as legacy script)
-    if (!((commandConfig as any).description || (commandConfig as any).describe || (commandConfig as any).desc)) {
+    if (
+      !(
+        (commandConfig as any).description ||
+        (commandConfig as any).describe ||
+        (commandConfig as any).desc
+      )
+    ) {
       continue;
     }
-    
+
     try {
       const parsedCommand = await parseCommand(name, commandConfig);
       commands[name] = parsedCommand;
@@ -209,15 +256,19 @@ async function generateCLIDocs() {
       console.warn(`⚠️ Could not parse command ${name}:`, error.message);
     }
   }
-  
+
   const outputDir = join(__dirname, '../docs/api');
-  
+
   // Only generate the overview page with all commands included
   generateCLIOverviewPage(commands, outputDir);
-  
+
   delete process.env.NX_GENERATE_DOCS_PROCESS;
-  
-  console.log(`✅ Generated CLI documentation with ${Object.keys(commands).length} commands`);
+
+  console.log(
+    `✅ Generated CLI documentation with ${
+      Object.keys(commands).length
+    } commands`
+  );
 }
 
 // Run the generator
