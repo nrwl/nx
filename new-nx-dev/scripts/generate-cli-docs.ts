@@ -110,11 +110,11 @@ function generateCLIOverviewPage(
   const commandNames = Object.keys(commands).sort();
 
   const content = `---
-title: Nx CLI Commands
+title: Nx CLI
 description: Complete reference for all Nx CLI commands
 ---
 
-# Nx CLI Commands
+# Nx CLI
 
 The Nx command line has various subcommands and options to help you manage your Nx workspace and run tasks efficiently. 
 Below is a complete reference for all available commands and their options.
@@ -125,17 +125,17 @@ You can run nx --help to view all available options.
 ${commandNames
   .map((cmdName) => {
     const cmd = commands[cmdName];
-    let section = `### \`nx ${cmdName}\`
+    let section = `### \`nx ${cmdName}\`\n`;
 
-${cmd.description || 'No description available'}
+    section += cmd.description || 'No description available';
 
-${
-  cmd.aliases && cmd.aliases.length > 0
-    ? `**Aliases:** ${cmd.aliases.map((alias) => `\`${alias}\``).join(', ')}
+    if (cmd.aliases && cmd.aliases.length > 0) {
+      section += `**Aliases:** ${cmd.aliases
+        .map((alias) => `\`${alias}\``)
+        .join(', ')}`;
+    }
 
-`
-    : ''
-}**Usage:**
+    section += `\n\n**Usage:**
 \`\`\`bash
 nx ${cmd.command || cmdName}
 \`\`\`

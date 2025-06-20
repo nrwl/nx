@@ -1,9 +1,9 @@
 ---
-title: Nx CLI Commands
+title: Nx CLI
 description: Complete reference for all Nx CLI commands
 ---
 
-# Nx CLI Commands
+# Nx CLI
 
 The Nx command line has various subcommands and options to help you manage your Nx workspace and run tasks efficiently. 
 Below is a complete reference for all available commands and their options.
@@ -12,7 +12,6 @@ You can run nx --help to view all available options.
 ## Available Commands
 
 ### `nx add`
-
 Install a plugin and initialize it.
 
 **Usage:**
@@ -32,7 +31,6 @@ nx add <packageSpecifier>
 
 
 ### `nx affected`
-
 Run target for affected projects. Affected projects are projects that have been changed and projects that depend on the changed projects. See https://nx.dev/ci/features/affected for more details.
 
 **Usage:**
@@ -71,7 +69,6 @@ nx affected
 
 
 ### `nx connect`
-
 Connect workspace to Nx Cloud.
 
 **Usage:**
@@ -90,7 +87,6 @@ nx connect
 
 
 ### `nx daemon`
-
 Prints information about the Nx Daemon process or starts a daemon process.
 
 **Usage:**
@@ -109,7 +105,6 @@ nx daemon
 
 
 ### `nx format:check`
-
 Check for un-formatted files.
 
 **Usage:**
@@ -136,7 +131,6 @@ nx format:check
 
 
 ### `nx format:write`
-
 Overwrite un-formatted files.
 
 **Usage:**
@@ -163,7 +157,6 @@ nx format:write
 
 
 ### `nx graph`
-
 Graph dependencies within workspace.
 
 **Usage:**
@@ -198,7 +191,6 @@ nx graph
 
 
 ### `nx import`
-
 Import code and git history from another repository into this repository.
 
 **Usage:**
@@ -222,7 +214,6 @@ nx import [sourceRepository] [destinationDirectory]
 
 
 ### `nx init`
-
 Adds Nx to any type of workspace. It installs nx, creates an nx.json configuration file and optionally sets up remote caching. For more info, check https://nx.dev/recipes/adopting-nx.
 
 **Usage:**
@@ -243,7 +234,6 @@ nx init
 
 
 ### `nx list`
-
 Lists installed plugins, capabilities of installed plugins and other available plugins.
 
 **Usage:**
@@ -261,7 +251,6 @@ nx list [plugin]
 
 
 ### `nx login`
-
 Login to Nx Cloud. This command is an alias for [`nx-cloud login`](/ci/reference/nx-cloud-cli#npx-nxcloud-login).
 
 **Usage:**
@@ -280,7 +269,6 @@ nx login [nxCloudUrl]
 
 
 ### `nx logout`
-
 Logout from Nx Cloud. This command is an alias for [`nx-cloud logout`](/ci/reference/nx-cloud-cli#npx-nxcloud-logout).
 
 **Usage:**
@@ -298,7 +286,6 @@ nx logout
 
 
 ### `nx migrate`
-
 Creates a migrations file or runs migrations from the migrations file.
   - Migrate packages and create migrations.json (e.g., nx migrate @nx/workspace@latest)
   - Run migrations (e.g., nx migrate --run-migrations=migrations.json). Use flag --if-exists to run migrations only if the migrations file exists.
@@ -327,7 +314,6 @@ nx migrate [packageAndVersion]
 
 
 ### `nx release`
-
 Orchestrate versioning and publishing of applications and libraries.
 
 **Usage:**
@@ -349,7 +335,6 @@ nx release
 
 
 ### `nx repair`
-
 Repair any configuration that is no longer supported by Nx.
 
     Specifically, this will run every migration within the `nx` package
@@ -376,7 +361,6 @@ nx repair
 
 
 ### `nx report`
-
 Reports useful version numbers to copy into the Nx issue template.
 
 **Usage:**
@@ -385,7 +369,6 @@ nx report
 ```
 
 ### `nx reset`
-
 Clears cached Nx artifacts and metadata about the workspace and shuts down the Nx Daemon.
 
 **Usage:**
@@ -406,7 +389,6 @@ nx reset
 
 
 ### `nx run`
-
 Run a target for a project
     (e.g., nx run myapp:serve:production).
 
@@ -444,7 +426,6 @@ nx run [project][:target][:configuration] [_..]
 
 
 ### `nx run-many`
-
 Run target for multiple listed projects.
 
 **Usage:**
@@ -479,7 +460,6 @@ nx run-many
 
 
 ### `nx show`
-
 Show information about the workspace (e.g., list of projects).
 
 **Usage:**
@@ -497,7 +477,6 @@ nx show
 
 
 ### `nx sync`
-
 Sync the workspace files by running all the sync generators.
 
 **Usage:**
@@ -515,7 +494,6 @@ nx sync
 
 
 ### `nx sync:check`
-
 Check that no changes are required after running all sync generators.
 
 **Usage:**
@@ -533,7 +511,6 @@ nx sync:check
 
 
 ### `nx view-logs`
-
 Enables you to view and interact with the logs via the advanced analytic UI from Nx Cloud to help you debug your issue. To do this, Nx needs to connect your workspace to Nx Cloud and upload the most recent run details. Only the metrics are uploaded, not the artefacts.
 
 **Usage:**
@@ -542,7 +519,6 @@ nx view-logs
 ```
 
 ### `nx watch`
-
 Watch for changes within projects, and execute commands.
 
 **Usage:**
