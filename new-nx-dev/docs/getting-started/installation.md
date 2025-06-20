@@ -1,6 +1,7 @@
 ---
 title: Installation
 description: Install Nx globally via npm, Homebrew, Chocolatey, or apt. Add Nx to existing repos with nx init and keep dependencies updated automatically.
+sidebar_position: 2
 ---
 
 import Tabs from '@theme/Tabs';

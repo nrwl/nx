@@ -1,5 +1,5 @@
 ---
-title: Integrate Nx with your Coding Assistant
+title: Nx AI MCP
 description: Set up Nx MCP server to give AI assistants deep workspace context, terminal integration, and enhanced development capabilities.
 ---
 

@@ -202,7 +202,7 @@ nx <command> --help
 \`\`\`
 `;
 
-  outputFileSync(join(outputDir, 'cli.md'), content);
+  outputFileSync(join(outputDir, 'nx-cli.md'), content);
 }
 
 async function generateCLIDocs() {

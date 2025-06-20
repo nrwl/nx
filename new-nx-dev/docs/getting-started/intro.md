@@ -5,6 +5,8 @@ sidebar_position: 1
 ---
 
 import Video from "@site/src/components/Video"
+import { Grid } from "@site/src/components/Grid"
+import { Card } from "@site/src/components/Card"
 
 # What is Nx?
 
@@ -20,7 +22,8 @@ Nx is built in a modular fashion, allowing you to adopt as little or as much as 
 
 At the **foundation is Nx Core**, a Rust-based, technology-agnostic task runner. Nx Core creates a knowledge graph of your workspace, understanding project relationships and dependencies. This enables highly optimized and fast task execution regardless of technology stack. It runs `package.json` scripts in [TypeScript monorepos](/technologies/typescript/introduction) or Gradle tasks in [Java projects](/technologies/java/introduction) or [can be extended](/extending-nx/intro/getting-started) to meet your projects specific needs
 
-\{% callout type="deepdive" title="What do you mean by 'running NPM scripts'?" %}
+<details>
+<summary>What do you mean by "_running NPM scripts_"?</summary>
 
 At the very core, Nx is a super fast, intelligent task runner. Let's take the example of an NPM workspace. This could be a project's `package.json`:
 
@@ -56,26 +59,54 @@ Similarly you [can run tasks across all projects](/features/run-tasks), just spe
 
 From there, you can gradually enhance your setup by adding features like [task caching](/features/cache-task-results), adding [plugins](/technologies), optimizing your CI via [task distribution](/ci/features/distribute-task-execution), and many more powerful capabilities as your needs grow.
 
-\{% /callout %}
+</details>
 
 Nx Core works great alone, but you can incrementally add capabilities as needed. Speed up your CI with [**Nx Cloud**](/ci) through remote caching and distributed task execution. Add [**Nx Console**](/getting-started/editor-setup) integrating Nx with your editor, giving you powerful autocomplete support, project graph visualization, CI run notifications and an MCP to [make your AI coding assistant smarter](/features/enhance-AI). Add [**Nx Plugins**](/technologies) for technology-specific automation and DX improvements and build custom capabilities using [Nx Devkit](/extending-nx/intro/getting-started).
 
 ## Where to go from here?
 
-\{% cards %}
-
-\{% card title="Get set up and ready with Nx" description="Dive right in with our getting started steps to install Nx, set up your editor, and create your first project" type="documentation" url="/getting-started" icon="RocketLaunchIcon" /%}
-
-\{% card title="Step by step with our tutorials" description="Learn more about Nx through hands-on tutorials for different technology stacks" type="documentation" url="/getting-started/tutorials" icon="AcademicCapIcon" /%}
-
-\{% card title="Learn with our video courses" description="Dive deeper with comprehensive video courses that walk you through Nx concepts" type="documentation" url="/courses" icon="PlayCircleIcon" /%}
-
-\{% card title="Dive deep into Nx features" description="Discover all the powerful features that Nx provides to streamline your workflow" type="documentation" url="/features" icon="SparklesIcon" /%}
-
-\{% card title="Understand underlying concepts" description="Improve your understanding of the core concepts of how Nx works under the hood" type="documentation" url="/concepts" icon="LightBulbIcon" /%}
-
-\{% card title="Explore Technologies" description="Explore Nx's technology integrations and how it can support your specific stack" type="documentation" url="/technologies" icon="CodeBracketIcon" /%}
-
-\{% /cards %}
+<Grid>
+  <Card 
+    title="Get set up and ready with Nx" 
+    description="Dive right in with our getting started steps to install Nx, set up your editor, and create your first project" 
+    url="/getting-started" 
+    icon="RocketLaunchIcon" 
+  />
+  
+  <Card 
+    title="Step by step with our tutorials" 
+    description="Learn more about Nx through hands-on tutorials for different technology stacks" 
+    url="/getting-started/tutorials" 
+    icon="AcademicCapIcon" 
+  />
+  
+  <Card 
+    title="Learn with our video courses" 
+    description="Dive deeper with comprehensive video courses that walk you through Nx concepts" 
+    url="/courses" 
+    icon="PlayCircleIcon" 
+  />
+  
+  <Card 
+    title="Dive deep into Nx features" 
+    description="Discover all the powerful features that Nx provides to streamline your workflow" 
+    url="/features" 
+    icon="SparklesIcon" 
+  />
+  
+  <Card 
+    title="Understand underlying concepts" 
+    description="Improve your understanding of the core concepts of how Nx works under the hood" 
+    url="/concepts" 
+    icon="LightBulbIcon" 
+  />
+  
+  <Card 
+    title="Explore Technologies" 
+    description="Explore Nx's technology integrations and how it can support your specific stack" 
+    url="/technologies" 
+    icon="CodeBracketIcon" 
+  />
+</Grid>
 
 **Stay up to date** with our latest news by [⭐️ starring us on Github](https://github.com/nrwl/nx), [subscribing to our Youtube channel](https://www.youtube.com/@nxdevtools), [joining our Discord](https://go.nx.dev/community), [subscribe to our monthly tech newsletter](https://go.nrwl.io/nx-newsletter) or follow us [on X](https://x.com/nxdevtools), [Bluesky](https://bsky.app/profile/nx.dev) and [LinkedIn](https://www.linkedin.com/company/nxdevtools).

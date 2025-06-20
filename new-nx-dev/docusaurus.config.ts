@@ -70,7 +70,8 @@ const config: Config = {
         },
         {
           type: 'doc',
-          docId: 'api/cli',
+          docId: 'api/nx-cli',
+          sidebarId: 'referencesSideBar',
           position: 'left',
           label: 'References',
         },
