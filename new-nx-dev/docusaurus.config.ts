@@ -68,7 +68,9 @@ const config: Config = {
       } satisfies Preset.Options,
     ],
   ],
-  plugins: [['./src/plugins/tailwind.ts', {}]],
+  plugins: [
+    ['./src/plugins/tailwind.ts', {}],
+  ],
   themeConfig: {
     // Replace with your project's social card
     image: 'img/docusaurus-social-card.jpg',
@@ -84,6 +86,12 @@ const config: Config = {
           sidebarId: 'tutorialSidebar',
           position: 'left',
           label: 'Tutorial',
+        },
+        {
+          type: 'doc',
+          docId: 'api/cli',
+          position: 'left',
+          label: 'CLI Reference',
         },
         {
           href: 'https://github.com/nrwl/nx',
