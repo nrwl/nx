@@ -329,7 +329,7 @@ async function buildJestTargets(
     ));
 
     if (options?.ciTargetName) {
-      const testPaths = await getTestPaths(
+      const { specs, testMatch } = await getTestPaths(
         projectRoot,
         rawConfig,
         absConfigFilePath,
@@ -349,10 +349,27 @@ async function buildJestTargets(
           (p: string) => new RegExp(replaceRootDirInPath(projectRoot, p))
         );
 
-      for (const testPath of testPaths) {
+      for (const testPath of specs) {
         const relativePath = normalizePath(
           relative(join(context.workspaceRoot, projectRoot), testPath)
         );
+
+        if (relativePath.includes('../')) {
+          throw new Error(
+            '@nx/jest/plugin attempted to run tests outside of the project root. This is not supported and should not happen. Please open an issue at https://github.com/nrwl/nx/issues/new/choose with the following information:\n\n' +
+              `\n\n${JSON.stringify(
+                {
+                  projectRoot,
+                  relativePath,
+                  specs,
+                  context,
+                  testMatch,
+                },
+                null,
+                2
+              )}`
+          );
+        }
 
         if (specIgnoreRegexes?.some((regex) => regex.test(relativePath))) {
           continue;
@@ -496,6 +513,23 @@ async function buildJestTargets(
           const relativePath = normalizePath(
             relative(join(context.workspaceRoot, projectRoot), testPath)
           );
+
+          if (relativePath.includes('../')) {
+            throw new Error(
+              '@nx/jest/plugin attempted to run tests outside of the project root. This is not supported and should not happen. Please open an issue at https://github.com/nrwl/nx/issues/new/choose with the following information:\n\n' +
+                `\n\n${JSON.stringify(
+                  {
+                    projectRoot,
+                    relativePath,
+                    testPaths,
+                    context,
+                  },
+                  null,
+                  2
+                )}`
+            );
+          }
+
           const targetName = `${options.ciTargetName}--${relativePath}`;
           dependsOn.push(targetName);
           targets[targetName] = {
@@ -711,7 +745,7 @@ async function getTestPaths(
   absConfigFilePath: string,
   context: CreateNodesContext,
   presetCache: Record<string, unknown>
-): Promise<string[]> {
+): Promise<{ specs: string[]; testMatch: string[] }> {
   const testMatch = await getJestOption<string[]>(
     rawConfig,
     absConfigFilePath,
@@ -746,7 +780,7 @@ async function getTestPaths(
     );
   }
 
-  return paths;
+  return { specs: paths, testMatch };
 }
 
 async function getJestOption<T = any>(

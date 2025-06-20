@@ -239,60 +239,77 @@ async function buildPlaywrightTargets(
 
     const dependsOn: TargetConfiguration['dependsOn'] = [];
 
-    await forEachTestFile(
-      (testFile) => {
-        const outputSubfolder = relative(projectRoot, testFile)
-          .replace(/[\/\\]/g, '-')
-          .replace(/\./g, '-');
-        const relativeSpecFilePath = normalizePath(
-          relative(projectRoot, testFile)
+    const testFiles = await getAllTestFiles({
+      context,
+      path: testDir,
+      config: playwrightConfig,
+    });
+
+    for (const testFile of testFiles) {
+      const outputSubfolder = relative(projectRoot, testFile)
+        .replace(/[\/\\]/g, '-')
+        .replace(/\./g, '-');
+      const relativeSpecFilePath = normalizePath(
+        relative(projectRoot, testFile)
+      );
+
+      if (relativeSpecFilePath.includes('../')) {
+        throw new Error(
+          '@nx/playwright/plugin attempted to run tests outside of the project root. This is not supported and should not happen. Please open an issue at https://github.com/nrwl/nx/issues/new/choose with the following information:\n\n' +
+            `\n\n${JSON.stringify(
+              {
+                projectRoot,
+                testFile,
+                testFiles,
+                context,
+                config: playwrightConfig,
+              },
+              null,
+              2
+            )}`
         );
-        const targetName = `${options.ciTargetName}--${relativeSpecFilePath}`;
-        ciTargetGroup.push(targetName);
-        targets[targetName] = {
-          ...ciBaseTargetConfig,
-          options: {
-            ...ciBaseTargetConfig.options,
-            env: getOutputEnvVars(reporterOutputs, outputSubfolder),
-          },
-          outputs: getTargetOutputs(
-            testOutput,
-            reporterOutputs,
-            context.workspaceRoot,
-            projectRoot,
-            outputSubfolder
-          ),
-          command: `${
-            baseTargetConfig.command
-          } ${relativeSpecFilePath} --output=${join(
-            testOutput,
-            outputSubfolder
-          )}`,
-          metadata: {
-            technologies: ['playwright'],
-            description: `Runs Playwright Tests in ${relativeSpecFilePath} in CI`,
-            help: {
-              command: `${pmc.exec} playwright test --help`,
-              example: {
-                options: {
-                  workers: 1,
-                },
+      }
+
+      const targetName = `${options.ciTargetName}--${relativeSpecFilePath}`;
+      ciTargetGroup.push(targetName);
+      targets[targetName] = {
+        ...ciBaseTargetConfig,
+        options: {
+          ...ciBaseTargetConfig.options,
+          env: getOutputEnvVars(reporterOutputs, outputSubfolder),
+        },
+        outputs: getTargetOutputs(
+          testOutput,
+          reporterOutputs,
+          context.workspaceRoot,
+          projectRoot,
+          outputSubfolder
+        ),
+        command: `${
+          baseTargetConfig.command
+        } ${relativeSpecFilePath} --output=${join(
+          testOutput,
+          outputSubfolder
+        )}`,
+        metadata: {
+          technologies: ['playwright'],
+          description: `Runs Playwright Tests in ${relativeSpecFilePath} in CI`,
+          help: {
+            command: `${pmc.exec} playwright test --help`,
+            example: {
+              options: {
+                workers: 1,
               },
             },
           },
-        };
-        dependsOn.push({
-          target: targetName,
-          projects: 'self',
-          params: 'forward',
-        });
-      },
-      {
-        context,
-        path: testDir,
-        config: playwrightConfig,
-      }
-    );
+        },
+      };
+      dependsOn.push({
+        target: targetName,
+        projects: 'self',
+        params: 'forward',
+      });
+    }
 
     targets[options.ciTargetName] ??= {};
 
@@ -327,27 +344,18 @@ async function buildPlaywrightTargets(
   return { targets, metadata };
 }
 
-async function forEachTestFile(
-  cb: (path: string) => void,
-  opts: {
-    context: CreateNodesContext;
-    path: string;
-    config: PlaywrightTestConfig;
-  }
-) {
-  const files = await getFilesInDirectoryUsingContext(
-    opts.context.workspaceRoot,
-    opts.path
-  );
+async function getAllTestFiles(opts: {
+  context: CreateNodesContext;
+  path: string;
+  config: PlaywrightTestConfig;
+}) {
+  const files: string[] = [];
+  await getFilesInDirectoryUsingContext(opts.context.workspaceRoot, opts.path);
   const matcher = createMatcher(opts.config.testMatch);
   const ignoredMatcher = opts.config.testIgnore
     ? createMatcher(opts.config.testIgnore)
     : () => false;
-  for (const file of files) {
-    if (matcher(file) && !ignoredMatcher(file)) {
-      cb(file);
-    }
-  }
+  return files.filter((file) => matcher(file) && !ignoredMatcher(file));
 }
 
 function createMatcher(pattern: string | RegExp | Array<string | RegExp>) {
