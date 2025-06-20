@@ -1,6 +1,6 @@
 ---
-title: "@nx/vue Migrations"
-description: "Complete reference for all @nx/vue migration commands"
+title: '@nx/vue Migrations'
+description: 'Complete reference for all @nx/vue migration commands'
 sidebar_label: Migrations
 ---
 
@@ -12,6 +12,7 @@ Below is a complete reference for all available migrations and their details.
 ## Available Migrations
 
 ### `update-19.4.3`
+
 Update dependencies to version 19.4.3
 
 **Version:** `19.4.3`
@@ -20,11 +21,12 @@ Update dependencies to version 19.4.3
 
 This migration updates the following packages:
 
-| Package | Version | Type |
-|---------|---------|------|
+| Package   | Version  | Type     |
+| --------- | -------- | -------- |
 | `vue-tsc` | `^2.0.0` | packages |
 
 ### `update-20.7.1`
+
 Update dependencies to version 20.7.1
 
 **Version:** `20.7.1`
@@ -33,12 +35,12 @@ Update dependencies to version 20.7.1
 
 This migration updates the following packages:
 
-| Package | Version | Type |
-|---------|---------|------|
-| `vue` | `^3.5.13` | packages |
-| `vue-tsc` | `^2.2.8` | packages |
-| `vue-router` | `^4.5.0` | packages |
-| `@vitejs/plugin-vue` | `^5.2.3` | packages |
+| Package              | Version   | Type     |
+| -------------------- | --------- | -------- |
+| `vue`                | `^3.5.13` | packages |
+| `vue-tsc`            | `^2.2.8`  | packages |
+| `vue-router`         | `^4.5.0`  | packages |
+| `@vitejs/plugin-vue` | `^5.2.3`  | packages |
 
 ## Running Migrations
 

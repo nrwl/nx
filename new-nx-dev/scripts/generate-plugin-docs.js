@@ -41,22 +41,26 @@ const OUTPUT_BASE_DIR = 'docs/api/plugins';
 
 function parseGenerators(pluginPath) {
   const generatorsJsonPath = path.join(pluginPath, 'generators.json');
-  
+
   if (!fs.existsSync(generatorsJsonPath)) {
     return null; // Plugin might not have generators
   }
 
-  const generatorsJson = JSON.parse(fs.readFileSync(generatorsJsonPath, 'utf-8'));
+  const generatorsJson = JSON.parse(
+    fs.readFileSync(generatorsJsonPath, 'utf-8')
+  );
   const generators = new Map();
 
-  for (const [name, config] of Object.entries(generatorsJson.generators || {})) {
+  for (const [name, config] of Object.entries(
+    generatorsJson.generators || {}
+  )) {
     // Skip hidden generators
     if (config.hidden) {
       continue;
     }
 
     const schemaPath = path.join(pluginPath, config.schema);
-    
+
     if (fs.existsSync(schemaPath)) {
       const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf-8'));
       generators.set(name, { config, schema });
@@ -66,72 +70,6 @@ function parseGenerators(pluginPath) {
   return generators;
 }
 
-function parseExecutors(pluginPath) {
-  const executorsJsonPath = path.join(pluginPath, 'executors.json');
-  
-  if (!fs.existsSync(executorsJsonPath)) {
-    return null; // Plugin might not have executors
-  }
-
-  const executorsJson = JSON.parse(fs.readFileSync(executorsJsonPath, 'utf-8'));
-  const executors = new Map();
-
-  for (const [name, config] of Object.entries(executorsJson.executors || {})) {
-    // Skip hidden executors
-    if (config.hidden) {
-      continue;
-    }
-
-    const schemaPath = path.join(pluginPath, config.schema);
-    
-    if (fs.existsSync(schemaPath)) {
-      const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf-8'));
-      executors.set(name, { config, schema });
-    }
-  }
-
-  return executors;
-}
-
-function parseMigrations(pluginPath) {
-  const migrationsJsonPath = path.join(pluginPath, 'migrations.json');
-  
-  if (!fs.existsSync(migrationsJsonPath)) {
-    return null; // Plugin might not have migrations
-  }
-
-  const migrationsJson = JSON.parse(fs.readFileSync(migrationsJsonPath, 'utf-8'));
-  const migrations = new Map();
-
-  // Handle migrations in generators/schematics format
-  for (const [migrationName, migrationConfig] of Object.entries(migrationsJson.generators || migrationsJson.schematics || {})) {
-    migrations.set(migrationName, { 
-      version: migrationConfig.version || 'unknown', 
-      config: migrationConfig,
-      packageJsonUpdates: migrationConfig.packageJsonUpdates || {},
-      factory: migrationConfig.factory || migrationConfig.implementation,
-      requires: migrationConfig.requires
-    });
-  }
-
-  // Also check for packageJsonUpdates at the root level
-  if (migrationsJson.packageJsonUpdates) {
-    for (const [version, updates] of Object.entries(migrationsJson.packageJsonUpdates)) {
-      const migrationName = `update-${version}`;
-      if (!migrations.has(migrationName)) {
-        migrations.set(migrationName, {
-          version,
-          config: { description: `Update dependencies to version ${version}` },
-          packageJsonUpdates: updates,
-          factory: null
-        });
-      }
-    }
-  }
-
-  return migrations;
-}
-
 function getPropertyType(property) {
   if (property.type) {
     if (Array.isArray(property.type)) {
@@ -139,11 +77,11 @@ function getPropertyType(property) {
     }
     return property.type;
   }
-  
+
   if (property.oneOf) {
     return 'string';
   }
-  
+
   return 'any';
 }
 
@@ -164,17 +102,20 @@ function getPropertyDefault(property) {
     }
     return `\`${JSON.stringify(property.default)}\``;
   }
-  
+
   if (property.$default) {
-    if (property.$default.$source === 'argv' && property.$default.index !== undefined) {
+    if (
+      property.$default.$source === 'argv' &&
+      property.$default.index !== undefined
+    ) {
       return 'From command line';
     }
   }
-  
+
   return '';
 }
 
-function generateGeneratorsMarkdown(pluginName, generators) {
+function generateMarkdown(pluginName, generators) {
   const packageName = `@nx/${pluginName}`;
   let markdown = `---
 title: "${packageName} Generators"
@@ -191,17 +132,21 @@ Below is a complete reference for all available generators and their options.
 `;
 
   // Sort generators alphabetically
-  const sortedGenerators = Array.from(generators.entries()).sort(([a], [b]) => a.localeCompare(b));
+  const sortedGenerators = Array.from(generators.entries()).sort(([a], [b]) =>
+    a.localeCompare(b)
+  );
 
   for (const [name, { config, schema }] of sortedGenerators) {
     const fullGeneratorName = `${packageName}:${name}`;
-    
+
     markdown += `
 ### \`${name}\`
 `;
 
     if (schema.description || config.description) {
-      markdown += `${escapeForMdx(schema.description || config.description)}\n\n`;
+      markdown += `${escapeForMdx(
+        schema.description || config.description
+      )}\n\n`;
     }
 
     markdown += `**Usage:**
@@ -212,18 +157,22 @@ nx generate ${fullGeneratorName} [options]
 
     if (config.aliases && config.aliases.length > 0) {
       markdown += `
-**Aliases:** ${config.aliases.map(a => `\`${a}\``).join(', ')}
+**Aliases:** ${config.aliases.map((a) => `\`${a}\``).join(', ')}
 `;
     }
 
     // Positional arguments (usually the first required property)
     const required = schema.required || [];
     const properties = schema.properties || {};
-    
+
     // Check for properties with $default.$source === 'argv'
     const positionalArgs = [];
     for (const [propName, prop] of Object.entries(properties)) {
-      if (prop.$default && prop.$default.$source === 'argv' && typeof prop.$default.index === 'number') {
+      if (
+        prop.$default &&
+        prop.$default.$source === 'argv' &&
+        typeof prop.$default.index === 'number'
+      ) {
         positionalArgs[prop.$default.index] = propName;
       }
     }
@@ -232,7 +181,9 @@ nx generate ${fullGeneratorName} [options]
       markdown += `
 **Arguments:**
 \`\`\`bash
-nx generate ${fullGeneratorName} ${positionalArgs.map(arg => `&lt;${arg}&gt;`).join(' ')} [options]
+nx generate ${fullGeneratorName} ${positionalArgs
+        .map((arg) => `&lt;${arg}&gt;`)
+        .join(' ')} [options]
 \`\`\`
 `;
     }
@@ -248,10 +199,10 @@ nx generate ${fullGeneratorName} ${positionalArgs.map(arg => `&lt;${arg}&gt;`).j
       const sortedProperties = Object.entries(properties).sort(([a], [b]) => {
         const aRequired = required.includes(a);
         const bRequired = required.includes(b);
-        
+
         if (aRequired && !bRequired) return -1;
         if (!aRequired && bRequired) return 1;
-        
+
         return a.localeCompare(b);
       });
 
@@ -265,7 +216,7 @@ nx generate ${fullGeneratorName} ${positionalArgs.map(arg => `&lt;${arg}&gt;`).j
         const description = escapeForMdx(property.description || '');
         const defaultValue = getPropertyDefault(property);
         const isRequired = required.includes(propName);
-        
+
         let optionName = `\`--${propName}\``;
         if (isRequired) {
           optionName += ' **[required]**';
@@ -278,7 +229,11 @@ nx generate ${fullGeneratorName} ${positionalArgs.map(arg => `&lt;${arg}&gt;`).j
     }
 
     // Add examples if we can detect common patterns
-    if (name === 'init' || name === 'configuration' || name === 'component-configuration') {
+    if (
+      name === 'init' ||
+      name === 'configuration' ||
+      name === 'component-configuration'
+    ) {
       markdown += `
 #### Examples
 
@@ -306,216 +261,16 @@ nx generate ${packageName}:<generator> --help
   return markdown;
 }
 
-function generateExecutorsMarkdown(pluginName, executors) {
-  const packageName = `@nx/${pluginName}`;
-  let markdown = `---
-title: "${packageName} Executors"
-description: "Complete reference for all ${packageName} executor commands"
-sidebar_label: Executors
----
-
-# ${packageName} Executors
-
-The ${packageName} plugin provides various executors to run tasks on your ${pluginName} projects within your Nx workspace.
-Below is a complete reference for all available executors and their options.
-
-## Available Executors
-`;
-
-  // Sort executors alphabetically
-  const sortedExecutors = Array.from(executors.entries()).sort(([a], [b]) => a.localeCompare(b));
-
-  for (const [name, { config, schema }] of sortedExecutors) {
-    markdown += `
-### \`${name}\`
-`;
-
-    if (schema.description || config.description) {
-      markdown += `${escapeForMdx(schema.description || config.description)}\n\n`;
-    }
-
-    markdown += `**Usage:**
-\`\`\`bash
-nx run &lt;project&gt;:${name} [options]
-\`\`\`
-`;
-
-    if (config.aliases && config.aliases.length > 0) {
-      markdown += `
-**Aliases:** ${config.aliases.map(a => `\`${a}\``).join(', ')}
-`;
-    }
-
-    const properties = schema.properties || {};
-    
-    if (Object.keys(properties).length > 0) {
-      markdown += `
-#### Options
-
-| Option | Type | Description | Default |
-|--------|------|-------------|---------|`;
-
-      // Sort properties alphabetically, but put required ones first
-      const required = schema.required || [];
-      const sortedProperties = Object.entries(properties).sort(([a], [b]) => {
-        const aRequired = required.includes(a);
-        const bRequired = required.includes(b);
-        
-        if (aRequired && !bRequired) return -1;
-        if (!aRequired && bRequired) return 1;
-        
-        return a.localeCompare(b);
-      });
-
-      for (const [propName, property] of sortedProperties) {
-        const type = getPropertyType(property);
-        const description = escapeForMdx(property.description || '');
-        const defaultValue = getPropertyDefault(property);
-        const isRequired = required.includes(propName);
-        
-        let optionName = `\`--${propName}\``;
-        if (isRequired) {
-          optionName += ' **[required]**';
-        }
-
-        markdown += `\n| ${optionName} | ${type} | ${description} | ${defaultValue} |`;
-      }
-
-      markdown += '\n';
-    }
-  }
-
-  markdown += `
-## Getting Help
-
-You can get help for any executor by adding the \`--help\` flag:
-
-\`\`\`bash
-nx run &lt;project&gt;:&lt;executor&gt; --help
-\`\`\`
-`;
-
-  return markdown;
-}
-
-function generateMigrationsMarkdown(pluginName, migrations) {
-  const packageName = `@nx/${pluginName}`;
-  let markdown = `---
-title: "${packageName} Migrations"
-description: "Complete reference for all ${packageName} migration commands"
-sidebar_label: Migrations
----
-
-# ${packageName} Migrations
-
-The ${packageName} plugin provides various migrations to help you update your ${pluginName} projects and dependencies within your Nx workspace.
-Below is a complete reference for all available migrations and their details.
-
-## Available Migrations
-`;
-
-  // Sort migrations by version, then by name
-  const sortedMigrations = Array.from(migrations.entries()).sort(([a, dataA], [b, dataB]) => {
-    // First sort by version
-    const versionComparison = dataA.version.localeCompare(dataB.version, undefined, { numeric: true });
-    if (versionComparison !== 0) return versionComparison;
-    // Then by migration name
-    return a.localeCompare(b);
-  });
-
-  for (const [name, { version, config, packageJsonUpdates, factory, requires }] of sortedMigrations) {
-    markdown += `
-### \`${name}\`
-`;
-
-    if (config.description) {
-      markdown += `${escapeForMdx(config.description)}\n\n`;
-    }
-
-    markdown += `**Version:** \`${version}\`\n\n`;
-
-    if (factory) {
-      markdown += `**Implementation:** \`${factory}\`\n\n`;
-    }
-
-    // Show package.json updates if any
-    if (packageJsonUpdates && Object.keys(packageJsonUpdates).length > 0) {
-      markdown += `#### Package Updates
-
-This migration updates the following packages:
-
-| Package | Version | Type |
-|---------|---------|------|`;
-
-      for (const [packageType, packages] of Object.entries(packageJsonUpdates)) {
-        if (typeof packages === 'object' && packages !== null) {
-          for (const [packageName, versionSpec] of Object.entries(packages)) {
-            let version = versionSpec;
-            if (typeof versionSpec === 'object') {
-              version = versionSpec.version || JSON.stringify(versionSpec);
-            }
-            markdown += `\n| \`${packageName}\` | \`${version}\` | ${packageType} |`;
-          }
-        }
-      }
-
-      markdown += '\n';
-    }
-
-    // Show if migration requires manual steps
-    if (requires || config.requires) {
-      const requiresData = requires || config.requires;
-      markdown += `
-#### Requirements
-
-This migration requires the following:
-
-`;
-      if (typeof requiresData === 'object' && !Array.isArray(requiresData)) {
-        // Handle object format like {"cypress": ">=14.0.0"}
-        for (const [packageName, versionSpec] of Object.entries(requiresData)) {
-          markdown += `- \`${packageName}\` ${versionSpec}\n`;
-        }
-      } else if (Array.isArray(requiresData)) {
-        for (const requirement of requiresData) {
-          markdown += `- ${escapeForMdx(requirement)}\n`;
-        }
-      } else {
-        markdown += `- ${escapeForMdx(requiresData)}\n`;
-      }
-      markdown += '\n';
-    }
-  }
-
-  markdown += `
-## Running Migrations
-
-To run a specific migration:
-
-\`\`\`bash
-nx migrate ${packageName}@&lt;version&gt;
-\`\`\`
-
-To see what migrations are available:
-
-\`\`\`bash
-nx migrate ${packageName}@latest --dry-run
-\`\`\`
-`;
-
-  return markdown;
-}
-
 function main() {
   console.log('Generating plugin documentation...');
-  
+
   let successCount = 0;
   let skipCount = 0;
   let errorCount = 0;
 
   for (const relativePath of PLUGIN_PATHS) {
     const pluginPath = path.join(__dirname, relativePath);
-    
+
     if (!fs.existsSync(pluginPath)) {
       console.log(`⚠️  Skipping ${relativePath} - path does not exist`);
       skipCount++;
@@ -524,59 +279,36 @@ function main() {
 
     // Extract plugin name from path
     const pluginName = path.basename(pluginPath);
-    
+
     try {
       const generators = parseGenerators(pluginPath);
-      const executors = parseExecutors(pluginPath);
-      const migrations = parseMigrations(pluginPath);
-      
-      if (!generators && !executors && !migrations) {
-        console.log(`⚠️  Skipping ${pluginName} - no generators.json, executors.json, or migrations.json found`);
-        skipCount++;
-        continue;
-      }
-      
-      const hasGenerators = generators && generators.size > 0;
-      const hasExecutors = executors && executors.size > 0;
-      const hasMigrations = migrations && migrations.size > 0;
-      
-      if (!hasGenerators && !hasExecutors && !hasMigrations) {
-        console.log(`⚠️  Skipping ${pluginName} - no visible generators, executors, or migrations found`);
+
+      if (!generators) {
+        console.log(`⚠️  Skipping ${pluginName} - no generators.json found`);
         skipCount++;
         continue;
       }
 
+      if (generators.size === 0) {
+        console.log(`⚠️  Skipping ${pluginName} - no visible generators found`);
+        skipCount++;
+        continue;
+      }
+
+      // Generate markdown
+      const markdown = generateMarkdown(pluginName, generators);
+
       // Create output directory
       const outputDir = path.join(__dirname, '..', OUTPUT_BASE_DIR, pluginName);
       fs.mkdirSync(outputDir, { recursive: true });
-      
-      let generatedFiles = [];
-      
-      // Generate generators documentation if we have generators
-      if (hasGenerators) {
-        const generatorsMarkdown = generateGeneratorsMarkdown(pluginName, generators);
-        const generatorsOutputPath = path.join(outputDir, 'generators.md');
-        fs.writeFileSync(generatorsOutputPath, generatorsMarkdown);
-        generatedFiles.push(`${generators.size} generators`);
-      }
-      
-      // Generate executors documentation if we have executors
-      if (hasExecutors) {
-        const executorsMarkdown = generateExecutorsMarkdown(pluginName, executors);
-        const executorsOutputPath = path.join(outputDir, 'executors.md');
-        fs.writeFileSync(executorsOutputPath, executorsMarkdown);
-        generatedFiles.push(`${executors.size} executors`);
-      }
-      
-      // Generate migrations documentation if we have migrations
-      if (hasMigrations) {
-        const migrationsMarkdown = generateMigrationsMarkdown(pluginName, migrations);
-        const migrationsOutputPath = path.join(outputDir, 'migrations.md');
-        fs.writeFileSync(migrationsOutputPath, migrationsMarkdown);
-        generatedFiles.push(`${migrations.size} migrations`);
-      }
-      
-      console.log(`✅ Generated documentation for ${pluginName} (${generatedFiles.join(', ')})`);
+
+      // Write markdown file
+      const outputPath = path.join(outputDir, 'generators.md');
+      fs.writeFileSync(outputPath, markdown);
+
+      console.log(
+        `✅ Generated documentation for ${pluginName} (${generators.size} generators)`
+      );
       successCount++;
     } catch (error) {
       console.error(`❌ Error processing ${pluginName}:`, error.message);
@@ -588,7 +320,7 @@ function main() {
   console.log(`  ✅ Successfully generated: ${successCount}`);
   console.log(`  ⚠️  Skipped: ${skipCount}`);
   console.log(`  ❌ Errors: ${errorCount}`);
-  
+
   if (errorCount > 0) {
     process.exit(1);
   }

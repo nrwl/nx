@@ -1,6 +1,6 @@
 ---
-title: "@nx/node Migrations"
-description: "Complete reference for all @nx/node migration commands"
+title: '@nx/node Migrations'
+description: 'Complete reference for all @nx/node migration commands'
 sidebar_label: Migrations
 ---
 
@@ -12,6 +12,7 @@ Below is a complete reference for all available migrations and their details.
 ## Available Migrations
 
 ### `update-20.4.0`
+
 Update dependencies to version 20.4.0
 
 **Version:** `20.4.0`
@@ -20,14 +21,14 @@ Update dependencies to version 20.4.0
 
 This migration updates the following packages:
 
-| Package | Version | Type |
-|---------|---------|------|
-| `fastify` | `~5.2.1` | packages |
-| `fastify-plugin` | `~5.0.1` | packages |
-| `@fastify/autoload` | `~6.0.3` | packages |
-| `@fastify/sensible` | `~6.0.2` | packages |
-| `express` | `^4.21.2` | packages |
-| `@types/express` | `^4.17.21` | packages |
+| Package             | Version    | Type     |
+| ------------------- | ---------- | -------- |
+| `fastify`           | `~5.2.1`   | packages |
+| `fastify-plugin`    | `~5.0.1`   | packages |
+| `@fastify/autoload` | `~6.0.3`   | packages |
+| `@fastify/sensible` | `~6.0.2`   | packages |
+| `express`           | `^4.21.2`  | packages |
+| `@types/express`    | `^4.17.21` | packages |
 
 ## Running Migrations
 

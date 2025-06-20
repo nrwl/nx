@@ -1,6 +1,6 @@
 ---
-title: "@nx/nest Migrations"
-description: "Complete reference for all @nx/nest migration commands"
+title: '@nx/nest Migrations'
+description: 'Complete reference for all @nx/nest migration commands'
 sidebar_label: Migrations
 ---
 
@@ -12,6 +12,7 @@ Below is a complete reference for all available migrations and their details.
 ## Available Migrations
 
 ### `update-21.2.0-beta.2`
+
 Update dependencies to version 21.2.0-beta.2
 
 **Version:** `21.2.0-beta.2`
@@ -20,9 +21,9 @@ Update dependencies to version 21.2.0-beta.2
 
 This migration updates the following packages:
 
-| Package | Version | Type |
-|---------|---------|------|
-| `nest` | `^11.0.0` | packages |
+| Package              | Version   | Type     |
+| -------------------- | --------- | -------- |
+| `nest`               | `^11.0.0` | packages |
 | `@nestjs/schematics` | `^11.0.0` | packages |
 
 ## Running Migrations

@@ -1,6 +1,6 @@
 ---
-title: "@nx/gradle Generators"
-description: "Complete reference for all @nx/gradle generator commands"
+title: '@nx/gradle Generators'
+description: 'Complete reference for all @nx/gradle generator commands'
 sidebar_label: Generators
 ---
 
@@ -12,23 +12,26 @@ Below is a complete reference for all available generators and their options.
 ## Available Generators
 
 ### `ci-workflow`
+
 Setup a CI Workflow to run Nx in CI.
 
 **Usage:**
+
 ```bash
 nx generate @nx/gradle:ci-workflow [options]
 ```
 
 **Arguments:**
+
 ```bash
 nx generate @nx/gradle:ci-workflow &lt;name&gt; [options]
 ```
 
 #### Options
 
-| Option | Type | Description | Default |
-|--------|------|-------------|---------|
-| `--ci` **[required]** | string | CI provider. |  |
+| Option                | Type   | Description  | Default |
+| --------------------- | ------ | ------------ | ------- |
+| `--ci` **[required]** | string | CI provider. |         |
 
 ## Getting Help
 

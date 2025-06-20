@@ -1,6 +1,6 @@
 ---
-title: "@nx/rollup Migrations"
-description: "Complete reference for all @nx/rollup migration commands"
+title: '@nx/rollup Migrations'
+description: 'Complete reference for all @nx/rollup migration commands'
 sidebar_label: Migrations
 ---
 
@@ -12,6 +12,7 @@ Below is a complete reference for all available migrations and their details.
 ## Available Migrations
 
 ### `update-19.0.0`
+
 Update dependencies to version 19.0.0
 
 **Version:** `19.0.0`
@@ -20,10 +21,10 @@ Update dependencies to version 19.0.0
 
 This migration updates the following packages:
 
-| Package | Version | Type |
-|---------|---------|------|
+| Package              | Version  | Type     |
+| -------------------- | -------- | -------- |
 | `@rollup/plugin-url` | `^8.0.2` | packages |
-| `@svgr/rollup` | `^8.1.0` | packages |
+| `@svgr/rollup`       | `^8.1.0` | packages |
 
 ## Running Migrations
 

@@ -1,6 +1,6 @@
 ---
-title: "@nx/nuxt Migrations"
-description: "Complete reference for all @nx/nuxt migration commands"
+title: '@nx/nuxt Migrations'
+description: 'Complete reference for all @nx/nuxt migration commands'
 sidebar_label: Migrations
 ---
 
@@ -12,12 +12,12 @@ Below is a complete reference for all available migrations and their details.
 ## Available Migrations
 
 ### `add-vue-to-storybook-config`
+
 Add vue() plugin to viteFinal in Storybook config files when it is missing.
 
 **Version:** `19.6.0-beta.0`
 
 **Implementation:** `./src/migrations/update-19-6-0/add-vue-plugin-to-storybook-config`
-
 
 ## Running Migrations
 
