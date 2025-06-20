@@ -48,7 +48,7 @@
         "description": "Don't include the directory in the name of the module or standalone component entry of the library.",
         "type": "boolean",
         "default": false,
-        "x-deprecated": "Provide the exact name instead. This option will be removed in Nx 22."
+        "x-deprecated": "Use the --name option to provide the exact name instead. This option will be removed in Nx 22."
       },
       "addModuleSpec": {
         "description": "Add a module spec file.",

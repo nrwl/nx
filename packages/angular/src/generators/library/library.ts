@@ -51,7 +51,7 @@ export async function libraryGenerator(
   if (schema.simpleName !== undefined && schema.simpleName !== false) {
     // TODO(v22): Remove simpleName as user should be using name.
     logger.warn(
-      `The "simpleName" option is deprecated and will be removed in Nx 22. Please provide the exact name you want to use for the library instead.`
+      `The "--simpleName" option is deprecated and will be removed in Nx 22. Please use the "--name" option to provide the exact name you want for the library.`
     );
   }
 
