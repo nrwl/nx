@@ -115,6 +115,11 @@ async function createNodesInternal(
         root: projectRoot,
         targets,
         metadata,
+        release: {
+          version: {
+            versionActions: '@nx/docker/release/version-actions',
+          },
+        },
       },
     },
   };

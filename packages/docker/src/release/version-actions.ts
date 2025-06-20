@@ -1,0 +1,98 @@
+import { VersionActions } from 'nx/release';
+import type { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
+import { getLatestCommitSha } from 'nx/src/utils/git-utils';
+import { ProjectGraph, type ProjectGraphDependency, Tree } from '@nx/devkit';
+import { execSync } from 'child_process';
+
+export default class DockerVersionActions extends VersionActions {
+  validManifestFilenames: string[] = ['Dockerfile'];
+
+  async readCurrentVersionFromSourceManifest(
+    tree: Tree
+  ): Promise<{ currentVersion: string; manifestPath: string } | null> {
+    return {
+      currentVersion: '0.0.0',
+      manifestPath: null,
+    };
+  }
+
+  async readCurrentVersionFromRegistry(
+    tree: Tree,
+    currentVersionResolverMetadata: NxReleaseVersionConfiguration['currentVersionResolverMetadata']
+  ): Promise<{ currentVersion: string | null; logText: string } | null> {
+    return {
+      currentVersion: '0.0.0',
+      logText: 'Cannot retrieve from registry',
+    };
+  }
+
+  async readCurrentVersionOfDependency(
+    tree: Tree,
+    projectGraph: ProjectGraph,
+    dependencyProjectName: string
+  ): Promise<{
+    currentVersion: string | null;
+    dependencyCollection: string | null;
+  }> {
+    // Docker does not require reading versions of dependencies
+    return {
+      currentVersion: null,
+      dependencyCollection: null,
+    };
+  }
+
+  async calculateNewVersion(
+    currentVersion: string | null,
+    newVersionInput: string,
+    newVersionInputReason: string,
+    newVersionInputReasonData: Record<string, unknown>,
+    preid: string
+  ): Promise<{
+    newVersion: string;
+    logText: string;
+  }> {
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const formatted = `${yy}${mm}.${dd}`;
+    const shortSha = getLatestCommitSha();
+    const newVersion = `${formatted}.${shortSha}`;
+
+    return {
+      newVersion,
+      logText: `New version applied: ${newVersion}`,
+    };
+  }
+
+  async readDependencies(
+    tree: Tree,
+    projectGraph: ProjectGraph
+  ): Promise<ProjectGraphDependency[]> {
+    // Docker has no need to read dependent projects from the graph
+    return [];
+  }
+
+  async updateProjectVersion(
+    tree: Tree,
+    newVersion: string
+  ): Promise<string[]> {
+    // Should only return log messages if `--dry-run`
+    // Should run `docker tag image_name registry/repo_name:newVersion`
+    // docker tag will be able to tag the image if it exists, so we'd have to enforce preVersionCommand
+    const imageTag = this.projectGraphNode.data.root
+      .replace(/^[\\/]/, '')
+      .replace(/[\\/\s]+/g, '-');
+    execSync(`docker tag ${imageTag} columferrynx/apps-acme:${newVersion}`);
+    return [`Image ${imageTag} tagged with ${newVersion}`];
+  }
+
+  async updateProjectDependencies(
+    tree: Tree,
+    projectGraph: ProjectGraph,
+    dependenciesToUpdate: Record<string, string>
+  ): Promise<string[]> {
+    // Dockerfiles manage dependent images and versions internally
+    return [];
+  }
+}
