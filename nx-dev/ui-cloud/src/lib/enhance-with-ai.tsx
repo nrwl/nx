@@ -1,6 +1,9 @@
 import {
+  AcademicCapIcon,
+  CircleStackIcon,
   CloudArrowDownIcon,
   CodeBracketIcon,
+  HeartIcon,
   RectangleGroupIcon,
   ServerStackIcon,
 } from '@heroicons/react/24/outline';
@@ -10,24 +13,41 @@ import { ReactElement } from 'react';
 
 const features = [
   {
-    name: 'AI explainer',
+    name: 'Self-healing CI',
     description:
-      "Debug task errors on your CI pipeline directly in your pipeline's UI.",
-    icon: CodeBracketIcon,
+      'Automatically fix flaky tests, letting you merge with confidence and eliminating wasted time babysitting PRs.',
+    icon: HeartIcon,
+    isAvailable: false,
+    link: '',
+  },
+  {
+    name: 'AI data analysis',
+    description:
+      'Ask questions about your runs and tasks in natural language. Get real-time, data-driven answers to "Why did this build slow down?" or "Which tests are the flakiest this week?"',
+    icon: CircleStackIcon,
+    isAvailable: false,
+    link: '',
+  },
+  {
+    name: 'Nx MCP (Model Context Protocol)',
+    description:
+      'Gives your AI assistant the "map" it needs. Make your AI understand your workspace structure, enabling faster and more reliable coding, debugging, and refactoring.',
+    icon: AcademicCapIcon,
     isAvailable: true,
-    link: '/ci/features/explain-with-ai#explain-with-ai-betautm_source=nx.app&utm_campaign=ai-section',
+    link: '/features/enhance-ai',
   },
   {
     name: 'Dynamic Nx Agent sizing',
     description:
-      'Automatically adjust Nx Agents numbers depending on your workspace usage and needs.',
+      'Automatically scale the number and size of Nx Agents to match your workload, perfectly balancing CI speed and infrastructure cost without any manual configuration.',
     icon: ServerStackIcon,
     isAvailable: false,
     link: '',
   },
   {
     name: 'Task cache miss diagnosis',
-    description: 'Understand why a task has a cache miss and how to fix it.',
+    description:
+      "Instantly understand why a cache miss occurred and get clear instructions on how to fix it, maximizing your team's caching efficiency.",
     icon: CloudArrowDownIcon,
     isAvailable: false,
     link: '',
@@ -35,10 +55,18 @@ const features = [
   {
     name: 'Organization insights',
     description:
-      "Understand your teams' workspaces: shared code usage, ownership, bottlenecks.",
+      "Get a bird's-eye view of your teams' workspaces. Understand shared code usage, identify cross-team bottlenecks, and enforce architectural consistency across your entire organization.",
     icon: RectangleGroupIcon,
     isAvailable: false,
     link: '',
+  },
+  {
+    name: 'AI explainer',
+    description:
+      'Get clear, actionable explanations for complex CI errors directly in your task logs. Stop deciphering cryptic messages and start fixing the root cause.',
+    icon: CodeBracketIcon,
+    isAvailable: true,
+    link: '/ci/features/explain-with-ai',
   },
 ];
 
