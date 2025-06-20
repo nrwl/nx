@@ -1,6 +1,7 @@
 ---
-title: @nx/cypress Generators
-description: Complete reference for all @nx/cypress generator commands
+title: "@nx/cypress Generators"
+description: "Complete reference for all @nx/cypress generator commands"
+sidebar_label: Generators
 ---
 
 # @nx/cypress Generators
@@ -27,7 +28,7 @@ nx generate @nx/cypress:configuration [options]
 | `--project` **[required]** | string | The project to add a Cypress configuration to |  |
 | `--baseUrl` | string | The address (with the port) which your application is running on. If you wish to start your application when running the e2e target, then use --devServerTarget instead. |  |
 | `--bundler` | string | The Cypress bundler to use. | `webpack` |
-| `--devServerTarget` | string | A devServerTarget,'<projectName>:<targetName>[:<configName>], that will be used to run tests against. This is usually the app this project will be used in. Pass --baseUrl if you wish to not use a devServerTarget. |  |
+| `--devServerTarget` | string | A devServerTarget,'&lt;projectName&gt;:&lt;targetName&gt;[:&lt;configName&gt;], that will be used to run tests against. This is usually the app this project will be used in. Pass --baseUrl if you wish to not use a devServerTarget. |  |
 | `--directory` | string | A directory where the project is placed relative from the project root | `cypress` |
 | `--js` | boolean | Generate JavaScript files rather than TypeScript files. | `false` |
 | `--jsx` | boolean | Whether or not this project uses JSX. | `true` |

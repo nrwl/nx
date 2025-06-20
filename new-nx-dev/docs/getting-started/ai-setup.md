@@ -1,5 +1,5 @@
 ---
-title: Nx AI MCP
+title: AI Integration
 description: Set up Nx MCP server to give AI assistants deep workspace context, terminal integration, and enhanced development capabilities.
 ---
 

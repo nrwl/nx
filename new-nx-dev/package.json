@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
-    "start": "npm run generate-cli-docs && docusaurus start --no-open",
-    "build": "npm run generate-cli-docs && docusaurus build",
+    "start": "npm run generate-docs && docusaurus start --no-open",
+    "build": "npm run generate-docs && docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
@@ -13,7 +13,9 @@
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
     "typecheck": "tsc",
-    "generate-cli-docs": "tsx scripts/generate-cli-docs.ts"
+    "generate-docs": "npm run generate-cli-docs && npm run generate-plugin-docs",
+    "generate-cli-docs": "tsx scripts/generate-cli-docs.ts",
+    "generate-plugin-docs": "node scripts/generate-plugin-docs.js"
   },
   "dependencies": {
     "@docusaurus/core": "3.8.1",

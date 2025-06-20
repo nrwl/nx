@@ -3,11 +3,47 @@
 const fs = require('fs');
 const path = require('path');
 
+// TODO: make this a glob pattern or something so we don't have to manually update
+// Define the plugins to generate documentation for
+const PLUGIN_PATHS = [
+  '../../packages/cypress',
+  '../../packages/react',
+  '../../packages/next',
+  '../../packages/angular',
+  '../../packages/vue',
+  '../../packages/vite',
+  '../../packages/webpack',
+  '../../packages/jest',
+  '../../packages/eslint',
+  '../../packages/storybook',
+  '../../packages/playwright',
+  '../../packages/rollup',
+  '../../packages/esbuild',
+  '../../packages/rspack',
+  '../../packages/remix',
+  '../../packages/expo',
+  '../../packages/react-native',
+  '../../packages/detox',
+  '../../packages/express',
+  '../../packages/nest',
+  '../../packages/node',
+  '../../packages/js',
+  '../../packages/web',
+  '../../packages/workspace',
+  '../../packages/devkit',
+  '../../packages/nx',
+  '../../packages/plugin',
+  '../../packages/nuxt',
+  '../../packages/gradle',
+];
+
+const OUTPUT_BASE_DIR = 'docs/api/plugins';
+
 function parseGenerators(pluginPath) {
   const generatorsJsonPath = path.join(pluginPath, 'generators.json');
   
   if (!fs.existsSync(generatorsJsonPath)) {
-    throw new Error(`generators.json not found at ${generatorsJsonPath}`);
+    return null; // Plugin might not have generators
   }
 
   const generatorsJson = JSON.parse(fs.readFileSync(generatorsJsonPath, 'utf-8'));
@@ -45,10 +81,20 @@ function getPropertyType(property) {
   return 'any';
 }
 
+function escapeForMdx(str) {
+  if (typeof str !== 'string') return str;
+  // Escape angle brackets that might be interpreted as JSX
+  return str
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/{/g, '&#123;')
+    .replace(/}/g, '&#125;');
+}
+
 function getPropertyDefault(property) {
   if (property.default !== undefined) {
     if (typeof property.default === 'string') {
-      return `\`${property.default}\``;
+      return `\`${escapeForMdx(property.default)}\``;
     }
     return `\`${JSON.stringify(property.default)}\``;
   }
@@ -65,8 +111,9 @@ function getPropertyDefault(property) {
 function generateMarkdown(pluginName, generators) {
   const packageName = `@nx/${pluginName}`;
   let markdown = `---
-title: ${packageName} Generators
-description: Complete reference for all ${packageName} generator commands
+title: "${packageName} Generators"
+description: "Complete reference for all ${packageName} generator commands"
+sidebar_label: Generators
 ---
 
 # ${packageName} Generators
@@ -88,7 +135,7 @@ Below is a complete reference for all available generators and their options.
 `;
 
     if (schema.description || config.description) {
-      markdown += `${schema.description || config.description}\n\n`;
+      markdown += `${escapeForMdx(schema.description || config.description)}\n\n`;
     }
 
     markdown += `**Usage:**
@@ -119,7 +166,7 @@ nx generate ${fullGeneratorName} [options]
       markdown += `
 **Arguments:**
 \`\`\`bash
-nx generate ${fullGeneratorName} ${positionalArgs.map(arg => `<${arg}>`).join(' ')} [options]
+nx generate ${fullGeneratorName} ${positionalArgs.map(arg => `&lt;${arg}&gt;`).join(' ')} [options]
 \`\`\`
 `;
     }
@@ -149,7 +196,7 @@ nx generate ${fullGeneratorName} ${positionalArgs.map(arg => `<${arg}>`).join(' 
         }
 
         const type = getPropertyType(property);
-        const description = property.description || '';
+        const description = escapeForMdx(property.description || '');
         const defaultValue = getPropertyDefault(property);
         const isRequired = required.includes(propName);
         
@@ -194,50 +241,64 @@ nx generate ${packageName}:<generator> --help
 }
 
 function main() {
-  const args = process.argv.slice(2);
+  console.log('Generating plugin documentation...');
   
-  if (args.length < 1) {
-    console.error('Usage: node generate-plugin-docs.js <plugin-path> [output-dir]');
-    console.error('Example: node generate-plugin-docs.js packages/cypress new-nx-dev/docs/api/plugins');
-    process.exit(1);
-  }
+  let successCount = 0;
+  let skipCount = 0;
+  let errorCount = 0;
 
-  const pluginPath = args[0];
-  const outputBaseDir = args[1] || 'new-nx-dev/docs/api/plugins';
-  
-  if (!fs.existsSync(pluginPath)) {
-    console.error(`Plugin path does not exist: ${pluginPath}`);
-    process.exit(1);
-  }
-
-  // Extract plugin name from path
-  const pluginName = path.basename(pluginPath);
-  
-  try {
-    console.log(`Parsing generators for ${pluginName}...`);
-    const generators = parseGenerators(pluginPath);
+  for (const relativePath of PLUGIN_PATHS) {
+    const pluginPath = path.join(__dirname, relativePath);
     
-    if (generators.size === 0) {
-      console.log(`No generators found for ${pluginName}`);
-      return;
+    if (!fs.existsSync(pluginPath)) {
+      console.log(`⚠️  Skipping ${relativePath} - path does not exist`);
+      skipCount++;
+      continue;
     }
 
-    console.log(`Found ${generators.size} generators`);
+    // Extract plugin name from path
+    const pluginName = path.basename(pluginPath);
     
-    // Generate markdown
-    const markdown = generateMarkdown(pluginName, generators);
-    
-    // Create output directory
-    const outputDir = path.join(outputBaseDir, pluginName);
-    fs.mkdirSync(outputDir, { recursive: true });
-    
-    // Write markdown file
-    const outputPath = path.join(outputDir, 'generators.md');
-    fs.writeFileSync(outputPath, markdown);
-    
-    console.log(`Generated documentation at: ${outputPath}`);
-  } catch (error) {
-    console.error('Error generating documentation:', error);
+    try {
+      const generators = parseGenerators(pluginPath);
+      
+      if (!generators) {
+        console.log(`⚠️  Skipping ${pluginName} - no generators.json found`);
+        skipCount++;
+        continue;
+      }
+      
+      if (generators.size === 0) {
+        console.log(`⚠️  Skipping ${pluginName} - no visible generators found`);
+        skipCount++;
+        continue;
+      }
+
+      // Generate markdown
+      const markdown = generateMarkdown(pluginName, generators);
+      
+      // Create output directory
+      const outputDir = path.join(__dirname, '..', OUTPUT_BASE_DIR, pluginName);
+      fs.mkdirSync(outputDir, { recursive: true });
+      
+      // Write markdown file
+      const outputPath = path.join(outputDir, 'generators.md');
+      fs.writeFileSync(outputPath, markdown);
+      
+      console.log(`✅ Generated documentation for ${pluginName} (${generators.size} generators)`);
+      successCount++;
+    } catch (error) {
+      console.error(`❌ Error processing ${pluginName}:`, error.message);
+      errorCount++;
+    }
+  }
+
+  console.log(`\nSummary:`);
+  console.log(`  ✅ Successfully generated: ${successCount}`);
+  console.log(`  ⚠️  Skipped: ${skipCount}`);
+  console.log(`  ❌ Errors: ${errorCount}`);
+  
+  if (errorCount > 0) {
     process.exit(1);
   }
 }
