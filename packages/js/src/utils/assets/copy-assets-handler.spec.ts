@@ -66,8 +66,12 @@ describe('AssetInputOutputHandler', () => {
   let projectDir: string;
   let outputDir: string;
   let callback: jest.SpyInstance;
+  let originalCwd: string;
 
   beforeEach(() => {
+    // Store original cwd to restore later
+    originalCwd = process.cwd();
+
     // Resolve to real paths to avoid symlink discrepancies with watcher.
     const tmp = fs.realpathSync(path.join(os.tmpdir()));
 
@@ -100,6 +104,11 @@ describe('AssetInputOutputHandler', () => {
         'LICENSE',
       ],
     });
+  });
+
+  afterEach(() => {
+    // Restore original cwd
+    process.chdir(originalCwd);
   });
 
   test('watchAndProcessOnAssetChange', async () => {
@@ -216,6 +225,61 @@ describe('AssetInputOutputHandler', () => {
         type: 'create',
         src: path.join(rootDir, 'mylib/docs/test2.md'),
         dest: path.join(rootDir, 'dist/mylib/docs/test2.md'),
+      },
+    ]);
+  });
+
+  test('should copy assets to correct location when running from nested directory', async () => {
+    // Create a nested directory structure to simulate running from a subdirectory
+    const nestedDir = path.join(rootDir, 'e2e', 'integration-tests');
+    fs.mkdirSync(nestedDir, { recursive: true });
+
+    // Change to nested directory to simulate running nx command from there
+    process.chdir(nestedDir);
+
+    // Create test files
+    fs.writeFileSync(path.join(rootDir, 'LICENSE'), 'license');
+    fs.writeFileSync(path.join(projectDir, 'README.md'), 'readme');
+    fs.writeFileSync(path.join(projectDir, 'docs/test1.md'), 'test');
+
+    // Create CopyAssetsHandler with relative outputDir (this is where the bug manifests)
+    const nestedSut = new CopyAssetsHandler({
+      rootDir,
+      projectDir,
+      outputDir: 'dist/mylib', // relative path - this triggers the bug
+      callback: callback as any,
+      assets: [
+        'mylib/*.md',
+        {
+          input: 'mylib/docs',
+          glob: '**/*.md',
+          output: 'docs',
+        },
+        'LICENSE',
+      ],
+    });
+
+    await nestedSut.processAllAssetsOnce();
+
+    expect(callback).toHaveBeenCalledWith([
+      {
+        type: 'create',
+        src: path.join(rootDir, 'LICENSE'),
+        dest: path.join(rootDir, 'dist/mylib/LICENSE'),
+      },
+    ]);
+    expect(callback).toHaveBeenCalledWith([
+      {
+        type: 'create',
+        src: path.join(rootDir, 'mylib/README.md'),
+        dest: path.join(rootDir, 'dist/mylib/README.md'),
+      },
+    ]);
+    expect(callback).toHaveBeenCalledWith([
+      {
+        type: 'create',
+        src: path.join(rootDir, 'mylib/docs/test1.md'),
+        dest: path.join(rootDir, 'dist/mylib/docs/test1.md'),
       },
     ]);
   });
