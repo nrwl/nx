@@ -91,7 +91,7 @@ export async function* webpackExecutor(
   context: ExecutorContext
 ): AsyncGenerator<WebpackExecutorEvent, WebpackExecutorEvent, undefined> {
   // Default to production build.
-  if(!process.env['NODE_ENV']) {
+  if (!process.env['NODE_ENV']) {
     process.env['NODE_ENV'] = 'production';
   }
 

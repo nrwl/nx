@@ -3,10 +3,7 @@
   "compilerOptions": {
     "outDir": "../../dist/packages/remix/spec",
     "module": "commonjs",
-    "types": [
-      "jest",
-      "node"
-    ],
+    "types": ["jest", "node"],
     "resolveJsonModule": true
   },
   "include": [

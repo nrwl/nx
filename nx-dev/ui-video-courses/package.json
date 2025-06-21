@@ -1,0 +1,12 @@
+{
+  "name": "@nx/nx-dev-ui-video-courses",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@nx/nx-dev-data-access-courses": "workspace:",
+    "@nx/nx-dev-ui-primitives": "workspace:",
+    "@nx/nx-dev-ui-common": "workspace:"
+  }
+}

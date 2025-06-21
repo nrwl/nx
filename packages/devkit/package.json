@@ -35,7 +35,8 @@
     "semver": "^7.5.3",
     "yargs-parser": "21.1.1",
     "minimatch": "9.0.3",
-    "enquirer": "~2.3.6"
+    "enquirer": "~2.3.6",
+    "nx": "workspace:"
   },
   "publishConfig": {
     "access": "public"

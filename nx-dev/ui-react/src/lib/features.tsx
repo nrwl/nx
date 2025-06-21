@@ -201,7 +201,6 @@ export function Features(): ReactElement {
         />
         <FeatureCard
           title="Zero Configuration"
-          j
           description="Add Nx to your existing monorepo in minutes."
           href="/recipes/adopting-nx/adding-to-monorepo"
           icon={

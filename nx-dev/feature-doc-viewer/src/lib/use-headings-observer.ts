@@ -17,7 +17,7 @@ export function useHeadingsObserver(
     const node = elementRef?.current; // DOM Ref
     const hasIOSupport = !!window.IntersectionObserver;
 
-    if (!hasIOSupport || !node) return;
+    if (!hasIOSupport || !node) return undefined;
     const observer = new IntersectionObserver(handleObserver, {
       threshold,
       root,

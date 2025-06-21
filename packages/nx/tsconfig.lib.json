@@ -4,9 +4,7 @@
     "module": "commonjs",
     "outDir": "../../dist/packages/nx",
     "declaration": true,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "composite": true,
     "noEmit": false
   },
@@ -17,9 +15,5 @@
     "**/__fixtures__/**/*.*",
     "./src/internal-testing-utils/**/*.ts"
   ],
-  "include": [
-    "**/*.ts",
-    "**/*.json",
-    "migrations.json"
-  ]
+  "include": ["**/*.ts", "**/*.json", "migrations.json"]
 }

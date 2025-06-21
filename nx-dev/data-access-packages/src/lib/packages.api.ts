@@ -1,4 +1,4 @@
-import { TagsApi } from '@nx/dev-data-access-documents/node-only';
+import { TagsApi } from '@nx/nx-dev-data-access-documents/node-only';
 import { DocumentMetadata } from '@nx/nx-dev-models-document';
 import {
   FileMetadata,

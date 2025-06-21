@@ -1,13 +1,9 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
-    "types": [
-      "node"
-    ],
-    "lib": [
-      "dom"
-    ],
+    "outDir": "../../dist/out-tsc/nx-dev/feature-ai",
+    "types": ["node"],
+    "lib": ["dom"],
     "composite": true,
     "declaration": true
   },
@@ -22,12 +18,7 @@
     "**/*.test.tsx",
     "jest.config.ts"
   ],
-  "include": [
-    "**/*.js",
-    "**/*.jsx",
-    "**/*.ts",
-    "**/*.tsx"
-  ],
+  "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"],
   "references": [
     {
       "path": "../feature-analytics/tsconfig.lib.json"
@@ -44,5 +35,5 @@
     {
       "path": "../util-ai/tsconfig.lib.json"
     }
-  ],
+  ]
 }

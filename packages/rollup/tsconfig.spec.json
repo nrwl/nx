@@ -3,17 +3,9 @@
   "compilerOptions": {
     "outDir": "../../dist/packages/rollup/spec",
     "module": "commonjs",
-    "types": [
-      "jest",
-      "node"
-    ]
+    "types": ["jest", "node"]
   },
-  "include": [
-    "jest.config.ts",
-    "**/*.test.ts",
-    "**/*.spec.ts",
-    "**/*.d.ts"
-  ],
+  "include": ["jest.config.ts", "**/*.test.ts", "**/*.spec.ts", "**/*.d.ts"],
   "references": [
     {
       "path": "./tsconfig.lib.json"

@@ -1,7 +1,7 @@
 packages:
-  - "packages/*"
-  - "e2e/*"
-  - "graph/*"
-  - "nx-dev/*"
-  - "tools/*"
-  - "typedoc-theme"
+  - 'packages/*'
+  - 'e2e/*'
+  - 'graph/*'
+  - 'nx-dev/*'
+  - 'tools/*'
+  - 'typedoc-theme'

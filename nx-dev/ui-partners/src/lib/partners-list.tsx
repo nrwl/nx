@@ -8,7 +8,7 @@ import {
   LiveLoveAppIcon,
   NStudioIcon,
   ZephyrCloudIcon,
-} from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-icons';
 import { useEffect, useMemo, useState } from 'react';
 import { Partner } from './partner';
 

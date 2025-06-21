@@ -1,7 +1,7 @@
 import { getBasicPluginsSection } from '@nx/nx-dev-data-access-menu';
 import { DocViewer } from '@nx/nx-dev-feature-doc-viewer';
 import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev-models-document';
-import { Menu, MenuItem } from '@nx/nx-dev/models-menu';
+import { Menu, MenuItem } from '@nx/nx-dev-models-menu';
 import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev-ui-common';
 import { GetStaticPaths, GetStaticProps } from 'next';
 import { useRouter } from 'next/router';

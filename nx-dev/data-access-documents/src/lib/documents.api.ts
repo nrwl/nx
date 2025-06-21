@@ -5,7 +5,7 @@ import {
   type RelatedDocument,
 } from '@nx/nx-dev-models-document';
 import { type ProcessedPackageMetadata } from '@nx/nx-dev-models-package';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { type TagsApi } from './tags.api';
 import { extractFrontmatter } from '@nx/nx-dev-ui-markdoc';

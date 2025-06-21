@@ -4,9 +4,7 @@
     "module": "commonjs",
     "outDir": "../../dist/packages/create-nx-plugin",
     "declaration": true,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "composite": true,
     "noEmit": false
   },
@@ -17,10 +15,7 @@
     "**/*_test.ts",
     "jest.config.ts"
   ],
-  "include": [
-    "**/*.ts",
-    "**/*.json"
-  ],
+  "include": ["**/*.ts", "**/*.json"],
   "references": [
     {
       "path": "../create-nx-workspace/tsconfig.lib.json"

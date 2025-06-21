@@ -4,6 +4,27 @@
   "include": [],
   "references": [
     {
+      "path": "../workspace"
+    },
+    {
+      "path": "../react"
+    },
+    {
+      "path": "../eslint"
+    },
+    {
+      "path": "../js"
+    },
+    {
+      "path": "../jest"
+    },
+    {
+      "path": "../devkit"
+    },
+    {
+      "path": "../detox"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ]

@@ -9,6 +9,12 @@
   "files": [],
   "references": [
     {
+      "path": "../js"
+    },
+    {
+      "path": "../devkit"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ]

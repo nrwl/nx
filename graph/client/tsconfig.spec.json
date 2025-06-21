@@ -3,13 +3,8 @@
   "compilerOptions": {
     "outDir": "../../dist/graph/client/spec",
     "module": "commonjs",
-    "types": [
-      "jest",
-      "node"
-    ],
-    "lib": [
-      "DOM"
-    ]
+    "types": ["jest", "node"],
+    "lib": ["DOM"]
   },
   "include": [
     "**/*.test.ts",

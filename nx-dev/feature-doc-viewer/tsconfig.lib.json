@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/out-tsc/nx-dev/feature-doc-viewer",
     "types": ["node"],
     "lib": ["dom"],
     "composite": true,
@@ -19,12 +19,12 @@
     "jest.config.ts"
   ],
   "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"],
-    "references": [
+  "references": [
     { "path": "../feature-analytics/tsconfig.lib.json" },
     { "path": "../feature-feedback/tsconfig.lib.json" },
     { "path": "../models-document/tsconfig.lib.json" },
     { "path": "../ui-common/tsconfig.lib.json" },
     { "path": "../ui-markdoc/tsconfig.lib.json" },
     { "path": "../ui-primitives/tsconfig.lib.json" }
-  ],
+  ]
 }

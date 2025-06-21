@@ -7,6 +7,15 @@
   "files": [],
   "references": [
     {
+      "path": "../node"
+    },
+    {
+      "path": "../js"
+    },
+    {
+      "path": "../devkit"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ]

@@ -2,11 +2,9 @@ import { DefaultLayout } from '@nx/nx-dev-ui-common';
 import {
   CallToAction,
   Features,
-  FeatureSections,
   GettingStarted,
   Hero,
-  Resources,
-} from '@nx/nx-dev/ui-gradle';
+} from '@nx/nx-dev-ui-gradle';
 
 import type { Metadata } from 'next';
 

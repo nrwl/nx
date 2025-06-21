@@ -6,7 +6,7 @@ import {
   ProcessedDocument,
   RelatedDocument,
 } from '@nx/nx-dev-models-document';
-import { MenuItem } from '@nx/nx-dev/models-menu';
+import { MenuItem } from '@nx/nx-dev-models-menu';
 import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev-ui-common';
 import { GetStaticPaths, GetStaticProps } from 'next';
 import { menusApi } from '../lib/menus.api';

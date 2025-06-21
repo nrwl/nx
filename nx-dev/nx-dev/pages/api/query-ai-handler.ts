@@ -65,7 +65,7 @@ export default async function handler(request: NextRequest) {
       });
 
     const sourcesMarkdown = formatMarkdownSources(pageSections);
-    const stream = OpenAIStream(response);
+    const stream = OpenAIStream(response as any);
     const finalStream = await appendToStream(stream, sourcesMarkdown);
 
     return new StreamingTextResponse(finalStream);

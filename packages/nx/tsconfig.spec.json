@@ -4,7 +4,7 @@
     "outDir": "../../dist/packages/nx/spec",
     "module": "commonjs",
     "types": ["jest", "node"],
-    "composite": true,
+    "composite": true
   },
   "include": [
     "**/*.spec.ts",

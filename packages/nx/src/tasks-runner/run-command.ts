@@ -155,8 +155,9 @@ async function getTerminalOutputLifeCycle(
         nxArgs.targets.join(', ') +
         ` for ${projectNames.length} ${projectText}`;
       if (tasks.length > projectNames.length) {
-        titleText += `, and ${tasks.length - projectNames.length
-          } requisite ${taskText}`;
+        titleText += `, and ${
+          tasks.length - projectNames.length
+        } requisite ${taskText}`;
       }
     }
 
@@ -457,11 +458,11 @@ export async function runCommand(
       const exitCode = !completed
         ? signalToCode('SIGINT')
         : Object.values(taskResults).some(
-          (taskResult) =>
-            taskResult.status === 'failure' || taskResult.status === 'skipped'
-        )
-          ? 1
-          : 0;
+            (taskResult) =>
+              taskResult.status === 'failure' || taskResult.status === 'skipped'
+          )
+        ? 1
+        : 0;
 
       await runPostTasksExecution({
         taskResults,
@@ -642,10 +643,11 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     // throw an error to stop the execution of the tasks.
     if (areAllResultsFailures) {
       output.error({
-        title: `The workspace is probably out of sync because ${failedGeneratorsCount === 1
+        title: `The workspace is probably out of sync because ${
+          failedGeneratorsCount === 1
             ? 'a sync generator'
             : 'some sync generators'
-          } failed to run`,
+        } failed to run`,
         bodyLines: failedSyncGeneratorsFixMessageLines,
       });
     } else {
@@ -670,10 +672,11 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
 
   if (areAllResultsFailures) {
     output.warn({
-      title: `The workspace is probably out of sync because ${failedGeneratorsCount === 1
+      title: `The workspace is probably out of sync because ${
+        failedGeneratorsCount === 1
           ? 'a sync generator'
           : 'some sync generators'
-        } failed to run`,
+      } failed to run`,
       bodyLines: failedSyncGeneratorsFixMessageLines,
     });
 
@@ -719,9 +722,9 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
       ...resultBodyLines,
       ...(nxJson.sync?.applyChanges === true
         ? [
-          '',
-          'Proceeding to sync the identified changes automatically (`sync.applyChanges` is set to `true` in your `nx.json`).',
-        ]
+            '',
+            'Proceeding to sync the identified changes automatically (`sync.applyChanges` is set to `true` in your `nx.json`).',
+          ]
         : []),
     ],
   });
@@ -745,8 +748,8 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
           ...getFlushFailureMessageLines(flushResult, nxArgs.verbose),
           ...(flushResult.generalFailure
             ? [
-              'If needed, you can run the tasks with the `--skip-sync` flag to disable syncing.',
-            ]
+                'If needed, you can run the tasks with the `--skip-sync` flag to disable syncing.',
+              ]
             : []),
         ],
       });
@@ -767,24 +770,25 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
 
     const successTitle = anySyncGeneratorsFailed
       ? // the identified changes were synced successfully, but the workspace
-      // is still not up to date, which we'll mention next
-      'The identified changes were synced successfully!'
+        // is still not up to date, which we'll mention next
+        'The identified changes were synced successfully!'
       : // the workspace is fully up to date
-      'The workspace was synced successfully!';
+        'The workspace was synced successfully!';
     const successSubtitle =
       nxJson.sync?.applyChanges === true
         ? 'Please make sure to commit the changes to your repository or this will error in CI.'
         : // The user was prompted and we already logged a message about erroring in CI
-        // so here we just tell them to commit the changes.
-        'Please make sure to commit the changes to your repository.';
+          // so here we just tell them to commit the changes.
+          'Please make sure to commit the changes to your repository.';
     spinner.succeed(`${successTitle}\n\n${successSubtitle}`);
 
     if (anySyncGeneratorsFailed) {
       output.warn({
-        title: `The workspace is probably still out of sync because ${failedGeneratorsCount === 1
+        title: `The workspace is probably still out of sync because ${
+          failedGeneratorsCount === 1
             ? 'a sync generator'
             : 'some sync generators'
-          } failed to run`,
+        } failed to run`,
         bodyLines: failedSyncGeneratorsFixMessageLines,
       });
 
@@ -951,74 +955,74 @@ export async function invokeTasksRunner({
   let promiseOrObservable:
     | Observable<{ task: Task; success: boolean }>
     | Promise<{ [id: string]: TaskStatus }> = tasksRunner(
-      tasks,
-      {
-        ...runnerOptions,
-        lifeCycle: compositedLifeCycle,
-      },
-      {
-        initiatingProject,
-        initiatingTasks,
-        projectGraph,
-        nxJson,
-        nxArgs,
-        taskGraph,
-        hasher: {
-          hashTask(task: Task, taskGraph_?: TaskGraph, env?: NodeJS.ProcessEnv) {
-            if (!taskGraph_) {
-              output.warn({
-                title: `TaskGraph is now required as an argument to hashTask`,
-                bodyLines: [
-                  `The TaskGraph object can be retrieved from the context`,
-                  'This will result in an error in Nx 20',
-                ],
-              });
-              taskGraph_ = taskGraph;
-            }
-            if (!env) {
-              output.warn({
-                title: `The environment variables are now required as an argument to hashTask`,
-                bodyLines: [
-                  `Please pass the environment variables used when running the task`,
-                  'This will result in an error in Nx 20',
-                ],
-              });
-              env = process.env;
-            }
-            return hasher.hashTask(task, taskGraph_, env);
-          },
-          hashTasks(
-            task: Task[],
-            taskGraph_?: TaskGraph,
-            env?: NodeJS.ProcessEnv
-          ) {
-            if (!taskGraph_) {
-              output.warn({
-                title: `TaskGraph is now required as an argument to hashTasks`,
-                bodyLines: [
-                  `The TaskGraph object can be retrieved from the context`,
-                  'This will result in an error in Nx 20',
-                ],
-              });
-              taskGraph_ = taskGraph;
-            }
-            if (!env) {
-              output.warn({
-                title: `The environment variables are now required as an argument to hashTasks`,
-                bodyLines: [
-                  `Please pass the environment variables used when running the tasks`,
-                  'This will result in an error in Nx 20',
-                ],
-              });
-              env = process.env;
-            }
-
-            return hasher.hashTasks(task, taskGraph_, env);
-          },
+    tasks,
+    {
+      ...runnerOptions,
+      lifeCycle: compositedLifeCycle,
+    },
+    {
+      initiatingProject,
+      initiatingTasks,
+      projectGraph,
+      nxJson,
+      nxArgs,
+      taskGraph,
+      hasher: {
+        hashTask(task: Task, taskGraph_?: TaskGraph, env?: NodeJS.ProcessEnv) {
+          if (!taskGraph_) {
+            output.warn({
+              title: `TaskGraph is now required as an argument to hashTask`,
+              bodyLines: [
+                `The TaskGraph object can be retrieved from the context`,
+                'This will result in an error in Nx 20',
+              ],
+            });
+            taskGraph_ = taskGraph;
+          }
+          if (!env) {
+            output.warn({
+              title: `The environment variables are now required as an argument to hashTask`,
+              bodyLines: [
+                `Please pass the environment variables used when running the task`,
+                'This will result in an error in Nx 20',
+              ],
+            });
+            env = process.env;
+          }
+          return hasher.hashTask(task, taskGraph_, env);
         },
-        daemon: daemonClient,
-      }
-    );
+        hashTasks(
+          task: Task[],
+          taskGraph_?: TaskGraph,
+          env?: NodeJS.ProcessEnv
+        ) {
+          if (!taskGraph_) {
+            output.warn({
+              title: `TaskGraph is now required as an argument to hashTasks`,
+              bodyLines: [
+                `The TaskGraph object can be retrieved from the context`,
+                'This will result in an error in Nx 20',
+              ],
+            });
+            taskGraph_ = taskGraph;
+          }
+          if (!env) {
+            output.warn({
+              title: `The environment variables are now required as an argument to hashTasks`,
+              bodyLines: [
+                `Please pass the environment variables used when running the tasks`,
+                'This will result in an error in Nx 20',
+              ],
+            });
+            env = process.env;
+          }
+
+          return hasher.hashTasks(task, taskGraph_, env);
+        },
+      },
+      daemon: daemonClient,
+    }
+  );
   if ((promiseOrObservable as any).subscribe) {
     promiseOrObservable = convertObservableToPromise(
       promiseOrObservable as Observable<{ task: Task; success: boolean }>

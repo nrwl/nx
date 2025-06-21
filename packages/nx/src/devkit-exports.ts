@@ -107,7 +107,10 @@ export { output } from './utils/output';
 /**
  * @category Package Manager
  */
-export type { PackageManager } from './utils/package-manager';
+export type {
+  PackageManager,
+  PackageManagerCommands,
+} from './utils/package-manager';
 
 /**
  * @category Package Manager

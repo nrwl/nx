@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/out-tsc/nx-dev/ui-references",
     "types": ["node"],
     "composite": true,
     "declaration": true

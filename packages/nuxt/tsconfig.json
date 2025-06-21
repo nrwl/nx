@@ -7,6 +7,21 @@
   "include": [],
   "references": [
     {
+      "path": "../vite"
+    },
+    {
+      "path": "../vue"
+    },
+    {
+      "path": "../eslint"
+    },
+    {
+      "path": "../js"
+    },
+    {
+      "path": "../devkit"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ]
