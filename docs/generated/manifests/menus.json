@@ -7210,6 +7210,30 @@
                   }
                 ],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Polygraph",
+                "path": "/ci/recipes/enterprise/polygraph",
+                "id": "polygraph",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Metadata Only Workspaces",
+                "path": "/ci/recipes/enterprise/metadata-only-workspace",
+                "id": "metadata-only-workspace",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Custom Workflows",
+                "path": "/ci/recipes/enterprise/custom-workflows",
+                "id": "custom-workflows",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
