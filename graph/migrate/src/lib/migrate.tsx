@@ -17,6 +17,7 @@ import {
   MigrationSettingsPanel,
   AutomaticMigration,
 } from './components';
+import { getCurrentMigrationType } from './state/automatic/selectors';
 
 export interface MigrateUIProps {
   migrations: MigrationDetailsWithId[];
@@ -37,6 +38,7 @@ export interface MigrateUIProps {
   ) => void;
   onSkipMigration: (migration: MigrationDetailsWithId) => void;
   onUndoMigration: (migration: MigrationDetailsWithId) => void;
+  onStopMigration: (migration: MigrationDetailsWithId) => void;
   onCancel: () => void;
   onFinish: (squashCommits: boolean) => void;
   onFileClick: (
@@ -49,7 +51,6 @@ export interface MigrateUIProps {
 
 export enum PrimaryAction {
   RunMigrations = 'Run Migrations',
-  PauseMigrations = 'Pause Migrations',
   ApproveChanges = 'Approve Changes to Continue',
   FinishWithoutSquashingCommits = 'Finish without squashing commits',
   FinishSquashingCommits = 'Finish (squash commits)',
@@ -74,9 +75,22 @@ export function MigrateUI(props: MigrateUIProps) {
       },
     },
   });
+  const currentMigration = useSelector(
+    actor,
+    (state) => state.context.currentMigration
+  );
+
   const isDone = useSelector(actor, (state) => state.matches('done'));
   const isInit = useSelector(actor, (state) => state.matches('init'));
   const isRunning = useSelector(actor, (state) => state.matches('running'));
+  const isCurrentMigrationStopped = useSelector(
+    actor,
+    (state) => getCurrentMigrationType(state.context) === 'stopped'
+  );
+  const isCurrentMigrationFailed = useSelector(
+    actor,
+    (state) => getCurrentMigrationType(state.context) === 'failed'
+  );
 
   const isNeedReview = useSelector(actor, (state) =>
     state.matches('needsReview')
@@ -108,40 +122,43 @@ export function MigrateUI(props: MigrateUIProps) {
   useEffect(() => {
     if (
       (primaryAction === PrimaryAction.ApproveChanges ||
-        primaryAction === PrimaryAction.RunMigrations ||
-        primaryAction === PrimaryAction.PauseMigrations) &&
+        primaryAction === PrimaryAction.RunMigrations) &&
       !isInit
     ) {
       setPrimaryAction(
-        isRunning
-          ? PrimaryAction.PauseMigrations
-          : isNeedReview
+        isNeedReview && !isCurrentMigrationFailed
           ? PrimaryAction.ApproveChanges
           : PrimaryAction.RunMigrations
       );
     }
-  }, [isRunning, primaryAction, isInit, isNeedReview]);
+  }, [
+    isRunning,
+    primaryAction,
+    isInit,
+    isNeedReview,
+    isCurrentMigrationFailed,
+  ]);
 
-  const handlePauseResume = () => {
-    if (isRunning) {
-      actor.send({ type: 'pause' });
-    } else {
-      actor.send({ type: 'startRunning' });
-    }
+  const handleStartMigration = () => {
+    actor.send({ type: 'startRunning' });
   };
 
   const handlePrimaryActionSelection = () => {
-    if (
-      primaryAction === PrimaryAction.RunMigrations ||
-      primaryAction === PrimaryAction.PauseMigrations
-    ) {
-      handlePauseResume();
+    if (primaryAction === PrimaryAction.RunMigrations) {
+      handleStartMigration();
     } else if (
       primaryAction === PrimaryAction.FinishWithoutSquashingCommits ||
       primaryAction === PrimaryAction.FinishSquashingCommits
     ) {
       props.onFinish(primaryAction === PrimaryAction.FinishSquashingCommits);
     }
+  };
+
+  const handleStopMigration = () => {
+    if (!currentMigration) {
+      return;
+    }
+    props.onStopMigration(currentMigration);
   };
 
   if (isInit) {
@@ -197,30 +214,43 @@ export function MigrateUI(props: MigrateUIProps) {
         />
       </div>
       <div className="bottom-0 flex shrink-0 justify-end gap-2 bg-transparent py-4">
+        <button
+          onClick={props.onCancel}
+          type="button"
+          className="flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+        >
+          Cancel
+        </button>
         <div className="flex gap-2">
           <button
-            onClick={props.onCancel}
+            onClick={handleStopMigration}
+            disabled={isCurrentMigrationStopped || isNeedReview}
             type="button"
-            className="flex w-full items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+            className={`flex items-center rounded-md border px-4 py-2 text-sm font-medium shadow-sm ${
+              isCurrentMigrationStopped || isNeedReview
+                ? 'cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 dark:border-gray-600 dark:bg-gray-600 dark:text-gray-400'
+                : 'border-red-300 bg-red-500 text-white hover:bg-red-600 dark:border-red-600 dark:bg-red-600 hover:dark:bg-red-700'
+            }`}
           >
-            Cancel
+            Stop Migration
           </button>
+
           <div className="group flex">
             <button
               onClick={handlePrimaryActionSelection}
               type="button"
               title={primaryAction}
               disabled={isNeedReview}
-              className="whitespace-nowrap rounded-l-md border border-blue-700 bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600 disabled:cursor-not-allowed disabled:border-blue-400 disabled:bg-blue-400 disabled:opacity-50 dark:border-blue-700 dark:bg-blue-600 dark:text-white hover:dark:bg-blue-700"
+              className="whitespace-nowrap rounded-l-md border border-blue-700 bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm enabled:hover:bg-blue-600 disabled:cursor-not-allowed disabled:border-blue-400 disabled:bg-blue-400 disabled:opacity-50 dark:border-blue-700 dark:bg-blue-600 dark:text-white enabled:hover:dark:bg-blue-700"
             >
               {primaryAction}
             </button>
             <div className="relative flex">
               <button
                 type="button"
-                onClick={() => setIsOpen((prev) => !prev)}
                 disabled={isNeedReview}
-                className="border-l-1 flex items-center rounded-r-md border border-blue-700 bg-blue-500 px-2 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:border-blue-400 disabled:bg-blue-400 disabled:opacity-50 dark:border-blue-700 dark:bg-blue-700 dark:text-white hover:dark:bg-blue-800"
+                onClick={() => setIsOpen((prev) => !prev)}
+                className="border-l-1 flex items-center rounded-r-md border border-blue-700 bg-blue-500 px-2 py-2 text-sm font-medium text-white shadow-sm enabled:hover:bg-blue-700 disabled:cursor-not-allowed disabled:border-blue-400 disabled:bg-blue-400 disabled:opacity-50 dark:border-blue-700 dark:bg-blue-700 dark:text-white enabled:hover:dark:bg-blue-800"
               >
                 <ChevronDownIcon className="h-4 w-4" />
               </button>
@@ -233,52 +263,25 @@ export function MigrateUI(props: MigrateUIProps) {
                 }}
               >
                 <ul className="p-2">
-                  {!isDone && (
-                    <>
-                      {' '}
-                      {!isRunning && (
-                        <li
-                          className="flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
-                          onClick={() => {
-                            setPrimaryAction(PrimaryAction.RunMigrations);
-                            setIsOpen(false);
-                          }}
-                        >
-                          <span
-                            className={
-                              primaryAction === PrimaryAction.RunMigrations
-                                ? 'inline-block'
-                                : 'opacity-0'
-                            }
-                          >
-                            <CheckIcon className="h-4 w-4" />
-                          </span>
-                          <span>{'Run Migrations'}</span>
-                        </li>
-                      )}
-                      {isRunning && (
-                        <li
-                          className="flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
-                          onClick={() => {
-                            setPrimaryAction(PrimaryAction.PauseMigrations);
-                            setIsOpen(false);
-                          }}
-                        >
-                          <span
-                            className={
-                              primaryAction === PrimaryAction.PauseMigrations
-                                ? 'inline-block'
-                                : 'opacity-0'
-                            }
-                          >
-                            <CheckIcon className="h-4 w-4" />
-                          </span>
-                          <span>{'Pause Migrations'}</span>
-                        </li>
-                      )}
-                      <div className="my-1 h-0.5 w-full bg-slate-300/30" />
-                    </>
-                  )}
+                  <li
+                    className="flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+                    onClick={() => {
+                      setPrimaryAction(PrimaryAction.RunMigrations);
+                      setIsOpen(false);
+                    }}
+                  >
+                    <span
+                      className={
+                        primaryAction === PrimaryAction.RunMigrations
+                          ? 'inline-block'
+                          : 'opacity-0'
+                      }
+                    >
+                      <CheckIcon className="h-4 w-4" />
+                    </span>
+                    <span>{'Run Migrations'}</span>
+                  </li>
+                  <div className="my-1 h-0.5 w-full bg-slate-300/30" />
                   <li
                     className="flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
                     onClick={() => {

@@ -106,6 +106,13 @@ export function MigrateApp({
     });
   };
 
+  const onStopMigration = (migration: MigrationDetailsWithId) => {
+    externalApiService.postEvent({
+      type: 'stop-migration',
+      payload: { migration },
+    });
+  };
+
   return (
     <MigrateUI
       migrations={migrations}
@@ -119,6 +126,7 @@ export function MigrateApp({
       onUndoMigration={onUndoMigration}
       onViewImplementation={onViewImplementation}
       onViewDocumentation={onViewDocumentation}
+      onStopMigration={onStopMigration}
     ></MigrateUI>
   );
 }
