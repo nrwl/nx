@@ -41,7 +41,7 @@ const features = [
 
 export function EnhancedSecurity(): ReactElement {
   return (
-    <section id="ai-for-your-ci" className="scroll-mt-24">
+    <section id="enterprise-grade-ci-security" className="scroll-mt-24">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <SectionHeading as="h2" variant="title" id="deep-understanding">

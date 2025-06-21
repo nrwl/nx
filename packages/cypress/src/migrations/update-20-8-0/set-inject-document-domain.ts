@@ -49,7 +49,12 @@ function setInjectDocumentDomain(cypressConfig: string): string {
 
   const sourceFile = tsquery.ast(cypressConfig);
   let e2eProperty = getObjectProperty(config, 'e2e');
-  let componentProperty = getObjectProperty(config, 'component');
+  let hasOtherTopLevelProperties = config.properties.some(
+    (p): p is PropertyAssignment =>
+      ts.isPropertyAssignment(p) &&
+      p.name.getText() !== 'e2e' &&
+      p.name.getText() !== 'component'
+  );
   let updatedConfig = config;
 
   const topLevelExperimentalSkipDomainInjectionProperty = getObjectProperty(
@@ -116,62 +121,10 @@ function setInjectDocumentDomain(cypressConfig: string): string {
     }
   }
 
-  let componentSkipDomainState: 'not-set' | 'skipping' | 'not-skipping' =
-    'not-set';
-  if (componentProperty) {
-    let experimentalSkipDomainInjectionProperty: PropertyAssignment | undefined;
-    let isObjectLiteral = false;
-    if (ts.isObjectLiteralExpression(componentProperty.initializer)) {
-      experimentalSkipDomainInjectionProperty = getObjectProperty(
-        componentProperty.initializer,
-        'experimentalSkipDomainInjection'
-      );
-      isObjectLiteral = true;
-    }
-
-    if (experimentalSkipDomainInjectionProperty) {
-      componentSkipDomainState =
-        !ts.isArrayLiteralExpression(
-          experimentalSkipDomainInjectionProperty.initializer
-        ) ||
-        experimentalSkipDomainInjectionProperty.initializer.elements.length > 0
-          ? 'skipping'
-          : 'not-skipping';
-    }
-
-    if (
-      componentSkipDomainState === 'not-set' &&
-      topLevelSkipDomainState === 'not-set'
-    ) {
-      updatedConfig = updateObjectProperty(updatedConfig, componentProperty, {
-        newValue: setInjectDocumentDomainInObject(
-          componentProperty.initializer
-        ),
-      });
-    } else if (componentSkipDomainState === 'not-skipping') {
-      updatedConfig = updateObjectProperty(updatedConfig, componentProperty, {
-        newValue: replaceExperimentalSkipDomainInjectionInObject(
-          componentProperty.initializer
-        ),
-      });
-    } else if (componentSkipDomainState === 'skipping') {
-      updatedConfig = updateObjectProperty(updatedConfig, componentProperty, {
-        newValue: removeObjectProperty(
-          // we only determine that it's skipping if it's an object literal
-          componentProperty.initializer as ObjectLiteralExpression,
-          getObjectProperty(
-            componentProperty.initializer as ObjectLiteralExpression,
-            'experimentalSkipDomainInjection'
-          )
-        ),
-      });
-    }
-  }
-
   if (
     topLevelSkipDomainState === 'not-set' &&
     !e2eProperty &&
-    !componentProperty
+    hasOtherTopLevelProperties
   ) {
     updatedConfig = setInjectDocumentDomainInObject(updatedConfig);
   } else if (topLevelSkipDomainState === 'not-skipping') {

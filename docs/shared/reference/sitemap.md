@@ -719,6 +719,7 @@
           - [bundle-rules](/reference/core-api/conformance/executors/bundle-rules)
         - [generators](/reference/core-api/conformance/generators)
           - [create-rule](/reference/core-api/conformance/generators/create-rule)
+          - [preset](/reference/core-api/conformance/generators/preset)
       - [azure-cache](/reference/core-api/azure-cache)
         - [Overview](/reference/core-api/azure-cache/overview)
       - [gcs-cache](/reference/core-api/gcs-cache)

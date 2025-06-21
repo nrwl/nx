@@ -974,7 +974,7 @@ Next, let's come up with a set of rules based on these tags:
 - `scope:orders` should be able to import from `scope:orders`, `scope:shared` and `scope:products`
 - `scope:products` should be able to import from `scope:products` and `scope:shared`
 
-To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.base.json` at the root of the workspace and add the following `depConstraints` in the `@nx/enforce-module-boundaries` rule configuration:
+To enforce the rules, Nx ships with a custom ESLint rule. Open the `eslint.config.mjs` at the root of the workspace and add the following `depConstraints` in the `@nx/enforce-module-boundaries` rule configuration:
 
 ```js {% fileName="eslint.config.mjs" %}
 import nx from '@nx/eslint-plugin';

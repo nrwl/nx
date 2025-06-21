@@ -7,6 +7,7 @@ import {
   GeneratorCallback,
   installPackagesTask,
   joinPathFragments,
+  logger,
   names,
   offsetFromRoot,
   ProjectConfiguration,
@@ -101,6 +102,13 @@ export async function libraryGeneratorInternal(
     })
   );
   const options = await normalizeOptions(tree, schema);
+
+  if (schema.simpleName !== undefined && schema.simpleName !== false) {
+    // TODO(v22): Remove simpleName as user should be using name.
+    logger.warn(
+      `The "--simpleName" option is deprecated and will be removed in Nx 22. Please use the "--name" option to provide the exact name you want for the library.`
+    );
+  }
 
   createFiles(tree, options);
 

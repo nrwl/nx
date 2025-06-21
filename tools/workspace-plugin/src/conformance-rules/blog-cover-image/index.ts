@@ -1,22 +1,21 @@
-import { readFileSync, existsSync } from 'node:fs';
-import { join, dirname, basename, extname } from 'node:path';
-import { load as yamlLoad } from 'js-yaml';
-import { workspaceRoot } from '@nx/devkit';
-import { sync as globSync } from 'glob';
 import {
   createConformanceRule,
-  type ProjectFilesViolation,
+  type ConformanceViolation,
 } from '@nx/conformance';
+import { workspaceRoot } from '@nx/devkit';
+import { sync as globSync } from 'glob';
+import { load as yamlLoad } from 'js-yaml';
+import { existsSync, readFileSync } from 'node:fs';
+import { extname, join } from 'node:path';
 
 export default createConformanceRule<{ mdGlobPattern: string }>({
   name: 'blog-cover-image',
   category: 'consistency',
   description:
     'Ensures that blog posts have a cover_image defined in avif or jpg format with appropriate fallbacks',
-  reporter: 'project-files-reporter',
   implementation: async ({ projectGraph, ruleOptions }) => {
-    const violations: ProjectFilesViolation[] = [];
-    const webinarWarnings: ProjectFilesViolation[] = [];
+    const violations: ConformanceViolation[] = [];
+    const webinarWarnings: ConformanceViolation[] = [];
     const { mdGlobPattern } = ruleOptions;
 
     // Look for the docs project

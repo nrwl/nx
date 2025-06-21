@@ -158,7 +158,7 @@ Below is an example on how to connect to MinIO:
     "forcePathStyle": true,
     "accessKeyId": "abc1234",
     "secretAccessKey": "4321cba",
-    "disableChecksum: true
+    "disableChecksum": true
   }
 }
 ```

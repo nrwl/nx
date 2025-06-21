@@ -69,6 +69,15 @@
         "originalFilePath": "/libs/nx-packages/conformance/src/generators/create-rule/schema.json",
         "path": "conformance/generators/create-rule",
         "type": "generator"
+      },
+      {
+        "description": "Nx workspace preset which includes a working conformance rule",
+        "file": "external-generated/packages/conformance/generators/preset.json",
+        "hidden": false,
+        "name": "preset",
+        "originalFilePath": "/libs/nx-packages/conformance/src/generators/preset/schema.json",
+        "path": "conformance/generators/preset",
+        "type": "generator"
       }
     ],
     "migrations": [],

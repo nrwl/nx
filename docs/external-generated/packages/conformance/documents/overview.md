@@ -3,6 +3,8 @@ title: Overview of the Nx powerpack-conformance Plugin
 description: The Nx Powerpack Conformance plugin provides the ability to write and apply rules for your workspace
 ---
 
+# @nx/conformance
+
 The `@nx/conformance` plugin allows [Nx Powerpack](/powerpack) users to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability** and **security**.
 
 The conformance plugin allows you to encode your own organization's standards so that they can be enforced automatically. Conformance rules can also complement linting tools by enforcing that those tools are configured in the recommended way. The rules are written in TypeScript but can be applied to any language in the codebase or focus entirely on configuration files.
