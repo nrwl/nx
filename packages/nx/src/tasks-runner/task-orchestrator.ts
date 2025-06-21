@@ -635,7 +635,6 @@ export class TaskOrchestrator {
         temporaryOutputPath,
         streamOutput
       );
-
       if (this.tuiEnabled) {
         if (runningTask instanceof PseudoTtyProcess) {
           // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
@@ -646,11 +645,18 @@ export class TaskOrchestrator {
           runningTask.onOutput((output) => {
             this.options.lifeCycle.appendTaskOutput(task.id, output, true);
           });
-        } else if ('onOutput' in runningTask) {
+        } else if (
+          'onOutput' in runningTask &&
+          typeof runningTask.onOutput === 'function'
+        ) {
+          // Register task that can provide progressive output but isn't interactive (e.g., NodeChildProcessWithNonDirectOutput)
           this.options.lifeCycle.registerRunningTaskWithEmptyParser(task.id);
           runningTask.onOutput((output) => {
             this.options.lifeCycle.appendTaskOutput(task.id, output, false);
           });
+        } else {
+          // Fallback for tasks that don't support progressive output
+          this.options.lifeCycle.registerRunningTaskWithEmptyParser(task.id);
         }
       }
 

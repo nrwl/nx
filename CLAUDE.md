@@ -177,6 +177,8 @@ Fixes #ISSUE_NUMBER
 ### Guidelines
 
 - Ensure your commit message follows the conventional commit format (use `pnpm commit`)
+  - Use `fix:`, `feat:`, `chore:`, etc. as appropriate types.
+  - Scope is **required** for all commits. Possible scopes are listed in `scripts/commitizen.js`.
 - Read the submission guidelines in CONTRIBUTING.md before posting
 - For complex changes, you can request a dedicated Nx release by mentioning the Nx team
 - Always link the related issue using "Fixes #ISSUE_NUMBER" to automatically close it when merged
