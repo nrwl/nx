@@ -100,6 +100,8 @@ export * from './lib/partners/briebug';
 export * from './lib/partners/liveloveapp';
 export * from './lib/partners/nstudio';
 export * from './lib/partners/zephry-cloud';
+export * from './lib/partners/angular-architects';
+export * from './lib/partners/this-dot-labs';
 
 // PODCASTS
 export * from './lib/podcasts/amazon-music';
