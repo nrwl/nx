@@ -1,10 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/out-tsc/nx-dev/ui-sponsor-card",
     "types": ["node"],
     "composite": true,
-    "declaration": true
+    "declaration": true,
+    "lib": ["DOM", "ES2022"]
   },
   "files": [
     "../../node_modules/@nx/react/typings/cssmodule.d.ts",

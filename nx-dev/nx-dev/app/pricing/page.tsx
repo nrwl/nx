@@ -5,7 +5,7 @@ import {
   CreditPricing,
   PlansDisplay,
   TrialCallout,
-} from '@nx/nx-dev/ui-pricing';
+} from '@nx/nx-dev-ui-pricing';
 import {
   CallToAction,
   DefaultLayout,

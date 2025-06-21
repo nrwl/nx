@@ -11,6 +11,12 @@
   "include": [],
   "references": [
     {
+      "path": "../ui-icons"
+    },
+    {
+      "path": "../ui-common"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ],

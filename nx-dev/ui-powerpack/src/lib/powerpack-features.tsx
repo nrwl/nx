@@ -15,7 +15,7 @@ import {
   TextLink,
 } from '@nx/nx-dev-ui-common';
 import { cx } from '@nx/nx-dev-ui-primitives';
-import { AnimatedCurvedBeam } from '@nx/nx-dev/ui-animations';
+import { AnimatedCurvedBeam } from '@nx/nx-dev-ui-animations';
 import {
   CircleStackIcon,
   ServerIcon,

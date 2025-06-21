@@ -11,7 +11,7 @@ import {
 import { VideoModal } from '@nx/nx-dev-ui-common';
 import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 import { motion } from 'framer-motion';
-import { MovingBorder } from '@nx/nx-dev/ui-animations';
+import { MovingBorder } from '@nx/nx-dev-ui-animations';
 import { cx } from '@nx/nx-dev-ui-primitives';
 import Image from 'next/image';
 

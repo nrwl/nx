@@ -4,6 +4,12 @@
   "include": [],
   "references": [
     {
+      "path": "../workspace"
+    },
+    {
+      "path": "../devkit"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ]

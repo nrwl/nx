@@ -8,7 +8,7 @@ import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { cx } from '@nx/nx-dev-ui-primitives';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { collectHeadings, TableOfContents } from './table-of-contents';
 import { RelatedDocumentsSection } from './related-documents-section';
 import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
@@ -24,13 +24,21 @@ export function DocViewer({
   widgetData: { githubStarsCount: number };
 }): JSX.Element {
   const router = useRouter();
+  const [currentPath, setCurrentPath] = useState<string>('');
+  const [basePath, setBasePath] = useState<string>('');
+
+  useEffect(() => {
+    setCurrentPath(router.asPath);
+    setBasePath(router.basePath);
+  }, [router.asPath, router.basePath]);
+
   const hideTableOfContent =
-    router.asPath.endsWith('/getting-started') ||
-    router.asPath.includes('/ci/intro/ci-with-nx') ||
-    router.asPath.includes('/extending-nx/intro/getting-started') ||
-    router.asPath.includes('/nx-api/devkit') ||
-    router.asPath.includes('/reference/glossary') ||
-    router.asPath.includes('/ci/reference/release-notes');
+    currentPath.endsWith('/getting-started') ||
+    currentPath.includes('/ci/intro/ci-with-nx') ||
+    currentPath.includes('/extending-nx/intro/getting-started') ||
+    currentPath.includes('/nx-api/devkit') ||
+    currentPath.includes('/reference/glossary') ||
+    currentPath.includes('/ci/reference/release-notes');
   const ref = useRef<HTMLDivElement | null>(null);
 
   const { metadata, node, treeNode } = renderMarkdown(
@@ -75,14 +83,14 @@ export function DocViewer({
           'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.'
         }
         openGraph={{
-          url: 'https://nx.dev' + router.asPath,
+          url: 'https://nx.dev' + currentPath,
           title: vm.title,
           description:
             vm.description ??
             'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.',
           images: [
             {
-              url: `https://nx.dev/images/open-graph/${router.asPath
+              url: `https://nx.dev/images/open-graph/${currentPath
                 .replace('/', '')
                 .replace(/\//gi, '-')}.${
                 vm.mediaImage ? getExtension(vm.mediaImage) : 'jpg'
@@ -144,7 +152,7 @@ export function DocViewer({
                     )}
                     <TableOfContents
                       elementRef={ref}
-                      path={router.basePath}
+                      path={basePath}
                       headings={vm.tableOfContent}
                       document={document}
                     >

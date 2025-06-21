@@ -22,11 +22,7 @@
     "noImplicitReturns": false,
     "noImplicitThis": false,
     "useUnknownInCatchVariables": false,
-    "paths": {
-      "@nx/docs": ["docs"],
-      "@nx/docs/*": ["docs/*"],
-      "nx": ["packages/nx"],
-      "nx/*": ["packages/nx/*"]
-    }
+    "composite": true,
+    "declarationMap": true
   }
 }

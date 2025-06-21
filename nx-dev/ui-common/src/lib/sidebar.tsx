@@ -19,6 +19,7 @@ import {
   useCallback,
   useRef,
   useState,
+  useEffect,
 } from 'react';
 import { NxIcon } from '@nx/nx-dev-ui-icons';
 
@@ -109,7 +110,17 @@ function SidebarSectionItems({
 }): JSX.Element {
   const router = useRouter();
   const initialRender = useRef(true);
-  const isActiveLink = withoutAnchors(router.asPath).startsWith(item.path);
+  const [currentPath, setCurrentPath] = useState<string>('');
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    setCurrentPath(router.asPath);
+  }, [router.asPath]);
+
+  const isActiveLink = isClient
+    ? withoutAnchors(currentPath).startsWith(item.path)
+    : false;
   const [collapsed, setCollapsed] = useState(
     !item.disableCollapsible && !isActiveLink
   );
@@ -168,9 +179,9 @@ function SidebarSectionItems({
       </h5>
       <ul className={collapsed ? 'hidden' : ''}>
         {children.map((subItem, index) => {
-          const isActiveLink = withoutAnchors(router.asPath).startsWith(
-            subItem.path
-          );
+          const isActiveLink = isClient
+            ? withoutAnchors(currentPath).startsWith(subItem.path)
+            : false;
           if (isActiveLink && collapsed && initialRender.current) {
             handleCollapseToggle();
           }
@@ -257,12 +268,22 @@ export function SidebarMobile({
   toggleNav,
 }: FloatingSidebarProps): JSX.Element {
   const router = useRouter();
-  const isCI: boolean = router.asPath.startsWith('/ci');
-  const isAPI: boolean = router.asPath.startsWith('/nx-api');
-  const isExtendingNx: boolean = router.asPath.startsWith('/extending-nx');
-  const isPlugins: boolean = router.asPath.startsWith('/plugin-registry');
-  const isChangelog: boolean = router.asPath.startsWith('/changelog');
-  const isAiChat: boolean = router.asPath.startsWith('/ai-chat');
+  const [currentPath, setCurrentPath] = useState<string>('');
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    setCurrentPath(router.asPath);
+  }, [router.asPath]);
+
+  const isCI: boolean = isClient && currentPath.startsWith('/ci');
+  const isAPI: boolean = isClient && currentPath.startsWith('/nx-api');
+  const isExtendingNx: boolean =
+    isClient && currentPath.startsWith('/extending-nx');
+  const isPlugins: boolean =
+    isClient && currentPath.startsWith('/plugin-registry');
+  const isChangelog: boolean = isClient && currentPath.startsWith('/changelog');
+  const isAiChat: boolean = isClient && currentPath.startsWith('/ai-chat');
   const isNx: boolean =
     !isCI &&
     !isAPI &&

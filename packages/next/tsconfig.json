@@ -7,6 +7,24 @@
   "files": [],
   "references": [
     {
+      "path": "../webpack"
+    },
+    {
+      "path": "../web"
+    },
+    {
+      "path": "../react"
+    },
+    {
+      "path": "../eslint"
+    },
+    {
+      "path": "../js"
+    },
+    {
+      "path": "../devkit"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ]

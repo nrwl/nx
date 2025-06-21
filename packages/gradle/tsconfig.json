@@ -5,6 +5,9 @@
   "include": [],
   "references": [
     {
+      "path": "../devkit"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ]

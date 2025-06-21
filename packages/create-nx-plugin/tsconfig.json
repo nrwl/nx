@@ -7,6 +7,9 @@
   "files": [],
   "references": [
     {
+      "path": "../create-nx-workspace"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ]

@@ -4,12 +4,15 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/out-tsc/nx-dev/data-access-packages",
     "types": ["node"],
     "composite": true,
     "declaration": true
   },
   "references": [
+    {
+      "path": "../data-access-documents/tsconfig.lib.json"
+    },
     {
       "path": "../models-document/tsconfig.lib.json"
     },

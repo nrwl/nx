@@ -81,9 +81,7 @@ export async function addE2e(
             `vite.config.${options.js ? 'js' : 'ts'}`
           ),
           options.addPlugin,
-          options.devServerPort ?? 4200,
-          // If the user manually sets the port, then use it for dev and preview
-          options.port
+          options.port ?? options.devServerPort ?? 4200
         )
       : await getViteE2EWebServerInfo(
           tree,
@@ -93,9 +91,7 @@ export async function addE2e(
             `vite.config.${options.js ? 'js' : 'ts'}`
           ),
           options.addPlugin,
-          options.devServerPort ?? 4200,
-          // If the user manually sets the port, then use it for dev and preview
-          options.port
+          options.port ?? options.devServerPort ?? 4200
         );
   } else if (options.bundler === 'rsbuild') {
     ensurePackage('@nx/rsbuild', nxVersion);

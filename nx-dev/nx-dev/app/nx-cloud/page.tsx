@@ -8,7 +8,7 @@ import {
   Statistics,
   TrustedBy,
   UnderstandWorkspace,
-} from '@nx/nx-dev/ui-cloud';
+} from '@nx/nx-dev-ui-cloud';
 import {
   ButtonLinkProps,
   CallToAction,

@@ -8,9 +8,9 @@
       "@nx/react/typings/cssmodule.d.ts",
       "@nx/react/typings/image.d.ts"
     ],
-    "lib": ["DOM", "es2019"],
+    "lib": ["DOM", "es2022"],
     "composite": true,
-    "rootDir": "./src"
+    "jsx": "react-jsx"
   },
   "exclude": [
     "jest.config.ts",

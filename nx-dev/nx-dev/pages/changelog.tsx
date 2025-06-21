@@ -14,7 +14,7 @@ import { compare, parse } from 'semver';
 import { changeLogApi } from '../lib/changelog.api';
 import { useNavToggle } from '../lib/navigation-toggle.effect';
 import { menusApi } from '../lib/menus.api';
-import { MenuItem } from '@nx/nx-dev/models-menu';
+import { MenuItem } from '@nx/nx-dev-models-menu';
 import { getBasicNxSection } from '@nx/nx-dev-data-access-menu';
 import Link from 'next/link';
 

@@ -1,6 +1,6 @@
 import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 import { type ReactElement } from 'react';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 import { WebinarSection } from './webinar-section';
 
 export function Hero(): ReactElement {

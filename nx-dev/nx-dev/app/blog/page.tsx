@@ -1,12 +1,9 @@
 import type { Metadata } from 'next';
 import { blogApi } from '../../lib/blog.api';
-import { BlogContainer } from '@nx/nx-dev/ui-blog';
+import { BlogContainer } from '@nx/nx-dev-ui-blog';
 import { DefaultLayout } from '@nx/nx-dev-ui-common';
 import { Suspense } from 'react';
-import {
-  requestFreeTrial,
-  tryNxCloudForFree,
-} from '../../lib/components/headerCtaConfigs';
+import { tryNxCloudForFree } from '../../lib/components/headerCtaConfigs';
 
 export const metadata: Metadata = {
   title: 'Nx Blog - Updates from the Nx & Nx Cloud team',

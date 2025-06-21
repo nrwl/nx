@@ -42,8 +42,8 @@ export function getDisplayHeaderFromTargetConfiguration(
     options = rest;
   } else if (targetConfiguration.executor === 'nx:run-script') {
     link = `https://nx.dev/nx-api/nx/executors/run-script`;
-    displayText.command = targetConfiguration.metadata?.runCommand;
-    displayText.script = targetConfiguration.metadata?.scriptContent;
+    displayText.command = targetConfiguration.metadata?.['runCommand'];
+    displayText.script = targetConfiguration.metadata?.['scriptContent'];
     const { script, ...rest } = targetConfiguration.options;
     options = rest;
   }

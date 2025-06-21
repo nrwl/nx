@@ -7,6 +7,18 @@
   "files": [],
   "references": [
     {
+      "path": "../eslint"
+    },
+    {
+      "path": "../js"
+    },
+    {
+      "path": "../cypress"
+    },
+    {
+      "path": "../devkit"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ]

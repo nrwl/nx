@@ -1,7 +1,7 @@
 'use client';
 import { motion, Variants } from 'framer-motion';
 import { Spotlight } from './elements/spotlight';
-import { AnimateValue } from '@nx/nx-dev/ui-animations';
+import { AnimateValue } from '@nx/nx-dev-ui-animations';
 import { ReactElement } from 'react';
 
 export function FasterAndCheaper(): ReactElement {
