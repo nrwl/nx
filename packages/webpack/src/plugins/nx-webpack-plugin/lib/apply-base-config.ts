@@ -195,7 +195,7 @@ function applyNxIndependentConfig(
     warnings: true,
     errors: true,
     colors: !options.verbose && !options.statsJson,
-    chunks: !options.verbose,
+    chunks: !!options.verbose,
     assets: !!options.verbose,
     chunkOrigins: !!options.verbose,
     chunkModules: !!options.verbose,
