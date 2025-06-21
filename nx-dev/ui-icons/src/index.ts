@@ -1,8 +1,11 @@
 // AI
+export * from './lib/ai/claude';
 export * from './lib/ai/cursor';
 export * from './lib/ai/github-copilot';
+export * from './lib/ai/google-gemini';
 export * from './lib/ai/intellij-ai';
 export * from './lib/ai/model-context-protocol';
+export * from './lib/ai/open-ai';
 
 // CI PROVIDERS
 export * from './lib/ci-providers/azure-devops';
@@ -112,6 +115,7 @@ export * from './lib/products';
 
 // SOCIALS
 export * from './lib/socials/discord-icon';
+export * from './lib/socials/meta';
 export * from './lib/socials/x-icon';
 export * from './lib/socials/youtube';
 
