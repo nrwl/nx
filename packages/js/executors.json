@@ -22,6 +22,11 @@
       "schema": "./src/executors/node/schema.json",
       "description": "Execute a Node application."
     },
+    "prune-lockfile": {
+      "implementation": "./src/executors/prune-lockfile/prune-lockfile",
+      "schema": "./src/executors/prune-lockfile/schema.json",
+      "description": "Creates a pruned lockfile based on the project dependencies and places it into the output directory."
+    },
     "release-publish": {
       "implementation": "./src/executors/release-publish/release-publish.impl",
       "schema": "./src/executors/release-publish/schema.json",

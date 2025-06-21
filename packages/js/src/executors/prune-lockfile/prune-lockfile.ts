@@ -1,4 +1,5 @@
 import {
+  detectPackageManager,
   type ExecutorContext,
   logger,
   parseTargetString,
@@ -6,65 +7,65 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
-import { interpolate } from 'nx/src/tasks-runner/utils';
-import { type CopyWorkspaceModulesOptions } from './schema';
-import { cpSync, existsSync, mkdirSync } from 'node:fs';
+import { existsSync, lstatSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
-import { lstatSync } from 'fs';
+import { interpolate } from 'nx/src/tasks-runner/utils';
+import { type PackageJson } from 'nx/src/utils/package-json';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { getWorkspacePackagesFromGraph } from 'nx/src/plugins/js/utils/get-workspace-packages-from-graph';
+import {
+  getLockFileName,
+  createLockFile,
+} from 'nx/src/plugins/js/lock-file/lock-file';
+import { type PruneLockfileOptions } from './schema';
 
-export default async function copyWorkspaceModules(
-  schema: CopyWorkspaceModulesOptions,
+export default async function pruneLockfileExecutor(
+  schema: PruneLockfileOptions,
   context: ExecutorContext
 ) {
-  logger.log('Copying Workspace Modules to Build Directory...');
+  logger.log('Pruning lockfile...');
   const outputDirectory = getOutputDir(schema, context);
   const packageJson = getPackageJson(schema, context);
-  createWorkspaceModules(outputDirectory);
-  handleWorkspaceModules(outputDirectory, packageJson, context.projectGraph);
-  logger.log('Success!');
-  return { success: true };
+  const { lockfileName, lockFile } = createPrunedLockfile(
+    packageJson,
+    context.projectGraph
+  );
+  const lockfileOutputPath = join(outputDirectory, lockfileName);
+  writeFileSync(lockfileOutputPath, lockFile);
+  writeFileSync(
+    join(outputDirectory, 'package.json'),
+    JSON.stringify(packageJson, null, 2)
+  );
+  logger.log(`Lockfile pruned: ${lockfileOutputPath}`);
+  return {
+    success: true,
+  };
 }
 
-function handleWorkspaceModules(
-  outputDirectory: string,
-  packageJson: {
-    dependencies?: Record<string, string>;
-  },
-  projectGraph: ProjectGraph
-) {
-  if (!packageJson.dependencies) {
-    return;
-  }
-  const workspaceModules = getWorkspacePackagesFromGraph(projectGraph);
+function createPrunedLockfile(packageJson: PackageJson, graph: ProjectGraph) {
+  const packageManager = detectPackageManager(workspaceRoot);
+  const lockfileName = getLockFileName(packageManager);
+  const lockFile = createLockFile(packageJson, graph, packageManager);
 
-  for (const [pkgName] of Object.entries(packageJson.dependencies)) {
-    if (workspaceModules.has(pkgName)) {
-      logger.verbose(`Copying ${pkgName}.`);
-      const workspaceModuleProject = workspaceModules.get(pkgName);
-      const workspaceModuleRoot = workspaceModuleProject.data.root;
-      const newWorkspaceModulePath = join(
-        outputDirectory,
-        'workspace_modules',
-        pkgName
-      );
-      mkdirSync(newWorkspaceModulePath, { recursive: true });
-      cpSync(workspaceModuleRoot, newWorkspaceModulePath, {
-        filter: (src) => !src.includes('node_modules'),
-        recursive: true,
-      });
-      logger.verbose(`Copied ${pkgName} successfully.`);
+  for (const [pkgName, pkgVersion] of Object.entries(
+    packageJson.dependencies ?? {}
+  )) {
+    if (
+      pkgVersion.startsWith('workspace:') ||
+      pkgVersion.startsWith('file:') ||
+      pkgVersion.startsWith('link:')
+    ) {
+      packageJson.dependencies[pkgName] = `file:./workspace_modules/${pkgName}`;
     }
   }
-}
 
-function createWorkspaceModules(outputDirectory: string) {
-  mkdirSync(join(outputDirectory, 'workspace_modules'), { recursive: true });
+  return {
+    lockfileName,
+    lockFile,
+  };
 }
 
 function getPackageJson(
-  schema: CopyWorkspaceModulesOptions,
+  schema: PruneLockfileOptions,
   context: ExecutorContext
 ) {
   const target = parseTargetString(schema.buildTarget, context);
@@ -78,10 +79,7 @@ function getPackageJson(
   return packageJson;
 }
 
-function getOutputDir(
-  schema: CopyWorkspaceModulesOptions,
-  context: ExecutorContext
-) {
+function getOutputDir(schema: PruneLockfileOptions, context: ExecutorContext) {
   let outputDir = schema.outputPath;
   if (outputDir) {
     outputDir = normalizeOutputPath(outputDir);

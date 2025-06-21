@@ -27,12 +27,15 @@ import {
 import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { findNodeMatchingVersion } from './project-graph-pruning';
+import { join } from 'path';
+import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 
 // we use key => node map to avoid duplicate work when parsing keys
 let keyMap = new Map<string, Set<ProjectGraphExternalNode>>();
 let currentLockFileHash: string;
 
 let parsedLockFile: Lockfile;
+
 function parsePnpmLockFile(
   lockFileContent: string,
   lockFileHash: string
@@ -403,25 +406,29 @@ export function stringifyPnpmLockfile(
   packageJson: NormalizedPackageJson
 ): string {
   const data = parseAndNormalizePnpmLockfile(rootLockFileContent);
-  const { lockfileVersion, packages } = data;
+  const { lockfileVersion, packages, importers } = data;
 
-  const rootSnapshot = mapRootSnapshot(
-    packageJson,
-    packages,
-    graph,
-    +lockfileVersion
-  );
+  const { snapshot: rootSnapshot, importers: requiredImporters } =
+    mapRootSnapshot(packageJson, importers, packages, graph, +lockfileVersion);
   const snapshots = mapSnapshots(
     data.packages,
     graph.externalNodes,
     +lockfileVersion
   );
 
+  const workspaceDependencyImporters: Record<string, ProjectSnapshot> = {};
+  for (const [packageName, importerPath] of Object.entries(requiredImporters)) {
+    const baseImporter = importers[importerPath];
+    workspaceDependencyImporters[`workspace_modules/${packageName}`] =
+      baseImporter;
+  }
+
   const output: Lockfile = {
     ...data,
     lockfileVersion,
     importers: {
       '.': rootSnapshot,
+      ...workspaceDependencyImporters,
     },
     packages: sortObjectByKeys(snapshots),
   };
@@ -567,11 +574,14 @@ function versionIsAlias(
 
 function mapRootSnapshot(
   packageJson: NormalizedPackageJson,
+  rootImporters: Record<string, ProjectSnapshot>,
   packages: PackageSnapshots,
   graph: ProjectGraph,
   lockfileVersion: number
-): ProjectSnapshot {
+) {
+  const workspaceModules = getWorkspacePackagesFromGraph(graph);
   const snapshot: ProjectSnapshot = { specifiers: {} };
+  const importers: Record<string, string> = {};
   [
     'dependencies',
     'optionalDependencies',
@@ -581,26 +591,54 @@ function mapRootSnapshot(
     if (packageJson[depType]) {
       Object.keys(packageJson[depType]).forEach((packageName) => {
         const version = packageJson[depType][packageName];
-        const node =
-          graph.externalNodes[`npm:${packageName}@${version}`] ||
-          (graph.externalNodes[`npm:${packageName}`] &&
-          graph.externalNodes[`npm:${packageName}`].data.version === version
-            ? graph.externalNodes[`npm:${packageName}`]
-            : findNodeMatchingVersion(graph, packageName, version));
-        if (!node) {
-          throw new Error(
-            `Could not find external node for package ${packageName}@${version}.`
-          );
+        if (workspaceModules.has(packageName)) {
+          for (const [importerPath, importerSnapshot] of Object.entries(
+            rootImporters
+          )) {
+            const workspaceDep = importerSnapshot.dependencies[packageName];
+            if (workspaceDep) {
+              const workspaceDepImporterPath = workspaceDep.replace(
+                'link:',
+                ''
+              );
+              const importerKeyForPackage = join(
+                importerPath,
+                workspaceDepImporterPath
+              );
+              importers[packageName] = importerKeyForPackage;
+              snapshot.specifiers[
+                packageName
+              ] = `file:./workspace_modules/${packageName}`;
+              snapshot.dependencies = snapshot.dependencies || {};
+              snapshot.dependencies[
+                packageName
+              ] = `link:./workspace_modules/${packageName}`;
+              break;
+            }
+          }
+        } else {
+          const node =
+            graph.externalNodes[`npm:${packageName}@${version}`] ||
+            (graph.externalNodes[`npm:${packageName}`] &&
+            graph.externalNodes[`npm:${packageName}`].data.version === version
+              ? graph.externalNodes[`npm:${packageName}`]
+              : findNodeMatchingVersion(graph, packageName, version));
+          if (!node) {
+            throw new Error(
+              `Could not find external node for package ${packageName}@${version}.`
+            );
+          }
+          snapshot.specifiers[packageName] = version;
+          // peer dependencies are mapped to dependencies
+          let section =
+            depType === 'peerDependencies' ? 'dependencies' : depType;
+          snapshot[section] = snapshot[section] || {};
+          snapshot[section][packageName] = findOriginalKeys(
+            packages,
+            node,
+            lockfileVersion
+          )[0][0];
         }
-        snapshot.specifiers[packageName] = version;
-        // peer dependencies are mapped to dependencies
-        let section = depType === 'peerDependencies' ? 'dependencies' : depType;
-        snapshot[section] = snapshot[section] || {};
-        snapshot[section][packageName] = findOriginalKeys(
-          packages,
-          node,
-          lockfileVersion
-        )[0][0];
       });
     }
   });
@@ -609,7 +647,7 @@ function mapRootSnapshot(
     snapshot[key] = sortObjectByKeys(snapshot[key]);
   });
 
-  return snapshot;
+  return { snapshot, importers };
 }
 
 function findVersion(
