@@ -133,7 +133,6 @@ export function YouTube(props: {
           width={props.width || '100%'}
           allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
           loading="lazy"
-          credentialless="true"
           className={cx({
             'rounded-lg shadow-lg': !props.disableRoundedCorners,
           })}

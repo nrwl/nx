@@ -7,6 +7,15 @@
   "include": [],
   "references": [
     {
+      "path": "../web"
+    },
+    {
+      "path": "../js"
+    },
+    {
+      "path": "../devkit"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ]

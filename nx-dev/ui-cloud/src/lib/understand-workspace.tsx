@@ -14,7 +14,7 @@ import { BentoGrid, BentoGridItem } from './elements/bento-grid';
 import { cx } from '@nx/nx-dev-ui-primitives';
 import { animate, motion, useMotionValue, useTransform } from 'framer-motion';
 import { ReactElement, useEffect } from 'react';
-import { usePrefersReducedMotion } from '@nx/nx-dev/ui-animations';
+import { usePrefersReducedMotion } from '@nx/nx-dev-ui-animations';
 
 export function UnderstandWorkspace(): ReactElement {
   return (

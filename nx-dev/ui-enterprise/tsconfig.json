@@ -16,10 +16,22 @@
   "include": [],
   "references": [
     {
-      "path": "./tsconfig.lib.json"
+      "path": "../ui-animations"
     },
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../ui-primitives"
+    },
+    {
+      "path": "../ui-icons"
+    },
+    {
+      "path": "../feature-analytics"
+    },
+    {
+      "path": "../ui-common"
+    },
+    {
+      "path": "./tsconfig.lib.json"
     }
   ]
 }

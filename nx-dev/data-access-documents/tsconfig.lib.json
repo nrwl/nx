@@ -4,10 +4,11 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/out-tsc/nx-dev/data-access-documents",
     "types": ["node"],
     "composite": true,
-    "declaration": true
+    "declaration": true,
+    "jsx": "react-jsx"
   },
   "references": [
     { "path": "../models-document/tsconfig.lib.json" },

@@ -4,6 +4,18 @@
   "include": [],
   "references": [
     {
+      "path": "../workspace"
+    },
+    {
+      "path": "../react"
+    },
+    {
+      "path": "../js"
+    },
+    {
+      "path": "../devkit"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ]

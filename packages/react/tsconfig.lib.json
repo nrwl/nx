@@ -17,10 +17,10 @@
   "include": ["**/*.ts", "**/*.json"],
   "references": [
     {
-      "path": "../nx/tsconfig.lib.json"
+      "path": "../module-federation/tsconfig.lib.json"
     },
     {
-      "path": "../module-federation/tsconfig.lib.json"
+      "path": "../vite/tsconfig.lib.json"
     },
     {
       "path": "../web/tsconfig.lib.json"

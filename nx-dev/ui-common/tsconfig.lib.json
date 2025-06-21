@@ -1,11 +1,14 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
-    "types": ["node"],
-    "lib": ["dom"],
+    "outDir": "../../dist/out-tsc/nx-dev/ui-common",
+    "types": [],
+    "lib": ["DOM", "ES2022"],
     "composite": true,
-    "declaration": true
+    "declaration": true,
+    "jsx": "react-jsx",
+    "skipLibCheck": true,
+    "strict": false
   },
   "files": [
     "../../node_modules/@nx/react/typings/cssmodule.d.ts",

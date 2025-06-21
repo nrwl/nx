@@ -16,6 +16,10 @@
     "src/**/*.ts",
     "src/**/*.js"
   ],
-  "references": [],
+  "references": [
+    {
+      "path": "../client"
+    }
+  ],
   "exclude": []
 }

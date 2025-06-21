@@ -7,6 +7,12 @@
   "include": [],
   "references": [
     {
+      "path": "../../nx-dev/ui-fence"
+    },
+    {
+      "path": "../ui-code-block"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ],

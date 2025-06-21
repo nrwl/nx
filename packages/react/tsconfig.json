@@ -7,6 +7,24 @@
   "files": [],
   "references": [
     {
+      "path": "../module-federation"
+    },
+    {
+      "path": "../vite"
+    },
+    {
+      "path": "../web"
+    },
+    {
+      "path": "../eslint"
+    },
+    {
+      "path": "../js"
+    },
+    {
+      "path": "../devkit"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ]

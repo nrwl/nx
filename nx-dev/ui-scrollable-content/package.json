@@ -3,5 +3,8 @@
   "version": "0.0.1",
   "type": "commonjs",
   "main": "./src/index.ts",
-  "types": "./src/index.ts"
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@nx/nx-dev-feature-analytics": "workspace:"
+  }
 }

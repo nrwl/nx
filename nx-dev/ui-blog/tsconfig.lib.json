@@ -1,12 +1,18 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/out-tsc/nx-dev/ui-blog",
     "declaration": true,
     "composite": true,
     "types": ["node"]
   },
   "references": [
+    {
+      "path": "../ui-markdoc/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-common/tsconfig.lib.json"
+    },
     {
       "path": "../ui-primitives/tsconfig.lib.json"
     },
@@ -14,12 +20,9 @@
       "path": "../ui-icons/tsconfig.lib.json"
     },
     {
-      "path": "../ui-markdoc/tsconfig.lib.json"
-    },
-    {
-      "path": "../ui-common/tsconfig.lib.json"
+      "path": "../data-access-documents/tsconfig.lib.json"
     }
   ],
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"]
 }

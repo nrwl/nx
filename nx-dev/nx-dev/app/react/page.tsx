@@ -4,8 +4,8 @@ import {
   Features,
   GettingStarted,
   Hero,
-} from '@nx/nx-dev/ui-react';
-import { NxBenefitsVideo } from '@nx/nx-dev/ui-react';
+} from '@nx/nx-dev-ui-react';
+import { NxBenefitsVideo } from '@nx/nx-dev-ui-react';
 
 import type { Metadata } from 'next';
 

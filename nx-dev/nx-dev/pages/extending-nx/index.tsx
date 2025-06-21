@@ -1,7 +1,7 @@
 import { getBasicPluginsSection } from '@nx/nx-dev-data-access-menu';
 import { DocViewer } from '@nx/nx-dev-feature-doc-viewer';
 import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev-models-document';
-import { Menu, MenuItem } from '@nx/nx-dev/models-menu';
+import { Menu, MenuItem } from '@nx/nx-dev-models-menu';
 import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev-ui-common';
 import { GetStaticProps } from 'next';
 import { menusApi } from '../../lib/menus.api';
@@ -64,20 +64,29 @@ export default function PluginsRoot({
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-  const document = nxPluginsApi.generateRootDocumentIndex({
-    name: 'Extending Nx',
-    description: 'Learn more about creating your own plugin, extending Nx.',
-  });
-  return {
-    props: {
-      document,
-      widgetData: {
-        githubStarsCount: await fetchGithubStarCount(),
+  try {
+    const document = nxPluginsApi.generateRootDocumentIndex({
+      name: 'Extending Nx',
+      description: 'Learn more about creating your own plugin, extending Nx.',
+    });
+    return {
+      props: {
+        document,
+        widgetData: {
+          githubStarsCount: await fetchGithubStarCount(),
+        },
+        menu: menusApi.getMenu('extending-nx', ''),
+        relatedDocuments: document.tags
+          .map((t) => tagsApi.getAssociatedItems(t))
+          .flat(),
       },
-      menu: menusApi.getMenu('extending-nx', ''),
-      relatedDocuments: document.tags
-        .map((t) => tagsApi.getAssociatedItems(t))
-        .flat(),
-    },
-  };
+    };
+  } catch {
+    return {
+      notFound: true,
+      props: {
+        statusCode: 404,
+      },
+    };
+  }
 };

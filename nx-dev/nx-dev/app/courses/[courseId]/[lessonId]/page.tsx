@@ -1,6 +1,6 @@
 import { coursesApi } from '../../../../lib/courses.api';
 import { DefaultLayout } from '@nx/nx-dev-ui-common';
-import { LessonPlayer } from '@nx/nx-dev/ui-courses';
+import { LessonPlayer } from '@nx/nx-dev-ui-courses';
 import { Metadata } from 'next';
 
 interface LessonPageProps {

@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/out-tsc/nx-dev/ui-react",
     "types": [
       "node",
       "@nx/react/typings/cssmodule.d.ts",
@@ -23,6 +23,9 @@
   ],
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "references": [
+    {
+      "path": "../ui-animations/tsconfig.lib.json"
+    },
     {
       "path": "../feature-analytics/tsconfig.lib.json"
     },
