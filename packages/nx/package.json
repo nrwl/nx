@@ -11,8 +11,19 @@
   "scripts": {
     "postinstall": "node ./bin/post-install"
   },
-  "main": "./src/index.js",
-  "typings": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "default": "./src/index.js",
+      "types": "./src/index.d.ts"
+    },
+    "./src/devkit-exports": {
+      "import": "./src/devkit-exports.js",
+      "default": "./src/devkit-exports.js",
+      "types": "./src/devkit-exports.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
   "keywords": [
     "Monorepo",
     "Angular",

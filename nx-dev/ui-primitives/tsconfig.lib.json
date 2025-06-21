@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/out-tsc/nx-dev/ui-primitives",
     "types": ["node"],
     "lib": ["DOM", "ES2022"],
     "composite": true,

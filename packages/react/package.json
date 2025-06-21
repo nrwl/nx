@@ -42,6 +42,7 @@
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",
     "@nx/web": "file:../web",
+    "@nx/vite": "file:../vite",
     "@nx/module-federation": "file:../module-federation",
     "express": "^4.21.2",
     "http-proxy-middleware": "^3.0.3",

@@ -10,6 +10,12 @@
   "include": [],
   "references": [
     {
+      "path": "../ui-project-details"
+    },
+    {
+      "path": "../ui-theme"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ],

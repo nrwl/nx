@@ -10,6 +10,7 @@
     "@nx/nx-dev-ui-blog": "file:../ui-blog",
     "@nx/nx-dev-ui-common": "file:../ui-common",
     "@nx/nx-dev-ui-icons": "file:../ui-icons",
-    "@nx/nx-dev-ui-markdoc": "file:../ui-markdoc"
+    "@nx/nx-dev-ui-markdoc": "file:../ui-markdoc",
+    "@nx/nx-dev-ui-primitives": "workspace:"
   }
 }

@@ -87,11 +87,14 @@ export function ShowOptionsHelp({
               }
             : async () => {
                 setPending(true);
-                const result = await fetch(
+                const result = (await fetch(
                   `/help?project=${encodeURIComponent(
                     projectName
                   )}&target=${encodeURIComponent(targetName)}`
-                ).then((resp) => resp.json());
+                ).then((resp) => resp.json())) as {
+                  text: string;
+                  success: boolean;
+                };
                 setResult(result);
                 setPending(false);
               }

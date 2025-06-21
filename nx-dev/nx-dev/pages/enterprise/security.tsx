@@ -11,10 +11,15 @@ import {
   SecurityHero,
   WhyCiSecurityMatters,
 } from '@nx/nx-dev-ui-enterprise';
-import { type ReactElement } from 'react';
+import { type ReactElement, useEffect, useState } from 'react';
 
 export function EnterpriseSecurity(): ReactElement {
   const router = useRouter();
+  const [currentPath, setCurrentPath] = useState('/enterprise/security');
+
+  useEffect(() => {
+    setCurrentPath(router.asPath);
+  }, [router.asPath]);
 
   const headerCTAConfig: ButtonLinkProps[] = [
     {
@@ -33,7 +38,7 @@ export function EnterpriseSecurity(): ReactElement {
         description="Protect your codebase from artifact poisoning with infrastructure-first security."
         canonical="https://nx.dev/enterprise/security"
         openGraph={{
-          url: 'https://nx.dev' + router.asPath,
+          url: 'https://nx.dev' + currentPath,
           title: 'Enterprise-Grade Security, Built Into the Core',
           description:
             'Protect your codebase from artifact poisoning with infrastructure-first security.',

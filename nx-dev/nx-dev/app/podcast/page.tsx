@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { podcastApi } from '../../lib/podcast.api';
 import { DefaultLayout } from '@nx/nx-dev-ui-common';
-import { Hero, PodcastList } from '@nx/nx-dev/ui-podcast';
+import { Hero, PodcastList } from '@nx/nx-dev-ui-podcast';
 
 export const metadata: Metadata = {
   title: 'Nx Podcast - Updates from the Nx & Nx Cloud team',

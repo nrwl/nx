@@ -1,6 +1,6 @@
 import { ComponentProps, ReactElement, useState } from 'react';
-import { ButtonLink, SectionHeading, VideoModal } from '@nx/nx-dev/ui-common';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { ButtonLink, SectionHeading, VideoModal } from '@nx/nx-dev-ui-common';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 import { EnvelopeIcon, PlayIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import { UkgIcon } from '@nx/nx-dev-ui-icons';

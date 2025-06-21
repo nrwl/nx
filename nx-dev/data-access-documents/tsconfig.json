@@ -7,10 +7,16 @@
   "include": [],
   "references": [
     {
-      "path": "./tsconfig.lib.json"
+      "path": "../ui-markdoc"
     },
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../models-package"
+    },
+    {
+      "path": "../models-document"
+    },
+    {
+      "path": "./tsconfig.lib.json"
     }
   ]
 }

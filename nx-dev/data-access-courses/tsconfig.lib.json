@@ -1,12 +1,16 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/out-tsc/nx-dev/data-access-courses",
     "types": ["node"],
     "composite": true,
-    "declaration": true
+    "declaration": true,
+    "jsx": "react-jsx"
   },
   "references": [
+    {
+      "path": "../data-access-documents/tsconfig.lib.json"
+    },
     {
       "path": "../ui-markdoc/tsconfig.lib.json"
     }

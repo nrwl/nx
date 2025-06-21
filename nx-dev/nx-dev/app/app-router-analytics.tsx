@@ -14,5 +14,5 @@ export default function AppRouterAnalytics({ gaMeasurementId }) {
     }
   }, [pathName, gaMeasurementId, lastPath]);
 
-  return <></>;
+  return null;
 }

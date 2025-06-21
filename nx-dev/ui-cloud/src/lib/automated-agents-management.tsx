@@ -8,7 +8,7 @@ import {
 import { SectionHeading } from '@nx/nx-dev-ui-common';
 import { motion } from 'framer-motion';
 import { NxCloudIcon } from '@nx/nx-dev-ui-icons';
-import { usePrefersReducedMotion } from '@nx/nx-dev/ui-animations';
+import { usePrefersReducedMotion } from '@nx/nx-dev-ui-animations';
 
 export function AutomatedAgentsManagement(): JSX.Element {
   const shouldReduceMotion = usePrefersReducedMotion();

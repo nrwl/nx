@@ -8,7 +8,6 @@ import {
 import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import Script from 'next/script';
 
 export default function ConfPage(): JSX.Element {
   const router = useRouter();

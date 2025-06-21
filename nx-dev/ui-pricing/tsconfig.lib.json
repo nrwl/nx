@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/out-tsc/nx-dev/ui-pricing",
     "types": [
       "node",
       "@nx/react/typings/cssmodule.d.ts",

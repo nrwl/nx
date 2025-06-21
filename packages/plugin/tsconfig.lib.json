@@ -18,9 +18,6 @@
   "include": ["**/*.ts", "**/*.json"],
   "references": [
     {
-      "path": "../nx/tsconfig.lib.json"
-    },
-    {
       "path": "../eslint/tsconfig.lib.json"
     },
     {

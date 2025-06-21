@@ -13,9 +13,6 @@
   "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
   "references": [
     {
-      "path": "../nx/tsconfig.lib.json"
-    },
-    {
       "path": "../module-federation/tsconfig.lib.json"
     },
     {

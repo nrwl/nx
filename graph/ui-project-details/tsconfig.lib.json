@@ -9,6 +9,7 @@
       "@nx/react/typings/cssmodule.d.ts",
       "@nx/react/typings/image.d.ts"
     ],
+    "lib": ["ES2022", "DOM"],
     "composite": true,
     "noEmit": false
   },

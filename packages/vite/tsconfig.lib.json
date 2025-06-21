@@ -11,9 +11,6 @@
   "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
   "references": [
     {
-      "path": "../nx/tsconfig.lib.json"
-    },
-    {
       "path": "../js/tsconfig.lib.json"
     },
     {

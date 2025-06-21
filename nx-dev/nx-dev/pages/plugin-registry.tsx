@@ -1,5 +1,5 @@
 import { getBasicNxSection } from '@nx/nx-dev-data-access-menu';
-import { MenuItem } from '@nx/nx-dev/models-menu';
+import { MenuItem } from '@nx/nx-dev-models-menu';
 import {
   Breadcrumbs,
   DocumentationHeader,
