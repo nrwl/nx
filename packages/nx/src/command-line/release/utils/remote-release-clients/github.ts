@@ -69,9 +69,12 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
         apiBaseUrl = createReleaseConfig.apiBaseUrl;
       }
 
-      // Extract the 'user/repo' part from the URL
+      // Extract the 'user/repo' part from the `remoteUrl`, expecting the following formats:
+      // - HTTPS: https://github.com/user/repo.git
+      // - SSH: git@github.com:user/repo.git
+      // - SSH over HTTPS: ssh://git@ssh.github.com:443/user/repo.git
       const escapedHostname = hostname.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regexString = `${escapedHostname}[/:]([\\w.-]+/[\\w.-]+)(\\.git)?`;
+      const regexString = `${escapedHostname}(?::\\d+)?[/:]([\\w.-]+/[\\w.-]+)(?:\\.git)?/?$`;
       const regex = new RegExp(regexString);
       const match = remoteUrl.match(regex);
 
