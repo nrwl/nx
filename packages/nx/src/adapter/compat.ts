@@ -76,6 +76,7 @@ export const allowedWorkspaceExtensions = [
   'nxCloudUrl',
   'nxCloudEncryptionKey',
   'parallel',
+  'customCache',
   'cacheDirectory',
   'useDaemonProcess',
   'useInferencePlugins',

@@ -636,6 +636,11 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   parallel?: number;
 
   /**
+   * Custom cache package
+   */
+  customCache?: string;
+
+  /**
    * Changes the directory used by Nx to store its cache.
    */
   cacheDirectory?: string;

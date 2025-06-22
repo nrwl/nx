@@ -212,6 +212,9 @@ export class DbCache {
         return await RemoteCacheV2.fromCacheV1(this.options.nxCloudRemoteCache);
       }
     } else {
+      if (nxJson.customCache) {
+        return await this.resolveRemoteCache(nxJson.customCache)
+      }
       return (
         (await this.getS3Cache()) ??
         (await this.getSharedCache()) ??

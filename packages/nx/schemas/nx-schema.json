@@ -118,6 +118,10 @@
       "type": "number",
       "description": "Specifies how many tasks are ran in parallel by Nx for the default tasks runner."
     },
+    "customCache": {
+      "type": "string",
+      "description": "Custom cache package."
+    },
     "cacheDirectory": {
       "type": "string",
       "description": "Specifies the default location of the cache directory."
@@ -497,6 +501,10 @@
               "items": {
                 "type": "string"
               }
+            },
+            "customCache": {
+              "type": "string",
+              "description": "Custom cache package."
             },
             "cacheDirectory": {
               "type": "string",
