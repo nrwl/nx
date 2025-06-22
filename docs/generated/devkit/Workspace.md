@@ -18,6 +18,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 
 - [$schema](/reference/core-api/devkit/documents/Workspace#$schema): string
 - [affected](/reference/core-api/devkit/documents/Workspace#affected): NxAffectedConfig
+- [customCache](/reference/core-api/devkit/documents/Workspace#customCache): string
 - [cacheDirectory](/reference/core-api/devkit/documents/Workspace#cachedirectory): string
 - [cli](/reference/core-api/devkit/documents/Workspace#cli): Object
 - [defaultBase](/reference/core-api/devkit/documents/Workspace#defaultbase): string
@@ -72,6 +73,18 @@ use [defaultBase](/reference/core-api/devkit/documents/NxJsonConfiguration#defau
 #### Inherited from
 
 [NxJsonConfiguration](/reference/core-api/devkit/documents/NxJsonConfiguration).[affected](/reference/core-api/devkit/documents/NxJsonConfiguration#affected)
+
+---
+
+### customCache
+
+• `Optional` **customCache**: `string`
+
+Custom cache package.
+
+#### Inherited from
+
+[NxJsonConfiguration](/reference/core-api/devkit/documents/NxJsonConfiguration).[customCache](/reference/core-api/devkit/documents/NxJsonConfiguration#customCache)
 
 ---
 

@@ -20,6 +20,7 @@ Nx.json configuration
 
 - [$schema](/reference/core-api/devkit/documents/NxJsonConfiguration#$schema): string
 - [affected](/reference/core-api/devkit/documents/NxJsonConfiguration#affected): NxAffectedConfig
+- [customCache](/reference/core-api/devkit/documents/NxJsonConfiguration#customCache): string
 - [cacheDirectory](/reference/core-api/devkit/documents/NxJsonConfiguration#cachedirectory): string
 - [cli](/reference/core-api/devkit/documents/NxJsonConfiguration#cli): Object
 - [defaultBase](/reference/core-api/devkit/documents/NxJsonConfiguration#defaultbase): string
@@ -64,6 +65,14 @@ Default options for `nx affected`
 **`Deprecated`**
 
 use [defaultBase](/reference/core-api/devkit/documents/NxJsonConfiguration#defaultbase) instead. For more information see https://nx.dev/deprecated/affected-config#affected-config
+
+---
+
+### customCache
+
+• `Optional` **customCache**: `string`
+
+Custom cache package.
 
 ---
 
