@@ -213,7 +213,7 @@ export class DbCache {
       }
     } else {
       if (nxJson.customCache) {
-        return await this.resolveRemoteCache(nxJson.customCache)
+        return await this.resolveRemoteCache(nxJson.customCache);
       }
       return (
         (await this.getS3Cache()) ??
