@@ -40,6 +40,8 @@ import picomatch = require('picomatch');
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { normalizeOptions } from 'nx/src/utils/normalize-options';
+
 import type { Extension, ParsedCommandLine, System } from 'typescript';
 import {
   addBuildAndWatchDepsTargets,
@@ -48,39 +50,42 @@ import {
   type ParsedTsconfigData,
 } from './util';
 
+interface BuildOptions {
+  targetName?: string;
+  configName?: string;
+  buildDepsName?: string;
+  watchDepsName?: string;
+}
+interface TypecheckOptions {
+  targetName?: string;
+}
 export interface TscPluginOptions {
-  typecheck?:
-    | boolean
-    | {
-        targetName?: string;
-      };
-  build?:
-    | boolean
-    | {
-        targetName?: string;
-        configName?: string;
-        buildDepsName?: string;
-        watchDepsName?: string;
-      };
+  typecheck?: boolean | TypecheckOptions;
+  build?: boolean | BuildOptions;
   verboseOutput?: boolean;
 }
-
-interface NormalizedPluginOptions {
-  typecheck:
-    | false
-    | {
-        targetName: string;
-      };
-  build:
-    | false
-    | {
-        targetName: string;
-        configName: string;
-        buildDepsName?: string;
-        watchDepsName?: string;
-      };
+interface NormalizedTscPluginOptions {
+  typecheck: false | TypecheckOptions;
+  build: false | BuildOptions;
   verboseOutput: boolean;
 }
+
+const defaultTypecheckOptions: Required<TypecheckOptions> = {
+  targetName: 'typecheck',
+};
+
+const defaultBuildOptions: Required<BuildOptions> = {
+  targetName: 'build',
+  configName: 'tsconfig.lib.json',
+  buildDepsName: 'build-deps',
+  watchDepsName: 'watch-deps',
+};
+
+const defaultOptions: NormalizedTscPluginOptions = {
+  typecheck: defaultTypecheckOptions,
+  build: false,
+  verboseOutput: false,
+};
 
 type TscProjectResult = Pick<ProjectConfiguration, 'targets'>;
 
@@ -165,7 +170,8 @@ const tsConfigGlob = '**/tsconfig*.json';
 export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
   tsConfigGlob,
   async (configFilePaths, options, context) => {
-    const optionsHash = hashObject(options);
+    const normalizedOptions = normalizeTscOptions(options);
+    const optionsHash = hashObject(normalizedOptions);
     const targetsCachePath = join(
       workspaceDataDirectory,
       `tsc-${optionsHash}.hash`
@@ -174,8 +180,6 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
       readFromCache<Record<string, TscProjectResult>>(targetsCachePath);
     cache = { fileHashes: {}, rawFiles: {}, isExternalProjectReference: {} };
     initializeTsConfigCache(configFilePaths, context.workspaceRoot);
-
-    const normalizedOptions = normalizePluginOptions(options);
 
     const {
       configFilePaths: validConfigFilePaths,
@@ -239,7 +243,7 @@ export const createNodes: CreateNodes<TscPluginOptions> = [
       return {};
     }
 
-    const normalizedOptions = normalizePluginOptions(options);
+    const normalizedOptions = normalizeTscOptions(options);
     cache = { fileHashes: {}, rawFiles: {}, isExternalProjectReference: {} };
     initializeTsConfigCache([configFilePath], context.workspaceRoot);
 
@@ -412,7 +416,7 @@ function checkIfConfigFileShouldBeProject(
 function buildTscTargets(
   configFilePath: string,
   projectRoot: string,
-  options: NormalizedPluginOptions,
+  options: NormalizedTscPluginOptions,
   context: CreateNodesContext
 ) {
   const targets: Record<string, TargetConfiguration> = {};
@@ -1276,49 +1280,42 @@ function readTsConfig(
   );
 }
 
-function normalizePluginOptions(
-  pluginOptions: TscPluginOptions = {}
-): NormalizedPluginOptions {
-  const defaultTypecheckTargetName = 'typecheck';
-  let typecheck: NormalizedPluginOptions['typecheck'] = {
-    targetName: defaultTypecheckTargetName,
-  };
-  if (pluginOptions.typecheck === false) {
-    typecheck = false;
-  } else if (
-    pluginOptions.typecheck &&
-    typeof pluginOptions.typecheck !== 'boolean'
-  ) {
-    typecheck = {
-      targetName:
-        pluginOptions.typecheck.targetName ?? defaultTypecheckTargetName,
-    };
+function normalizeToFalseOrOptions<T extends object>(
+  value: false,
+  defaults: Required<T>
+): false;
+function normalizeToFalseOrOptions<T extends object>(
+  value: true | Partial<T>,
+  defaults: Required<T>
+): Required<T>;
+function normalizeToFalseOrOptions<T extends object>(
+  value: boolean | Partial<T>,
+  defaults: Required<T>
+): Required<T> | false;
+function normalizeToFalseOrOptions<T extends object>(
+  value: boolean | Partial<T>,
+  defaults: Required<T>
+): Required<T> | false {
+  if (value === false) {
+    return false;
   }
-
-  const defaultBuildTargetName = 'build';
-  const defaultBuildConfigName = 'tsconfig.lib.json';
-  let build: NormalizedPluginOptions['build'] = {
-    targetName: defaultBuildTargetName,
-    configName: defaultBuildConfigName,
-    buildDepsName: 'build-deps',
-    watchDepsName: 'watch-deps',
-  };
-  // Build target is not enabled by default
-  if (!pluginOptions.build) {
-    build = false;
-  } else if (pluginOptions.build && typeof pluginOptions.build !== 'boolean') {
-    build = {
-      targetName: pluginOptions.build.targetName ?? defaultBuildTargetName,
-      configName: pluginOptions.build.configName ?? defaultBuildConfigName,
-      buildDepsName: pluginOptions.build.buildDepsName ?? 'build-deps',
-      watchDepsName: pluginOptions.build.watchDepsName ?? 'watch-deps',
-    };
+  if (value === true) {
+    return { ...defaults };
   }
+  return normalizeOptions(value, defaults);
+}
 
+function normalizeTscOptions(
+  options: TscPluginOptions = {}
+): NormalizedTscPluginOptions {
+  const { typecheck, build, ...rest } = normalizeOptions(
+    options,
+    defaultOptions
+  );
   return {
-    typecheck,
-    build,
-    verboseOutput: pluginOptions.verboseOutput ?? false,
+    typecheck: normalizeToFalseOrOptions(typecheck, defaultTypecheckOptions),
+    build: normalizeToFalseOrOptions(build, defaultBuildOptions),
+    ...rest,
   };
 }
 
