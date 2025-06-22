@@ -20,9 +20,9 @@ Nx.json configuration
 
 - [$schema](/reference/core-api/devkit/documents/NxJsonConfiguration#$schema): string
 - [affected](/reference/core-api/devkit/documents/NxJsonConfiguration#affected): NxAffectedConfig
-- [customCache](/reference/core-api/devkit/documents/NxJsonConfiguration#customCache): string
 - [cacheDirectory](/reference/core-api/devkit/documents/NxJsonConfiguration#cachedirectory): string
 - [cli](/reference/core-api/devkit/documents/NxJsonConfiguration#cli): Object
+- [customCache](/reference/core-api/devkit/documents/NxJsonConfiguration#customcache): string
 - [defaultBase](/reference/core-api/devkit/documents/NxJsonConfiguration#defaultbase): string
 - [defaultProject](/reference/core-api/devkit/documents/NxJsonConfiguration#defaultproject): string
 - [extends](/reference/core-api/devkit/documents/NxJsonConfiguration#extends): string
@@ -68,14 +68,6 @@ use [defaultBase](/reference/core-api/devkit/documents/NxJsonConfiguration#defau
 
 ---
 
-### customCache
-
-• `Optional` **customCache**: `string`
-
-Custom cache package.
-
----
-
 ### cacheDirectory
 
 • `Optional` **cacheDirectory**: `string`
@@ -96,6 +88,14 @@ Default generator collection. It is used when no collection is provided.
 | :-------------------- | :---------------------------------------------------------------------- |
 | `defaultProjectName?` | `string`                                                                |
 | `packageManager?`     | [`PackageManager`](/reference/core-api/devkit/documents/PackageManager) |
+
+---
+
+### customCache
+
+• `Optional` **customCache**: `string`
+
+Custom cache package
 
 ---
 
