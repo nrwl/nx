@@ -72,7 +72,7 @@ If you open the repo in [Github Codespace](https://github.com/features/codespace
 > Then, try updating the base image used in [devcontainer.json](.devcontainer/devcontainer.json) and rebuild it, to see if it solved the issue.
 >
 > Current base image is `"mcr.microsoft.com/devcontainers/typescript-node:20-bookworm"` which is based on `Debian-12 (bookworm)`,
-> which comes with `GLIBC v2.36` pre-installed (Nx tools currenlty requires `GLIBC v2.33` or higher).
+> which comes with `GLIBC v2.36` pre-installed (Nx tools currently requires `GLIBC v2.33` or higher).
 
 ## Building the Project
 
