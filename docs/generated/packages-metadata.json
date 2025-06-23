@@ -4173,6 +4173,15 @@
         "originalFilePath": "/packages/playwright/src/executors/playwright/schema.json",
         "path": "playwright/executors/playwright",
         "type": "executor"
+      },
+      {
+        "description": "THIS IS AN INTERNAL EXECUTOR USED BY ATOMIZED TASKS. DO NOT USE IT DIRECTLY. Merge Playwright blob reports and aggregate the results.",
+        "file": "generated/packages/playwright/executors/merge-reports.json",
+        "hidden": true,
+        "name": "merge-reports",
+        "originalFilePath": "/packages/playwright/src/executors/merge-reports/schema.json",
+        "path": "playwright/executors/merge-reports",
+        "type": "executor"
       }
     ],
     "generators": [
