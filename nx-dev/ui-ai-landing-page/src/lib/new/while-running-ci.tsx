@@ -56,7 +56,7 @@ const features: FeatureCardProps[] = [
       </>
     ),
     type: 'video',
-    videoUrl: 'https://youtu.be/fPqPh4h8RJg',
+    videoUrl: 'https://youtu.be/JW5Ki3PkRWA',
     imageUrl: '/images/ai/self-healing-ci-thumb.avif',
   },
   {

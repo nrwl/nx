@@ -4,22 +4,20 @@ import { FeatureCard, type FeatureCardProps } from './feature-card';
 
 const features: FeatureCardProps[] = [
   {
-    isAvailable: true,
+    isAvailable: false,
     id: 'architectural-queries',
     title: 'Architectural Queries',
     subtitle: 'Ask questions about your entire system in plain English.',
     description: (
-      <>
-        <p className="flex-auto">
-          Query your monorepo naturally: "Why is CI slower than last month?" or
-          "Which projects depend on our auth library?" AI combines CI data,
-          project relationships, and team structure for accurate answers.
-        </p>
-      </>
+      <p className="flex-auto">
+        Query your workspace data naturally: "Extract all failed CI runs from
+        the last month" or "What patterns are causing our tests to fail?" AI
+        analyzes your CI pipeline data, cache performance, and build patterns to
+        identify bottlenecks and optimization opportunities.
+      </p>
     ),
-    type: 'video',
-    videoUrl: 'https://youtu.be/RNilYmJJzdk',
-    imageUrl: 'https://place-hold.it/960x540/d1d5dc/000?text=ImageLink',
+    type: 'link',
+    imageUrl: '/images/ai/ci-querying-thumb.avif',
   },
   {
     isAvailable: false,
@@ -27,12 +25,10 @@ const features: FeatureCardProps[] = [
     title: 'Cross-Repository Intelligence',
     subtitle: 'AI that understands your entire organization.',
     description: (
-      <>
-        <p className="flex-auto">
-          Nx Polygraph will extend AI context across multiple repositories,
-          enabling system-wide refactoring and cross-repo analysis.
-        </p>
-      </>
+      <p className="flex-auto">
+        Nx Polygraph will extend AI context across multiple repositories,
+        enabling system-wide refactoring and cross-repo analysis.
+      </p>
     ),
     type: 'link',
     imageUrl: '/images/ai/cross-repository-intelligence-thumb.avif',
