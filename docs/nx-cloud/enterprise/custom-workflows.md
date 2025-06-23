@@ -38,7 +38,7 @@ Navigate to your organization's Custom Workflows page in Nx Cloud. You'll see an
 Polygraph workflows are designed to grab the latest graph information from Nx to keep the Workspace graph up to date for your organization.
 {% /tab %}
 {% tab label="Conformance workflows" %}
-Conformance based workflows allows running the pre-defined conformance rules for a given workspace. Once setup you can also force a rerun of these conformance rules as desired.
+Conformance based workflows allow running the pre-defined conformance rules for a given workspace. Once setup you can also force a rerun of these conformance rules as desired.
 {% /tab %}
 {% /tabs %}
 
@@ -65,6 +65,8 @@ You can also upload your own custom launch template by clicking **Configure temp
 Back in the custom workflow action page, you can manually trigger a run via clicking **Force**
 ![Polygraph overview](/nx-cloud/enterprise/images/org-polygraph-overview.avif)
 
-Once your workflow has run, you can view its most recent execution via clicking **View Latest Execution**. If you've used with [Nx Agents](/ci/features/distribute-task-execution), then this interface will be familiar. The execution show each step taken by the workflow and the logs associated with each step.
+
+Once your workflow has run, you can view its most recent execution via clicking **View Latest Execution**. If you've used with [Nx Agents](/ci/features/distribute-task-execution), then this interface will be familiar. The execution shows each step taken by the workflow and the logs associated with each step.
+
 
 ![Custom Workflow Conformance Run](/nx-cloud/enterprise/images/custom-workflow-conformance-run.avif)
