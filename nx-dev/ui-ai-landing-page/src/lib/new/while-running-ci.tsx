@@ -33,22 +33,23 @@ const features: FeatureCardProps[] = [
   },
   {
     isAvailable: true,
-    id: 'self-healing-tests',
-    title: 'Self-Healing Tests',
-    subtitle: 'Let AI fix your CI errors while CI is running.',
+    id: 'self-healing-ci',
+    title: 'Self-Healing CI',
+    subtitle: 'Stop babysitting PRs. AI fixes your CI failures automatically.',
     description: (
       <>
         <p className="flex-auto">
-          Nx automatically analyzes failures in CI with workspace context and
-          generates actual code fixes while the CI is still running.
+          AI agents detect, analyze, and propose fixes for CI failures using
+          your workspace context. Stay focused on features while AI handles the
+          debugging.
         </p>
         <div className="mt-4">
           <Link
-            href="/blog/nx-editor-ci-llm-integration"
-            title="How to automatically fix CI with Nx"
+            href="/blog/nx-self-healing-ci"
+            title="Stop babysitting PRs with Self-Healing CI"
             className="text-sm/6 font-semibold"
           >
-            How to automatically fix CI with Nx{' '}
+            Stop babysitting PRs with Self-Healing CI{' '}
             <span aria-hidden="true">→</span>
           </Link>
         </div>
@@ -56,7 +57,7 @@ const features: FeatureCardProps[] = [
     ),
     type: 'video',
     videoUrl: 'https://youtu.be/fPqPh4h8RJg',
-    imageUrl: '/images/ai/ai-ci-fix-thumb.avif',
+    imageUrl: '/images/ai/self-healing-ci-thumb.avif',
   },
   {
     isAvailable: true,
