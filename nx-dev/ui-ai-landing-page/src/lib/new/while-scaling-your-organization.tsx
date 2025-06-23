@@ -1,22 +1,35 @@
 import { ReactElement, useState } from 'react';
 import { SectionHeading, VideoModal } from '@nx/nx-dev/ui-common';
 import { FeatureCard, type FeatureCardProps } from './feature-card';
+import Link from 'next/link';
 
 const features: FeatureCardProps[] = [
   {
-    isAvailable: false,
+    isAvailable: true,
     id: 'architectural-queries',
-    title: 'Architectural Queries',
-    subtitle: 'Ask questions about your entire system in plain English.',
+    title: 'Talk to your CI',
+    subtitle: 'Ask questions about your CI runs in plain English.',
     description: (
-      <p className="flex-auto">
-        Query your workspace data naturally: "Extract all failed CI runs from
-        the last month" or "What patterns are causing our tests to fail?" AI
-        analyzes your CI pipeline data, cache performance, and build patterns to
-        identify bottlenecks and optimization opportunities.
-      </p>
+      <>
+        <p className="flex-auto">
+          Ask questions like "Show me failed builds from last month" and get
+          instant insights into performance metrics, cache patterns, and
+          optimization opportunities.
+        </p>
+        <div className="mt-4">
+          <Link
+            href="/blog/nx-cloud-analyze-via-nx-mcp"
+            title="Analyze Your Nx Cloud Runs With Your AI Assistant"
+            className="text-sm/6 font-semibold"
+          >
+            Analyze Your Nx Cloud Runs With Your AI Assistant{' '}
+            <span aria-hidden="true">→</span>
+          </Link>
+        </div>
+      </>
     ),
-    type: 'link',
+    type: 'video',
+    videoUrl: 'https://youtu.be/A68sjLnDwZQ',
     imageUrl: '/images/ai/ci-querying-thumb.avif',
   },
   {
