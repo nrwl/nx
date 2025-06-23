@@ -31,11 +31,16 @@ class NxProjectGraphReportPlugin : Plugin<Project> {
               project.properties
                   .filterKeys { it.endsWith("TargetName") }
                   .mapValues { it.value.toString() }
+
+          val compileTestProperty =
+              project.findProperty("compileTest")?.toString()?.toBoolean() ?: false
+
           task.projectName.set(project.name)
           task.projectRef.set(project)
           task.hash.set(hashProperty)
           task.targetNameOverrides.set(targetNameOverrides)
           task.workspaceRoot.set(workspaceRootProperty)
+          task.compileTest.set(compileTestProperty)
 
           task.description = "Create Nx project report for ${project.name}"
           task.group = "Reporting"

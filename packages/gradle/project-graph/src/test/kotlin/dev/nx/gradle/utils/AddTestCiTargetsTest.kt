@@ -92,4 +92,65 @@ class AddTestCiTargetsTest {
 
     assertEquals("nx:noop", parentCi["executor"])
   }
+
+  @Test
+  fun `should respect compileTest parameter default value`() {
+    val testFile =
+        File(projectRoot, "src/test/kotlin/DefaultTest.kt").apply {
+          parentFile.mkdirs()
+          writeText("@Test class DefaultTest")
+        }
+
+    val testFiles = project.files(testFile)
+    val targets = mutableMapOf<String, MutableMap<String, Any?>>()
+    val targetGroups = mutableMapOf<String, MutableList<String>>()
+    val ciTestTargetName = "ci"
+
+    // Test without specifying compileTest (should default to false)
+    addTestCiTargets(
+        testFiles = testFiles,
+        projectBuildPath = ":project-a",
+        testTask = testTask,
+        testTargetName = "test",
+        targets = targets,
+        targetGroups = targetGroups,
+        projectRoot = projectRoot.absolutePath,
+        workspaceRoot = workspaceRoot.absolutePath,
+        ciTestTargetName = ciTestTargetName)
+
+    // Should use regex-based approach (default behavior)
+    assertTrue(targets.containsKey("ci--DefaultTest"))
+    assertTrue(targets.containsKey("ci"))
+  }
+
+  @Test
+  fun `should handle compileTest=false explicitly`() {
+    val testFile =
+        File(projectRoot, "src/test/kotlin/ExplicitTest.kt").apply {
+          parentFile.mkdirs()
+          writeText("@Test class ExplicitTest")
+        }
+
+    val testFiles = project.files(testFile)
+    val targets = mutableMapOf<String, MutableMap<String, Any?>>()
+    val targetGroups = mutableMapOf<String, MutableList<String>>()
+    val ciTestTargetName = "ci"
+
+    // Test with explicit compileTest=false
+    addTestCiTargets(
+        testFiles = testFiles,
+        projectBuildPath = ":project-a",
+        testTask = testTask,
+        testTargetName = "test",
+        targets = targets,
+        targetGroups = targetGroups,
+        projectRoot = projectRoot.absolutePath,
+        workspaceRoot = workspaceRoot.absolutePath,
+        ciTestTargetName = ciTestTargetName,
+        compileTest = false)
+
+    // Should use regex-based approach
+    assertTrue(targets.containsKey("ci--ExplicitTest"))
+    assertTrue(targets.containsKey("ci"))
+  }
 }

@@ -9,7 +9,8 @@ fun createNodeForProject(
     project: Project,
     targetNameOverrides: Map<String, String>,
     workspaceRoot: String,
-    atomized: Boolean
+    atomized: Boolean,
+    compileTest: Boolean = false
 ): GradleNodeReport {
   val logger = project.logger
   logger.info("${Date()} ${project.name} createNodeForProject: get nodes and dependencies")
@@ -32,7 +33,7 @@ fun createNodeForProject(
   try {
     val gradleTargets: GradleTargets =
         processTargetsForProject(
-            project, dependencies, targetNameOverrides, workspaceRoot, atomized)
+            project, dependencies, targetNameOverrides, workspaceRoot, atomized, compileTest)
     val projectRoot = project.projectDir.path
     val projectNode =
         ProjectNode(
@@ -62,7 +63,8 @@ fun processTargetsForProject(
     dependencies: MutableSet<Dependency>,
     targetNameOverrides: Map<String, String>,
     workspaceRoot: String,
-    atomized: Boolean
+    atomized: Boolean,
+    compileTest: Boolean = false
 ): GradleTargets {
   val targets: NxTargets = mutableMapOf()
   val targetGroups: TargetGroups = mutableMapOf()
@@ -121,7 +123,8 @@ fun processTargetsForProject(
             targetGroups,
             projectRoot,
             workspaceRoot,
-            ciTestTargetName!!)
+            ciTestTargetName,
+            compileTest = compileTest)
       }
 
       if (hasCiIntTestTarget && task.name.startsWith("compileIntTest")) {
@@ -134,7 +137,8 @@ fun processTargetsForProject(
             targetGroups,
             projectRoot,
             workspaceRoot,
-            ciIntTestTargetName!!)
+            ciIntTestTargetName,
+            compileTest = compileTest)
       }
 
       if (ciTestTargetName != null || ciIntTestTargetName != null) {
