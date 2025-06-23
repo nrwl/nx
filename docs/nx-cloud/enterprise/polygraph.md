@@ -30,7 +30,7 @@ Polygraph features require an Nx Enterprise license. [Reach out to the team](/co
 
 ## Workspace Graph
 
-Visualizes dependencies between all repositories in your organization, providing visibility into what repo depends other repos within the organization.
+Visualizes dependencies between all repositories in your organization, providing visibility into what repos depend on other repos within the organization.
 
 - **Identify consumers of shared libraries**: Enable confident API changes and deprecations by knowing exactly who will be affected
 - **Understand organizational code structure at a glance**: Help leadership make informed decisions about architecture and team boundaries
@@ -46,7 +46,7 @@ Quickly onboard new workspaces with the [GitHub VCS integration](/ci/features/gi
 
 Define and enforce consistency, maintainability, reliability and security standards across your organization.
 
-- **Gradual rule rollout**: Give teams time to fix issues, at a schedule time, change a rule from _evaluated_ to _enforced_ automatically.
+- **Gradual rule rollout**: Give teams time to fix issues, at a scheduled time, change a rule from _evaluated_ to _enforced_ automatically.
 - **Workspace coverage**: Understand which repositories and teams are subject to which rules
 - **Compliance control**: Make sure teams are keeping up with organization wide standards that they can't disable when using Nx Cloud as the registry for rules.
 
@@ -78,7 +78,7 @@ Custom workflows enable proactive monitoring and automated compliance checking, 
 
 ## Metadata Only Workspaces
 
-Gain quick visibility across your organizations repositories without needing to migrate each repository as an Nx Workspace.
+Gain quick visibility across your organization's repositories without needing to migrate each repository as an Nx Workspace.
 Easily onboard any repository as a **metadata-only** to immediately start contributing to the [Workspace Graph](#workspace-graph).
 Metadata-only workspaces can still leverage [custom workflows](/ci/recipes/enterprise/polygraph#custom-workflows) and [conformance rules](/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud).
 
@@ -111,5 +111,5 @@ Yes, rules can be set to _evaluate_ mode before enforcement, and you can schedul
 Powerpack enables conformance rules within individual workspaces. Polygraph extends this by publishing rules across your entire organization, configuring them across multiple workspaces, and tracking results at the organizational level. An Nx Cloud Enterprise license is required for Polygraph features.
 
 {% callout type="check" title="Ready to start using Polygraph? " %}
-Existing enterprise customer should contact their assigned developer productivity engineer to get setup. Otherwise, reach out to us about [Nx Enterprise](/enterprise) to unlock Polygraph's organizational scaling features.
+Existing enterprise customers should contact their assigned developer productivity engineer to get setup. Otherwise, reach out to us about [Nx Enterprise](/enterprise) to unlock Polygraph's organizational scaling features.
 {%/callout %}

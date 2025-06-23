@@ -5,7 +5,7 @@ description: 'Run scheduled tasks to gather data and run checks automatically ac
 
 ## What are Custom Workflows?
 
-Custom Workflows enable you to run scheduled tasks and automated checks across all or a selection of repositories in your organization. This powerful feature extends beyond traditional CI/CD by creating an avenue to proactive monitor and automate compliance checking, ensuring your organization's standards are maintained consistently.
+Custom Workflows enable you to run scheduled tasks and automated checks across all or a selection of repositories in your organization. This powerful feature extends beyond traditional CI/CD by creating an avenue to proactively monitor and automate compliance checking, ensuring your organization's standards are maintained consistently.
 
 Custom Workflows are scheduled automation that run independently of your CI/CD pipelines. Unlike traditional workflows that only trigger when code changes, Custom Workflows run on your schedule—whether that's daily, weekly, or at any interval you define. This is especially valuable for repositories that are rarely updated but still need regular monitoring for security vulnerabilities, compliance checks, or organizational standards.
 
@@ -22,7 +22,7 @@ Some companies have repositories that don't have CI pipelines, or changes are so
 - **Proactive maintenance**: Identify technical debt and maintenance issues before they become critical
 
 {% callout type="note" title="Nx Enterprise Required" %}
-Custom Workflows are available as part of Nx Enterprise and [consume compute credits](/pricing#resource-classes?utm_source=nx.dev&utm_campaign=polygraph). [Reach out to learn more about Nx Enterprise](/enterprise?utm_source=nx.dev&utm_campagin=polygraph)
+Custom Workflows are available as part of Nx Enterprise and [consume compute credits](/pricing#resource-classes?utm_source=nx.dev&utm_campaign=polygraph). [Reach out to learn more about Nx Enterprise](/enterprise?utm_source=nx.dev&utm_campaign=polygraph)
 {%/callout %}
 
 ## Access Custom Workflows
@@ -65,6 +65,6 @@ You can also upload your own custom launch template by clicking **Configure temp
 Back in the custom workflow action page, you can manually trigger a run via clicking **Force**
 ![Polygraph overview](/nx-cloud/enterprise/images/org-polygraph-overview.avif)
 
-Once your workflow has ran, you can view it's most recent execution via clicking **View Latest Execution**. If you've used with [Nx Agents](/ci/features/distribute-task-execution), then this interface will be familiar. The execution show each step taken by the workflow and the logs associated with each step.
+Once your workflow has run, you can view its most recent execution via clicking **View Latest Execution**. If you've used with [Nx Agents](/ci/features/distribute-task-execution), then this interface will be familiar. The execution show each step taken by the workflow and the logs associated with each step.
 
 ![Custom Workflow Conformance Run](/nx-cloud/enterprise/images/custom-workflow-conformance-run.avif)

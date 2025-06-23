@@ -34,7 +34,7 @@ Metadata-only workspaces are ideal for:
 ## Connecting
 
 {% callout type="note" title="Onboarding Assistance" %}
-Reach out to your assigned developer productivity engineer, if you need any assistance in getting setup with polygraph and metadata-only workspaces.
+Reach out to your assigned developer productivity engineer, if you need any assistance in getting set up with polygraph and metadata-only workspaces.
 {%/callout %}
 
 {% tabs %}
