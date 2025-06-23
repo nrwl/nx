@@ -18,6 +18,7 @@ youtubeUrl: https://youtu.be/PXNjedYhZDs
 - **Enhancing Nx Generators with AI: Predictability Meets Intelligence**
 - [Your AI Assistant Can Now Read Your Terminal: Real-Time Development Error Fixing](/blog/nx-terminal-integration-ai)
 - [Introducing Self-Healing CI for Nx and Nx Cloud](/blog/nx-self-healing-ci)
+- [Analyze Your Nx Cloud Runs With Your AI Assistant](/blog/nx-cloud-analyze-via-nx-mcp)
 
 {% /callout %}
 
