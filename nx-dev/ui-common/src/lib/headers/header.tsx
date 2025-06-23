@@ -27,6 +27,7 @@ import {
 import { ButtonLink, ButtonLinkProps } from '../button';
 import {
   enterpriseItems,
+  professionalServicesItems,
   resourceMenuItems,
   solutionsItems,
 } from './menu-items';
@@ -162,6 +163,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                         sections={{
                           'By roles': solutionsItems,
                           'For enterprises': enterpriseItems,
+                          'Professional services': professionalServicesItems,
                         }}
                       />
                     </Popover.Panel>
@@ -434,6 +436,9 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                                   {[
                                     ...Object.values(solutionsItems).flat(),
                                     ...Object.values(enterpriseItems).flat(),
+                                    ...Object.values(
+                                      professionalServicesItems
+                                    ).flat(),
                                   ].map((item) => (
                                     <MobileMenuItem
                                       key={item.name}
