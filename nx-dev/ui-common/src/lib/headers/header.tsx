@@ -211,6 +211,14 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
             </Popover>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
             <Link
+              href="/ai"
+              title="AI"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
+            >
+              AI
+            </Link>
+            <Link
               href="/remote-cache"
               title="Nx Remote Cache"
               className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
@@ -253,9 +261,11 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
         {/*SECONDARY NAVIGATION*/}
         <div className="flex-shrink-0 text-sm">
           <nav className="flex items-center justify-center space-x-1">
-            {buttonsToRender.map((buttonProps, index) => (
-              <ButtonLink key={index} {...buttonProps} />
-            ))}
+            <div className="hidden xl:block">
+              {buttonsToRender.map((buttonProps, index) => (
+                <ButtonLink key={index} {...buttonProps} />
+              ))}
+            </div>
             <a
               title="Nx is open source, check the code on GitHub"
               href="https://github.com/nrwl/nx"
@@ -474,6 +484,22 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                             )}
                           </Disclosure>
                           <Link
+                            href="/ai"
+                            title="AI"
+                            className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
+                            prefetch={false}
+                          >
+                            AI
+                          </Link>
+                          <Link
+                            href="/remote-cache"
+                            title="Nx Remote Cache"
+                            className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
+                            prefetch={false}
+                          >
+                            Remote Cache
+                          </Link>
+                          <Link
                             href="/nx-cloud"
                             title="Nx Cloud"
                             className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
@@ -488,14 +514,6 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                             prefetch={false}
                           >
                             Pricing
-                          </Link>
-                          <Link
-                            href="/remote-cache"
-                            title="Nx Remote Cache"
-                            className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
-                            prefetch={false}
-                          >
-                            Remote Cache
                           </Link>
                           <Disclosure as="div">
                             {({ open }) => (
