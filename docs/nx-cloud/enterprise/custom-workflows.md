@@ -22,7 +22,7 @@ Some companies have repositories that don't have CI pipelines, or changes are so
 - **Proactive maintenance**: Identify technical debt and maintenance issues before they become critical
 
 {% callout type="note" title="Nx Enterprise Required" %}
-Custom Workflows are available as part of Nx Enterprise and [consume compute credits](/pricing#resource-classes?utm_source=nx.dev&utm_campaign=polygraph). [Reach out to learn more about Nx Enterprise](/enterprise?utm_source=nx.dev&utm_campaign=polygraph)
+Custom Workflows are available as part of Nx Enterprise and [consume compute credits](/pricing#resource-classes). [Reach out to learn more about Nx Enterprise](/enterprise)
 {%/callout %}
 
 ## Access Custom Workflows
