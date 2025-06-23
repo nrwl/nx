@@ -9,6 +9,8 @@ import { readFileSync } from 'fs';
 import { createFileSync, writeFileSync } from 'fs-extra';
 import { join, resolve } from 'path';
 
+const kotlinVersion = '2.0.21';
+
 export function createGradleProject(
   projectName: string,
   type: 'kotlin' | 'groovy' = 'kotlin',
@@ -39,6 +41,11 @@ export function createGradleProject(
       }
     )
   );
+
+  // Update Kotlin version to 2.0.21 after project creation
+  if (type === 'kotlin') {
+    updateKotlinVersion(cwd, type);
+  }
 
   try {
     e2eConsoleLogger(
@@ -101,4 +108,93 @@ function addLocalPluginManagement(filePath: string) {
 }
 ` + content;
   writeFileSync(filePath, content);
+}
+
+function updateKotlinVersion(cwd: string, type: 'kotlin' | 'groovy') {
+  e2eConsoleLogger(`Updating Kotlin version to ${kotlinVersion}`);
+
+  // Update the main build file
+  const buildFilePath = join(
+    cwd,
+    `build.gradle${type === 'kotlin' ? '.kts' : ''}`
+  );
+  try {
+    let buildContent = readFileSync(buildFilePath, 'utf-8');
+
+    if (type === 'kotlin') {
+      // Update Kotlin JVM plugin version in build.gradle.kts
+      buildContent = buildContent.replace(
+        /id\s*\(\s*["']org\.jetbrains\.kotlin\.jvm["']\s*\)\s+version\s+["'][^"']*["']/g,
+        `id("org.jetbrains.kotlin.jvm") version "${kotlinVersion}"`
+      );
+    } else {
+      // Update Kotlin JVM plugin version in build.gradle (Groovy)
+      buildContent = buildContent.replace(
+        /id\s+['"]org\.jetbrains\.kotlin\.jvm['"]\s+version\s+['"][^'"]*['"]/g,
+        `id 'org.jetbrains.kotlin.jvm' version '${kotlinVersion}'`
+      );
+    }
+
+    writeFileSync(buildFilePath, buildContent);
+    e2eConsoleLogger(`Updated Kotlin version in ${buildFilePath}`);
+  } catch (error) {
+    e2eConsoleLogger(`Warning: Could not update ${buildFilePath}: ${error}`);
+  }
+
+  // Update subproject build files
+  const subprojects = ['app', 'list', 'utilities'];
+  subprojects.forEach((subproject) => {
+    const subBuildFilePath = join(
+      cwd,
+      subproject,
+      `build.gradle${type === 'kotlin' ? '.kts' : ''}`
+    );
+    try {
+      let subBuildContent = readFileSync(subBuildFilePath, 'utf-8');
+
+      if (type === 'kotlin') {
+        // Update Kotlin JVM plugin version in subproject build.gradle.kts
+        subBuildContent = subBuildContent.replace(
+          /id\s*\(\s*["']org\.jetbrains\.kotlin\.jvm["']\s*\)/g,
+          `id("org.jetbrains.kotlin.jvm") version "${kotlinVersion}"`
+        );
+      } else {
+        // Update Kotlin JVM plugin version in subproject build.gradle (Groovy)
+        subBuildContent = subBuildContent.replace(
+          /id\s+['"]org\.jetbrains\.kotlin\.jvm['"]/g,
+          `id 'org.jetbrains.kotlin.jvm' version '${kotlinVersion}'`
+        );
+      }
+
+      writeFileSync(subBuildFilePath, subBuildContent);
+      e2eConsoleLogger(`Updated Kotlin version in ${subBuildFilePath}`);
+    } catch (error) {
+      e2eConsoleLogger(
+        `Warning: Could not update ${subBuildFilePath}: ${error}`
+      );
+    }
+  });
+
+  // Create or update gradle/libs.versions.toml if it exists
+  const versionCatalogPath = join(cwd, 'gradle', 'libs.versions.toml');
+  try {
+    let versionContent = readFileSync(versionCatalogPath, 'utf-8');
+    // Update kotlin-gradle-plugin version in version catalog
+    versionContent = versionContent.replace(
+      /kotlin-gradle-plugin\s*=\s*["'][^"']*["']/g,
+      `kotlin-gradle-plugin = "${kotlinVersion}"`
+    );
+    // Also update any plain kotlin version if it exists
+    versionContent = versionContent.replace(
+      /^kotlin\s*=\s*["'][^"']*["']/gm,
+      `kotlin = "${kotlinVersion}"`
+    );
+    writeFileSync(versionCatalogPath, versionContent);
+    e2eConsoleLogger(`Updated Kotlin version in ${versionCatalogPath}`);
+  } catch (error) {
+    // Version catalog might not exist, which is fine
+    e2eConsoleLogger(
+      `Version catalog not found at ${versionCatalogPath}, skipping`
+    );
+  }
 }
