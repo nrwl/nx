@@ -569,6 +569,7 @@
         - [API](/technologies/test-tools/playwright/api)
           - [executors](/technologies/test-tools/playwright/api/executors)
             - [playwright](/technologies/test-tools/playwright/api/executors/playwright)
+            - [merge-reports](/technologies/test-tools/playwright/api/executors/merge-reports)
           - [generators](/technologies/test-tools/playwright/api/generators)
             - [configuration](/technologies/test-tools/playwright/api/generators/configuration)
             - [init](/technologies/test-tools/playwright/api/generators/init)
