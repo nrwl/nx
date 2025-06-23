@@ -4,6 +4,7 @@ import dev.nx.gradle.data.*
 import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -23,12 +24,12 @@ class CompileTestCiTargetsTest {
   fun setup() {
     projectRoot = File(workspaceRoot, "project-a").apply { mkdirs() }
     project = ProjectBuilder.builder().withProjectDir(projectRoot).build()
-    testTask = project.task("test")
+    testTask = project.tasks.create("test")
   }
 
   @Test
-  fun `should use compileTest approach when compileTest flag is true`() {
-    // Create test source files (won't be used in compileTest mode)
+  fun `should use compiled test classes when available`() {
+    // Create test source files (won't be used when compiled classes exist)
     val testFile =
         File(projectRoot, "src/test/kotlin/MyTest.kt").apply {
           parentFile.mkdirs()
@@ -59,8 +60,7 @@ class CompileTestCiTargetsTest {
         targetGroups = targetGroups,
         projectRoot = projectRoot.absolutePath,
         workspaceRoot = workspaceRoot.absolutePath,
-        ciTestTargetName = ciTestTargetName,
-        compileTest = true)
+        ciTestTargetName = ciTestTargetName)
 
     // Should generate targets based on compiled classes, not source files
     assertTrue(targets.containsKey("ci--UserServiceTest"))
@@ -72,41 +72,11 @@ class CompileTestCiTargetsTest {
 
     // Verify target groups
     val group = targetGroups[testCiTargetGroup]
-    assertTrue(group != null)
-    assertTrue(group!!.contains("ci--UserServiceTest"))
+    assertNotNull(group)
+    assertTrue(group.contains("ci--UserServiceTest"))
     assertTrue(group.contains("ci--UserRepositoryTest"))
     assertTrue(group.contains("ci--IntegrationTest"))
     assertTrue(group.contains("ci"))
-  }
-
-  @Test
-  fun `should use regex approach when compileTest flag is false`() {
-    val testFile =
-        File(projectRoot, "src/test/kotlin/MyTest.kt").apply {
-          parentFile.mkdirs()
-          writeText("@Test class MyTest")
-        }
-
-    val testFiles = project.files(testFile)
-    val targets = mutableMapOf<String, MutableMap<String, Any?>>()
-    val targetGroups = mutableMapOf<String, MutableList<String>>()
-    val ciTestTargetName = "ci"
-
-    addTestCiTargets(
-        testFiles = testFiles,
-        projectBuildPath = ":project-a",
-        testTask = testTask,
-        testTargetName = "test",
-        targets = targets,
-        targetGroups = targetGroups,
-        projectRoot = projectRoot.absolutePath,
-        workspaceRoot = workspaceRoot.absolutePath,
-        ciTestTargetName = ciTestTargetName,
-        compileTest = false)
-
-    // Should generate targets based on source file regex analysis
-    assertTrue(targets.containsKey("ci--MyTest"))
-    assertTrue(targets.containsKey("ci"))
   }
 
   @Test
@@ -165,7 +135,7 @@ class CompileTestCiTargetsTest {
   }
 
   @Test
-  fun `should pass compileTest parameter through call chain`() {
+  fun `should handle createNodeForProject without compileTest parameter`() {
     // Create compiled test classes
     val buildDir = project.layout.buildDirectory.asFile.get()
     val kotlinTestClassesDir = File(buildDir, "classes/kotlin/test/com/example").apply { mkdirs() }
@@ -174,26 +144,87 @@ class CompileTestCiTargetsTest {
     val targetNameOverrides = mapOf<String, String>()
     val workspaceRoot = workspaceRoot.absolutePath
 
-    // Test with compileTest = true
-    val report1 =
+    // Test with new signature (no compileTest parameter)
+    val report =
         createNodeForProject(
             project = project,
             targetNameOverrides = targetNameOverrides,
             workspaceRoot = workspaceRoot,
-            atomized = true,
-            compileTest = true)
+            atomized = true)
 
-    // Test with compileTest = false (default)
-    val report2 =
-        createNodeForProject(
-            project = project,
-            targetNameOverrides = targetNameOverrides,
-            workspaceRoot = workspaceRoot,
-            atomized = true,
-            compileTest = false)
+    // Should succeed without errors and always try compiled test analysis
+    // Verify that the report was generated successfully (contains nodes or is valid empty report)
+    assertNotNull(report)
+  }
 
-    // Both should succeed without errors (actual behavior depends on test setup)
-    assertTrue(report1.nodes.isNotEmpty() || report1.nodes.isEmpty()) // Should not crash
-    assertTrue(report2.nodes.isNotEmpty() || report2.nodes.isEmpty()) // Should not crash
+  @Test
+  fun `should handle missing compiled classes gracefully`() {
+    // Don't create any compiled test classes
+    val targets = mutableMapOf<String, MutableMap<String, Any?>>()
+    val targetGroups = mutableMapOf<String, MutableList<String>>()
+    val ciDependsOn = mutableListOf<Map<String, String>>()
+    val ciTestTargetName = "ci"
+
+    // Initialize target group
+    ensureTargetGroupExists(targetGroups, testCiTargetGroup)
+
+    // This should not crash even when no compiled classes exist
+    val testClassNames = getCompiledTestClassNames(testTask, ":project-a")
+
+    // Should return empty map when no classes found
+    assertTrue(testClassNames.isEmpty())
+
+    // Process should work with empty test class names
+    processTestClasses(
+        testClassNames = testClassNames,
+        ciTestTargetName = ciTestTargetName,
+        projectBuildPath = ":project-a",
+        testTask = testTask,
+        projectRoot = projectRoot.absolutePath,
+        workspaceRoot = workspaceRoot.absolutePath,
+        targets = targets,
+        targetGroups = targetGroups,
+        ciDependsOn = ciDependsOn)
+
+    // Should have no targets created
+    assertEquals(0, targets.size)
+    assertEquals(0, ciDependsOn.size)
+  }
+
+  @Test
+  fun `should fall back to regex detection when no compiled classes exist`() {
+    // Create test source files (for regex fallback)
+    val testFile =
+        File(projectRoot, "src/test/kotlin/FallbackTest.kt").apply {
+          parentFile.mkdirs()
+          writeText("@Test class FallbackTest")
+        }
+
+    // Don't create any compiled test classes - should fall back to regex
+    val testFiles = project.files(testFile)
+    val targets = mutableMapOf<String, MutableMap<String, Any?>>()
+    val targetGroups = mutableMapOf<String, MutableList<String>>()
+    val ciTestTargetName = "ci"
+
+    addTestCiTargets(
+        testFiles = testFiles,
+        projectBuildPath = ":project-a",
+        testTask = testTask,
+        testTargetName = "test",
+        targets = targets,
+        targetGroups = targetGroups,
+        projectRoot = projectRoot.absolutePath,
+        workspaceRoot = workspaceRoot.absolutePath,
+        ciTestTargetName = ciTestTargetName)
+
+    // Should fall back to regex detection and create targets
+    assertTrue(targets.containsKey("ci--FallbackTest"))
+    assertTrue(targets.containsKey("ci"))
+
+    // Verify target groups
+    val group = targetGroups[testCiTargetGroup]
+    assertNotNull(group)
+    assertTrue(group.contains("ci--FallbackTest"))
+    assertTrue(group.contains("ci"))
   }
 }

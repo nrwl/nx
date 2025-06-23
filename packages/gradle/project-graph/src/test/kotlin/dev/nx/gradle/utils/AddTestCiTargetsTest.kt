@@ -9,21 +9,21 @@ import org.gradle.api.Task
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 
 class AddTestCiTargetsTest {
 
   private lateinit var project: Project
   private lateinit var testTask: Task
-  private lateinit var workspaceRoot: File
+  @TempDir lateinit var workspaceRoot: File
   private lateinit var projectRoot: File
 
   @BeforeEach
   fun setup() {
-    workspaceRoot = createTempDir("workspace")
     projectRoot = File(workspaceRoot, "project-a").apply { mkdirs() }
 
     project = ProjectBuilder.builder().withProjectDir(projectRoot).build()
-    testTask = project.task("test")
+    testTask = project.tasks.create("test")
   }
 
   @Test
@@ -94,7 +94,7 @@ class AddTestCiTargetsTest {
   }
 
   @Test
-  fun `should respect compileTest parameter default value`() {
+  fun `should try compiled test analysis first then fallback to regex`() {
     val testFile =
         File(projectRoot, "src/test/kotlin/DefaultTest.kt").apply {
           parentFile.mkdirs()
@@ -106,7 +106,7 @@ class AddTestCiTargetsTest {
     val targetGroups = mutableMapOf<String, MutableList<String>>()
     val ciTestTargetName = "ci"
 
-    // Test without specifying compileTest (should default to false)
+    // Always tries compiled test analysis first, then falls back to regex
     addTestCiTargets(
         testFiles = testFiles,
         projectBuildPath = ":project-a",
@@ -118,39 +118,8 @@ class AddTestCiTargetsTest {
         workspaceRoot = workspaceRoot.absolutePath,
         ciTestTargetName = ciTestTargetName)
 
-    // Should use regex-based approach (default behavior)
+    // Should create targets using regex-based approach since no compiled classes exist
     assertTrue(targets.containsKey("ci--DefaultTest"))
-    assertTrue(targets.containsKey("ci"))
-  }
-
-  @Test
-  fun `should handle compileTest=false explicitly`() {
-    val testFile =
-        File(projectRoot, "src/test/kotlin/ExplicitTest.kt").apply {
-          parentFile.mkdirs()
-          writeText("@Test class ExplicitTest")
-        }
-
-    val testFiles = project.files(testFile)
-    val targets = mutableMapOf<String, MutableMap<String, Any?>>()
-    val targetGroups = mutableMapOf<String, MutableList<String>>()
-    val ciTestTargetName = "ci"
-
-    // Test with explicit compileTest=false
-    addTestCiTargets(
-        testFiles = testFiles,
-        projectBuildPath = ":project-a",
-        testTask = testTask,
-        testTargetName = "test",
-        targets = targets,
-        targetGroups = targetGroups,
-        projectRoot = projectRoot.absolutePath,
-        workspaceRoot = workspaceRoot.absolutePath,
-        ciTestTargetName = ciTestTargetName,
-        compileTest = false)
-
-    // Should use regex-based approach
-    assertTrue(targets.containsKey("ci--ExplicitTest"))
     assertTrue(targets.containsKey("ci"))
   }
 }

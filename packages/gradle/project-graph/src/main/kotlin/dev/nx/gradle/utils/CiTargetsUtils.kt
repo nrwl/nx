@@ -38,15 +38,31 @@ fun addTestCiTargets(
     targetGroups: TargetGroups,
     projectRoot: String,
     workspaceRoot: String,
-    ciTestTargetName: String,
-    compileTest: Boolean = false
+    ciTestTargetName: String
 ) {
+  testTask.logger.info("${testTask.path}: Starting addTestCiTargets")
+
   ensureTargetGroupExists(targetGroups, testCiTargetGroup)
 
   val ciDependsOn = mutableListOf<Map<String, String>>()
 
-  if (compileTest) {
-    val testClassNames = getCompiledTestClassNames(testTask, projectBuildPath)
+  // Always try to use compiled class analysis first
+  testTask.logger.info("${testTask.path}: Getting compiled test class names")
+  val testClassNames =
+      try {
+        getCompiledTestClassNames(testTask)
+      } catch (e: Exception) {
+        testTask.logger.warn(
+            "${testTask.path}: Error getting compiled test class names: ${e.message}")
+        emptyMap<String, String>()
+      }
+
+  testTask.logger.info("${testTask.path}: Found ${testClassNames.size} compiled test classes")
+
+  if (testClassNames.isNotEmpty()) {
+    // Use compiled class analysis if classes are available
+    testTask.logger.info(
+        "${testTask.path}: Processing ${testClassNames.size} compiled test classes")
     processTestClasses(
         testClassNames,
         ciTestTargetName,
@@ -57,28 +73,22 @@ fun addTestCiTargets(
         targets,
         targetGroups,
         ciDependsOn)
+    testTask.logger.info("${testTask.path}: Finished processing compiled test classes")
   } else {
-    testFiles
-        .filter { it.path.startsWith(workspaceRoot) }
-        .forEach { testFile ->
-          // Check if file contains test annotations before processing
-          val content = testFile.takeIf { it.exists() }?.readText()
-          if (content != null && containsEssentialTestAnnotations(content)) {
-            val classNames = getAllVisibleClassesWithNestedAnnotation(testFile)
-            classNames?.let {
-              processTestClasses(
-                  it,
-                  ciTestTargetName,
-                  projectBuildPath,
-                  testTask,
-                  projectRoot,
-                  workspaceRoot,
-                  targets,
-                  targetGroups,
-                  ciDependsOn)
-            }
-          }
-        }
+    // Fall back to regex-based source analysis if compiled classes not available
+    testTask.logger.info(
+        "${testTask.path}: No compiled test classes found, falling back to regex analysis")
+    processTestFilesWithRegex(
+        testFiles,
+        workspaceRoot,
+        ciTestTargetName,
+        projectBuildPath,
+        testTask,
+        projectRoot,
+        targets,
+        targetGroups,
+        ciDependsOn)
+    testTask.logger.info("${testTask.path}: Finished regex-based test file processing")
   }
 
   testTask.logger.info("${testTask.path} generated CI targets: ${ciDependsOn.map { it["target"] }}")
@@ -93,6 +103,39 @@ fun addTestCiTargets(
         testTargetName,
         ciDependsOn)
   }
+}
+
+private fun processTestFilesWithRegex(
+    testFiles: FileCollection,
+    workspaceRoot: String,
+    ciTestTargetName: String,
+    projectBuildPath: String,
+    testTask: Task,
+    projectRoot: String,
+    targets: NxTargets,
+    targetGroups: TargetGroups,
+    ciDependsOn: MutableList<Map<String, String>>
+) {
+  testFiles
+      .filter { it.path.startsWith(workspaceRoot) }
+      .forEach { testFile ->
+        val content = testFile.takeIf { it.exists() }?.readText()
+        if (content != null && containsEssentialTestAnnotations(content)) {
+          val classNames = getAllVisibleClassesWithNestedAnnotation(testFile)
+          classNames?.let {
+            processTestClasses(
+                it,
+                ciTestTargetName,
+                projectBuildPath,
+                testTask,
+                projectRoot,
+                workspaceRoot,
+                targets,
+                targetGroups,
+                ciDependsOn)
+          }
+        }
+      }
 }
 
 internal fun processTestClasses(
@@ -117,35 +160,30 @@ internal fun processTestClasses(
   }
 }
 
-private fun getCompiledTestClassNames(
-    testTask: Task,
-    projectBuildPath: String
+internal fun getCompiledTestClassNames(
+    testTask: Task
 ): Map<String, String> {
   val result = mutableMapOf<String, String>()
   val project = testTask.project
 
   try {
-    // Execute compileTestKotlin and compileTestJava tasks
-    val compileTestKotlinTask = project.tasks.findByName("compileTestKotlin")
-    val compileTestJavaTask = project.tasks.findByName("compileTestJava")
-
-    compileTestKotlinTask?.let { task ->
-      testTask.logger.info("Executing compileTestKotlin task")
-      task.actions.forEach { action -> action.execute(task) }
-    }
-
-    compileTestJavaTask?.let { task ->
-      testTask.logger.info("Executing compileTestJava task")
-      task.actions.forEach { action -> action.execute(task) }
-    }
-
     // Find and analyze test classes directories
+    // Note: We rely on existing compiled classes. The compilation should happen
+    // as part of the normal build process since this is typically called during
+    // compileTest* task execution
     val testClassesDirs = getTestClassesDirs(project)
+
+    if (testClassesDirs.isEmpty() || testClassesDirs.none { it.exists() }) {
+      testTask.logger.info("No test classes directories found or they don't exist")
+      return result
+    }
 
     testClassesDirs.forEach { testClassesDir ->
       if (testClassesDir.exists() && testClassesDir.isDirectory) {
         testTask.logger.info("Analyzing test classes directory: ${testClassesDir.absolutePath}")
         analyzeTestClassesDir(testClassesDir, "", result, testTask)
+        testTask.logger.info(
+            "Finished analyzing ${testClassesDir.absolutePath}, found ${result.size} test classes so far")
       }
     }
   } catch (e: Exception) {
@@ -153,6 +191,7 @@ private fun getCompiledTestClassNames(
     testTask.logger.debug("Stack trace:", e)
   }
 
+  testTask.logger.info("Total compiled test classes found: ${result.size}")
   return result
 }
 
@@ -179,13 +218,34 @@ internal fun analyzeTestClassesDir(
     dir: File,
     packagePath: String,
     result: MutableMap<String, String>,
-    testTask: Task
+    testTask: Task,
+    visitedDirs: MutableSet<String> = mutableSetOf(),
+    maxDepth: Int = 20,
+    currentDepth: Int = 0
 ) {
+  // Prevent infinite recursion due to symlinks or circular references
+  val canonicalPath =
+      try {
+        dir.canonicalPath
+      } catch (e: Exception) {
+        testTask.logger.warn("Unable to get canonical path for $dir: ${e.message}")
+        return
+      }
+
+  if (canonicalPath in visitedDirs || currentDepth >= maxDepth) {
+    testTask.logger.debug(
+        "Skipping directory $canonicalPath (already visited or max depth reached)")
+    return
+  }
+
+  visitedDirs.add(canonicalPath)
+
   dir.listFiles()?.forEach { file ->
     when {
       file.isDirectory -> {
         val newPackagePath = if (packagePath.isEmpty()) file.name else "$packagePath.${file.name}"
-        analyzeTestClassesDir(file, newPackagePath, result, testTask)
+        analyzeTestClassesDir(
+            file, newPackagePath, result, testTask, visitedDirs, maxDepth, currentDepth + 1)
       }
       file.name.endsWith(".class") -> {
         val className = file.name.removeSuffix(".class")

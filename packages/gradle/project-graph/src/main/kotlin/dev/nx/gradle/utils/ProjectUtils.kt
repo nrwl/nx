@@ -9,8 +9,7 @@ fun createNodeForProject(
     project: Project,
     targetNameOverrides: Map<String, String>,
     workspaceRoot: String,
-    atomized: Boolean,
-    compileTest: Boolean = false
+    atomized: Boolean
 ): GradleNodeReport {
   val logger = project.logger
   logger.info("${Date()} ${project.name} createNodeForProject: get nodes and dependencies")
@@ -33,7 +32,7 @@ fun createNodeForProject(
   try {
     val gradleTargets: GradleTargets =
         processTargetsForProject(
-            project, dependencies, targetNameOverrides, workspaceRoot, atomized, compileTest)
+            project, dependencies, targetNameOverrides, workspaceRoot, atomized)
     val projectRoot = project.projectDir.path
     val projectNode =
         ProjectNode(
@@ -63,8 +62,7 @@ fun processTargetsForProject(
     dependencies: MutableSet<Dependency>,
     targetNameOverrides: Map<String, String>,
     workspaceRoot: String,
-    atomized: Boolean,
-    compileTest: Boolean = false
+    atomized: Boolean
 ): GradleTargets {
   val targets: NxTargets = mutableMapOf()
   val targetGroups: TargetGroups = mutableMapOf()
@@ -89,8 +87,17 @@ fun processTargetsForProject(
   val hasCiTestTarget = ciTestTargetName != null && testTasks.isNotEmpty() && atomized
   val hasCiIntTestTarget = ciIntTestTargetName != null && intTestTasks.isNotEmpty() && atomized
 
+  val processedTasks = mutableSetOf<String>()
+
   project.tasks.forEach { task ->
     try {
+      // Prevent processing the same task multiple times
+      if (task.path in processedTasks) {
+        logger.debug("Skipping already processed task: ${task.path}")
+        return@forEach
+      }
+      processedTasks.add(task.path)
+
       val now = Date()
       logger.info("$now ${project.name}: Processing task ${task.path}")
 
@@ -123,8 +130,7 @@ fun processTargetsForProject(
             targetGroups,
             projectRoot,
             workspaceRoot,
-            ciTestTargetName,
-            compileTest = compileTest)
+            ciTestTargetName)
       }
 
       if (hasCiIntTestTarget && task.name.startsWith("compileIntTest")) {
@@ -137,8 +143,7 @@ fun processTargetsForProject(
             targetGroups,
             projectRoot,
             workspaceRoot,
-            ciIntTestTargetName,
-            compileTest = compileTest)
+            ciIntTestTargetName)
       }
 
       if (ciTestTargetName != null || ciIntTestTargetName != null) {

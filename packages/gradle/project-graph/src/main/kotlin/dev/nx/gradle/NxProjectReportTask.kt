@@ -30,15 +30,12 @@ abstract class NxProjectReportTask @Inject constructor(private val projectLayout
 
   @get:Input abstract val targetNameOverrides: MapProperty<String, String>
 
-  @get:Input abstract val compileTest: Property<Boolean>
-
   // Don't compute report at configuration time, move it to execution time
   @get:Internal // Prevent Gradle from caching this reference
   abstract val projectRef: Property<Project>
 
   init {
     atomized.convention(true)
-    compileTest.convention(false)
   }
 
   @get:OutputFile
@@ -51,15 +48,13 @@ abstract class NxProjectReportTask @Inject constructor(private val projectLayout
     logger.info("${Date()} Hash input: ${hash.get()}")
     logger.info("${Date()} Target Name Overrides ${targetNameOverrides.get()}")
     logger.info("${Date()} Atomized: ${atomized.get()}")
-    logger.info("${Date()} CompileTest: ${compileTest.get()}")
     val project = projectRef.get() // Get project reference at execution time
     val report =
         createNodeForProject(
             project,
             targetNameOverrides.get(),
             workspaceRoot.get(),
-            atomized.get(),
-            compileTest.get()) // Compute report at execution time
+            atomized.get()) // Compute report at execution time
     val reportJson = gson.toJson(report)
 
     if (outputFile.exists() && outputFile.readText() == reportJson) {
