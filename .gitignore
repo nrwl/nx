@@ -101,7 +101,7 @@ node_modules/
 # OS specific
 # Task files
 tasks.json
-tasks/ 
+tasks/
 
 # Raw docs local configuration (machine-specific)
 .rawdocs.local.json
