@@ -8,9 +8,6 @@ import org.gradle.api.file.FileCollection
 
 const val testCiTargetGroup = "verification"
 
-private val testFileNameRegex =
-    Regex("^(?!(abstract|fake)).*?(Test)(s)?\\d*", RegexOption.IGNORE_CASE)
-
 private val packageDeclarationRegex =
     Regex(
         """^\s*package\s+([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)""",
@@ -48,7 +45,7 @@ fun addTestCiTargets(
   val ciDependsOn = mutableListOf<Map<String, String>>()
 
   testFiles
-      .filter { isTestFile(it, workspaceRoot) }
+      .filter { it.path.startsWith(workspaceRoot) }
       .forEach { testFile ->
         val classNames = getAllVisibleClassesWithNestedAnnotation(testFile)
 
@@ -82,9 +79,12 @@ private fun containsEssentialTestAnnotations(content: String): Boolean {
   return essentialTestAnnotations.any { content.contains(it) }
 }
 
-// This function return all class names and nested class names inside a file
+// This function returns all class names and nested class names inside a file
 fun getAllVisibleClassesWithNestedAnnotation(file: File): MutableMap<String, String>? {
   val content = file.takeIf { it.exists() }?.readText() ?: return null
+  if (!containsEssentialTestAnnotations(content)) {
+    return null
+  }
 
   val lines = content.lines()
   val result = mutableMapOf<String, String>()
@@ -148,11 +148,6 @@ fun getAllVisibleClassesWithNestedAnnotation(file: File): MutableMap<String, Str
 
 fun ensureTargetGroupExists(targetGroups: TargetGroups, group: String) {
   targetGroups.getOrPut(group) { mutableListOf() }
-}
-
-private fun isTestFile(file: File, workspaceRoot: String): Boolean {
-  val fileName = file.name.substringBefore(".")
-  return file.path.startsWith(workspaceRoot) && testFileNameRegex.matches(fileName)
 }
 
 private fun buildTestCiTarget(
