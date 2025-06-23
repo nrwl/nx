@@ -23,7 +23,7 @@ class AddTestCiTargetsTest {
     projectRoot = File(workspaceRoot, "project-a").apply { mkdirs() }
 
     project = ProjectBuilder.builder().withProjectDir(projectRoot).build()
-    testTask = project.tasks.create("test")
+    testTask = project.tasks.register("test").get()
   }
 
   @Test

@@ -167,11 +167,15 @@ internal fun getCompiledTestClassNames(
   val project = testTask.project
 
   try {
-    // Find and analyze test classes directories
-    // Note: We rely on existing compiled classes. The compilation should happen
-    // as part of the normal build process since this is typically called during
-    // compileTest* task execution
-    val testClassesDirs = getTestClassesDirs(project)
+    // Use Gradle's built-in testClassesDirs from Test tasks
+    val testClassesDirs = if (testTask is org.gradle.api.tasks.testing.Test) {
+      testTask.testClassesDirs.files.toList()
+    } else {
+      // Fallback: look for Test tasks in the project
+      project.tasks.withType(org.gradle.api.tasks.testing.Test::class.java)
+        .flatMap { it.testClassesDirs.files }
+        .distinct()
+    }
 
     if (testClassesDirs.isEmpty() || testClassesDirs.none { it.exists() }) {
       testTask.logger.info("No test classes directories found or they don't exist")
@@ -195,24 +199,6 @@ internal fun getCompiledTestClassNames(
   return result
 }
 
-internal fun getTestClassesDirs(project: org.gradle.api.Project): List<File> {
-  val testClassesDirs = mutableListOf<File>()
-
-  // Standard Gradle test classes directories
-  val buildDir = project.layout.buildDirectory.asFile.get()
-  val kotlinTestClasses = File(buildDir, "classes/kotlin/test")
-  val javaTestClasses = File(buildDir, "classes/java/test")
-
-  if (kotlinTestClasses.exists()) {
-    testClassesDirs.add(kotlinTestClasses)
-  }
-
-  if (javaTestClasses.exists()) {
-    testClassesDirs.add(javaTestClasses)
-  }
-
-  return testClassesDirs
-}
 
 internal fun analyzeTestClassesDir(
     dir: File,
@@ -261,24 +247,76 @@ internal fun analyzeTestClassesDir(
 
 internal fun isTestClass(classFile: File, testTask: Task): Boolean {
   return try {
-    // Simple heuristic: check if class file contains test-related bytecode patterns
-    // This is a simplified approach - in practice, you'd want to use a bytecode analysis library
     val className = classFile.name.removeSuffix(".class")
-
-    // Common test class naming patterns
-    val isTestByName =
-        className.endsWith("Test") ||
-            className.endsWith("Tests") ||
-            className.startsWith("Test") ||
-            className.contains("Test")
-
+    
+    // Filter out invalid class names but allow nested classes for now
+    if (className.contains(" ") || className.isBlank()) {
+      testTask.logger.debug("Skipping class with invalid name: $className")
+      return false
+    }
+    
+    // For classes with $, filter out anonymous/lambda classes but allow named nested classes
+    if (className.contains("$")) {
+      // Anonymous classes have numeric suffixes: MyClass$1, MyClass$2
+      // Lambda classes: MyClass$$Lambda$1
+      val afterDollar = className.substringAfterLast("$")
+      val lambdaPattern = "$" + "$" + "Lambda" + "$"
+      val isAnonymousOrLambda = afterDollar.all { it.isDigit() } || 
+                               className.contains(lambdaPattern) ||
+                               afterDollar.startsWith("WhenMappings") // Kotlin when mappings
+      
+      if (isAnonymousOrLambda) {
+        testTask.logger.debug("Skipping anonymous/lambda class: $className")
+        return false
+      }
+    }
+    
+    // Try bytecode analysis first
+    if (classFile.length() > 0) {
+      try {
+        val bytes = classFile.readBytes()
+        val bytecodeString = String(bytes, Charsets.ISO_8859_1)
+        
+        // Check for @Nested classes first (these can have $ in name)
+        val isNestedTestClass = bytecodeString.contains("Lorg/junit/jupiter/api/Nested;")
+        if (isNestedTestClass) {
+          testTask.logger.debug("Class $className identified as nested test class")
+          return true
+        }
+        
+        // Look for test annotations in the bytecode
+        val hasTestAnnotations = listOf(
+            "Lorg/junit/Test;",           // JUnit 4 @Test
+            "Lorg/junit/jupiter/api/Test;", // JUnit 5 @Test
+            "Lorg/testng/annotations/Test;", // TestNG @Test
+            "Lkotlin/test/Test;",          // Kotlin test @Test
+            "TestTemplate",               // JUnit 5 @TestTemplate
+            "ParameterizedTest",          // JUnit 5 @ParameterizedTest
+            "RepeatedTest"                // JUnit 5 @RepeatedTest
+        ).any { annotation ->
+          bytecodeString.contains(annotation)
+        }
+        
+        if (hasTestAnnotations) {
+          testTask.logger.debug("Class $className identified as test class by bytecode analysis")
+          return true
+        }
+      } catch (e: Exception) {
+        testTask.logger.debug("Bytecode analysis failed for ${classFile.name}: ${e.message}, falling back to naming patterns")
+      }
+    }
+    
+    // Fallback to naming patterns for test scenarios or when bytecode analysis fails
+    val isTestByName = className.endsWith("Test") ||
+                      className.endsWith("Tests") ||
+                      className.startsWith("Test") ||
+                      className.contains("Test")
+    
     if (isTestByName) {
-      testTask.logger.debug("Class $className identified as test class by naming pattern")
+      testTask.logger.debug("Class $className identified as test class by naming pattern (fallback)")
       return true
     }
-
-    // For now, return false for non-pattern matches
-    // In a full implementation, you'd analyze the bytecode for test annotations
+    
     false
   } catch (e: Exception) {
     testTask.logger.debug("Error analyzing class file ${classFile.name}: ${e.message}")

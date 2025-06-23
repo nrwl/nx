@@ -22,7 +22,7 @@ class ProcessTestClassesTest {
   fun setup() {
     projectRoot = File(workspaceRoot, "project-a").apply { mkdirs() }
     project = ProjectBuilder.builder().withProjectDir(projectRoot).build()
-    testTask = project.task("test")
+    testTask = project.tasks.register("test").get()
   }
 
   @Test

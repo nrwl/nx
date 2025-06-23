@@ -24,20 +24,20 @@ class ProcessTargetsForProjectTest {
         }
 
     val testTask =
-        project.tasks.create("test").apply {
+        project.tasks.register("test").get().apply {
           group = "verification"
           description = "Runs the tests"
           inputs.files(project.files(testFile1))
         }
-    project.tasks.create("compileTestKotlin").apply { inputs.files(project.files(testFile1)) }
+    project.tasks.register("compileTestKotlin").get().apply { inputs.files(project.files(testFile1)) }
 
     val checkTask =
-        project.tasks.create("check").apply {
+        project.tasks.register("check").get().apply {
           group = "verification"
           description = "Runs all checks"
           dependsOn(testTask)
         }
-    project.tasks.create("build").apply {
+    project.tasks.register("build").get().apply {
       group = "build"
       description = "Assembles and tests"
       dependsOn(checkTask)
@@ -122,22 +122,22 @@ class ProcessTargetsForProjectTest {
         }
 
     val testTask =
-        project.tasks.create("test").apply {
+        project.tasks.register("test").get().apply {
           group = "verification"
           description = "Runs the tests"
           inputs.files(project.files(testFile1))
         }
     project.tasks
-        .create("compileTestKotlin")
+        .register("compileTestKotlin").get()
         .dependsOn(testTask) // This task name triggers ci test target logic
 
     val checkTask =
-        project.tasks.create("check").apply {
+        project.tasks.register("check").get().apply {
           group = "verification"
           description = "Runs all checks"
           dependsOn(testTask)
         }
-    project.tasks.create("build").apply {
+    project.tasks.register("build").get().apply {
       group = "build"
       description = "Assembles and tests"
       dependsOn(checkTask)

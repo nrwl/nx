@@ -36,8 +36,8 @@ class NxProjectGraphReportPluginTest {
     val project = ProjectBuilder.builder().build()
 
     // Create mock compilation tasks
-    project.tasks.create("compileTestKotlin")
-    project.tasks.create("compileTestJava")
+    project.tasks.register("compileTestKotlin")
+    project.tasks.register("compileTestJava")
 
     // Apply the plugin
     project.pluginManager.apply(NxProjectGraphReportPlugin::class.java)
