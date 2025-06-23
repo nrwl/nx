@@ -3,22 +3,25 @@ plugins {
   `maven-publish`
   signing
   id("com.ncorti.ktfmt.gradle") version "+"
-  id("dev.nx.gradle.project-graph") version "0.1.0"
-  id("org.jetbrains.kotlin.jvm") version "2.1.10"
+  id("dev.nx.gradle.project-graph") version "0.1.3"
+  id("org.jetbrains.kotlin.jvm") version "2.0.21"
   id("com.gradle.plugin-publish") version "1.2.1"
 }
 
 group = "dev.nx.gradle"
 
-version = "0.1.2"
+version = "0.1.3"
 
 repositories { mavenCentral() }
 
 dependencies {
   implementation("com.google.code.gson:gson:2.10.1")
+  implementation("com.github.javaparser:javaparser-core:3.25.8")
+  // Use kotlin-compiler-embeddable with exclusion to avoid CI classpath conflicts
+  implementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.0.21") {
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-gradle-plugin")
+  }
   testImplementation(kotlin("test"))
-  testImplementation("org.mockito:mockito-core:5.8.0")
-  testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
   testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
 }
 

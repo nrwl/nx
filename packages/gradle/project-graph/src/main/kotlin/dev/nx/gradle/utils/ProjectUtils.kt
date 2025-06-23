@@ -95,6 +95,11 @@ fun processTargetsForProject(
   val hasCiTestTarget = ciTestTargetName != null && testTasks.isNotEmpty() && atomized
   val hasCiIntTestTarget = ciIntTestTargetName != null && intTestTasks.isNotEmpty() && atomized
 
+  logger.info(
+      "${project.name}: hasCiTestTarget = $hasCiTestTarget (ciTestTargetName=$ciTestTargetName, testTasks.size=${testTasks.size}, atomized=$atomized)")
+  logger.info(
+      "${project.name}: hasCiIntTestTarget = $hasCiIntTestTarget (ciIntTestTargetName=$ciIntTestTargetName, intTestTasks.size=${intTestTasks.size}, atomized=$atomized)")
+
   project.tasks.forEach { task ->
     try {
       val now = Date()
@@ -129,7 +134,8 @@ fun processTargetsForProject(
             targetGroups,
             projectRoot,
             workspaceRoot,
-            ciTestTargetName!!)
+            ciTestTargetName!!) // Safe to use !! because hasCiTestTarget checks ciTestTargetName !=
+        // null
       }
 
       if (hasCiIntTestTarget && task.name.startsWith("compileIntTest")) {
@@ -142,7 +148,8 @@ fun processTargetsForProject(
             targetGroups,
             projectRoot,
             workspaceRoot,
-            ciIntTestTargetName!!)
+            ciIntTestTargetName!!) // Safe to use !! because hasCiIntTestTarget checks
+        // ciIntTestTargetName != null
       }
 
       if (ciTestTargetName != null || ciIntTestTargetName != null) {

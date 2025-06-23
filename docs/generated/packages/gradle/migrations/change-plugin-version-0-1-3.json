@@ -1,0 +1,14 @@
+{
+  "name": "change-plugin-version-0-1-3",
+  "version": "21.3.0-beta.3",
+  "cli": "nx",
+  "description": "Change dev.nx.gradle.project-graph to version 0.1.3 in build file",
+  "factory": "./src/migrations/21-3-0/change-plugin-version-0-1-3",
+  "implementation": "/packages/gradle/src/migrations/21-3-0/change-plugin-version-0-1-3.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/gradle",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": "#### Change dev.nx.gradle.project-graph to version 0.1.3\n\nChange dev.nx.gradle.project-graph to version 0.1.3 in build file\n\n#### Sample Code Changes\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```{% fileName=\"build.gradle\" %}\nplugins {\n\tid \"dev.nx.gradle.project-graph\" version \"0.1.0\"\n}\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```{% fileName=\"build.gradle\" %}\nplugins {\n    id \"dev.nx.gradle.project-graph\" version \"0.1.3\"\n}\n```\n\n{% /tab %}\n{% /tabs %}\n"
+}
