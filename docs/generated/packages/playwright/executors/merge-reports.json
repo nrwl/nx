@@ -1,0 +1,36 @@
+{
+  "name": "merge-reports",
+  "implementation": "/packages/playwright/src/executors/merge-reports/merge-reports.impl.ts",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "version": 2,
+    "title": "Schema for Playwright Merge Reports Executor",
+    "description": "THIS IS AN INTERNAL EXECUTOR USED BY ATOMIZED TASKS. DO NOT USE IT DIRECTLY. Merge Playwright blob reports and aggregate the results.",
+    "type": "object",
+    "properties": {
+      "blobReportsDir": {
+        "description": "Directory containing the Playwright blob reports. Relative to the project root.",
+        "type": "string"
+      },
+      "config": {
+        "description": "The Playwright configuration file path. Relative to the project root.",
+        "type": "string",
+        "x-completion-type": "file",
+        "x-completion-glob": "playwright?(*)@(.js|.cjs|.mjs|.ts|.cts|.mtx)",
+        "x-priority": "important"
+      },
+      "expectedSuites": {
+        "description": "The expected number of test suites to produce a report.",
+        "type": "number",
+        "x-priority": "important"
+      }
+    },
+    "required": ["blobReportsDir", "config", "expectedSuites"],
+    "presets": []
+  },
+  "description": "THIS IS AN INTERNAL EXECUTOR USED BY ATOMIZED TASKS. DO NOT USE IT DIRECTLY. Merge Playwright blob reports and aggregate the results.",
+  "hidden": true,
+  "aliases": [],
+  "path": "/packages/playwright/src/executors/merge-reports/schema.json",
+  "type": "executor"
+}
