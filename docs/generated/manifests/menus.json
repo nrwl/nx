@@ -4719,6 +4719,14 @@
                             "children": [],
                             "isExternal": false,
                             "disableCollapsible": false
+                          },
+                          {
+                            "id": "merge-reports",
+                            "path": "/technologies/test-tools/playwright/api/executors/merge-reports",
+                            "name": "merge-reports",
+                            "children": [],
+                            "isExternal": false,
+                            "disableCollapsible": false
                           }
                         ],
                         "isExternal": false,

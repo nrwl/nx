@@ -376,16 +376,11 @@ async function buildPlaywrightTargets(
           skipOnFailure: false,
         })
       );
-      targets[options.ciTargetName].executor = 'nx:run-commands';
+      targets[options.ciTargetName].executor = '@nx/playwright:merge-reports';
       targets[options.ciTargetName].options = {
-        commands: [
-          `playwright merge-reports ${
-            options.atomizedBlobReportOutputDir
-          } --config=${posix.relative(projectRoot, configFilePath)}`,
-          getStatusCheckCommand(options.atomizedBlobReportOutputDir),
-        ],
-        cwd: '{projectRoot}',
-        parallel: false,
+        blobReportsDir: options.atomizedBlobReportOutputDir,
+        config: posix.relative(projectRoot, configFilePath),
+        expectedSuites: dependsOn.length,
       };
     } else {
       targets[options.ciTargetName].executor = 'nx:noop';
@@ -655,10 +650,6 @@ function normalizeOutput(
     );
   }
   return joinPathFragments('{projectRoot}', pathRelativeToProjectRoot);
-}
-
-function getStatusCheckCommand(atomizedBlobReportOutputDir: string): string {
-  return `node -e "const fs=require('fs');let suites=0,hasFailed=false;try{const d='${atomizedBlobReportOutputDir}';for(const f of fs.readdirSync(d)){if(!f.endsWith('.jsonl'))continue;const lines=fs.readFileSync(\\\`\\\${d}/\\\${f}\\\`,'utf8').trim().split('\\n');let l=lines.at(-1);if(!/\\"method\\":\\"onEnd\\"/.test(l))l=lines.find(l=>/\\"method\\":\\"onEnd\\"/.test(l));if(!l)continue;const e=JSON.parse(l);suites++;hasFailed||=e.params.result.status==='failed';}const failed=hasFailed||suites!==3;console.log('\\n',failed?'❌':'✅','Test suite',failed?'failed.':'passed!','\\n');process.exit(failed?1:0);}catch(e){console.error('❌ Failed to read test report:',e.message);process.exit(1);}"`;
 }
 
 function getAtomizedTaskOutputEnvVars(
