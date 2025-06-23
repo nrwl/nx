@@ -2379,6 +2379,16 @@
         "type": "migration"
       },
       {
+        "description": "Change dev.nx.gradle.project-graph to version 0.1.3 in build file",
+        "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-3.json",
+        "hidden": false,
+        "name": "change-plugin-version-0-1-3",
+        "version": "21.3.0-beta.3",
+        "originalFilePath": "/packages/gradle",
+        "path": "gradle/migrations/change-plugin-version-0-1-3",
+        "type": "migration"
+      },
+      {
         "description": "Change dev.nx.gradle.project-graph to version 0.1.2 in build file",
         "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-2.json",
         "hidden": false,
