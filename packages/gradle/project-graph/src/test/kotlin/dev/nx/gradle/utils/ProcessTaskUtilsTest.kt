@@ -4,10 +4,19 @@ import dev.nx.gradle.data.Dependency
 import dev.nx.gradle.data.ExternalNode
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.*
 
 class ProcessTaskUtilsTest {
+
+  private val project = ProjectBuilder.builder().build()
+  private val logger = project.logger
+
+  @BeforeEach
+  fun clearCache() {
+    // Clear the thread-local cache to prevent interference between tests
+    taskDependencyCache.get().clear()
+  }
 
   @Test
   fun `test replaceRootInPath`() {
@@ -40,7 +49,7 @@ class ProcessTaskUtilsTest {
     val externalNodes = mutableMapOf<String, ExternalNode>()
     val path = "org/apache/commons/commons-lang3/3.13.0/hash/commons-lang3-3.13.0.jar"
 
-    val key = getExternalDepFromInputFile(path, externalNodes, mock())
+    val key = getExternalDepFromInputFile(path, externalNodes, logger)
 
     assertEquals("gradle:commons-lang3-3.13.0", key)
     assertTrue(externalNodes.containsKey("gradle:commons-lang3-3.13.0"))
@@ -49,7 +58,7 @@ class ProcessTaskUtilsTest {
   @Test
   fun `test getExternalDepFromInputFile invalid path`() {
     val externalNodes = mutableMapOf<String, ExternalNode>()
-    val key = getExternalDepFromInputFile("invalid/path.jar", externalNodes, mock())
+    val key = getExternalDepFromInputFile("invalid/path.jar", externalNodes, logger)
 
     assertNull(key)
     assertTrue(externalNodes.isEmpty())
