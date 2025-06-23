@@ -1,13 +1,13 @@
 ---
 title: 'Run Language-Agnostic Conformance Rules'
-description: 'Learn how to use Nx Powerpack conformance rules to enforce organizational standards, maintain consistency, and ensure security across your workspace.'
+description: 'Learn how to use Nx Powerpack and Nx Enterprise conformance rules to enforce organizational standards, maintain consistency, and ensure security across your workspace.'
 ---
 
 # Run Language-Agnostic Conformance Rules
 
 {% youtube src="https://youtu.be/6wg23sLveTQ" title="Nx Powerpack workspace conformance" /%}
 
-The [`@nx/conformance`](/reference/core-api/conformance) plugin allows [Nx Powerpack](/powerpack) users to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability** and **security**. Powerpack is available for Nx version 19.8 and higher.
+The [`@nx/conformance`](/reference/core-api/conformance) plugin allows [Nx Powerpack](/powerpack) and [Nx Enterprise](/enterprise) users to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability** and **security**. Powerpack is available for Nx version 19.8 and higher.
 
 The conformance plugin allows you to **encode your own organization's standards** so that they can be enforced automatically. Conformance rules can also **complement linting tools** by enforcing that those tools are configured in the recommended way. The rules are written in TypeScript but can be **applied to any language in the codebase** or focus entirely on configuration files.
 
@@ -18,9 +18,9 @@ The plugin also provides the following pre-written rules:
 
 ## Setup
 
-The `@nx/conformance` plugin requires an Nx Powerpack license to function. [Activating Powerpack](/nx-enterprise/activate-powerpack) is a simple process.
+The `@nx/conformance` plugin requires an Nx Powerpack or [Nx Enterprise license](/enterprise) to function. [Activating Powerpack](/nx-enterprise/activate-powerpack) is a simple process.
 
-{% call-to-action title="Get a License and Activate Powerpack" icon="nx" description="Unlock all the features of the Nx CLI" url="/nx-enterprise/activate-powerpack" /%}
+{% call-to-action title="Get a License and Activate Powerpack or Nx Enterprise" icon="nx" description="Unlock all the features of the Nx CLI" url="/nx-enterprise/activate-powerpack" /%}
 
 Then, add the Conformance plugin to your workspace.
 
