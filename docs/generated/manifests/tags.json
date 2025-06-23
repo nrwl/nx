@@ -1612,6 +1612,29 @@
       "path": "/ci/recipes/enterprise/single-tenant/overview"
     }
   ],
+  "polygraph": [
+    {
+      "description": "Enterprise features for visualizing dependencies and enforcing standards across multiple repositories",
+      "file": "nx-cloud/enterprise/polygraph",
+      "id": "polygraph",
+      "name": "Polygraph",
+      "path": "/ci/recipes/enterprise/polygraph"
+    },
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/metadata-only-workspace",
+      "id": "metadata-only-workspace",
+      "name": "Metadata Only Workspaces",
+      "path": "/ci/recipes/enterprise/metadata-only-workspace"
+    },
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/custom-workflows",
+      "id": "custom-workflows",
+      "name": "Custom Workflows",
+      "path": "/ci/recipes/enterprise/custom-workflows"
+    }
+  ],
   "docker": [
     {
       "description": "",

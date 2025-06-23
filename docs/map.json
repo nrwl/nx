@@ -2829,6 +2829,25 @@
                       "file": "nx-cloud/enterprise/conformance/publish-conformance-rules-to-nx-cloud"
                     }
                   ]
+                },
+                {
+                  "name": "Polygraph",
+                  "description": "Enterprise features for visualizing dependencies and enforcing standards across multiple repositories",
+                  "id": "polygraph",
+                  "tags": ["polygraph"],
+                  "file": "nx-cloud/enterprise/polygraph"
+                },
+                {
+                  "name": "Metadata Only Workspaces",
+                  "id": "metadata-only-workspace",
+                  "tags": ["polygraph"],
+                  "file": "nx-cloud/enterprise/metadata-only-workspace"
+                },
+                {
+                  "name": "Custom Workflows",
+                  "id": "custom-workflows",
+                  "tags": ["polygraph"],
+                  "file": "nx-cloud/enterprise/custom-workflows"
                 }
               ]
             },
