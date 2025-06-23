@@ -3,6 +3,20 @@ import type { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
 import { getLatestCommitSha } from 'nx/src/utils/git-utils';
 import { ProjectGraph, type ProjectGraphDependency, Tree } from '@nx/devkit';
 import { execSync } from 'child_process';
+import { DockerVersionActionsOptions } from './version-actions-options';
+
+type NxReleaseProjectConfiguration = Pick<
+  // Expose a subset of version config options at the project level
+  NxReleaseVersionConfiguration,
+  | 'versionActions'
+  | 'versionActionsOptions'
+  | 'manifestRootsToUpdate'
+  | 'currentVersionResolver'
+  | 'currentVersionResolverMetadata'
+  | 'fallbackCurrentVersionResolver'
+  | 'versionPrefix'
+  | 'preserveLocalDependencyProtocols'
+>;
 
 export default class DockerVersionActions extends VersionActions {
   validManifestFilenames: string[] = ['Dockerfile'];
@@ -56,7 +70,7 @@ export default class DockerVersionActions extends VersionActions {
     const mm = String(now.getMonth() + 1).padStart(2, '0');
     const dd = String(now.getDate()).padStart(2, '0');
     const formatted = `${yy}${mm}.${dd}`;
-    const shortSha = getLatestCommitSha();
+    const shortSha = getLatestCommitSha().slice(0, 6);
     const newVersion = `${formatted}.${shortSha}`;
 
     return {
@@ -80,11 +94,10 @@ export default class DockerVersionActions extends VersionActions {
     // Should only return log messages if `--dry-run`
     // Should run `docker tag image_name registry/repo_name:newVersion`
     // docker tag will be able to tag the image if it exists, so we'd have to enforce preVersionCommand
-    const imageTag = this.projectGraphNode.data.root
-      .replace(/^[\\/]/, '')
-      .replace(/[\\/\s]+/g, '-');
-    execSync(`docker tag ${imageTag} columferrynx/apps-acme:${newVersion}`);
-    return [`Image ${imageTag} tagged with ${newVersion}`];
+    const imageRef = this.getDefaultImageReference();
+    const newImageRef = this.getImageReference();
+    execSync(`docker tag ${imageRef} ${newImageRef}:${newVersion}`);
+    return [`Image ${imageRef} tagged with ${newImageRef}:${newVersion}`];
   }
 
   async updateProjectDependencies(
@@ -94,5 +107,27 @@ export default class DockerVersionActions extends VersionActions {
   ): Promise<string[]> {
     // Dockerfiles manage dependent images and versions internally
     return [];
+  }
+
+  private getImageReference() {
+    const versionActionsOptions: DockerVersionActionsOptions =
+      (
+        this.projectGraphNode.data?.release
+          ?.version as NxReleaseProjectConfiguration
+      )?.versionActionsOptions ?? {};
+
+    let imageRef =
+      versionActionsOptions.repositoryName ?? this.getDefaultImageReference();
+
+    if (versionActionsOptions.registry) {
+      imageRef = `${versionActionsOptions.registry}/${imageRef}`;
+    }
+    return imageRef;
+  }
+
+  private getDefaultImageReference() {
+    return this.projectGraphNode.data.root
+      .replace(/^[\\/]/, '')
+      .replace(/[\\/\s]+/g, '-');
   }
 }

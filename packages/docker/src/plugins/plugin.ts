@@ -24,15 +24,13 @@ interface ExpandedRunTargetOptions {
 }
 type RunTargetOptions = string | Partial<ExpandedRunTargetOptions>;
 
-interface DockerPushRegistryOptions {
-  registryUrl: string;
+interface DockerRegistryOptions {
+  registry: string;
   repositoryName: string;
-  tag: string;
 }
 
-interface ExpandedPushTargetOptions extends Partial<DockerPushRegistryOptions> {
+interface ExpandedPushTargetOptions {
   name: string;
-  environments: Record<string, DockerPushRegistryOptions>;
 }
 
 type PushTargetOptions = string | Partial<ExpandedPushTargetOptions>;
@@ -41,12 +39,14 @@ export interface DockerPluginOptions {
   buildTarget?: BuildTargetOptions;
   runTarget?: RunTargetOptions;
   pushTarget?: PushTargetOptions;
+  registryOptions?: DockerRegistryOptions;
 }
 
 interface NormalizedDockerPluginOptions {
   buildTarget: ExpandedBuildTargetOptions;
   runTarget: ExpandedRunTargetOptions;
   pushTarget: ExpandedPushTargetOptions;
+  registryOptions: DockerRegistryOptions;
 }
 
 type DockerTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
@@ -118,6 +118,7 @@ async function createNodesInternal(
         release: {
           version: {
             versionActions: '@nx/docker/release/version-actions',
+            versionActionsOptions: normalizedOptions.registryOptions ?? {},
           },
         },
       },
@@ -130,8 +131,8 @@ async function createDockerTargets(
   options: NormalizedDockerPluginOptions,
   context: CreateNodesContext
 ) {
-  const imageTag = projectRoot.replace(/^[\\/]/, '').replace(/[\\/\s]+/g, '-');
-  const ociOutputPath = `${imageTag}.oci`;
+  const imageRef = projectRoot.replace(/^[\\/]/, '').replace(/[\\/\s]+/g, '-');
+  const ociOutputPath = `${imageRef}.oci`;
 
   const namedInputs = getNamedInputs(projectRoot, context);
   const targets: Record<string, TargetConfiguration> = {};
@@ -142,9 +143,9 @@ async function createDockerTargets(
     options: {
       cwd: projectRoot,
       args: [
-        `--tag ${imageTag}`,
-        `--output type=image,name=${imageTag}`,
-        `--output type=oci,dest=${ociOutputPath},name=${imageTag}`,
+        `--tag ${imageRef}`,
+        `--output type=image,name=${imageRef}`,
+        `--output type=oci,dest=${ociOutputPath},name=${imageRef}`,
       ],
     },
     outputs: [`{projectRoot}/${ociOutputPath}`],
@@ -186,7 +187,7 @@ async function createDockerTargets(
 
   targets[options.runTarget.name] = {
     dependsOn: [`docker:load`],
-    command: `docker run ${imageTag}`,
+    command: `docker run ${imageRef}`,
     options: {
       cwd: projectRoot,
     },
@@ -205,16 +206,16 @@ async function createDockerTargets(
     },
   };
 
-  let customRegistryTag = `${options.pushTarget.tag}`;
-  if (options.pushTarget.repositoryName) {
-    customRegistryTag = `${options.pushTarget.repositoryName}:${customRegistryTag}`;
+  let customRegistryRef = ``;
+  if (options.registryOptions.repositoryName) {
+    customRegistryRef = `${options.registryOptions.repositoryName}`;
   }
-  if (options.pushTarget.registryUrl) {
-    customRegistryTag = `${options.pushTarget.registryUrl}/${customRegistryTag}`;
+  if (options.registryOptions.registry) {
+    customRegistryRef = `${options.registryOptions.registry}/${customRegistryRef}`;
   }
   targets[`docker:prepush`] = {
     dependsOn: [`docker:load`],
-    command: `docker tag ${imageTag} ${customRegistryTag}`,
+    command: `docker tag ${imageRef} ${customRegistryRef}`,
     options: {
       cwd: projectRoot,
     },
@@ -235,7 +236,7 @@ async function createDockerTargets(
 
   targets[options.pushTarget.name] = {
     dependsOn: [`docker:prepush`],
-    command: `docker push ${customRegistryTag}`,
+    command: `docker push ${customRegistryRef}`,
     options: {
       cwd: projectRoot,
     },
@@ -254,6 +255,14 @@ async function createDockerTargets(
     },
   };
 
+  targets['nx-release-publish'] = {
+    executor: '@nx/docker:release-publish',
+    options: {
+      registry: options.registryOptions.registry,
+      repositoryName: options.registryOptions.repositoryName,
+    },
+  };
+
   return { targets, metadata: {} };
 }
 
@@ -264,6 +273,7 @@ function normalizePluginOptions(
     buildTarget: normalizeBuildTarget(options),
     runTarget: normalizeRunTarget(options),
     pushTarget: normalizePushTarget(options),
+    registryOptions: options.registryOptions,
   };
 }
 
@@ -309,26 +319,14 @@ function normalizePushTarget({
   if (!pushTarget) {
     return {
       name: 'docker:push',
-      registryUrl: undefined,
-      repositoryName: undefined,
-      tag: 'latest',
-      environments: undefined,
     };
   } else if (typeof pushTarget === 'string') {
     return {
       name: pushTarget,
-      registryUrl: undefined,
-      repositoryName: undefined,
-      tag: 'latest',
-      environments: undefined,
     };
   } else {
     return {
       name: pushTarget.name ?? 'docker:push',
-      registryUrl: pushTarget.registryUrl ?? undefined,
-      repositoryName: pushTarget.repositoryName ?? undefined,
-      tag: pushTarget.tag ?? 'latest',
-      environments: pushTarget.environments ?? undefined,
     };
   }
 }

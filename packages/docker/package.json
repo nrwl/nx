@@ -36,6 +36,7 @@
       "default": "./package.json"
     }
   },
+  "executors": "./executors.json",
   "dependencies": {
     "@nx/devkit": "file:../devkit",
     "tslib": "^2.3.0"
