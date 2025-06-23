@@ -1,6 +1,5 @@
 import { VersionActions } from 'nx/release';
 import type { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
-import { getLatestCommitSha } from 'nx/src/utils/git-utils';
 import {
   joinPathFragments,
   ProjectGraph,
@@ -8,7 +7,11 @@ import {
   Tree,
 } from '@nx/devkit';
 import { execSync } from 'child_process';
-import { DockerVersionActionsOptions } from './version-actions-options';
+import {
+  DockerVersionActionsOptions,
+  normalizeVersionPattern,
+} from './version-actions-options';
+import { interpolateVersionPattern } from './version-pattern-utils';
 
 type NxReleaseProjectConfiguration = Pick<
   // Expose a subset of version config options at the project level
@@ -26,6 +29,10 @@ type NxReleaseProjectConfiguration = Pick<
 export default class DockerVersionActions extends VersionActions {
   validManifestFilenames: string[] = ['Dockerfile'];
   isDryRun = process.env.NX_DRY_RUN === 'true';
+  defaultVersionPattern = `{currentDate|YYMM.DD}.{shortCommitSha}`;
+  versionPatterns = normalizeVersionPattern(
+    this.finalConfigForProject.versionActionsOptions?.versionPattern ?? {}
+  );
 
   async readCurrentVersionFromSourceManifest(
     tree: Tree
@@ -71,13 +78,21 @@ export default class DockerVersionActions extends VersionActions {
     newVersion: string;
     logText: string;
   }> {
-    const now = new Date();
-    const yy = String(now.getFullYear()).slice(-2);
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const dd = String(now.getDate()).padStart(2, '0');
-    const formatted = `${yy}${mm}.${dd}`;
-    const shortSha = getLatestCommitSha().slice(0, 6);
-    const newVersion = `${formatted}.${shortSha}`;
+    let newVersion = [
+      'major',
+      'premajor',
+      'minor',
+      'preminor',
+      'patch',
+      'prepatch',
+      'prerelease',
+    ].some((v) => v === newVersionInput)
+      ? this.versionPatterns[newVersionInput] || this.defaultVersionPattern
+      : newVersionInput;
+
+    newVersion = interpolateVersionPattern(newVersion, {
+      projectName: this.projectGraphNode.name,
+    });
 
     return {
       newVersion,
@@ -97,9 +112,6 @@ export default class DockerVersionActions extends VersionActions {
     tree: Tree,
     newVersion: string
   ): Promise<string[]> {
-    // Should only return log messages if `--dry-run`
-    // Should run `docker tag image_name registry/repo_name:newVersion`
-    // docker tag will be able to tag the image if it exists, so we'd have to enforce preVersionCommand
     const imageRef = this.getDefaultImageReference();
     const newImageRef = this.getImageReference();
     if (!this.isDryRun) {
@@ -129,10 +141,7 @@ export default class DockerVersionActions extends VersionActions {
 
   private getImageReference() {
     const versionActionsOptions: DockerVersionActionsOptions =
-      (
-        this.projectGraphNode.data?.release
-          ?.version as NxReleaseProjectConfiguration
-      )?.versionActionsOptions ?? {};
+      this.finalConfigForProject.versionActionsOptions ?? {};
 
     let imageRef =
       versionActionsOptions.repositoryName ?? this.getDefaultImageReference();

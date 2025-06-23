@@ -13,6 +13,7 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { existsSync } from 'fs';
 import { basename, dirname, join } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
+import { DockerVersionActionsOptions } from '../release/version-actions-options';
 
 interface ExpandedBuildTargetOptions {
   name: string;
@@ -27,6 +28,7 @@ type RunTargetOptions = string | Partial<ExpandedRunTargetOptions>;
 interface DockerRegistryOptions {
   registry?: string;
   repositoryName?: string;
+  versionPattern?: string;
 }
 
 interface ExpandedPushTargetOptions {
@@ -108,6 +110,12 @@ async function createNodesInternal(
   );
 
   const { targets, metadata } = targetsCache[hash];
+  const versionActionsOptions: DockerVersionActionsOptions = {
+    ...normalizedOptions.registryOptions,
+    versionPattern:
+      normalizedOptions.registryOptions?.versionPattern ??
+      '{currentDate|YYMM.DD}.{shortCommitSha}',
+  };
 
   return {
     projects: {
@@ -118,8 +126,10 @@ async function createNodesInternal(
         release: {
           version: {
             versionActions: '@nx/docker/release/version-actions',
-            versionActionsOptions: (normalizedOptions.registryOptions ??
-              {}) as Record<string, unknown>,
+            versionActionsOptions: versionActionsOptions as Record<
+              string,
+              unknown
+            >,
           },
         },
       },
