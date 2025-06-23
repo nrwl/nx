@@ -20,6 +20,7 @@ type NxReleaseProjectConfiguration = Pick<
 
 export default class DockerVersionActions extends VersionActions {
   validManifestFilenames: string[] = ['Dockerfile'];
+  isDryRun = process.env.NX_DRY_RUN === 'true';
 
   async readCurrentVersionFromSourceManifest(
     tree: Tree
@@ -96,8 +97,16 @@ export default class DockerVersionActions extends VersionActions {
     // docker tag will be able to tag the image if it exists, so we'd have to enforce preVersionCommand
     const imageRef = this.getDefaultImageReference();
     const newImageRef = this.getImageReference();
-    execSync(`docker tag ${imageRef} ${newImageRef}:${newVersion}`);
-    return [`Image ${imageRef} tagged with ${newImageRef}:${newVersion}`];
+    if (!this.isDryRun) {
+      execSync(`docker tag ${imageRef} ${newImageRef}:${newVersion}`);
+    }
+    const logs = [
+      `Image ${imageRef} tagged with ${newImageRef}:${newVersion}.`,
+    ];
+    if (this.isDryRun) {
+      logs.push(`No changes were applied as --dry-run is enabled.`);
+    }
+    return logs;
   }
 
   async updateProjectDependencies(
