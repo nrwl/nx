@@ -65,8 +65,6 @@ You can also upload your own custom launch template by clicking **Configure temp
 Back in the custom workflow action page, you can manually trigger a run via clicking **Force**
 ![Polygraph overview](/nx-cloud/enterprise/images/org-polygraph-overview.avif)
 
-
 Once your workflow has run, you can view its most recent execution via clicking **View Latest Execution**. If you've used with [Nx Agents](/ci/features/distribute-task-execution), then this interface will be familiar. The execution shows each step taken by the workflow and the logs associated with each step.
-
 
 ![Custom Workflow Conformance Run](/nx-cloud/enterprise/images/custom-workflow-conformance-run.avif)
