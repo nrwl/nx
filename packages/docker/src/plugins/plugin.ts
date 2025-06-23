@@ -25,8 +25,8 @@ interface ExpandedRunTargetOptions {
 type RunTargetOptions = string | Partial<ExpandedRunTargetOptions>;
 
 interface DockerRegistryOptions {
-  registry: string;
-  repositoryName: string;
+  registry?: string;
+  repositoryName?: string;
 }
 
 interface ExpandedPushTargetOptions {
@@ -118,7 +118,8 @@ async function createNodesInternal(
         release: {
           version: {
             versionActions: '@nx/docker/release/version-actions',
-            versionActionsOptions: normalizedOptions.registryOptions ?? {},
+            versionActionsOptions: (normalizedOptions.registryOptions ??
+              {}) as Record<string, unknown>,
           },
         },
       },
@@ -273,7 +274,7 @@ function normalizePluginOptions(
     buildTarget: normalizeBuildTarget(options),
     runTarget: normalizeRunTarget(options),
     pushTarget: normalizePushTarget(options),
-    registryOptions: options.registryOptions,
+    registryOptions: options.registryOptions ?? {},
   };
 }
 

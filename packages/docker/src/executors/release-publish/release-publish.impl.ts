@@ -6,6 +6,8 @@ import {
   NormalizedDockerReleasePublishSchema,
 } from './schema';
 import { DockerVersionActionsOptions } from '../../release/version-actions-options';
+import { join } from 'path';
+import { existsSync, readFileSync } from 'fs';
 
 type NxReleaseProjectConfiguration = Pick<
   // Expose a subset of version config options at the project level
@@ -58,10 +60,8 @@ function findImageReference(
   const versionActionsOptions: DockerVersionActionsOptions =
     (projectConfig.data?.release?.version as NxReleaseProjectConfiguration)
       ?.versionActionsOptions ?? {};
-  let imageRef = '';
-  if (schema.version) {
-    imageRef = `${schema.version}`;
-  }
+  let imageRef = readVersionFromFile(projectConfig.data.root) ?? 'latest';
+
   if (schema.repositoryName || versionActionsOptions.repositoryName) {
     imageRef = `${
       schema.repositoryName ?? versionActionsOptions.repositoryName
@@ -80,6 +80,18 @@ function findImageReference(
       `Could not find Docker Image ${imageRef}. Did you run 'nx release version'?`
     );
   }
+}
+
+function readVersionFromFile(projectRoot: string) {
+  const versionFilePath = join(projectRoot, '.docker-version');
+  if (!existsSync(versionFilePath)) {
+    throw new Error(
+      "Could not find .docker-version file. Did you run 'nx release version'?"
+    );
+  }
+
+  const version = readFileSync(versionFilePath, { encoding: 'utf8' });
+  return version.trim();
 }
 
 function checkDockerImageExistsLocally(imageRef: string) {

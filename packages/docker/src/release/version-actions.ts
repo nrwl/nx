@@ -1,7 +1,12 @@
 import { VersionActions } from 'nx/release';
 import type { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
 import { getLatestCommitSha } from 'nx/src/utils/git-utils';
-import { ProjectGraph, type ProjectGraphDependency, Tree } from '@nx/devkit';
+import {
+  joinPathFragments,
+  ProjectGraph,
+  type ProjectGraphDependency,
+  Tree,
+} from '@nx/devkit';
 import { execSync } from 'child_process';
 import { DockerVersionActionsOptions } from './version-actions-options';
 
@@ -106,6 +111,10 @@ export default class DockerVersionActions extends VersionActions {
     if (this.isDryRun) {
       logs.push(`No changes were applied as --dry-run is enabled.`);
     }
+    tree.write(
+      joinPathFragments(this.projectGraphNode.data.root, '.docker-version'),
+      newVersion
+    );
     return logs;
   }
 

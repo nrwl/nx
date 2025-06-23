@@ -1,7 +1,6 @@
 export interface DockerReleasePublishSchema {
   registry?: string;
   repositoryName?: string;
-  version?: string;
   dryRun?: boolean;
 }
 

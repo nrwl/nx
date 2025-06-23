@@ -1651,7 +1651,17 @@
   {
     "description": "The Nx Plugin for Docker to aid in containerizing projects.",
     "documents": [],
-    "executors": [],
+    "executors": [
+      {
+        "description": "DO NOT INVOKE DIRECTLY WITH `nx run`. Use `nx release publish` instead.",
+        "file": "generated/packages/docker/executors/release-publish.json",
+        "hidden": true,
+        "name": "release-publish",
+        "originalFilePath": "/packages/docker/src/executors/release-publish/schema.json",
+        "path": "docker/executors/release-publish",
+        "type": "executor"
+      }
+    ],
     "generators": [],
     "migrations": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
