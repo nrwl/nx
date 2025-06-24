@@ -89,7 +89,7 @@
       ]
     },
     "copy-readme": {
-      "outputs": ["{workspaceRoot}/build/packages/workspace/README.md"],
+      "outputs": ["{workspaceRoot}/dist/packages/workspace/README.md"],
       "command": "node ./scripts/copy-readme.js workspace",
       "dependsOn": [
         {

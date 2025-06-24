@@ -8,7 +8,7 @@
       "dependsOn": ["^nx-release-publish"],
       "executor": "@nx/js:release-publish",
       "options": {
-        "packageRoot": "build/packages/gradle"
+        "packageRoot": "dist/packages/gradle"
       }
     },
     "build": {
