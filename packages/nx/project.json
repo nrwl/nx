@@ -56,8 +56,30 @@
     "echo": {
       "command": "echo hi"
     },
+    "build-base": {
+      "dependsOn": [
+        "^build-client",
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        },
+        {
+          "target": "build-native",
+          "projects": "self"
+        },
+        {
+          "target": "copy-assets",
+          "projects": "self"
+        }
+      ]
+    },
     "build": {
-      "dependsOn": ["^build-client", "build-base-ts", "build-native"],
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "projects": "self"
+        }
+      ],
       "inputs": [
         "production",
         "^production",
@@ -167,7 +189,12 @@
           }
         ]
       },
-      "dependsOn": ["build-base-ts"]
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
     }
   }
 }

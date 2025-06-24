@@ -16,7 +16,7 @@ export function getPublishedVersion(): string {
   process.env.PUBLISHED_VERSION =
     process.env.PUBLISHED_VERSION ||
     // read version of built nx package
-    readJsonFile(join(workspaceRoot, `./build/packages/nx/package.json`))
+    readJsonFile(join(workspaceRoot, `./dist/packages/nx/package.json`))
       .version ||
     // fallback to latest if built nx package is missing
     'latest';

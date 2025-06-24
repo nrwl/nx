@@ -2,6 +2,7 @@
   "name": "@nx/graph-client",
   "version": "0.0.1",
   "type": "commonjs",
+  "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "dependencies": {
