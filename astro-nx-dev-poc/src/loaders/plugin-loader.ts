@@ -226,12 +226,19 @@ nx run project:${docType} --help
 export async function generateAllPluginDocs(): Promise<PluginDocEntry[]> {
   console.log('Generating plugin documentation...');
 
+  // Check if we're in the main Nx workspace with packages
+  const packagesDir = join(workspaceRoot, '../packages');
+  if (!existsSync(packagesDir)) {
+    console.error('❌ Nx packages directory not found at expected location');
+    throw new Error(`Cannot find packages directory at ${packagesDir}`);
+  }
+
   const entries: PluginDocEntry[] = [];
   let successCount = 0;
   let skipCount = 0;
 
   for (const relativePath of PLUGIN_PATHS) {
-    const pluginPath = join(workspaceRoot, 'packages', relativePath);
+    const pluginPath = join(workspaceRoot, '../packages', relativePath);
 
     if (!existsSync(pluginPath)) {
       console.log(`⚠️  Skipping ${relativePath} - path does not exist`);

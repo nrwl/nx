@@ -110,74 +110,86 @@ nx <command> --help
 }
 
 export async function generateNxCliDocs(): Promise<string> {
-  console.log('🔍 Analyzing Nx CLI commands...');
+  console.log('🔍 Generating Nx CLI documentation...');
 
-  // Register TypeScript paths from the base config
-  const config = readJsonSync(
-    join(workspaceRoot, 'tsconfig.base.json')
-  ).compilerOptions;
-  registerTsConfigPaths(config);
+  try {
+    // Look for nx-commands in the main Nx repository (go up from poc-beta-docs)
+    const nxCommandsPath = join(
+      workspaceRoot,
+      '../packages/nx/src/command-line/nx-commands'
+    );
 
-  console.log('📁 Using yargs command object...');
+    console.log(`📍 Looking for nx-commands at: ${nxCommandsPath}`);
 
-  // Import the commandsObject from the nx-commands file
-  const nxCommandsPath = join(
-    workspaceRoot,
-    'packages/nx/src/command-line/nx-commands'
-  );
-
-  const { default: importFresh } = await import('import-fresh');
-  const { commandsObject } = importFresh(nxCommandsPath);
-
-  // Get all commands from yargs
-  const nxCommands = getCommands(commandsObject);
-
-  // Commands to exclude from documentation
-  const sharedCommands = ['generate', 'exec'];
-  const hiddenCommands = ['$0', 'conformance', 'conformance:check'];
-
-  const commands: Record<string, ParsedCommand> = {};
-
-  // Parse each command
-  for (const [name, commandConfig] of Object.entries(nxCommands)) {
-    if (sharedCommands.includes(name) || hiddenCommands.includes(name)) {
-      continue;
+    // If the nx-commands file doesn't exist, try alternative path
+    if (!require('fs').existsSync(nxCommandsPath)) {
+      console.error('❌ Nx CLI source not found at expected location');
+      throw new Error(`Cannot find nx-commands at ${nxCommandsPath}`);
     }
 
-    // Check if command has description
-    if (
-      !(
-        (commandConfig as any).description ||
-        (commandConfig as any).describe ||
-        (commandConfig as any).desc
-      )
-    ) {
-      continue;
+    // Register TypeScript paths from the base config in main Nx repo
+    const tsconfigPath = join(workspaceRoot, '../tsconfig.base.json');
+    const config = readJsonSync(tsconfigPath).compilerOptions;
+    registerTsConfigPaths(config);
+
+    console.log('📁 Using yargs command object...');
+
+    const { default: importFresh } = await import('import-fresh');
+    const { commandsObject } = importFresh(nxCommandsPath);
+
+    // Get all commands from yargs
+    const nxCommands = getCommands(commandsObject);
+
+    // Commands to exclude from documentation
+    const sharedCommands = ['generate', 'exec'];
+    const hiddenCommands = ['$0', 'conformance', 'conformance:check'];
+
+    const commands: Record<string, ParsedCommand> = {};
+
+    // Parse each command
+    for (const [name, commandConfig] of Object.entries(nxCommands)) {
+      if (sharedCommands.includes(name) || hiddenCommands.includes(name)) {
+        continue;
+      }
+
+      // Check if command has description
+      if (
+        !(
+          (commandConfig as any).description ||
+          (commandConfig as any).describe ||
+          (commandConfig as any).desc
+        )
+      ) {
+        continue;
+      }
+
+      try {
+        const parsedCommand = await parseCommand(
+          name,
+          commandConfig,
+          importFresh
+        );
+        commands[name] = parsedCommand;
+      } catch (error: any) {
+        console.warn(`⚠️ Could not parse command ${name}:`, error.message);
+      }
     }
 
-    try {
-      const parsedCommand = await parseCommand(
-        name,
-        commandConfig,
-        importFresh
-      );
-      commands[name] = parsedCommand;
-    } catch (error: any) {
-      console.warn(`⚠️ Could not parse command ${name}:`, error.message);
-    }
+    const markdown = generateCLIMarkdown(commands);
+
+    delete process.env.NX_GENERATE_DOCS_PROCESS;
+
+    console.log(
+      `✅ Generated CLI documentation with ${
+        Object.keys(commands).length
+      } commands`
+    );
+
+    return markdown;
+  } catch (error: any) {
+    console.error('❌ Failed to generate CLI docs:', error.message);
+    throw error;
   }
-
-  const markdown = generateCLIMarkdown(commands);
-
-  delete process.env.NX_GENERATE_DOCS_PROCESS;
-
-  console.log(
-    `✅ Generated CLI documentation with ${
-      Object.keys(commands).length
-    } commands`
-  );
-
-  return markdown;
 }
 
 function readJsonSync(filePath: string): any {
