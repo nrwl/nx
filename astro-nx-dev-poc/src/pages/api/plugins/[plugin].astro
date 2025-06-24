@@ -1,0 +1,78 @@
+---
+import { getCollection } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import Layout from '../../../layouts/Layout.astro';
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { Content } from '@astrojs/starlight/components/Content.astro';
+
+export async function getStaticPaths() {
+  const pluginDocs = await getCollection('plugin-docs');
+  
+  // Group docs by plugin name
+  const docsByPlugin = pluginDocs.reduce((acc, doc) => {
+    const pluginName = doc.data.pluginName;
+    if (!acc[pluginName]) {
+      acc[pluginName] = [];
+    }
+    acc[pluginName].push(doc);
+    return acc;
+  }, {} as Record<string, CollectionEntry<'plugin-docs'>[]>);
+  
+  // Generate paths for each plugin
+  return Object.entries(docsByPlugin).map(([pluginName, docs]) => ({
+    params: { plugin: pluginName },
+    props: { 
+      pluginName,
+      docs: docs.sort((a, b) => {
+        const order = ['generators', 'executors', 'migrations'];
+        return order.indexOf(a.data.docType) - order.indexOf(b.data.docType);
+      })
+    },
+  }));
+}
+
+const { pluginName, docs } = Astro.props;
+
+// Combine all documentation sections
+let sections = [];
+
+for (const doc of docs) {
+  // Remove the frontmatter from the content
+  const contentWithoutFrontmatter = doc.data.content.replace(/^---[\s\S]*?---\n\n/, '');
+  sections.push({
+    type: doc.data.docType,
+    content: contentWithoutFrontmatter
+  });
+}
+---
+
+<StarlightPage
+  frontmatter={{
+    title: `@nx/${pluginName}`,
+    description: `Complete reference for @nx/${pluginName} plugin`,
+  }}
+>
+  <article>
+    <h1>@nx/{pluginName}</h1>
+    
+    <nav>
+      <h2>Documentation</h2>
+      <ul>
+        {sections.map((section) => (
+          <li>
+            <a href={`#${section.type}`}>
+              {section.type.charAt(0).toUpperCase() + section.type.slice(1)}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    {sections.map((section) => (
+      <section id={section.type}>
+        <Fragment set:html={section.content} />
+        <hr />
+      </section>
+    ))}
+  </article>
+</StarlightPage>

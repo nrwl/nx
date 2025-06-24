@@ -13,14 +13,14 @@ export const collections = {
   'cli-docs': defineCollection({
     loader: async () => {
       // TODO: Implement CLI documentation loader
-      const { generateNxCliDocs } = await import('../loaders/cli-loader');
-      const cliDocs = await generateNxCliDocs();
+      //   const { generateNxCliDocs } = await import('./loaders/cli-loader');
+      //   const cliDocs = await generateNxCliDocs();
       return [
         {
           id: 'nx-cli',
           title: 'Nx CLI',
           description: 'Complete reference for all Nx CLI commands',
-          content: cliDocs,
+          content: 'blah',
         },
       ];
     },
@@ -35,7 +35,7 @@ export const collections = {
   'plugin-docs': defineCollection({
     loader: async () => {
       // TODO: Implement plugin documentation loader
-      const { generateAllPluginDocs } = await import('../loaders/plugin-loader');
+      const { generateAllPluginDocs } = await import('./loaders/plugin-loader');
       return await generateAllPluginDocs();
     },
     schema: z.object({

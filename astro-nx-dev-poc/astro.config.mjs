@@ -40,11 +40,23 @@ export default defineConfig({
         {
           label: 'API Reference',
           items: [
-            { label: 'Nx CLI', slug: 'api/nx-cli' },
+            // { label: 'Nx CLI', slug: 'api/nx-cli' },
             { label: 'Nx Cloud CLI', slug: 'api/nx-cloud-cli' },
             {
               label: 'Plugins',
-              autogenerate: { directory: 'api/plugins' },
+              items: [
+                { label: 'Overview', slug: 'api/plugins' },
+                { label: '@nx/angular', link: '/api/plugins/angular' },
+                { label: '@nx/cypress', link: '/api/plugins/cypress' },
+                { label: '@nx/eslint', link: '/api/plugins/eslint' },
+                { label: '@nx/jest', link: '/api/plugins/jest' },
+                { label: '@nx/next', link: '/api/plugins/next' },
+                { label: '@nx/react', link: '/api/plugins/react' },
+                { label: '@nx/storybook', link: '/api/plugins/storybook' },
+                { label: '@nx/vite', link: '/api/plugins/vite' },
+                { label: '@nx/vue', link: '/api/plugins/vue' },
+                { label: '@nx/webpack', link: '/api/plugins/webpack' },
+              ],
             },
           ],
         },

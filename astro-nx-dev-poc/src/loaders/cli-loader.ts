@@ -1,5 +1,6 @@
 import { workspaceRoot } from '@nx/devkit';
-import { readFileSync } from 'fs';
+import importFresh from 'import-fresh';
+import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { register as registerTsConfigPaths } from 'tsconfig-paths';
 import {
@@ -116,26 +117,25 @@ export async function generateNxCliDocs(): Promise<string> {
     // Look for nx-commands in the main Nx repository (go up from poc-beta-docs)
     const nxCommandsPath = join(
       workspaceRoot,
-      '../packages/nx/src/command-line/nx-commands'
+      'packages/nx/src/command-line/nx-commands'
     );
 
     console.log(`📍 Looking for nx-commands at: ${nxCommandsPath}`);
 
     // If the nx-commands file doesn't exist, try alternative path
-    if (!require('fs').existsSync(nxCommandsPath)) {
+    if (existsSync(nxCommandsPath)) {
       console.error('❌ Nx CLI source not found at expected location');
       throw new Error(`Cannot find nx-commands at ${nxCommandsPath}`);
     }
 
     // Register TypeScript paths from the base config in main Nx repo
-    const tsconfigPath = join(workspaceRoot, '../tsconfig.base.json');
+    const tsconfigPath = join(workspaceRoot, 'tsconfig.base.json');
     const config = readJsonSync(tsconfigPath).compilerOptions;
     registerTsConfigPaths(config);
 
     console.log('📁 Using yargs command object...');
 
-    const { default: importFresh } = await import('import-fresh');
-    const { commandsObject } = importFresh(nxCommandsPath);
+    const { commandsObject } = importFresh<any>(nxCommandsPath);
 
     // Get all commands from yargs
     const nxCommands = getCommands(commandsObject);
@@ -187,6 +187,7 @@ export async function generateNxCliDocs(): Promise<string> {
 
     return markdown;
   } catch (error: any) {
+    console.trace('errr');
     console.error('❌ Failed to generate CLI docs:', error.message);
     throw error;
   }
