@@ -2493,14 +2493,24 @@
     "executors": {},
     "generators": {},
     "migrations": {
-      "/technologies/module-federation/api/migrations/20.5.0": {
+      "/technologies/module-federation/api/migrations/21.2.0-package-updates": {
         "description": "",
-        "file": "generated/packages/module-federation/migrations/20.5.0.json",
+        "file": "generated/packages/module-federation/migrations/21.2.0-package-updates.json",
         "hidden": false,
-        "name": "20.5.0",
+        "name": "21.2.0-package-updates",
+        "version": "21.2.0-beta.6",
+        "originalFilePath": "/packages/module-federation",
+        "path": "/technologies/module-federation/api/migrations/21.2.0-package-updates",
+        "type": "migration"
+      },
+      "/technologies/module-federation/api/migrations/20.5.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/module-federation/migrations/20.5.0-package-updates.json",
+        "hidden": false,
+        "name": "20.5.0-package-updates",
         "version": "20.5.0-beta.5",
         "originalFilePath": "/packages/module-federation",
-        "path": "/technologies/module-federation/api/migrations/20.5.0",
+        "path": "/technologies/module-federation/api/migrations/20.5.0-package-updates",
         "type": "migration"
       },
       "/technologies/module-federation/api/migrations/20.4.0-package-updates": {

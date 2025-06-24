@@ -2712,12 +2712,22 @@
     "migrations": [
       {
         "description": "",
-        "file": "generated/packages/module-federation/migrations/20.5.0.json",
+        "file": "generated/packages/module-federation/migrations/21.2.0-package-updates.json",
         "hidden": false,
-        "name": "20.5.0",
+        "name": "21.2.0-package-updates",
+        "version": "21.2.0-beta.6",
+        "originalFilePath": "/packages/module-federation",
+        "path": "module-federation/migrations/21.2.0-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
+        "file": "generated/packages/module-federation/migrations/20.5.0-package-updates.json",
+        "hidden": false,
+        "name": "20.5.0-package-updates",
         "version": "20.5.0-beta.5",
         "originalFilePath": "/packages/module-federation",
-        "path": "module-federation/migrations/20.5.0",
+        "path": "module-federation/migrations/20.5.0-package-updates",
         "type": "migration"
       },
       {
