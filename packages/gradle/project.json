@@ -11,14 +11,28 @@
         "packageRoot": "build/packages/gradle"
       }
     },
-    "build-base": {
+    "build": {
       "dependsOn": [
-        "^build-base",
-        "build-native",
-        "gradle-batch-runner:assemble"
-      ],
-      "executor": "@nx/js:tsc",
+        {
+          "target": "build-base",
+          "projects": "self"
+        }
+      ]
+    },
+    "copy-readme": {
+      "outputs": ["{workspaceRoot}/dist/packages/gradle/README.md"],
+      "command": "node ./scripts/copy-readme.js gradle",
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
+    },
+    "copy-assets": {
+      "executor": "@nx/workspace-plugin:copy-assets",
       "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/gradle",
@@ -58,11 +72,30 @@
             "output": "/"
           }
         ]
-      }
+      },
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
     },
-    "build": {
-      "outputs": ["{workspaceRoot}/build/packages/gradle/README.md"],
-      "command": "node ./scripts/copy-readme.js gradle"
+    "build-base": {
+      "dependsOn": [
+        "^build",
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        },
+        {
+          "target": "copy-assets",
+          "projects": "self"
+        },
+        {
+          "target": "copy-readme",
+          "projects": "self"
+        }
+      ]
     }
   },
   "tags": []

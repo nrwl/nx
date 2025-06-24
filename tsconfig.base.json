@@ -13,7 +13,6 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "allowJs": true,
-    "esModuleInterop": true,
     "noImplicitAny": false,
     "strictNullChecks": false,
     "strictFunctionTypes": false,

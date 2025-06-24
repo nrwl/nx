@@ -4,12 +4,17 @@
     "module": "esnext",
     "declaration": true,
     "composite": true,
-    "outDir": "../../dist/packages/angular/runtime",
-    "tsBuildInfoFile": "../../dist/packages/angular/runtime/tsconfig.lib.runtime.tsbuildinfo",
+    "outDir": "../../dist/packages/angular",
+    "tsBuildInfoFile": "../../dist/packages/angular/tsconfig.lib.runtime.tsbuildinfo",
     "noEmit": false
   },
   "include": ["index.ts", "src/runtime/**/*", "mf/**/*", "testing/**/*"],
   "angularCompilerOptions": {
     "compilationMode": "partial"
-  }
+  },
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ]
 }

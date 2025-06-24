@@ -18,7 +18,11 @@
 const {
   CopyAssetsHandler,
 } = require('@nx/js/src/utils/assets/copy-assets-handler');
-const { readJsonFile, workspaceRoot } = require('@nx/devkit');
+const {
+  readJsonFile,
+  workspaceRoot,
+  createProjectGraphAsync,
+} = require('@nx/devkit');
 const path = require('path');
 const fs = require('fs');
 

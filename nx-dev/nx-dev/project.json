@@ -4,56 +4,11 @@
   "sourceRoot": "nx-dev/nx-dev",
   "projectType": "application",
   "targets": {
-    "build": {
-      "dependsOn": [
-        {
-          "target": "build-base"
-        }
-      ],
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "nx run nx-dev:sitemap",
-          "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts"
-        ],
-        "parallel": false
-      },
-      "inputs": [
-        "production",
-        "^production",
-        "{workspaceRoot}/scripts/tsconfig.scripts.json",
-        "{workspaceRoot}/scripts/documentation/internal-link-checker.ts"
-      ],
-      "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev"]
-    },
-    "sitemap": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev/public"],
-      "options": {
-        "command": "pnpm next-sitemap --config ./nx-dev/nx-dev/next-sitemap.config.js"
-      }
-    },
     "generate-og-images": {
       "executor": "nx:run-commands",
       "outputs": ["{projectRoot}/public/images/open-graph"],
       "options": {
         "command": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/open-graph/generate-images.ts"
-      }
-    },
-    "build-base": {
-      "parallelism": false,
-      "executor": "@nx/next:build",
-      "dependsOn": ["copy-docs"],
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "root": "nx-dev/nx-dev",
-        "outputPath": "dist/nx-dev/nx-dev"
-      },
-      "configurations": {
-        "development": {
-          "outputPath": "nx-dev/nx-dev"
-        },
-        "production": {}
       }
     },
     "copy-docs": {
@@ -63,6 +18,14 @@
       "options": {
         "cwd": "nx-dev/nx-dev"
       }
+    },
+    "next:build": {
+      "dependsOn": [
+        {
+          "target": "copy-docs",
+          "projects": "self"
+        }
+      ]
     },
     "serve-docs": {
       "executor": "nx:run-commands",
@@ -75,58 +38,82 @@
       }
     },
     "start": {
-      "dependsOn": ["build-base"],
-      "command": "nx run nx-dev:serve:production"
-    },
-    "serve": {
-      "executor": "@nx/next:server",
-      "dependsOn": ["copy-docs"],
-      "options": {
-        "buildTarget": "nx-dev:build-base",
-        "dev": true
-      },
-      "configurations": {
-        "production": {
-          "buildTarget": "nx-dev:build-base:production",
-          "dev": false
-        },
-        "development": {
-          "buildTarget": "nx-dev:build-base:development",
-          "dev": true
+      "dependsOn": [
+        {
+          "target": "next:build",
+          "projects": "self"
         }
-      },
-      "defaultConfiguration": "development"
+      ]
     },
-    "deploy-build": {
+    "link-checker": {
       "executor": "nx:run-commands",
-      "outputs": ["{projectRoot}/public/documentation"],
-      "dependsOn": ["@nx/nx-source:documentation"],
       "options": {
-        "commands": [
-          {
-            "command": "nx run nx-dev:generate-og-images",
-            "description": "OG images generation"
-          },
-          {
-            "command": "nx copy-docs nx-dev",
-            "description": "Copy generated docs to build output"
-          },
-          {
-            "command": "nx copy-tutorial nx-dev",
-            "description": "Copy tutorial to build output"
-          },
-          {
-            "command": "npx ts-node -P scripts/tsconfig.scripts.json scripts/documentation/plugin-quality-indicators.ts",
-            "description": "Fetch plugin data"
-          },
-          {
-            "command": "nx run nx-dev:build",
-            "description": "NextJs build step"
-          }
-        ],
-        "color": true,
-        "parallel": false
+        "command": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts"
       }
+    },
+    "sitemap": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/nx-dev/nx-dev/public"],
+      "options": {
+        "command": "pnpm next-sitemap --config ./nx-dev/nx-dev/next-sitemap.config.js"
+      },
+      "dependsOn": [
+        {
+          "target": "next:build",
+          "projects": "self"
+        }
+      ]
+    },
+    "dev": {
+      "dependsOn": [
+        {
+          "target": "copy-docs",
+          "projects": "self"
+        }
+      ]
+    },
+    "build": {
+      "dependsOn": [
+        {
+          "target": "sitemap",
+          "projects": "self"
+        },
+        {
+          "target": "link-checker",
+          "projects": "self"
+        }
+      ]
+    }
+  },
+  "deploy-build": {
+    "executor": "nx:run-commands",
+    "outputs": ["{projectRoot}/public/documentation"],
+    "dependsOn": ["@nx/nx-source:documentation"],
+    "options": {
+      "commands": [
+        {
+          "command": "nx run nx-dev:generate-og-images",
+          "description": "OG images generation"
+        },
+        {
+          "command": "nx copy-docs nx-dev",
+          "description": "Copy generated docs to build output"
+        },
+        {
+          "command": "nx copy-tutorial nx-dev",
+          "description": "Copy tutorial to build output"
+        },
+        {
+          "command": "npx ts-node -P scripts/tsconfig.scripts.json scripts/documentation/plugin-quality-indicators.ts",
+          "description": "Fetch plugin data"
+        },
+        {
+          "command": "nx run nx-dev:build",
+          "description": "NextJs build step"
+        }
+      ],
+      "color": true,
+      "parallel": false
     }
   },
   "tags": ["scope:nx-dev", "type:app"],

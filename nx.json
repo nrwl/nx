@@ -180,10 +180,19 @@
     "build-ng": {
       "cache": true
     },
+    "build-base-ts": {
+      "cache": true
+    },
     "sitemap": {
       "cache": true
     },
     "copy-docs": {
+      "cache": true
+    },
+    "copy-assets": {
+      "cache": true
+    },
+    "copy-readme": {
       "cache": true
     }
   },
@@ -191,9 +200,10 @@
     "@monodon/rust",
     {
       "plugin": "@nx/js/typescript",
-      "include": ["packages/js/**/*"],
       "options": {
-        "build": true
+        "build": {
+          "targetName": "build-base-ts"
+        }
       }
     },
     {
@@ -250,8 +260,8 @@
       "options": {
         "startTargetName": "next:start",
         "buildTargetName": "next:build",
-        "devTargetName": "dev",
-        "serveStaticTargetName": "serve-static"
+        "devTargetName": "next:dev",
+        "serveStaticTargetName": "next:serve-static"
       }
     },
     "@nx/enterprise-cloud",

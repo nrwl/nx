@@ -3,7 +3,7 @@
   "lib": {
     "entryFile": "index.ts"
   },
-  "dest": "../../build/packages/angular",
+  "dest": "../../dist/packages/angular",
   "deleteDestPath": false,
   "allowedNonPeerDependencies": [
     "@nx/",

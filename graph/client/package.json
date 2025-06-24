@@ -2,6 +2,8 @@
   "name": "@nx/graph-client",
   "version": "0.0.1",
   "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "dependencies": {
     "@nx/graph-internal-ui-theme": "workspace:",
     "@nx/graph-internal-project-details": "workspace:",
