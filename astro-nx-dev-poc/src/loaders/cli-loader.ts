@@ -1,5 +1,5 @@
-import { readJsonSync } from 'fs-extra';
 import { workspaceRoot } from '@nx/devkit';
+import { readFileSync } from 'fs';
 import { join } from 'path';
 import { register as registerTsConfigPaths } from 'tsconfig-paths';
 import {
@@ -7,8 +7,6 @@ import {
   parseCommand,
   type ParsedCommand,
 } from './utils/nx-command-parser';
-
-const importFresh = require('import-fresh');
 
 function generateCLIMarkdown(commands: Record<string, ParsedCommand>): string {
   const commandNames = Object.keys(commands).sort();
@@ -57,7 +55,7 @@ nx ${cmd.command || cmdName}
 
       for (const option of sortedOptions) {
         const optionNames = option.name.map((n) => `\`--${n}\``).join(', ');
-        let description = option.description || 'No description';
+        let description = option.description || '';
 
         // Add alias information
         if (option.name.length > 1) {
@@ -87,7 +85,9 @@ nx ${cmd.command || cmdName}
             ? `\`${JSON.stringify(option.default).replace(/"/g, '')}\``
             : '';
 
-        section += `| ${optionNames} | ${option.type} | ${description} | ${defaultValue} |\n`;
+        section += `| ${optionNames} | ${option.type} | ${
+          description || '_No Description_'
+        } | ${defaultValue} |\n`;
       }
 
       section += '\n';
@@ -125,6 +125,8 @@ export async function generateNxCliDocs(): Promise<string> {
     workspaceRoot,
     'packages/nx/src/command-line/nx-commands'
   );
+
+  const { default: importFresh } = await import('import-fresh');
   const { commandsObject } = importFresh(nxCommandsPath);
 
   // Get all commands from yargs
@@ -176,4 +178,14 @@ export async function generateNxCliDocs(): Promise<string> {
   );
 
   return markdown;
+}
+
+function readJsonSync(filePath: string): any {
+  try {
+    const content = readFileSync(filePath, 'utf-8');
+    return JSON.parse(content);
+  } catch (error) {
+    console.error(`Error reading JSON file at ${filePath}:`, error);
+    throw error;
+  }
 }

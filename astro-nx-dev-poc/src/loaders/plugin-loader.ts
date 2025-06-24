@@ -1,5 +1,5 @@
 import { existsSync } from 'fs';
-import { join } from 'path';
+import { join, resolve as pathResolve } from 'path';
 import { workspaceRoot } from '@nx/devkit';
 import {
   parseGenerators,
@@ -14,35 +14,35 @@ import {
 // TODO: make this a glob pattern or something so we don't have to manually update
 // Define the plugins to generate documentation for
 const PLUGIN_PATHS = [
-  '../../packages/cypress',
-  '../../packages/react',
-  '../../packages/next',
-  '../../packages/angular',
-  '../../packages/vue',
-  '../../packages/vite',
-  '../../packages/webpack',
-  '../../packages/jest',
-  '../../packages/eslint',
-  '../../packages/storybook',
-  '../../packages/playwright',
-  '../../packages/rollup',
-  '../../packages/esbuild',
-  '../../packages/rspack',
-  '../../packages/remix',
-  '../../packages/expo',
-  '../../packages/react-native',
-  '../../packages/detox',
-  '../../packages/express',
-  '../../packages/nest',
-  '../../packages/node',
-  '../../packages/js',
-  '../../packages/web',
-  '../../packages/workspace',
-  '../../packages/devkit',
-  '../../packages/nx',
-  '../../packages/plugin',
-  '../../packages/nuxt',
-  '../../packages/gradle',
+  'cypress',
+  'react',
+  'next',
+  'angular',
+  'vue',
+  'vite',
+  'webpack',
+  'jest',
+  'eslint',
+  'storybook',
+  'playwright',
+  'rollup',
+  'esbuild',
+  'rspack',
+  'remix',
+  'expo',
+  'react-native',
+  'detox',
+  'express',
+  'nest',
+  'node',
+  'js',
+  'web',
+  'workspace',
+  'devkit',
+  'nx',
+  'plugin',
+  'nuxt',
+  'gradle',
 ];
 
 function generateMarkdown(
@@ -231,7 +231,7 @@ export async function generateAllPluginDocs(): Promise<PluginDocEntry[]> {
   let skipCount = 0;
 
   for (const relativePath of PLUGIN_PATHS) {
-    const pluginPath = join(workspaceRoot, relativePath);
+    const pluginPath = join(workspaceRoot, 'packages', relativePath);
 
     if (!existsSync(pluginPath)) {
       console.log(`⚠️  Skipping ${relativePath} - path does not exist`);
