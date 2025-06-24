@@ -27,9 +27,10 @@ export async function withModuleFederation(
       },
       optimization: {
         ...(config.optimization ?? {}),
-        runtimeChunk: isDevServer
-          ? config.optimization?.runtimeChunk ?? undefined
-          : false,
+        runtimeChunk:
+          isDevServer && !options.exposes
+            ? config.optimization?.runtimeChunk ?? undefined
+            : false,
       },
       resolve: {
         ...(config.resolve ?? {}),
