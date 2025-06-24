@@ -26,6 +26,8 @@ In each case, attackers turned trusted build processes into deployment pipelines
 
 If you use a build system with remote caching, assume you're affected. This isn't hyperbole. **Most organizations are unknowingly giving every PR author the power to poison production without leaving a trace.**
 
+{% toc /%}
+
 ## Understanding Remote Cache
 
 Any sophisticated build system uses remote caching to improve performance. Here's how it works:
