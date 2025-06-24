@@ -13,13 +13,19 @@ jest.doMock('./version-actions', () => ({
   resolveVersionActionsForProject: mockResolveVersionActionsForProject,
 }));
 
+class ProjectLoggerMock {
+  public logs: string[] = [];
+  constructor() {}
+
+  buffer(message: string) {
+    this.logs.push(message);
+  }
+  flush() {}
+}
+
 jest.doMock('./project-logger', () => ({
   ...jest.requireActual('./project-logger'),
-  // Don't slow down or add noise to unit tests output unnecessarily
-  ProjectLogger: class ProjectLogger {
-    buffer() {}
-    flush() {}
-  },
+  ProjectLogger: ProjectLoggerMock,
 }));
 
 let mockResolveCurrentVersion = jest.fn();
@@ -431,6 +437,70 @@ describe('Multiple Release Groups', () => {
         }
         "
       `);
+    });
+
+    it('should not log duplicate messages when versioning release groups', async () => {
+      const {
+        nxReleaseConfig,
+        projectGraph,
+        releaseGroups,
+        releaseGroupToFilteredProjects,
+        filters,
+      } = await createNxReleaseConfigAndPopulateWorkspace(
+        tree,
+        `
+            group1 ({ "projectsRelationship": "fixed" }):
+              - pkg-a@1.0.0 [js]
+                -> depends on pkg-c
+              - pkg-b@1.0.0 [js]
+            group2 ({ "projectsRelationship": "fixed" }):
+              - pkg-c@2.0.0 [js]
+              - pkg-d@2.0.0 [js]
+          `,
+        {
+          version: {
+            conventionalCommits: true,
+          },
+        },
+        mockResolveCurrentVersion
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          // pkg-c has a bump, which should cause pkg-d to bump because they are in a fixed group
+          // and pkg-a depends on pkg-c so should also bump, and pkg-b is in a fixed group with pkg-a so should also bump
+          if (projectName === 'pkg-c') return 'patch';
+          return 'none';
+        }
+      );
+
+      const processor = new ReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        releaseGroups,
+        releaseGroupToFilteredProjects,
+        {
+          dryRun: false,
+          verbose: false,
+          firstRelease: false,
+          preid: undefined,
+          filters,
+        }
+      );
+
+      await processor.init();
+      await processor.processGroups();
+
+      // Expect the logger to not contain duplicate logs for the same project
+      const projectLogger = (processor as any).projectLoggers as Map<
+        string,
+        ProjectLoggerMock
+      >;
+      for (const [, { logs }] of projectLogger) {
+        const uniqueLogs = new Set(logs);
+        expect(logs.sort()).toEqual(Array.from(uniqueLogs).sort());
+      }
     });
   });
 
