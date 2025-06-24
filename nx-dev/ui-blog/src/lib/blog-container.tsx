@@ -30,14 +30,17 @@ export interface BlogContainerProps {
 export function sortFirstFivePosts(
   posts: BlogPostDataEntry[]
 ): BlogPostDataEntry[] {
-  // Separate posts: pinned-able posts first
-  const allowedPinnedPosts = posts.filter((p) => p.pinned !== false);
+  // Sort posts: pinned posts first, then by date
+  const sortedPosts = posts.sort((a, b) => {
+    // If one is pinned and the other isn't, prioritize the pinned one
+    if (a.pinned === true && b.pinned !== true) return -1;
+    if (b.pinned === true && a.pinned !== true) return 1;
 
-  allowedPinnedPosts.sort(
-    (a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf()
-  );
+    // Otherwise, sort by date (newest first)
+    return new Date(b.date).valueOf() - new Date(a.date).valueOf();
+  });
 
-  return allowedPinnedPosts.slice(0, 5);
+  return sortedPosts.slice(0, 5);
 }
 
 export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
