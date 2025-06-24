@@ -26,7 +26,7 @@ This is completely normal! Google and Facebook might operate with one repository
 The unfortunate downsides to scaling an organization are:
 
 - **You lose architectural visibility** - Within your monorepo, you can see exactly how your application depends on your libraries, how different teams' code connects, and what the impact of changes will be. But once you step outside that repository boundary, you're flying blind.
-- **Standards become inconsistent** - Coding standards and tool configurations become harder and harder to enforce as your organization grows. You’re left to manually check and track compliance which lead to inconsistency.
+- **Standards become inconsistent** - Coding standards and tool configurations become harder and harder to enforce as your organization grows. You're left to manually check and track compliance which leads to inconsistency.
 - **Dependencies become invisible** - You know your frontend application depends on your design system because it downloads it from npm, but that relationship is completely opaque until something breaks.
 
 The result? Teams end up maintaining spreadsheets to track dependencies, writing documentation that's always out of date, and being forced to react to problems as they emerge.
@@ -102,7 +102,7 @@ The era of isolated repositories and manual governance is ending. With Polygraph
 Learn more:
 
 - 📄 [Polygraph docs](/ci/recipes/enterprise/polygraph)
-- 🧠 [Nx AI Docs](/features/enhance-AI)
+- 🧠 [Nx AI Docs](/features/enhance-ai)
 - 🌩️ [Nx Cloud](/nx-cloud)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)
