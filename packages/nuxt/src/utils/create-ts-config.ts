@@ -37,7 +37,7 @@ export function createTsConfig(
     };
     json.exclude = ['node_modules', 'tmp'];
   } else {
-    json.extends = relativePathToRootTsConfig;
+    json.extends = './.nuxt/tsconfig.json';
   }
 
   writeJson(host, `${options.projectRoot}/tsconfig.json`, json);

@@ -111,6 +111,10 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     {
       ...options,
       offsetFromRoot: projectOffsetFromRoot,
+      relativePathToRootTsConfig: getRelativePathToRootTsConfig(
+        tree,
+        options.appProjectRoot
+      ),
       title: options.projectName,
       dot: '.',
       tmpl: '',
