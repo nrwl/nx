@@ -4,9 +4,18 @@
   "sourceRoot": "packages/expo/src",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "projects": "self"
+        }
+      ]
+    },
+    "copy-assets": {
+      "executor": "@nx/workspace-plugin:copy-assets",
       "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           "packages/expo/*.md",
           {
@@ -42,11 +51,40 @@
           },
           "LICENSE"
         ]
-      }
+      },
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
     },
-    "build": {
-      "outputs": ["{workspaceRoot}/build/packages/expo/README.md"],
-      "command": "node ./scripts/copy-readme.js expo"
+    "copy-readme": {
+      "outputs": ["{workspaceRoot}/dist/packages/expo/README.md"],
+      "command": "node ./scripts/copy-readme.js expo",
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
+    },
+    "build-base": {
+      "dependsOn": [
+        "^build",
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        },
+        {
+          "target": "copy-assets",
+          "projects": "self"
+        },
+        {
+          "target": "copy-readme",
+          "projects": "self"
+        }
+      ]
     }
   },
   "tags": []

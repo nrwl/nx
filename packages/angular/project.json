@@ -5,13 +5,17 @@
   "projectType": "library",
   "targets": {
     "build-ng": {
-      "dependsOn": ["build-base"],
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "projects": "self"
+        }
+      ],
       "executor": "@nx/angular:package",
       "options": {
-        "project": "packages/angular/ng-package.json",
-        "tsConfig": "packages/angular/tsconfig.lib.runtime.json"
+        "project": "packages/angular/ng-package.json"
       },
-      "outputs": ["{workspaceRoot}/build/packages/angular"]
+      "outputs": ["{workspaceRoot}/dist/packages/angular"]
     },
     "build-base": {
       "executor": "@nx/js:tsc",
@@ -58,7 +62,17 @@
       }
     },
     "build": {
-      "dependsOn": ["build-ng", "build-base", "^build"],
+      "dependsOn": [
+        "^build",
+        {
+          "target": "build-base",
+          "projects": "self"
+        },
+        {
+          "target": "build-ng",
+          "projects": "self"
+        }
+      ],
       "outputs": ["{workspaceRoot}/build/packages/angular/README.md"],
       "command": "node ./scripts/copy-readme.js angular"
     }

@@ -31,7 +31,7 @@ module.exports = {
       styles: ['./src/styles.css'],
       scripts: [],
       assets: getAssets(process.env.NX_TASK_TARGET_CONFIGURATION),
-      webpackConfig: './webpack.config.cjs',
+      webpackConfig: './webpack.config.js',
       outputHashing: 'none',
       deleteOutputPath: false,
     }),

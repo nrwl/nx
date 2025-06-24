@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "generators": "./generators.json",
+  "executors": "./executors.json",
   "dependencies": {
     "tslib": "^2.3.0"
   },

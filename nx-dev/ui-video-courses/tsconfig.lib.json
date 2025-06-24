@@ -24,13 +24,13 @@
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "references": [
     {
+      "path": "../ui-common/tsconfig.lib.json"
+    },
+    {
       "path": "../ui-primitives/tsconfig.lib.json"
     },
     {
       "path": "../data-access-courses/tsconfig.lib.json"
-    },
-    {
-      "path": "../ui-common/tsconfig.lib.json"
     }
   ]
 }

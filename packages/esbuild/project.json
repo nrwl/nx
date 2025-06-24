@@ -4,9 +4,28 @@
   "sourceRoot": "packages/esbuild",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "projects": "self"
+        }
+      ]
+    },
+    "copy-readme": {
+      "outputs": ["{workspaceRoot}/dist/packages/esbuild/README.md"],
+      "commands": ["node ./scripts/copy-readme.js esbuild"],
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
+    },
+    "copy-assets": {
+      "executor": "@nx/workspace-plugin:copy-assets",
       "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/esbuild",
@@ -41,11 +60,30 @@
             "output": "/"
           }
         ]
-      }
+      },
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
     },
-    "build": {
-      "outputs": ["{workspaceRoot}/build/packages/esbuild/README.md"],
-      "commands": ["node ./scripts/copy-readme.js esbuild"]
+    "build-base": {
+      "dependsOn": [
+        "^build",
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        },
+        {
+          "target": "copy-assets",
+          "projects": "self"
+        },
+        {
+          "target": "copy-readme",
+          "projects": "self"
+        }
+      ]
     }
   }
 }

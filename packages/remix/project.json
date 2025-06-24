@@ -5,22 +5,17 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "command": "node ./scripts/copy-readme.js remix",
-      "outputs": ["{workspaceRoot}/build/packages/remix/README.md"]
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "projects": "self"
+        }
+      ]
     },
-    "build-base": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+    "copy-assets": {
+      "executor": "@nx/workspace-plugin:copy-assets",
       "options": {
-        "outputPath": "build/packages/remix",
-        "tsConfig": "packages/remix/tsconfig.lib.json",
-        "packageJson": "packages/remix/package.json",
-        "main": "packages/remix/index.ts",
-        "generateExportsField": true,
-        "additionalEntryPoints": [
-          "{projectRoot}/{executors,generators,migrations}.json",
-          "{projectRoot}/generators.ts"
-        ],
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           "packages/remix/*.md",
           {
@@ -41,7 +36,40 @@
           },
           "LICENSE"
         ]
-      }
+      },
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
+    },
+    "copy-readme": {
+      "outputs": ["{workspaceRoot}/dist/packages/remix/README.md"],
+      "command": "node ./scripts/copy-readme.js remix",
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
+    },
+    "build-base": {
+      "dependsOn": [
+        "^build",
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        },
+        {
+          "target": "copy-assets",
+          "projects": "self"
+        },
+        {
+          "target": "copy-readme",
+          "projects": "self"
+        }
+      ]
     }
   },
   "tags": []

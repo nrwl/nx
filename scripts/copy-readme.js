@@ -21,6 +21,6 @@ r = r.replace(
   fs.readFileSync('scripts/readme-fragments/resources.md')
 );
 
-console.log('WRITING', `build/packages/${p}/README.md`);
+console.log('WRITING', `dist/packages/${p}/README.md`);
 
-fs.writeFileSync(`build/packages/${p}/README.md`, r);
+fs.writeFileSync(`dist/packages/${p}/README.md`, r);

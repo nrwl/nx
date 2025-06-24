@@ -4,9 +4,18 @@
   "sourceRoot": "packages/storybook",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "projects": "self"
+        }
+      ]
+    },
+    "copy-assets": {
+      "executor": "@nx/workspace-plugin:copy-assets",
       "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/storybook",
@@ -51,11 +60,40 @@
             "output": "/"
           }
         ]
-      }
+      },
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
     },
-    "build": {
-      "outputs": ["{workspaceRoot}/build/packages/storybook/README.md"],
-      "command": "node ./scripts/copy-readme.js storybook"
+    "copy-readme": {
+      "outputs": ["{workspaceRoot}/dist/packages/storybook/README.md"],
+      "command": "node ./scripts/copy-readme.js storybook",
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
+    },
+    "build-base": {
+      "dependsOn": [
+        "^build",
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        },
+        {
+          "target": "copy-assets",
+          "projects": "self"
+        },
+        {
+          "target": "copy-readme",
+          "projects": "self"
+        }
+      ]
     }
   }
 }

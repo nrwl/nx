@@ -1,8 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "moduleResolution": "node16",
-    "module": "node16",
+    "module": "commonjs",
     "outDir": "../../dist/packages/angular",
     "declaration": true,
     "types": ["node"],
@@ -16,7 +15,6 @@
     "**/*_test.ts",
     "jest.config.ts",
     "test-setup.ts",
-    "index.ts",
     "src/runtime/**/*",
     "mf/**/*",
     "testing/**/*"
