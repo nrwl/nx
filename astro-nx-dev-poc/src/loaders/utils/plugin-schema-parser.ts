@@ -62,9 +62,7 @@ export function parseGenerators(pluginPath: string): Map<string, any> | null {
     return null; // Plugin might not have generators
   }
 
-  const generatorsJson = JSON.parse(
-    readFileSync(generatorsJsonPath, 'utf-8')
-  );
+  const generatorsJson = JSON.parse(readFileSync(generatorsJsonPath, 'utf-8'));
   const generators = new Map();
 
   for (const [name, config] of Object.entries(
@@ -93,9 +91,7 @@ export function parseExecutors(pluginPath: string): Map<string, any> | null {
     return null; // Plugin might not have executors
   }
 
-  const executorsJson = JSON.parse(
-    readFileSync(executorsJsonPath, 'utf-8')
-  );
+  const executorsJson = JSON.parse(readFileSync(executorsJsonPath, 'utf-8'));
   const executors = new Map();
 
   for (const [name, config] of Object.entries(
@@ -124,9 +120,7 @@ export function parseMigrations(pluginPath: string): Map<string, any> | null {
     return null; // Plugin might not have migrations
   }
 
-  const migrationsJson = JSON.parse(
-    readFileSync(migrationsJsonPath, 'utf-8')
-  );
+  const migrationsJson = JSON.parse(readFileSync(migrationsJsonPath, 'utf-8'));
   const migrations = new Map();
 
   for (const [name, config] of Object.entries(

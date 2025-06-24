@@ -2,7 +2,11 @@ import { readJsonSync } from 'fs-extra';
 import { workspaceRoot } from '@nx/devkit';
 import { join } from 'path';
 import { register as registerTsConfigPaths } from 'tsconfig-paths';
-import { getCommands, parseCommand, type ParsedCommand } from './utils/nx-command-parser';
+import {
+  getCommands,
+  parseCommand,
+  type ParsedCommand,
+} from './utils/nx-command-parser';
 
 const importFresh = require('import-fresh');
 
@@ -150,7 +154,11 @@ export async function generateNxCliDocs(): Promise<string> {
     }
 
     try {
-      const parsedCommand = await parseCommand(name, commandConfig, importFresh);
+      const parsedCommand = await parseCommand(
+        name,
+        commandConfig,
+        importFresh
+      );
       commands[name] = parsedCommand;
     } catch (error: any) {
       console.warn(`⚠️ Could not parse command ${name}:`, error.message);

@@ -8,7 +8,7 @@ import {
   type PluginDocEntry,
   getPropertyType,
   getPropertyDefault,
-  escapeForMdx
+  escapeForMdx,
 } from './utils/plugin-schema-parser';
 
 // TODO: make this a glob pattern or something so we don't have to manually update
@@ -52,7 +52,7 @@ function generateMarkdown(
 ): string {
   const packageName = `@nx/${pluginName}`;
   const typeLabel = docType.charAt(0).toUpperCase() + docType.slice(1);
-  
+
   let markdown = `---
 title: "${packageName} ${typeLabel}"
 description: "Complete reference for all ${packageName} ${docType} commands"
@@ -113,7 +113,10 @@ nx run project:${name} [options]
 
     // Check for properties with $default.$source === 'argv'
     const positionalArgs: string[] = [];
-    for (const [propName, prop] of Object.entries(properties) as [string, any][]) {
+    for (const [propName, prop] of Object.entries(properties) as [
+      string,
+      any
+    ][]) {
       if (
         prop.$default &&
         prop.$default.$source === 'argv' &&
@@ -250,7 +253,7 @@ export async function generateAllPluginDocs(): Promise<PluginDocEntry[]> {
           pluginName,
           packageName: `@nx/${pluginName}`,
           docType: 'generators',
-          content: markdown
+          content: markdown,
         });
       }
 
@@ -264,7 +267,7 @@ export async function generateAllPluginDocs(): Promise<PluginDocEntry[]> {
           pluginName,
           packageName: `@nx/${pluginName}`,
           docType: 'executors',
-          content: markdown
+          content: markdown,
         });
       }
 
@@ -278,7 +281,7 @@ export async function generateAllPluginDocs(): Promise<PluginDocEntry[]> {
           pluginName,
           packageName: `@nx/${pluginName}`,
           docType: 'migrations',
-          content: markdown
+          content: markdown,
         });
       }
 
@@ -286,7 +289,9 @@ export async function generateAllPluginDocs(): Promise<PluginDocEntry[]> {
         console.log(`✅ Generated documentation for ${pluginName}`);
         successCount++;
       } else {
-        console.log(`⚠️  Skipping ${pluginName} - no visible documentation found`);
+        console.log(
+          `⚠️  Skipping ${pluginName} - no visible documentation found`
+        );
         skipCount++;
       }
     } catch (error: any) {
