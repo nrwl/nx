@@ -59,7 +59,7 @@
       ]
     },
     "copy-readme": {
-      "outputs": ["{workspaceRoot}/build/packages/devkit/README.md"],
+      "outputs": ["{workspaceRoot}/dist/packages/devkit/README.md"],
       "command": "node ./scripts/copy-readme.js devkit",
       "dependsOn": [
         {

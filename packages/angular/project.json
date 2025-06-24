@@ -73,7 +73,7 @@
           "projects": "self"
         }
       ],
-      "outputs": ["{workspaceRoot}/build/packages/angular/README.md"],
+      "outputs": ["{workspaceRoot}/dist/packages/angular/README.md"],
       "command": "node ./scripts/copy-readme.js angular"
     }
   },
