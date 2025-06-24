@@ -1057,6 +1057,14 @@
                         "disableCollapsible": false
                       },
                       {
+                        "id": "prune-lockfile",
+                        "path": "/technologies/typescript/api/executors/prune-lockfile",
+                        "name": "prune-lockfile",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
                         "id": "release-publish",
                         "path": "/technologies/typescript/api/executors/release-publish",
                         "name": "release-publish",

@@ -2492,6 +2492,15 @@
         "type": "executor"
       },
       {
+        "description": "Creates a pruned lockfile based on the project dependencies and places it into the output directory.",
+        "file": "generated/packages/js/executors/prune-lockfile.json",
+        "hidden": false,
+        "name": "prune-lockfile",
+        "originalFilePath": "/packages/js/src/executors/prune-lockfile/schema.json",
+        "path": "js/executors/prune-lockfile",
+        "type": "executor"
+      },
+      {
         "description": "DO NOT INVOKE DIRECTLY WITH `nx run`. Use `nx release publish` instead.",
         "file": "generated/packages/js/executors/release-publish.json",
         "hidden": true,

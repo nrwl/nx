@@ -1,4 +1,7 @@
-import { type ProjectGraph, ProjectGraphProjectNode } from '@nx/devkit';
+import {
+  type ProjectGraph,
+  ProjectGraphProjectNode,
+} from '../../../config/project-graph';
 
 export function getWorkspacePackagesFromGraph(graph: ProjectGraph) {
   const workspacePackages: Map<string, ProjectGraphProjectNode> = new Map();

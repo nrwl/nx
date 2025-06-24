@@ -11,10 +11,12 @@ import {
   DependencyType,
   ProjectGraph,
   ProjectGraphExternalNode,
+  ProjectGraphProjectNode,
 } from '../../../config/project-graph';
 import { hashArray } from '../../../hasher/file-hasher';
 import { sortObjectByKeys } from '../../../utils/object-sort';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
+import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 
 /**
  * Yarn
@@ -358,11 +360,13 @@ export function stringifyYarnLockfile(
   const { parseSyml, stringifySyml } = require('@yarnpkg/parsers');
   const { __metadata, ...dependencies } = parseSyml(rootLockFileContent);
   const isBerry = !!__metadata;
+  const workspaceModules = getWorkspacePackagesFromGraph(graph);
 
   const snapshots = mapSnapshots(
     dependencies,
     graph.externalNodes,
     packageJson,
+    workspaceModules,
     isBerry
   );
 
@@ -430,6 +434,7 @@ function mapSnapshots(
   rootDependencies: Record<string, YarnDependency>,
   nodes: Record<string, ProjectGraphExternalNode>,
   packageJson: NormalizedPackageJson,
+  workspaceModules: Map<string, ProjectGraphProjectNode>,
   isBerry: boolean
 ): Record<string, YarnDependency> {
   // map snapshot to set of keys (e.g. `eslint@^7.0.0, eslint@npm:^7.0.0`)
@@ -451,7 +456,11 @@ function mapSnapshots(
 
   // collect snapshots and their matching keys
   Object.values(nodes).forEach((node) => {
-    const foundOriginalKeys = findOriginalKeys(groupedDependencies, node);
+    const foundOriginalKeys = findOriginalKeys(
+      groupedDependencies,
+      node,
+      workspaceModules
+    );
     if (!foundOriginalKeys) {
       throw new Error(
         `Original key(s) not found for "${node.data.packageName}@${node.data.version}" while pruning yarn.lock.`
@@ -470,7 +479,11 @@ function mapSnapshots(
     );
 
     // add package.json requested version to keys
-    const requestedVersion = getPackageJsonVersion(combinedDependencies, node);
+    const requestedVersion = getPackageJsonVersion(
+      combinedDependencies,
+      node,
+      workspaceModules
+    );
     if (requestedVersion) {
       addPackageVersion(
         node.data.packageName,
@@ -487,7 +500,8 @@ function mapSnapshots(
     }
     const requestedResolutionsVersion = getPackageJsonVersion(
       resolutions,
-      node
+      node,
+      workspaceModules
     );
     if (requestedResolutionsVersion) {
       addPackageVersion(
@@ -575,10 +589,13 @@ function reverseMapBerryKey(
 
 function getPackageJsonVersion(
   dependencies: Record<string, string>,
-  node: ProjectGraphExternalNode
+  node: ProjectGraphExternalNode,
+  workspaceModules: Map<string, ProjectGraphProjectNode>
 ): string {
   const { packageName, version } = node.data;
-
+  if (workspaceModules.has(packageName)) {
+    return `file:./workspace_modules/${packageName}`;
+  }
   if (dependencies[packageName]) {
     const patchRegex = new RegExp(`^patch:${packageName}@(.*)|#.*$`);
     // extract the version from the patch or use the full version
@@ -611,13 +628,26 @@ function isClassicAlias(
 
 function findOriginalKeys(
   dependencies: Record<string, YarnDependency>,
-  node: ProjectGraphExternalNode
+  node: ProjectGraphExternalNode,
+  workspaceModules: Map<string, ProjectGraphProjectNode>
 ): [string[], YarnDependency] {
   for (const keyExpr of Object.keys(dependencies)) {
     const snapshot = dependencies[keyExpr];
     const keys = keyExpr.split(', ');
     if (!keys.some((k) => k.startsWith(`${node.data.packageName}@`))) {
       continue;
+    }
+    if (
+      keys.some(
+        (k) =>
+          workspaceModules.has(k) || workspaceModules.has(k.split('@file:')[0])
+      )
+    ) {
+      const packageName = keys[0].split('@file:')[0];
+      return [
+        [`${packageName}@file:./workspace_modules/${packageName}`],
+        snapshot,
+      ];
     }
     if (
       isStandardPackage(snapshot, node.data.version) ||

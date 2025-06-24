@@ -176,7 +176,7 @@ export function getLockFileName(packageManager: PackageManager): string {
   throw new Error(`Unknown package manager: ${packageManager}`);
 }
 
-function getLockFilePath(packageManager: PackageManager): string {
+export function getLockFilePath(packageManager: PackageManager): string {
   if (packageManager === 'yarn') {
     return YARN_LOCK_PATH;
   }
