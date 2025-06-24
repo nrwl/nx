@@ -11,7 +11,15 @@
   },
   "dependencies": {
     "@astrojs/starlight": "^0.34.4",
+    "@nx/devkit": "^21.1.0",
     "astro": "^5.6.1",
-    "sharp": "^0.32.5"
+    "fs-extra": "^11.1.1",
+    "sharp": "^0.32.5",
+    "tsconfig-paths": "^4.2.0",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.1",
+    "@types/yargs": "^17.0.24"
   }
 }
