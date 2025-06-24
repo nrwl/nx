@@ -4,17 +4,18 @@
   "sourceRoot": "packages/vue",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "projects": "self"
+        }
+      ]
+    },
+    "copy-assets": {
+      "executor": "@nx/workspace-plugin:copy-assets",
       "options": {
-        "outputPath": "build/packages/vue",
-        "tsConfig": "packages/vue/tsconfig.lib.json",
-        "main": "packages/vue/index.ts",
-        "generateExportsField": true,
-        "additionalEntryPoints": [
-          "{projectRoot}/{executors,generators,migrations}.json",
-          "{projectRoot}/src/tailwind.ts"
-        ],
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/vue",
@@ -50,11 +51,39 @@
           }
         ]
       },
-      "outputs": ["{options.outputPath}"]
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
     },
-    "build": {
+    "copy-readme": {
+      "outputs": ["{workspaceRoot}/dist/packages/vue/README.md"],
       "command": "node ./scripts/copy-readme.js vue",
-      "outputs": ["{workspaceRoot}/build/packages/vue/README.md"]
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
+    },
+    "build-base": {
+      "dependsOn": [
+        "^build",
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        },
+        {
+          "target": "copy-assets",
+          "projects": "self"
+        },
+        {
+          "target": "copy-readme",
+          "projects": "self"
+        }
+      ]
     }
   }
 }

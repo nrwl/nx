@@ -5,17 +5,17 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/build/packages/rspack/README.md"],
-      "command": "node ./scripts/copy-readme.js rspack"
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "projects": "self"
+        }
+      ]
     },
-    "build-base": {
-      "dependsOn": ["^build-base"],
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+    "copy-assets": {
+      "executor": "@nx/workspace-plugin:copy-assets",
       "options": {
-        "outputPath": "build/packages/rspack",
-        "main": "packages/rspack/src/index.ts",
-        "tsConfig": "packages/rspack/tsconfig.lib.json",
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           "packages/rspack/*.md",
           {
@@ -36,7 +36,40 @@
           },
           "LICENSE"
         ]
-      }
+      },
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
+    },
+    "copy-readme": {
+      "outputs": ["{workspaceRoot}/dist/packages/rspack/README.md"],
+      "command": "node ./scripts/copy-readme.js rspack",
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
+    },
+    "build-base": {
+      "dependsOn": [
+        "^build",
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        },
+        {
+          "target": "copy-assets",
+          "projects": "self"
+        },
+        {
+          "target": "copy-readme",
+          "projects": "self"
+        }
+      ]
     }
   },
   "tags": []
