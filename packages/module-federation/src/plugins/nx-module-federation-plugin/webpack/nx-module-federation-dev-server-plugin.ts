@@ -63,7 +63,7 @@ export class NxModuleFederationDevServerPlugin
         );
         startRemoteProxies(staticRemotesConfig, mappedLocationOfRemotes, {
           pathToCert: this._options.devServerConfig.sslCert,
-          pathToKey: this._options.devServerConfig.sslCert,
+          pathToKey: this._options.devServerConfig.sslKey,
         });
 
         new DefinePlugin({
