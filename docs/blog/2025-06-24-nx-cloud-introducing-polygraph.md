@@ -102,7 +102,7 @@ The era of isolated repositories and manual governance is ending. With Polygraph
 Learn more:
 
 - 📄 [Polygraph docs](/ci/recipes/enterprise/polygraph)
-- 🧠 [Nx AI Docs](/features/enhance-ai)
+- 🧠 [Nx AI Docs](/features/enhance-AI)
 - 🌩️ [Nx Cloud](/nx-cloud)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)
