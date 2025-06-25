@@ -12,6 +12,7 @@ import {
 } from './utils/plugin-schema-parser';
 import type { Loader, LoaderContext } from 'astro/loaders';
 import type { AstroIntegrationLogger } from 'astro';
+import { extractHeadings } from '../utils/extract-headings';
 
 // TODO: make this a glob pattern or something so we don't have to manually update
 // Define the plugins to generate documentation for
@@ -248,6 +249,7 @@ export async function generateAllPluginDocs(
       const generators = parseGenerators(pluginPath);
       if (generators && generators.size > 0) {
         const markdown = generateMarkdown(pluginName, generators, 'generators');
+        const headings = extractHeadings(markdown);
         entries.push({
           id: `${pluginName}-generators`,
           body: markdown,
@@ -261,6 +263,7 @@ export async function generateAllPluginDocs(
             packageName: `@nx/${pluginName}`,
             docType: 'generators',
             content: markdown,
+            headings,
           },
         });
       }
@@ -269,6 +272,7 @@ export async function generateAllPluginDocs(
       const executors = parseExecutors(pluginPath);
       if (executors && executors.size > 0) {
         const markdown = generateMarkdown(pluginName, executors, 'executors');
+        const headings = extractHeadings(markdown);
         entries.push({
           id: `${pluginName}-executors`,
           body: markdown,
@@ -282,6 +286,7 @@ export async function generateAllPluginDocs(
             packageName: `@nx/${pluginName}`,
             docType: 'executors',
             content: markdown,
+            headings,
           },
         });
       }
@@ -290,6 +295,7 @@ export async function generateAllPluginDocs(
       const migrations = parseMigrations(pluginPath);
       if (migrations && migrations.size > 0) {
         const markdown = generateMarkdown(pluginName, migrations, 'migrations');
+        const headings = extractHeadings(markdown);
         entries.push({
           id: `${pluginName}-migrations`,
           body: markdown,
@@ -303,6 +309,7 @@ export async function generateAllPluginDocs(
             packageName: `@nx/${pluginName}`,
             docType: 'migrations',
             content: markdown,
+            headings,
           },
         });
       }

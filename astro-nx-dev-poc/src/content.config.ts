@@ -41,6 +41,11 @@ export const collections = {
       packageName: z.string(),
       docType: z.enum(['generators', 'executors', 'migrations']),
       content: z.string(),
+      headings: z.array(z.object({
+        depth: z.number(),
+        slug: z.string(),
+        text: z.string(),
+      })).optional(),
     }),
   }),
 };

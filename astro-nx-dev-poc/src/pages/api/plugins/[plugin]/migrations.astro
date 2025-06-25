@@ -32,6 +32,7 @@ const htmlContent = await parseMarkdownToHtml(doc.body);
     title: `@nx/${pluginName} - migrations`,
     description: `@nx/${pluginName} plugin migrations`,
   }}
+  headings={doc.data.headings || []}
 >
   <Fragment set:html={htmlContent} />
 </StarlightPage>
