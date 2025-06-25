@@ -1,36 +1,39 @@
 ---
-title: Welcome to Starlight
-description: Get started building your docs site with Starlight.
+title: Nx Documentation
+description: Learn how to use Nx to build faster and scale better
 template: splash
 hero:
-  tagline: Congrats on setting up a new Starlight project!
-  image:
-    file: ../../assets/houston.webp
+  title: Welcome to Nx
+  tagline: An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.
   actions:
-    - text: Example Guide
-      link: /guides/example/
+    - text: Get Started
+      link: /getting-started/
       icon: right-arrow
-    - text: Read the Starlight docs
-      link: https://starlight.astro.build
-      icon: external
-      variant: minimal
+      variant: primary
+    - text: API Reference
+      link: /api/
+      icon: open-book
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
-## Next steps
+## Explore Nx
 
 <CardGrid stagger>
-  <Card title="Update content" icon="pencil">
-    Edit `src/content/docs/index.mdx` to see this page change.
+  <Card title="Getting Started" icon="rocket">
+    Learn the basics of Nx and set up your first workspace.
+    [Start learning →](/getting-started/)
   </Card>
-  <Card title="Add new content" icon="add-document">
-    Add Markdown or MDX files to `src/content/docs` to create new pages.
+  <Card title="API Reference" icon="document">
+    Browse comprehensive API documentation for all Nx tools and plugins.
+    [View API →](/api/)
   </Card>
-  <Card title="Configure your site" icon="setting">
-    Edit your `sidebar` and other config in `astro.config.mjs`.
+  <Card title="Nx Cloud" icon="cloud">
+    Speed up your builds with distributed caching and task execution.
+    [Learn about Nx Cloud →](/getting-started/nx-cloud)
   </Card>
-  <Card title="Read the docs" icon="open-book">
-    Learn more in [the Starlight Docs](https://starlight.astro.build/).
+  <Card title="Plugins" icon="puzzle">
+    Extend Nx with plugins for React, Angular, Vue, and more.
+    [Browse plugins →](/api/plugins)
   </Card>
 </CardGrid>

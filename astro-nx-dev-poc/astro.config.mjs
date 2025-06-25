@@ -1,7 +1,7 @@
 // @ts-check
 import {defineConfig} from 'astro/config';
 import starlight from '@astrojs/starlight';
-import {autoPluginSidebar} from './src/plugins/auto-plugin-sidebar';
+import {sectionSidebar} from './src/plugins/section-sidebar';
 
 import netlify from '@astrojs/netlify';
 
@@ -13,7 +13,10 @@ export default defineConfig({
             tagline:
                 'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.',
             favicon: '/favicon.svg',
-            plugins: [autoPluginSidebar()],
+            plugins: [sectionSidebar()],
+            components: {
+                Sidebar: './src/components/Sidebar.astro',
+            },
             markdown: {
                 // this breaks the renderMarkdown function in the plugin loader due to starlight path normalization
                 // as to _why_ it has to normalize a path?
@@ -41,7 +44,7 @@ export default defineConfig({
             editLink: {
                 baseUrl: 'https://github.com/nrwl/nx/tree/main/',
             },
-            customCss: ['./src/styles/custom.css'],
+            customCss: ['./src/styles/custom.css', './src/styles/sidebar-tabs.css'],
             sidebar: [
                 {
                     label: 'Getting Started',

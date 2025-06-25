@@ -1,0 +1,293 @@
+---
+import Default from '@astrojs/starlight/components/Sidebar.astro';
+
+const currentPath = Astro.url.pathname;
+const activeTab = currentPath.startsWith('/api/') ? 'reference' : 'learn';
+
+// Get sidebar data from Starlight's route context
+const { sidebar } = Astro.locals.starlightRoute;
+
+// Find sections by looking for groups with the right labels
+const learnSection = sidebar?.find(item => 
+  item.type === 'group' && item.label === 'Getting Started'
+);
+
+const referenceSection = sidebar?.find(item => 
+  item.type === 'group' && item.label === 'API Reference'
+);
+---
+
+{!sidebar || sidebar.length === 0 ? (
+  <Default {...Astro.props} />
+) : (
+
+<nav class="sl-sidebar tabbed-sidebar" aria-label="Main">
+  <div class="sidebar-tabs" role="tablist">
+    <button 
+      class="sidebar-tab"
+      data-tab-id="learn"
+      aria-controls="tabpanel-learn"
+      aria-selected={activeTab === 'learn' ? 'true' : 'false'}
+      role="tab"
+    >
+      <span class="tab-icon">📚</span>
+      <span class="tab-label">Learn</span>
+    </button>
+    <button 
+      class="sidebar-tab"
+      data-tab-id="reference"
+      aria-controls="tabpanel-reference"
+      aria-selected={activeTab === 'reference' ? 'true' : 'false'}
+      role="tab"
+    >
+      <span class="tab-icon">📖</span>
+      <span class="tab-label">Reference</span>
+    </button>
+  </div>
+  
+  <div class="sidebar-content sl-sidebar-content">
+    <div id="tabpanel-learn" class="tab-panel" role="tabpanel" style={activeTab === 'learn' ? '' : 'display: none'}>
+      {learnSection && learnSection.type === 'group' && (
+        <ul class="top-level">
+          <li>
+            <details open>
+              <summary>
+                <div class="group-label">
+                  <span>{learnSection.label}</span>
+                </div>
+              </summary>
+              <ul>
+                {learnSection.entries.map((entry) => (
+                  <li>
+                    {entry.type === 'link' ? (
+                      <a href={entry.href} aria-current={entry.isCurrent ? 'page' : undefined}>
+                        <span>{entry.label}</span>
+                      </a>
+                    ) : entry.type === 'group' ? (
+                      <details open={!entry.collapsed}>
+                        <summary>
+                          <div class="group-label">
+                            <span>{entry.label}</span>
+                          </div>
+                        </summary>
+                        <ul>
+                          {entry.entries.map((subentry) => (
+                            <li>
+                              {subentry.type === 'link' && (
+                                <a href={subentry.href} aria-current={subentry.isCurrent ? 'page' : undefined}>
+                                  <span>{subentry.label}</span>
+                                </a>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          </li>
+        </ul>
+      )}
+    </div>
+    
+    <div id="tabpanel-reference" class="tab-panel" role="tabpanel" style={activeTab === 'reference' ? '' : 'display: none'}>
+      {referenceSection && referenceSection.type === 'group' && (
+        <ul class="top-level">
+          <li>
+            <details open>
+              <summary>
+                <div class="group-label">
+                  <span>{referenceSection.label}</span>
+                </div>
+              </summary>
+              <ul>
+                {referenceSection.entries.map((entry) => (
+                  <li>
+                    {entry.type === 'link' ? (
+                      <a href={entry.href} aria-current={entry.isCurrent ? 'page' : undefined}>
+                        <span>{entry.label}</span>
+                      </a>
+                    ) : entry.type === 'group' ? (
+                      <details open={!entry.collapsed}>
+                        <summary>
+                          <div class="group-label">
+                            <span>{entry.label}</span>
+                          </div>
+                        </summary>
+                        <ul>
+                          {entry.entries.map((subentry) => (
+                            <li>
+                              {subentry.type === 'link' && (
+                                <a href={subentry.href} aria-current={subentry.isCurrent ? 'page' : undefined}>
+                                  <span>{subentry.label}</span>
+                                </a>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          </li>
+        </ul>
+      )}
+    </div>
+  </div>
+</nav>
+
+<script>
+  // Tab switching functionality
+  document.addEventListener('DOMContentLoaded', () => {
+    const tabs = document.querySelectorAll('.sidebar-tab');
+    const panels = document.querySelectorAll('.tab-panel');
+    
+    function switchTab(tabId: string) {
+      tabs.forEach(tab => {
+        const isActive = tab.getAttribute('data-tab-id') === tabId;
+        tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+      
+      panels.forEach(panel => {
+        const isActive = panel.id === `tabpanel-${tabId}`;
+        panel.style.display = isActive ? '' : 'none';
+      });
+      
+      localStorage.setItem('activeDocTab', tabId);
+    }
+    
+    // Add click handlers
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const tabId = tab.getAttribute('data-tab-id');
+        if (tabId) switchTab(tabId);
+      });
+    });
+    
+    // Restore saved tab preference
+    const savedTab = localStorage.getItem('activeDocTab');
+    if (savedTab && savedTab !== 'learn') {
+      // Only switch if not on default tab
+      const currentPath = window.location.pathname;
+      if (!currentPath.startsWith('/api/')) {
+        switchTab(savedTab);
+      }
+    }
+  });
+</script>
+
+<style>
+  .tabbed-sidebar {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--sl-color-gray-5);
+    background: var(--sl-color-bg-sidebar);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .sidebar-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    flex: 1;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--sl-color-gray-2);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .sidebar-tab:hover {
+    color: var(--sl-color-text);
+    background: var(--sl-color-gray-6);
+  }
+
+  .sidebar-tab[aria-selected="true"] {
+    color: var(--sl-color-text-accent);
+    border-bottom-color: var(--sl-color-text-accent);
+  }
+
+  .tab-icon {
+    font-size: 1.125rem;
+  }
+
+  .sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 0;
+  }
+
+  /* Match Starlight sidebar styles */
+  .top-level {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  details {
+    position: relative;
+  }
+
+  summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    margin-inline-start: -0.5rem;
+    border-radius: 0.25rem;
+  }
+
+  summary:hover {
+    background-color: var(--sl-color-gray-6);
+  }
+
+  .group-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--sl-color-white);
+  }
+
+  ul {
+    list-style: none;
+    padding-inline-start: 1rem;
+    margin: 0;
+  }
+
+  a {
+    display: block;
+    padding: 0.25rem 0.5rem;
+    margin-inline-start: -0.5rem;
+    color: var(--sl-color-gray-2);
+    text-decoration: none;
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+  }
+
+  a:hover {
+    background-color: var(--sl-color-gray-6);
+    color: var(--sl-color-white);
+  }
+
+  a[aria-current="page"] {
+    background-color: var(--sl-color-gray-6);
+    color: var(--sl-color-white);
+    font-weight: 600;
+  }
+</style>
+)}
