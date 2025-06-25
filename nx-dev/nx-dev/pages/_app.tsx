@@ -87,7 +87,7 @@ export default function CustomApp({
       </Link>
       <Component {...pageProps} />
       {/* <LiveStreamNotifier /> */}
-      <WebinarNotifier />
+      {/* <WebinarNotifier /> */}
 
       {/* All tracking scripts consolidated in GlobalScripts component */}
       <GlobalScripts
