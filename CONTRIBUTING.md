@@ -344,6 +344,7 @@ The scope must be one of the following:
 - express - anything Express specific
 - js - anything related to @nx/js package or general js/ts support
 - linter - anything Linter specific
+- module-federation - anything Nx Module Federation specific
 - nest - anything Nest specific
 - nextjs - anything Next specific
 - node - anything Node specific
