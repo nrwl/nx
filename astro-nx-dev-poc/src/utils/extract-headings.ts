@@ -4,6 +4,22 @@ export interface Heading {
   text: string;
 }
 
+// Shared function to create consistent slugs
+export function createSlug(text: string | any): string {
+  // Ensure text is a string
+  const textStr = typeof text === 'string' ? text : String(text);
+  
+  return textStr
+    .toLowerCase()
+    .replace(/<[^>]*>/g, '') // Remove HTML tags
+    .replace(/`/g, '') // Remove backticks
+    .replace(/\*/g, '') // Remove asterisks
+    .replace(/[^\w\s-]/g, '') // Remove special characters
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+    .trim();
+}
+
 export function extractHeadings(markdown: string): Heading[] {
   const headings: Heading[] = [];
   const lines = markdown.split('\n');
@@ -15,14 +31,8 @@ export function extractHeadings(markdown: string): Heading[] {
       const depth = match[1].length;
       const text = match[2].trim();
       
-      // Remove backticks and other markdown formatting for the slug
-      const cleanText = text.replace(/`/g, '').replace(/\*/g, '');
-      const slug = cleanText
-        .toLowerCase()
-        .replace(/[^\w\s-]/g, '') // Remove special characters
-        .replace(/\s+/g, '-') // Replace spaces with hyphens
-        .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
-        .trim();
+      // Create slug using the shared function
+      const slug = createSlug(text);
       
       headings.push({
         depth,

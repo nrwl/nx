@@ -17,6 +17,7 @@
     "fs-extra": "^11.1.1",
     "gray-matter": "^4.0.3",
     "marked": "^15.0.12",
+    "marked-gfm-heading-id": "^4.1.1",
     "sharp": "^0.32.5",
     "tsconfig-paths": "^4.2.0",
     "yargs": "^17.7.2"
