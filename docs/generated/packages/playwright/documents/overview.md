@@ -98,15 +98,15 @@ Run `nx e2e <your-app-name>` to execute e2e tests with Playwright
 
 {% callout type="note" title="Selecting Specific Specs" %}
 
-You can use the `--grep/-g` flag to glob for test files.
-You can use the `--grepInvert/-gv` flag to glob for files to _not_ run.
+You can use the `--grep/-g` flag to filter tests using regular expressions.
+You can use the `--grepInvert/-gv` flag to filter out tests that match the regular expression.
 
 ```bash
-# run the tests in the feat-a/ directory
-nx e2e frontend-e2e --grep="**feat-a/**"
+# run tests that match the regular expression
+nx e2e frontend-e2e --grep="feat-a"
 
-# run everything except feat-a/ directory
-nx e2e frontend-e2e --grepInvert=**feat-a/**
+# run tests that don't match the regular expression
+nx e2e frontend-e2e --grepInvert="feat-a"
 ```
 
 {% /callout %}
