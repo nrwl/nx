@@ -315,3 +315,82 @@ export const PendingApproval: Story = {
     },
   },
 };
+
+export const MigrationStopped: Story = {
+  args: {
+    currentMigrationId: 'migration-2',
+    migrations: [
+      {
+        id: 'migration-1',
+        name: 'migration-1',
+        description: 'This is a test migration',
+        version: '1.0.0',
+        package: 'nx',
+        implementation: './src/migrations/migration-1.ts',
+      },
+      {
+        id: 'migration-2',
+        name: 'migration-2',
+        description: 'This is a test migration',
+        version: '1.0.1',
+        package: '@nx/react',
+        implementation: './src/migrations/migration-2.ts',
+      },
+      {
+        id: 'migration-3',
+        name: 'migration-3',
+        description: 'Migrate 3',
+        version: '1.0.1',
+        package: '@nx/react',
+        implementation: './src/migrations/migration-3.ts',
+      },
+    ],
+    nxConsoleMetadata: {
+      completedMigrations: {
+        'migration-1': {
+          name: 'migration-1',
+          type: 'successful',
+          changedFiles: [],
+          ref: '123',
+          nextSteps: [],
+        },
+        'migration-2': {
+          name: 'migration-2',
+          type: 'stopped',
+          error: 'Migration was stopped by the user',
+        },
+      },
+      targetVersion: '20.3.2',
+    },
+    onRunMigration: (migration) => {
+      console.log('run migration', migration);
+    },
+    onRunMany: (migrations, configuration) => {
+      console.log('run many migrations', migrations, configuration);
+    },
+    onSkipMigration: (migration) => {
+      console.log('skip migration', migration);
+    },
+    onUndoMigration: (migration) => {
+      console.log('undo migration', migration);
+    },
+    onFileClick: (migration, file) => {
+      console.log('file click', migration, file);
+    },
+    onViewImplementation: (migration) => {
+      console.log('view implementation', migration);
+    },
+    onViewDocumentation: (migration) => {
+      console.log('view documentation', migration);
+    },
+    onCancel: () => {
+      console.log('cancel');
+    },
+    onFinish: (squash: boolean) => {
+      console.log('finished', squash);
+    },
+    onStopMigration: (migration) => {
+      console.log('stop migration', migration);
+    },
+  },
+};
