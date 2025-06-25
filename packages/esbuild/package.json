@@ -39,7 +39,7 @@
     "tslib": "^2.3.0"
   },
   "peerDependencies": {
-    "esbuild": ">=0.19.2 <1.0.0"
+    "esbuild": "^0.22.0"
   },
   "peerDependenciesMeta": {
     "esbuild": {
