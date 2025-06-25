@@ -1,20 +1,32 @@
 ---
 import Default from '@astrojs/starlight/components/Sidebar.astro';
+import { sidebarGroups, getActiveGroup } from '../config/sidebar.config';
 
 const currentPath = Astro.url.pathname;
-const activeTab = currentPath.startsWith('/api/') ? 'reference' : 'learn';
+const activeGroupId = getActiveGroup(currentPath);
 
 // Get sidebar data from Starlight's route context
 const { sidebar } = Astro.locals.starlightRoute;
 
-// Find sections by looking for groups with the right labels
-const learnSection = sidebar?.find(item => 
-  item.type === 'group' && item.label === 'Getting Started'
-);
-
-const referenceSection = sidebar?.find(item => 
-  item.type === 'group' && item.label === 'API Reference'
-);
+// Build sidebar sections for each group
+const groupSections = sidebarGroups.map(group => {
+  const groupItems = sidebar?.filter(item => {
+    if (item.type === 'group') {
+      // Check if this sidebar item belongs to this group
+      // by matching labels or checking if any entries match the group's pattern
+      return group.items.some(configItem => 
+        configItem.label === item.label ||
+        (configItem.autogenerate?.directory && item.label?.toLowerCase().includes(configItem.autogenerate.directory))
+      );
+    }
+    return false;
+  });
+  
+  return {
+    ...group,
+    entries: groupItems || []
+  };
+});
 ---
 
 {!sidebar || sidebar.length === 0 ? (
@@ -23,124 +35,87 @@ const referenceSection = sidebar?.find(item =>
 
 <nav class="sl-sidebar tabbed-sidebar" aria-label="Main">
   <div class="sidebar-tabs" role="tablist">
-    <button 
-      class="sidebar-tab"
-      data-tab-id="learn"
-      aria-controls="tabpanel-learn"
-      aria-selected={activeTab === 'learn' ? 'true' : 'false'}
-      role="tab"
-    >
-      <span class="tab-icon">📚</span>
-      <span class="tab-label">Learn</span>
-    </button>
-    <button 
-      class="sidebar-tab"
-      data-tab-id="reference"
-      aria-controls="tabpanel-reference"
-      aria-selected={activeTab === 'reference' ? 'true' : 'false'}
-      role="tab"
-    >
-      <span class="tab-icon">📖</span>
-      <span class="tab-label">Reference</span>
-    </button>
+    {sidebarGroups.map(group => (
+      <button 
+        class="sidebar-tab"
+        data-tab-id={group.id}
+        aria-controls={`tabpanel-${group.id}`}
+        aria-selected={activeGroupId === group.id ? 'true' : 'false'}
+        role="tab"
+      >
+        {group.icon && <span class="tab-icon">{group.icon}</span>}
+        <span class="tab-label">{group.label}</span>
+      </button>
+    ))}
   </div>
   
   <div class="sidebar-content sl-sidebar-content">
-    <div id="tabpanel-learn" class="tab-panel" role="tabpanel" style={activeTab === 'learn' ? '' : 'display: none'}>
-      {learnSection && learnSection.type === 'group' && (
-        <ul class="top-level">
-          <li>
-            <details open>
-              <summary>
-                <div class="group-label">
-                  <span>{learnSection.label}</span>
-                </div>
-              </summary>
-              <ul>
-                {learnSection.entries.map((entry) => (
-                  <li>
-                    {entry.type === 'link' ? (
-                      <a href={entry.href} aria-current={entry.isCurrent ? 'page' : undefined}>
+    {groupSections.map(section => (
+      <div 
+        id={`tabpanel-${section.id}`} 
+        class="tab-panel" 
+        role="tabpanel" 
+        style={activeGroupId === section.id ? '' : 'display: none'}
+      >
+        {section.entries.length > 0 ? (
+          <ul class="top-level">
+            {section.entries.map((entry: any) => (
+              <li>
+                {entry.type === 'group' ? (
+                  <details open>
+                    <summary>
+                      <div class="group-label">
                         <span>{entry.label}</span>
-                      </a>
-                    ) : entry.type === 'group' ? (
-                      <details open={!entry.collapsed}>
-                        <summary>
-                          <div class="group-label">
-                            <span>{entry.label}</span>
-                          </div>
-                        </summary>
-                        <ul>
-                          {entry.entries.map((subentry) => (
-                            <li>
-                              {subentry.type === 'link' && (
-                                <a href={subentry.href} aria-current={subentry.isCurrent ? 'page' : undefined}>
-                                  <span>{subentry.label}</span>
-                                </a>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      </details>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            </details>
-          </li>
-        </ul>
-      )}
-    </div>
-    
-    <div id="tabpanel-reference" class="tab-panel" role="tabpanel" style={activeTab === 'reference' ? '' : 'display: none'}>
-      {referenceSection && referenceSection.type === 'group' && (
-        <ul class="top-level">
-          <li>
-            <details open>
-              <summary>
-                <div class="group-label">
-                  <span>{referenceSection.label}</span>
-                </div>
-              </summary>
-              <ul>
-                {referenceSection.entries.map((entry) => (
-                  <li>
-                    {entry.type === 'link' ? (
-                      <a href={entry.href} aria-current={entry.isCurrent ? 'page' : undefined}>
-                        <span>{entry.label}</span>
-                      </a>
-                    ) : entry.type === 'group' ? (
-                      <details open={!entry.collapsed}>
-                        <summary>
-                          <div class="group-label">
-                            <span>{entry.label}</span>
-                          </div>
-                        </summary>
-                        <ul>
-                          {entry.entries.map((subentry) => (
-                            <li>
-                              {subentry.type === 'link' && (
-                                <a href={subentry.href} aria-current={subentry.isCurrent ? 'page' : undefined}>
-                                  <span>{subentry.label}</span>
-                                </a>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      </details>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            </details>
-          </li>
-        </ul>
-      )}
-    </div>
+                      </div>
+                    </summary>
+                    <ul>
+                      {entry.entries.map((item: any) => (
+                        <li>
+                          {item.type === 'link' ? (
+                            <a href={item.href} aria-current={item.isCurrent ? 'page' : undefined}>
+                              <span>{item.label}</span>
+                            </a>
+                          ) : item.type === 'group' ? (
+                            <details open={!item.collapsed}>
+                              <summary>
+                                <div class="group-label">
+                                  <span>{item.label}</span>
+                                </div>
+                              </summary>
+                              <ul>
+                                {item.entries.map((subitem: any) => (
+                                  <li>
+                                    {subitem.type === 'link' && (
+                                      <a href={subitem.href} aria-current={subitem.isCurrent ? 'page' : undefined}>
+                                        <span>{subitem.label}</span>
+                                      </a>
+                                    )}
+                                  </li>
+                                ))}
+                              </ul>
+                            </details>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div class="empty-state">
+            <p>No items in this section yet.</p>
+          </div>
+        )}
+      </div>
+    ))}
   </div>
 </nav>
 
 <script>
+  import { sidebarGroups, getActiveGroup } from '../config/sidebar.config';
+  
   // Tab switching functionality
   document.addEventListener('DOMContentLoaded', () => {
     const tabs = document.querySelectorAll('.sidebar-tab');
@@ -168,15 +143,21 @@ const referenceSection = sidebar?.find(item =>
       });
     });
     
-    // Restore saved tab preference
-    const savedTab = localStorage.getItem('activeDocTab');
-    if (savedTab && savedTab !== 'learn') {
-      // Only switch if not on default tab
+    // Handle navigation - update active tab based on URL
+    function updateActiveTabFromUrl() {
       const currentPath = window.location.pathname;
-      if (!currentPath.startsWith('/api/')) {
-        switchTab(savedTab);
-      }
+      const activeGroup = getActiveGroup(currentPath);
+      switchTab(activeGroup);
     }
+    
+    // Update on initial load
+    updateActiveTabFromUrl();
+    
+    // Listen for navigation changes
+    window.addEventListener('popstate', updateActiveTabFromUrl);
+    
+    // For Astro View Transitions (if enabled)
+    document.addEventListener('astro:after-swap', updateActiveTabFromUrl);
   });
 </script>
 
@@ -194,6 +175,7 @@ const referenceSection = sidebar?.find(item =>
     position: sticky;
     top: 0;
     z-index: 10;
+    flex-wrap: wrap;
   }
 
   .sidebar-tab {
@@ -202,6 +184,7 @@ const referenceSection = sidebar?.find(item =>
     gap: 0.5rem;
     padding: 0.75rem 1rem;
     flex: 1;
+    min-width: 0;
     background: transparent;
     border: none;
     border-bottom: 3px solid transparent;
@@ -210,6 +193,9 @@ const referenceSection = sidebar?.find(item =>
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .sidebar-tab:hover {
@@ -224,6 +210,12 @@ const referenceSection = sidebar?.find(item =>
 
   .tab-icon {
     font-size: 1.125rem;
+    flex-shrink: 0;
+  }
+
+  .tab-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .sidebar-content {
@@ -253,6 +245,22 @@ const referenceSection = sidebar?.find(item =>
 
   summary:hover {
     background-color: var(--sl-color-gray-6);
+  }
+
+  summary::marker,
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  details[open] > summary::before {
+    transform: rotate(90deg);
+  }
+
+  summary::before {
+    content: '▸';
+    display: inline-block;
+    margin-inline-end: 0.25rem;
+    transition: transform 0.2s;
   }
 
   .group-label {
@@ -288,6 +296,28 @@ const referenceSection = sidebar?.find(item =>
     background-color: var(--sl-color-gray-6);
     color: var(--sl-color-white);
     font-weight: 600;
+  }
+
+  .empty-state {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: var(--sl-color-gray-3);
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 50rem) {
+    .sidebar-tabs {
+      gap: 0.25rem;
+    }
+    
+    .sidebar-tab {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8125rem;
+    }
+    
+    .tab-icon {
+      font-size: 1rem;
+    }
   }
 </style>
 )}
