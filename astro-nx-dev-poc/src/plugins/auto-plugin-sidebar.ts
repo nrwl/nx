@@ -18,7 +18,7 @@ export function autoPluginSidebar(): StarlightPlugin {
           return;
         }
         
-        const pluginItems: Array<{ label: string; link: string }> = [];
+        const pluginItems: Array<{ label: string; link?: string; items?: any[] }> = [];
         
         try {
           const directories = readdirSync(packagesDir, { withFileTypes: true })
@@ -36,10 +36,49 @@ export function autoPluginSidebar(): StarlightPlugin {
                 
                 // Only include @nx scoped packages
                 if (packageName.startsWith('@nx/')) {
-                  pluginItems.push({
-                    label: packageName,
-                    link: `/api/plugins/${dir}`,
-                  });
+                  const pluginDir = join(packagesDir, dir);
+                  
+                  // Check for generators.json, executors.json, and migrations.json
+                  const hasGenerators = existsSync(join(pluginDir, 'generators.json'));
+                  const hasExecutors = existsSync(join(pluginDir, 'executors.json'));
+                  const hasMigrations = existsSync(join(pluginDir, 'migrations.json'));
+                  
+                  // If the plugin has any of these files, create sub-items
+                  if (hasGenerators || hasExecutors || hasMigrations) {
+                    const subItems: any[] = [];
+                    
+                    if (hasGenerators) {
+                      subItems.push({
+                        label: 'Generators',
+                        link: `/api/plugins/${dir}/generators`,
+                      });
+                    }
+                    
+                    if (hasExecutors) {
+                      subItems.push({
+                        label: 'Executors',
+                        link: `/api/plugins/${dir}/executors`,
+                      });
+                    }
+                    
+                    if (hasMigrations) {
+                      subItems.push({
+                        label: 'Migrations',
+                        link: `/api/plugins/${dir}/migrations`,
+                      });
+                    }
+                    
+                    pluginItems.push({
+                      label: packageName,
+                      items: subItems,
+                    });
+                  } else {
+                    // If no sub-items, link directly to the plugin overview
+                    pluginItems.push({
+                      label: packageName,
+                      link: `/api/plugins/${dir}`,
+                    });
+                  }
                 }
               } catch (e) {
                 logger.warn(`Failed to parse package.json for ${dir}`);
