@@ -115,7 +115,7 @@
       "description": "Set this to true to disable all connections to Nx Cloud."
     },
     "parallel": {
-      "type": "number",
+      "type": ["number", "string"],
       "description": "Specifies how many tasks are ran in parallel by Nx for the default tasks runner."
     },
     "cacheDirectory": {
@@ -488,7 +488,7 @@
               "description": "Defines whether the cache captures stderr or just stdout."
             },
             "parallel": {
-              "type": "number",
+              "type": ["number", "string"],
               "description": "Defines the max number of targets ran in parallel."
             },
             "cacheableOperations": {

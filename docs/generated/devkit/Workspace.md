@@ -33,7 +33,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [nxCloudEncryptionKey](/reference/core-api/devkit/documents/Workspace#nxcloudencryptionkey): string
 - [nxCloudId](/reference/core-api/devkit/documents/Workspace#nxcloudid): string
 - [nxCloudUrl](/reference/core-api/devkit/documents/Workspace#nxcloudurl): string
-- [parallel](/reference/core-api/devkit/documents/Workspace#parallel): number
+- [parallel](/reference/core-api/devkit/documents/Workspace#parallel): string | number
 - [plugins](/reference/core-api/devkit/documents/Workspace#plugins): PluginConfiguration[]
 - [pluginsConfig](/reference/core-api/devkit/documents/Workspace#pluginsconfig): Record<string, Record<string, unknown>>
 - [projects](/reference/core-api/devkit/documents/Workspace#projects): Record<string, ProjectConfiguration>
@@ -296,7 +296,7 @@ caching and displaying run links.
 
 ### parallel
 
-• `Optional` **parallel**: `number`
+• `Optional` **parallel**: `string` \| `number`
 
 Specifies how many tasks can be run in parallel.
 

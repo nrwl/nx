@@ -22,6 +22,7 @@ import {
   runPostTasksExecution,
   runPreTasksExecution,
 } from '../project-graph/plugins/tasks-execution-hooks';
+import { concurrency } from '../utils/concurrency';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { NxArgs } from '../utils/command-line-utils';
 import { handleErrors } from '../utils/handle-errors';
@@ -1224,7 +1225,7 @@ export function getRunnerOptions(
   }
 
   if (nxJson.parallel) {
-    result.parallel ??= nxJson.parallel;
+    result.parallel ??= concurrency(nxJson.parallel);
   }
 
   if (nxJson.cacheDirectory) {

@@ -154,6 +154,13 @@ describe('readParallelFromArgsAndEnv', () => {
     expect(result).toEqual(5);
   });
 
+  it('0.6 parallel should be 60%', () => {
+    const result = readParallelFromArgsAndEnv({
+      parallel: '0.6',
+    });
+    expect(result).toBeGreaterThanOrEqual(1);
+  });
+
   it('should read parallel 6', () => {
     const result = readParallelFromArgsAndEnv({
       parallel: '6',

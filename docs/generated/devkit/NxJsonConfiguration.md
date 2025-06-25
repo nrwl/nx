@@ -35,7 +35,7 @@ Nx.json configuration
 - [nxCloudEncryptionKey](/reference/core-api/devkit/documents/NxJsonConfiguration#nxcloudencryptionkey): string
 - [nxCloudId](/reference/core-api/devkit/documents/NxJsonConfiguration#nxcloudid): string
 - [nxCloudUrl](/reference/core-api/devkit/documents/NxJsonConfiguration#nxcloudurl): string
-- [parallel](/reference/core-api/devkit/documents/NxJsonConfiguration#parallel): number
+- [parallel](/reference/core-api/devkit/documents/NxJsonConfiguration#parallel): string | number
 - [plugins](/reference/core-api/devkit/documents/NxJsonConfiguration#plugins): PluginConfiguration[]
 - [pluginsConfig](/reference/core-api/devkit/documents/NxJsonConfiguration#pluginsconfig): Record<string, Record<string, unknown>>
 - [release](/reference/core-api/devkit/documents/NxJsonConfiguration#release): NxReleaseConfiguration
@@ -228,7 +228,7 @@ caching and displaying run links.
 
 ### parallel
 
-• `Optional` **parallel**: `number`
+• `Optional` **parallel**: `string` \| `number`
 
 Specifies how many tasks can be run in parallel.
 
