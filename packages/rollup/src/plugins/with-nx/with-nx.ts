@@ -37,6 +37,7 @@ const image = require('@rollup/plugin-image');
 const json = require('@rollup/plugin-json');
 const copy = require('rollup-plugin-copy');
 const postcss = require('rollup-plugin-postcss');
+const typescript = require('@rollup/plugin-typescript');
 
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
 
@@ -216,19 +217,42 @@ export function withNx(
       }),
       image(),
       json(),
-      // Needed to generate type definitions, even if we're using babel or swc.
-      require('rollup-plugin-typescript2')({
-        check: !options.skipTypeCheck,
-        tsconfig: tsConfigPath,
-        tsconfigOverride: {
-          compilerOptions: createTsCompilerOptions(
-            projectRoot,
-            tsConfig,
-            options,
-            dependencies
-          ),
-        },
-      }),
+      // TypeScript compilation and declaration generation
+      // TODO(Colum): Change default value of useLegacyTypescriptPlugin to false for Nx 23
+      options.useLegacyTypescriptPlugin !== false
+        ? (() => {
+            // TODO(Colum): Remove in Nx 24
+            // Show deprecation warning
+            logger.warn(
+              `rollup-plugin-typescript2 usage is deprecated and will be removed in Nx 24. ` +
+                `Set 'useLegacyTypescriptPlugin: false' to use the official @rollup/plugin-typescript.`
+            );
+
+            return require('rollup-plugin-typescript2')({
+              check: !options.skipTypeCheck,
+              tsconfig: tsConfigPath,
+              tsconfigOverride: {
+                compilerOptions: createTsCompilerOptions(
+                  projectRoot,
+                  tsConfig,
+                  options,
+                  dependencies
+                ),
+              },
+            });
+          })()
+        : typescript({
+            tsconfig: tsConfigPath,
+            compilerOptions: createTsCompilerOptions(
+              projectRoot,
+              tsConfig,
+              options,
+              dependencies
+            ),
+            declaration: true,
+            declarationMap: !!options.sourceMap,
+            noEmitOnError: !options.skipTypeCheck,
+          }),
       typeDefinitions({
         projectRoot,
       }),
