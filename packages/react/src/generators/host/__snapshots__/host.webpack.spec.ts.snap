@@ -46,7 +46,7 @@ module.exports = moduleFederationConfig;
 exports[`hostGenerator bundler=webpack should generate host files and configs for SSR when --typescriptConfiguration=true 1`] = `
 "import { composePlugins, withNx } from '@nx/webpack';
 import { withReact } from '@nx/react';
-import { withModuleFederationForSSR } from '@nx/module-federation/webpack';
+import { withModuleFederationForSSR } from '@nx/module-federation/webpack.js';
 
 import baseConfig from './module-federation.config';
 
@@ -134,7 +134,7 @@ module.exports = {
 exports[`hostGenerator bundler=webpack should generate host files and configs when --typescriptConfiguration=true 1`] = `
 "import {composePlugins, withNx} from '@nx/webpack';
 import {withReact} from '@nx/react';
-import {withModuleFederation} from '@nx/module-federation/webpack';
+import {withModuleFederation} from '@nx/module-federation/webpack.js';
 import { ModuleFederationConfig } from '@nx/module-federation';
 
 import baseConfig from './module-federation.config';

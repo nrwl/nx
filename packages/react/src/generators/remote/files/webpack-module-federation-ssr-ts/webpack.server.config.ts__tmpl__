@@ -1,6 +1,6 @@
 import {composePlugins, withNx} from '@nx/webpack';
 import {withReact} from '@nx/react';
-import {withModuleFederationForSSR} from '@nx/module-federation/webpack';
+import {withModuleFederationForSSR} from '@nx/module-federation/webpack.js';
 
 import baseConfig from "./module-federation.server.config";
 
