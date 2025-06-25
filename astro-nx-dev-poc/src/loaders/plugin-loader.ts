@@ -1,5 +1,6 @@
 import { existsSync } from 'fs';
-import { join, resolve as pathResolve } from 'path';
+import { z } from 'astro:content';
+import { join, resolve as pathResolve, relative } from 'path';
 import { workspaceRoot } from '@nx/devkit';
 import {
   parseGenerators,
@@ -8,8 +9,9 @@ import {
   type PluginDocEntry,
   getPropertyType,
   getPropertyDefault,
-  escapeForMdx,
 } from './utils/plugin-schema-parser';
+import type { Loader, LoaderContext } from 'astro/loaders';
+import type { AstroIntegrationLogger } from 'astro';
 
 // TODO: make this a glob pattern or something so we don't have to manually update
 // Define the plugins to generate documentation for
@@ -80,9 +82,7 @@ Below is a complete reference for all available ${docType} and their options.
 `;
 
     if (schema?.description || config?.description) {
-      markdown += `${escapeForMdx(
-        schema?.description || config?.description
-      )}\n\n`;
+      markdown += `${schema?.description || config?.description}\n\n`;
     }
 
     if (docType === 'generators') {
@@ -162,7 +162,7 @@ nx generate ${fullItemName} ${positionalArgs
         }
 
         const type = getPropertyType(property);
-        const description = escapeForMdx(property.description || '');
+        const description = property.description || '';
         const defaultValue = getPropertyDefault(property);
         const isRequired = required.includes(propName);
 
@@ -223,8 +223,10 @@ nx run project:${docType} --help
   return markdown;
 }
 
-export async function generateAllPluginDocs(): Promise<PluginDocEntry[]> {
-  console.log('Generating plugin documentation...');
+export async function generateAllPluginDocs(
+  logger: AstroIntegrationLogger
+): Promise<PluginDocEntry[]> {
+  logger.info('Generating plugin documentation...');
   const entries: PluginDocEntry[] = [];
   let successCount = 0;
   let skipCount = 0;
@@ -248,11 +250,17 @@ export async function generateAllPluginDocs(): Promise<PluginDocEntry[]> {
         const markdown = generateMarkdown(pluginName, generators, 'generators');
         entries.push({
           id: `${pluginName}-generators`,
-          title: `@nx/${pluginName} Generators`,
-          pluginName,
-          packageName: `@nx/${pluginName}`,
-          docType: 'generators',
-          content: markdown,
+          body: markdown,
+          filePath: relative(
+            join(workspaceRoot, 'astro-nx-dev-poc'),
+            join(pluginPath, 'generators.json')
+          ),
+          data: {
+            title: `@nx/${pluginName} Generators`,
+            pluginName,
+            packageName: `@nx/${pluginName}`,
+            docType: 'generators',
+          },
         });
       }
 
@@ -262,11 +270,17 @@ export async function generateAllPluginDocs(): Promise<PluginDocEntry[]> {
         const markdown = generateMarkdown(pluginName, executors, 'executors');
         entries.push({
           id: `${pluginName}-executors`,
-          title: `@nx/${pluginName} Executors`,
-          pluginName,
-          packageName: `@nx/${pluginName}`,
-          docType: 'executors',
-          content: markdown,
+          body: markdown,
+          filePath: relative(
+            join(workspaceRoot, 'astro-nx-dev-poc'),
+            join(pluginPath, 'executors.json')
+          ),
+          data: {
+            title: `@nx/${pluginName} Executors`,
+            pluginName,
+            packageName: `@nx/${pluginName}`,
+            docType: 'executors',
+          },
         });
       }
 
@@ -276,33 +290,64 @@ export async function generateAllPluginDocs(): Promise<PluginDocEntry[]> {
         const markdown = generateMarkdown(pluginName, migrations, 'migrations');
         entries.push({
           id: `${pluginName}-migrations`,
-          title: `@nx/${pluginName} Migrations`,
-          pluginName,
-          packageName: `@nx/${pluginName}`,
-          docType: 'migrations',
-          content: markdown,
+          body: markdown,
+          filePath: relative(
+            join(workspaceRoot, 'astro-nx-dev-poc'),
+            join(pluginPath, 'migration.json')
+          ),
+          data: {
+            title: `@nx/${pluginName} Migrations`,
+            pluginName,
+            packageName: `@nx/${pluginName}`,
+            docType: 'migrations',
+          },
         });
       }
 
       if (generators?.size || executors?.size || migrations?.size) {
-        console.log(`✅ Generated documentation for ${pluginName}`);
+        logger.info(`✅ Generated documentation for ${pluginName}`);
         successCount++;
       } else {
-        console.log(
+        logger.warn(
           `⚠️  Skipping ${pluginName} - no visible documentation found`
         );
         skipCount++;
       }
     } catch (error: any) {
-      console.error(`❌ Error processing ${pluginName}:`, error.message);
+      logger.error(`❌ Error processing ${pluginName}: ${error.message}`);
       skipCount++;
     }
   }
 
-  console.log(`\nPlugin Documentation Summary:`);
-  console.log(`  ✅ Successfully generated: ${successCount}`);
-  console.log(`  ⚠️  Skipped: ${skipCount}`);
-  console.log(`  📄 Total entries: ${entries.length}`);
+  logger.info(`\nPlugin Documentation Summary:`);
+  logger.info(`  ✅ Successfully generated: ${successCount}`);
+  logger.info(`  ⚠️  Skipped: ${skipCount}`);
+  logger.info(`  📄 Total entries: ${entries.length}`);
 
   return entries;
+}
+
+export function PluginLoader(options: any = {}): Loader {
+  return {
+    name: 'nx-plugin-loader',
+    async load({
+      store,
+      logger,
+      generateDigest,
+      meta,
+      parseData,
+    }: LoaderContext) {
+      const docs = await generateAllPluginDocs(logger);
+      logger.info(`Loaded ${docs.length} plugin documentation entries`);
+
+      store.clear();
+
+      for (const doc of docs) {
+        logger.info(`Processing documentation for ${doc.id}`);
+        store.set(doc);
+      }
+
+      logger.info(`Generated plugin documentation with ${docs.length} entries`);
+    },
+  };
 }

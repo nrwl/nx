@@ -1,13 +1,17 @@
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
-export interface PluginDocEntry {
+export interface PluginDocEntry<TData = Record<string, unknown>> {
+  /** The ID of the entry. Must be unique per collection. */
   id: string;
-  title: string;
-  pluginName: string;
-  packageName: string;
-  docType: 'generators' | 'executors' | 'migrations';
-  content: string;
+  /** The data to store. */
+  data: TData;
+  /** The raw body of the content, if applicable. */
+  body?: string;
+  /** The file path of the content, if applicable. Relative to the site root. */
+  filePath?: string;
+  /** A content digest, to check if the content has changed. */
+  digest?: number | string;
 }
 
 export function getPropertyType(property: any): string {
@@ -25,21 +29,8 @@ export function getPropertyType(property: any): string {
   return 'any';
 }
 
-export function escapeForMdx(str: string): string {
-  if (typeof str !== 'string') return str;
-  // Escape angle brackets that might be interpreted as JSX
-  return str
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/{/g, '&#123;')
-    .replace(/}/g, '&#125;');
-}
-
 export function getPropertyDefault(property: any): string {
   if (property.default !== undefined) {
-    if (typeof property.default === 'string') {
-      return `\`${escapeForMdx(property.default)}\``;
-    }
     return `\`${JSON.stringify(property.default)}\``;
   }
 
@@ -55,7 +46,9 @@ export function getPropertyDefault(property: any): string {
   return '';
 }
 
-export function parseGenerators(pluginPath: string): Map<string, any> | null {
+export function parseGenerators(
+  pluginPath: string
+): Map<string, { config: any; schema: any; schemaPath: string }> | null {
   const generatorsJsonPath = join(pluginPath, 'generators.json');
 
   if (!existsSync(generatorsJsonPath)) {
@@ -77,7 +70,7 @@ export function parseGenerators(pluginPath: string): Map<string, any> | null {
 
     if (existsSync(schemaPath)) {
       const schema = JSON.parse(readFileSync(schemaPath, 'utf-8'));
-      generators.set(name, { config, schema });
+      generators.set(name, { config, schema, schemaPath });
     }
   }
 

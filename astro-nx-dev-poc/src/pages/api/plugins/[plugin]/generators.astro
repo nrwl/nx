@@ -1,0 +1,7 @@
+---
+import { getEntry } from 'astro:content';
+const e = await getEntry('plugin-docs', Astro.params.plugin);
+console.log(e, Astro.params.plugin);
+---
+
+generators

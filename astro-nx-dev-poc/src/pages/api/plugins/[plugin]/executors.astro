@@ -1,0 +1,51 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { getCollection, getEntry } from 'astro:content';
+import { render } from 'astro:content';
+export async function getStaticPaths() {
+  const pluginDocs = await getCollection(
+    'plugin-docs',
+    (entry) => entry.data.docType === 'executors'
+  );
+
+  // Group docs by plugin name
+  //   const docsByPlugin = pluginDocs.reduce(
+  //     (acc, doc) => {
+  //       const pluginName = doc.data.pluginName;
+  //       if (!acc[pluginName]) {
+  //         acc[pluginName] = [];
+  //       }
+  //       acc[pluginName].push(doc);
+  //       return acc;
+  //     },
+  //     {} as Record<string, CollectionEntry<'plugin-docs'>[]>
+  //   );
+
+  // Generate paths for each plugin
+  return pluginDocs.map((p) => ({
+    params: { plugin: p.data.pluginName },
+    props: { doc: p },
+  }));
+}
+
+const { doc } = Astro.props;
+const pluginName = doc.data.pluginName;
+const { Content, headings, remarkPluginFrontmatter } = await render(doc);
+console.log(headings, remarkPluginFrontmatter);
+---
+
+<StarlightPage
+  frontmatter={{
+    title: `@nx/${pluginName} - executors`,
+    description: `@nx/${pluginName} plugin executors`,
+  }}
+>
+  <p>executors</p>
+  this should be the content
+  {Content ? <Content /> : <p>no content</p>}
+  <br />
+  body provided:
+  <pre>
+  {doc.body}
+  </pre>
+</StarlightPage>

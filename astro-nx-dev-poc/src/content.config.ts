@@ -1,6 +1,7 @@
 import { defineCollection, z } from 'astro:content';
 import { docsLoader } from '@astrojs/starlight/loaders';
 import { docsSchema } from '@astrojs/starlight/schema';
+import { PluginLoader } from './loaders/plugin-loader';
 
 export const collections = {
   // Default docs collection handled by Starlight
@@ -33,11 +34,7 @@ export const collections = {
 
   // Custom collection for plugin docs
   'plugin-docs': defineCollection({
-    loader: async () => {
-      // TODO: Implement plugin documentation loader
-      const { generateAllPluginDocs } = await import('./loaders/plugin-loader');
-      return await generateAllPluginDocs();
-    },
+    loader: PluginLoader(),
     schema: z.object({
       title: z.string(),
       pluginName: z.string(),
