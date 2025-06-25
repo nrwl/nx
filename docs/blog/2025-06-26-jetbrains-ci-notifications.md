@@ -27,7 +27,7 @@ We just shipped a JetBrains AI Assistant integration for failing CI pipelines! ð
 The constant context switching between your IDE and browser to check CI results is now a thing of the past. Nx Console brings CI failure notifications directly into your JetBrains IDE â€“ with one-click AI-powered fixes included.
 
 Here's what makes this powerful: when a CI failure occurs, you can instantly open JetBrains AI Assistant with full context. The AI understands your entire workspace structure through our MCP integration, analyzes the failure, and suggests fixes you can apply immediately. This eliminates the need to decipher error logs or hunt through stack traces yourself.
-Also check out [Nx Cloud's self-healing CI capabilities](/blog/nx-self-healing-ci) which are in many ways the next step up from this and coming the JetBrains soon.
+Also check out [Nx Cloud's self-healing CI capabilities](/blog/nx-self-healing-ci) which are in many ways the next step up from this and coming to JetBrains soon.
 
 ## How it works
 
