@@ -7,6 +7,7 @@ import { Filters } from './filters';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ALL_TOPICS } from './topics';
+import { sortFirstFivePosts } from './sort-featured-posts';
 import {
   ComputerDesktopIcon,
   BookOpenIcon,
@@ -23,24 +24,6 @@ import {
 export interface BlogContainerProps {
   blogPosts: BlogPostDataEntry[];
   tags: string[];
-}
-
-// first five blog posts should prioritize pinned posts, then show recent posts
-// excluding any posts that have specific slugs we want to deprioritize
-export function sortFirstFivePosts(
-  posts: BlogPostDataEntry[]
-): BlogPostDataEntry[] {
-  // Sort posts: pinned posts first, then by date
-  const sortedPosts = posts.sort((a, b) => {
-    // If one is pinned and the other isn't, prioritize the pinned one
-    if (a.pinned === true && b.pinned !== true) return -1;
-    if (b.pinned === true && a.pinned !== true) return 1;
-
-    // Otherwise, sort by date (newest first)
-    return new Date(b.date).valueOf() - new Date(a.date).valueOf();
-  });
-
-  return sortedPosts.slice(0, 5);
 }
 
 export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
