@@ -1,9 +1,7 @@
 ---
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import { getCollection } from 'astro:content';
-import MarkdownContent from '@astrojs/starlight/components/MarkdownContent.astro';
-import { marked } from 'marked';
-import matter from 'gray-matter';
+import { parseMarkdownToHtml } from '../../../../utils/markdown';
 
 export async function getStaticPaths() {
   const pluginDocs = await getCollection(
@@ -21,11 +19,8 @@ export async function getStaticPaths() {
 const { doc } = Astro.props;
 const pluginName = doc.data.pluginName;
 
-// Parse frontmatter and content separately
-const { content, data } = matter(doc.body);
-
-// Convert markdown to HTML (content without frontmatter)
-const htmlContent = await marked.parse(content);
+// Convert markdown to HTML
+const htmlContent = await parseMarkdownToHtml(doc.body);
 ---
 
 <StarlightPage
