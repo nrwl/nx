@@ -59,3 +59,56 @@ Ensure that the architecture of your Node.js installation matches your hardware.
 Often, the culprit of the mismatch is a faulty installation of your toolchain: Homebrew (MacOS), Node.js or VSCode (if using Nx Console). You should reinstall your toolchain with the correct architecture. Run `nx report` again to validate the installation.
 
 For issues inside VSCode or Nx Console, also refer to the [Nx Console troubleshooting docs](recipes/nx-console/console-troubleshooting)
+
+## Global Installation Issues
+
+### Package Manager Confusion
+
+If you're having trouble updating or uninstalling a global Nx installation, it may be because Nx was installed using a different Node.js installation or package manager than you're currently using.
+
+For example, if `which nx` shows:
+
+```
+/opt/homebrew/bin/nx
+```
+
+This might indicate that:
+
+1. Nx was installed via npm/yarn/pnpm using a Node.js version that was installed via Homebrew
+2. You're now using a different Node.js installation (e.g., via a version manager like nvm, fnm, or volta)
+
+### How to fix
+
+To properly uninstall Nx in this scenario:
+
+1. First, identify where Nx is installed:
+
+   ```shell
+   which nx
+   ```
+
+2. If it shows a Homebrew path (`/opt/homebrew/bin/nx`) but `brew list` doesn't show Nx, then it was likely installed via npm using Homebrew's Node.js:
+
+   ```shell
+   /opt/homebrew/bin/npm uninstall -g nx
+   ```
+
+3. After removing the old installation, reinstall Nx using your current Node.js setup:
+   ```shell
+   npm install -g nx
+   ```
+
+### Alternative Installation Methods
+
+If you continue to experience issues with npm/yarn/pnpm global installations, consider using platform-specific package managers:
+
+- **macOS**: `brew install nx`
+- **Windows**: `choco install nx`
+- **Ubuntu/Debian**:
+  ```shell
+  sudo add-apt-repository ppa:nrwl/nx
+  sudo apt update
+  sudo apt install nx
+  ```
+
+These installation methods can help avoid Node.js version conflicts and permission issues.

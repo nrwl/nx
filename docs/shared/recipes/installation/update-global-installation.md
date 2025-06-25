@@ -75,3 +75,7 @@ pnpm rm --global nx
 {% /tabs %}
 
 Finally, to complete your global installation update, simply reinstall it as described [above](#update-your-global-nx-installation).
+
+## Troubleshooting
+
+If you're experiencing issues with conflicting global installations or if `which nx` shows a path that doesn't match your expected package manager (e.g., showing a Homebrew path when you installed with npm), refer to the [Global Installation Issues](/installation/troubleshoot-installation#global-installation-issues) section in our troubleshooting guide.
