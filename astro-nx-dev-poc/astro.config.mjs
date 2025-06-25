@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import { autoPluginSidebar } from './src/plugins/auto-plugin-sidebar';
 
 import netlify from '@astrojs/netlify';
 
@@ -12,6 +13,7 @@ export default defineConfig({
       tagline:
         'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.',
       favicon: '/favicon.svg',
+      plugins: [autoPluginSidebar()],
       social: [
         { icon: 'github', label: 'GitHub', href: 'https://github.com/nrwl/nx' },
         {
@@ -48,16 +50,7 @@ export default defineConfig({
               label: 'Plugins',
               items: [
                 { label: 'Overview', slug: 'api/plugins' },
-                { label: '@nx/angular', link: '/api/plugins/angular' },
-                { label: '@nx/cypress', link: '/api/plugins/cypress' },
-                { label: '@nx/eslint', link: '/api/plugins/eslint' },
-                { label: '@nx/jest', link: '/api/plugins/jest' },
-                { label: '@nx/next', link: '/api/plugins/next' },
-                { label: '@nx/react', link: '/api/plugins/react' },
-                { label: '@nx/storybook', link: '/api/plugins/storybook' },
-                { label: '@nx/vite', link: '/api/plugins/vite' },
-                { label: '@nx/vue', link: '/api/plugins/vue' },
-                { label: '@nx/webpack', link: '/api/plugins/webpack' },
+                // Plugins will be dynamically added by the autoPluginSidebar plugin
               ],
             },
           ],
