@@ -12,7 +12,7 @@ import {
   Testimonials,
   TrustedBy,
 } from '@nx/nx-dev/ui-common';
-import { gotoAppButton } from '../../lib/components/headerCtaConfigs';
+import { gotoAppButton } from '../../lib/header-cta.configs';
 
 export const metadata: Metadata = {
   title: 'Nx Cloud - Available Plans',

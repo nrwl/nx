@@ -6,7 +6,7 @@ import {
   Hero,
   OssProjects,
 } from '@nx/nx-dev/ui-customers';
-import { contactButton } from '../lib/components/headerCtaConfigs';
+import { contactButton } from '../lib/header-cta.configs';
 
 export function Customers(): JSX.Element {
   const router = useRouter();

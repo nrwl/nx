@@ -72,8 +72,8 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
       variant: 'primary',
       size: 'small',
       target: '_blank',
-      title: 'Try Nx Cloud for free',
-      children: <span>Try Nx Cloud for free</span>,
+      title: 'Get started',
+      children: 'Get started',
     },
   ];
 
@@ -371,14 +371,14 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                       </div>
                       <div className="relative mt-6 flex-1 px-4 sm:px-6">
                         <ButtonLink
-                          href="/nx-cloud"
+                          href="https://cloud.nx.app/get-started"
                           variant="primary"
                           size="small"
                           target="_blank"
                           title="Try Nx Cloud for free"
                           className="w-full"
                         >
-                          Try Nx Cloud for free
+                          Get started
                         </ButtonLink>
 
                         <div className="mt-4 divide-y divide-slate-200 border-b border-slate-200 dark:divide-slate-800 dark:border-slate-800">
