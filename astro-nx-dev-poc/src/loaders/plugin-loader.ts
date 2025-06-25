@@ -1,6 +1,5 @@
 import { existsSync } from 'fs';
-import { z } from 'astro:content';
-import { join, resolve as pathResolve, relative } from 'path';
+import { join, relative } from 'path';
 import { workspaceRoot } from '@nx/devkit';
 import {
   parseGenerators,
@@ -11,7 +10,6 @@ import {
   getPropertyDefault,
 } from './utils/plugin-schema-parser';
 import type { Loader, LoaderContext } from 'astro/loaders';
-import type { AstroIntegrationLogger } from 'astro';
 import { extractHeadings } from '../utils/extract-headings';
 
 // TODO: make this a glob pattern or something so we don't have to manually update
@@ -56,13 +54,7 @@ function generateMarkdown(
   const packageName = `@nx/${pluginName}`;
   const typeLabel = docType.charAt(0).toUpperCase() + docType.slice(1);
 
-  let markdown = `---
-title: "${packageName} ${typeLabel}"
-description: "Complete reference for all ${packageName} ${docType} commands"
-sidebar_label: ${typeLabel}
----
-
-The ${packageName} plugin provides various ${docType} to help you create and configure ${pluginName} projects within your Nx workspace.
+  let markdown = `The ${packageName} plugin provides various ${docType} to help you create and configure ${pluginName} projects within your Nx workspace.
 Below is a complete reference for all available ${docType} and their options.
 
 ## Available ${typeLabel}
@@ -343,10 +335,8 @@ export function PluginLoader(options: any = {}): Loader {
     async load({
       store,
       logger,
-      generateDigest,
-      meta,
-      parseData,
       watcher,
+     renderMarkdown
     }: LoaderContext) {
       const docs = await generateAllPluginDocs(logger, watcher);
       logger.info(`Loaded ${docs.length} plugin documentation entries`);
@@ -354,6 +344,9 @@ export function PluginLoader(options: any = {}): Loader {
       store.clear();
 
       for (const doc of docs) {
+        if(doc.body) {
+          doc.rendered = await renderMarkdown(doc.body);
+        }
         logger.info(`Processing documentation for ${doc.id}`);
         store.set(doc);
       }

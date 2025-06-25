@@ -1,5 +1,6 @@
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
+import type {RenderedContent} from "astro:content";
 
 export interface PluginDocEntry<TData = Record<string, unknown>> {
   /** The ID of the entry. Must be unique per collection. */
@@ -10,8 +11,11 @@ export interface PluginDocEntry<TData = Record<string, unknown>> {
   body?: string;
   /** The file path of the content, if applicable. Relative to the site root. */
   filePath?: string;
+
+  deferredRender?: boolean;
   /** A content digest, to check if the content has changed. */
   digest?: number | string;
+  rendered?: RenderedContent
 }
 
 export function getPropertyType(property: any): string {

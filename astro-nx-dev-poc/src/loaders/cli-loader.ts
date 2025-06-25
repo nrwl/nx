@@ -1,24 +1,13 @@
 import { workspaceRoot } from '@nx/devkit';
-import importFresh from 'import-fresh';
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
-import { register as registerTsConfigPaths } from 'tsconfig-paths';
-import {
-  getCommands,
-  parseCommand,
-  type ParsedCommand,
-} from './utils/nx-command-parser';
+import { join, relative } from 'path';
+import { fork } from 'child_process';
+import type { ParsedCommand } from './utils/nx-command-parser';
+import type { Loader, LoaderContext } from 'astro/loaders';
 
 function generateCLIMarkdown(commands: Record<string, ParsedCommand>): string {
   const commandNames = Object.keys(commands).sort();
 
-  const content = `---
-title: Nx CLI
-description: Complete reference for all Nx CLI commands
----
-
-# Nx CLI
-
+  const content = `
 The Nx command line has various subcommands and options to help you manage your Nx workspace and run tasks efficiently. 
 Below is a complete reference for all available commands and their options.
 You can run nx --help to view all available options. 
@@ -110,95 +99,126 @@ nx <command> --help
   return content;
 }
 
-export async function generateNxCliDocs(): Promise<string> {
-  console.log('🔍 Generating Nx CLI documentation...');
+export interface CliDocEntry {
+  id: string;
+  body: string;
+  rendered?: any;
+  filePath: string;
+  data: {
+    title: string;
+    docType: 'cli';
+    content: string;
+  };
+}
+
+export async function generateNxCliDocs(
+  logger: LoaderContext['logger'],
+  watcher?: LoaderContext['watcher']
+): Promise<CliDocEntry> {
+  logger.info('🔍 Generating Nx CLI documentation...');
 
   try {
-    // Look for nx-commands in the main Nx repository (go up from poc-beta-docs)
-    const nxCommandsPath = join(
+    // Run the CLI parser in a subprocess to avoid ESM/CJS issues
+    const subprocessPath = join(
       workspaceRoot,
-      'packages/nx/src/command-line/nx-commands'
+      'astro-nx-dev-poc/src/loaders/subprocess/cli-subprocess.cjs'
     );
 
-    console.log(`📍 Looking for nx-commands at: ${nxCommandsPath}`);
 
-    // If the nx-commands file doesn't exist, try alternative path
-    if (existsSync(nxCommandsPath)) {
-      console.error('❌ Nx CLI source not found at expected location');
-      throw new Error(`Cannot find nx-commands at ${nxCommandsPath}`);
-    }
+    // Run subprocess and get results
+    const result = await new Promise<{ commands: Record<string, ParsedCommand> }>(
+      (resolve, reject) => {
+        const child = fork(subprocessPath, [], {
+          cwd: workspaceRoot,
+          silent: true,
+        });
 
-    // Register TypeScript paths from the base config in main Nx repo
-    const tsconfigPath = join(workspaceRoot, 'tsconfig.base.json');
-    const config = readJsonSync(tsconfigPath).compilerOptions;
-    registerTsConfigPaths(config);
+        let stdout = '';
+        let stderr = '';
 
-    console.log('📁 Using yargs command object...');
+        child.stdout?.on('data', (data) => {
+          stdout += data.toString();
+        });
 
-    const { commandsObject } = importFresh<any>(nxCommandsPath);
+        child.stderr?.on('data', (data) => {
+          stderr += data.toString();
+          logger.warn(data.toString());
+        });
 
-    // Get all commands from yargs
-    const nxCommands = getCommands(commandsObject);
+        child.on('message', (message: any) => {
+          if (message.type === 'result') {
+            resolve(message.data);
+          } else if (message.type === 'error') {
+            reject(new Error(message.error));
+          }
+        });
 
-    // Commands to exclude from documentation
-    const sharedCommands = ['generate', 'exec'];
-    const hiddenCommands = ['$0', 'conformance', 'conformance:check'];
+        child.on('error', (error) => {
+          reject(error);
+        });
 
-    const commands: Record<string, ParsedCommand> = {};
-
-    // Parse each command
-    for (const [name, commandConfig] of Object.entries(nxCommands)) {
-      if (sharedCommands.includes(name) || hiddenCommands.includes(name)) {
-        continue;
+        child.on('exit', (code) => {
+          if (code !== 0) {
+            reject(
+              new Error(
+                `CLI subprocess exited with code ${code}\nstderr: ${stderr}`
+              )
+            );
+          }
+        });
       }
+    );
 
-      // Check if command has description
-      if (
-        !(
-          (commandConfig as any).description ||
-          (commandConfig as any).describe ||
-          (commandConfig as any).desc
-        )
-      ) {
-        continue;
-      }
+    const markdown = generateCLIMarkdown(result.commands);
 
-      try {
-        const parsedCommand = await parseCommand(
-          name,
-          commandConfig,
-          importFresh
-        );
-        commands[name] = parsedCommand;
-      } catch (error: any) {
-        console.warn(`⚠️ Could not parse command ${name}:`, error.message);
-      }
-    }
-
-    const markdown = generateCLIMarkdown(commands);
-
-    delete process.env.NX_GENERATE_DOCS_PROCESS;
-
-    console.log(
+    logger.info(
       `✅ Generated CLI documentation with ${
-        Object.keys(commands).length
+        Object.keys(result.commands).length
       } commands`
     );
 
-    return markdown;
+    return {
+      id: 'api/nx-cli',
+      body: markdown,
+      filePath: relative(
+        join(workspaceRoot, 'astro-nx-dev-poc'),
+        join(workspaceRoot, 'packages/nx/src/command-line/nx-commands.ts')
+      ),
+      data: {
+        title: 'Nx CLI Reference',
+        docType: 'cli',
+        content: markdown,
+      },
+    };
   } catch (error: any) {
-    console.trace('errr');
-    console.error('❌ Failed to generate CLI docs:', error.message);
+    logger.error('❌ Failed to generate CLI docs:');
+    logger.error(error.message);
     throw error;
   }
 }
 
-function readJsonSync(filePath: string): any {
-  try {
-    const content = readFileSync(filePath, 'utf-8');
-    return JSON.parse(content);
-  } catch (error) {
-    console.error(`Error reading JSON file at ${filePath}:`, error);
-    throw error;
-  }
+export function CliLoader(options: any = {}): Loader {
+  return {
+    name: 'nx-cli-loader',
+    async load({
+      store,
+      logger,
+      watcher,
+      renderMarkdown,
+    }: LoaderContext) {
+      const doc = await generateNxCliDocs(logger, watcher);
+      logger.info('Loaded CLI documentation');
+
+      store.clear();
+
+      if (doc.body) {
+        doc.rendered = await renderMarkdown(doc.body);
+      }
+      
+      logger.info(`Processing CLI documentation`);
+      store.set(doc);
+
+      logger.info('Generated CLI documentation');
+    },
+  };
 }

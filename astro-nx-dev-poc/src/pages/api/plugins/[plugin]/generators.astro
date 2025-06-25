@@ -1,7 +1,6 @@
 ---
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
-import { getCollection } from 'astro:content';
-import { parseMarkdownToHtml } from '../../../../utils/markdown';
+import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
   const pluginDocs = await getCollection(
@@ -22,8 +21,7 @@ const pluginName = doc.data.pluginName;
 if (!doc.body) {
   throw new Error(`No content found for plugin: ${pluginName}`);
 }
-// Convert markdown to HTML
-const htmlContent = await parseMarkdownToHtml(doc.body);
+const {Content , headings} = await render(doc)
 ---
 
 <StarlightPage
@@ -31,7 +29,7 @@ const htmlContent = await parseMarkdownToHtml(doc.body);
     title: `@nx/${pluginName} - generators`,
     description: `@nx/${pluginName} plugin generators`,
   }}
-  headings={doc.data.headings || []}
+  headings={headings || []}
 >
-  <Fragment set:html={htmlContent} />
+    <Content />
 </StarlightPage>
