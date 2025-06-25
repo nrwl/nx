@@ -10,6 +10,7 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/netlify": "^6.4.0",
     "@astrojs/starlight": "^0.34.4",
     "@nx/devkit": "^21.1.0",
     "astro": "^5.6.1",
