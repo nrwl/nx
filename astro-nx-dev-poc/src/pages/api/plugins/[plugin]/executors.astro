@@ -19,6 +19,10 @@ export async function getStaticPaths() {
 const { doc } = Astro.props;
 const pluginName = doc.data.pluginName;
 
+if (!doc.body) {
+  throw new Error(`No content found for plugin: ${pluginName}`);
+}
+
 // Convert markdown to HTML
 const htmlContent = await parseMarkdownToHtml(doc.body);
 ---

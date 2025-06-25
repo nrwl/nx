@@ -222,7 +222,8 @@ nx run project:${docType} --help
 }
 
 export async function generateAllPluginDocs(
-  logger: AstroIntegrationLogger
+  logger: LoaderContext['logger'],
+  watcher: LoaderContext['watcher']
 ): Promise<PluginDocEntry[]> {
   logger.info('Generating plugin documentation...');
   const entries: PluginDocEntry[] = [];
@@ -237,6 +238,7 @@ export async function generateAllPluginDocs(
       skipCount++;
       continue;
     }
+    watcher?.add(pluginPath);
 
     // Extract plugin name from path
     const pluginName = relativePath.split('/').pop() || '';
@@ -337,8 +339,9 @@ export function PluginLoader(options: any = {}): Loader {
       generateDigest,
       meta,
       parseData,
+      watcher,
     }: LoaderContext) {
-      const docs = await generateAllPluginDocs(logger);
+      const docs = await generateAllPluginDocs(logger, watcher);
       logger.info(`Loaded ${docs.length} plugin documentation entries`);
 
       store.clear();
