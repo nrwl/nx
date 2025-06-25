@@ -48,6 +48,8 @@ sudo apt install nx
 {% /tab %}
 {% /tabs %}
 
+**Having installation issues?** If you encounter problems with global installations, see our [troubleshooting guide](/installation/troubleshoot-installation#global-installation-issues).
+
 {% /step %}
 
 {% step title="Set Up Your Editor" %}

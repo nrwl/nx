@@ -86,6 +86,10 @@ Try one of these tutorials for a full walkthrough of what to do after you instal
 - [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
 - [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
 
+## Troubleshooting
+
+If you encounter issues with global Nx installations, such as permission errors or conflicting installations from different package managers, refer to our [troubleshooting guide](/installation/troubleshoot-installation#global-installation-issues).
+
 ## More Documentation
 
 - [Add Nx to an Existing Repository](/recipes/adopting-nx)

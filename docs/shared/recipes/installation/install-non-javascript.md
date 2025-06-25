@@ -32,6 +32,8 @@ npm install --global nx
 {% /tab %}
 {% /tabs %}
 
+**Note:** If you encounter issues with global installations, such as permission errors or conflicting installations from different package managers, refer to our [troubleshooting guide](/installation/troubleshoot-installation#global-installation-issues).
+
 ## Usage
 
 You can install Nx in the `.nx/installation` directory of your repository by running `nx init` in a directory without a `package.json` file.

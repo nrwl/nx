@@ -28,7 +28,7 @@ Then you can add Nx to it by using:
 nx init
 ```
 
-_(Note, make sure you have [Nx installed globally](/getting-started/installation) or use `npx` if you're in a JavaScript environment)_
+_(Note, make sure you have [Nx installed globally](/getting-started/installation) or use `npx` if you're in a JavaScript environment. If you encounter installation issues, see our [troubleshooting guide](/installation/troubleshoot-installation#global-installation-issues).)_
 
 Nx will detect the underlying workspace configuration, ask you a couple of questions and install itself into the workspace. As you keep going, you can incrementally add functionality, like:
 

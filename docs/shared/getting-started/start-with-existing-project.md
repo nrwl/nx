@@ -15,7 +15,7 @@ Getting started is remarkably simple. You can add Nx to any existing project wit
 nx init
 ```
 
-_(Note, make sure you have [Nx installed globally](/getting-started/installation) or use `npx` if you're in a JavaScript environment)_
+_(Note, make sure you have [Nx installed globally](/getting-started/installation) or use `npx` if you're in a JavaScript environment. If you encounter installation issues, see our [troubleshooting guide](/installation/troubleshoot-installation#global-installation-issues).)_
 
 This command automatically detects your underlying workspace structure, whether it's a monorepo, a single project, or something in between. Nx will then ask you a series of targeted questions about your setup and preferences, using your answers to auto-configure itself seamlessly into your existing workspace. This intelligent setup process ensures you get the benefits of Nx with minimal configuration changes or disruption to your current development workflow.
 
