@@ -344,6 +344,97 @@ describe('Multiple Release Groups', () => {
     });
   });
 
+  describe('Two related groups, one independent one fixed, just JS', () => {
+    it('should correctly version projects using mocked conventional commits', async () => {
+      const {
+        nxReleaseConfig,
+        projectGraph,
+        releaseGroups,
+        releaseGroupToFilteredProjects,
+        filters,
+      } = await createNxReleaseConfigAndPopulateWorkspace(
+        tree,
+        `
+            group1 ({ "projectsRelationship": "independent" }):
+              - pkg-a@1.0.0 [js]
+                -> depends on pkg-c
+              - pkg-b@1.0.0 [js]
+            group2 ({ "projectsRelationship": "fixed" }):
+              - pkg-c@2.0.0 [js]
+              - pkg-d@2.0.0 [js]
+          `,
+        {
+          version: {
+            conventionalCommits: true,
+          },
+        },
+        mockResolveCurrentVersion
+      );
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        (_, __, ___, ____, { name: projectName }) => {
+          // pkg-c has a bump, which should cause pkg-d to bump because they are in a fixed group
+          // and pkg-a depends on pkg-c so should also bump
+          if (projectName === 'pkg-c') return 'patch';
+          return 'none';
+        }
+      );
+
+      const processor = new ReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        releaseGroups,
+        releaseGroupToFilteredProjects,
+        {
+          dryRun: false,
+          verbose: false,
+          firstRelease: false,
+          preid: undefined,
+          filters,
+        }
+      );
+
+      await processor.init();
+      await processor.processGroups();
+
+      // Called for each project
+      expect(mockResolveVersionActionsForProject).toHaveBeenCalledTimes(4);
+
+      expect(tree.read('pkg-a/package.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "name": "pkg-a",
+          "version": "1.0.1",
+          "dependencies": {
+            "pkg-c": "2.0.1"
+          }
+        }
+        "
+      `);
+      expect(tree.read('pkg-b/package.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "name": "pkg-b",
+          "version": "1.0.0"
+        }
+        "
+      `);
+      expect(tree.read('pkg-c/package.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "name": "pkg-c",
+          "version": "2.0.1"
+        }
+        "
+      `);
+      expect(tree.read('pkg-d/package.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "name": "pkg-d",
+          "version": "2.0.1"
+        }
+        "
+      `);
+    });
+  });
+
   describe('Two related groups, both fixed relationship, just JS', () => {
     it('should correctly version projects across group boundaries', async () => {
       const {
