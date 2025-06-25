@@ -315,6 +315,7 @@
     "ts-jest": "29.1.0",
     "ts-loader": "^9.3.1",
     "ts-node": "10.9.1",
+    "ts-checker-rspack-plugin": "^1.1.1",
     "tsconfig-paths": "^4.1.2",
     "tsconfig-paths-webpack-plugin": "4.0.0",
     "typedoc": "0.25.12",
