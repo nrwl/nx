@@ -61,8 +61,6 @@ description: "Complete reference for all ${packageName} ${docType} commands"
 sidebar_label: ${typeLabel}
 ---
 
-# ${packageName} ${typeLabel}
-
 The ${packageName} plugin provides various ${docType} to help you create and configure ${pluginName} projects within your Nx workspace.
 Below is a complete reference for all available ${docType} and their options.
 
@@ -260,6 +258,7 @@ export async function generateAllPluginDocs(
             pluginName,
             packageName: `@nx/${pluginName}`,
             docType: 'generators',
+            content: markdown,
           },
         });
       }
@@ -280,6 +279,7 @@ export async function generateAllPluginDocs(
             pluginName,
             packageName: `@nx/${pluginName}`,
             docType: 'executors',
+            content: markdown,
           },
         });
       }
@@ -300,6 +300,7 @@ export async function generateAllPluginDocs(
             pluginName,
             packageName: `@nx/${pluginName}`,
             docType: 'migrations',
+            content: markdown,
           },
         });
       }
