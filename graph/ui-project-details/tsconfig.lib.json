@@ -4,11 +4,7 @@
     "outDir": "../../dist/out-tsc/graph/ui-project-details",
     "tsBuildInfoFile": "../../dist/out-tsc/graph/ui-project-details/tsconfig.lib.tsbuildinfo",
     "declaration": true,
-    "types": [
-      "node",
-      "@nx/react/typings/cssmodule.d.ts",
-      "@nx/react/typings/image.d.ts"
-    ],
+    "types": ["node"],
     "lib": ["ES2022", "DOM"],
     "composite": true,
     "noEmit": false
@@ -29,15 +25,16 @@
     "**/*.stories.tsx"
   ],
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
+  "files": [
+    "../../packages/react/typings/cssmodule.d.ts",
+    "../../packages/react/typings/image.d.ts"
+  ],
   "references": [
     {
       "path": "../../nx-dev/ui-fence/tsconfig.lib.json"
     },
     {
       "path": "../ui-code-block/tsconfig.lib.json"
-    },
-    {
-      "path": "../../packages/devkit/tsconfig.lib.json"
     }
   ]
 }

@@ -200,7 +200,9 @@
     "@monodon/rust",
     {
       "plugin": "@nx/js/typescript",
+      "include": ["packages/**/*", "graph/**/*"],
       "options": {
+        "typecheck": true,
         "build": {
           "targetName": "build-base-ts"
         }
