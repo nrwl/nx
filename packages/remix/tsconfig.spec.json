@@ -4,7 +4,8 @@
     "outDir": "../../dist/packages/remix/spec",
     "module": "commonjs",
     "types": ["jest", "node"],
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "composite": true
   },
   "include": [
     "**/*.test.ts",
@@ -16,9 +17,13 @@
     "**/*.test.jsx",
     "**/*.spec.jsx",
     "**/*.d.ts",
-    "jest.config.ts"
+    "jest.config.ts",
+    "*.json"
   ],
   "references": [
+    {
+      "path": "../nx"
+    },
     {
       "path": "./tsconfig.lib.json"
     }

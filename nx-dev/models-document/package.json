@@ -2,6 +2,7 @@
   "name": "@nx/nx-dev-models-document",
   "version": "0.0.1",
   "type": "commonjs",
+  "private": true,
   "main": "./src/index.ts",
   "types": "./src/index.ts"
 }

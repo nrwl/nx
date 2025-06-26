@@ -31,14 +31,18 @@
   "dependencies": {
     "picomatch": "^4.0.2",
     "tslib": "^2.3.0",
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
-    "@nx/eslint": "file:../eslint",
-    "@nx/vite": "file:../vite",
-    "@nx/web": "file:../web"
+    "@nx/devkit": "workspace:*",
+    "nx": "workspace:*",
+    "@nx/js": "workspace:*",
+    "@nx/eslint": "workspace:*",
+    "@nx/vite": "workspace:*",
+    "@nx/web": "workspace:*"
   },
   "publishConfig": {
     "access": "public"
   },
-  "peerDependencies": {}
+  "peerDependencies": {},
+  "devDependencies": {
+    "jest": "^29.4.1"
+  }
 }

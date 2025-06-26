@@ -16,6 +16,9 @@
       "path": "../models-document"
     },
     {
+      "path": "../../packages/devkit"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ]

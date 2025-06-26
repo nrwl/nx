@@ -4,7 +4,8 @@
     "outDir": "../../dist/packages/cypress/spec",
     "module": "commonjs",
     "types": ["jest", "node"],
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "composite": true
   },
   "include": [
     "**/*.spec.ts",
@@ -16,6 +17,15 @@
     "**/*.spec.jsx",
     "**/*.test.jsx",
     "**/*.d.ts",
-    "jest.config.ts"
+    "jest.config.ts",
+    "*.json"
+  ],
+  "references": [
+    {
+      "path": "../nx"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    }
   ]
 }

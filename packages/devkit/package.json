@@ -36,7 +36,10 @@
     "yargs-parser": "21.1.1",
     "minimatch": "9.0.3",
     "enquirer": "~2.3.6",
-    "nx": "workspace:"
+    "nx": "workspace:*"
+  },
+  "devDependencies": {
+    "jest": "^29.4.1"
   },
   "publishConfig": {
     "access": "public"

@@ -24,10 +24,11 @@
   "generators": "./generators.json",
   "executors": "./executors.json",
   "dependencies": {
-    "@nx/js": "file:../js",
-    "@nx/devkit": "workspace:",
-    "@nx/web": "file:../web",
-    "@nx/module-federation": "file:../module-federation",
+    "@nx/js": "workspace:*",
+    "@nx/devkit": "workspace:*",
+    "nx": "workspace:*",
+    "@nx/web": "workspace:*",
+    "@nx/module-federation": "workspace:*",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "@rspack/core": "^1.3.8",
     "@rspack/dev-server": "^1.1.1",
@@ -65,5 +66,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "jest": "^29.4.1"
   }
 }

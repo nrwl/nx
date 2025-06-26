@@ -18,6 +18,9 @@
   "include": ["**/*.ts", "**/*.json"],
   "references": [
     {
+      "path": "../nx/tsconfig.lib.json"
+    },
+    {
       "path": "../js/tsconfig.lib.json"
     },
     {

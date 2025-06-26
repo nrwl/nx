@@ -31,11 +31,12 @@
   "dependencies": {
     "tslib": "^2.3.0",
     "@nuxt/kit": "^3.10.0",
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
-    "@nx/eslint": "file:../eslint",
-    "@nx/vue": "file:../vue",
-    "@nx/vite": "file:../vite",
+    "@nx/devkit": "workspace:*",
+    "nx": "workspace:*",
+    "@nx/js": "workspace:*",
+    "@nx/eslint": "workspace:*",
+    "@nx/vue": "workspace:*",
+    "@nx/vite": "workspace:*",
     "@phenomnomnominal/tsquery": "~5.0.1"
   },
   "peerDependencies": {
@@ -43,5 +44,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "jest": "^29.4.1"
   }
 }

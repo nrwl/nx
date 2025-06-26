@@ -25,9 +25,10 @@
   "executors": "./executors.json",
   "dependencies": {
     "tslib": "^2.3.0",
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
-    "@nx/web": "file:../web",
+    "@nx/devkit": "workspace:*",
+    "nx": "workspace:*",
+    "@nx/js": "workspace:*",
+    "@nx/web": "workspace:*",
     "picocolors": "^1.1.0",
     "webpack": "^5.88.0",
     "@rspack/core": "^1.3.8",
@@ -42,5 +43,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "jest": "^29.4.1"
   }
 }
