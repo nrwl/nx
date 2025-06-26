@@ -1,5 +1,10 @@
 # Enterprise Release Notes
 
+### 2025.06.2
+
+- Fix: Terminal outputs not loading in the browser in restricted environments
+  - Requires an update to the latest current nx-cloud Helm chart version 0.16.3
+
 ### 2025.06.1
 
 - Fix: GitHub connection issue on nx-api startup when Nx Agents are active
