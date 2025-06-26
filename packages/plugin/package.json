@@ -34,6 +34,9 @@
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*"
   },
+  "devDependencies": {
+    "jest": "^29.4.1"
+  },
   "publishConfig": {
     "access": "public"
   }

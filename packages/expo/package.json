@@ -44,6 +44,9 @@
     "tsconfig-paths": "^4.1.2",
     "tslib": "^2.3.0"
   },
+  "devDependencies": {
+    "jest": "^29.4.1"
+  },
   "executors": "./executors.json",
   "ng-update": {
     "requirements": {},

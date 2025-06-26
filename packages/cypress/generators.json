@@ -3,7 +3,7 @@
   "version": "0.1",
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init#cypressInitGeneratorInternal",
+      "factory": "./src/generators/init/init",
       "schema": "./src/generators/init/schema.json",
       "description": "Initialize the `@nx/cypress` plugin.",
       "aliases": ["ng-add"],
@@ -11,19 +11,19 @@
     },
     "configuration": {
       "aliases": ["cypress-e2e-configuration", "e2e", "e2e-config"],
-      "factory": "./src/generators/configuration/configuration#configurationGeneratorInternal",
+      "factory": "./src/generators/configuration/configuration",
       "schema": "./src/generators/configuration/schema.json",
       "description": "Add a Cypress E2E Configuration to an existing project."
     },
     "component-configuration": {
       "aliases": ["cypress-component-configuration"],
-      "factory": "./src/generators/component-configuration/component-configuration#componentConfigurationGeneratorInternal",
+      "factory": "./src/generators/component-configuration/component-configuration",
       "schema": "./src/generators/component-configuration/schema.json",
       "description": "Set up Cypress Component Test for a project",
       "hidden": true
     },
     "migrate-to-cypress-11": {
-      "factory": "./src/generators/migrate-to-cypress-11/migrate-to-cypress-11#migrateCypressProject",
+      "factory": "./src/generators/migrate-to-cypress-11/migrate-to-cypress-11",
       "schema": "./src/generators/migrate-to-cypress-11/schema.json",
       "description": "Migrate existing Cypress e2e projects to Cypress v11"
     },

@@ -2,36 +2,36 @@
   "$schema": "https://json-schema.org/schema",
   "$id": "CopyAssets",
   "title": "Copy Assets Executor",
-  "description": "Copies assets to the output directory",
+  "description": "Copies assets to the output directory.",
   "type": "object",
   "properties": {
     "assets": {
       "type": "array",
-      "description": "List of asset patterns/configurations to copy",
+      "description": "List of asset patterns/configurations to copy.",
       "items": {
         "oneOf": [
           {
             "type": "string",
-            "description": "Path to asset file or directory"
+            "description": "Path to asset file or directory."
           },
           {
             "type": "object",
             "properties": {
               "input": {
                 "type": "string",
-                "description": "Source directory for the assets"
+                "description": "Source directory for the assets."
               },
               "glob": {
                 "type": "string",
-                "description": "Glob pattern to match files"
+                "description": "Glob pattern to match files."
               },
               "output": {
                 "type": "string",
-                "description": "Output directory relative to outputPath"
+                "description": "Output directory relative to outputPath."
               },
               "ignore": {
                 "type": "array",
-                "description": "Glob patterns to ignore",
+                "description": "Glob patterns to ignore.",
                 "items": {
                   "type": "string"
                 }
@@ -45,15 +45,15 @@
     },
     "outputPath": {
       "type": "string",
-      "description": "The output path for copied assets (relative to project root). If not provided, will be derived from tsConfig"
+      "description": "The output path for copied assets (relative to project root). If not provided, will be derived from tsConfig."
     },
     "tsConfig": {
       "type": "string",
-      "description": "Path to the TypeScript configuration file. Used to derive outputPath from compilerOptions.outDir if outputPath is not specified"
+      "description": "Path to the TypeScript configuration file. Used to derive outputPath from compilerOptions.outDir if outputPath is not specified."
     },
     "watch": {
       "type": "boolean",
-      "description": "Enable watch mode to monitor asset changes",
+      "description": "Enable watch mode to monitor asset changes.",
       "default": false
     }
   },

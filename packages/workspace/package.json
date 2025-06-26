@@ -47,6 +47,9 @@
     "tslib": "^2.3.0",
     "yargs-parser": "21.1.1"
   },
+  "devDependencies": {
+    "jest": "^29.4.1"
+  },
   "publishConfig": {
     "access": "public"
   }

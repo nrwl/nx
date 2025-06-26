@@ -38,6 +38,9 @@
     "express": "^4.21.2",
     "http-proxy-middleware": "^3.0.3"
   },
+  "devDependencies": {
+    "jest": "^29.4.1"
+  },
   "nx-migrations": {
     "migrations": "./migrations.json"
   },

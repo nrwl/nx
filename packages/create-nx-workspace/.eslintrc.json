@@ -1,5 +1,5 @@
 {
-  "extends": "../../.eslintrc",
+  "extends": "../../.eslintrc.json",
   "rules": {
     "no-restricted-imports": [
       "error",
@@ -11,7 +11,7 @@
       "@nx/devkit"
     ]
   },
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": ["!**/*", "node_modules"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
@@ -32,7 +32,8 @@
         "@nx/dependency-checks": [
           "error",
           {
-            "buildTargets": ["build-base"]
+            "buildTargets": ["build-base"],
+            "ignoredDependencies": ["tslib"]
           }
         ]
       }

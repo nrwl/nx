@@ -1,7 +1,7 @@
 {
-  "extends": "../../.eslintrc",
+  "extends": "../../.eslintrc.json",
   "rules": {},
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": ["!**/*", "node_modules"],
   "overrides": [
     {
       "files": [
@@ -23,7 +23,7 @@
           "error",
           {
             "buildTargets": ["build-base"],
-            "ignoredDependencies": ["nx", "typescript", "detox"]
+            "ignoredDependencies": ["nx", "tslib", "typescript", "detox"]
           }
         ]
       }

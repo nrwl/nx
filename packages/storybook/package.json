@@ -32,6 +32,9 @@
     "requirements": {},
     "migrations": "./migrations.json"
   },
+  "devDependencies": {
+    "jest": "^29.4.1"
+  },
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@phenomnomnominal/tsquery": "~5.0.1",

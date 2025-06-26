@@ -59,7 +59,7 @@ export function ShowOptionsHelp({
       null,
       2
     );
-  }, [helpExampleOptions, helpExampleArgs]);
+  }, [helpExampleOptions, helpExampleArgs, targetName]);
 
   let runHelpActionElement: null | ReactNode;
   if (environment === 'docs') {
@@ -125,6 +125,7 @@ export function ShowOptionsHelp({
           <a
             className="text-blue-500 hover:underline"
             target="_blank"
+            rel="noopener noreferrer"
             href="https://nx.dev/recipes/running-tasks/pass-args-to-commands#pass-args-to-commands"
           >
             passing them

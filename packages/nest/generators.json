@@ -4,7 +4,7 @@
   "extends": ["@nx/workspace"],
   "generators": {
     "application": {
-      "factory": "./src/generators/application/application#applicationGeneratorInternal",
+      "factory": "./src/generators/application/application",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
@@ -18,7 +18,7 @@
       "hidden": true
     },
     "library": {
-      "factory": "./src/generators/library/library#libraryGeneratorInternal",
+      "factory": "./src/generators/library/library",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",

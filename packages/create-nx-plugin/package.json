@@ -35,6 +35,9 @@
     "tslib": "^2.3.0",
     "yargs": "^17.6.2"
   },
+  "devDependencies": {
+    "jest": "^29.4.1"
+  },
   "publishConfig": {
     "access": "public"
   }

@@ -63,6 +63,9 @@
     "./plugin": "./plugin.js",
     "./preset": "./src/utils/preset.js"
   },
+  "devDependencies": {
+    "jest": "^29.4.1"
+  },
   "nx-migrations": {
     "migrations": "./migrations.json"
   }
