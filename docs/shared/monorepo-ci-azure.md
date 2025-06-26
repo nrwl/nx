@@ -63,7 +63,11 @@ jobs:
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - script: yarn nx-cloud record -- echo Hello World
+      # This requires connecting your workspace to Nx Cloud. Run "nx connect" to get started w/ Nx Cloud
+      # - script: yarn nx-cloud record -- nx format:check
+
+      # Without Nx Cloud, run format:check directly
+      - script: yarn nx-cloud record -- nx format:check
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --targets lint test build
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --parallel 1 e2e-ci
 ```
