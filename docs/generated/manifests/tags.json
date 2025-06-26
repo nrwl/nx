@@ -856,10 +856,10 @@
   ],
   "self-hosted-caching": [
     {
-      "description": "Host the remote cache without using Nx Cloud",
+      "description": "Different options of hosting remote cache",
       "file": "shared/recipes/running-tasks/self-hosted-caching",
       "id": "self-hosted-caching",
-      "name": "Self-Host the Remote Cache",
+      "name": "Remote Cache",
       "path": "/recipes/running-tasks/self-hosted-caching"
     }
   ],
