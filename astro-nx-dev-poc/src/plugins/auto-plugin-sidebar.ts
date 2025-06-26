@@ -83,6 +83,7 @@ export function autoPluginSidebar(): StarlightPlugin {
                     pluginItems.push({
                       label: packageName,
                       items: subItems,
+                      collapsed: true,
                     });
                   } else {
                     // If no sub-items, link directly to the plugin overview
@@ -127,6 +128,7 @@ export function autoPluginSidebar(): StarlightPlugin {
                 // Replace the existing plugins section with the dynamic one
                 apiRefSection.items[pluginsIndex] = {
                   label: 'Plugins',
+                  collapsed: true,
                   items: [
                     { label: 'Overview', slug: 'api/plugins' },
                     ...pluginItems,
