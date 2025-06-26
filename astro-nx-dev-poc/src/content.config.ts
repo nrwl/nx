@@ -18,11 +18,15 @@ export const collections = {
       title: z.string(),
       docType: z.literal('cli'),
       content: z.string(),
-      headings: z.array(z.object({
-        depth: z.number(),
-        slug: z.string(),
-        text: z.string(),
-      })).optional(),
+      headings: z
+        .array(
+          z.object({
+            depth: z.number(),
+            slug: z.string(),
+            text: z.string(),
+          })
+        )
+        .optional(),
     }),
   }),
 
@@ -35,11 +39,15 @@ export const collections = {
       packageName: z.string(),
       docType: z.enum(['generators', 'executors', 'migrations']),
       content: z.string(),
-      headings: z.array(z.object({
-        depth: z.number(),
-        slug: z.string(),
-        text: z.string(),
-      })).optional(),
+      headings: z
+        .array(
+          z.object({
+            depth: z.number(),
+            slug: z.string(),
+            text: z.string(),
+          })
+        )
+        .optional(),
     }),
   }),
 };

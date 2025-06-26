@@ -227,7 +227,7 @@ export async function generateAllPluginDocs(
     const pluginPath = join(workspaceRoot, 'packages', relativePath);
 
     if (!existsSync(pluginPath)) {
-      console.log(`⚠️  Skipping ${relativePath} - path does not exist`);
+      logger.warn(`⚠️  Skipping ${relativePath} - path does not exist`);
       skipCount++;
       continue;
     }
@@ -332,19 +332,14 @@ export async function generateAllPluginDocs(
 export function PluginLoader(options: any = {}): Loader {
   return {
     name: 'nx-plugin-loader',
-    async load({
-      store,
-      logger,
-      watcher,
-     renderMarkdown
-    }: LoaderContext) {
+    async load({ store, logger, watcher, renderMarkdown }: LoaderContext) {
       const docs = await generateAllPluginDocs(logger, watcher);
       logger.info(`Loaded ${docs.length} plugin documentation entries`);
 
       store.clear();
 
       for (const doc of docs) {
-        if(doc.body) {
+        if (doc.body) {
           doc.rendered = await renderMarkdown(doc.body);
         }
         logger.info(`Processing documentation for ${doc.id}`);

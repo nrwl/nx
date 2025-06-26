@@ -8,7 +8,7 @@ export interface Heading {
 export function createSlug(text: string | any): string {
   // Ensure text is a string
   const textStr = typeof text === 'string' ? text : String(text);
-  
+
   return textStr
     .toLowerCase()
     .replace(/<[^>]*>/g, '') // Remove HTML tags
@@ -23,17 +23,17 @@ export function createSlug(text: string | any): string {
 export function extractHeadings(markdown: string): Heading[] {
   const headings: Heading[] = [];
   const lines = markdown.split('\n');
-  
+
   for (const line of lines) {
     // Match markdown headings (##, ###, etc.)
     const match = line.match(/^(#{2,6})\s+(.+)$/);
     if (match) {
       const depth = match[1].length;
       const text = match[2].trim();
-      
+
       // Create slug using the shared function
       const slug = createSlug(text);
-      
+
       headings.push({
         depth,
         slug,
@@ -41,6 +41,6 @@ export function extractHeadings(markdown: string): Heading[] {
       });
     }
   }
-  
+
   return headings;
 }

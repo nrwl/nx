@@ -1,14 +1,3 @@
-import type { SidebarItem } from '@astrojs/starlight/types';
-
-export interface SidebarGroup {
-  id: string;
-  label: string;
-  icon?: string;
-  urlPattern: RegExp;
-  priority?: number;
-  items: SidebarItem[];
-}
-
 export const sidebarGroups: SidebarGroup[] = [
   {
     id: 'getting-started',
@@ -57,19 +46,6 @@ export const sidebarGroups: SidebarGroup[] = [
       {
         label: 'Reference',
         autogenerate: { directory: 'reference' },
-      },
-    ],
-  },
-  {
-    id: 'plugins',
-    label: 'Plugins',
-    icon: '🔌',
-    urlPattern: /^\/plugins\//,
-    priority: 4,
-    items: [
-      {
-        label: 'Plugins',
-        autogenerate: { directory: 'plugins' },
       },
     ],
   },

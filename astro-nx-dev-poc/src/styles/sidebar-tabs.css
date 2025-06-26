@@ -1,6 +1,6 @@
-/* Custom styles for tabbed sidebar */
+/* Sidebar adjustments for tab-based navigation in header */
 :root {
-  --sl-sidebar-tab-height: 3rem;
+  --sl-sidebar-tab-height: 0; /* No longer needed */
 }
 
 /* Ensure sidebar takes full height */
@@ -8,21 +8,7 @@ starlight-sidebar {
   height: 100%;
 }
 
-starlight-sidebar > .tabbed-sidebar {
-  height: 100%;
-}
-
-/* Style the tab content area */
-.sidebar-content .sl-sidebar {
-  padding-top: 0;
-}
-
-/* Ensure mobile menu works with tabs */
-@media (max-width: 50rem) {
-  .sidebar-tabs {
-    position: sticky;
-    top: 0;
-    background: var(--sl-color-bg-sidebar);
-    z-index: 10;
-  }
+/* Sidebar content adjustments */
+.sl-sidebar {
+  padding-top: 1rem;
 }

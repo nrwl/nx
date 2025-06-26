@@ -1,4 +1,3 @@
-
 const { join, resolve: pathResolve } = require('path');
 const { existsSync, readFileSync } = require('fs');
 const importFresh = require('import-fresh');
@@ -13,8 +12,8 @@ require('ts-node').register({
   project: join(workspaceRoot, 'tsconfig.base.json'),
   transpileOnly: true,
   compilerOptions: {
-    module: 'commonjs'
-  }
+    module: 'commonjs',
+  },
 });
 
 // Register TypeScript paths from the base config in main Nx repo
@@ -52,9 +51,7 @@ async function parseCommand(name, command) {
 
   const yargs = importFresh('yargs');
   // Get options from yargs builder
-  const builder = await command.builder(
-    yargs().getInternalMethods().reset()
-  );
+  const builder = await command.builder(yargs().getInternalMethods().reset());
 
   const builderDescriptions = builder
     .getInternalMethods()

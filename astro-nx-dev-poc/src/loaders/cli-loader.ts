@@ -124,50 +124,49 @@ export async function generateNxCliDocs(
       'astro-nx-dev-poc/src/loaders/subprocess/cli-subprocess.cjs'
     );
 
-
     // Run subprocess and get results
-    const result = await new Promise<{ commands: Record<string, ParsedCommand> }>(
-      (resolve, reject) => {
-        const child = fork(subprocessPath, [], {
-          cwd: workspaceRoot,
-          silent: true,
-        });
+    const result = await new Promise<{
+      commands: Record<string, ParsedCommand>;
+    }>((resolve, reject) => {
+      const child = fork(subprocessPath, [], {
+        cwd: workspaceRoot,
+        silent: true,
+      });
 
-        let stdout = '';
-        let stderr = '';
+      let stdout = '';
+      let stderr = '';
 
-        child.stdout?.on('data', (data) => {
-          stdout += data.toString();
-        });
+      child.stdout?.on('data', (data) => {
+        stdout += data.toString();
+      });
 
-        child.stderr?.on('data', (data) => {
-          stderr += data.toString();
-          logger.warn(data.toString());
-        });
+      child.stderr?.on('data', (data) => {
+        stderr += data.toString();
+        logger.warn(data.toString());
+      });
 
-        child.on('message', (message: any) => {
-          if (message.type === 'result') {
-            resolve(message.data);
-          } else if (message.type === 'error') {
-            reject(new Error(message.error));
-          }
-        });
+      child.on('message', (message: any) => {
+        if (message.type === 'result') {
+          resolve(message.data);
+        } else if (message.type === 'error') {
+          reject(new Error(message.error));
+        }
+      });
 
-        child.on('error', (error) => {
-          reject(error);
-        });
+      child.on('error', (error) => {
+        reject(error);
+      });
 
-        child.on('exit', (code) => {
-          if (code !== 0) {
-            reject(
-              new Error(
-                `CLI subprocess exited with code ${code}\nstderr: ${stderr}`
-              )
-            );
-          }
-        });
-      }
-    );
+      child.on('exit', (code) => {
+        if (code !== 0) {
+          reject(
+            new Error(
+              `CLI subprocess exited with code ${code}\nstderr: ${stderr}`
+            )
+          );
+        }
+      });
+    });
 
     const markdown = generateCLIMarkdown(result.commands);
 
@@ -200,12 +199,7 @@ export async function generateNxCliDocs(
 export function CliLoader(options: any = {}): Loader {
   return {
     name: 'nx-cli-loader',
-    async load({
-      store,
-      logger,
-      watcher,
-      renderMarkdown,
-    }: LoaderContext) {
+    async load({ store, logger, watcher, renderMarkdown }: LoaderContext) {
       const doc = await generateNxCliDocs(logger, watcher);
       logger.info('Loaded CLI documentation');
 
@@ -214,7 +208,7 @@ export function CliLoader(options: any = {}): Loader {
       if (doc.body) {
         doc.rendered = await renderMarkdown(doc.body);
       }
-      
+
       logger.info(`Processing CLI documentation`);
       store.set(doc);
 

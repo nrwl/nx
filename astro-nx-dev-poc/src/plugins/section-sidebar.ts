@@ -6,18 +6,14 @@ export function sectionSidebar(): StarlightPlugin {
   return {
     name: 'section-sidebar',
     hooks: {
-      setup({ config, logger, updateConfig, addIntegration }) {
+      setup(params) {
+        const { logger, updateConfig } = params;
         logger.info('Setting up section-based sidebar...');
 
-        // Apply the auto-plugin sidebar for API section
+        // Apply the auto-plugin sidebar for API section, calling here since we want these plugins tied to each other
         const autoPlugin = autoPluginSidebar();
         if (autoPlugin.hooks?.setup) {
-          autoPlugin.hooks.setup({
-            config,
-            logger,
-            updateConfig,
-            addIntegration,
-          });
+          autoPlugin.hooks.setup(params);
         }
 
         // Set the initial sidebar to all sections combined

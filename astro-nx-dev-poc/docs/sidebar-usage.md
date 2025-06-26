@@ -16,11 +16,11 @@ The sidebar groups are configured in `/src/config/sidebar.config.ts`. Each group
 
 ```typescript
 interface SidebarGroup {
-  id: string;           // Unique identifier
-  label: string;        // Display label
-  icon?: string;        // Optional emoji icon
-  urlPattern: RegExp;   // URL pattern to match
-  priority?: number;    // Priority for pattern matching
+  id: string; // Unique identifier
+  label: string; // Display label
+  icon?: string; // Optional emoji icon
+  urlPattern: RegExp; // URL pattern to match
+  priority?: number; // Priority for pattern matching
   items: SidebarItem[]; // Sidebar items for this group
 }
 ```
@@ -62,6 +62,7 @@ To add a new group, edit `/src/config/sidebar.config.ts`:
 ## Customization
 
 The component can be further customized by:
+
 - Modifying the styles in the `<style>` section of `Sidebar.astro`
 - Adding new group types in the configuration
 - Implementing additional features like search or filtering

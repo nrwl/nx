@@ -28,7 +28,7 @@ export function getCommands(command: any) {
 
 export async function parseCommand(
   name: string,
-  command: any,
+  command: any
 ): Promise<ParsedCommand> {
   // If it's not a function, return a stripped down version
   if (
@@ -51,9 +51,7 @@ export async function parseCommand(
 
   const yargs = await import(`yargs?r=${Math.random()}`);
   // Get options from yargs builder
-  const builder = await command.builder(
-    yargs().getInternalMethods().reset()
-  );
+  const builder = await command.builder(yargs().getInternalMethods().reset());
 
   const builderDescriptions = builder
     .getInternalMethods()
