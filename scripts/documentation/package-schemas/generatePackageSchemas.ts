@@ -1,15 +1,15 @@
 /*
  * Lookup for all the schema.json and add create a list with their path and related package information
  * */
-import { createDocumentMetadata } from '@nx/nx-dev/models-document';
+import { createDocumentMetadata } from '@nx/nx-dev-models-document';
 import * as chalk from 'chalk';
 import { join, resolve } from 'path';
 import { compare } from 'semver';
 import {
   getSchemaFromReference,
   InternalLookup,
-} from '@nx/nx-dev/data-access-packages';
-import { NxSchema, PackageMetadata } from '@nx/nx-dev/models-package';
+} from '@nx/nx-dev-data-access-packages';
+import { NxSchema, PackageMetadata } from '@nx/nx-dev-models-package';
 import { generateJsonFile, generateMarkdownFile } from '../utils';
 import { findPackageMetadataList } from './package-metadata';
 import { schemaResolver, getExamplesFileFromPath } from './schema.resolver';

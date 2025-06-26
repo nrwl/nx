@@ -21,7 +21,7 @@ export default function CustomApp({
   useEffect(() => {
     const handleRouteChange = (url: URL) =>
       sendPageViewEvent({ gaId: gaMeasurementId, path: url.toString() });
-    router.events.on('routeChangeStart', (url) => handleRouteChange(url));
+    router.events.on('routeChangeStart', handleRouteChange);
     return () => router.events.off('routeChangeStart', handleRouteChange);
   }, [router.events, gaMeasurementId]);
   return (
