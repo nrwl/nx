@@ -47,8 +47,5 @@
     ".": "./index.js",
     "./plugin": "./plugin.js",
     "./plugins/component-testing": "./plugins/component-testing/index.js"
-  },
-  "devDependencies": {
-    "jest": "^29.4.1"
   }
 }

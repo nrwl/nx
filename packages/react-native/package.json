@@ -52,8 +52,5 @@
   "generators": "./generators.json",
   "publishConfig": {
     "access": "public"
-  },
-  "devDependencies": {
-    "jest": "^29.4.1"
   }
 }

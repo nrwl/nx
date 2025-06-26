@@ -38,9 +38,6 @@
     "enquirer": "~2.3.6",
     "nx": "workspace:*"
   },
-  "devDependencies": {
-    "jest": "^29.4.1"
-  },
   "publishConfig": {
     "access": "public"
   },

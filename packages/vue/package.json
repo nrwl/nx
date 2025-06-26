@@ -41,8 +41,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "peerDependencies": {},
-  "devDependencies": {
-    "jest": "^29.4.1"
-  }
+  "peerDependencies": {}
 }

@@ -57,8 +57,5 @@
       "types": "./config-utils.d.ts",
       "default": "./config-utils.js"
     }
-  },
-  "devDependencies": {
-    "jest": "^29.4.1"
   }
 }
