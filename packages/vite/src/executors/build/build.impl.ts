@@ -129,7 +129,11 @@ export async function* viteBuildExecutor(
 
     // Here, we want the outdir relative to the workspace root.
     // So, we calculate the relative path from the workspace root to the outdir.
-    const outDirRelativeToWorkspaceRoot = outDir.replaceAll('../', '');
+    const absoluteOutDir = resolve(resolve(context.root, projectRoot), outDir);
+    const outDirRelativeToWorkspaceRoot = relative(
+      context.root,
+      absoluteOutDir
+    );
     const distPackageJson = resolve(
       outDirRelativeToWorkspaceRoot,
       'package.json'
