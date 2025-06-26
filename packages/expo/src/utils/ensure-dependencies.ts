@@ -11,12 +11,11 @@ import {
   expoMetroRuntimeVersion,
   expoSplashScreenVersion,
   expoStatusBarVersion,
+  expoSystemUiVersion,
   jestExpoVersion,
   reactNativeSvgTransformerVersion,
   reactNativeSvgVersion,
   reactNativeWebVersion,
-  reactTestRendererVersion,
-  testingLibraryJestNativeVersion,
   testingLibraryReactNativeVersion,
   typesReactVersion,
 } from './versions';
@@ -28,6 +27,7 @@ export function ensureDependencies(host: Tree): GeneratorCallback {
     {
       'expo-splash-screen': expoSplashScreenVersion,
       'expo-status-bar': expoStatusBarVersion,
+      'expo-system-ui': expoSystemUiVersion,
       'react-native-web': reactNativeWebVersion,
       '@expo/metro-config': expoMetroConfigVersion,
       '@expo/metro-runtime': expoMetroRuntimeVersion,
@@ -36,9 +36,7 @@ export function ensureDependencies(host: Tree): GeneratorCallback {
     },
     {
       '@types/react': typesReactVersion,
-      'react-test-renderer': reactTestRendererVersion,
       '@testing-library/react-native': testingLibraryReactNativeVersion,
-      '@testing-library/jest-native': testingLibraryJestNativeVersion,
       'jest-expo': jestExpoVersion,
       'babel-preset-expo': babelPresetExpoVersion,
       ...(isPnpm
