@@ -37,7 +37,6 @@ const image = require('@rollup/plugin-image');
 const json = require('@rollup/plugin-json');
 const copy = require('rollup-plugin-copy');
 const postcss = require('rollup-plugin-postcss');
-const rollupPluginTypescript = require('@rollup/plugin-typescript');
 
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
 
@@ -208,6 +207,16 @@ export function withNx(
       options.generatePackageJson ??= true;
     }
 
+    const compilerOptions: Record<string, unknown> = createTsCompilerOptions(
+      projectRoot,
+      tsConfig,
+      options,
+      dependencies
+    );
+    compilerOptions.outDir = Array.isArray(finalConfig.output)
+      ? finalConfig.output[0].dir
+      : finalConfig.output.dir;
+
     finalConfig.plugins = [
       copy({
         targets: convertCopyAssetsToRollupOptions(
@@ -218,13 +227,13 @@ export function withNx(
       image(),
       json(),
       // TypeScript compilation and declaration generation
-      // TODO(Colum): Change default value of useLegacyTypescriptPlugin to false for Nx 23
+      // TODO(v22): Change default value of useLegacyTypescriptPlugin to false for Nx 22
       options.useLegacyTypescriptPlugin !== false
         ? (() => {
-            // TODO(Colum): Remove in Nx 24
+            // TODO(v23): Remove in Nx 23
             // Show deprecation warning
             logger.warn(
-              `rollup-plugin-typescript2 usage is deprecated and will be removed in Nx 24. ` +
+              `rollup-plugin-typescript2 usage is deprecated and will be removed in Nx 23. ` +
                 `Set 'useLegacyTypescriptPlugin: false' to use the official @rollup/plugin-typescript.`
             );
 
@@ -232,23 +241,13 @@ export function withNx(
               check: !options.skipTypeCheck,
               tsconfig: tsConfigPath,
               tsconfigOverride: {
-                compilerOptions: createTsCompilerOptions(
-                  projectRoot,
-                  tsConfig,
-                  options,
-                  dependencies
-                ),
+                compilerOptions,
               },
             });
           })()
-        : rollupPluginTypescript({
+        : require('@rollup/plugin-typescript')({
             tsconfig: tsConfigPath,
-            compilerOptions: createTsCompilerOptions(
-              projectRoot,
-              tsConfig,
-              options,
-              dependencies
-            ),
+            compilerOptions,
             declaration: true,
             declarationMap: !!options.sourceMap,
             noEmitOnError: !options.skipTypeCheck,
