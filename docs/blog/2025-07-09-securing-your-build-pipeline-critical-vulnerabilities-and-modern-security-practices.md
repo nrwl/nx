@@ -1,5 +1,5 @@
 ---
-title: "**Securing Your Build Pipeline: Critical Vulnerabilities and Modern Security Practices**"
+title: "Securing Your Build Pipeline: Critical Vulnerabilities and Modern Security Practices"
 description: "Join Nx CEO, Jeff Cross, and CTO, Victor Savkin, for an essential security briefing on protecting your build infrastructure from emerging threats. With the recent publication of CVE-2025-36852 – CREEP (Cache Race-condition Exploit Enables Poisoning, severity 9.4), it's more critical than ever to understand the security implications of your build and CI/CD choices.
 
 This webinar goes beyond just one vulnerability to address the broader security challenges facing modern development teams. Whether you're using Nx or other build systems, you'll learn actionable strategies to secure your entire build pipeline."
