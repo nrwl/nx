@@ -9,7 +9,7 @@ authors: ['James Henry']
 tags: [webinar]
 cover_image: /blog/images/2025-06-18/June-2025-Webinar-Card.avif
 time: 10am ET/2pm UTC
-status: Upcoming
+status: Past - Gated
 registrationUrl: https://go.nx.dev/june2025-webinar
 ---
 
@@ -21,4 +21,4 @@ Join us for a demo of the new polygraph features in Nx Cloud, launching this mon
 
 These features are designed to extend some of the powerful benefits of an Nx workspace to multi-workspace environments and take Nx Cloud beyond CI. We'll cover our updated conformance dashboard, how to visualize dependencies across your repos, the new onboarding experience for workspaces that aren’t yet a part of Nx Cloud, and preview how Nx Cloud will be able to fix your code automatically via agentic AI.
 
-{% call-to-action title="Register today!" url="https://go.nx.dev/june2025-webinar" description="Save your spot" /%}
+{% call-to-action title="Download the recording" url="https://go.nx.dev/june2025-webinar" description="Sign up to gain access" /%}
