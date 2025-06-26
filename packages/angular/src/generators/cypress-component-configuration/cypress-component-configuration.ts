@@ -3,6 +3,7 @@ import type { FoundTarget } from '@nx/cypress/src/utils/find-target-options';
 import {
   ensurePackage,
   formatFiles,
+  GeneratorCallback,
   joinPathFragments,
   ProjectConfiguration,
   readProjectConfiguration,
@@ -28,7 +29,7 @@ import { CypressComponentConfigSchema } from './schema';
 export async function cypressComponentConfiguration(
   tree: Tree,
   options: CypressComponentConfigSchema
-) {
+): Promise<GeneratorCallback> {
   const projectConfig = readProjectConfiguration(tree, options.project);
   const { componentConfigurationGenerator: baseCyCTConfig } = ensurePackage<
     typeof import('@nx/cypress')

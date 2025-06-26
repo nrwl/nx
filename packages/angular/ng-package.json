@@ -6,6 +6,7 @@
   "dest": "../../dist/packages/angular",
   "deleteDestPath": false,
   "allowedNonPeerDependencies": [
+    "nx",
     "@nx/",
     "@phenomnomnominal/tsquery",
     "@typescript-eslint/",

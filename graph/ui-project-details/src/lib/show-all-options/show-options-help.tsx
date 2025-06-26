@@ -7,7 +7,7 @@ import {
 } from '@nx/graph/legacy/shared';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type { TargetConfiguration } from '@nx/devkit';
+import type { TargetConfiguration } from '../types/graph-types';
 import { TerminalOutput } from '@nx/nx-dev-ui-fence';
 import { Tooltip } from '@nx/graph/legacy/tooltips';
 import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';

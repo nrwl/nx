@@ -1,6 +1,4 @@
-/* eslint-disable @nx/enforce-module-boundaries */
-// nx-ignore-next-line
-import type { TargetConfiguration } from '@nx/devkit';
+import type { TargetConfiguration } from '../types/graph-types';
 
 export function getDisplayHeaderFromTargetConfiguration(
   targetConfiguration: TargetConfiguration

@@ -1,6 +1,4 @@
-/* eslint-disable @nx/enforce-module-boundaries */
-// nx-ignore-next-line
-import type { TargetConfiguration } from '@nx/devkit';
+import type { TargetConfiguration } from '../types/graph-types';
 import { JsonCodeBlock } from '@nx/graph-ui-code-block';
 import { ExpandedTargetsContext } from '@nx/graph/legacy/shared';
 import { CopyToClipboardButton } from '@nx/graph/legacy/components';

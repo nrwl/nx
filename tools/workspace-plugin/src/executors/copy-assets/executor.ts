@@ -77,8 +77,7 @@ export async function copyAssetsExecutor(
   options: CopyAssetsExecutorOptions,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
-  // Ensure project graph is created before proceeding
-  // This is needed for CopyAssetsHandler which uses daemon client in watch mode
+  // Need to ensure the project graph is created before accessing project details
   try {
     await createProjectGraphAsync();
   } catch (error) {

@@ -3,11 +3,7 @@
   "compilerOptions": {
     "outDir": "../../dist/out-tsc/nx-dev/ui-fence",
     "declaration": true,
-    "types": [
-      "node",
-      "@nx/react/typings/cssmodule.d.ts",
-      "@nx/react/typings/image.d.ts"
-    ],
+    "types": ["node"],
     "lib": ["DOM", "es2022"],
     "composite": true,
     "jsx": "react-jsx"
@@ -23,5 +19,9 @@
     "src/**/*.spec.jsx",
     "src/**/*.test.jsx"
   ],
-  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"]
+  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
+  "files": [
+    "../../packages/react/typings/cssmodule.d.ts",
+    "../../packages/react/typings/image.d.ts"
+  ]
 }

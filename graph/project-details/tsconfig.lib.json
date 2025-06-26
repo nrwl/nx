@@ -3,11 +3,7 @@
   "compilerOptions": {
     "outDir": "../../dist/graph/project-details",
     "declaration": true,
-    "types": [
-      "node",
-      "@nx/react/typings/cssmodule.d.ts",
-      "@nx/react/typings/image.d.ts"
-    ],
+    "types": ["node"],
     "lib": ["DOM"],
     "composite": true,
     "noEmit": false
@@ -31,5 +27,9 @@
     {
       "path": "../ui-theme/tsconfig.lib.json"
     }
+  ],
+  "files": [
+    "../../packages/react/typings/cssmodule.d.ts",
+    "../../packages/react/typings/image.d.ts"
   ]
 }
