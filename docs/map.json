@@ -301,8 +301,8 @@
                   "file": "shared/recipes/running-tasks/convert-to-inferred"
                 },
                 {
-                  "name": "Self-Host the Remote Cache",
-                  "description": "Host the remote cache without using Nx Cloud",
+                  "name": "Remote Cache",
+                  "description": "Different options of hosting remote cache",
                   "id": "self-hosted-caching",
                   "tags": ["self-hosted-caching"],
                   "file": "shared/recipes/running-tasks/self-hosted-caching"
