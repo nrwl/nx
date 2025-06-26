@@ -63,6 +63,9 @@
     "tinyglobby": "^0.2.12",
     "tslib": "^2.3.0"
   },
+  "devDependencies": {
+    "jest": "^29.4.1"
+  },
   "peerDependencies": {
     "verdaccio": "^6.0.5"
   },

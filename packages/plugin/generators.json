@@ -4,17 +4,17 @@
   "extends": ["@nx/workspace"],
   "generators": {
     "plugin": {
-      "factory": "./src/generators/plugin/plugin#pluginGeneratorInternal",
+      "factory": "./src/generators/plugin/plugin",
       "schema": "./src/generators/plugin/schema.json",
       "description": "Create a Nx Plugin."
     },
     "create-package": {
-      "factory": "./src/generators/create-package/create-package#createPackageGeneratorInternal",
+      "factory": "./src/generators/create-package/create-package",
       "schema": "./src/generators/create-package/schema.json",
       "description": "Create a package which can be used by npx to create a new workspace"
     },
     "e2e-project": {
-      "factory": "./src/generators/e2e-project/e2e#e2eProjectGeneratorInternal",
+      "factory": "./src/generators/e2e-project/e2e",
       "schema": "./src/generators/e2e-project/schema.json",
       "description": "Create a E2E application for a Nx Plugin."
     },
@@ -39,7 +39,7 @@
       "description": "Adds linting configuration to validate common json files for nx plugins."
     },
     "preset": {
-      "factory": "./src/generators/preset/generator#presetGeneratorInternal",
+      "factory": "./src/generators/preset/generator",
       "schema": "./src/generators/preset/schema.json",
       "description": "Initializes a workspace with an nx-plugin inside of it. Use as: `create-nx-workspace --preset @nx/plugin`.",
       "hidden": true,

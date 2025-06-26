@@ -5,6 +5,9 @@
   "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "devDependencies": {
+    "jest": "^29.4.1"
+  },
   "dependencies": {
     "@nx/graph-internal-ui-theme": "workspace:",
     "@nx/graph-internal-project-details": "workspace:",

@@ -4,20 +4,20 @@
   "extends": ["@nx/workspace"],
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init#reactNativeInitGeneratorInternal",
+      "factory": "./src/generators/init/init",
       "schema": "./src/generators/init/schema.json",
       "description": "Initialize the `@nx/react-native` plugin.",
       "hidden": true
     },
     "application": {
-      "factory": "./src/generators/application/application#reactNativeApplicationGeneratorInternal",
+      "factory": "./src/generators/application/application",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
       "description": "Create a React Native application."
     },
     "library": {
-      "factory": "./src/generators/library/library#reactNativeLibraryGeneratorInternal",
+      "factory": "./src/generators/library/library",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
@@ -30,7 +30,7 @@
       "aliases": ["c"]
     },
     "upgrade-native": {
-      "factory": "./src/generators/upgrade-native/upgrade-native#reactNativeUpgradeNativeGenerator",
+      "factory": "./src/generators/upgrade-native/upgrade-native",
       "schema": "./src/generators/upgrade-native/schema.json",
       "description": "Destructive command to upgrade native iOS and Android code to latest."
     },

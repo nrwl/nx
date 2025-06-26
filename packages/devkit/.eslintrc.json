@@ -1,11 +1,11 @@
 {
-  "extends": "../../.eslintrc",
-  "ignorePatterns": ["!**/*"],
+  "extends": "../../.eslintrc.json",
+  "ignorePatterns": ["!**/*", "node_modules"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       "rules": {
-        "@typescript-eslint/explicit-module-boundary-types": ["error"],
+        "@typescript-eslint/explicit-module-boundary-types": "error",
         "@typescript-eslint/no-restricted-imports": [
           "error",
           {
@@ -69,6 +69,7 @@
               "nx",
               "typescript",
               "prettier",
+              "tslib",
               // Installed to workspace by plugins
               "rxjs",
               "@angular-devkit/core",

@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "type": "commonjs",
   "private": true,
+  "devDependencies": {
+    "jest": "^29.4.1"
+  },
   "dependencies": {
     "@nx/nx-dev-data-access-documents": "workspace:*",
     "@nx/nx-dev-data-access-menu": "workspace:*",

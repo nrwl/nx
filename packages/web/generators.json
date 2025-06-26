@@ -4,13 +4,13 @@
   "extends": ["@nx/workspace"],
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init#webInitGenerator",
+      "factory": "./src/generators/init/init",
       "schema": "./src/generators/init/schema.json",
       "description": "Add `@nrwl/web` to a project.",
       "hidden": true
     },
     "application": {
-      "factory": "./src/generators/application/application#applicationGeneratorInternal",
+      "factory": "./src/generators/application/application",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",

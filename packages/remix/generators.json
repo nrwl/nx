@@ -17,26 +17,26 @@
       "hidden": true
     },
     "application": {
-      "implementation": "./src/generators/application/application.impl#remixApplicationGeneratorInternal",
+      "implementation": "./src/generators/application/application.impl",
       "schema": "./src/generators/application/schema.json",
       "description": "Generate a new Remix application",
       "aliases": ["app"],
       "x-type": "application"
     },
     "cypress-component-configuration": {
-      "implementation": "./src/generators/cypress-component-configuration/cypress-component-configuration.impl#cypressComponentConfigurationGeneratorInternal",
+      "implementation": "./src/generators/cypress-component-configuration/cypress-component-configuration.impl",
       "schema": "./src/generators/cypress-component-configuration/schema.json",
       "description": "Generate a Cypress Component Testing configuration for a Remix project"
     },
     "library": {
-      "implementation": "./src/generators/library/library.impl#remixLibraryGeneratorInternal",
+      "implementation": "./src/generators/library/library.impl",
       "schema": "./src/generators/library/schema.json",
       "description": "Generate a new library",
       "aliases": ["lib"],
       "x-type": "library"
     },
     "init": {
-      "implementation": "./src/generators/init/init#remixInitGeneratorInternal",
+      "implementation": "./src/generators/init/init",
       "schema": "./src/generators/init/schema.json",
       "description": "Initialize the `@nx/remix` plugin.",
       "hidden": true
@@ -72,7 +72,7 @@
       "description": "Generates a TailwindCSS configuration for the Remix application"
     },
     "storybook-configuration": {
-      "implementation": "./src/generators/storybook-configuration/storybook-configuration.impl#remixStorybookConfiguration",
+      "implementation": "./src/generators/storybook-configuration/storybook-configuration.impl",
       "schema": "./src/generators/storybook-configuration/schema.json",
       "description": "Generates a Storybook configuration for a Remix application"
     },
