@@ -21,6 +21,7 @@ export function autoPluginSidebar(): StarlightPlugin {
           label: string;
           link?: string;
           items?: any[];
+          collapsed?: boolean;
         }> = [];
 
         try {
@@ -118,30 +119,13 @@ export function autoPluginSidebar(): StarlightPlugin {
           if (apiRefIndex !== -1) {
             const apiRefSection = sidebar[apiRefIndex] as any;
 
-            // Find the Plugins section within API Reference
             if (apiRefSection.items) {
-              const pluginsIndex = apiRefSection.items.findIndex(
-                (item: any) => item.label === 'Plugins'
+              apiRefSection.items.push(...pluginItems);
+
+              updateConfig({ sidebar });
+              logger.info(
+                `Successfully added ${pluginItems.length} plugins directly to API Reference`
               );
-
-              if (pluginsIndex !== -1) {
-                // Replace the existing plugins section with the dynamic one
-                apiRefSection.items[pluginsIndex] = {
-                  label: 'Plugins',
-                  collapsed: true,
-                  items: [
-                    { label: 'Overview', slug: 'api/plugins' },
-                    ...pluginItems,
-                  ],
-                };
-
-                // Update the config with the modified sidebar
-                updateConfig({ sidebar });
-                console.log(JSON.stringify(sidebar, null, 2));
-                logger.info(
-                  'Successfully updated sidebar with dynamic plugin list'
-                );
-              }
             }
           }
         } catch (error) {

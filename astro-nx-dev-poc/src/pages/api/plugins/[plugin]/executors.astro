@@ -11,7 +11,7 @@ export async function getStaticPaths() {
   // Generate paths for each plugin
   return pluginDocs.map((p) => ({
     params: { plugin: p.data.pluginName },
-    props: { doc: p },
+    props: { doc: p }
   }));
 }
 
@@ -28,14 +28,9 @@ const { Content, headings } = await render(doc);
 <StarlightPage
   frontmatter={{
     title: `@nx/${pluginName} - executors`,
-    description: `@nx/${pluginName} plugin executors`,
+    description: `@nx/${pluginName} plugin executors`
   }}
   headings={headings || []}
 >
-  this is my content
   <Content />
-
-  <br />
-  here is the raw markdown:
-  {doc.body}
 </StarlightPage>
