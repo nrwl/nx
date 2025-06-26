@@ -39,6 +39,9 @@
     "nx": "workspace:*",
     "@nx/js": "workspace:*"
   },
+  "devDependencies": {
+    "jest": "^29.4.1"
+  },
   "publishConfig": {
     "access": "public"
   }

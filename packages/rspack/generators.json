@@ -40,7 +40,7 @@
       "description": "Convert the project to use the `NxAppRspackPlugin` and `NxReactRspackPlugin`."
     },
     "convert-to-inferred": {
-      "factory": "./src/generators/convert-to-inferred/convert-to-inferred#convertToInferred",
+      "factory": "./src/generators/convert-to-inferred/convert-to-inferred",
       "schema": "./src/generators/convert-to-inferred/schema.json",
       "description": "Convert existing Rspack project(s) using `@nx/rspack:rspack` executor to use `@nx/rspack/plugin`."
     }

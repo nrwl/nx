@@ -11,7 +11,7 @@
       "hidden": true
     },
     "application": {
-      "factory": "./src/generators/application/application#applicationGeneratorInternal",
+      "factory": "./src/generators/application/application",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "description": "Create a Nuxt application."

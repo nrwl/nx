@@ -39,6 +39,9 @@
     "yargs": "^17.6.2",
     "axios": "^1.8.3"
   },
+  "devDependencies": {
+    "jest": "^29.4.1"
+  },
   "publishConfig": {
     "access": "public"
   }

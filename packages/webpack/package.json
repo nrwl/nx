@@ -67,9 +67,11 @@
     "webpack-node-externals": "^3.0.0",
     "webpack-subresource-integrity": "^5.1.0",
     "@nx/devkit": "workspace:*",
-    "jest": "^29.4.1",
     "nx": "workspace:*",
     "@nx/js": "workspace:*"
+  },
+  "devDependencies": {
+    "jest": "^29.4.1"
   },
   "publishConfig": {
     "access": "public"
