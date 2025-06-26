@@ -207,6 +207,16 @@ export function withNx(
       options.generatePackageJson ??= true;
     }
 
+    const compilerOptions: Record<string, unknown> = createTsCompilerOptions(
+      projectRoot,
+      tsConfig,
+      options,
+      dependencies
+    );
+    compilerOptions.outDir = Array.isArray(finalConfig.output)
+      ? finalConfig.output[0].dir
+      : finalConfig.output.dir;
+
     finalConfig.plugins = [
       copy({
         targets: convertCopyAssetsToRollupOptions(
@@ -216,19 +226,32 @@ export function withNx(
       }),
       image(),
       json(),
-      // Needed to generate type definitions, even if we're using babel or swc.
-      require('rollup-plugin-typescript2')({
-        check: !options.skipTypeCheck,
-        tsconfig: tsConfigPath,
-        tsconfigOverride: {
-          compilerOptions: createTsCompilerOptions(
-            projectRoot,
-            tsConfig,
-            options,
-            dependencies
-          ),
-        },
-      }),
+      // TypeScript compilation and declaration generation
+      // TODO(v22): Change default value of useLegacyTypescriptPlugin to false for Nx 22
+      options.useLegacyTypescriptPlugin !== false
+        ? (() => {
+            // TODO(v23): Remove in Nx 23
+            // Show deprecation warning
+            logger.warn(
+              `rollup-plugin-typescript2 usage is deprecated and will be removed in Nx 23. ` +
+                `Set 'useLegacyTypescriptPlugin: false' to use the official @rollup/plugin-typescript.`
+            );
+
+            return require('rollup-plugin-typescript2')({
+              check: !options.skipTypeCheck,
+              tsconfig: tsConfigPath,
+              tsconfigOverride: {
+                compilerOptions,
+              },
+            });
+          })()
+        : require('@rollup/plugin-typescript')({
+            tsconfig: tsConfigPath,
+            compilerOptions,
+            declaration: true,
+            declarationMap: !!options.sourceMap,
+            noEmitOnError: !options.skipTypeCheck,
+          }),
       typeDefinitions({
         projectRoot,
       }),
