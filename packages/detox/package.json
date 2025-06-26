@@ -27,11 +27,12 @@
   "main": "./index",
   "types": "index.d.ts",
   "dependencies": {
-    "@nx/devkit": "file:../devkit",
-    "@nx/jest": "file:../jest",
-    "@nx/js": "file:../js",
-    "@nx/eslint": "file:../eslint",
-    "@nx/react": "file:../react",
+    "@nx/devkit": "workspace:*",
+    "@nx/jest": "workspace:*",
+    "@nx/js": "workspace:*",
+    "@nx/eslint": "workspace:*",
+    "@nx/react": "workspace:*",
+    "nx": "workspace:*",
     "tslib": "^2.3.0"
   },
   "peerDependencies": {
@@ -45,5 +46,8 @@
   "generators": "./generators.json",
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "jest": "^29.4.1"
   }
 }

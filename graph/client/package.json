@@ -11,6 +11,7 @@
     "@nx/graph-internal-ui-project-details": "workspace:",
     "@nx/graph-migrate": "workspace:",
     "@nx/graph-ui-common": "workspace:",
-    "@nx/graph-ui-code-block": "workspace:"
+    "@nx/graph-ui-code-block": "workspace:",
+    "jest": "^29.4.1"
   }
 }

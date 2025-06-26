@@ -4,6 +4,9 @@
   "include": [],
   "references": [
     {
+      "path": "../nx"
+    },
+    {
       "path": "../workspace"
     },
     {
@@ -11,6 +14,9 @@
     },
     {
       "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
     }
   ]
 }

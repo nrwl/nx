@@ -38,10 +38,11 @@
     }
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit",
+    "@nx/devkit": "workspace:*",
     "@zkochan/js-yaml": "0.0.7",
     "chalk": "^4.1.0",
     "enquirer": "~2.3.6",
+    "nx": "workspace:*",
     "picomatch": "4.0.2",
     "tslib": "^2.3.0",
     "yargs-parser": "21.1.1"

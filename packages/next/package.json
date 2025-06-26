@@ -35,20 +35,21 @@
     "next": ">=14.0.0"
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit",
+    "@nx/devkit": "workspace:*",
     "@babel/plugin-proposal-decorators": "^7.22.7",
     "@svgr/webpack": "^8.1.0",
     "copy-webpack-plugin": "^10.2.4",
     "file-loader": "^6.2.0",
     "ignore": "^5.0.4",
+    "nx": "workspace:*",
     "semver": "^7.5.3",
     "tslib": "^2.3.0",
     "webpack-merge": "^5.8.0",
-    "@nx/js": "file:../js",
-    "@nx/eslint": "file:../eslint",
-    "@nx/react": "file:../react",
-    "@nx/web": "file:../web",
-    "@nx/webpack": "file:../webpack",
+    "@nx/js": "workspace:*",
+    "@nx/eslint": "workspace:*",
+    "@nx/react": "workspace:*",
+    "@nx/web": "workspace:*",
+    "@nx/webpack": "workspace:*",
     "@phenomnomnominal/tsquery": "~5.0.1"
   },
   "publishConfig": {

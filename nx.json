@@ -383,12 +383,5 @@
         }
       }
     ]
-  },
-  "generators": {
-    "@nx/react": {
-      "library": {
-        "unitTestRunner": "jest"
-      }
-    }
   }
 }

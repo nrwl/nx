@@ -35,13 +35,14 @@
     "picocolors": "^1.1.0",
     "tsconfig-paths": "^4.1.2",
     "tslib": "^2.3.0",
-    "@nx/detox": "file:../detox",
-    "@nx/devkit": "file:../devkit",
-    "@nx/jest": "file:../jest",
-    "@nx/js": "file:../js",
-    "@nx/eslint": "file:../eslint",
-    "@nx/react": "file:../react",
-    "@nx/workspace": "file:../workspace"
+    "@nx/detox": "workspace:*",
+    "@nx/devkit": "workspace:*",
+    "nx": "workspace:*",
+    "@nx/jest": "workspace:*",
+    "@nx/js": "workspace:*",
+    "@nx/eslint": "workspace:*",
+    "@nx/react": "workspace:*",
+    "@nx/workspace": "workspace:*"
   },
   "executors": "./executors.json",
   "ng-update": {
@@ -51,5 +52,8 @@
   "generators": "./generators.json",
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "jest": "^29.4.1"
   }
 }

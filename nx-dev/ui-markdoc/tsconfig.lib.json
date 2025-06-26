@@ -48,6 +48,9 @@
     },
     {
       "path": "../../graph/ui-project-details/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/devkit/tsconfig.lib.json"
     }
   ]
 }

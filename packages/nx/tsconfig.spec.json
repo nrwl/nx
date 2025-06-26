@@ -16,6 +16,12 @@
     "**/*.fixture.ts",
     "**/*.d.ts",
     "./src/internal-testing-utils/**/*.ts",
-    "jest.config.ts"
+    "jest.config.ts",
+    "*.json"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    }
   ]
 }

@@ -31,8 +31,9 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
+    "@nx/devkit": "workspace:*",
+    "@nx/js": "workspace:*",
+    "nx": "workspace:*",
     "tinyglobby": "^0.2.12",
     "picocolors": "^1.1.0",
     "tsconfig-paths": "^4.1.2",
@@ -48,5 +49,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "jest": "^29.4.1"
   }
 }

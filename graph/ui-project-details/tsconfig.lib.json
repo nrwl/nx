@@ -35,6 +35,9 @@
     },
     {
       "path": "../ui-code-block/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/devkit/tsconfig.lib.json"
     }
   ]
 }

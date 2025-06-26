@@ -13,6 +13,9 @@
       "path": "../ui-code-block"
     },
     {
+      "path": "../../packages/devkit"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ],

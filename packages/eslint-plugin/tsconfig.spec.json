@@ -1,8 +1,10 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
-    "types": ["jest", "node"]
+    "outDir": "../../dist/packages/eslint-plugin/spec",
+    "module": "commonjs",
+    "types": ["jest", "node"],
+    "composite": true
   },
   "include": [
     "**/*.spec.ts",
@@ -16,6 +18,12 @@
     "**/*.spec.jsx",
     "**/*.test.jsx",
     "**/*.d.ts",
-    "jest.config.ts"
+    "jest.config.ts",
+    "*.json"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    }
   ]
 }

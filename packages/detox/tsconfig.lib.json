@@ -12,6 +12,9 @@
   "include": ["**/*.ts", "**/*.json"],
   "references": [
     {
+      "path": "../nx/tsconfig.lib.json"
+    },
+    {
       "path": "../react/tsconfig.lib.json"
     },
     {

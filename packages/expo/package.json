@@ -28,14 +28,15 @@
   "main": "./index",
   "types": "index.d.ts",
   "dependencies": {
-    "@nx/detox": "file:../detox",
-    "@nx/devkit": "file:../devkit",
-    "@nx/eslint": "file:../eslint",
-    "@nx/jest": "file:../jest",
-    "@nx/js": "file:../js",
-    "@nx/react": "file:../react",
-    "@nx/web": "file:../web",
-    "@nx/webpack": "file:../webpack",
+    "@nx/detox": "workspace:*",
+    "@nx/devkit": "workspace:*",
+    "nx": "workspace:*",
+    "@nx/eslint": "workspace:*",
+    "@nx/jest": "workspace:*",
+    "@nx/js": "workspace:*",
+    "@nx/react": "workspace:*",
+    "@nx/web": "workspace:*",
+    "@nx/webpack": "workspace:*",
     "enhanced-resolve": "^5.8.3",
     "metro-config": "~0.80.4",
     "metro-resolver": "~0.80.4",
@@ -51,5 +52,8 @@
   "generators": "./generators.json",
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "jest": "^29.4.1"
   }
 }

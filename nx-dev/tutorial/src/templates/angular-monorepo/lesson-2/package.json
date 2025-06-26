@@ -1,9 +1,9 @@
 {
   "name": "@angular-monorepo/source",
   "version": "0.0.0",
+  "private": true,
   "license": "MIT",
   "scripts": {},
-  "private": true,
   "dependencies": {
     "@angular/common": "~20.0.0",
     "@angular/compiler": "~20.0.0",

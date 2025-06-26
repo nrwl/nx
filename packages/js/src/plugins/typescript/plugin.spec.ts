@@ -1370,7 +1370,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "{projectRoot}/package.json",
                       "{workspaceRoot}/tsconfig.foo.json",
-                      "{workspaceRoot}/tsconfig.base.json",
                       "{workspaceRoot}/libs/my-package/tsconfig.base.json",
                       "{projectRoot}/tsconfig.json",
                       "{projectRoot}/src/**/*.ts",
@@ -1380,7 +1379,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "externalDependencies": [
                           "typescript",
-                          "@tsconfig/strictest",
                         ],
                       },
                     ],
@@ -4082,7 +4080,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "{projectRoot}/package.json",
                       "{workspaceRoot}/tsconfig.foo.json",
-                      "{workspaceRoot}/tsconfig.base.json",
                       "{workspaceRoot}/libs/my-package/tsconfig.base.json",
                       "{projectRoot}/tsconfig.lib.json",
                       "{projectRoot}/src/**/*.ts",
@@ -4092,7 +4089,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "externalDependencies": [
                           "typescript",
-                          "@tsconfig/strictest",
                         ],
                       },
                     ],

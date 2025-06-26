@@ -19,6 +19,9 @@
       "path": "../js"
     },
     {
+      "path": "../nx"
+    },
+    {
       "path": "../devkit"
     },
     {

@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "../../dist/packages/storybook/spec",
     "module": "commonjs",
-    "types": ["jest", "node"]
+    "types": ["jest", "node"],
+    "composite": true
   },
   "include": [
     "**/*.spec.ts",
@@ -17,7 +18,8 @@
     "**/*.spec.jsx",
     "**/*.test.jsx",
     "**/*.d.ts",
-    "jest.config.ts"
+    "jest.config.ts",
+    "*.json"
   ],
   "references": [
     {
