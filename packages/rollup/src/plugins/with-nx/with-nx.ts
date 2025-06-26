@@ -37,7 +37,7 @@ const image = require('@rollup/plugin-image');
 const json = require('@rollup/plugin-json');
 const copy = require('rollup-plugin-copy');
 const postcss = require('rollup-plugin-postcss');
-const typescript = require('@rollup/plugin-typescript');
+const rollupPluginTypescript = require('@rollup/plugin-typescript');
 
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
 
@@ -241,7 +241,7 @@ export function withNx(
               },
             });
           })()
-        : typescript({
+        : rollupPluginTypescript({
             tsconfig: tsConfigPath,
             compilerOptions: createTsCompilerOptions(
               projectRoot,
