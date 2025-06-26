@@ -146,8 +146,6 @@
     "@types/flat": "^5.0.1",
     "@types/fs-extra": "^11.0.0",
     "@types/is-ci": "^3.0.0",
-    "@types/jasmine": "~2.8.6",
-    "@types/jasminewd2": "~2.0.3",
     "@types/jest": "29.5.12",
     "@types/js-yaml": "^4.0.9",
     "@types/marked": "^2.0.0",

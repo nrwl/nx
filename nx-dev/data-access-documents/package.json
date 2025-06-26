@@ -20,7 +20,5 @@
     "@nx/nx-dev-models-package": "workspace:*",
     "@nx/nx-dev-ui-markdoc": "workspace:*"
   },
-  "devDependencies": {
-    "jest": "^29.4.1"
-  }
+  "devDependencies": {}
 }

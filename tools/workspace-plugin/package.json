@@ -14,7 +14,5 @@
   "type": "commonjs",
   "main": "./src/index.js",
   "typings": "./src/index.d.ts",
-  "devDependencies": {
-    "jest": "^29.4.1"
-  }
+  "devDependencies": {}
 }
