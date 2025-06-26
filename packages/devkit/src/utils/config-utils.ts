@@ -10,16 +10,21 @@ export let dynamicImport = new Function(
 );
 
 export async function loadConfigFile<T extends object = any>(
-  configFilePath: string
+  configFilePath: string,
+  tsconfigFileNames?: string[]
 ): Promise<T> {
   const extension = extname(configFilePath);
-  const module = await loadModule(configFilePath, extension);
+  const module = await loadModule(configFilePath, extension, tsconfigFileNames);
   return module.default ?? module;
 }
 
-async function loadModule(path: string, extension: string): Promise<any> {
+async function loadModule(
+  path: string,
+  extension: string,
+  tsconfigFileNames?: string[]
+): Promise<any> {
   if (isTypeScriptFile(extension)) {
-    return await loadTypeScriptModule(path, extension);
+    return await loadTypeScriptModule(path, extension, tsconfigFileNames);
   }
   return await loadJavaScriptModule(path, extension);
 }
@@ -30,9 +35,10 @@ function isTypeScriptFile(extension: string): boolean {
 
 async function loadTypeScriptModule(
   path: string,
-  extension: string
+  extension: string,
+  tsconfigFileNames?: string[]
 ): Promise<any> {
-  const tsConfigPath = getTypeScriptConfigPath(path);
+  const tsConfigPath = getTypeScriptConfigPath(path, tsconfigFileNames);
 
   if (tsConfigPath) {
     const unregisterTsProject = registerTsProject(tsConfigPath);
@@ -46,10 +52,16 @@ async function loadTypeScriptModule(
   return await loadModuleByExtension(path, extension);
 }
 
-function getTypeScriptConfigPath(path: string): string | null {
+function getTypeScriptConfigPath(
+  path: string,
+  tsconfigFileNames?: string[]
+): string | null {
   const siblingFiles = readdirSync(dirname(path));
-  return siblingFiles.includes('tsconfig.json')
-    ? join(dirname(path), 'tsconfig.json')
+  const tsConfigFileName = (tsconfigFileNames ?? ['tsconfig.json']).find(
+    (name) => siblingFiles.includes(name)
+  );
+  return tsConfigFileName
+    ? join(dirname(path), tsConfigFileName)
     : getRootTsConfigPath();
 }
 
