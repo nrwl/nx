@@ -1,7 +1,39 @@
 import type { StarlightPlugin } from '@astrojs/starlight/types';
 import { readdirSync, existsSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { join, basename, extname } from 'path';
 import { workspaceRoot } from '@nx/devkit';
+
+function getStaticPluginFiles(pluginDir: string, workspaceRoot: string): Array<{ label: string; slug: string }> {
+  const staticFiles: Array<{ label: string; slug: string }> = [];
+  const pluginContentDir = join(workspaceRoot, 'astro-nx-dev-poc', 'src', 'content', 'docs', 'api', 'plugins', pluginDir);
+  
+  if (!existsSync(pluginContentDir)) {
+    return staticFiles;
+  }
+
+  try {
+    const files = readdirSync(pluginContentDir, { withFileTypes: true });
+    
+    for (const file of files) {
+      if (file.isFile() && (file.name.endsWith('.md') || file.name.endsWith('.mdx'))) {
+        const fileName = basename(file.name, extname(file.name));
+        const label = fileName
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        
+        staticFiles.push({
+          label,
+          slug: `api/plugins/${pluginDir}/${fileName}`,
+        });
+      }
+    }
+  } catch (error) {
+    // Ignore errors when reading static files
+  }
+
+  return staticFiles;
+}
 
 export function autoPluginSidebar(): StarlightPlugin {
   return {
@@ -56,7 +88,7 @@ export function autoPluginSidebar(): StarlightPlugin {
                     join(pluginDir, 'migrations.json')
                   );
 
-                  // If the plugin has any of these files, create sub-items
+                  // Create sub-items for generated docs and static files
                   const subItems: any[] = [];
 
                   if (hasGenerators) {
@@ -79,6 +111,13 @@ export function autoPluginSidebar(): StarlightPlugin {
                       link: `/api/plugins/${dir}/migrations`,
                     });
                   }
+
+                  // Add static markdown files from content/docs/api/plugins/<plugin>/
+                  const staticFiles = getStaticPluginFiles(dir, workspaceRoot);
+                  if (staticFiles.length > 0) {
+                    logger.info(`Found ${staticFiles.length} static files for ${packageName}: ${staticFiles.map(f => f.label).join(', ')}`);
+                  }
+                  subItems.push(...staticFiles);
 
                   if (subItems.length > 0) {
                     pluginItems.push({
