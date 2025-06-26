@@ -1,6 +1,6 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type { TargetConfiguration } from '@nx/devkit';
+import type { TargetConfiguration } from '../types/graph-types';
 import { CopyToClipboardButton } from '@nx/graph/legacy/components';
 import {
   ChevronDownIcon,

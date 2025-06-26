@@ -4,7 +4,6 @@
     "outDir": "../../dist/out-tsc/nx-dev/ui-webinar",
     "types": [
       "node",
-
       "@nx/react/typings/cssmodule.d.ts",
       "@nx/react/typings/image.d.ts"
     ],

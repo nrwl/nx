@@ -1,6 +1,6 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type { ProjectGraphProjectNode } from '@nx/devkit';
+import type { ProjectGraphProjectNode } from '../types/graph-types';
 
 /**
  * This function groups targets based on the targetGroups metadata
@@ -12,7 +12,10 @@ export function groupTargets(project: ProjectGraphProjectNode): {
   groups: Record<string, string[]>;
   targets: string[];
 } {
-  const targetGroups = { ...(project.data.metadata?.targetGroups ?? {}) };
+  const targetGroups = {
+    ...((project.data.metadata?.targetGroups as Record<string, string[]>) ??
+      {}),
+  };
   Object.entries(targetGroups).forEach(([group, targets]) => {
     targetGroups[group] = [...targets].sort(sortNxReleasePublishLast);
   });
