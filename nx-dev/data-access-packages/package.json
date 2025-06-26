@@ -2,6 +2,7 @@
   "name": "@nx/nx-dev-data-access-packages",
   "version": "0.0.1",
   "type": "commonjs",
+  "private": true,
   "exports": {
     ".": {
       "import": "./src/index.ts",
@@ -14,8 +15,8 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@nx/nx-dev-models-package": "workspace:",
-    "@nx/nx-dev-models-document": "workspace:",
-    "@nx/nx-dev-data-access-documents": "workspace:"
+    "@nx/nx-dev-models-package": "workspace:*",
+    "@nx/nx-dev-models-document": "workspace:*",
+    "@nx/nx-dev-data-access-documents": "workspace:*"
   }
 }

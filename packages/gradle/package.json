@@ -35,10 +35,14 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit"
+    "@nx/devkit": "workspace:*",
+    "nx": "workspace:*"
   },
   "publishConfig": {
     "access": "public"
   },
-  "executors": "./executors.json"
+  "executors": "./executors.json",
+  "devDependencies": {
+    "jest": "^29.4.1"
+  }
 }

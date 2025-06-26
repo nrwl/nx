@@ -19,6 +19,9 @@
       "path": "../jest"
     },
     {
+      "path": "../nx"
+    },
+    {
       "path": "../devkit"
     },
     {

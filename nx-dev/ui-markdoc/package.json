@@ -2,15 +2,20 @@
   "name": "@nx/nx-dev-ui-markdoc",
   "version": "0.0.1",
   "type": "commonjs",
+  "private": true,
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "dependencies": {
-    "@nx/graph-internal-ui-project-details": "workspace:",
-    "@nx/nx-dev-ui-fence": "workspace:",
-    "@nx/nx-dev-ui-primitives": "workspace:",
-    "@nx/nx-dev-ui-theme": "workspace:",
-    "@nx/nx-dev-ui-icons": "workspace:",
-    "@nx/nx-dev-ui-common": "workspace:",
-    "@nx/nx-dev-feature-analytics": "workspace:"
+    "@nx/devkit": "workspace:*",
+    "@nx/graph-internal-ui-project-details": "workspace:*",
+    "@nx/nx-dev-ui-fence": "workspace:*",
+    "@nx/nx-dev-ui-primitives": "workspace:*",
+    "@nx/nx-dev-ui-theme": "workspace:*",
+    "@nx/nx-dev-ui-icons": "workspace:*",
+    "@nx/nx-dev-ui-common": "workspace:*",
+    "@nx/nx-dev-feature-analytics": "workspace:*"
+  },
+  "devDependencies": {
+    "jest": "^29.4.1"
   }
 }

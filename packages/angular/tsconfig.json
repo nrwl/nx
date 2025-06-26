@@ -8,6 +8,9 @@
   "files": [],
   "references": [
     {
+      "path": "../nx"
+    },
+    {
       "path": "../workspace"
     },
     {

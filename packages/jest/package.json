@@ -37,8 +37,10 @@
   "dependencies": {
     "@jest/reporters": "^29.4.1",
     "@jest/test-result": "^29.4.1",
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
+    "@nx/devkit": "workspace:*",
+    "jest": "^29.4.1",
+    "nx": "workspace:*",
+    "@nx/js": "workspace:*",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "identity-obj-proxy": "3.0.0",
     "jest-config": "^29.4.1",

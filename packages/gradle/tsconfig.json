@@ -5,6 +5,9 @@
   "include": [],
   "references": [
     {
+      "path": "../nx"
+    },
+    {
       "path": "../devkit"
     },
     {

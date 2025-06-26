@@ -30,11 +30,12 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit",
+    "@nx/devkit": "workspace:*",
+    "nx": "workspace:*",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "@swc/helpers": "~0.5.0",
     "enquirer": "~2.3.6",
-    "@nx/js": "file:../js",
+    "@nx/js": "workspace:*",
     "picomatch": "4.0.2",
     "tsconfig-paths": "^4.1.2",
     "semver": "^7.6.3",
@@ -61,5 +62,8 @@
     "./plugins/nx-copy-assets.plugin": "./plugins/nx-copy-assets.plugin.js",
     "./plugins/nx-tsconfig-paths.plugin": "./plugins/nx-tsconfig-paths.plugin.js",
     "./plugins/rollup-replace-files.plugin": "./plugins/rollup-replace-files.plugin.js"
+  },
+  "devDependencies": {
+    "jest": "^29.4.1"
   }
 }

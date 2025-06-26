@@ -16,6 +16,9 @@
       "path": "../cypress"
     },
     {
+      "path": "../nx"
+    },
+    {
       "path": "../devkit"
     },
     {

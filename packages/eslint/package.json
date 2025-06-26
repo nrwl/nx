@@ -35,8 +35,9 @@
     "eslint": "^8.0.0 || ^9.0.0"
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
+    "@nx/devkit": "workspace:*",
+    "@nx/js": "workspace:*",
+    "nx": "workspace:*",
     "semver": "^7.5.3",
     "tslib": "^2.3.0",
     "typescript": "~5.8.2"
@@ -48,5 +49,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "jest": "^29.4.1"
   }
 }

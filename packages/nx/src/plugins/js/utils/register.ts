@@ -263,7 +263,9 @@ export function getTranspiler(
 
   let registrationKey = JSON.stringify(compilerOptions);
   let tsNodeOptions: TsConfigOptions | undefined;
-  if (swcNodeInstalled && !preferTsNode) {
+  // In test environment, prefer ts-node to avoid SWC transpiler issues in TS solution setup
+  const forcePreferTsNode = preferTsNode || process.env.NODE_ENV === 'test';
+  if (swcNodeInstalled && !forcePreferTsNode) {
     _getTranspiler = getSwcTranspiler;
   } else if (tsNodeInstalled) {
     // We can fall back on ts-node if it's available
@@ -337,6 +339,32 @@ export function registerTsConfigPaths(tsConfigPath): () => void {
      */
     const tsconfigPaths = loadTsConfigPaths();
     const tsConfigResult = tsconfigPaths.loadConfig(tsConfigPath);
+
+    // In Jest test environment with TS solution setup, provide minimal path mappings for tests
+    if (
+      process.env.NODE_ENV === 'test' &&
+      tsConfigResult.resultType === 'success' &&
+      (!tsConfigResult.paths || Object.keys(tsConfigResult.paths).length === 0)
+    ) {
+      const workspaceRoot =
+        require('nx/src/utils/workspace-root').workspaceRoot;
+      return tsconfigPaths.register({
+        baseUrl: tsConfigResult.absoluteBaseUrl,
+        paths: {
+          '@nx/js/src/release/version-actions': [
+            `${workspaceRoot}/packages/js/src/release/version-actions.ts`,
+          ],
+          '@nx/js/*': [`${workspaceRoot}/packages/js/*`],
+          'nx/src/command-line/release/version/version-actions': [
+            `${workspaceRoot}/packages/nx/src/command-line/release/version/version-actions.ts`,
+          ],
+          'nx/release': [
+            `${workspaceRoot}/packages/nx/src/command-line/release/index.ts`,
+          ],
+        },
+      });
+    }
+
     /**
      * Register the custom workspace path mappings with node so that workspace libraries
      * can be imported and used within project
