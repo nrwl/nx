@@ -221,14 +221,6 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
               AI
             </Link>
             <Link
-              href="/remote-cache"
-              title="Nx Remote Cache"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
-              prefetch={false}
-            >
-              Remote Cache
-            </Link>
-            <Link
               href="/nx-cloud"
               title="Nx Cloud"
               className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
@@ -495,14 +487,6 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                             prefetch={false}
                           >
                             AI
-                          </Link>
-                          <Link
-                            href="/remote-cache"
-                            title="Nx Remote Cache"
-                            className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
-                            prefetch={false}
-                          >
-                            Remote Cache
                           </Link>
                           <Link
                             href="/nx-cloud"

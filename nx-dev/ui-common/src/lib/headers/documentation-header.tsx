@@ -315,14 +315,6 @@ export function DocumentationHeader({
               AI
             </Link>
             <Link
-              href="/remote-cache"
-              title="Nx Remote Cache"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
-              prefetch={false}
-            >
-              Remote Cache
-            </Link>
-            <Link
               href="/nx-cloud"
               title="Nx Cloud"
               className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
@@ -345,7 +337,7 @@ export function DocumentationHeader({
               className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
               prefetch={false}
             >
-              Nx Enterprise
+              Enterprise
             </Link>
           </nav>
         </div>

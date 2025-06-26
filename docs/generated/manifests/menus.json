@@ -380,7 +380,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Self-Host the Remote Cache",
+                "name": "Remote Cache",
                 "path": "/recipes/running-tasks/self-hosted-caching",
                 "id": "self-hosted-caching",
                 "isExternal": false,

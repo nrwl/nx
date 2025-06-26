@@ -9,58 +9,13 @@ The Custom Task Runners API was created many years ago and has not been supporte
 
 This page guides you on how to migrate off the now deprecated Custom Task Runner API for both:
 
-- achieving self-hosted remote caching
+- choosing the best remote cache option for your organization
 - implementing pre/post processing logic when running tasks
 
-## Self-Hosted Remote Cache
+## Remote Cache
 
-Nx offers different ways to enable self-hosted remote caching for your workspace that can be used starting with Nx version 19.8 and higher. You can either use our official Nx packages that come with ready-to-use adapters for AWS S3, GCP, Azure and more, or build your own cache server by following the Nx Remote Caching OpenAPI spec.
-
-Read more in our [documentation](/recipes/running-tasks/self-hosted-caching).
-
-### Migrating from `@nx-aws-plugin`
-
-If you've been using the `@nx-aws-plugin/nx-aws-cache` community plugin, you should be easily able to migrate to the free [Nx S3 cache plugin](/reference/core-api/s3-cache/overview). The specific modification depends on your repository's configuration.
-
-The following is one example, where a custom tasks runner configuration in `nx.json` will be removed:
-
-```json
-{
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "@nx-aws-plugin/nx-aws-cache",
-      "options": {
-        "awsAccessKeyId": "key",
-        "awsSecretAccessKey": "secret",
-        "awsForcePathStyle": true,
-        "awsEndpoint": "http://custom",
-        "awsBucket": "my-bucket",
-        "awsRegion": "eu-central-1",
-        "encryptionFileKey": "key"
-      }
-    }
-  }
-}
-```
-
-And replaced with:
-
-```json
-{
-  "s3": {
-    "accessKeyId": "key",
-    "secretAccessKey": "secret",
-    "forcePathStyle": true,
-    "endpoint": "http://custom",
-    "bucket": "my-bucket",
-    "region": "eu-central-1",
-    "encryptionFileKey": "key",
-    "localMode": "read-write"
-  }
-}
-```
-
-The [API documentation](/recipes/running-tasks/self-hosted-caching#official-nx-selfhosted-cache-packages) for each plugin describes the available options.
+There are several ways to set up remote caching with Nx.
+[Read more about remote cache options](/recipes/running-tasks/self-hosted-caching).
 
 ## The preTasksExecution and postTasksExecution hooks
 

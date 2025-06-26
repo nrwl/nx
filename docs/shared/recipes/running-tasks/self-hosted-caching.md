@@ -1,34 +1,57 @@
 ---
-title: 'Self-Host your Remote Cache'
-description: 'Learn how to self-host Nx remote caching on AWS S3, Google Cloud, Azure, or shared drives, or build your own cache server for enhanced build performance in your monorepo.'
+title: 'Remote Cache'
+description: 'Learn how to set up remote cache.'
 ---
 
-# Self-Host your Remote Cache
+# Remote Cache
 
-Nx offers different ways to enable self-hosted remote caching for your workspace that can be used starting with Nx version 19.8 and higher:
+There are several ways to set up remote caching with Nx.
 
-- **Using the official Nx packages** that come with ready-to-use adapters for AWS S3, GCP, Azure, and more.
-- **Build your own cache server** by following the Nx Remote Caching OpenAPI spec.
+{% callout type="announcement" title="Nx Cloud: Managed Remote Cache" %}
+
+Recommended for everyone.
+
+- [Fully managed multi-tier remote caching with Nx Replay](/ci/features/remote-cache)
+- [Both secure and fast](/enterprise/security)
+- Generous free plan
+
+You'll also get access to advanced CI features:
+
+- [Automated distribution of tasks across machines with Nx Agents](/ci/features/distribute-task-execution)
+- [Automated splitting of tasks (including e2e tests) with Nx Atomizer](/ci/features/split-e2e-tasks)
+- [Detection and re-running of flaky tasks](/ci/features/flaky-tasks)
+- [Self-healing CI and other AI features](/ai)
+
+[Get Started](https://cloud.nx.app)
+{% /callout %}
+
+{% callout type="announcement" title="Nx Enterprise" %}
+
+Recommended for large organizations.
+
+Includes everything from Nx Cloud, plus:
+
+- Work hand-in-hand with the Nx team for continual improvement
+- Run on the Nx Cloud servers in any region or run fully self-contained, on-prem
+- SOC 2 type 1 and 2 compliant and comes with single-tenant, dedicated EU region hosting as well as on-premise
+
+[Reach out for an Enterprise trial](/enterprise/trial)
+
+{% /callout %}
+
+## Self-Hosted Cache
+
+Great for proof of concepts and small teams.
 
 {% callout type="warning" title="Bucket-based caches are vulnerable to poisoning and often prohibited in organizations" %}
 
-CREEP (CVE-2025-36852) is a critical vulnerability in bucket-based self-hosted remote caches. It lets attackers with PR access poison production builds via a race condition during artifact creation—before security checks can catch it. [Learn more](/blog/cve-2025-36852-critical-cache-poisoning-vulnerability-creep)
+CREEP (CVE-2025-36852) is a critical vulnerability in bucket-based self-hosted remote caches that allows anyone with PR access to poison production builds. Many organizations are unaware of this security risk. [Learn more](/blog/creep-vulnerability-build-cache-security)
+
+All packages below (along with other bucket-based remote cache implementations) are listed in the CVE and are not allowed in many organizations.
 
 {% /callout %}
 
-{% callout type="note" title="Free & secure managed remote cache with Nx Cloud" %}
-
-Note, you can get started for free with a **fully managed remote caching powered by Nx Cloud**. It comes with a generous Hobby plan that is enough for most small teams. [Learn more here](/nx-cloud).
-
-If you are an enterprise and **data privacy and security is a concern**, [reach out for an Enterprise trial](/enterprise/trial). It is fully SOC 2 type 1 and 2 compliant and comes with single-tenant, dedicated EU region hosting as well as on-premise.
-
-**Are you an OSS project?** Nx Cloud is free for OSS. [Reach out here](/pricing#oss).
-
-{% /callout %}
-
-## Official Nx Self-Hosted Cache Packages
-
-The official self-hosted cache packages are the easiest migration path if you've been using a community caching solution based on the old custom task runner API in the past. All of the packages are completely free but require an activation key. Getting a key is a fully automated and self-serving process that happens during the package installation.
+All packages are free but require an activation key. Getting a key is a fully automated, self-service process that happens during package installation.
 
 The following remote cache adapters are available:
 
@@ -39,22 +62,13 @@ The following remote cache adapters are available:
 
 > Why require an activation key? It simply helps us know and support our users. If you prefer not to provide this information, you can also [build your own cache server](#build-your-own-caching-server).
 
-### Migrating From Custom Tasks Runners
-
-You might have used Nx's now deprecated custom task runners API in the following scenarios:
-
-- to implement custom self-hosted caching: going forward, use the official self-hosted packages or alternatively [build your own caching server](#build-your-own-caching-server)
-- to inject custom behavior before and after running tasks in Nx: for that purpose, we've built a new API exposing dedicated pre and post hooks.
-
-To learn more about migrating from custom task runners, [please refer to this detailed guide](/deprecated/custom-tasks-runner).
-
 ## Build Your Own Caching Server
 
-Starting in Nx version 20.8, you can build your own caching server using the OpenAPI specification provided below. This allows you to create a custom remote cache server that fits your specific needs. The server is responsible for managing all aspects of the remote cache, including storage, retrieval, and authentication.
+Starting in Nx version 20.8, you can build your own caching server using the OpenAPI specification below. This allows you to create a custom remote cache server tailored to your specific needs. The server manages all aspects of the remote cache, including storage, retrieval, and authentication.
 
-Implementation is left up to you, but the server must adhere to the OpenAPI specification provided below to ensure compatibility with Nx's caching mechanism. The endpoints described below involve the transfer of tar archives which are sent as binary data. It is important to note that the underlying format of that data is subject to change in future versions of Nx, but the OpenAPI specification should remain stable.
+Implementation is up to you, but the server must adhere to the OpenAPI specification below to ensure compatibility with Nx's caching mechanism. The endpoints transfer tar archives as binary data. Note that while the underlying data format may change in future Nx versions, the OpenAPI specification should remain stable.
 
-As long as your server adheres to the OpenAPI spec, you can implement it in any programming language or framework of your choice.
+You can implement your server in any programming language or framework, as long as it adheres to the OpenAPI spec.
 
 ### Open API Specification
 
@@ -200,18 +214,16 @@ As long as your server adheres to the OpenAPI spec, you can implement it in any 
 
 ### Usage Notes
 
-To use your custom caching server, you must set the `NX_SELF_HOSTED_REMOTE_CACHE_SERVER` environment variable. Additionally, the following environment variables also affect the behavior:
+To use your custom caching server, set the `NX_SELF_HOSTED_REMOTE_CACHE_SERVER` environment variable. The following environment variables also affect behavior:
 
 - `NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN`: The authentication token to access the cache server.
 - `NODE_TLS_REJECT_UNAUTHORIZED`: Set to `0` to disable TLS certificate validation.
 
-## Why Switch to Nx Cloud
+### Migrating From Custom Tasks Runners
 
-Nx Cloud is much more than just a remote caching solution; it provides a full platform for scaling monorepos on CI. It comes with:
+You might have used Nx's now-deprecated custom task runners API in these scenarios:
 
-- [fully managed remote caching with Nx Replay](/ci/features/remote-cache)
-- [automated distribution of tasks across machines with Nx Agents](/ci/features/distribute-task-execution)
-- [automated splitting of tasks (including e2e tests) with Nx Atomizer](/ci/features/split-e2e-tasks)
-- [detection and re-running of flaky tasks](/ci/features/flaky-tasks)
+- To implement custom self-hosted caching: use one of the implementations listed above
+- To inject custom behavior before and after running tasks: use our new API with dedicated pre and post hooks
 
-{% call-to-action title="Connect to Nx Cloud" icon="nxcloud" description="Enable task distribution and Atomizer" url="/ci/intro/connect-to-nx-cloud" /%}
+To learn more about migrating from custom task runners, [please refer to this detailed guide](/deprecated/custom-tasks-runner).
