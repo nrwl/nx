@@ -252,7 +252,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
               className="hidden gap-2 px-3 py-2 font-semibold leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
               prefetch={false}
             >
-              Enterprise
+              Nx Enterprise
             </Link>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
             <div className="px-3 opacity-50 hover:opacity-100">
@@ -531,7 +531,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                                     'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none'
                                   )}
                                 >
-                                  <span>Enterprise</span>
+                                  <span>Nx Enterprise</span>
                                   <ChevronDownIcon
                                     aria-hidden="true"
                                     className={cx(
