@@ -20,6 +20,7 @@ pinned: false
 - [Your AI Assistant Can Now Read Your Terminal: Real-Time Development Error Fixing](/blog/nx-terminal-integration-ai)
 - [Introducing Self-Healing CI for Nx and Nx Cloud](/blog/nx-self-healing-ci)
 - **Analyze Your Nx Cloud Runs With Your AI Assistant**
+- [Automatically Fix your CI Failures with JetBrains AI Assistant](/blog/jetbrains-ci-autofix)
 
 {% /callout %}
 
