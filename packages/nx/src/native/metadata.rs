@@ -16,14 +16,14 @@ pub fn get_binary_target() -> String {
     let mut binary_target = String::new();
 
     if !arch.is_empty() {
-        binary_target.push_str(&arch);
+        binary_target.push_str(arch);
     }
 
     if !os.is_empty() {
         if !binary_target.is_empty() {
             binary_target.push('-');
         }
-        binary_target.push_str(&os);
+        binary_target.push_str(os);
     }
 
     binary_target

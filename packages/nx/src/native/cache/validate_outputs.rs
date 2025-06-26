@@ -23,8 +23,8 @@ pub fn validate_outputs(outputs: Vec<String>) -> anyhow::Result<()> {
         } else {
             for prefix in ALLOWED_WORKSPACE_ROOT_OUTPUT_PREFIXES.iter() {
                 if let Some(trimmed) = output.strip_prefix(prefix) {
-                    if contains_glob_pattern(&trimmed) {
-                        let (root, _) = partition_glob(&trimmed)?;
+                    if contains_glob_pattern(trimmed) {
+                        let (root, _) = partition_glob(trimmed)?;
                         if root.is_empty() {
                             workspace_globs.push(output);
                         }
