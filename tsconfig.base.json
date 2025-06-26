@@ -8,6 +8,7 @@
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
     "types": ["node", "jest"],
+    "typeRoots": ["./node_modules/@types"],
     "lib": ["ES2022"],
     "declaration": true,
     "resolveJsonModule": true,

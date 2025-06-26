@@ -65,8 +65,5 @@
   },
   "nx-migrations": {
     "migrations": "./migrations.json"
-  },
-  "devDependencies": {
-    "jest": "^29.4.1"
   }
 }

@@ -15,7 +15,5 @@
     "@nx/nx-dev-ui-common": "workspace:*",
     "@nx/nx-dev-feature-analytics": "workspace:*"
   },
-  "devDependencies": {
-    "jest": "^29.4.1"
-  }
+  "devDependencies": {}
 }

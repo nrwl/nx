@@ -528,12 +528,6 @@ importers:
       '@types/is-ci':
         specifier: ^3.0.0
         version: 3.0.4
-      '@types/jasmine':
-        specifier: ~2.8.6
-        version: 2.8.23
-      '@types/jasminewd2':
-        specifier: ~2.0.3
-        version: 2.0.13
       '@types/jest':
         specifier: 29.5.12
         version: 29.5.12
@@ -10855,12 +10849,6 @@ packages:
 
   '@types/istanbul-reports@3.0.4':
     resolution: {integrity: sha512-pk2B1NWalF9toCRu6gjBzR69syFjP4Od8WRAX+0mmf9lAjCRicLOWc+ZrxZHx/0XRjotgkF9t6iaMJ+aXcOdZQ==}
-
-  '@types/jasmine@2.8.23':
-    resolution: {integrity: sha512-x2taYv8LtplAGTEPxEnc1nWh3dqV4VhgAzXLXQkRolB/+cAOfCAqXt+8cKjX/a8v1JmNXQ9yGCJT8+8pEuU1Mg==}
-
-  '@types/jasminewd2@2.0.13':
-    resolution: {integrity: sha512-aJ3wj8tXMpBrzQ5ghIaqMisD8C3FIrcO6sDKHqFbuqAsI7yOxj0fA7MrRCPLZHIVUjERIwsMmGn/vB0UQ9u0Hg==}
 
   '@types/jest@29.5.12':
     resolution: {integrity: sha512-eDC8bTvT/QhYdxJAulQikueigY5AsdBRH2yDKW3yveW7svY3+DzN84/2NUgkw10RTiJbWqZrTtoGVdYlvFJdLw==}
@@ -33081,12 +33069,6 @@ snapshots:
   '@types/istanbul-reports@3.0.4':
     dependencies:
       '@types/istanbul-lib-report': 3.0.3
-
-  '@types/jasmine@2.8.23': {}
-
-  '@types/jasminewd2@2.0.13':
-    dependencies:
-      '@types/jasmine': 2.8.23
 
   '@types/jest@29.5.12':
     dependencies:
