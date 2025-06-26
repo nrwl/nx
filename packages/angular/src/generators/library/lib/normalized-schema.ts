@@ -25,6 +25,7 @@ export interface NormalizedSchema {
     skipModule?: boolean;
     skipPackageJson?: boolean;
     skipPostInstall?: boolean;
+    skipTsConfig?: boolean;
     standalone?: boolean;
     linter: Linter | LinterType;
     unitTestRunner: UnitTestRunner;
