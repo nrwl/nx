@@ -67,7 +67,7 @@ jobs:
       # - script: yarn nx-cloud record -- nx format:check
 
       # Without Nx Cloud, run format:check directly
-      - script: yarn nx-cloud record -- nx format:check
+      - script: yarn nx format:check
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --targets lint test build
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --parallel 1 e2e-ci
 ```
