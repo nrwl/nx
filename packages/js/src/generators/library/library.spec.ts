@@ -1517,7 +1517,7 @@ describe('lib', () => {
         expect(tree.exists('my-lib/.babelrc')).toBeFalsy();
       });
 
-      it('should not generate a .babelrc when bundler is swc (even if flag is set to true)', async () => {
+      it('should generate a .babelrc when includeBabelRc flag is true (even with swc bundler)', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           directory: 'my-lib',
@@ -1525,7 +1525,8 @@ describe('lib', () => {
           includeBabelRc: true,
         });
 
-        expect(tree.exists('my-lib/.babelrc')).toBeFalsy();
+        expect(tree.exists('my-lib/.babelrc')).toBeTruthy();
+        expect(tree.exists('my-lib/.swcrc')).toBeFalsy();
       });
 
       it('should generate a .babelrc when flag is set to true (even if there is no `@nx/web` plugin installed)', async () => {
@@ -1632,6 +1633,47 @@ describe('lib', () => {
           ],
         },
       });
+    });
+
+    it('should create .babelrc when includeBabelRc is true with rollup bundler', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        bundler: 'rollup',
+        includeBabelRc: true,
+      });
+
+      expect(tree.exists('my-lib/.babelrc')).toBeTruthy();
+      const babelrc = readJson(tree, 'my-lib/.babelrc');
+      expect(babelrc.presets).toEqual([
+        ['@nx/js/babel', { useBuiltIns: 'usage' }],
+      ]);
+
+      // Should NOT create .swcrc when babel is explicitly requested
+      expect(tree.exists('my-lib/.swcrc')).toBeFalsy();
+    });
+
+    it('should create .swcrc when includeBabelRc is false with rollup bundler', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        bundler: 'rollup',
+        includeBabelRc: false,
+      });
+
+      expect(tree.exists('my-lib/.swcrc')).toBeTruthy();
+      expect(tree.exists('my-lib/.babelrc')).toBeFalsy();
+    });
+
+    it('should create .swcrc when includeBabelRc is not set with rollup bundler (default behavior)', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        bundler: 'rollup',
+      });
+
+      expect(tree.exists('my-lib/.swcrc')).toBeTruthy();
+      expect(tree.exists('my-lib/.babelrc')).toBeFalsy();
     });
   });
 
