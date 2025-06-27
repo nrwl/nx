@@ -63,7 +63,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
         this.pluginOptions.devServer?.hmr && isDevServer ? 'true' : 'false',
       ...(this.pluginOptions.define ?? {}),
     }).apply(compiler);
-    if (this.pluginOptions.assets) {
+    if (this.pluginOptions.assets && !this.isPlatformServer) {
       new CopyRspackPlugin({
         patterns: (this.pluginOptions.assets ?? []).map((asset) => {
           let { input, output = '' } = asset;
