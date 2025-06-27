@@ -576,7 +576,9 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
     );
   }
 
-  if (options.bundler === 'swc' || options.bundler === 'rollup') {
+  if (options.includeBabelRc) {
+    addBabelRc(tree, options);
+  } else if (options.bundler === 'swc' || options.bundler === 'rollup') {
     addSwcConfig(
       tree,
       options.projectRoot,
@@ -584,8 +586,6 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
         ? 'commonjs'
         : 'es6'
     );
-  } else if (options.includeBabelRc) {
-    addBabelRc(tree, options);
   }
 
   if (options.unitTestRunner === 'none') {
