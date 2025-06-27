@@ -6,9 +6,8 @@ import {
   runCLI,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { classify } from '@nx/devkit/src/utils/string-utils';
-import { join } from 'path';
 
 describe('Move Angular Project', () => {
   let proj: string;

@@ -9,7 +9,7 @@ import {
   updateJson,
   updateFile,
   runCommand,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('@nx/js:copy-workspace-modules', () => {
   let scope: string;

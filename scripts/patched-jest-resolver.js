@@ -82,34 +82,38 @@ module.exports = function (modulePath, options) {
   }
 
   try {
+    // Detect if we're running from e2e directory
+    const isE2E = options.rootDir.includes('/e2e/');
+    const packagesPath = isE2E ? '../../packages/' : '../';
+    
     // TS Solution: Allow specific workspace packages to be resolved to TypeScript source
     const tsWorkspacePackages = {
-      '@nx/rollup': path.resolve(options.rootDir, '../rollup/index.ts'),
-      '@nx/eslint': path.resolve(options.rootDir, '../eslint/index.ts'),
-      '@nx/vite': path.resolve(options.rootDir, '../vite/index.ts'),
-      '@nx/jest': path.resolve(options.rootDir, '../jest/index.ts'),
-      '@nx/js': path.resolve(options.rootDir, '../js/src/index.ts'),
+      '@nx/rollup': path.resolve(options.rootDir, `${packagesPath}rollup/index.ts`),
+      '@nx/eslint': path.resolve(options.rootDir, `${packagesPath}eslint/index.ts`),
+      '@nx/vite': path.resolve(options.rootDir, `${packagesPath}vite/index.ts`),
+      '@nx/jest': path.resolve(options.rootDir, `${packagesPath}jest/index.ts`),
+      '@nx/js': path.resolve(options.rootDir, `${packagesPath}js/src/index.ts`),
       // Additional packages where tests are working
-      '@nx/next': path.resolve(options.rootDir, '../next/index.ts'),
-      '@nx/storybook': path.resolve(options.rootDir, '../storybook/index.ts'),
-      '@nx/rsbuild': path.resolve(options.rootDir, '../rsbuild/index.ts'),
+      '@nx/next': path.resolve(options.rootDir, `${packagesPath}next/index.ts`),
+      '@nx/storybook': path.resolve(options.rootDir, `${packagesPath}storybook/index.ts`),
+      '@nx/rsbuild': path.resolve(options.rootDir, `${packagesPath}rsbuild/index.ts`),
       '@nx/react-native': path.resolve(
         options.rootDir,
-        '../react-native/index.ts'
+        `${packagesPath}react-native/index.ts`
       ),
-      '@nx/express': path.resolve(options.rootDir, '../express/index.ts'),
-      '@nx/web': path.resolve(options.rootDir, '../web/index.ts'),
-      '@nx/vue': path.resolve(options.rootDir, '../vue/index.ts'),
-      '@nx/workspace': path.resolve(options.rootDir, '../workspace/index.ts'),
+      '@nx/express': path.resolve(options.rootDir, `${packagesPath}express/index.ts`),
+      '@nx/web': path.resolve(options.rootDir, `${packagesPath}web/index.ts`),
+      '@nx/vue': path.resolve(options.rootDir, `${packagesPath}vue/index.ts`),
+      '@nx/workspace': path.resolve(options.rootDir, `${packagesPath}workspace/index.ts`),
       '@nx/module-federation': path.resolve(
         options.rootDir,
-        '../module-federation/index.ts'
+        `${packagesPath}module-federation/index.ts`
       ),
-      '@nx/react': path.resolve(options.rootDir, '../react/index.ts'),
-      '@nx/remix': path.resolve(options.rootDir, '../remix/index.ts'),
-      '@nx/webpack': path.resolve(options.rootDir, '../webpack/index.ts'),
-      '@nx/playwright': path.resolve(options.rootDir, '../playwright/index.ts'),
-      '@nx/rspack': path.resolve(options.rootDir, '../rspack/src/index.ts'),
+      '@nx/react': path.resolve(options.rootDir, `${packagesPath}react/index.ts`),
+      '@nx/remix': path.resolve(options.rootDir, `${packagesPath}remix/index.ts`),
+      '@nx/webpack': path.resolve(options.rootDir, `${packagesPath}webpack/index.ts`),
+      '@nx/playwright': path.resolve(options.rootDir, `${packagesPath}playwright/index.ts`),
+      '@nx/rspack': path.resolve(options.rootDir, `${packagesPath}rspack/src/index.ts`),
     };
 
     if (tsWorkspacePackages[modulePath]) {
@@ -119,7 +123,7 @@ module.exports = function (modulePath, options) {
     // Handle @nx/js/src/* paths
     if (modulePath.startsWith('@nx/js/src/')) {
       const relativePath = modulePath.replace('@nx/js/src/', '');
-      return path.resolve(options.rootDir, '../js/src/', relativePath + '.ts');
+      return path.resolve(options.rootDir, `${packagesPath}js/src/`, relativePath + '.ts');
     }
 
     // Handle @nx/eslint/src/* paths
@@ -127,7 +131,7 @@ module.exports = function (modulePath, options) {
       const relativePath = modulePath.replace('@nx/eslint/src/', '');
       return path.resolve(
         options.rootDir,
-        '../eslint/src/',
+        `${packagesPath}eslint/src/`,
         relativePath + '.ts'
       );
     }
@@ -140,13 +144,21 @@ module.exports = function (modulePath, options) {
       'react',
       'vite',
       'rollup',
+      'workspace',
+      'angular',
+      'next',
+      'node',
+      'web',
+      'webpack',
+      'cypress',
+      'jest',
     ];
     for (const pkg of srcPackages) {
       if (modulePath.startsWith(`@nx/${pkg}/src/`)) {
         const relativePath = modulePath.replace(`@nx/${pkg}/src/`, '');
         return path.resolve(
           options.rootDir,
-          `../${pkg}/src/`,
+          `${packagesPath}${pkg}/src/`,
           relativePath + '.ts'
         );
       }
@@ -155,7 +167,7 @@ module.exports = function (modulePath, options) {
     // Handle nx/src/* paths (for direct nx package imports)
     if (modulePath.startsWith('nx/src/')) {
       const relativePath = modulePath.replace('nx/src/', '');
-      return path.resolve(options.rootDir, '../nx/src/', relativePath + '.ts');
+      return path.resolve(options.rootDir, `${packagesPath}nx/src/`, relativePath + '.ts');
     }
 
     // Block other Nx packages from auto-resolution

@@ -8,7 +8,7 @@ import {
   tmpProjPath,
   uniq,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {

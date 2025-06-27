@@ -10,7 +10,7 @@ const nativeFiles = glob.globSync(`packages/${p}/**/*.{node,wasm,js,mjs,cjs}`);
 console.log({ nativeFiles });
 
 nativeFiles.forEach((file) => {
-  const destFile = `build/${file}`;
+  const destFile = `dist/${file}`;
   const destDir = path.dirname(destFile);
   fs.mkdirSync(destDir, { recursive: true });
   fs.copyFileSync(file, destFile);
