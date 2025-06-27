@@ -1,6 +1,6 @@
 import { readJsonFile, type TargetConfiguration } from '@nx/devkit';
 import { existsSync } from 'node:fs';
-import { dirname, extname, isAbsolute, relative, resolve } from 'node:path';
+import { extname, isAbsolute, relative, resolve } from 'node:path';
 import { type PackageManagerCommands } from 'nx/src/utils/package-manager';
 import { join } from 'path';
 import { type ParsedCommandLine } from 'typescript';
@@ -94,7 +94,7 @@ export function isValidPackageJsonBuildConfig(
 
     const isPathSourceFile = (path: string): boolean => {
       const normalizedPath = isAbsolute(path)
-        ? resolve(path)
+        ? resolve(workspaceRoot, path.startsWith('/') ? path.slice(1) : path)
         : resolve(workspaceRoot, resolvedProjectPath, path);
 
       // For outFile case, check if path points to the specific outFile
@@ -150,7 +150,7 @@ export function isValidPackageJsonBuildConfig(
 
   const isPathSourceFile = (path: string): boolean => {
     const normalizedPath = isAbsolute(path)
-      ? resolve(workspaceRoot, path.slice(1)) // Remove leading slash and resolve relative to workspace root
+      ? resolve(workspaceRoot, path.startsWith('/') ? path.slice(1) : path)
       : resolve(workspaceRoot, resolvedProjectPath, path);
 
     if (resolvedOutDir) {
@@ -169,6 +169,8 @@ export function isValidPackageJsonBuildConfig(
       if (tsExtensions.includes(ext)) {
         return true;
       }
+      // If include is not defined and it's not a TS file, assume it's not a source file
+      return false;
     }
 
     const projectAbsolutePath = resolve(workspaceRoot, resolvedProjectPath);

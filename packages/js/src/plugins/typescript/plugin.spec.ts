@@ -95,8 +95,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "^typecheck",
                   ],
                   "inputs": [
-                  "production",
-                  "^production",
+                    "production",
+                    "^production",
                     {
                       "externalDependencies": [
                         "typescript",
