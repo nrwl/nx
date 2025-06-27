@@ -1,4 +1,4 @@
-import type { TargetConfiguration } from '../types/graph-types';
+import type { TargetConfiguration } from '@nx/devkit';
 import { JsonCodeBlock } from '@nx/graph-ui-code-block';
 import { ExpandedTargetsContext } from '@nx/graph/legacy/shared';
 import { CopyToClipboardButton } from '@nx/graph/legacy/components';

@@ -206,7 +206,8 @@
     },
     "copy-assets": {
       "cache": true,
-      "inputs": ["default", "^production"]
+      "inputs": ["production", "^production"],
+      "outputs": ["{workspaceRoot}/dist/packages/{projectName}"]
     }
   },
   "plugins": [
