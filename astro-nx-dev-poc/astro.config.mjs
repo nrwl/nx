@@ -55,7 +55,17 @@ export default defineConfig({
           autogenerate: { directory: 'getting-started' },
         },
         {
-          label: 'API Reference',
+          label: "Guides",
+          autogenerate: { directory: 'guides' },
+        },
+        {
+
+          label: "Concepts",
+          autogenerate: { directory: 'concepts' },
+        },
+        {
+          label: 'References',
+          collapsed: true,
           items: [
             // have to use link bc slug is mapped to the /docs/ folder but we need the astro component in the pages/ dir
             { label: 'Nx CLI', link: 'api/nx-cli' },
