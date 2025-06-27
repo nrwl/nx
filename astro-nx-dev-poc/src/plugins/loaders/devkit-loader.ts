@@ -18,6 +18,8 @@ interface DocumentRecord {
   title: string;
   description?: string;
   path?: string;
+  kind?: string;
+  category?: string;
 }
 
 export function DevKitLoader() {
@@ -235,7 +237,8 @@ async function generateDocsForEntry(
           title: reflection.name,
           description: reflection.comment?.summary?.[0]?.text || '',
           path: `${options.publicPath}${reflection.name}`,
-          type: reflection.variant,
+          kind: typedoc.ReflectionKind[reflection.kind],
+          category: getReflectionCategory(reflection.kind),
         },
       };
 
@@ -254,9 +257,11 @@ function generateMarkdownForReflection(
   // Title
   content += `# ${reflection.name}\n\n`;
 
-  // Kind badge
+  // Kind badge and category
   const kindName = typedoc.ReflectionKind[reflection.kind] || 'Unknown';
-  content += `**Kind**: ${kindName}\n\n`;
+  const category = getReflectionCategory(reflection.kind);
+  content += `**Kind**: ${kindName}\n`;
+  content += `**Category**: ${category}\n\n`;
 
   // Comment/description
   if (reflection.comment) {
@@ -352,4 +357,35 @@ function formatType(type?: typedoc.SomeType): string {
   }
 
   return 'any';
+}
+
+function getReflectionCategory(kind: typedoc.ReflectionKind): string {
+  // Map TypeDoc ReflectionKind to plural category names
+  const categoryMap: Record<number, string> = {
+    [typedoc.ReflectionKind.Project]: 'Projects',
+    [typedoc.ReflectionKind.Module]: 'Modules',
+    [typedoc.ReflectionKind.Namespace]: 'Namespaces',
+    [typedoc.ReflectionKind.Enum]: 'Enumerations',
+    [typedoc.ReflectionKind.EnumMember]: 'Enumeration Members',
+    [typedoc.ReflectionKind.Variable]: 'Variables',
+    [typedoc.ReflectionKind.Function]: 'Functions',
+    [typedoc.ReflectionKind.Class]: 'Classes',
+    [typedoc.ReflectionKind.Interface]: 'Interfaces',
+    [typedoc.ReflectionKind.Constructor]: 'Constructors',
+    [typedoc.ReflectionKind.Property]: 'Properties',
+    [typedoc.ReflectionKind.Method]: 'Methods',
+    [typedoc.ReflectionKind.CallSignature]: 'Call Signatures',
+    [typedoc.ReflectionKind.IndexSignature]: 'Index Signatures',
+    [typedoc.ReflectionKind.ConstructorSignature]: 'Constructor Signatures',
+    [typedoc.ReflectionKind.Parameter]: 'Parameters',
+    [typedoc.ReflectionKind.TypeLiteral]: 'Type Literals',
+    [typedoc.ReflectionKind.TypeParameter]: 'Type Parameters',
+    [typedoc.ReflectionKind.Accessor]: 'Accessors',
+    [typedoc.ReflectionKind.GetSignature]: 'Get Signatures',
+    [typedoc.ReflectionKind.SetSignature]: 'Set Signatures',
+    [typedoc.ReflectionKind.TypeAlias]: 'Type Aliases',
+    [typedoc.ReflectionKind.Reference]: 'References',
+  };
+
+  return categoryMap[kind] || 'Other';
 }

@@ -36,7 +36,9 @@ const devkitDocs = defineCollection({
   schema: z.object({
     title: z.string(),
     docType: z.literal('devkit'),
-    content: z.string(),
+    content: z.string().optional(),
+    category: z.string().optional(),
+    kind: z.string().optional(),
   }),
 });
 
