@@ -1,12 +1,10 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc/graph/ui-theme",
-    "tsBuildInfoFile": "../../dist/out-tsc/graph/ui-theme/tsconfig.lib.tsbuildinfo",
+    "outDir": "dist",
     "declaration": true,
     "types": ["node"],
-    "composite": true,
-    "noEmit": false
+    "composite": true
   },
   "exclude": [
     "jest.config.ts",

@@ -92,6 +92,26 @@
         {
           "target": "copy-readme",
           "projects": "self"
+        },
+        {
+          "target": "add-package-json-fields",
+          "projects": "self"
+        }
+      ]
+    },
+    "nx-release-publish": {
+      "executor": "@nx/js:release-publish",
+      "options": {
+        "packageRoot": "dist/packages/storybook"
+      },
+      "dependsOn": ["^nx-release-publish"]
+    },
+    "add-package-json-fields": {
+      "executor": "@nx/workspace-plugin:add-package-json-fields",
+      "dependsOn": [
+        {
+          "target": "copy-assets",
+          "projects": "self"
         }
       ]
     }

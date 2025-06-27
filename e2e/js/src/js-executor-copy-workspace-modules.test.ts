@@ -2,8 +2,6 @@ import {
   checkFilesExist,
   cleanupProject,
   newProject,
-  readFile,
-  readJson,
   runCLI,
   uniq,
   updateJson,
