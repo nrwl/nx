@@ -51,7 +51,7 @@ export async function createApplicationFiles(
   );
 
   if (options.unitTestRunner === 'none') {
-    host.delete(join(options.appProjectRoot, `App.spec.tsx`));
+    host.delete(join(options.appProjectRoot, 'src/app/App.spec.tsx'));
   }
   if (options.js) {
     toJS(host);
