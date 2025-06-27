@@ -7,9 +7,9 @@ import {
   rmDist,
   runCLI,
   runCommand,
-  tmpProjPath,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e/utils';
 
 describe('Rollup Plugin', () => {
@@ -245,6 +245,21 @@ export default config;
         `export const hello = 'world';\n`
       );
 
+      // Change TypeScript plugin build target to avoid conflict with Rollup
+      updateJson('nx.json', (nxJson) => {
+        nxJson.plugins.forEach((plugin) => {
+          if (
+            plugin.plugin === '@nx/js/typescript' &&
+            plugin.include?.includes(`libs/${myPkg}/*`)
+          ) {
+            if (plugin.options?.build?.targetName === 'build') {
+              plugin.options.build.targetName = 'tsc:build';
+            }
+          }
+        });
+        return nxJson;
+      });
+
       // Update rollup config to use useLegacyTypescriptPlugin: false
       updateFile(
         `libs/${myPkg}/rollup.config.cjs`,
@@ -284,6 +299,21 @@ export default config;
         `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=rollup`
       );
       updateFile(`libs/${myPkg}/src/index.ts`, `export const foo = 'bar';\n`);
+
+      // Change TypeScript plugin build target to avoid conflict with Rollup
+      updateJson('nx.json', (nxJson) => {
+        nxJson.plugins.forEach((plugin) => {
+          if (
+            plugin.plugin === '@nx/js/typescript' &&
+            plugin.include?.includes(`libs/${myPkg}/*`)
+          ) {
+            if (plugin.options?.build?.targetName === 'build') {
+              plugin.options.build.targetName = 'tsc:build';
+            }
+          }
+        });
+        return nxJson;
+      });
 
       // Update rollup config to explicitly use useLegacyTypescriptPlugin: true
       updateFile(
