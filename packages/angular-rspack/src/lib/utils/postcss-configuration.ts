@@ -22,6 +22,7 @@ interface RawPostcssConfiguration {
 const postcssConfigurationFiles: string[] = [
   'postcss.config.json',
   '.postcssrc.json',
+  'postcss.config.js',
 ];
 const tailwindConfigFiles: string[] = [
   'tailwind.config.js',
@@ -88,7 +89,9 @@ export async function loadPostcssConfiguration(
     return undefined;
   }
 
-  const raw = await readPostcssConfiguration(configPath);
+  const raw = configPath.endsWith('.js')
+    ? require(configPath)
+    : await readPostcssConfiguration(configPath);
 
   // If no plugins are defined, consider it equivalent to no configuration
   if (!raw.plugins || typeof raw.plugins !== 'object') {
