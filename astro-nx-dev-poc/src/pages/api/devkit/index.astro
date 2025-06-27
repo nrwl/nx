@@ -1,0 +1,16 @@
+---
+import { render, getCollection } from 'astro:content';
+
+const devkitDocs = await getCollection('devkit-docs');
+
+if (!devkitDocs) {
+  throw new Error('DevKit documentation not found');
+}
+const { Content, headings } = await render(devkitDocs[0]);
+console.log('Content:', Content);
+console.log('Headings:', headings);
+console.log(devkitDocs[0]);
+---
+
+blah
+<Content />

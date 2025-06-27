@@ -3,10 +3,6 @@ title: Nx Cloud CLI
 description: Complete reference for all Nx Cloud CLI commands
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
-
-# Nx Cloud CLI
-
 The Nx Cloud command line interface provides various commands to connect and interact with Nx Cloud, manage distributed task execution, and handle authentication.
 Below is a complete reference for all available commands and their options.
 
@@ -32,8 +28,8 @@ npx nx-cloud login [nxCloudUrl]
 
 #### Configuration File Location
 
-<Tabs>
-  <TabItem value="macos-linux" label="macOS & Linux" default>
+{% tabs %}
+{% tabitem label="macOS & Linux" %}
 
 We look for this file at the following locations:
 
@@ -43,14 +39,13 @@ We look for this file at the following locations:
 
 If we don't find an existing config file, we create one at `$HOME/config/nxcloud/nxcloud.ini`
 
-  </TabItem>
-  <TabItem value="windows" label="Windows">
+{% /tabitem %}
+  {% tabitem label="Windows" %}
 
 We look for this file within the `%LOCALAPPDATA%/nxcloud` directory and if it does not exist, we will create a new `nxcloud.ini` file there.
 
-  </TabItem>
-</Tabs>
-
+  {% /tabitem %}
+{% /tabs %}
 The format of this file is as follows:
 
 ```ini
@@ -153,7 +148,8 @@ using the `linux-medium-js` launch template.
 You can also [define the configuration in a file](/ci/features/dynamic-agents) and reference it as follows:
 `npx nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"`.
 
-```yaml {% fileName=".nx/workflows/dynamic-changesets.yaml" %}
+```yaml 
+// .nx/workflows/dynamic-changesets.yaml
 distribute-on:
   small-changeset: 3 linux-medium-js
   medium-changeset: 6 linux-medium-js
@@ -173,8 +169,8 @@ prevent your CI Pipeline Execution from ending prematurely, cutting off any unfi
 Whether you are running commands serially or in parallel (through use of the `&` operand or discrete jobs), you should
 include one or more targets from each command.
 
-<Tabs>
-<TabItem value="serial" label="Serial command execution" default>
+{% tabs %}
+{% tabitem label="Serial command execution" %}
 
 #### Incorrect example:
 
@@ -197,9 +193,8 @@ executed.
 - run: nx affected -t test
 - run: nx affected -t build
 ```
-
-</TabItem>
-<TabItem value="parallel" label="Parallel command execution">
+  {% /tabitem %}
+{% tabitem label="Parallel command execution" %}
 
 #### Incorrect example:
 
@@ -219,8 +214,8 @@ In this case, Nx Cloud will stop your pipeline, leaving work incomplete for both
 - run: nx affected -t build & nx affected -t lint & nx affected -t test
 ```
 
-</TabItem>
-</Tabs>
+{% /tabitem %}
+{% /tabs %}
 
 #### Advanced shutdown targeting
 
@@ -261,21 +256,20 @@ This will set `VAR1` and `VAR2` on Nx Agents to the same values set on the main 
 Invoking `npx nx-cloud start-ci-run` will tell Nx to distribute by default. You can enable/disable distribution for
 individual commands as follows:
 
-<Tabs>
-<TabItem value="nx-18" label="Nx >= 18" default>
+{% tabs %}
+{% tabitem  label="Nx >= 18" %}
 
 - `nx affected -t build --agents` (explicitly enable distribution)
 - `nx affected -t build --no-agents` (explicitly disable distribution)
 
-</TabItem>
-
-<TabItem value="nx-14" label="Nx >= 14.7">
+{% /tabitem %}
+{% tabitem  label="Nx >= 14.7" %}
 
 - `nx affected -t build --dte` (explicitly enable distribution)
 - `nx affected -t build --no-dte` (explicitly disable distribution)
 
-</TabItem>
-</Tabs>
+{% /tabitem %}
+{% /tabs %}
 
 ### `nx-cloud stop-all-agents`
 

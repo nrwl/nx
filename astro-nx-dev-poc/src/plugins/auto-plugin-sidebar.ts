@@ -3,25 +3,40 @@ import { readdirSync, existsSync, readFileSync } from 'fs';
 import { join, basename, extname } from 'path';
 import { workspaceRoot } from '@nx/devkit';
 
-function getStaticPluginFiles(pluginDir: string, workspaceRoot: string): Array<{ label: string; slug: string }> {
+function getStaticPluginFiles(
+  pluginDir: string,
+  workspaceRoot: string
+): Array<{ label: string; slug: string }> {
   const staticFiles: Array<{ label: string; slug: string }> = [];
-  const pluginContentDir = join(workspaceRoot, 'astro-nx-dev-poc', 'src', 'content', 'docs', 'api', 'plugins', pluginDir);
-  
+  const pluginContentDir = join(
+    workspaceRoot,
+    'astro-nx-dev-poc',
+    'src',
+    'content',
+    'docs',
+    'api',
+    'plugins',
+    pluginDir
+  );
+
   if (!existsSync(pluginContentDir)) {
     return staticFiles;
   }
 
   try {
     const files = readdirSync(pluginContentDir, { withFileTypes: true });
-    
+
     for (const file of files) {
-      if (file.isFile() && (file.name.endsWith('.md') || file.name.endsWith('.mdx'))) {
+      if (
+        file.isFile() &&
+        (file.name.endsWith('.md') || file.name.endsWith('.mdx'))
+      ) {
         const fileName = basename(file.name, extname(file.name));
         const label = fileName
           .split('-')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
           .join(' ');
-        
+
         staticFiles.push({
           label,
           slug: `api/plugins/${pluginDir}/${fileName}`,
@@ -115,7 +130,13 @@ export function autoPluginSidebar(): StarlightPlugin {
                   // Add static markdown files from content/docs/api/plugins/<plugin>/
                   const staticFiles = getStaticPluginFiles(dir, workspaceRoot);
                   if (staticFiles.length > 0) {
-                    logger.info(`Found ${staticFiles.length} static files for ${packageName}: ${staticFiles.map(f => f.label).join(', ')}`);
+                    logger.info(
+                      `Found ${
+                        staticFiles.length
+                      } static files for ${packageName}: ${staticFiles
+                        .map((f) => f.label)
+                        .join(', ')}`
+                    );
                   }
                   subItems.push(...staticFiles);
 
@@ -152,7 +173,7 @@ export function autoPluginSidebar(): StarlightPlugin {
             (item) =>
               typeof item === 'object' &&
               'label' in item &&
-              item.label === 'API Reference'
+              item.label === 'References'
           );
 
           if (apiRefIndex !== -1) {
