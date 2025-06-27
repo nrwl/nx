@@ -235,6 +235,7 @@ export function createLockFile(
         title:
           "Unable to create bun lock files. Run bun install it's just as quick",
       });
+      return '';
     }
   } catch (e) {
     if (!isPostInstallProcess()) {

@@ -76,16 +76,25 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
             new sources.RawSource(serializeJson(packageJson))
           );
           const packageManager = detectPackageManager(this.options.root);
-          compilation.emitAsset(
-            getLockFileName(packageManager),
-            new sources.RawSource(
-              createLockFile(
-                packageJson,
-                this.options.projectGraph,
-                packageManager
+
+          if (packageManager === 'bun') {
+            compilation
+              .getLogger('GeneratePackageJsonPlugin')
+              .warn(
+                'Bun lockfile generation is not supported. Only package.json will be generated.'
+              );
+          } else {
+            compilation.emitAsset(
+              getLockFileName(packageManager),
+              new sources.RawSource(
+                createLockFile(
+                  packageJson,
+                  this.options.projectGraph,
+                  packageManager
+                )
               )
-            )
-          );
+            );
+          }
         }
       );
     });
