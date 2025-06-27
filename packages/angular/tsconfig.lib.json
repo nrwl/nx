@@ -1,12 +1,13 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "module": "commonjs",
     "outDir": "../../dist/packages/angular",
     "declaration": true,
     "types": ["node"],
     "composite": true,
-    "noEmit": false
+    "noEmit": false,
+    "esModuleInterop": true
   },
   "exclude": [
     "**/*.spec.ts",
