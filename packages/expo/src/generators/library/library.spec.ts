@@ -247,7 +247,7 @@ describe('lib', () => {
   });
 
   describe('--unit-test-runner', () => {
-    it('should not generate test configuration', async () => {
+    it('should not generate test configuration or install test dependencies when unitTestRunner is none', async () => {
       await expoLibraryGenerator(appTree, {
         ...defaultSchema,
         unitTestRunner: 'none',
@@ -267,9 +267,20 @@ describe('lib', () => {
           "targets": {},
         }
       `);
+      const packageJson = readJson(appTree, 'package.json');
+      expect(
+        packageJson.devDependencies['react-test-renderer']
+      ).toBeUndefined();
+      expect(
+        packageJson.devDependencies['@testing-library/react-native']
+      ).toBeUndefined();
+      expect(
+        packageJson.devDependencies['@testing-library/jest-native']
+      ).toBeUndefined();
+      expect(packageJson.devDependencies['jest-expo']).toBeUndefined();
     });
 
-    it('should generate test configuration', async () => {
+    it('should generate test configuration and install test dependencies when unitTestRunner is jest', async () => {
       await expoLibraryGenerator(appTree, {
         ...defaultSchema,
         unitTestRunner: 'jest',
@@ -327,6 +338,15 @@ describe('lib', () => {
         };
         "
       `);
+      const packageJson = readJson(appTree, 'package.json');
+      expect(packageJson.devDependencies['react-test-renderer']).toBeDefined();
+      expect(
+        packageJson.devDependencies['@testing-library/react-native']
+      ).toBeDefined();
+      expect(
+        packageJson.devDependencies['@testing-library/jest-native']
+      ).toBeDefined();
+      expect(packageJson.devDependencies['jest-expo']).toBeDefined();
     });
   });
 
