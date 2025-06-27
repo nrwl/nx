@@ -201,8 +201,8 @@ export async function normalizeOptions(
       typeof options.index === 'string' ? options.index : options.index.input
     ),
     output: indexOutput,
-    // @TODO: Add support for transformer
-    transformer: undefined,
+    transformer:
+      typeof options.index === 'object' ? options.index.transformer : undefined,
     // Preload initial defaults to true
     preloadInitial:
       typeof options.index !== 'object' ||

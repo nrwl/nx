@@ -132,6 +132,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
         ),
         i18n: this.i18n,
         optimization: this.pluginOptions.optimization,
+        postTransform: this.pluginOptions.index.transformer,
         isSsr: !!(
           this.pluginOptions.ssr ||
           this.pluginOptions.prerender ||
