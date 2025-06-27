@@ -5,7 +5,7 @@ authors: ['Victor Savkin']
 tags: ['caching', 'security']
 cover_image: /blog/images/2025-06-25/header.avif
 description: 'Build systems with remote caching can inadvertently grant every developer write access to production. Learn about the CREEP vulnerability (CVE-2025-36852) and how to protect your organization.'
-pinned: false
+pinned: true
 ---
 
 Build systems with remote caching make CI/CD pipelines fast. Very fast. They are essential for scaling modern software development.
@@ -25,6 +25,8 @@ This isn't new. Compromised low-privilege access has enabled devastating breache
 In each case, attackers turned trusted build processes into deployment pipelines for malicious code.
 
 If you use a build system with remote caching, assume you're affected. This isn't hyperbole. **Most organizations are unknowingly giving every PR author the power to poison production without leaving a trace.**
+
+{% call-to-action size="lg" title="Join our webinar + live Q&A on July 9th and 16th" url="https://bit.ly/4kkSHiy" icon="nxcloud" description="Join Nx co-founders, Jeff and Victor, for an essential security briefing on protecting your build infrastructure from emerging threats." /%}
 
 {% toc /%}
 
@@ -239,6 +241,8 @@ Any implementation that writes directly to S3, GCS, Azure, **including the packa
 Remote caching is critical for build performance, but we need to treat it with the same rigor we apply to production access.
 
 If you have questions about assessing your exposure or implementing secure caching, [reach out to our team](/contact/engineering).
+
+{% call-to-action size="lg" title="Join our webinar + live Q&A on July 9th and 16th" url="https://bit.ly/4npF0BA" icon="nxcloud" description="Join Nx co-founders, Jeff and Victor, for an essential security briefing on protecting your build infrastructure from emerging threats." /%}
 
 ---
 
