@@ -88,6 +88,18 @@
         "packageRoot": "dist/packages/{projectName}"
       }
     },
+    "add-extra-dependencies": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node ./scripts/replace-workspace-protocols.js {projectName}"
+      }
+    },
+    "add-package-json-fields": {
+      "executor": "@nx/workspace-plugin:add-package-json-fields",
+      "options": {
+        "packageRoot": "dist/packages/{projectName}"
+      }
+    },
     "build": {
       "dependsOn": ["build-base", "build-native"],
       "inputs": ["production", "^production"],
@@ -101,7 +113,7 @@
       "dependsOn": ["^build-base", "build-native"],
       "inputs": ["production", "^production"],
       "options": {
-        "outputPath": "build/{projectRoot}",
+        "outputPath": "dist/{projectRoot}",
         "tsConfig": "{projectRoot}/tsconfig.lib.json",
         "main": "{projectRoot}/index.ts"
       },
@@ -189,11 +201,12 @@
     "copy-docs": {
       "cache": true
     },
-    "copy-assets": {
-      "cache": true
-    },
     "copy-readme": {
       "cache": true
+    },
+    "copy-assets": {
+      "cache": true,
+      "inputs": ["default", "^production"]
     }
   },
   "plugins": [

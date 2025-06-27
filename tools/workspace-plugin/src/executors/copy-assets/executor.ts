@@ -4,6 +4,7 @@ import {
   workspaceRoot,
   readJsonFile,
   createProjectGraphAsync,
+  ProjectGraph,
 } from '@nx/devkit';
 import { CopyAssetsHandler } from '@nx/js/src/utils/assets/copy-assets-handler';
 import * as path from 'path';
@@ -78,15 +79,16 @@ export async function copyAssetsExecutor(
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
   // Need to ensure the project graph is created before accessing project details
+  let projectGraph: ProjectGraph;
   try {
-    await createProjectGraphAsync();
+    projectGraph = await createProjectGraphAsync();
   } catch (error) {
     logger.error(`Failed to create project graph: ${error.message || error}`);
     throw error;
   }
 
   const projectName = context.projectName;
-  const projectRoot = context.projectGraph.nodes[projectName].data.root;
+  const projectRoot = projectGraph.nodes[projectName].data.root;
 
   if (!options.assets || options.assets.length === 0) {
     logger.info(`No assets to copy for project: ${projectName}`);

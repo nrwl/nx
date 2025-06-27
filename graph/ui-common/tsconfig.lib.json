@@ -1,8 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc/graph/ui-common",
-    "tsBuildInfoFile": "../../dist/out-tsc/graph/ui-common/tsconfig.lib.tsbuildinfo",
+    "outDir": "dist",
     "declaration": true,
     "emitDeclarationOnly": true,
     "declarationMap": true,
