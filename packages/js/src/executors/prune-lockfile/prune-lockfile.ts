@@ -25,17 +25,30 @@ export default async function pruneLockfileExecutor(
   logger.log('Pruning lockfile...');
   const outputDirectory = getOutputDir(schema, context);
   const packageJson = getPackageJson(schema, context);
-  const { lockfileName, lockFile } = createPrunedLockfile(
-    packageJson,
-    context.projectGraph
-  );
-  const lockfileOutputPath = join(outputDirectory, lockfileName);
-  writeFileSync(lockfileOutputPath, lockFile);
-  writeFileSync(
-    join(outputDirectory, 'package.json'),
-    JSON.stringify(packageJson, null, 2)
-  );
-  logger.log(`Lockfile pruned: ${lockfileOutputPath}`);
+  const packageManager = detectPackageManager(workspaceRoot);
+
+  if (packageManager === 'bun') {
+    logger.warn(
+      'Bun lockfile generation is not supported. Only package.json will be generated. Run "bun install" in the output directory if needed.'
+    );
+    writeFileSync(
+      join(outputDirectory, 'package.json'),
+      JSON.stringify(packageJson, null, 2)
+    );
+  } else {
+    const { lockfileName, lockFile } = createPrunedLockfile(
+      packageJson,
+      context.projectGraph
+    );
+    const lockfileOutputPath = join(outputDirectory, lockfileName);
+    writeFileSync(lockfileOutputPath, lockFile);
+    writeFileSync(
+      join(outputDirectory, 'package.json'),
+      JSON.stringify(packageJson, null, 2)
+    );
+    logger.log(`Lockfile pruned: ${lockfileOutputPath}`);
+  }
+
   return {
     success: true,
   };
