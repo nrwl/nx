@@ -1,4 +1,4 @@
-import type { TargetConfiguration } from '../types/graph-types';
+import type { TargetConfiguration } from '@nx/devkit';
 
 export function getDisplayHeaderFromTargetConfiguration(
   targetConfiguration: TargetConfiguration
