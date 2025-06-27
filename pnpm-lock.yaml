@@ -182,6 +182,9 @@ importers:
       starlight-links-validator:
         specifier: ^0.17.0
         version: 0.17.0(@astrojs/starlight@0.34.4(astro@5.10.1(@types/node@20.16.10)(encoding@0.1.13)(ioredis@5.4.1)(jiti@1.21.6)(less@4.1.3)(rollup@4.22.0)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.39.1)(typescript@5.8.3)(yaml@2.6.1)))
+      starlight-typedoc:
+        specifier: ^0.21.3
+        version: 0.21.3(@astrojs/starlight@0.34.4(astro@5.10.1(@types/node@20.16.10)(encoding@0.1.13)(ioredis@5.4.1)(jiti@1.21.6)(less@4.1.3)(rollup@4.22.0)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.39.1)(typescript@5.8.3)(yaml@2.6.1)))(typedoc-plugin-markdown@3.17.1(typedoc@0.25.12(typescript@5.8.3)))(typedoc@0.25.12(typescript@5.8.3))
       string-width:
         specifier: ^4.2.3
         version: 4.2.3
@@ -19724,6 +19727,14 @@ packages:
     engines: {node: '>=18.17.1'}
     peerDependencies:
       '@astrojs/starlight': '>=0.32.0'
+
+  starlight-typedoc@0.21.3:
+    resolution: {integrity: sha512-xqJlZ9Vd2bIWu61gvkHHiDQrwE9zHZGkf4sIr1LqY3FGv9g0IkDwn8/Falay0xOJoSf5XKs2J3BpFfhodLVGIg==}
+    engines: {node: '>=18.17.1'}
+    peerDependencies:
+      '@astrojs/starlight': '>=0.32.0'
+      typedoc: '>=0.28.0'
+      typedoc-plugin-markdown: '>=4.6.0'
 
   state-local@1.0.7:
     resolution: {integrity: sha512-HTEHMNieakEnoe33shBYcZ7NX83ACUjCu8c40iOGEZsngj9zRnkqS9j1pqQPXwobB0ZcVTk27REb7COQ0UR59w==}
@@ -47468,6 +47479,13 @@ snapshots:
       unist-util-visit: 5.0.0
     transitivePeerDependencies:
       - supports-color
+
+  starlight-typedoc@0.21.3(@astrojs/starlight@0.34.4(astro@5.10.1(@types/node@20.16.10)(encoding@0.1.13)(ioredis@5.4.1)(jiti@1.21.6)(less@4.1.3)(rollup@4.22.0)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.39.1)(typescript@5.8.3)(yaml@2.6.1)))(typedoc-plugin-markdown@3.17.1(typedoc@0.25.12(typescript@5.8.3)))(typedoc@0.25.12(typescript@5.8.3)):
+    dependencies:
+      '@astrojs/starlight': 0.34.4(astro@5.10.1(@types/node@20.16.10)(encoding@0.1.13)(ioredis@5.4.1)(jiti@1.21.6)(less@4.1.3)(rollup@4.22.0)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.39.1)(typescript@5.8.3)(yaml@2.6.1))
+      github-slugger: 2.0.0
+      typedoc: 0.25.12(typescript@5.8.3)
+      typedoc-plugin-markdown: 3.17.1(typedoc@0.25.12(typescript@5.8.3))
 
   state-local@1.0.7: {}
 

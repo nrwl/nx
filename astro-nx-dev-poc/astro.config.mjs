@@ -46,7 +46,7 @@ export default defineConfig({
       editLink: {
         baseUrl: 'https://github.com/nrwl/nx/tree/main/',
       },
-      customCss: ['./src/styles/custom.css', './src/styles/sidebar-tabs.css'],
+      customCss: ['./src/styles/custom.css'],
       sidebar: [
         {
           label: 'Getting Started',

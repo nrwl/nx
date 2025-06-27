@@ -10,7 +10,6 @@ import {
   getPropertyDefault,
 } from './utils/plugin-schema-parser';
 import type { Loader, LoaderContext } from 'astro/loaders';
-import { extractHeadings } from '../utils/extract-headings';
 
 // TODO: make this a glob pattern or something so we don't have to manually update
 // Define the plugins to generate documentation for
@@ -241,7 +240,6 @@ export async function generateAllPluginDocs(
       const generators = parseGenerators(pluginPath);
       if (generators && generators.size > 0) {
         const markdown = generateMarkdown(pluginName, generators, 'generators');
-        const headings = extractHeadings(markdown);
         entries.push({
           id: `${pluginName}-generators`,
           body: markdown,
@@ -254,8 +252,6 @@ export async function generateAllPluginDocs(
             pluginName,
             packageName: `@nx/${pluginName}`,
             docType: 'generators',
-            content: markdown,
-            headings,
           },
         });
       }
@@ -264,7 +260,6 @@ export async function generateAllPluginDocs(
       const executors = parseExecutors(pluginPath);
       if (executors && executors.size > 0) {
         const markdown = generateMarkdown(pluginName, executors, 'executors');
-        const headings = extractHeadings(markdown);
         entries.push({
           id: `${pluginName}-executors`,
           body: markdown,
@@ -277,8 +272,6 @@ export async function generateAllPluginDocs(
             pluginName,
             packageName: `@nx/${pluginName}`,
             docType: 'executors',
-            content: markdown,
-            headings,
           },
         });
       }
@@ -287,7 +280,6 @@ export async function generateAllPluginDocs(
       const migrations = parseMigrations(pluginPath);
       if (migrations && migrations.size > 0) {
         const markdown = generateMarkdown(pluginName, migrations, 'migrations');
-        const headings = extractHeadings(markdown);
         entries.push({
           id: `${pluginName}-migrations`,
           body: markdown,
@@ -301,7 +293,6 @@ export async function generateAllPluginDocs(
             packageName: `@nx/${pluginName}`,
             docType: 'migrations',
             content: markdown,
-            headings,
           },
         });
       }
@@ -320,18 +311,14 @@ export async function generateAllPluginDocs(
       skipCount++;
     }
   }
-
-  logger.info(`\nPlugin Documentation Summary:`);
-  logger.info(`  ✅ Successfully generated: ${successCount}`);
-  logger.info(`  ⚠️  Skipped: ${skipCount}`);
-  logger.info(`  📄 Total entries: ${entries.length}`);
-
   return entries;
 }
 
 export function PluginLoader(options: any = {}): Loader {
   return {
     name: 'nx-plugin-loader',
+    // @ts-expect-error renderMarkdown is real idk why TS is complaining
+    // https://docs.astro.build/en/reference/content-loader-reference/#rendermarkdown
     async load({ store, logger, watcher, renderMarkdown }: LoaderContext) {
       const docs = await generateAllPluginDocs(logger, watcher);
       logger.info(`Loaded ${docs.length} plugin documentation entries`);

@@ -11,8 +11,6 @@ export interface PluginDocEntry<TData = Record<string, unknown>> {
   body?: string;
   /** The file path of the content, if applicable. Relative to the site root. */
   filePath?: string;
-
-  deferredRender?: boolean;
   /** A content digest, to check if the content has changed. */
   digest?: number | string;
   rendered?: RenderedContent;

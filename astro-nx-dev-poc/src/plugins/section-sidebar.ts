@@ -1,6 +1,5 @@
 import type { StarlightPlugin } from '@astrojs/starlight/types';
 import { autoPluginSidebar } from './auto-plugin-sidebar';
-import { getAllSidebarItems } from '../config/sidebar.config';
 
 export function sectionSidebar(): StarlightPlugin {
   return {
