@@ -1,4 +1,5 @@
 ---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import { render, getCollection } from 'astro:content';
 
 const devkitDocs = await getCollection('devkit-docs');
@@ -12,5 +13,12 @@ console.log('Headings:', headings);
 console.log(devkitDocs[0]);
 ---
 
-blah
-<Content />
+<StarlightPage
+  frontmatter={{
+    title: 'DevKit Documentation',
+    description: 'Documentation for the DevKit',
+    headings: headings || [],
+  }}
+>
+  <Content />
+</StarlightPage>

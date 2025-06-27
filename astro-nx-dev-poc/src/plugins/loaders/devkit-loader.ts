@@ -10,19 +10,14 @@ import {
 } from 'fs';
 import { tmpdir } from 'os';
 import { randomUUID } from 'crypto';
-import type { RenderedContent } from 'astro:content';
+import type { DataStore, RenderedContent } from 'astro:content';
 import type { LoaderContext } from 'astro/loaders';
+import type { PluginDocEntry } from './utils/plugin-schema-parser';
 
 interface DocumentRecord {
-  id: string;
-  body?: string;
-  data: {
-    title: string;
-    description?: string;
-    slug: string;
-    path: string;
-    rendered: RenderedContent;
-  };
+  title: string;
+  description?: string;
+  path?: string;
 }
 
 export function DevKitLoader() {
@@ -185,8 +180,8 @@ export function DevKitLoader() {
 
 async function generateDocsForEntry(
   options: Partial<typedoc.TypeDocOptions> & { [key: string]: unknown },
-  store: any,
-  logger: any,
+  store: LoaderContext['store'],
+  logger: LoaderContext['logger'],
   renderMarkdown: (content: string) => Promise<RenderedContent>,
   baseSlug: string
 ) {
@@ -232,14 +227,13 @@ async function generateDocsForEntry(
         }`
       );
 
-      const documentRecord: DocumentRecord = {
+      const documentRecord: PluginDocEntry<DocumentRecord> = {
         id: slug,
         body: markdownContent,
+        rendered,
         data: {
           title: reflection.name,
           description: reflection.comment?.summary?.[0]?.text || '',
-          rendered,
-          slug: slug,
           path: `${options.publicPath}${reflection.name}`,
         },
       };
