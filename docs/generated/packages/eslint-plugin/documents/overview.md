@@ -8,6 +8,8 @@ The `@nx/eslint-plugin` package is an ESLint plugin that contains a collection o
 - [enforce-module-boundaries](#enforce-module-boundaries-rule)
 - [dependency-checks](#dependency-checks-rule)
 
+For detailed information about the available ESLint configurations and their design philosophy, see the [ESLint Configurations guide](/technologies/eslint/eslint-plugin/recipes/configurations).
+
 ## Setting Up ESLint Plugin
 
 ### Installation
