@@ -5,6 +5,7 @@ import {
   stripIndents,
   Tree,
 } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { relative } from 'path';
 import { GeneratorOptions } from '../schema';
 
@@ -28,7 +29,10 @@ export function addTailwindConfig(
     joinPathFragments(__dirname, '..', filesDir),
     project.root,
     {
-      relativeSourceRoot: relative(project.root, project.sourceRoot),
+      relativeSourceRoot: relative(
+        project.root,
+        getProjectSourceRoot(project, tree)
+      ),
       tmpl: '',
     }
   );

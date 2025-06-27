@@ -5,6 +5,7 @@ import {
 } from '@nx/devkit';
 import { insertImport } from '@nx/js';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type { CallExpression, SourceFile } from 'typescript';
 import {
   addProviderToAppConfig,
@@ -18,6 +19,7 @@ let tsquery: typeof import('@phenomnomnominal/tsquery').tsquery;
 
 export function addHydration(tree: Tree, options: NormalizedGeneratorOptions) {
   const projectConfig = readProjectConfiguration(tree, options.project);
+  const sourceRoot = getProjectSourceRoot(projectConfig, tree);
 
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -26,18 +28,12 @@ export function addHydration(tree: Tree, options: NormalizedGeneratorOptions) {
 
   let pathToClientConfigFile: string;
   if (options.standalone) {
-    pathToClientConfigFile = joinPathFragments(
-      projectConfig.sourceRoot,
-      'app/app.config.ts'
-    );
+    pathToClientConfigFile = joinPathFragments(sourceRoot, 'app/app.config.ts');
   } else {
-    pathToClientConfigFile = joinPathFragments(
-      projectConfig.sourceRoot,
-      'app/app.module.ts'
-    );
+    pathToClientConfigFile = joinPathFragments(sourceRoot, 'app/app.module.ts');
     if (!tree.exists(pathToClientConfigFile)) {
       pathToClientConfigFile = joinPathFragments(
-        projectConfig.sourceRoot,
+        sourceRoot,
         'app/app-module.ts'
       );
     }

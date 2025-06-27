@@ -3,6 +3,7 @@ import {
   joinPathFragments,
   offsetFromRoot,
   output,
+  type ProjectConfiguration,
   readJson,
   readNxJson,
   type Tree,
@@ -290,14 +291,15 @@ export function getProjectType(
 }
 
 export function getProjectSourceRoot(
-  tree: Tree,
-  projectSourceRoot: string | undefined,
-  projectRoot: string
-): string | undefined {
+  project: ProjectConfiguration,
+  tree?: Tree
+): string {
+  tree ??= new FsTree(workspaceRoot, false);
+
   return (
-    projectSourceRoot ??
-    (tree.exists(joinPathFragments(projectRoot, 'src'))
-      ? joinPathFragments(projectRoot, 'src')
-      : projectRoot)
+    project.sourceRoot ??
+    (tree.exists(joinPathFragments(project.root, 'src'))
+      ? joinPathFragments(project.root, 'src')
+      : project.root)
   );
 }
