@@ -6,7 +6,6 @@
     "composite": true,
     "outDir": "../../dist/packages/angular",
     "tsBuildInfoFile": "../../dist/packages/angular/tsconfig.lib.runtime.tsbuildinfo",
-    "noEmit": false
   },
   "include": ["index.ts", "src/runtime/**/*", "mf/**/*", "testing/**/*"],
   "angularCompilerOptions": {

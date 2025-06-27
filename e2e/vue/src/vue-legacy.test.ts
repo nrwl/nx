@@ -1,4 +1,4 @@
-import { cleanupProject, newProject, runCLI, uniq } from '@nx/e2e/utils';
+import { cleanupProject, newProject, runCLI, uniq } from '@nx/e2e-utils';
 
 describe('Vue Plugin (legacy)', () => {
   let proj: string;

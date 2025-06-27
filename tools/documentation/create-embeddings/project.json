@@ -12,17 +12,18 @@
         "platform": "node",
         "outputPath": "dist/tools/documentation/create-embeddings",
         "format": ["esm"],
-        "bundle": false,
+        "bundle": true,
         "main": "tools/documentation/create-embeddings/src/main.mts",
         "tsConfig": "tools/documentation/create-embeddings/tsconfig.app.json",
         "assets": ["tools/documentation/create-embeddings/src/assets"],
-        "generatePackageJson": true,
         "esbuildOptions": {
           "sourcemap": true,
           "outExtension": {
             ".js": ".js"
           }
-        }
+        },
+        "external": ["fs", "path", "crypto"],
+        "skipTypeCheck": true
       },
       "configurations": {
         "development": {},

@@ -5,7 +5,7 @@ import {
   newProject,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Next Playwright e2e tests', () => {
   let projectName;

@@ -14,7 +14,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { names } from '@nx/devkit';
 import { join } from 'path';
 

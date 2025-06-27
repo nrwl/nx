@@ -7,6 +7,30 @@
   "files": [],
   "references": [
     {
+      "path": "../../packages/workspace"
+    },
+    {
+      "path": "../../packages/vite"
+    },
+    {
+      "path": "../../packages/js"
+    },
+    {
+      "path": "../../packages/jest"
+    },
+    {
+      "path": "../../packages/vue"
+    },
+    {
+      "path": "../utils"
+    },
+    {
+      "path": "../../packages/devkit"
+    },
+    {
+      "path": "../../packages/nx"
+    },
+    {
       "path": "./tsconfig.spec.json"
     }
   ]

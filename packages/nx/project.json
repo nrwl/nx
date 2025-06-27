@@ -51,7 +51,7 @@
     },
     "artifacts": {
       "dependsOn": ["copy-native-package-directories"],
-      "command": "pnpm napi artifacts --package-json-path dist/packages/nx/package.json -d ./artifacts --npm-dir dist/packages"
+      "command": "pnpm napi artifacts --package-json-path dist/packages/nx/package.json -d packages/nx/src/native --npm-dir dist/packages"
     },
     "echo": {
       "command": "echo hi"

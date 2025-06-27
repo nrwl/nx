@@ -1084,6 +1084,747 @@ importers:
         specifier: 21.1.1
         version: 21.1.1
 
+  e2e/angular:
+    dependencies:
+      '@nx/angular':
+        specifier: workspace:*
+        version: link:../../packages/angular
+      '@nx/cypress':
+        specifier: workspace:*
+        version: link:../../packages/cypress
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/web':
+        specifier: workspace:*
+        version: link:../../packages/web
+      '@nx/webpack':
+        specifier: workspace:*
+        version: link:../../packages/webpack
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/cypress:
+    dependencies:
+      '@nx/cypress':
+        specifier: workspace:*
+        version: link:../../packages/cypress
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/detox:
+    dependencies:
+      '@nx/detox':
+        specifier: workspace:*
+        version: link:../../packages/detox
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/esbuild:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/esbuild':
+        specifier: workspace:*
+        version: link:../../packages/esbuild
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/eslint:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/eslint':
+        specifier: workspace:*
+        version: link:../../packages/eslint
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/expo:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/expo':
+        specifier: workspace:*
+        version: link:../../packages/expo
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/gradle:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/gradle':
+        specifier: workspace:*
+        version: link:../../packages/gradle
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/jest:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/js:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/esbuild':
+        specifier: workspace:*
+        version: link:../../packages/esbuild
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/lerna-smoke-tests:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/next:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/next':
+        specifier: workspace:*
+        version: link:../../packages/next
+      '@nx/react':
+        specifier: workspace:*
+        version: link:../../packages/react
+      '@nx/webpack':
+        specifier: workspace:*
+        version: link:../../packages/webpack
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/node:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/esbuild':
+        specifier: workspace:*
+        version: link:../../packages/esbuild
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/node':
+        specifier: workspace:*
+        version: link:../../packages/node
+      '@nx/webpack':
+        specifier: workspace:*
+        version: link:../../packages/webpack
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/nuxt:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/nuxt':
+        specifier: workspace:*
+        version: link:../../packages/nuxt
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/nx:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/nx-init:
+    dependencies:
+      '@nx/angular':
+        specifier: workspace:*
+        version: link:../../packages/angular
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/nest':
+        specifier: workspace:*
+        version: link:../../packages/nest
+      '@nx/react':
+        specifier: workspace:*
+        version: link:../../packages/react
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/playwright:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/playwright':
+        specifier: workspace:*
+        version: link:../../packages/playwright
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/plugin:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/plugin':
+        specifier: workspace:*
+        version: link:../../packages/plugin
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/react:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/react':
+        specifier: workspace:*
+        version: link:../../packages/react
+      '@nx/vite':
+        specifier: workspace:*
+        version: link:../../packages/vite
+      '@nx/webpack':
+        specifier: workspace:*
+        version: link:../../packages/webpack
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/react-native:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/react-native':
+        specifier: workspace:*
+        version: link:../../packages/react-native
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/release:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/remix:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/remix':
+        specifier: workspace:*
+        version: link:../../packages/remix
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/rollup:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/rollup':
+        specifier: workspace:*
+        version: link:../../packages/rollup
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/rspack:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/rspack':
+        specifier: workspace:*
+        version: link:../../packages/rspack
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/storybook:
+    dependencies:
+      '@nx/angular':
+        specifier: workspace:*
+        version: link:../../packages/angular
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/react':
+        specifier: workspace:*
+        version: link:../../packages/react
+      '@nx/storybook':
+        specifier: workspace:*
+        version: link:../../packages/storybook
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/utils:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/vite:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/vite':
+        specifier: workspace:*
+        version: link:../../packages/vite
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/vue:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/vite':
+        specifier: workspace:*
+        version: link:../../packages/vite
+      '@nx/vue':
+        specifier: workspace:*
+        version: link:../../packages/vue
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/web:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/vite':
+        specifier: workspace:*
+        version: link:../../packages/vite
+      '@nx/web':
+        specifier: workspace:*
+        version: link:../../packages/web
+      '@nx/webpack':
+        specifier: workspace:*
+        version: link:../../packages/webpack
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/webpack:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/webpack':
+        specifier: workspace:*
+        version: link:../../packages/webpack
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
+  e2e/workspace-create:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../../packages/jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
+      '@nx/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+      create-nx-workspace:
+        specifier: workspace:*
+        version: link:../../packages/create-nx-workspace
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
   graph/client:
     dependencies:
       '@nx/graph-internal-project-details':
@@ -1104,6 +1845,10 @@ importers:
       '@nx/graph-ui-common':
         specifier: 'workspace:'
         version: link:../ui-common
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   graph/migrate:
     dependencies:
@@ -1113,6 +1858,10 @@ importers:
       '@nx/graph-ui-common':
         specifier: 'workspace:'
         version: link:../ui-common
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   graph/project-details:
     dependencies:
@@ -1122,8 +1871,16 @@ importers:
       '@nx/graph-internal-ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
-  graph/ui-code-block: {}
+  graph/ui-code-block:
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   graph/ui-common: {}
 
@@ -1135,6 +1892,10 @@ importers:
       '@nx/nx-dev-ui-fence':
         specifier: 'workspace:'
         version: link:../../nx-dev/ui-fence
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   graph/ui-theme: {}
 
@@ -1417,6 +2178,10 @@ importers:
       '@nx/nx-dev-util-ai':
         specifier: workspace:*
         version: link:../util-ai
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   nx-dev/tutorial: {}
 
@@ -1529,6 +2294,10 @@ importers:
       '@nx/nx-dev-ui-common':
         specifier: workspace:*
         version: link:../ui-common
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   nx-dev/ui-company:
     dependencies:
@@ -1645,6 +2414,10 @@ importers:
       '@nx/nx-dev-ui-primitives':
         specifier: workspace:*
         version: link:../ui-primitives
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   nx-dev/ui-icons: {}
 
@@ -1892,6 +2665,9 @@ importers:
         specifier: ^5.8.0
         version: 5.10.0
     devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.15))(@types/node@20.16.10)(typescript@5.8.3))
       nx:
         specifier: workspace:*
         version: link:../nx
@@ -1913,6 +2689,10 @@ importers:
       yargs:
         specifier: ^17.6.2
         version: 17.6.2
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/create-nx-workspace:
     dependencies:
@@ -1940,6 +2720,10 @@ importers:
       yargs:
         specifier: ^17.6.2
         version: 17.6.2
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/cypress:
     dependencies:
@@ -1973,6 +2757,10 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/detox:
     dependencies:
@@ -2000,6 +2788,10 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/devkit:
     dependencies:
@@ -2030,6 +2822,10 @@ importers:
       yargs-parser:
         specifier: 21.1.1
         version: 21.1.1
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/esbuild:
     dependencies:
@@ -2084,6 +2880,10 @@ importers:
       typescript:
         specifier: ~5.8.2
         version: 5.8.3
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/eslint-plugin:
     dependencies:
@@ -2126,6 +2926,10 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/expo:
     dependencies:
@@ -2174,6 +2978,10 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/express:
     dependencies:
@@ -2192,6 +3000,10 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/gradle:
     dependencies:
@@ -2201,6 +3013,10 @@ importers:
       nx:
         specifier: workspace:*
         version: link:../nx
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/jest:
     dependencies:
@@ -2351,6 +3167,10 @@ importers:
       verdaccio:
         specifier: ^6.0.5
         version: 6.0.5(encoding@0.1.13)(typanion@3.14.0)
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/module-federation:
     dependencies:
@@ -2393,6 +3213,10 @@ importers:
       webpack:
         specifier: ^5.88.0
         version: 5.99.8(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4)
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/nest:
     dependencies:
@@ -2414,6 +3238,10 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/next:
     dependencies:
@@ -2468,6 +3296,10 @@ importers:
       webpack-merge:
         specifier: ^5.8.0
         version: 5.10.0
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/node:
     dependencies:
@@ -2495,6 +3327,10 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/nuxt:
     dependencies:
@@ -2528,6 +3364,10 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/nx:
     dependencies:
@@ -2642,6 +3482,10 @@ importers:
       yargs-parser:
         specifier: 21.1.1
         version: 21.1.1
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
     optionalDependencies:
       '@nx/nx-darwin-arm64':
         specifier: '*'
@@ -2700,6 +3544,10 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/plugin:
     dependencies:
@@ -2721,6 +3569,10 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/react:
     dependencies:
@@ -2772,6 +3624,10 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/react-native:
     dependencies:
@@ -2826,6 +3682,10 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/remix:
     dependencies:
@@ -2853,6 +3713,10 @@ importers:
       tslib:
         specifier: ^2.3.1
         version: 2.8.1
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.15))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/rollup:
     dependencies:
@@ -2910,6 +3774,10 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.15))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/rsbuild:
     dependencies:
@@ -2934,6 +3802,10 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/rspack:
     dependencies:
@@ -3039,6 +3911,10 @@ importers:
       webpack-node-externals:
         specifier: ^3.0.0
         version: 3.0.0
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/storybook:
     dependencies:
@@ -3069,6 +3945,10 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/vite:
     dependencies:
@@ -3108,6 +3988,10 @@ importers:
       vitest:
         specifier: ^1.3.1 || ^2.0.0 || ^3.0.0
         version: 3.0.5(@types/debug@4.1.12)(@types/node@20.16.10)(jiti@1.21.6)(jsdom@20.0.3(bufferutil@4.0.7))(less@4.3.0)(sass-embedded@1.85.1)(sass@1.88.0)(stylus@0.64.0)(terser@5.39.1)(yaml@2.6.1)
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/vue:
     dependencies:
@@ -3135,6 +4019,10 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/web:
     dependencies:
@@ -3159,6 +4047,10 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/webpack:
     dependencies:
@@ -3198,9 +4090,6 @@ importers:
       fork-ts-checker-webpack-plugin:
         specifier: 7.2.13
         version: 7.2.13(typescript@5.8.3)(webpack@5.99.8)
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
       less:
         specifier: 4.1.3
         version: 4.1.3
@@ -3282,6 +4171,10 @@ importers:
       webpack-subresource-integrity:
         specifier: ^5.1.0
         version: 5.1.0(html-webpack-plugin@5.5.0(webpack@5.99.8))(webpack@5.99.8)
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/workspace:
     dependencies:
@@ -3309,6 +4202,10 @@ importers:
       yargs-parser:
         specifier: 21.1.1
         version: 21.1.1
+    devDependencies:
+      jest:
+        specifier: ^29.4.1
+        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   tools/workspace-plugin:
     dependencies:
