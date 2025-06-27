@@ -1,13 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc/graph/migrate",
-    "tsBuildInfoFile": "../../dist/out-tsc/graph/migrate/tsconfig.lib.tsbuildinfo",
+    "outDir": "dist",
     "declaration": true,
     "types": ["node"],
     "lib": ["DOM"],
-    "composite": true,
-    "noEmit": false
+    "composite": true
   },
   "exclude": [
     "jest.config.ts",

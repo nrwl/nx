@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "version": 2,
+  "title": "Add Package.json Fields",
+  "description": "Add required package.json fields like 'types' and 'type' to built packages",
+  "type": "object",
+  "properties": {
+    "packageRoot": {
+      "type": "string",
+      "description": "The root directory of the built package (relative to workspace root)",
+      "default": "dist/packages/{projectName}"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,8 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc/graph/ui-project-details",
-    "tsBuildInfoFile": "../../dist/out-tsc/graph/ui-project-details/tsconfig.lib.tsbuildinfo",
+    "outDir": "dist",
     "declaration": true,
     "types": ["node"],
     "lib": ["ES2022", "DOM"],

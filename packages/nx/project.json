@@ -70,6 +70,10 @@
         {
           "target": "copy-assets",
           "projects": "self"
+        },
+        {
+          "target": "add-package-json-fields",
+          "projects": "self"
         }
       ]
     },
@@ -192,6 +196,15 @@
       "dependsOn": [
         {
           "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
+    },
+    "add-package-json-fields": {
+      "executor": "@nx/workspace-plugin:add-package-json-fields",
+      "dependsOn": [
+        {
+          "target": "copy-assets",
           "projects": "self"
         }
       ]

@@ -24,7 +24,7 @@
       "dependsOn": [
         "local-registry",
         {
-          "target": "build-ts",
+          "target": "build",
           "projects": ["tag:npm:public"]
         }
       ],
@@ -34,7 +34,7 @@
     "nx-release": {
       "dependsOn": [
         {
-          "target": "build-ts",
+          "target": "build",
           "projects": ["tag:npm:public"]
         }
       ],

@@ -15,9 +15,7 @@
       "options": {
         "project": "packages/angular/ng-package.json"
       },
-      "outputs": [
-        "{workspaceRoot}/dist/packages/angular"
-      ]
+      "outputs": ["{workspaceRoot}/dist/packages/angular"]
     },
     "build-base": {
       "executor": "@nx/js:tsc"
@@ -45,19 +43,13 @@
           {
             "input": "packages/angular",
             "glob": "**/*.json",
-            "ignore": [
-              "**/tsconfig*.json",
-              "project.json",
-              ".eslintrc.json"
-            ],
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
             "output": "/"
           },
           {
             "input": "packages/angular",
             "glob": "**/*.js",
-            "ignore": [
-              "**/jest.config.js"
-            ],
+            "ignore": ["**/jest.config.js"],
             "output": "/"
           },
           {
@@ -95,10 +87,15 @@
           "projects": "self"
         }
       ],
-      "outputs": [
-        "{workspaceRoot}/dist/packages/angular/README.md"
-      ],
+      "outputs": ["{workspaceRoot}/dist/packages/angular/README.md"],
       "command": "node ./scripts/copy-readme.js angular"
+    },
+    "nx-release-publish": {
+      "executor": "@nx/js:release-publish",
+      "options": {
+        "packageRoot": "dist/packages/angular"
+      },
+      "dependsOn": ["^nx-release-publish"]
     }
   },
   "implicitDependencies": []

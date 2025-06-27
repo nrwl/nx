@@ -7,7 +7,10 @@ delete preset.setupFiles;
 const updatedModuleNameMapper = {};
 for (const [key, value] of Object.entries(preset.moduleNameMapper)) {
   // Replace <rootDir>/../ with <rootDir>/../../packages/ for e2e directories
-  updatedModuleNameMapper[key] = value.replace('<rootDir>/../', '<rootDir>/../../packages/');
+  updatedModuleNameMapper[key] = value.replace(
+    '<rootDir>/../',
+    '<rootDir>/../../packages/'
+  );
 }
 
 module.exports = {

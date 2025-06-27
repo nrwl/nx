@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/graph/project-details",
+    "outDir": "dist",
     "declaration": true,
     "types": ["node"],
     "lib": ["DOM"],

@@ -87,6 +87,19 @@
         {
           "target": "copy-assets",
           "projects": "self"
+        },
+        {
+          "target": "add-package-json-fields",
+          "projects": "self"
+        }
+      ]
+    },
+    "add-package-json-fields": {
+      "executor": "@nx/workspace-plugin:add-package-json-fields",
+      "dependsOn": [
+        {
+          "target": "copy-assets",
+          "projects": "self"
         }
       ]
     }
