@@ -1,9 +1,6 @@
 import type { Tree } from '@nx/devkit';
-import {
-  generateFiles,
-  joinPathFragments,
-  readProjectConfiguration,
-} from '@nx/devkit';
+import { generateFiles, readProjectConfiguration } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'path';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
@@ -49,8 +46,7 @@ export function addServerFile(tree: Tree, options: NormalizedGeneratorOptions) {
     );
   }
 
-  const sourceRoot =
-    project.sourceRoot ?? joinPathFragments(project.root, 'src');
+  const sourceRoot = getProjectSourceRoot(project, tree);
 
   generateFiles(
     tree,

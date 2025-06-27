@@ -10,6 +10,7 @@ import {
 } from 'node:fs';
 import { join, relative } from 'path';
 import type { NormalizedExecutorOptions } from './schema';
+import { getProjectSourceRoot } from './typescript/ts-solution-setup';
 
 interface InlineProjectNode {
   name: string;
@@ -134,7 +135,7 @@ function projectNodeToInlineProjectNode(
   return {
     name: projectNode.name,
     root: projectNode.data.root,
-    sourceRoot: projectNode.data.sourceRoot,
+    sourceRoot: getProjectSourceRoot(projectNode.data),
     pathAlias,
     buildOutputPath,
   };

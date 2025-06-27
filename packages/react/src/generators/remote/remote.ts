@@ -1,4 +1,3 @@
-import { join } from 'path';
 import {
   addDependenciesToPackageJson,
   formatFiles,
@@ -13,29 +12,31 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
+import { join } from 'path';
 
-import { normalizeOptions } from '../application/lib/normalize-options';
-import applicationGenerator from '../application/application';
-import { NormalizedSchema } from '../application/schema';
-import { updateHostWithRemote } from './lib/update-host-with-remote';
+import { ensureRootProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { isValidVariable } from '@nx/js';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { updateModuleFederationProject } from '../../rules/update-module-federation-project';
-import { Schema } from './schema';
-import setupSsrGenerator from '../setup-ssr/setup-ssr';
-import { setupSsrForRemote } from './lib/setup-ssr-for-remote';
-import { setupTspathForRemote } from './lib/setup-tspath-for-remote';
-import { addRemoteToDynamicHost } from './lib/add-remote-to-dynamic-host';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { maybeJs } from '../../utils/maybe-js';
-import { isValidVariable } from '@nx/js';
 import {
   moduleFederationEnhancedVersion,
   nxVersion,
 } from '../../utils/versions';
-import { ensureRootProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import applicationGenerator from '../application/application';
 import {
   createNxRspackPluginOptions,
   getDefaultTemplateVariables,
 } from '../application/lib/create-application-files';
+import { normalizeOptions } from '../application/lib/normalize-options';
+import { NormalizedSchema } from '../application/schema';
+import setupSsrGenerator from '../setup-ssr/setup-ssr';
+import { addRemoteToDynamicHost } from './lib/add-remote-to-dynamic-host';
+import { setupSsrForRemote } from './lib/setup-ssr-for-remote';
+import { setupTspathForRemote } from './lib/setup-tspath-for-remote';
+import { updateHostWithRemote } from './lib/update-host-with-remote';
+import { Schema } from './schema';
 
 export function addModuleFederationFiles(
   host: Tree,
@@ -231,7 +232,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
   if (options.host && options.dynamic) {
     const hostConfig = readProjectConfiguration(host, schema.host);
     const pathToMFManifest = joinPathFragments(
-      hostConfig.sourceRoot,
+      getProjectSourceRoot(hostConfig, host),
       'assets/module-federation.manifest.json'
     );
     addRemoteToDynamicHost(

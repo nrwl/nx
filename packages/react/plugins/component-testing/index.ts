@@ -4,6 +4,10 @@ import {
 } from '@nx/cypress/plugins/cypress-preset';
 import type { CypressExecutorOptions } from '@nx/cypress/src/executors/cypress/cypress.impl';
 import {
+  createExecutorContext,
+  getProjectConfigByPath,
+} from '@nx/cypress/src/utils/ct-helpers';
+import {
   ExecutorContext,
   joinPathFragments,
   logger,
@@ -14,11 +18,8 @@ import {
   Target,
   workspaceRoot,
 } from '@nx/devkit';
-import {
-  createExecutorContext,
-  getProjectConfigByPath,
-} from '@nx/cypress/src/utils/ct-helpers';
 
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 
@@ -269,7 +270,7 @@ function buildTargetWebpack(
     withSchemaDefaults(parsed, context),
     workspaceRoot,
     buildableProjectConfig.root!,
-    buildableProjectConfig.sourceRoot!
+    getProjectSourceRoot(buildableProjectConfig)
   );
 
   let customWebpack: any;
@@ -301,7 +302,7 @@ function buildTargetWebpack(
           extractLicenses: false,
           root: workspaceRoot,
           projectRoot: ctProjectConfig.root,
-          sourceRoot: ctProjectConfig.sourceRoot,
+          sourceRoot: getProjectSourceRoot(ctProjectConfig),
         },
         context,
       }

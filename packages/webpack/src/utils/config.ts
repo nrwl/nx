@@ -4,10 +4,10 @@ import {
   readProjectsConfigurationFromProjectGraph,
   workspaceRoot,
 } from '@nx/devkit';
-import { Configuration } from 'webpack';
-
-import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { readNxJson } from 'nx/src/config/configuration';
+import { Configuration } from 'webpack';
+import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';
 
 export const nxWebpackComposablePlugin = 'nxWebpackComposablePlugin';
 
@@ -93,7 +93,7 @@ function ensureNxWebpackExecutionContext(ctx: NxWebpackExecutionContext): void {
   ctx.options ??= {
     root: workspaceRoot,
     projectRoot: projectNode.data.root,
-    sourceRoot: projectNode.data.sourceRoot ?? projectNode.data.root,
+    sourceRoot: getProjectSourceRoot(projectNode.data),
     // These aren't actually needed since NxWebpackPlugin and withNx both support them being undefined.
     assets: undefined,
     outputPath: undefined,
