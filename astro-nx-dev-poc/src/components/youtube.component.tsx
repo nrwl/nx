@@ -106,6 +106,7 @@ export function YouTube(props: {
   disableRoundedCorners?: boolean;
   imageOnly?: boolean;
 }): JSX.Element {
+  console.log('YouTube component props:', props);
   return (
     <div className="text-center">
       {' '}

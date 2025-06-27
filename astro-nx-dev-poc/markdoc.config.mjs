@@ -6,24 +6,24 @@ export default defineMarkdocConfig({
   tags: {
     youtube: {
       render: component('./src/components/Youtube.astro'),
-    //   attributes: {
-    //     src: {
-    //       type: 'String',
-    //       required: true,
-    //     },
-    //     title: {
-    //       type: 'String',
-    //       required: true,
-    //     },
-    //     width: {
-    //       type: 'String',
-    //       default: '100%',
-    //     },
-    //     caption: {
-    //       type: 'String',
-    //       required: false,
-    //     },
-    //   },
+      attributes: {
+        src: {
+          type: 'String',
+          required: true,
+        },
+        title: {
+          type: 'String',
+          required: true,
+        },
+        width: {
+          type: 'String',
+          default: '100%',
+        },
+        caption: {
+          type: 'String',
+          required: false,
+        },
+      },
     },
   },
 });

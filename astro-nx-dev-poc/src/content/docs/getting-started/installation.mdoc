@@ -3,38 +3,36 @@ title: Installation
 description: Install Nx globally via npm, Homebrew, Chocolatey, or apt. Add Nx to existing repos with nx init and keep dependencies updated automatically.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
-
 # Installation
 
 To install Nx on your machine, choose one of the following methods based on your operating system and package manager. You can also use `npx` to run Nx without installing it globally.
-
-<Tabs>
-    <TabItem value="npm" label="npm" default>
+{% tabs %}
+{% tabitem label="npm" %}
 
 ```shell
 npm add --global nx
 ```
 
 **Note:** You can also use `yarn`, `pnpm`, or `bun`
-</TabItem>
-<TabItem label="Homebrew (macOS, Linux)" value="brew">
+{% /tabitem %}
+
+{% tabitem label="Homebrew (macOS, Linux)" %}
 
 ```shell
 brew install nx
 ```
 
-    </TabItem>
+{% /tabitem %}
 
-    <TabItem label="Chocolatey (Windows)" value="choco">
+{% tabitem label="Chocolatey (Windows)" %}
 
 ```shell
 choco install nx
 ```
 
-    </TabItem>
+{% /tabitem %}
 
-    <TabItem label="apt (Ubuntu)" value="apt">
+{% tabitem label="apt (Ubuntu)" %}
 
 ```shell
 sudo add-apt-repository ppa:nrwl/nx
@@ -42,9 +40,44 @@ sudo apt update
 sudo apt install nx
 ```
 
-    </TabItem>
+{% /tabitem %}
+{% /tabs %}
+{% tabs %}
+{% tabitem label="npm" %}
 
-</Tabs>
+```shell
+npm add --global nx
+```
+
+**Note:** You can also use `yarn`, `pnpm`, or `bun`
+{% /tabitem %}
+
+{% tabitem label="Homebrew (macOS, Linux)" %}
+
+```shell
+brew install nx
+```
+
+{% /tabitem %}
+
+{% tabitem label="Chocolatey (Windows)" %}
+
+```shell
+choco install nx
+```
+
+{% /tabitem %}
+
+{% tabitem label="apt (Ubuntu)" %}
+
+```shell
+sudo add-apt-repository ppa:nrwl/nx
+sudo apt update
+sudo apt install nx
+```
+
+{% /tabitem %}
+{% /tabs %}
 
 ## Adding Nx to Your Repository
 

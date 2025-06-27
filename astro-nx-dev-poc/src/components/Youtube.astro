@@ -1,8 +1,5 @@
 ---
-// make wrapper component bc markdoc + astro only supports .astro components.
-// tbf we can port these jsx components easily but using wrapper for now
 import { YouTube } from './youtube.component';
 ---
 
-blah
-<!-- <Youtube {...Astro.props} client:load /> -->
+<YouTube {...Astro.props} />
