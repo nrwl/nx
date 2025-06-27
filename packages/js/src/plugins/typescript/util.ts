@@ -142,7 +142,7 @@ export function isValidPackageJsonBuildConfig(
       return true;
     }
 
-    // If outDir is inside project root: set for further checking
+    // If outDir is inside project root, then we should check entry points
     if (!relativePath.startsWith('..')) {
       resolvedOutDir = potentialOutDir;
     }
