@@ -111,11 +111,11 @@ export function getNestWebpackBuildConfig(): TargetConfiguration {
     executor: 'nx:run-commands',
     options: {
       command: 'webpack-cli build',
-      args: ['node-env=production'],
+      args: ['--node-env=production'],
     },
     configurations: {
       development: {
-        args: ['node-env=development'],
+        args: ['--node-env=development'],
       },
     },
   };
