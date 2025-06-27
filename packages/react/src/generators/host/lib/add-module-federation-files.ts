@@ -3,15 +3,16 @@ import {
   generateFiles,
   joinPathFragments,
   names,
-  readProjectConfiguration,
   offsetFromRoot,
+  readProjectConfiguration,
 } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { maybeJs } from '../../../utils/maybe-js';
-import { NormalizedSchema } from '../schema';
 import {
   createNxRspackPluginOptions,
   getDefaultTemplateVariables,
 } from '../../application/lib/create-application-files';
+import { NormalizedSchema } from '../schema';
 
 export function addModuleFederationFiles(
   host: Tree,
@@ -53,7 +54,7 @@ export function addModuleFederationFiles(
 
   const projectConfig = readProjectConfiguration(host, options.projectName);
   const pathToMFManifest = joinPathFragments(
-    projectConfig.sourceRoot,
+    getProjectSourceRoot(projectConfig, host),
     'assets/module-federation.manifest.json'
   );
 
