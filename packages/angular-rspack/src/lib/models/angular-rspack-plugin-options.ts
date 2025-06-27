@@ -157,13 +157,11 @@ export type IndexExpandedDefinition = {
   input: string;
   output?: string;
   preloadInitial?: boolean;
+  transformer?: IndexHtmlTransform;
 };
 export type IndexElement = IndexExpandedDefinition | string | false;
 export type IndexHtmlTransform = (content: string) => Promise<string>;
-export type NormalizedIndexElement =
-  | IndexExpandedDefinition & {
-      transformer: IndexHtmlTransform | undefined;
-    };
+export type NormalizedIndexElement = IndexExpandedDefinition;
 
 export type NormalizedEntryPoint = Required<
   Exclude<ScriptOrStyleEntry, string>
