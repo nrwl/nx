@@ -106,10 +106,6 @@
           "description": "Copy generated docs to build output"
         },
         {
-          "command": "nx copy-tutorial nx-dev",
-          "description": "Copy tutorial to build output"
-        },
-        {
           "command": "npx ts-node -P scripts/tsconfig.scripts.json scripts/documentation/plugin-quality-indicators.ts",
           "description": "Fetch plugin data"
         },
