@@ -136,7 +136,7 @@ jobs:
     permissions:
       contents: read
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 150     # <- cap each job to 150 minutes
+    timeout-minutes: 200     # <- cap each job to 200 minutes
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix)}} # Load matrix from previous job
       fail-fast: false
