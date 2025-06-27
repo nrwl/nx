@@ -1,3 +1,4 @@
+import { Sass } from '@nx/angular-rspack-compiler/src/models/style-preprocessor-options';
 import { workspaceRoot } from '@nx/devkit';
 import {
   CssExtractRspackPlugin,
@@ -214,7 +215,8 @@ export async function getStylesConfig(
             includePaths,
             false,
             !!buildOptions.verbose,
-            !!buildOptions.preserveSymlinks
+            !!buildOptions.preserveSymlinks,
+            buildOptions.stylePreprocessorOptions?.sass
           ),
         },
       ],
@@ -235,7 +237,8 @@ export async function getStylesConfig(
             includePaths,
             true,
             !!buildOptions.verbose,
-            !!buildOptions.preserveSymlinks
+            !!buildOptions.preserveSymlinks,
+            buildOptions.stylePreprocessorOptions?.sass
           ),
         },
       ],
@@ -317,7 +320,8 @@ function getSassLoaderOptions(
   includePaths: string[],
   indentedSyntax: boolean,
   verbose: boolean,
-  preserveSymlinks: boolean
+  preserveSymlinks: boolean,
+  deprecationOptions: Sass | undefined
 ): Record<string, unknown> {
   return {
     api: 'modern-compiler',
@@ -340,6 +344,7 @@ function getSassLoaderOptions(
       verbose,
       syntax: indentedSyntax ? 'indented' : 'scss',
       sourceMapIncludeSources: true,
+      ...(deprecationOptions || {}),
     }),
   };
 }
