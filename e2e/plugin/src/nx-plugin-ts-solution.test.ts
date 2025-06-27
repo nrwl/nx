@@ -10,7 +10,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import {
   ASYNC_GENERATOR_EXECUTOR_CONTENTS,
   NX_PLUGIN_V2_CONTENTS,

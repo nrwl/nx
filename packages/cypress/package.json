@@ -21,7 +21,7 @@
     "Front-end",
     "Testing"
   ],
-  "main": "./index",
+  "main": "./index.js",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",

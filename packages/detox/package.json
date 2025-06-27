@@ -24,7 +24,7 @@
   },
   "license": "MIT",
   "author": "Victor Savkin",
-  "main": "./index",
+  "main": "./index.js",
   "types": "index.d.ts",
   "dependencies": {
     "@nx/devkit": "workspace:*",

@@ -1,0 +1,22 @@
+{
+  "name": "tools-documentation-create-embeddings",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "*",
+    "dotenv": "*",
+    "dotenv-expand": "*",
+    "openai": "*",
+    "yargs": "*",
+    "github-slugger": "*",
+    "mdast-util-from-markdown": "*",
+    "mdast-util-to-markdown": "*",
+    "mdast-util-to-string": "*",
+    "unist-builder": "*"
+  },
+  "devDependencies": {
+    "@types/yargs": "*",
+    "typescript": "*"
+  }
+}

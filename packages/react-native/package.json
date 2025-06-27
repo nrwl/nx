@@ -23,7 +23,7 @@
   },
   "license": "MIT",
   "author": "Victor Savkin",
-  "main": "./index",
+  "main": "./index.js",
   "types": "index.d.ts",
   "dependencies": {
     "ajv": "^8.12.0",
