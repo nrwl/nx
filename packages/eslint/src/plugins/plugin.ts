@@ -20,6 +20,8 @@ import { basename, dirname, join, normalize, sep } from 'node:path/posix';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
+import { normalizeExtensions } from 'nx/src/utils/normalize-extensions';
+import { normalizeOptions } from 'nx/src/utils/normalize-options';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { gte } from 'semver';
 import type { ESLint as ESLintType } from 'eslint';
@@ -50,6 +52,12 @@ const DEFAULT_EXTENSIONS = [
   'html',
   'vue',
 ];
+
+const defaultOptions: Required<EslintPluginOptions> = {
+  targetName: 'lint',
+  extensions: DEFAULT_EXTENSIONS,
+};
+
 const PROJECT_CONFIG_FILENAMES = ['project.json', 'package.json'];
 const ESLINT_CONFIG_GLOB_V1 = combineGlobPatterns(
   ESLINT_CONFIG_FILENAMES.map((f) => `**/${f}`)
@@ -80,7 +88,6 @@ const internalCreateNodes = async (
   context: CreateNodesContext,
   projectsCache: Record<string, CreateNodesResult['projects']>
 ): Promise<CreateNodesResult> => {
-  options = normalizeOptions(options);
   const configDir = dirname(configFilePath);
 
   // Ensure that configFiles are set, e2e-run fails due to them being undefined in CI (does not occur locally)
@@ -265,8 +272,8 @@ const internalCreateNodesV2 = async (
 export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
   ESLINT_CONFIG_GLOB_V2,
   async (configFiles, options, context) => {
-    options = normalizeOptions(options);
-    const optionsHash = hashObject(options);
+    const normalizedOptions = normalizeEsLintOptions(options);
+    const optionsHash = hashObject(normalizedOptions);
     const cachePath = join(
       workspaceDataDirectory,
       `eslint-${optionsHash}.hash`
@@ -277,13 +284,13 @@ export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
       splitConfigFiles(configFiles);
     const lintableFilesPerProjectRoot = await collectLintableFilesByProjectRoot(
       projectRoots,
-      options,
+      normalizedOptions,
       context
     );
     const hashes = await calculateHashesForCreateNodes(
       projectRoots,
       {
-        ...options,
+        ...normalizedOptions,
         // change this to bust the cache when making changes that would yield
         // different results for the same hash
         bust: 1,
@@ -319,7 +326,7 @@ export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
             hashByRoot
           ),
         eslintConfigFiles,
-        options,
+        normalizedOptions,
         context
       );
     } finally {
@@ -334,7 +341,8 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
-    return internalCreateNodes(configFilePath, options, context, {});
+    const normalizedOptions = normalizeEsLintOptions(options);
+    return internalCreateNodes(configFilePath, normalizedOptions, context, {});
   },
 ];
 
@@ -540,23 +548,6 @@ function buildEslintTargets(
   return targets;
 }
 
-function normalizeOptions(options: EslintPluginOptions): EslintPluginOptions {
-  const normalizedOptions: EslintPluginOptions = {
-    targetName: options?.targetName ?? 'lint',
-  };
-
-  // Normalize user input for extensions (strip leading . characters)
-  if (Array.isArray(options?.extensions)) {
-    normalizedOptions.extensions = options.extensions.map((f) =>
-      f.replace(/^\.+/, '')
-    );
-  } else {
-    normalizedOptions.extensions = DEFAULT_EXTENSIONS;
-  }
-
-  return normalizedOptions;
-}
-
 /**
  * Determines if `child` is a subdirectory of `parent`. This is a simplified
  * version that takes into account that paths are always relative to the
@@ -575,4 +566,14 @@ function isSubDir(parent: string, child: string): boolean {
   }
 
   return child.startsWith(parent);
+}
+
+function normalizeEsLintOptions(
+  options: EslintPluginOptions
+): Required<EslintPluginOptions> {
+  const normalizedOptions = normalizeOptions(options, defaultOptions);
+  normalizedOptions.extensions = normalizeExtensions(
+    normalizedOptions.extensions
+  );
+  return normalizedOptions;
 }
