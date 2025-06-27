@@ -9,12 +9,6 @@ export function sectionSidebar(): StarlightPlugin {
       setup(params) {
         const { logger, updateConfig } = params;
         logger.info('Setting up section-based sidebar...');
-
-        // Set the initial sidebar to all sections combined first
-        // (Starlight will handle filtering based on current page)
-        const allSidebars = getAllSidebarItems();
-        updateConfig({ sidebar: allSidebars });
-
         // Then apply the auto-plugin sidebar to modify the API section with dynamic plugins
         const autoPlugin = autoPluginSidebar();
         if (autoPlugin.hooks?.setup) {
