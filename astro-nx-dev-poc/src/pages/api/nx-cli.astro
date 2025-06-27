@@ -2,7 +2,7 @@
 import { getEntry, render } from 'astro:content';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 
-const nxClI = await getEntry('cli-docs', 'api/nx-cli');
+const nxClI = await getEntry('nx-cli-docs', 'api/nx-cli');
 if (!nxClI || !nxClI.rendered) {
   throw new Error('No content found for nx-cli docs');
 }
@@ -13,7 +13,7 @@ const { Content, headings } = await render(nxClI);
 <StarlightPage
   frontmatter={{
     title: '@nx/cli',
-    description: 'Complete reference for @nx/cli'
+    description: 'Complete reference for @nx/cli',
   }}
   headings={headings || []}
 >

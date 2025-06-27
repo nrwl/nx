@@ -1,13 +1,14 @@
 ---
-title: Intro
+title: What is Nx?
 description: 'Nx is an AI-first build platform that connects everything from your editor to CI Helping you deliver fast, without breaking things.'
+sidebar:
+  order: 1
+  label: Intro
 ---
-
-# What is Nx?
 
 Nx is a powerful, open source, technology-agnostic build platform designed to efficiently manage codebases of any scale. From small single projects to large enterprise monorepos, Nx is designed to **streamline your development workflows**, **minimize errors** and **dramatically reduce waste** by [saving engineering time](https://youtu.be/2BLqiNnBPuU) and cutting compute costs.
 
-src="https://www.youtube.com/embed/-_4WMl-Fn0w"
+{% youtube title="What is Nx?" src="https://www.youtube.com/embed/-_4WMl-Fn0w" /%}
 
 As teams and codebases grow, productivity bottlenecks multiply: build times increase, CI becomes flaky, and code sharing becomes complex. **Nx reduces friction across your entire development cycle.**
 
@@ -64,14 +65,12 @@ Card title="Get set up and ready with Nx" href="/getting-started">
 Dive right in with our getting started steps to install Nx, set up your
 editor, and create your first project
 
-Card
+{% linkcard
 title="Step by step with our tutorials"
 href="/getting-started/tutorials"
-
->
-
-    Learn more about Nx through hands-on tutorials for different technology
-    stacks
+   description="Learn more about Nx through hands-on tutorials for different technology
+    stacks"
+/%}
 
 Card title="Learn with our video courses" href="/courses">
 Dive deeper with comprehensive video courses that walk you through Nx
