@@ -235,6 +235,7 @@ async function generateDocsForEntry(
           title: reflection.name,
           description: reflection.comment?.summary?.[0]?.text || '',
           path: `${options.publicPath}${reflection.name}`,
+          type: reflection.variant,
         },
       };
 
