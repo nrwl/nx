@@ -52,7 +52,7 @@
       },
       "dependsOn": [
         {
-          "target": "next:build",
+          "target": "sitemap",
           "projects": "self"
         }
       ]

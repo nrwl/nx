@@ -1,6 +1,6 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type { TargetConfiguration } from '../types/graph-types';
+import type { TargetConfiguration } from '@nx/devkit';
 
 export function getTargetExecutorSourceMapKey(
   targetConfiguration: TargetConfiguration

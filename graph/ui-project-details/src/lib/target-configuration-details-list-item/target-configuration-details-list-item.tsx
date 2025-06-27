@@ -1,6 +1,6 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type { ProjectGraphProjectNode } from '../types/graph-types';
+import type { ProjectGraphProjectNode } from '@nx/devkit';
 import TargetConfigurationDetails from '../target-configuration-details/target-configuration-details';
 
 export interface TargetConfigurationDetailsListItemProps {
