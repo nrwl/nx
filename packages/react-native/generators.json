@@ -29,21 +29,6 @@
       "description": "Create a React Native component.",
       "aliases": ["c"]
     },
-    "storybook-configuration": {
-      "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGeneratorInternal",
-      "schema": "./src/generators/storybook-configuration/schema.json",
-      "description": "Set up Storybook for a React Native application or library."
-    },
-    "component-story": {
-      "factory": "./src/generators/component-story/component-story#componentStoryGenerator",
-      "schema": "./src/generators/component-story/schema.json",
-      "description": "Generate Storybook story for a React Native component."
-    },
-    "stories": {
-      "factory": "./src/generators/stories/stories#storiesGenerator",
-      "schema": "./src/generators/stories/schema.json",
-      "description": "Create stories for all components declared in an application or library."
-    },
     "upgrade-native": {
       "factory": "./src/generators/upgrade-native/upgrade-native#reactNativeUpgradeNativeGenerator",
       "schema": "./src/generators/upgrade-native/schema.json",

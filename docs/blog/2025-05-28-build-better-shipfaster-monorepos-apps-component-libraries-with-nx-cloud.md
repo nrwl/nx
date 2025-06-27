@@ -9,8 +9,8 @@ authors: ['Jordan Powell (Nx)', 'Ilyass Elfouih (Bitovi)']
 tags: [webinar]
 cover_image: /blog/images/2025-05-28/Nx-Partner-Webinar---May-2025.avif
 time: 1pm ET/5pm UTC
-status: Upcoming
-registrationUrl: https://bit.ly/4jQLCqp
+status: Past - Ungated
+registrationUrl: https://bit.ly/4kv5tfb
 ---
 
 **May 28, 2025 - 1pm ET/5pm UTC**
@@ -21,4 +21,4 @@ Unlock faster development and more efficient CI/CD workflows with Nx and Bitovi.
 
 Bitovi's Ilyass Elfouih and Nx's Jordan Powell will walk through a **real-world scenario** where a frontend team updates a shared component, faces a classic code owner approval challenge, and uses Nx Cloud to fix and validate the change without triggering a full test suite.
 
-{% call-to-action title="Register today!" url="https://bit.ly/4jQLCqp" description="Save your spot" /%}
+{% call-to-action title="View the recording" url="https://bit.ly/4kv5tfb" description="Watch on youtube" /%}

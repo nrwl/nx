@@ -1,0 +1,13 @@
+# Enable pre/post-install which are disabled by default. Installing peer deps which is also disabled by default
+auto-install-peers=true
+enable-pre-post-scripts=true
+
+# Enable lifecycle scripts for specific packages that require them (like post-install)
+enable-scripts=@napi-rs/canvas,sharp,@swc/core,@swc/cli,@swc-node/register,esbuild
+
+# Compatibility
+strict-peer-dependencies=false
+lockfile-version-strict=false
+
+# Consistency across environments
+use-node-version=20.19.0 

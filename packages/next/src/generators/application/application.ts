@@ -21,7 +21,6 @@ import { addJest } from './lib/add-jest';
 import { addProject } from './lib/add-project';
 import { createApplicationFiles } from './lib/create-application-files';
 import { setDefaults } from './lib/set-defaults';
-import { updateJestConfig } from './lib/update-jest-config';
 import { nextInitGenerator } from '../init/init';
 import { addStyleDependencies } from '../../utils/styles';
 import { addLinting } from './lib/add-linting';
@@ -36,6 +35,7 @@ import {
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 import { configureForSwc } from '../../utils/add-swc-to-custom-server';
+import { updateJestConfig } from '../../utils/jest-config-util';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
@@ -100,7 +100,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   });
   tasks.push(styledTask);
 
-  updateJestConfig(host, options);
+  updateJestConfig(host, { ...options, projectRoot: options.appProjectRoot });
   updateCypressTsConfig(host, options);
   setDefaults(host, options);
 

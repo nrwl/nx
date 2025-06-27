@@ -82,6 +82,37 @@ export function normalizeOptions(
     );
   }
 
+  // Normalize typeCheck and skipTypeChecking options
+  let normalizedTypeCheck: boolean;
+  let normalizedSkipTypeChecking: boolean;
+
+  if (
+    combinedPluginAndMaybeExecutorOptions.typeCheck !== undefined &&
+    combinedPluginAndMaybeExecutorOptions.skipTypeChecking !== undefined
+  ) {
+    // Both options are provided - use typeCheck as the source of truth
+    normalizedTypeCheck = combinedPluginAndMaybeExecutorOptions.typeCheck;
+    normalizedSkipTypeChecking =
+      !combinedPluginAndMaybeExecutorOptions.typeCheck;
+  } else if (combinedPluginAndMaybeExecutorOptions.typeCheck !== undefined) {
+    // Only typeCheck is provided
+    normalizedTypeCheck = combinedPluginAndMaybeExecutorOptions.typeCheck;
+    normalizedSkipTypeChecking =
+      !combinedPluginAndMaybeExecutorOptions.typeCheck;
+  } else if (
+    combinedPluginAndMaybeExecutorOptions.skipTypeChecking !== undefined
+  ) {
+    // Only skipTypeChecking is provided
+    normalizedSkipTypeChecking =
+      combinedPluginAndMaybeExecutorOptions.skipTypeChecking;
+    normalizedTypeCheck =
+      !combinedPluginAndMaybeExecutorOptions.skipTypeChecking;
+  } else {
+    // Neither option is provided - use defaults
+    normalizedTypeCheck = true;
+    normalizedSkipTypeChecking = false;
+  }
+
   return {
     ...combinedPluginAndMaybeExecutorOptions,
     assets: combinedPluginAndMaybeExecutorOptions.assets
@@ -126,6 +157,7 @@ export function normalizeOptions(
       combinedPluginAndMaybeExecutorOptions.sassImplementation ??
       'sass-embedded',
     scripts: combinedPluginAndMaybeExecutorOptions.scripts ?? [],
+    skipTypeChecking: normalizedSkipTypeChecking,
     sourceMap: combinedPluginAndMaybeExecutorOptions.sourceMap ?? !isProd,
     sourceRoot,
     styles: combinedPluginAndMaybeExecutorOptions.styles ?? [],
@@ -133,6 +165,7 @@ export function normalizeOptions(
       combinedPluginAndMaybeExecutorOptions.subresourceIntegrity ?? false,
     target: combinedPluginAndMaybeExecutorOptions.target ?? 'web',
     targetName,
+    typeCheck: normalizedTypeCheck,
     vendorChunk: combinedPluginAndMaybeExecutorOptions.vendorChunk ?? !isProd,
   };
 }

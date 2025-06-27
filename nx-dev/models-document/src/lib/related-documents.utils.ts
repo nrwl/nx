@@ -26,14 +26,15 @@ export function categorizeRelatedDocuments(
     },
     {
       id: 'recipes',
-      name: 'Recipes',
-      matchers: ['/recipes/'],
+      name: 'Guides',
+      matchers: ['/recipes/', '/guides/'],
       relatedDocuments: [],
     },
     {
       id: 'reference',
       name: 'Reference',
-      matchers: ['/workspace/', '/nx-api/'],
+      // TODO(caleb): including /technologies/ in the route will duplicate the display of `recipes/guides` so leaving off for now
+      matchers: ['/workspace/', '/nx-api/', '/core-api/'],
       relatedDocuments: [],
     },
     {
@@ -44,7 +45,7 @@ export function categorizeRelatedDocuments(
     },
   ];
 
-  items.forEach((i) =>
+  items?.forEach((i) =>
     categories.forEach((c) => {
       if (c.matchers.some((m) => i.path.includes(m)))
         c.relatedDocuments.push(i);

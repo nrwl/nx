@@ -3,6 +3,8 @@ title: Overview of the Nx esbuild Plugin
 description: The Nx Plugin for esbuild contains executors and generators that support building applications using esbuild. This page also explains how to configure esbuild on your Nx workspace.
 ---
 
+# @nx/esbuild
+
 The Nx Plugin for [esbuild](https://esbuild.github.io/api/), an extremely fast JavaScript bundler.
 
 Why should you use this plugin?
@@ -10,7 +12,7 @@ Why should you use this plugin?
 - _Fast_ builds using esbuild.
 - Type-checking using TypeScript, which esbuild does not handle.
 - Intelligent `package.json` output.
-- Additional [assets](/nx-api/esbuild/executors/esbuild#assets) for the output.
+- Additional [assets](/technologies/build-tools/esbuild/api/executors/esbuild#assets) for the output.
 
 ## Setting Up @nx/esbuild
 
@@ -133,4 +135,4 @@ Extra API options for esbuild can be passed in the `esbuildOptions` object for y
 
 ## More Documentation
 
-- [Using JS](/nx-api/js)
+- [Using JS](/technologies/typescript/introduction)

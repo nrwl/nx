@@ -663,7 +663,7 @@ npx create-nx-workspace mymonorepo --workspaces
 Also check out our docs:
 
 - [TypeScript Project Linking](/concepts/typescript-project-linking)
-- [Switching to Workspaces and Project References](/recipes/tips-n-tricks/switch-to-workspaces-project-references)
+- [Switching to Workspaces and Project References](/technologies/typescript/recipes/switch-to-workspaces-project-references)
 
 ---
 

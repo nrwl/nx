@@ -8,8 +8,8 @@ use tracing::debug;
 use crate::native::logger::enable_logger;
 use crate::native::tasks::types::{Task, TaskResult};
 use crate::native::{
+    ide::nx_console::messaging::NxConsoleMessageConnection,
     pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
-    tui::nx_console::messaging::NxConsoleMessageConnection,
 };
 
 use super::app::App;

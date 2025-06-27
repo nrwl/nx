@@ -12,12 +12,12 @@ type TsConfig = {
 export default async function (tree: Tree) {
   const uniqueTsConfigs = new Set<string>();
 
-  const projects = await getProjectsFilteredByDependencies(tree, [
+  const projects = await getProjectsFilteredByDependencies([
     'npm:@angular/core',
   ]);
 
-  for (const { project } of projects) {
-    for (const [, target] of allProjectTargets(project)) {
+  for (const graphNode of projects) {
+    for (const [, target] of allProjectTargets(graphNode.data)) {
       for (const [, options] of allTargetOptions<{ tsConfig?: string }>(
         target
       )) {

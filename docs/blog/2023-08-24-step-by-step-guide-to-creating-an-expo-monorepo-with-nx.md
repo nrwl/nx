@@ -294,7 +294,7 @@ If you want to create a build locally using your own infrastructure:
 npx nx build cats --local
 ```
 
-Here is the complete list of flags for the build command: [/nx-api/expo/executors/build](/nx-api/expo/executors/build).
+Here is the complete list of flags for the build command: [/technologies/react/expo/executors/build](/technologies/react/expo/api/executors/build).
 
 ## Submit to the App Store
 

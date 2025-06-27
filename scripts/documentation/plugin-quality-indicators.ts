@@ -12,7 +12,7 @@ interface PluginRegistry {
   url: string;
 }
 
-const packagesJson = require('../../nx-dev/nx-dev/public/documentation/generated/manifests/nx-api.json');
+const packagesJson = require('../../nx-dev/nx-dev/public/documentation/generated/manifests/new-nx-api.json');
 const officialPlugins = Object.keys(packagesJson)
   .filter(
     (m: any) =>

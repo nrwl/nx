@@ -2,6 +2,7 @@ import * as yargsParser from 'yargs-parser';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import { isTuiEnabled } from '../../tasks-runner/is-tui-enabled';
 import { PseudoTerminal } from '../../tasks-runner/pseudo-terminal';
+import { NoopChildProcess } from '../../tasks-runner/running-tasks/noop-child-process';
 import {
   ParallelRunningTasks,
   runSingleCommandWithPseudoTerminal,
@@ -115,6 +116,11 @@ export async function runCommands(
     throw new Error(
       'ERROR: Bad executor config for run-commands - "prefix", "prefixColor", "color" and "bgColor" can only be set when "parallel=true".'
     );
+  }
+
+  // Handle empty commands array - return immediately with success
+  if (normalized.commands.length === 0) {
+    return new NoopChildProcess({ code: 0, terminalOutput: '' });
   }
 
   const isSingleCommand = normalized.commands.length === 1;

@@ -6,7 +6,7 @@ description: Dive into a comprehensive guide on how to consolidate all your Stor
 # Publishing Storybook: One main Storybook instance for all projects
 
 This guide extends the
-[Using Storybook in a Nx workspace - Best practices](/nx-api/storybook/documents/best-practices) guide. In that guide, we discussed the best practices of using Storybook in a Nx workspace. We explained the main concepts and the mental model of how to best set up Storybook. In this guide, we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one single Storybook for your workspace.
+[Using Storybook in a Nx workspace - Best practices](/technologies/test-tools/storybook/recipes/best-practices) guide. In that guide, we discussed the best practices of using Storybook in a Nx workspace. We explained the main concepts and the mental model of how to best set up Storybook. In this guide, we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one single Storybook for your workspace.
 
 This case would work if all your projects (applications and libraries) containing stories that you want to use are using the same framework (Angular, React, Vue, etc). The reason is that you will be importing the stories in a central host Storybook's `.storybook/main.ts`, and we will be using one specific builder to build that Storybook. Storybook does not support mixing frameworks in the same Storybook instance.
 
@@ -28,7 +28,7 @@ Now, you have a new library, which will act as a shell/host for all your stories
 
 ### Configure the new library to use Storybook
 
-Now let’s configure our new library to use Storybook, using the [`@nx/storybook:configuration` generator](/nx-api/storybook/generators/configuration). Run:
+Now let’s configure our new library to use Storybook, using the [`@nx/storybook:configuration` generator](/technologies/test-tools/storybook/api/generators/configuration). Run:
 
 ```shell
 nx g @nx/storybook:configuration storybook-host --interactionTests=true --uiFramework=@storybook/react-vite

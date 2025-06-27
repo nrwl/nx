@@ -11,7 +11,7 @@
 
 # `> npx create-nx-workspace`
 
-Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution.
+An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.
 
 ## What is It?
 

@@ -60,4 +60,4 @@ Breaking changes, including the removal of deprecated APIs, will be highlighted 
 the [changelog](/changelog).
 
 Whenever possible, the Nx team will provide automatic migrations
-through [`nx migrate`](/nx-api/nx/documents/migrate#migrate).
+through [`nx migrate`](/reference/core-api/nx/documents/migrate#migrate).

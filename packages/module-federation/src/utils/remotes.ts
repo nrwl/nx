@@ -1,5 +1,5 @@
 import { Remotes } from './models';
-import { extname } from 'path';
+import { processRemoteLocation } from './url-helpers';
 
 /**
  * Map remote names to a format that can be understood and used by Module
@@ -48,22 +48,12 @@ function handleArrayRemote(
   const [nxRemoteProjectName, remoteLocation] = remote;
   const mfRemoteName = normalizeRemoteName(nxRemoteProjectName);
 
-  // Remote string starts like "promise new Promise(...)" – return as-is
+  const finalRemoteUrl = processRemoteLocation(remoteLocation, remoteEntryExt);
+
+  // Promise-based remotes should not use the global prefix format
   if (remoteLocation.startsWith('promise new Promise')) {
-    return remoteLocation;
+    return finalRemoteUrl;
   }
-
-  const resolvedUrl = new URL(remoteLocation);
-  const ext = extname(resolvedUrl.pathname);
-  const needsRemoteEntry = !['.js', '.mjs', '.json'].includes(ext);
-
-  if (needsRemoteEntry) {
-    resolvedUrl.pathname = resolvedUrl.pathname.endsWith('/')
-      ? `${resolvedUrl.pathname}remoteEntry.${remoteEntryExt}`
-      : `${resolvedUrl.pathname}/remoteEntry.${remoteEntryExt}`;
-  }
-
-  const finalRemoteUrl = resolvedUrl.href;
 
   return isRemoteGlobal ? `${mfRemoteName}@${finalRemoteUrl}` : finalRemoteUrl;
 }
@@ -101,19 +91,17 @@ export function mapRemotesForSSR(
       let [nxRemoteProjectName, remoteLocation] = remote;
       const mfRemoteName = normalizeRemoteName(nxRemoteProjectName);
 
-      const resolvedUrl = new URL(remoteLocation);
-      const remoteLocationExt = extname(resolvedUrl.pathname);
-      const needsRemoteEntry = !['.js', '.mjs', '.json'].includes(
-        remoteLocationExt
+      const finalRemoteUrl = processRemoteLocation(
+        remoteLocation,
+        remoteEntryExt
       );
 
-      if (needsRemoteEntry) {
-        resolvedUrl.pathname = resolvedUrl.pathname.endsWith('/')
-          ? `${resolvedUrl.pathname}remoteEntry.${remoteEntryExt}`
-          : `${resolvedUrl.pathname}/remoteEntry.${remoteEntryExt}`;
+      // Promise-based remotes should not use the global prefix format
+      if (remoteLocation.startsWith('promise new Promise')) {
+        mappedRemotes[mfRemoteName] = finalRemoteUrl;
+      } else {
+        mappedRemotes[mfRemoteName] = `${mfRemoteName}@${finalRemoteUrl}`;
       }
-      const finalRemoteUrl = resolvedUrl.href;
-      mappedRemotes[mfRemoteName] = `${mfRemoteName}@${finalRemoteUrl}`;
     } else if (typeof remote === 'string') {
       const mfRemoteName = normalizeRemoteName(remote);
       mappedRemotes[mfRemoteName] = `${mfRemoteName}@${determineRemoteUrl(

@@ -75,7 +75,7 @@ Just like with [fixed releases](/recipes/nx-release/get-started-with-nx-release)
 
 ## Use the Projects Filter
 
-One of the key benefits of independent releases is the ability to release only a subset of projects. Nx Release supports this with the `--projects` option. The value is an array of strings, and you can use any of the same specifiers that are supported by `nx run-many`'s [projects filtering](/nx-api/nx/documents/run-many), such as explicit project names, Nx tags, directories and glob patterns, including negation using the `!` character. A few examples:
+One of the key benefits of independent releases is the ability to release only a subset of projects. Nx Release supports this with the `--projects` option. The value is an array of strings, and you can use any of the same specifiers that are supported by `nx run-many`'s [projects filtering](/reference/core-api/nx/documents/run-many), such as explicit project names, Nx tags, directories and glob patterns, including negation using the `!` character. A few examples:
 
 Release only the `pkg-1` and `pkg-2` projects:
 

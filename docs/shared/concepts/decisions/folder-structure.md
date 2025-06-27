@@ -11,7 +11,7 @@ Projects are often grouped by _scope_. A project's scope is either the applicati
 
 ## Move Generator
 
-Don't be too anxious about choosing the exact right folder structure from the beginning. Projects can be moved or renamed using the [`@nx/workspace:move` generator](/nx-api/workspace/generators/move).
+Don't be too anxious about choosing the exact right folder structure from the beginning. Projects can be moved or renamed using the [`@nx/workspace:move` generator](/reference/core-api/workspace/generators/move).
 
 For instance, if a project under the `booking` folder is now being shared by multiple apps, you can move it to the shared folder like this:
 
@@ -21,7 +21,7 @@ nx g move --project booking-some-project shared/some-project
 
 ## Remove Generator
 
-Similarly, if you no longer need a project, you can remove it with the [`@nx/workspace:remove` generator](/nx-api/workspace/generators/remove).
+Similarly, if you no longer need a project, you can remove it with the [`@nx/workspace:remove` generator](/reference/core-api/workspace/generators/remove).
 
 ```shell
 nx g remove booking-some-project

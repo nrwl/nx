@@ -13,42 +13,42 @@ It allows Nx to recieve partial results and continue processing for better UX.
 
 ### Constructors
 
-- [constructor](../../devkit/documents/AggregateCreateNodesError#constructor)
+- [constructor](/reference/core-api/devkit/documents/AggregateCreateNodesError#constructor)
 
 ### Properties
 
-- [cause](../../devkit/documents/AggregateCreateNodesError#cause): unknown
-- [errors](../../devkit/documents/AggregateCreateNodesError#errors): [file: string, error: Error][]
-- [message](../../devkit/documents/AggregateCreateNodesError#message): string
-- [name](../../devkit/documents/AggregateCreateNodesError#name): string
-- [partialResults](../../devkit/documents/AggregateCreateNodesError#partialresults): CreateNodesResultV2
-- [pluginIndex](../../devkit/documents/AggregateCreateNodesError#pluginindex): number
-- [stack](../../devkit/documents/AggregateCreateNodesError#stack): string
-- [prepareStackTrace](../../devkit/documents/AggregateCreateNodesError#preparestacktrace): Function
-- [stackTraceLimit](../../devkit/documents/AggregateCreateNodesError#stacktracelimit): number
+- [cause](/reference/core-api/devkit/documents/AggregateCreateNodesError#cause): unknown
+- [errors](/reference/core-api/devkit/documents/AggregateCreateNodesError#errors): [file: string, error: Error][]
+- [message](/reference/core-api/devkit/documents/AggregateCreateNodesError#message): string
+- [name](/reference/core-api/devkit/documents/AggregateCreateNodesError#name): string
+- [partialResults](/reference/core-api/devkit/documents/AggregateCreateNodesError#partialresults): CreateNodesResultV2
+- [pluginIndex](/reference/core-api/devkit/documents/AggregateCreateNodesError#pluginindex): number
+- [stack](/reference/core-api/devkit/documents/AggregateCreateNodesError#stack): string
+- [prepareStackTrace](/reference/core-api/devkit/documents/AggregateCreateNodesError#preparestacktrace): Function
+- [stackTraceLimit](/reference/core-api/devkit/documents/AggregateCreateNodesError#stacktracelimit): number
 
 ### Methods
 
-- [captureStackTrace](../../devkit/documents/AggregateCreateNodesError#capturestacktrace)
+- [captureStackTrace](/reference/core-api/devkit/documents/AggregateCreateNodesError#capturestacktrace)
 
 ## Constructors
 
 ### constructor
 
-• **new AggregateCreateNodesError**(`errors`, `partialResults`): [`AggregateCreateNodesError`](../../devkit/documents/AggregateCreateNodesError)
+• **new AggregateCreateNodesError**(`errors`, `partialResults`): [`AggregateCreateNodesError`](/reference/core-api/devkit/documents/AggregateCreateNodesError)
 
 Throwing this error from a `createNodesV2` function will allow Nx to continue processing and recieve partial results from your plugin.
 
 #### Parameters
 
-| Name             | Type                                                                | Description                                                                                                                                                                                                      |
-| :--------------- | :------------------------------------------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `errors`         | [file: string, error: Error][]                                      | An array of tuples that represent errors encountered when processing a given file. An example entry might look like ['path/to/project.json', [Error: 'Invalid JSON. Unexpected token 'a' in JSON at position 0]] |
-| `partialResults` | [`CreateNodesResultV2`](../../devkit/documents/CreateNodesResultV2) | The partial results of the `createNodesV2` function. This should be the results for each file that didn't encounter an issue.                                                                                    |
+| Name             | Type                                                                              | Description                                                                                                                                                                                                      |
+| :--------------- | :-------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `errors`         | [file: string, error: Error][]                                                    | An array of tuples that represent errors encountered when processing a given file. An example entry might look like ['path/to/project.json', [Error: 'Invalid JSON. Unexpected token 'a' in JSON at position 0]] |
+| `partialResults` | [`CreateNodesResultV2`](/reference/core-api/devkit/documents/CreateNodesResultV2) | The partial results of the `createNodesV2` function. This should be the results for each file that didn't encounter an issue.                                                                                    |
 
 #### Returns
 
-[`AggregateCreateNodesError`](../../devkit/documents/AggregateCreateNodesError)
+[`AggregateCreateNodesError`](/reference/core-api/devkit/documents/AggregateCreateNodesError)
 
 **`Example`**
 
@@ -119,7 +119,7 @@ Error.name
 
 ### partialResults
 
-• `Readonly` **partialResults**: [`CreateNodesResultV2`](../../devkit/documents/CreateNodesResultV2)
+• `Readonly` **partialResults**: [`CreateNodesResultV2`](/reference/core-api/devkit/documents/CreateNodesResultV2)
 
 The partial results of the `createNodesV2` function. This should be the results for each file that didn't encounter an issue.
 

@@ -78,10 +78,13 @@ const getProjectsNamesFromPaths = (
   projectGraphNodes: Record<string, ProjectGraphProjectNode>,
   projectPaths: string[]
 ): string[] => {
+  if (!projectPaths.length) {
+    return [];
+  }
   const lookup = new RootPathLookup(projectGraphNodes);
-  return projectPaths.map((path) => {
-    return lookup.findNodeNameByRoot(path);
-  });
+  return projectPaths
+    .map((path) => lookup.findNodeNameByRoot(path))
+    .filter(Boolean);
 };
 
 class RootPathLookup {

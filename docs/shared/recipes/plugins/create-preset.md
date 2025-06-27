@@ -5,7 +5,7 @@ description: Learn how to create a custom preset generator for your Nx plugin th
 
 # Create a Custom Plugin Preset
 
-When you create a new nx workspace, you run the command: [`npx create-nx-workspace`](/nx-api/nx/documents/create-nx-workspace).
+When you create a new nx workspace, you run the command: [`npx create-nx-workspace`](/reference/core-api/nx/documents/create-nx-workspace).
 This command accepts a `--preset` option, for example: `npx create-nx-workspace --preset=react-standalone`.
 This preset option is pointing to a special generator function (remember, a generator is a function that simplifies an entire code generation script into a single function) that Nx will call when this `npx create-nx-workspace` command is run, that will generate your initial workspace.
 

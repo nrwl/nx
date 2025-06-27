@@ -188,7 +188,7 @@ The preset generator does 2 things:
 ![](/blog/images/2023-08-10/38RvkLIwUAvVDDrEp5sFPQ.avif)
 _preset generator_
 
-The `addProjectConfiguration` and `generateFiles` functions are from [@nx/devkit](/nx-api/devkit/documents/nx_devkit), a library that contains utility functions for writing plugins for Nx. For the future, see the [complete list of utility functions](/nx-api/devkit/documents/nx_devkit).
+The `addProjectConfiguration` and `generateFiles` functions are from [@nx/devkit](/reference/core-api/devkit/documents/nx_devkit), a library that contains utility functions for writing plugins for Nx. For the future, see the [complete list of utility functions](/reference/core-api/devkit/documents/nx_devkit).
 
 1.  Change the project which is created with `addProjectConfiguration`:
 
@@ -311,7 +311,7 @@ And finally, another file to host the actual HTML template: `src/generators/pres
 </html>
 ```
 
-3\. Our application uses some npm dependencies so add those to the workspace as well with the [addDependenciesToPackageJson](/nx-api/devkit/documents/nx_devkit) function to the end of the export default function in `src/generators/preset/generator.ts`:
+3\. Our application uses some npm dependencies so add those to the workspace as well with the [addDependenciesToPackageJson](/reference/core-api/devkit/documents/nx_devkit) function to the end of the export default function in `src/generators/preset/generator.ts`:
 
 ```
 import {

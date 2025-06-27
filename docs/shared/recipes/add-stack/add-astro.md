@@ -63,7 +63,7 @@ Because Nx [understands package.json scripts](/reference/project-configuration#p
 nx build
 ```
 
-If you plan on using your package manager to run the tasks, then you'll want to use [`nx exec`](/nx-api/nx/documents/exec) to wrap the command
+If you plan on using your package manager to run the tasks, then you'll want to use [`nx exec`](/reference/core-api/nx/documents/exec) to wrap the command
 
 i.e.
 
@@ -81,7 +81,7 @@ If you plan to only run tasks with the Nx CLI, then you can omit `nx exec`. The 
 
 ## Using Other Plugins
 
-With Nx plugins, you can create projects to help break out functionality of the project. For example, using the [`@nx/js:library`](/nx-api/js/generators/library#@nx/js:library) to contain our reusable `.astro` components.
+With Nx plugins, you can create projects to help break out functionality of the project. For example, using the [`@nx/js:library`](/technologies/typescript/api/generators/library#@nx/js:library) to contain our reusable `.astro` components.
 
 Install `@nx/js` plugin.
 

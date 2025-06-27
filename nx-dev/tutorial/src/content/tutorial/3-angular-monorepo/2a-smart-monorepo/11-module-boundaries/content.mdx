@@ -53,9 +53,9 @@ To enforce the rules, Nx ships with a custom ESLint rule. Open the `eslint.confi
 
 ```
 
-To test it, go to your `libs/products/src/lib/products.tsx` file and import the `Orders` component from the `orders` project:
+To test it, go to your `libs/products/src/lib/products/products.ts` file and import the `Orders` component from the `orders` project:
 
-```solution:/libs/products/src/lib/products.tsx title="/libs/products/src/lib/products.tsx" {3-4}
+```solution:/libs/products/src/lib/products/products.ts title="/libs/products/src/lib/products/products.ts" {4-5}
 
 ```
 
@@ -70,9 +70,9 @@ npx nx run-many -t lint
 ✖  nx run products:lint
    Linting "products"...
 
-   /Users/isaac/Documents/code/nx-recipes/angular-monorepo/libs/products/src/lib/products.tsx
-     4:1   error    A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
-     4:10  warning  'Orders' is defined but never used                                                                        @typescript-eslint/no-unused-vars
+   /Users/isaac/Documents/code/nx-recipes/angular-monorepo/libs/products/src/lib/products/products.ts
+     5:1   error    A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
+     5:10  warning  'Orders' is defined but never used                                                                           @typescript-eslint/no-unused-vars
 
    ✖ 2 problems (1 error, 1 warning)
 

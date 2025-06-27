@@ -65,7 +65,7 @@ Tailwind is a utility-first CSS framework packed with classes that can be compos
 nx g @nrwl/angular:app my-app --addTailwind
 ```
 
-Read more about Angular and Tailwind in our [docs](/nx-api/angular/generators/setup-tailwind).
+Read more about Angular and Tailwind in our [docs](/technologies/angular/api/generators/setup-tailwind).
 
 ### Other Highlights 🗒
 

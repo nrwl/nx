@@ -54,13 +54,6 @@ describe('vue:storybook-configuration', () => {
     const packageJson = JSON.parse(appTree.read('package.json', 'utf-8'));
     expect(packageJson.devDependencies['@storybook/vue3-vite']).toBeDefined();
     expect(packageJson.devDependencies['@storybook/vue3']).toBeDefined();
-    expect(
-      packageJson.devDependencies['@storybook/addon-interactions']
-    ).toBeDefined();
-    expect(packageJson.devDependencies['@storybook/test-runner']).toBeDefined();
-    expect(
-      packageJson.devDependencies['@storybook/testing-library']
-    ).toBeDefined();
   });
 
   it('should generate stories for components', async () => {

@@ -58,17 +58,37 @@ function postTargetTransformer(
   inferredTargetConfiguration: TargetConfiguration
 ): TargetConfiguration {
   if (target.inputs) {
-    const inputs = target.inputs.filter(
-      (input) =>
-        typeof input === 'string' &&
-        ![
-          'default',
-          '{workspaceRoot}/.eslintrc.json',
-          '{workspaceRoot}/.eslintignore',
-          '{workspaceRoot}/eslint.config.cjs',
-          '{workspaceRoot}/eslint.config.mjs',
-        ].includes(input)
-    );
+    const normalizeInput = (input: string) => {
+      return input
+        .replace('{workspaceRoot}', '')
+        .replace('{projectRoot}', projectDetails.root)
+        .replace('{projectName}', projectDetails.projectName)
+        .replace(/^\//, '');
+    };
+
+    const inputs = target.inputs.filter((input) => {
+      if (typeof input === 'string') {
+        // if the input is a string, check if it is inferred by the plugin
+        // if it is, filter it out
+        return !inferredTargetConfiguration.inputs.some(
+          (inferredInput) =>
+            typeof inferredInput === 'string' &&
+            normalizeInput(inferredInput) === normalizeInput(input)
+        );
+      } else if ('externalDependencies' in input) {
+        // if the input is an object with an externalDependencies property,
+        // check if all the external dependencies are inferred by the plugin
+        // if they are, filter it out
+        return !input.externalDependencies.every((externalDependency) =>
+          inferredTargetConfiguration.inputs.some(
+            (inferredInput) =>
+              typeof inferredInput === 'object' &&
+              'externalDependencies' in inferredInput &&
+              inferredInput.externalDependencies.includes(externalDependency)
+          )
+        );
+      }
+    });
     if (inputs.length === 0) {
       delete target.inputs;
     }

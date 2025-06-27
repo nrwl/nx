@@ -295,12 +295,12 @@ function updateViteConfiguration(tree, directory) {
 export default libraryGenerator;
 ```
 
-We updated the generator to use some new helper functions from the Nx devkit. Here are a few functions you may find useful. See the [full API reference](/nx-api/devkit/documents/nx_devkit) for all the options.
+We updated the generator to use some new helper functions from the Nx devkit. Here are a few functions you may find useful. See the [full API reference](/reference/core-api/devkit/documents/nx_devkit) for all the options.
 
-- [`runTasksInSerial`](/nx-api/devkit/documents/runTasksInSerial) - Allows you to collect many callbacks and return them all at the end of the generator.
-- [`formatFiles`](/nx-api/devkit/documents/formatFiles) - Run Prettier on the repository
-- [`readProjectConfiguration`](/nx-api/devkit/documents/readProjectConfiguration) - Get the calculated project configuration for a single project
-- [`updateNxJson`](/nx-api/devkit/documents/updateNxJson) - Update the `nx.json` file
+- [`runTasksInSerial`](/reference/core-api/devkit/documents/runTasksInSerial) - Allows you to collect many callbacks and return them all at the end of the generator.
+- [`formatFiles`](/reference/core-api/devkit/documents/formatFiles) - Run Prettier on the repository
+- [`readProjectConfiguration`](/reference/core-api/devkit/documents/readProjectConfiguration) - Get the calculated project configuration for a single project
+- [`updateNxJson`](/reference/core-api/devkit/documents/updateNxJson) - Update the `nx.json` file
 
 Now let's check to make sure that the `clearMocks` property is set correctly by the generator. First, we'll commit our changes so far. Then, we'll run the generator without the `--dry-run` flag so we can inspect the file contents.
 

@@ -3,21 +3,47 @@ title: Overview of the Nx GCS Cache Plugin
 description: The @nx/gcs-cache plugin enables you to use Google Cloud Storage to host your remote cache for efficient build caching across your team.
 ---
 
+# @nx/gcs-cache
+
 The `@nx/gcs-cache` plugin enables you to self-host your remote cache on [Google Cloud Storage](https://cloud.google.com/storage).
 
-{% callout type="deepdive" title="Free managed remote cache with Nx Cloud" %}
+{% callout type="warning" title="Bucket-based caches are vulnerable to poisoning and often prohibited in organizations" %}
 
-Note, you can get started for free with a **fully managed remote caching powered by Nx Cloud**. It comes with a generous Hobby plan that is enough for most small teams. [Learn more here](/nx-cloud).
+CREEP (CVE-2025-36852) is a critical vulnerability in bucket-based self-hosted remote caches that allows anyone with PR access to poison production builds. Many organizations are unaware of this security risk. [Learn more](/blog/creep-vulnerability-build-cache-security)
 
-If you are an enterprise and **data privacy and security is a concern**, [reach out for an Enterprise trial](/enterprise/trial). It is fully SOC 2 type 1 and 2 compliant and comes with single-tenant, dedicated EU region hosting as well as on-premise.
-
-**Are you an OSS project?** Nx Cloud is free for OSS. [Reach out here](/pricing#oss).
+`@nx/gcs-cache` (along with other bucket-based remote cache implementations) is listed in the CVE, and is not allowed in many organizations.
 
 {% /callout %}
 
-{% callout type="info" title="Self-hosted caching is now free" %}
+{% callout type="deepdive" title="Nx Cloud: Managed Multi-Tier Remote Cache [Secure]" %}
 
-Self-hosted caching is **now free for everyone** to use.
+Recommended for everyone.
+
+- [Fully managed multi-tier remote caching with Nx Replay](/ci/features/remote-cache)
+- [Both secure and fast](/enterprise/security)
+- Generous free plan
+
+You'll also get access to advanced CI features:
+
+- [Automated distribution of tasks across machines with Nx Agents](/ci/features/distribute-task-execution)
+- [Automated splitting of tasks (including e2e tests) with Nx Atomizer](/ci/features/split-e2e-tasks)
+- [Detection and re-running of flaky tasks](/ci/features/flaky-tasks)
+- [Self-healing CI and other AI features](/ai)
+
+[Get Started](https://cloud.nx.app)
+{% /callout %}
+
+{% callout type="deepdive" title="Nx Enterprise [Secure]" %}
+
+Recommended for large organizations.
+
+Includes everything from Nx Cloud, plus:
+
+- Work hand-in-hand with the Nx team for continual improvement
+- Run on the Nx Cloud servers in any region or run fully self-contained, on-prem
+- SOC 2 type 1 and 2 compliant and comes with single-tenant, dedicated EU region hosting as well as on-premise
+
+[Reach out for an Enterprise trial](/enterprise/trial)
 
 {% /callout %}
 

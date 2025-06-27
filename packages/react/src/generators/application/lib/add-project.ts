@@ -123,7 +123,9 @@ function createRspackBuildTarget(
           : [
               joinPathFragments(
                 options.appProjectRoot,
-                `src/styles.${options.style}`
+                `src/styles.${
+                  options.style === 'tailwind' ? 'css' : options.style
+                }`
               ),
             ],
       scripts: [],
@@ -199,7 +201,9 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
           : [
               joinPathFragments(
                 options.appProjectRoot,
-                `src/styles.${options.style}`
+                `src/styles.${
+                  options.style === 'tailwind' ? 'css' : options.style
+                }`
               ),
             ],
       scripts: [],

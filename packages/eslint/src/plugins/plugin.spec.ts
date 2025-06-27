@@ -110,7 +110,7 @@ describe('@nx/eslint/plugin', () => {
                   "inputs": [
                     "default",
                     "^default",
-                    "{projectRoot}/eslintrc.json",
+                    "{workspaceRoot}/.eslintrc.json",
                     "{workspaceRoot}/tools/eslint-rules/**/*",
                     {
                       "externalDependencies": [
@@ -166,7 +166,7 @@ describe('@nx/eslint/plugin', () => {
                   "inputs": [
                     "default",
                     "^default",
-                    "{projectRoot}/eslintrc.json",
+                    "{workspaceRoot}/.eslintrc.json",
                     "{workspaceRoot}/tools/eslint-rules/**/*",
                     {
                       "externalDependencies": [
@@ -443,7 +443,7 @@ describe('@nx/eslint/plugin', () => {
                   "inputs": [
                     "default",
                     "^default",
-                    "{projectRoot}/.eslintrc.json",
+                    "{workspaceRoot}/apps/my-app/.eslintrc.json",
                     "{workspaceRoot}/tools/eslint-rules/**/*",
                     {
                       "externalDependencies": [
@@ -482,7 +482,7 @@ describe('@nx/eslint/plugin', () => {
                   "inputs": [
                     "default",
                     "^default",
-                    "{projectRoot}/.eslintrc.json",
+                    "{workspaceRoot}/libs/my-lib/.eslintrc.json",
                     "{workspaceRoot}/tools/eslint-rules/**/*",
                     {
                       "externalDependencies": [
@@ -586,7 +586,7 @@ describe('@nx/eslint/plugin', () => {
                     "default",
                     "^default",
                     "{workspaceRoot}/.eslintrc.json",
-                    "{projectRoot}/.eslintrc.json",
+                    "{workspaceRoot}/apps/my-app/.eslintrc.json",
                     "{workspaceRoot}/tools/eslint-rules/**/*",
                     {
                       "externalDependencies": [
@@ -626,7 +626,7 @@ describe('@nx/eslint/plugin', () => {
                     "default",
                     "^default",
                     "{workspaceRoot}/.eslintrc.json",
-                    "{projectRoot}/.eslintrc.json",
+                    "{workspaceRoot}/libs/my-lib/.eslintrc.json",
                     "{workspaceRoot}/tools/eslint-rules/**/*",
                     {
                       "externalDependencies": [
@@ -746,7 +746,7 @@ describe('@nx/eslint/plugin', () => {
                     "default",
                     "^default",
                     "{workspaceRoot}/.eslintrc.json",
-                    "{projectRoot}/.eslintrc.json",
+                    "{workspaceRoot}/apps/myapp/nested/mylib/.eslintrc.json",
                     "{workspaceRoot}/tools/eslint-rules/**/*",
                     {
                       "externalDependencies": [
@@ -802,7 +802,7 @@ describe('@nx/eslint/plugin', () => {
                   "inputs": [
                     "default",
                     "^default",
-                    "{projectRoot}/eslintrc.json",
+                    "{workspaceRoot}/.eslintrc.json",
                     "{workspaceRoot}/tools/eslint-rules/**/*",
                     {
                       "externalDependencies": [
@@ -859,7 +859,7 @@ describe('@nx/eslint/plugin', () => {
                   "inputs": [
                     "default",
                     "^default",
-                    "{projectRoot}/eslintrc.json",
+                    "{workspaceRoot}/.eslintrc.json",
                     "{workspaceRoot}/tools/eslint-rules/**/*",
                     {
                       "externalDependencies": [

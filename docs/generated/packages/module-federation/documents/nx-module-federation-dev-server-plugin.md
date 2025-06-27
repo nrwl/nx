@@ -58,7 +58,7 @@ export default {
 ## How it works
 
 The `NxModuleFederationDevServerPlugin` and `NxModuleFederationSSRDevServerPlugin` will serve the remote applications in via a single file server (using `http-server`) and proxy requests to the remote applications to the correct port. This allows for a more streamlined development experience when working with module federation.
-You can learn more about this experience in the [Module Federation Technical Overview](/concepts/module-federation/nx-module-federation-technical-overview).
+You can learn more about this experience in the [Module Federation Technical Overview](/technologies/module-federation/concepts/nx-module-federation-technical-overview).
 
 The key difference between `NxModuleFederationDevServerPlugin` and `NxModuleFederationSSRDevServerPlugin` is that the latter will handle both `browser` and `server` bundles to support Server Side Rendering (SSR). It will also serve the host/consumer application by forking ([child_process.fork](https://nodejs.org/api/child_process.html#child_processforkmodulepath-args-options)) the `server.js` output from the `server` bundle of the host application.
 

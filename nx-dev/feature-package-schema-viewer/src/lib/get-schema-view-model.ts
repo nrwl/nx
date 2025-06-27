@@ -11,6 +11,7 @@ import {
 } from '@nx/nx-dev/models-package';
 import { ParsedUrlQuery } from 'querystring';
 import { Errors, Example, generateJsonExampleFor } from './examples';
+import { pkgToGeneratedApiDocs } from '@nx/nx-dev/models-document';
 
 function getReferenceFromQuery(query: string): string {
   return query.replace('root/', '#/');
@@ -28,7 +29,7 @@ export interface SchemaViewModel {
   schemaGithubUrl: string;
   schemaMetadata: SchemaMetadata;
   subReference: string;
-  type: 'executor' | 'generator';
+  type: 'executor' | 'generator' | 'migration';
 }
 
 export function getSchemaViewModel(
@@ -37,11 +38,12 @@ export function getSchemaViewModel(
   schema: SchemaMetadata
 ): SchemaViewModel | null {
   if (!schema.schema) return null;
+  const packageUrl = pkgToGeneratedApiDocs[pkg.name].pagePath;
 
   return {
     schemaMetadata: schema,
     packageName: pkg.packageName,
-    packageUrl: `/nx-api/${pkg.name}`,
+    packageUrl,
     schemaGithubUrl: pkg.githubRoot + schema.path,
     rootReference: '#',
     subReference:

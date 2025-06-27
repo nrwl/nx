@@ -5,5 +5,6 @@ data class NxBatchOptions(
     val tasks: Map<String, GradleTask>,
     val args: String,
     val quiet: Boolean,
-    val excludeTasks: List<String>
+    val excludeTasks: List<String>,
+    val excludeTestTasks: List<String>
 )

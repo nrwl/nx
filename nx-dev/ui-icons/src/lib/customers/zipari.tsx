@@ -1,5 +1,8 @@
 import { FC, SVGProps } from 'react';
 
+/**
+ * Use `#E31E39` for a colored version.
+ */
 export const ZipariIcon: FC<SVGProps<SVGSVGElement>> = (props) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"

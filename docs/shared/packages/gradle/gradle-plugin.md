@@ -3,6 +3,8 @@ title: Overview of the Nx Gradle Plugin
 description: The Nx Plugin for Gradle allows Gradle tasks to be run through Nx.
 ---
 
+# @nx/gradle
+
 [Gradle](https://gradle.org/) is a fast, dependable, and adaptable open-source build automation tool with an elegant and extensible declarative build language. Gradle supports Android, Java, Kotlin Multiplatform, Groovy, Scala, Javascript, and C/C++.
 
 The Nx Gradle plugin registers Gradle projects in your Nx workspace. It allows Gradle tasks to be run through Nx. Nx effortlessly makes your [CI faster](/ci/intro/ci-with-nx).
@@ -25,25 +27,33 @@ This plugin requires Java 17 or newer. Using older Java versions is unsupported 
 You can install Nx globally. Depending on your package manager, use one of the following commands:
 
 {% tabs %}
-{% tab label="Homebrew" %}
+{% tab label="npm" %}
 
 ```shell
-brew tap nrwl/nx
+npm add --global nx@latest
+```
+
+{% /tab %}
+{% tab label="Homebrew (macOS, Linux)" %}
+
+```shell
 brew install nx
 ```
 
 {% /tab %}
-{% tab label="Chocolatey" %}
+{% tab label="Chocolatey (Windows)" %}
 
 ```shell
 choco install nx
 ```
 
 {% /tab %}
-{% tab label="npm" %}
+{% tab label="apt (Ubuntu)" %}
 
 ```shell
-npm add --global nx@latest
+sudo add-apt-repository ppa:nrwl/nx
+sudo apt update
+sudo apt install nx
 ```
 
 {% /tab %}

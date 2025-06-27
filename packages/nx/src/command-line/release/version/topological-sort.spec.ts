@@ -25,10 +25,10 @@ describe('topologicalSort', () => {
     const indexC = result.indexOf('C');
     const indexD = result.indexOf('D');
 
-    expect(indexA).toBeLessThan(indexB); // A before B
-    expect(indexA).toBeLessThan(indexD); // A before D
-    expect(indexB).toBeLessThan(indexC); // B before C
-    expect(indexD).toBeLessThan(indexC); // D before C
+    expect(indexB).toBeLessThan(indexA); // B before A
+    expect(indexD).toBeLessThan(indexA); // D before A
+    expect(indexC).toBeLessThan(indexB); // C before B
+    expect(indexC).toBeLessThan(indexD); // C before D
   });
 
   it('should handle cycles by breaking them', () => {
@@ -149,8 +149,8 @@ describe('topologicalSort', () => {
     const indexC = result.indexOf('C');
     const indexD = result.indexOf('D');
 
-    expect(indexA).toBeLessThan(indexB); // A before B
-    expect(indexC).toBeLessThan(indexD); // C before D
+    expect(indexB).toBeLessThan(indexA); // B before A
+    expect(indexD).toBeLessThan(indexC); // D before C
   });
 
   it('should handle circular dependencies between two nodes', () => {

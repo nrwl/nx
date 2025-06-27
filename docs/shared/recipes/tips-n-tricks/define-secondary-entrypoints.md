@@ -85,4 +85,4 @@ When building the library, the `@nx/js:tsc` executor automatically adds the corr
 
 ## Compile to Multiple Formats
 
-You can also compile to multiple formats, if you switch to using the `@nx/rollup:rollup` executor. Read all [the details here](/recipes/tips-n-tricks/compile-multiple-formats).
+You can also compile to multiple formats, if you switch to using the `@nx/rollup:rollup` executor. Read all [the details here](/technologies/typescript/recipes/compile-multiple-formats).

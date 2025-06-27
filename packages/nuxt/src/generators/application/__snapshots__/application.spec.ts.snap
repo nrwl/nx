@@ -115,7 +115,7 @@ export default defineNuxtConfig({
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '../tsconfig.app.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
     },
   },
   imports: {
@@ -152,7 +152,7 @@ exports[`app generated files content - as-provided - my-app general application 
       "path": "./tsconfig.spec.json"
     }
   ],
-  "extends": "../tsconfig.base.json"
+  "extends": "./.nuxt/tsconfig.json"
 }
 "
 `;
@@ -233,7 +233,7 @@ exports[`app generated files content - as-provided - my-app general application 
       "path": "./tsconfig.spec.json"
     }
   ],
-  "extends": "../tsconfig.base.json"
+  "extends": "./.nuxt/tsconfig.json"
 }
 "
 `;
@@ -290,7 +290,7 @@ export default defineNuxtConfig({
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '../tsconfig.app.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
     },
   },
   imports: {
@@ -320,7 +320,7 @@ export default defineNuxtConfig({
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '../tsconfig.app.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
     },
   },
   imports: {
@@ -350,7 +350,7 @@ export default defineNuxtConfig({
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '../tsconfig.app.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
     },
   },
   imports: {
@@ -380,7 +380,7 @@ export default defineNuxtConfig({
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '../tsconfig.app.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
     },
   },
   imports: {
@@ -508,7 +508,7 @@ export default defineNuxtConfig({
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '../tsconfig.app.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
     },
   },
   imports: {
@@ -545,7 +545,7 @@ exports[`app generated files content - as-provided - myApp general application s
       "path": "./tsconfig.spec.json"
     }
   ],
-  "extends": "../tsconfig.base.json"
+  "extends": "./.nuxt/tsconfig.json"
 }
 "
 `;
@@ -626,7 +626,7 @@ exports[`app generated files content - as-provided - myApp general application s
       "path": "./tsconfig.spec.json"
     }
   ],
-  "extends": "../tsconfig.base.json"
+  "extends": "./.nuxt/tsconfig.json"
 }
 "
 `;
@@ -683,7 +683,7 @@ export default defineNuxtConfig({
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '../tsconfig.app.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
     },
   },
   imports: {
@@ -713,7 +713,7 @@ export default defineNuxtConfig({
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '../tsconfig.app.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
     },
   },
   imports: {
@@ -743,7 +743,7 @@ export default defineNuxtConfig({
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '../tsconfig.app.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
     },
   },
   imports: {
@@ -773,7 +773,7 @@ export default defineNuxtConfig({
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '../tsconfig.app.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
     },
   },
   imports: {

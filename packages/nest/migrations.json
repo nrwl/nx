@@ -1,4 +1,18 @@
 {
   "generators": {},
-  "packageJsonUpdates": {}
+  "packageJsonUpdates": {
+    "21.2.0-beta.2": {
+      "version": "21.2.0-beta.2",
+      "packages": {
+        "nest": {
+          "version": "^11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nestjs/schematics": {
+          "version": "^11.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
 }

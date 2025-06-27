@@ -9,8 +9,9 @@
 import { workspaceRoot } from '@nx/devkit';
 import browserslist from 'browserslist';
 import { existsSync } from 'fs';
-import { colors } from 'ng-packagr/src/lib/utils/color';
 import { dirname, join } from 'path';
+import { getNgPackagrVersionInfo } from '../ng-packagr-version';
+import { importNgPackagrPath } from '../package-imports';
 
 const maxWorkersVariable = process.env['NG_BUILD_MAX_WORKERS'];
 const maxThreads =
@@ -100,6 +101,10 @@ export class StylesheetProcessor {
     ]);
     const tailwindConfigPath = findTailwindConfiguration(searchDirs);
 
+    const { major: ngPackagrMajorVersion } = getNgPackagrVersionInfo();
+    const { colors } = importNgPackagrPath<
+      typeof import('ng-packagr/src/lib/utils/color')
+    >('ng-packagr/src/lib/utils/color', ngPackagrMajorVersion);
     const Piscina = getPiscina();
 
     this.renderWorker = new Piscina({

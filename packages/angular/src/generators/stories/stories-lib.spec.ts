@@ -115,8 +115,7 @@ describe('angularStories generator: libraries', () => {
       ).toMatchInlineSnapshot(`
         "import type { Meta, StoryObj } from '@storybook/angular';
         import { SecondaryButtonComponent } from './secondary-button.component';
-        import { within } from '@storybook/testing-library';
-        import { expect } from '@storybook/jest';
+        import { expect } from 'storybook/test';
 
         const meta: Meta<SecondaryButtonComponent> = {
           component: SecondaryButtonComponent,
@@ -131,9 +130,8 @@ describe('angularStories generator: libraries', () => {
 
         export const Heading: Story = {
           args: {},
-          play: async ({ canvasElement }) => {
-            const canvas = within(canvasElement);
-            expect(canvas.getByText(/secondary-button works!/gi)).toBeTruthy();
+          play: async ({ canvas }) => {
+            await expect(canvas.getByText(/secondary-button works!/gi)).toBeTruthy();
           },
         };
         "

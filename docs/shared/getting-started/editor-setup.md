@@ -1,11 +1,11 @@
 ---
-title: Editor Setup
-description: Learn how to set up your editor with Nx Console extensions to enhance your developer experience with features like task visualization, cache management, and generator UI.
+title: Editor Integration
+description: Set up Nx Console in VSCode or JetBrains for visual UI, task management, code generation, and enhanced AI assistance in your Nx workspace.
 ---
 
-# Editor Setup
+# Editor Integration
 
-Nx Console editor extensions make your developer experience richer. The extensions
+Nx Console editor extensions make your developer experience richer. The extensions:
 
 - [enhance AI integrations](/features/enhance-AI) by providing workspace-level context and up-to-date docs
 - show [inferred tasks](/concepts/inferred-tasks) and help you invoke them via the Project Details View

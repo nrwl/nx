@@ -1,3 +1,6 @@
+use super::{Component, Frame};
+use crate::native::ide::detection::{SupportedEditor, get_current_editor};
+use crate::native::tui::action::Action;
 use color_eyre::eyre::Result;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -10,9 +13,6 @@ use ratatui::{
 };
 use std::any::Any;
 use tokio::sync::mpsc::UnboundedSender;
-
-use super::{Component, Frame};
-use crate::native::tui::{action::Action, nx_console};
 
 use crate::native::tui::theme::THEME;
 
@@ -164,8 +164,8 @@ impl HelpPopup {
                 ("", ""),
                 (
                     "<ctrl>+a",
-                    match nx_console::get_current_editor() {
-                        nx_console::SupportedEditor::VSCode => {
+                    match get_current_editor() {
+                        SupportedEditor::VSCode => {
                             "Send terminal output to Copilot so that it can assist with any issues"
                         }
                         _ => {

@@ -153,6 +153,7 @@ export class PackagesApi {
     }
 
     const packages = Object.values(this.manifest);
+
     const experiment: {
       packages: StaticDocumentPaths[];
       documents: StaticDocumentPaths[];

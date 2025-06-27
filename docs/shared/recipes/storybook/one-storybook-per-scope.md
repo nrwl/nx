@@ -6,7 +6,7 @@ description: Learn how to set up individual Storybook instances for each scope w
 # Publishing Storybook: One Storybook instance per scope
 
 This guide extends the
-[Using Storybook in a Nx workspace - Best practices](/nx-api/storybook/documents/best-practices) guide. In that guide, we discussed the best practices of using Storybook in a Nx workspace. We explained the main concepts and the mental model of how to best set up Storybook. In this guide, we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one Storybook per scope (eg. theme, app, framework) for your workspace.
+[Using Storybook in a Nx workspace - Best practices](/technologies/test-tools/storybook/recipes/best-practices) guide. In that guide, we discussed the best practices of using Storybook in a Nx workspace. We explained the main concepts and the mental model of how to best set up Storybook. In this guide, we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one Storybook per scope (eg. theme, app, framework) for your workspace.
 
 Sometimes, you have multiple apps and libraries, and each of these is associated with a specific scope. You can read more about grouping libraries and scoping them in the [Library Types](/concepts/decisions/project-dependency-rules) documentation page.
 
@@ -32,8 +32,8 @@ happynrwl/
 |   |   |   |   ├── src/
 |   |   |   |   |   ├──lib
 |   |   |   |   |   |   ├──my-header
-|   |   |   |   |   |   |   ├── my-header.component.ts
-|   |   |   |   |   |   |   ├── my-header.component.stories.ts
+|   |   |   |   |   |   |   ├── my-header.ts
+|   |   |   |   |   |   |   ├── my-header.stories.ts
 |   |   |   |   |   |   |   └── etc...
 |   |   |   |   |   |   └── etc...
 |   |   |   |   |   └── etc...

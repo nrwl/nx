@@ -2,6 +2,7 @@ import { execSync } from 'child_process';
 import { join } from 'path';
 import { gte, major } from 'semver';
 import { readJsonFile, writeJsonFile } from '../../../../utils/fileutils';
+import { getNxRequirePaths } from '../../../../utils/installation-directory';
 import { sortObjectByKeys } from '../../../../utils/object-sort';
 import { output } from '../../../../utils/output';
 import { readModulePackageJson } from '../../../../utils/package-json';
@@ -11,9 +12,9 @@ import {
   resolvePackageVersionUsingInstallation,
   resolvePackageVersionUsingRegistry,
 } from '../../../../utils/package-manager';
+import { connectExistingRepoToNxCloudPrompt } from '../../../connect/connect-to-nx-cloud';
 import { initCloud } from '../utils';
 import type { Options } from './types';
-import { connectExistingRepoToNxCloudPrompt } from '../../../connect/connect-to-nx-cloud';
 
 // map of Angular major versions to Nx versions to use for legacy `nx init` migrations,
 // key is major Angular version and value is Nx version to use
@@ -21,9 +22,11 @@ const nxAngularLegacyVersionMap: Record<number, string> = {
   14: '~17.0.0',
   15: '~19.0.0',
   16: '~20.1.0',
+  17: '~21.1.0',
 };
 // min major angular version supported in latest Nx
-const minMajorAngularVersionSupported = 17;
+const minMajorAngularVersionSupported =
+  Math.max(...Object.keys(nxAngularLegacyVersionMap).map(Number)) + 1;
 // version when the Nx CLI changed from @nrwl/tao & @nrwl/cli to nx
 const versionWithConsolidatedPackages = '13.9.0';
 // version when packages were rescoped from @nrwl/* to @nx/*
@@ -33,9 +36,25 @@ export async function getLegacyMigrationFunctionIfApplicable(
   repoRoot: string,
   options: Options
 ): Promise<() => Promise<void> | null> {
-  const angularVersion =
-    readModulePackageJson('@angular/core').packageJson.version;
-  const majorAngularVersion = major(angularVersion);
+  let majorAngularVersion: number;
+  try {
+    const angularVersion = readModulePackageJson('@angular/core', [
+      repoRoot,
+      ...getNxRequirePaths(),
+    ]).packageJson.version;
+    majorAngularVersion = major(angularVersion);
+  } catch {
+    output.error({
+      title: 'Could not determine the existing Angular version',
+      bodyLines: [
+        'Please ensure "@angular/core" is installed in the workspace and you are running this command from the root of the workspace.',
+      ],
+    });
+    // errors are caught in the initHandler and not logged to the user, so we
+    // log it first and then throw to ensure it is logged to the user
+    throw new Error('Could not determine the existing Angular version');
+  }
+
   if (majorAngularVersion >= minMajorAngularVersionSupported) {
     // non-legacy
     return null;

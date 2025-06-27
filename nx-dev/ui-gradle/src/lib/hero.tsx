@@ -76,7 +76,7 @@ export function GettingStarted(): ReactElement {
         <div className="mt-12 grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 ">
           <GetStartedCard
             title="Install Nx"
-            command="brew tap nrwl/nx && brew install nx"
+            command="brew install nx"
             description="Get the <code>nx</code> executable from homebrew"
           />
           <GetStartedCard

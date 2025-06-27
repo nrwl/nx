@@ -17,7 +17,7 @@ import {
   getTaskDetails,
   hashTasksThatDoNotDependOnOutputsOfOtherTasks,
 } from '../hasher/hash-task';
-import { logError, logInfo, RunMode } from '../native';
+import { logDebug, RunMode } from '../native';
 import {
   runPostTasksExecution,
   runPreTasksExecution,
@@ -216,13 +216,13 @@ async function getTerminalOutputLifeCycle(
         // @ts-ignore
         return (chunk, encoding, callback) => {
           if (isError) {
-            logError(
+            logDebug(
               Buffer.isBuffer(chunk)
                 ? chunk.toString(encoding)
                 : chunk.toString()
             );
           } else {
-            logInfo(
+            logDebug(
               Buffer.isBuffer(chunk)
                 ? chunk.toString(encoding)
                 : chunk.toString()
@@ -1154,6 +1154,18 @@ function getTasksRunnerPath(
   runner: string,
   nxJson: NxJsonConfiguration<string[] | '*'>
 ) {
+  // If running inside of Codex, there will be no internet access, so we cannot use the cloud runner, regardless of other config.
+  // We can infer this scenario by checking for certain environment variables defined in their base image: https://github.com/openai/codex-universal
+  if (process.env.CODEX_ENV_NODE_VERSION) {
+    output.warn({
+      title: 'Codex environment detected, using default tasks runner',
+      bodyLines: [
+        'Codex does not have internet access when it runs tasks, so Nx will use the default tasks runner and only leverage local caching.',
+      ],
+    });
+    return defaultTasksRunnerPath;
+  }
+
   const isCloudRunner =
     // No tasksRunnerOptions for given --runner
     nxJson.nxCloudAccessToken ||

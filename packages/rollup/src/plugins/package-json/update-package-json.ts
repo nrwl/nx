@@ -16,6 +16,7 @@ export function updatePackageJson(
   },
   packageJson: PackageJson
 ) {
+  const jsFileRegex = /(\.cjs|\.mjs|\.esm\.js|\.cjs\.js|\.mjs\.js|\.js)$/;
   const hasEsmFormat = options.format.includes('esm');
   const hasCjsFormat = options.format.includes('cjs');
 
@@ -46,7 +47,7 @@ export function updatePackageJson(
           // Reserve `module` entry for bundlers to accommodate tree-shaking.
           {
             [hasCjsFormat ? 'module' : 'import']: filePath,
-            types: filePath.replace(/\.js$/, '.d.ts'),
+            types: filePath.replace(jsFileRegex, '.d.ts'),
           };
       }
     }
@@ -110,9 +111,9 @@ export function updatePackageJson(
   }
 
   if (packageJson.module) {
-    packageJson.types ??= packageJson.module.replace(/\.js$/, '.d.ts');
+    packageJson.types ??= packageJson.module.replace(jsFileRegex, '.d.ts');
   } else {
-    packageJson.types ??= packageJson.main.replace(/\.js$/, '.d.ts');
+    packageJson.types ??= packageJson.main.replace(jsFileRegex, '.d.ts');
   }
 
   writeJsonFile(

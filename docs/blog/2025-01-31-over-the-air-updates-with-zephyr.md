@@ -7,7 +7,7 @@ cover_image: /blog/images/2025-01-31/cover-image.jpg
 description: 'Deploy React Native app updates instantly with Module Federation and Zephyr Cloud, skipping app store review processes.'
 ---
 
-Module Federation is an exciting and continually evolving technology. The use cases for Module Federation have expanded from [Micro Frontends](/concepts/module-federation/micro-frontend-architecture) and [Faster Builds](/concepts/module-federation/faster-builds-with-module-federation) to also include something that should be extremely interesting for React Native users.
+Module Federation is an exciting and continually evolving technology. The use cases for Module Federation have expanded from [Micro Frontends](/technologies/module-federation/concepts/micro-frontend-architecture) and [Faster Builds](/technologies/module-federation/concepts/faster-builds-with-module-federation) to also include something that should be extremely interesting for React Native users.
 
 Thanks to the wonderful work from the [Re.Pack](https://re-pack.dev/) team at [Callstack](https://www.callstack.com/) and [Zephyr Cloud](https://www.zephyr-cloud.io/) now you can provide over-the-air (OTA) updates to your deployed native mobile apps by running a build from your laptop - without having to deal with the difficulties or time-consuming process of deploying a new binary to each of the app stores your application is deployed to.
 
@@ -60,7 +60,7 @@ Beyond just mitigating risk of changing dependencies that can cause runtime erro
 
 If you sprinkle [Nx Cloud](/ci/intro/why-nx-cloud) on top - you can ensure your CI remains fast as you scale out your application through [Nx Replay](/ci/features/remote-cache#use-remote-caching-nx-replay) and [Nx Agents](/ci/features/distribute-task-execution). Increased scalability does not come with an increased maintenance cost of managing CI machines manually thanks to declarative [config files](/ci/recipes/set-up/monorepo-ci-github-actions).
 
-You can learn more about Why to use Nx beyond Module Federation support [here](/getting-started/why-nx).
+You can learn more about Why to use Nx beyond Module Federation support [here](/getting-started/intro).
 
 ## Setting up a Super App with Nx
 

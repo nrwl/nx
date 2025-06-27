@@ -27,13 +27,24 @@ can [submit a Pull Request](https://github.com/nrwl/nx/blob/master/CONTRIBUTING.
 
 Source code and documentation are included in the top-level folders listed below.
 
-- `docs` - Markdown and configuration files for documentation including tutorials, guides for each supported platform,
-  and API docs.
-- `e2e` - E2E tests.
 - `packages` - Source code for Nx packages such as Angular, React, Web, NestJS, Next and others including generators and
   executors (or builders).
+- `e2e` - E2E tests for the Nx packages
+- `graph` - Source code for the Nx Graph application which shows the project graph, task graph, project details, and more in the browser.
+- `docs` - Markdown and configuration files for documentation including tutorials, guides for each supported platform,
+  and API docs.
+- `nx-dev` - Source code for the Nx documentation site which displays the markdown in `docs` and more.
+- `tools` - Workspace-specific tooling and plugins
 - `scripts` - Miscellaneous scripts for project tasks such as building documentation, testing, and code formatting.
 - `tmp` - Folder used by e2e tests. If you are a WebStorm user, make sure to mark this folder as excluded.
+
+## Technologies
+
+This repo contains a mix of different technologies, including:
+
+- **Rust**: The core of Nx is written in Rust, which provides performance and safety.
+- **TypeScript**: The primary language for Nx packages and the Nx DevKit.
+- **Kotlin**: Used for the Gradle and Java plugins.
 
 ## Development Workstation Setup
 
@@ -373,6 +384,57 @@ Closes #157
 To simplify and automate the process of committing with this format,
 **Nx is a [Commitizen](https://github.com/commitizen/cz-cli) friendly repository**, just do `git add` and
 execute `pnpm commit`.
+
+##### Using the Interactive Commit Tool
+
+Instead of `git commit`, use:
+
+```bash
+pnpm commit
+```
+
+This will launch an interactive prompt that will:
+
+1. Ask you to select the type of change (feat, fix, docs, cleanup, chore)
+2. Let you choose the appropriate scope from the predefined list
+3. Guide you through writing a clear, descriptive commit message
+4. Ensure your commit follows the conventional commit format
+
+##### Available Commit Types
+
+- **feat**: A new feature
+- **fix**: A bug fix
+- **docs**: Documentation only changes
+- **cleanup**: A code change that neither fixes a bug nor adds a feature
+- **chore**: Other changes that don't modify src or test files
+
+##### Available Scopes
+
+The repository includes many predefined scopes. Use the one which is most specific to the changes being committed
+
+- **core**: anything Nx core specific
+- **angular**: anything Angular specific
+- **react**: anything React specific
+- **nextjs**: anything Next specific
+- **node**: anything Node specific
+- **devkit**: devkit-related changes
+- **graph**: anything graph app specific
+- **testing**: anything testing specific (e.g. jest or cypress)
+- **misc**: misc stuff
+- **repo**: anything related to managing the repo itself
+- **nx-dev**: anything related to docs infrastructure
+
+For the complete list of available scopes, see `/scripts/commitizen.js`.
+
+##### Example Commits
+
+```bash
+feat(core): add new project graph visualization
+fix(angular): resolve build issues with standalone components
+docs(misc): update contributing guidelines
+chore(repo): bump dependencies
+cleanup(devkit): refactor utility functions for better readability
+```
 
 #### PR releases
 

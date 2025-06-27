@@ -4,6 +4,8 @@ description: Learn how to use the @nx/nest plugin to create and manage Nest.js a
 keywords: [nest, nestjs]
 ---
 
+# @nx/nest
+
 Nest.js is a framework designed for building scalable server-side applications. In many ways, Nest is familiar to Angular developers:
 
 - It has excellent TypeScript support.
@@ -189,13 +191,13 @@ Ensuring a smooth and reliable deployment of a Nest.js application in a producti
    Create a Dockerfile that specifies the application's environment and dependencies. Build a Docker image and optionally push it to a container registry. Deploy and run the Docker container on the server. Utilize the `@nx/node:setup-docker` generator to streamline the Docker setup process.
 
 2. **Installing Dependencies on the Server:**
-   Transfer the build artifacts to the server, install all dependencies using the package manager of your choice, and start the application. Ensure that [NxAppWebpackPlugin](/recipes/webpack/webpack-plugins#nxappwebpackplugin) is configured with `generatePackageJson: true` so that the build artifacts directory includes `package.json` and `package-lock.json` (or the equivalent files for other package managers).
+   Transfer the build artifacts to the server, install all dependencies using the package manager of your choice, and start the application. Ensure that [NxAppWebpackPlugin](/technologies/build-tools/webpack/recipes/webpack-plugins#nxappwebpackplugin) is configured with `generatePackageJson: true` so that the build artifacts directory includes `package.json` and `package-lock.json` (or the equivalent files for other package managers).
 
 3. **Transferring Pre-installed Dependencies:**
    Install dependencies during the build process, and transfer the build artifacts along with the `node_modules` directory to the server. Typically, the artifacts are archived for faster transfer and then unarchived on the server.
 
 4. **Bundling Dependencies:**
-   By default, Nx/Nest creates a setup that externalizes all dependencies, meaning they are not included in the bundle. This behavior can be adjusted using the `externalDependencies` parameter in the webpack configuration with [NxAppWebpackPlugin](/recipes/webpack/webpack-plugins#nxappwebpackplugin). After bundling, transfer the package to the server and start the application.
+   By default, Nx/Nest creates a setup that externalizes all dependencies, meaning they are not included in the bundle. This behavior can be adjusted using the `externalDependencies` parameter in the webpack configuration with [NxAppWebpackPlugin](/technologies/build-tools/webpack/recipes/webpack-plugins#nxappwebpackplugin). After bundling, transfer the package to the server and start the application.
 
 {% callout type="note" title="Bundling Dependencies" %}
 Bundling dependencies is typically not recommended for Node applications.
@@ -203,4 +205,4 @@ Bundling dependencies is typically not recommended for Node applications.
 
 ## More Documentation
 
-- [Using Jest](/nx-api/jest)
+- [Using Jest](/technologies/test-tools/jest/introduction)

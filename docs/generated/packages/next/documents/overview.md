@@ -3,6 +3,8 @@ title: Overview of the Nx Next.js Plugin
 description: The Nx Next.js plugin contains executors and generators for managing Next.js applications and libraries within an Nx workspace. This page also explains how to configure Next.js on your Nx workspace.
 ---
 
+# @nx/next
+
 When using Next.js in Nx, you get the out-of-the-box support for TypeScript, Cypress, and Jest. No need to configure anything: watch mode, source maps, and typings just work.
 
 The Next.js plugin contains executors and generators for managing Next.js applications and libraries within an Nx workspace. It provides:
@@ -237,26 +239,31 @@ And if you generated a library with `--bundler`, then you can build a library as
 nx build my-new-lib
 ```
 
-After running a build, the output will be in the `{workspaceRoot}/dist/{projectRoot}` folder.
+After running a build, the output will be in the `.next` folder inside your app's project directory by default. The output directory can be changed through configuration.
 
 {% tabs %}
 
-{% tab label="Using inferred tasks" %}
+{% tab label="@nx/next/plugin and next.config.js" %}
 
-You can customize the output folder path by update the bundler's config. For example vite's config can be updated in `vite.config.ts`:
+You can customize the output folder path by updating the Next.js config. For example, you can set a custom `distDir` in `next.config.js`:
 
-```typescript {% fileName="apps/my-next-app/vite.config.ts" highlightLines=[4]%}
-import { defineConfig } from 'vite';
-export default defineConfig(() => ({
-  build: {
-    outDir: 'dist/my-next-app',
-  },
-}));
+```javascript {% fileName="apps/my-next-app/next.config.js" highlightLines=[2]%}
+const nextConfig = {
+  distDir: 'dist',
+};
+
+module.exports = nextConfig;
 ```
+
+Note: This approach works best if you have `@nx/next/plugin` installed in your `nx.json`. You can add it with `nx add @nx/next`.
 
 {% /tab %}
 
 {% tab label="Using the @nx/next:build executor" %}
+
+{% callout type="note" title="Legacy Configuration" %}
+This approach is for projects not using the `@nx/next/plugin` in `nx.json`. If you have the plugin configured, it will automatically infer tasks from your Next.js configuration. See the [Inferred Tasks concept page](/concepts/inferred-tasks) for more details.
+{% /callout %}
 
 You can customize the output folder by setting `outputPath` in the project's `project.json` file
 
@@ -275,6 +282,8 @@ You can customize the output folder by setting `outputPath` in the project's `pr
   }
 }
 ```
+
+Note that the `sourceRoot` property may not exist for all Next.js applications, as it depends on your project structure.
 
 {% /tab %}
 {% /tabs %}
@@ -338,7 +347,7 @@ This command performs several actions:
 
 Once you are ready to deploy your Next.js application, you have absolute freedom to choose any hosting provider that fits your needs.
 
-You may know that the company behind Next.js, Vercel, has a great hosting platform offering that is developed in tandem with Next.js itself to offer a great overall developer and user experience. We have detailed [how to deploy your Next.js application to Vercel in a separate guide](/recipes/react/deploy-nextjs-to-vercel).
+You may know that the company behind Next.js, Vercel, has a great hosting platform offering that is developed in tandem with Next.js itself to offer a great overall developer and user experience. We have detailed [how to deploy your Next.js application to Vercel in a separate guide](/technologies/react/recipes/deploy-nextjs-to-vercel).
 
 ## More Documentation
 

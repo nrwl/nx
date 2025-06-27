@@ -1,6 +1,7 @@
 import { Tree, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { convertEslintJsonToFlatConfig } from './json-converter';
+import { EOL } from 'node:os';
 
 describe('convertEslintJsonToFlatConfig', () => {
   let tree: Tree;
@@ -63,7 +64,7 @@ describe('convertEslintJsonToFlatConfig', () => {
         })
       );
 
-      tree.write('.eslintignore', 'node_modules\nsomething/else');
+      tree.write('.eslintignore', `node_modules${EOL}something/else`);
 
       const { content } = convertEslintJsonToFlatConfig(
         tree,
@@ -227,7 +228,7 @@ describe('convertEslintJsonToFlatConfig', () => {
         })
       );
 
-      tree.write('mylib/.eslintignore', 'node_modules\nsomething/else');
+      tree.write('mylib/.eslintignore', `node_modules${EOL}something/else`);
 
       const { content } = convertEslintJsonToFlatConfig(
         tree,
@@ -376,7 +377,7 @@ describe('convertEslintJsonToFlatConfig', () => {
         })
       );
 
-      tree.write('.eslintignore', 'node_modules\nsomething/else');
+      tree.write('.eslintignore', `node_modules${EOL}something/else`);
 
       const { content } = convertEslintJsonToFlatConfig(
         tree,
@@ -537,7 +538,7 @@ describe('convertEslintJsonToFlatConfig', () => {
         })
       );
 
-      tree.write('mylib/.eslintignore', 'node_modules\nsomething/else');
+      tree.write('mylib/.eslintignore', `node_modules${EOL}something/else`);
 
       const { content } = convertEslintJsonToFlatConfig(
         tree,

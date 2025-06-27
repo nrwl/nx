@@ -39,6 +39,19 @@ Source file inputs are defined like this:
 
 Source file inputs must be prefixed with either `{projectRoot}` or `{workspaceRoot}` to distinguish where the paths should be resolved from. `{workspaceRoot}` should only appear in the beginning of an input but `{projectRoot}` and `{projectName}` can be specified later in the input to interpolate the root or name of the project into the input location.
 
+{% callout type="info" title="Token Behavior with Nested Projects" %}
+These tokens behave differently when dealing with nested projects:
+
+- `{projectRoot}/**/*` only includes files that are assigned to the specific project. Files in nested projects are excluded.
+- `{workspaceRoot}/path/**/*` includes all files matching the pattern in the entire workspace, including files from nested projects.
+
+For example, in a structure like `packages/parent/nested-child/`, using `{projectRoot}/**/*` for the `parent` project will exclude files from `nested-child`, while `{workspaceRoot}/packages/parent/**/*` will include them.
+{% /callout %}
+
+{% callout type="info" title="Gitignored Files Are Excluded" %}
+Files listed in `.gitignore` are automatically excluded from inputs. Nx will not consider gitignored files when computing the hash for tasks; therefore, changes to ignored files will not invalidate the cache.
+{% /callout %}
+
 Prefixing a source file input with `!` will exclude the files matching the pattern from the set of files used to calculate the hash.
 Prefixing a source file input with `^` means this entry applies to the project dependencies of the project, not the project itself.
 

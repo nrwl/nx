@@ -6,7 +6,7 @@ description: This guide explains how you can configure Vite in your Nx workspace
 # Configure Vite on your Nx workspace
 
 {% callout type="note" title="Use our generator!" %}
-It is recommended that you use the [`@nx/vite:configuration`](/nx-api/vite/generators/configuration) generator to set up [Vite](https://vitejs.dev/) for your new or existing projects.
+It is recommended that you use the [`@nx/vite:configuration`](/technologies/build-tools/vite/api/generators/configuration) generator to set up [Vite](https://vitejs.dev/) for your new or existing projects.
 {% /callout %}
 
 The `@nx/vite` plugin generators take care of configuring Vite for you. However, you may need to set up Vite manually in some cases. This guide explains how you can configure Vite in your Nx workspace.

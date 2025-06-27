@@ -213,15 +213,14 @@ time: ${processedWebinar['Time']}`
 status: ${processedWebinar['Status']}`
         : ''
     }${
-      processedWebinar['YouTube Link'] &&
-      processedWebinar['Status'] === 'Past - Ungated'
-        ? `
-youtubeUrl: ${processedWebinar['YouTube Link']}`
-        : ''
-    }${
       processedWebinar['Link to Landing Page']
         ? `
-registrationUrl: ${processedWebinar['Link to Landing Page']}`
+registrationUrl: ${
+            processedWebinar['YouTube Link'] &&
+            processedWebinar['Status'] === 'Past - Ungated'
+              ? processedWebinar['YouTube Link']
+              : processedWebinar['Link to Landing Page']
+          }`
         : ''
     }
 ---${
@@ -249,11 +248,16 @@ ${processedWebinar.Description}
 ${
   processedWebinar.Status === 'Upcoming'
     ? `{% call-to-action title="Register today!" url="${processedWebinar['Link to Landing Page']}" description="Save your spot" /%}`
-    : ''
+    : ``
 }${
       processedWebinar.Status === 'Past - Gated' &&
       processedWebinar['Link to Landing Page']
         ? `{% call-to-action title="Download the recording" url="${processedWebinar['Link to Landing Page']}" description="Sign up to gain access" /%}`
+        : ''
+    }${
+      processedWebinar.Status === 'Past - Ungated' &&
+      processedWebinar['Link to Landing Page']
+        ? `{% call-to-action title="View the recording" url="${processedWebinar['YouTube Link']}" description="Watch on youtube" /%}`
         : ''
     }
 `;

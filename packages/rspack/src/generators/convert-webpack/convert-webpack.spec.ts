@@ -142,7 +142,7 @@ describe('Convert webpack', () => {
 
     expect(tree.exists('demo/rspack.config.ts')).toBeTruthy();
     expect(tree.read('demo/rspack.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { withModuleFederation } from '@nx/module-federation/rspack';
+      "import { withModuleFederation } from '@nx/module-federation/rspack.js';
       import { withReact } from '@nx/rspack';
       import { withNx } from '@nx/rspack';
       import { composePlugins } from '@nx/rspack';
@@ -244,7 +244,7 @@ describe('Convert webpack', () => {
     expect(tree.exists('remote1/rspack.config.ts')).toBeTruthy();
     expect(tree.read('remote1/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { withModuleFederation } from '@nx/module-federation/rspack';
+      "import { withModuleFederation } from '@nx/module-federation/rspack.js';
       import { withReact } from '@nx/rspack';
       import { withNx } from '@nx/rspack';
       import { composePlugins } from '@nx/rspack';
@@ -350,7 +350,7 @@ describe('Convert webpack', () => {
     expect(tree.exists('remote2/rspack.config.ts')).toBeTruthy();
     expect(tree.read('remote2/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { withModuleFederation } from '@nx/module-federation/rspack';
+      "import { withModuleFederation } from '@nx/module-federation/rspack.js';
       import { withReact } from '@nx/rspack';
       import { withNx } from '@nx/rspack';
       import { composePlugins } from '@nx/rspack';

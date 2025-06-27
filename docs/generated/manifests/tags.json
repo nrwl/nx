@@ -1,10 +1,47 @@
 {
+  "init": [
+    {
+      "description": "",
+      "file": "shared/getting-started/start-with-existing-project",
+      "id": "adding-to-existing",
+      "name": "Add to existing project",
+      "path": "/getting-started/adding-to-existing"
+    },
+    {
+      "description": "",
+      "file": "shared/migration/adding-to-monorepo",
+      "id": "adding-to-monorepo",
+      "name": "NPM/Yarn/PNPM workspaces",
+      "path": "/recipes/adopting-nx/adding-to-monorepo"
+    },
+    {
+      "description": "",
+      "file": "shared/migration/adding-to-existing-project",
+      "id": "adding-to-existing-project",
+      "name": "Add to any Project",
+      "path": "/recipes/adopting-nx/adding-to-existing-project"
+    },
+    {
+      "description": "",
+      "file": "shared/migration/migration-angular",
+      "id": "angular",
+      "name": "Migrating from Angular CLI",
+      "path": "/technologies/angular/migration/angular"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/init",
+      "id": "init",
+      "name": "init",
+      "path": "/reference/core-api/nx/documents/init"
+    }
+  ],
   "editor-setup": [
     {
-      "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
+      "description": "Learn about Nx Console, an extension for VS Code and WebStorm. (formerly Editor Setup)",
       "file": "shared/getting-started/editor-setup",
       "id": "editor-setup",
-      "name": "Editor Setup",
+      "name": "Editor Integration",
       "path": "/getting-started/editor-setup"
     },
     {
@@ -50,6 +87,15 @@
       "path": "/recipes/nx-console/console-migrate-ui"
     }
   ],
+  "ai-integration": [
+    {
+      "description": "Learn about how to integrate Nx with your favorite AI assistant.",
+      "file": "shared/getting-started/ai-setup",
+      "id": "ai-integration",
+      "name": "AI Integration",
+      "path": "/getting-started/ai-integration"
+    }
+  ],
   "run-tasks": [
     {
       "description": "Learn about the various ways you can use Nx to run tasks in your workspace.",
@@ -57,27 +103,6 @@
       "id": "run-tasks",
       "name": "Run Tasks",
       "path": "/features/run-tasks"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/task-pipeline-configuration",
-      "id": "task-pipeline-configuration",
-      "name": "What is a Task Pipeline",
-      "path": "/concepts/task-pipeline-configuration"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/executors-and-configurations",
-      "id": "executors-and-configurations",
-      "name": "Executors and Configurations",
-      "path": "/concepts/executors-and-configurations"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/common-tasks",
-      "id": "common-tasks",
-      "name": "Common Tasks",
-      "path": "/concepts/common-tasks"
     },
     {
       "description": "",
@@ -143,6 +168,27 @@
       "path": "/recipes/running-tasks/workspace-watching"
     },
     {
+      "description": "",
+      "file": "shared/concepts/task-pipeline-configuration",
+      "id": "task-pipeline-configuration",
+      "name": "What is a Task Pipeline",
+      "path": "/concepts/task-pipeline-configuration"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/executors-and-configurations",
+      "id": "executors-and-configurations",
+      "name": "Executors and Configurations",
+      "path": "/concepts/executors-and-configurations"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/common-tasks",
+      "id": "common-tasks",
+      "name": "Common Tasks",
+      "path": "/concepts/common-tasks"
+    },
+    {
       "description": "This allows to only run tasks on projects that got changed in a given PR.",
       "file": "shared/using-nx/affected",
       "id": "affected",
@@ -154,21 +200,21 @@
       "file": "generated/packages/nx/documents/run",
       "id": "run",
       "name": "run",
-      "path": "/nx-api/nx/documents/run"
+      "path": "/reference/core-api/nx/documents/run"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/nx/documents/run-many",
       "id": "run-many",
       "name": "run-many",
-      "path": "/nx-api/nx/documents/run-many"
+      "path": "/reference/core-api/nx/documents/run-many"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/nx/documents/affected",
       "id": "affected",
       "name": "affected",
-      "path": "/nx-api/nx/documents/affected"
+      "path": "/reference/core-api/nx/documents/affected"
     }
   ],
   "cache-task-results": [
@@ -188,13 +234,6 @@
     },
     {
       "description": "",
-      "file": "shared/concepts/how-caching-works",
-      "id": "how-caching-works",
-      "name": "How Caching Works",
-      "path": "/concepts/how-caching-works"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/running-tasks/configure-inputs",
       "id": "configure-inputs",
       "name": "Configure Inputs for Task Caching",
@@ -206,6 +245,13 @@
       "id": "configure-outputs",
       "name": "Configure Outputs for Task Caching",
       "path": "/recipes/running-tasks/configure-outputs"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/how-caching-works",
+      "id": "how-caching-works",
+      "name": "How Caching Works",
+      "path": "/concepts/how-caching-works"
     },
     {
       "description": "",
@@ -261,14 +307,14 @@
       "file": "generated/packages/nx/documents/connect-to-nx-cloud",
       "id": "connect-to-nx-cloud",
       "name": "connect-to-nx-cloud",
-      "path": "/nx-api/nx/documents/connect-to-nx-cloud"
+      "path": "/reference/core-api/nx/documents/connect-to-nx-cloud"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/nx/documents/reset",
       "id": "reset",
       "name": "reset",
-      "path": "/nx-api/nx/documents/reset"
+      "path": "/reference/core-api/nx/documents/reset"
     }
   ],
   "AI": [
@@ -314,14 +360,14 @@
       "file": "generated/packages/nx/documents/dep-graph",
       "id": "dep-graph",
       "name": "graph",
-      "path": "/nx-api/nx/documents/dep-graph"
+      "path": "/reference/core-api/nx/documents/dep-graph"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/nx/documents/show",
       "id": "show",
       "name": "show",
-      "path": "/nx-api/nx/documents/show"
+      "path": "/reference/core-api/nx/documents/show"
     }
   ],
   "generate-code": [
@@ -393,7 +439,7 @@
       "file": "generated/packages/nx/documents/generate",
       "id": "generate",
       "name": "generate",
-      "path": "/nx-api/nx/documents/generate"
+      "path": "/reference/core-api/nx/documents/generate"
     }
   ],
   "inferred-tasks": [
@@ -403,6 +449,13 @@
       "id": "maintain-ts-monorepos",
       "name": "Maintain TypeScript Monorepos",
       "path": "/features/maintain-ts-monorepos"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/convert-to-inferred",
+      "id": "convert-to-inferred",
+      "name": "Migrate to Inferred Tasks (Project Crystal)",
+      "path": "/recipes/running-tasks/convert-to-inferred"
     },
     {
       "description": "",
@@ -424,13 +477,6 @@
       "id": "inferred-tasks",
       "name": "Inferred Tasks",
       "path": "/concepts/inferred-tasks"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/convert-to-inferred",
-      "id": "convert-to-inferred",
-      "name": "Migrate to Inferred Tasks (Project Crystal)",
-      "path": "/recipes/running-tasks/convert-to-inferred"
     },
     {
       "description": "",
@@ -460,7 +506,7 @@
       "file": "shared/recipes/tips-n-tricks/switch-to-workspaces-project-references",
       "id": "switch-to-workspaces-project-references",
       "name": "Switch to Workspaces and TS Project References",
-      "path": "/recipes/tips-n-tricks/switch-to-workspaces-project-references"
+      "path": "/technologies/typescript/recipes/switch-to-workspaces-project-references"
     }
   ],
   "sync": [
@@ -490,14 +536,14 @@
       "file": "generated/packages/nx/documents/sync",
       "id": "sync",
       "name": "sync",
-      "path": "/nx-api/nx/documents/sync"
+      "path": "/reference/core-api/nx/documents/sync"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/nx/documents/sync-check",
       "id": "sync-check",
       "name": "sync:check",
-      "path": "/nx-api/nx/documents/sync-check"
+      "path": "/reference/core-api/nx/documents/sync-check"
     }
   ],
   "automate-updating-dependencies": [
@@ -534,7 +580,7 @@
       "file": "generated/packages/nx/documents/migrate",
       "id": "migrate",
       "name": "migrate",
-      "path": "/nx-api/nx/documents/migrate"
+      "path": "/reference/core-api/nx/documents/migrate"
     }
   ],
   "enforce-module-boundaries": [
@@ -544,27 +590,6 @@
       "id": "enforce-module-boundaries",
       "name": "Enforce Module Boundaries",
       "path": "/features/enforce-module-boundaries"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/decisions/project-size",
-      "id": "project-size",
-      "name": "Project Size",
-      "path": "/concepts/decisions/project-size"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/decisions/project-dependency-rules",
-      "id": "project-dependency-rules",
-      "name": "Project Dependency Rules",
-      "path": "/concepts/decisions/project-dependency-rules"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/decisions/folder-structure",
-      "id": "folder-structure",
-      "name": "Folder Structure",
-      "path": "/concepts/decisions/folder-structure"
     },
     {
       "description": "",
@@ -596,6 +621,27 @@
     },
     {
       "description": "",
+      "file": "shared/concepts/decisions/project-size",
+      "id": "project-size",
+      "name": "Project Size",
+      "path": "/concepts/decisions/project-size"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/decisions/project-dependency-rules",
+      "id": "project-dependency-rules",
+      "name": "Project Dependency Rules",
+      "path": "/concepts/decisions/project-dependency-rules"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/decisions/folder-structure",
+      "id": "folder-structure",
+      "name": "Folder Structure",
+      "path": "/concepts/decisions/folder-structure"
+    },
+    {
+      "description": "",
       "file": "shared/reference/nxignore",
       "id": "nxignore",
       "name": ".nxignore",
@@ -606,14 +652,14 @@
       "file": "generated/packages/nx/documents/format-check",
       "id": "format-check",
       "name": "format:check",
-      "path": "/nx-api/nx/documents/format-check"
+      "path": "/reference/core-api/nx/documents/format-check"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/nx/documents/format-write",
       "id": "format-write",
       "name": "format:write",
-      "path": "/nx-api/nx/documents/format-write"
+      "path": "/reference/core-api/nx/documents/format-write"
     }
   ],
   "nx-release": [
@@ -734,7 +780,181 @@
       "file": "generated/packages/nx/documents/release",
       "id": "release",
       "name": "release",
-      "path": "/nx-api/nx/documents/release"
+      "path": "/reference/core-api/nx/documents/release"
+    }
+  ],
+  "installation": [
+    {
+      "description": "",
+      "file": "shared/recipes/installation/install-non-javascript",
+      "id": "install-non-javascript",
+      "name": "Install Nx in a Non-Javascript Repo",
+      "path": "/recipes/installation/install-non-javascript"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/installation/update-global-installation",
+      "id": "update-global-installation",
+      "name": "Update Your Global Nx Installation",
+      "path": "/recipes/installation/update-global-installation"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/installation/activate-powerpack",
+      "id": "activate-powerpack",
+      "name": "Activate Powerpack",
+      "path": "/nx-enterprise/activate-powerpack"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/create-nx-workspace",
+      "id": "create-nx-workspace",
+      "name": "create-nx-workspace",
+      "path": "/reference/core-api/nx/documents/create-nx-workspace"
+    }
+  ],
+  "terminal-ui": [
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/terminal-ui",
+      "id": "terminal-ui",
+      "name": "Use the Terminal UI",
+      "path": "/recipes/running-tasks/terminal-ui"
+    }
+  ],
+  "exec": [
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/root-level-scripts",
+      "id": "root-level-scripts",
+      "name": "Run Root-Level NPM Scripts with Nx",
+      "path": "/recipes/running-tasks/root-level-scripts"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/exec",
+      "id": "exec",
+      "name": "exec",
+      "path": "/reference/core-api/nx/documents/exec"
+    }
+  ],
+  "workspace-watching": [
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/workspace-watching",
+      "id": "workspace-watching",
+      "name": "Workspace Watching",
+      "path": "/recipes/running-tasks/workspace-watching"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/watch",
+      "id": "watch",
+      "name": "watch",
+      "path": "/reference/core-api/nx/documents/watch"
+    }
+  ],
+  "self-hosted-caching": [
+    {
+      "description": "Different options of hosting remote cache",
+      "file": "shared/recipes/running-tasks/self-hosted-caching",
+      "id": "self-hosted-caching",
+      "name": "Remote Cache",
+      "path": "/recipes/running-tasks/self-hosted-caching"
+    }
+  ],
+  "import": [
+    {
+      "description": "",
+      "file": "shared/migration/import-project",
+      "id": "import-project",
+      "name": "Import an Existing Project into an Nx Workspace",
+      "path": "/recipes/adopting-nx/import-project"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/import",
+      "id": "import",
+      "name": "import",
+      "path": "/reference/core-api/nx/documents/import"
+    }
+  ],
+  "add": [
+    {
+      "description": "",
+      "file": "shared/recipes/tips-n-tricks/keep-nx-versions-in-sync",
+      "id": "keep-nx-versions-in-sync",
+      "name": "Keep Nx Versions in Sync",
+      "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/nx-plugins",
+      "id": "nx-plugins",
+      "name": "What Are Nx Plugins",
+      "path": "/concepts/nx-plugins"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/add",
+      "id": "add",
+      "name": "add",
+      "path": "/reference/core-api/nx/documents/add"
+    }
+  ],
+  "environment-variables": [
+    {
+      "description": "",
+      "file": "shared/guides/define-environment-variables",
+      "id": "define-environment-variables",
+      "name": "Define Environment Variables",
+      "path": "/recipes/tips-n-tricks/define-environment-variables"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/use-environment-variables-in-angular",
+      "id": "use-environment-variables-in-angular",
+      "name": "Use Environment Variables in Angular",
+      "path": "/technologies/angular/recipes/use-environment-variables-in-angular"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/use-environment-variables-in-react",
+      "id": "use-environment-variables-in-react",
+      "name": "Use Environment Variables in React",
+      "path": "/technologies/react/recipes/use-environment-variables-in-react"
+    },
+    {
+      "description": "",
+      "file": "shared/reference/environment-variables",
+      "id": "environment-variables",
+      "name": "Environment Variables",
+      "path": "/reference/environment-variables"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/performance-profiling",
+      "id": "performance-profiling",
+      "name": "Profiling Build Performance",
+      "path": "/troubleshooting/performance-profiling"
+    }
+  ],
+  "yarn": [
+    {
+      "description": "",
+      "file": "shared/recipes/yarn-pnp",
+      "id": "yarn-pnp",
+      "name": "Using Yarn PnP",
+      "path": "/recipes/tips-n-tricks/yarn-pnp"
+    }
+  ],
+  "Plug and Play": [
+    {
+      "description": "",
+      "file": "shared/recipes/yarn-pnp",
+      "id": "yarn-pnp",
+      "name": "Using Yarn PnP",
+      "path": "/recipes/tips-n-tricks/yarn-pnp"
     }
   ],
   "intro": [
@@ -746,29 +966,6 @@
       "path": "/concepts/mental-model"
     }
   ],
-  "add": [
-    {
-      "description": "",
-      "file": "shared/concepts/nx-plugins",
-      "id": "nx-plugins",
-      "name": "What Are Nx Plugins",
-      "path": "/concepts/nx-plugins"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/tips-n-tricks/keep-nx-versions-in-sync",
-      "id": "keep-nx-versions-in-sync",
-      "name": "Keep Nx Versions in Sync",
-      "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/add",
-      "id": "add",
-      "name": "add",
-      "path": "/nx-api/nx/documents/add"
-    }
-  ],
   "create-your-own-plugin": [
     {
       "description": "",
@@ -776,6 +973,13 @@
       "id": "nx-plugins",
       "name": "What Are Nx Plugins",
       "path": "/concepts/nx-plugins"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/nx-devkit-angular-devkit",
+      "id": "nx-devkit-angular-devkit",
+      "name": "Nx Devkit and Angular Devkit",
+      "path": "/technologies/angular/recipes/nx-devkit-angular-devkit"
     },
     {
       "description": "",
@@ -811,13 +1015,6 @@
       "id": "publish-plugin",
       "name": "Publish a Plugin",
       "path": "/extending-nx/recipes/publish-plugin"
-    },
-    {
-      "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
-      "file": "generated/packages/angular/documents/nx-devkit-angular-devkit",
-      "id": "nx-devkit-angular-devkit",
-      "name": "Nx Devkit and Angular Devkit",
-      "path": "/nx-api/angular/documents/nx-devkit-angular-devkit"
     }
   ],
   "daemon": [
@@ -833,297 +1030,95 @@
       "file": "generated/packages/nx/documents/daemon",
       "id": "daemon",
       "name": "daemon",
-      "path": "/nx-api/nx/documents/daemon"
+      "path": "/reference/core-api/nx/documents/daemon"
     }
   ],
   "module-federation": [
     {
       "description": "",
-      "file": "shared/concepts/module-federation/module-federation-and-nx",
-      "id": "module-federation-and-nx",
-      "name": "Module Federation and Nx",
-      "path": "/concepts/module-federation/module-federation-and-nx"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/module-federation/nx-module-federation-technical-overview",
-      "id": "nx-module-federation-technical-overview",
-      "name": "Nx Module Federation Technical Overview",
-      "path": "/concepts/module-federation/nx-module-federation-technical-overview"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/module-federation/faster-builds",
-      "id": "faster-builds-with-module-federation",
-      "name": "Faster Builds with Module Federation",
-      "path": "/concepts/module-federation/faster-builds-with-module-federation"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/module-federation-with-ssr",
-      "id": "module-federation-with-ssr",
-      "name": "Setup Module Federation with SSR for React",
-      "path": "/recipes/react/module-federation-with-ssr"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/module-federation-with-ssr",
       "id": "module-federation-with-ssr",
       "name": "Setup Module Federation with SSR for Angular",
-      "path": "/recipes/angular/module-federation-with-ssr"
+      "path": "/technologies/angular/recipes/module-federation-with-ssr"
     },
     {
       "description": "",
       "file": "shared/recipes/module-federation/dynamic-mfe-angular",
       "id": "dynamic-module-federation-with-angular",
       "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-      "path": "/recipes/angular/dynamic-module-federation-with-angular"
+      "path": "/technologies/angular/recipes/dynamic-module-federation-with-angular"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/module-federation-with-ssr",
+      "id": "module-federation-with-ssr",
+      "name": "Setup Module Federation with SSR for React",
+      "path": "/technologies/react/recipes/module-federation-with-ssr"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/module-federation/module-federation-and-nx",
+      "id": "module-federation-and-nx",
+      "name": "Module Federation and Nx",
+      "path": "/technologies/module-federation/concepts/module-federation-and-nx"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/module-federation/nx-module-federation-technical-overview",
+      "id": "nx-module-federation-technical-overview",
+      "name": "Nx Module Federation Technical Overview",
+      "path": "/technologies/module-federation/concepts/nx-module-federation-technical-overview"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/module-federation/faster-builds",
+      "id": "faster-builds-with-module-federation",
+      "name": "Faster Builds with Module Federation",
+      "path": "/technologies/module-federation/concepts/faster-builds-with-module-federation"
     }
   ],
   "angular": [
     {
       "description": "",
-      "file": "shared/concepts/module-federation/module-federation-and-nx",
-      "id": "module-federation-and-nx",
-      "name": "Module Federation and Nx",
-      "path": "/concepts/module-federation/module-federation-and-nx"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/module-federation/nx-module-federation-technical-overview",
-      "id": "nx-module-federation-technical-overview",
-      "name": "Nx Module Federation Technical Overview",
-      "path": "/concepts/module-federation/nx-module-federation-technical-overview"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/module-federation/faster-builds",
-      "id": "faster-builds-with-module-federation",
-      "name": "Faster Builds with Module Federation",
-      "path": "/concepts/module-federation/faster-builds-with-module-federation"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/angular-rspack/getting-started",
-      "id": "getting-started",
-      "name": "Getting Started",
-      "path": "/recipes/angular/rspack/getting-started"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/module-federation-with-ssr",
       "id": "module-federation-with-ssr",
       "name": "Setup Module Federation with SSR for Angular",
-      "path": "/recipes/angular/module-federation-with-ssr"
+      "path": "/technologies/angular/recipes/module-federation-with-ssr"
     },
     {
       "description": "",
       "file": "shared/recipes/module-federation/dynamic-mfe-angular",
       "id": "dynamic-module-federation-with-angular",
       "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-      "path": "/recipes/angular/dynamic-module-federation-with-angular"
-    }
-  ],
-  "react": [
+      "path": "/technologies/angular/recipes/dynamic-module-federation-with-angular"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/getting-started",
+      "id": "getting-started",
+      "name": "Getting Started with Angular and Rspack",
+      "path": "/technologies/angular/angular-rspack/recipes/getting-started"
+    },
     {
       "description": "",
       "file": "shared/concepts/module-federation/module-federation-and-nx",
       "id": "module-federation-and-nx",
       "name": "Module Federation and Nx",
-      "path": "/concepts/module-federation/module-federation-and-nx"
+      "path": "/technologies/module-federation/concepts/module-federation-and-nx"
     },
     {
       "description": "",
       "file": "shared/concepts/module-federation/nx-module-federation-technical-overview",
       "id": "nx-module-federation-technical-overview",
       "name": "Nx Module Federation Technical Overview",
-      "path": "/concepts/module-federation/nx-module-federation-technical-overview"
+      "path": "/technologies/module-federation/concepts/nx-module-federation-technical-overview"
     },
     {
       "description": "",
       "file": "shared/concepts/module-federation/faster-builds",
       "id": "faster-builds-with-module-federation",
       "name": "Faster Builds with Module Federation",
-      "path": "/concepts/module-federation/faster-builds-with-module-federation"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/module-federation-with-ssr",
-      "id": "module-federation-with-ssr",
-      "name": "Setup Module Federation with SSR for React",
-      "path": "/recipes/react/module-federation-with-ssr"
-    }
-  ],
-  "installation": [
-    {
-      "description": "",
-      "file": "shared/recipes/installation/install-non-javascript",
-      "id": "install-non-javascript",
-      "name": "Install Nx in a Non-Javascript Repo",
-      "path": "/recipes/installation/install-non-javascript"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/installation/update-global-installation",
-      "id": "update-global-installation",
-      "name": "Update Your Global Nx Installation",
-      "path": "/recipes/installation/update-global-installation"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/installation/activate-powerpack",
-      "id": "activate-powerpack",
-      "name": "Activate Powerpack",
-      "path": "/nx-enterprise/activate-powerpack"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/create-nx-workspace",
-      "id": "create-nx-workspace",
-      "name": "create-nx-workspace",
-      "path": "/nx-api/nx/documents/create-nx-workspace"
-    }
-  ],
-  "terminal-ui": [
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/terminal-ui",
-      "id": "terminal-ui",
-      "name": "Use the Terminal UI",
-      "path": "/recipes/running-tasks/terminal-ui"
-    }
-  ],
-  "exec": [
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/root-level-scripts",
-      "id": "root-level-scripts",
-      "name": "Run Root-Level NPM Scripts with Nx",
-      "path": "/recipes/running-tasks/root-level-scripts"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/exec",
-      "id": "exec",
-      "name": "exec",
-      "path": "/nx-api/nx/documents/exec"
-    }
-  ],
-  "workspace-watching": [
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/workspace-watching",
-      "id": "workspace-watching",
-      "name": "Workspace Watching",
-      "path": "/recipes/running-tasks/workspace-watching"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/watch",
-      "id": "watch",
-      "name": "watch",
-      "path": "/nx-api/nx/documents/watch"
-    }
-  ],
-  "self-hosted-caching": [
-    {
-      "description": "Host the remote cache without using Nx Cloud",
-      "file": "shared/recipes/running-tasks/self-hosted-caching",
-      "id": "self-hosted-caching",
-      "name": "Self-Host the Remote Cache",
-      "path": "/recipes/running-tasks/self-hosted-caching"
-    }
-  ],
-  "init": [
-    {
-      "description": "",
-      "file": "shared/migration/adding-to-monorepo",
-      "id": "adding-to-monorepo",
-      "name": "NPM/Yarn/PNPM workspaces",
-      "path": "/recipes/adopting-nx/adding-to-monorepo"
-    },
-    {
-      "description": "",
-      "file": "shared/migration/adding-to-existing-project",
-      "id": "adding-to-existing-project",
-      "name": "Add to any Project",
-      "path": "/recipes/adopting-nx/adding-to-existing-project"
-    },
-    {
-      "description": "",
-      "file": "shared/migration/migration-angular",
-      "id": "angular",
-      "name": "Migrating from Angular CLI",
-      "path": "/recipes/angular/migration/angular"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/init",
-      "id": "init",
-      "name": "init",
-      "path": "/nx-api/nx/documents/init"
-    }
-  ],
-  "import": [
-    {
-      "description": "",
-      "file": "shared/migration/import-project",
-      "id": "import-project",
-      "name": "Import an Existing Project into an Nx Workspace",
-      "path": "/recipes/adopting-nx/import-project"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/import",
-      "id": "import",
-      "name": "import",
-      "path": "/nx-api/nx/documents/import"
-    }
-  ],
-  "environment-variables": [
-    {
-      "description": "",
-      "file": "shared/guides/use-environment-variables-in-react",
-      "id": "use-environment-variables-in-react",
-      "name": "Use Environment Variables in React",
-      "path": "/recipes/react/use-environment-variables-in-react"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/use-environment-variables-in-angular",
-      "id": "use-environment-variables-in-angular",
-      "name": "Use Environment Variables in Angular",
-      "path": "/recipes/angular/use-environment-variables-in-angular"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/define-environment-variables",
-      "id": "define-environment-variables",
-      "name": "Define Environment Variables",
-      "path": "/recipes/tips-n-tricks/define-environment-variables"
-    },
-    {
-      "description": "",
-      "file": "shared/reference/environment-variables",
-      "id": "environment-variables",
-      "name": "Environment Variables",
-      "path": "/reference/environment-variables"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/performance-profiling",
-      "id": "performance-profiling",
-      "name": "Profiling Build Performance",
-      "path": "/troubleshooting/performance-profiling"
-    }
-  ],
-  "introduction": [
-    {
-      "description": "",
-      "file": "shared/guides/angular-rspack/introduction",
-      "id": "introduction",
-      "name": "Introduction",
-      "path": "/recipes/angular/rspack/introduction"
+      "path": "/technologies/module-federation/concepts/faster-builds-with-module-federation"
     }
   ],
   "getting-started": [
@@ -1131,8 +1126,8 @@
       "description": "",
       "file": "shared/guides/angular-rspack/getting-started",
       "id": "getting-started",
-      "name": "Getting Started",
-      "path": "/recipes/angular/rspack/getting-started"
+      "name": "Getting Started with Angular and Rspack",
+      "path": "/technologies/angular/angular-rspack/recipes/getting-started"
     }
   ],
   "rspack": [
@@ -1140,8 +1135,8 @@
       "description": "",
       "file": "shared/guides/angular-rspack/getting-started",
       "id": "getting-started",
-      "name": "Getting Started",
-      "path": "/recipes/angular/rspack/getting-started"
+      "name": "Getting Started with Angular and Rspack",
+      "path": "/technologies/angular/angular-rspack/recipes/getting-started"
     }
   ],
   "setup": [
@@ -1149,8 +1144,8 @@
       "description": "",
       "file": "shared/guides/angular-rspack/getting-started",
       "id": "getting-started",
-      "name": "Getting Started",
-      "path": "/recipes/angular/rspack/getting-started"
+      "name": "Getting Started with Angular and Rspack",
+      "path": "/technologies/angular/angular-rspack/recipes/getting-started"
     }
   ],
   "migrate-from-webpack": [
@@ -1159,7 +1154,7 @@
       "file": "shared/guides/angular-rspack/migrate-from-webpack",
       "id": "migrate-from-webpack",
       "name": "Migrate from Angular Webpack",
-      "path": "/recipes/angular/rspack/migrate-from-webpack"
+      "path": "/technologies/angular/angular-rspack/recipes/migrate-from-webpack"
     }
   ],
   "handling-configurations": [
@@ -1168,7 +1163,7 @@
       "file": "shared/guides/angular-rspack/handling-configurations",
       "id": "handling-configurations",
       "name": "Handling Configurations",
-      "path": "/recipes/angular/rspack/handling-configurations"
+      "path": "/technologies/angular/angular-rspack/recipes/handling-configurations"
     }
   ],
   "configurations": [
@@ -1177,7 +1172,7 @@
       "file": "shared/guides/angular-rspack/handling-configurations",
       "id": "handling-configurations",
       "name": "Handling Configurations",
-      "path": "/recipes/angular/rspack/handling-configurations"
+      "path": "/technologies/angular/angular-rspack/recipes/handling-configurations"
     }
   ],
   "internationalization": [
@@ -1186,7 +1181,7 @@
       "file": "shared/guides/angular-rspack/internationalization",
       "id": "internationalization",
       "name": "Internationalization (i18n)",
-      "path": "/recipes/angular/rspack/internationalization"
+      "path": "/technologies/angular/angular-rspack/recipes/internationalization"
     }
   ],
   "i18n": [
@@ -1195,7 +1190,69 @@
       "file": "shared/guides/angular-rspack/internationalization",
       "id": "internationalization",
       "name": "Internationalization (i18n)",
-      "path": "/recipes/angular/rspack/internationalization"
+      "path": "/technologies/angular/angular-rspack/recipes/internationalization"
+    }
+  ],
+  "create-config": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-config",
+      "id": "create-config",
+      "name": "Create Config",
+      "path": "/technologies/angular/angular-rspack/api/create-config"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-config",
+      "id": "create-config",
+      "name": "Create Config",
+      "path": "/technologies/angular/angular-rsbuild/api/create-config"
+    }
+  ],
+  "create-server": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-server",
+      "id": "create-server",
+      "name": "Create Server",
+      "path": "/technologies/angular/angular-rspack/api/create-server"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-server",
+      "id": "create-server",
+      "name": "Create Server",
+      "path": "/technologies/angular/angular-rsbuild/api/create-server"
+    }
+  ],
+  "react": [
+    {
+      "description": "",
+      "file": "shared/recipes/module-federation-with-ssr",
+      "id": "module-federation-with-ssr",
+      "name": "Setup Module Federation with SSR for React",
+      "path": "/technologies/react/recipes/module-federation-with-ssr"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/module-federation/module-federation-and-nx",
+      "id": "module-federation-and-nx",
+      "name": "Module Federation and Nx",
+      "path": "/technologies/module-federation/concepts/module-federation-and-nx"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/module-federation/nx-module-federation-technical-overview",
+      "id": "nx-module-federation-technical-overview",
+      "name": "Nx Module Federation Technical Overview",
+      "path": "/technologies/module-federation/concepts/nx-module-federation-technical-overview"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/module-federation/faster-builds",
+      "id": "faster-builds-with-module-federation",
+      "name": "Faster Builds with Module Federation",
+      "path": "/technologies/module-federation/concepts/faster-builds-with-module-federation"
     }
   ],
   "deployment": [
@@ -1204,21 +1261,21 @@
       "file": "shared/recipes/deployment/node-server-fly-io",
       "id": "node-server-fly-io",
       "name": "Deploying a Node App to Fly.io",
-      "path": "/recipes/node/node-server-fly-io"
+      "path": "/technologies/node/recipes/node-server-fly-io"
     },
     {
       "description": "",
       "file": "shared/recipes/deployment/node-serverless-functions-netlify",
       "id": "node-serverless-functions-netlify",
       "name": "Add and Deploy Netlify Edge Functions with Node",
-      "path": "/recipes/node/node-serverless-functions-netlify"
+      "path": "/technologies/node/recipes/node-serverless-functions-netlify"
     },
     {
       "description": "",
       "file": "shared/recipes/deployment/node-aws-lambda",
       "id": "node-aws-lambda",
       "name": "Deploying AWS lambda in Node.js (deprecated)",
-      "path": "/recipes/node/node-aws-lambda"
+      "path": "/technologies/node/recipes/node-aws-lambda"
     }
   ],
   "node": [
@@ -1227,28 +1284,28 @@
       "file": "shared/recipes/deployment/node-server-fly-io",
       "id": "node-server-fly-io",
       "name": "Deploying a Node App to Fly.io",
-      "path": "/recipes/node/node-server-fly-io"
+      "path": "/technologies/node/recipes/node-server-fly-io"
     },
     {
       "description": "",
       "file": "shared/recipes/deployment/node-serverless-functions-netlify",
       "id": "node-serverless-functions-netlify",
       "name": "Add and Deploy Netlify Edge Functions with Node",
-      "path": "/recipes/node/node-serverless-functions-netlify"
+      "path": "/technologies/node/recipes/node-serverless-functions-netlify"
     },
     {
       "description": "",
       "file": "shared/recipes/deployment/node-aws-lambda",
       "id": "node-aws-lambda",
       "name": "Deploying AWS lambda in Node.js (deprecated)",
-      "path": "/recipes/node/node-aws-lambda"
+      "path": "/technologies/node/recipes/node-aws-lambda"
     },
     {
       "description": "",
       "file": "shared/recipes/node/application-proxies",
       "id": "application-proxies",
       "name": "Set Up Application Proxies",
-      "path": "/recipes/node/application-proxies"
+      "path": "/technologies/node/recipes/application-proxies"
     },
     {
       "description": "",
@@ -1286,124 +1343,13 @@
       "path": "/showcase/example-repos/serverless-fastify-planetscale"
     }
   ],
-  "storybook": [
-    {
-      "description": "This guide explains how to set up Storybook for React projects in your Nx workspace.",
-      "file": "shared/recipes/storybook/plugin-react",
-      "id": "overview-react",
-      "name": "Set up Storybook for React Projects",
-      "path": "/recipes/storybook/overview-react"
-    },
-    {
-      "description": "This guide explains how to set up Storybook for Angular projects in your Nx workspace.",
-      "file": "shared/recipes/storybook/plugin-angular",
-      "id": "overview-angular",
-      "name": "Set up Storybook for Angular Projects",
-      "path": "/recipes/storybook/overview-angular"
-    },
-    {
-      "description": "This guide explains how to set up Storybook for Vue projects in your Nx workspace.",
-      "file": "shared/recipes/storybook/plugin-vue",
-      "id": "overview-vue",
-      "name": "Set up Storybook for Vue Projects",
-      "path": "/recipes/storybook/overview-vue"
-    },
-    {
-      "description": "This guide explains how Storybook is configured on your Nx workspace.",
-      "file": "shared/recipes/storybook/configuring-storybook",
-      "id": "configuring-storybook",
-      "name": "Configuring Storybook on Nx",
-      "path": "/recipes/storybook/configuring-storybook"
-    },
-    {
-      "description": "This guide explains how to consolidate all your Storybook stories from different projects into one unified Storybook instance. Ideal for Nx workspaces leveraging a single framework.",
-      "file": "shared/recipes/storybook/one-storybook-for-all",
-      "id": "one-storybook-for-all",
-      "name": "One main Storybook instance for all projects",
-      "path": "/recipes/storybook/one-storybook-for-all"
-    },
-    {
-      "description": "This guide explains how to set up individual Storybook instances for each scope within an Nx workspace. It provides a structured approach, emphasizing folder organization and thematic scope separation.",
-      "file": "shared/recipes/storybook/one-storybook-per-scope",
-      "id": "one-storybook-per-scope",
-      "name": "One Storybook instance per scope",
-      "path": "/recipes/storybook/one-storybook-per-scope"
-    },
-    {
-      "description": "This guide explains how to publish a unified Storybook instance from multiple frameworks within an Nx workspace using Storybook Composition.",
-      "file": "shared/recipes/storybook/one-storybook-with-composition",
-      "id": "one-storybook-with-composition",
-      "name": "One main Storybook instance using Storybook Composition",
-      "path": "/recipes/storybook/one-storybook-with-composition"
-    },
-    {
-      "description": "This guide explains how to customize the webpack configuration and your vite configuration for Storybook.",
-      "file": "shared/recipes/storybook/custom-builder-configs",
-      "id": "custom-builder-configs",
-      "name": "How to configure Webpack and Vite for Storybook",
-      "path": "/recipes/storybook/custom-builder-configs"
-    },
-    {
-      "description": "This guide explains how you can set up Storybook interaction tests on your Nx workspace.",
-      "file": "shared/recipes/storybook/interaction-tests",
-      "id": "storybook-interaction-tests",
-      "name": "Setting up Storybook Interaction Tests with Nx",
-      "path": "/recipes/storybook/storybook-interaction-tests"
-    },
-    {
-      "description": "This guide explains how you can upgrade Storybook using the Storybook CLI upgrade and automigrate commands.",
-      "file": "shared/recipes/storybook/upgrading-storybook",
-      "id": "upgrading-storybook",
-      "name": "Upgrading Storybook using the Storybook CLI",
-      "path": "/recipes/storybook/upgrading-storybook"
-    },
-    {
-      "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
-      "file": "shared/recipes/storybook/storybook-composition-setup",
-      "id": "storybook-composition-setup",
-      "name": "Setting up Storybook Composition with Nx",
-      "path": "/recipes/storybook/storybook-composition-setup"
-    },
-    {
-      "description": "This guide explains how to set up Compodoc for Storybook on Angular projects in a Nx workspace.",
-      "file": "shared/recipes/storybook/angular-storybook-compodoc",
-      "id": "angular-storybook-compodoc",
-      "name": "Angular: Set up Compodoc for Storybook on Nx",
-      "path": "/recipes/storybook/angular-storybook-compodoc"
-    },
-    {
-      "description": "This document explains how to configure styles and preprocessor options in Angular projects with a Storybook configuration.",
-      "file": "shared/recipes/storybook/angular-configuring-styles",
-      "id": "angular-configuring-styles",
-      "name": "Angular: Configuring styles and preprocessor options",
-      "path": "/recipes/storybook/angular-configuring-styles"
-    }
-  ],
-  "yarn": [
-    {
-      "description": "",
-      "file": "shared/recipes/yarn-pnp",
-      "id": "yarn-pnp",
-      "name": "Using Yarn PnP",
-      "path": "/recipes/tips-n-tricks/yarn-pnp"
-    }
-  ],
-  "Plug and Play": [
-    {
-      "description": "",
-      "file": "shared/recipes/yarn-pnp",
-      "id": "yarn-pnp",
-      "name": "Using Yarn PnP",
-      "path": "/recipes/tips-n-tricks/yarn-pnp"
-    }
-  ],
   "eslint": [
     {
       "description": "",
       "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
       "id": "flat-config",
       "name": "Switching to ESLint's flat config format",
-      "path": "/recipes/tips-n-tricks/flat-config"
+      "path": "/technologies/eslint/recipes/flat-config"
     }
   ],
   "flat config": [
@@ -1412,7 +1358,100 @@
       "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
       "id": "flat-config",
       "name": "Switching to ESLint's flat config format",
-      "path": "/recipes/tips-n-tricks/flat-config"
+      "path": "/technologies/eslint/recipes/flat-config"
+    }
+  ],
+  "storybook": [
+    {
+      "description": "This guide explains how to set up Storybook for React projects in your Nx workspace.",
+      "file": "shared/recipes/storybook/plugin-react",
+      "id": "overview-react",
+      "name": "Set up Storybook for React Projects",
+      "path": "/technologies/test-tools/storybook/recipes/overview-react"
+    },
+    {
+      "description": "This guide explains how to set up Storybook for Angular projects in your Nx workspace.",
+      "file": "shared/recipes/storybook/plugin-angular",
+      "id": "overview-angular",
+      "name": "Set up Storybook for Angular Projects",
+      "path": "/technologies/test-tools/storybook/recipes/overview-angular"
+    },
+    {
+      "description": "This guide explains how to set up Storybook for Vue projects in your Nx workspace.",
+      "file": "shared/recipes/storybook/plugin-vue",
+      "id": "overview-vue",
+      "name": "Set up Storybook for Vue Projects",
+      "path": "/technologies/test-tools/storybook/recipes/overview-vue"
+    },
+    {
+      "description": "This guide explains how Storybook is configured on your Nx workspace.",
+      "file": "shared/recipes/storybook/configuring-storybook",
+      "id": "configuring-storybook",
+      "name": "Configuring Storybook on Nx",
+      "path": "/technologies/test-tools/storybook/recipes/configuring-storybook"
+    },
+    {
+      "description": "This guide explains how to consolidate all your Storybook stories from different projects into one unified Storybook instance. Ideal for Nx workspaces leveraging a single framework.",
+      "file": "shared/recipes/storybook/one-storybook-for-all",
+      "id": "one-storybook-for-all",
+      "name": "One main Storybook instance for all projects",
+      "path": "/technologies/test-tools/storybook/recipes/one-storybook-for-all"
+    },
+    {
+      "description": "This guide explains how to set up individual Storybook instances for each scope within an Nx workspace. It provides a structured approach, emphasizing folder organization and thematic scope separation.",
+      "file": "shared/recipes/storybook/one-storybook-per-scope",
+      "id": "one-storybook-per-scope",
+      "name": "One Storybook instance per scope",
+      "path": "/technologies/test-tools/storybook/recipes/one-storybook-per-scope"
+    },
+    {
+      "description": "This guide explains how to publish a unified Storybook instance from multiple frameworks within an Nx workspace using Storybook Composition.",
+      "file": "shared/recipes/storybook/one-storybook-with-composition",
+      "id": "one-storybook-with-composition",
+      "name": "One main Storybook instance using Storybook Composition",
+      "path": "/technologies/test-tools/storybook/recipes/one-storybook-with-composition"
+    },
+    {
+      "description": "This guide explains how to customize the webpack configuration and your vite configuration for Storybook.",
+      "file": "shared/recipes/storybook/custom-builder-configs",
+      "id": "custom-builder-configs",
+      "name": "How to configure Webpack and Vite for Storybook",
+      "path": "/technologies/test-tools/storybook/recipes/custom-builder-configs"
+    },
+    {
+      "description": "This guide explains how you can set up Storybook interaction tests on your Nx workspace.",
+      "file": "shared/recipes/storybook/interaction-tests",
+      "id": "storybook-interaction-tests",
+      "name": "Setting up Storybook Interaction Tests with Nx",
+      "path": "/technologies/test-tools/storybook/recipes/storybook-interaction-tests"
+    },
+    {
+      "description": "This guide explains how you can upgrade Storybook using the Storybook CLI upgrade and automigrate commands.",
+      "file": "shared/recipes/storybook/upgrading-storybook",
+      "id": "upgrading-storybook",
+      "name": "Upgrading Storybook using the Storybook CLI",
+      "path": "/technologies/test-tools/storybook/recipes/upgrading-storybook"
+    },
+    {
+      "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
+      "file": "shared/recipes/storybook/storybook-composition-setup",
+      "id": "storybook-composition-setup",
+      "name": "Setting up Storybook Composition with Nx",
+      "path": "/technologies/test-tools/storybook/recipes/storybook-composition-setup"
+    },
+    {
+      "description": "This guide explains how to set up Compodoc for Storybook on Angular projects in a Nx workspace.",
+      "file": "shared/recipes/storybook/angular-storybook-compodoc",
+      "id": "angular-storybook-compodoc",
+      "name": "Angular: Set up Compodoc for Storybook on Nx",
+      "path": "/technologies/test-tools/storybook/recipes/angular-storybook-compodoc"
+    },
+    {
+      "description": "This document explains how to configure styles and preprocessor options in Angular projects with a Storybook configuration.",
+      "file": "shared/recipes/storybook/angular-configuring-styles",
+      "id": "angular-configuring-styles",
+      "name": "Angular: Configuring styles and preprocessor options",
+      "path": "/technologies/test-tools/storybook/recipes/angular-configuring-styles"
     }
   ],
   "conformance": [
@@ -1520,7 +1559,7 @@
       "file": "generated/packages/nx/documents/connect-to-nx-cloud",
       "id": "connect-to-nx-cloud",
       "name": "connect-to-nx-cloud",
-      "path": "/nx-api/nx/documents/connect-to-nx-cloud"
+      "path": "/reference/core-api/nx/documents/connect-to-nx-cloud"
     }
   ],
   "running-tasks": [
@@ -1554,14 +1593,14 @@
       "file": "generated/packages/nx/documents/login",
       "id": "login",
       "name": "login",
-      "path": "/nx-api/nx/documents/login"
+      "path": "/reference/core-api/nx/documents/login"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/nx/documents/logout",
       "id": "logout",
       "name": "logout",
-      "path": "/nx-api/nx/documents/logout"
+      "path": "/reference/core-api/nx/documents/logout"
     }
   ],
   "single-tenant": [
@@ -1571,6 +1610,29 @@
       "id": "overview",
       "name": "Single Tenant Nx Cloud Hosting",
       "path": "/ci/recipes/enterprise/single-tenant/overview"
+    }
+  ],
+  "polygraph": [
+    {
+      "description": "Enterprise features for visualizing dependencies and enforcing standards across multiple repositories",
+      "file": "nx-cloud/enterprise/polygraph",
+      "id": "polygraph",
+      "name": "Polygraph",
+      "path": "/ci/recipes/enterprise/polygraph"
+    },
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/metadata-only-workspace",
+      "id": "metadata-only-workspace",
+      "name": "Metadata Only Workspaces",
+      "path": "/ci/recipes/enterprise/metadata-only-workspace"
+    },
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/custom-workflows",
+      "id": "custom-workflows",
+      "name": "Custom Workflows",
+      "path": "/ci/recipes/enterprise/custom-workflows"
     }
   ],
   "docker": [
@@ -1597,7 +1659,7 @@
       "file": "generated/packages/nx/documents/affected",
       "id": "affected",
       "name": "affected",
-      "path": "/nx-api/nx/documents/affected"
+      "path": "/reference/core-api/nx/documents/affected"
     }
   ]
 }

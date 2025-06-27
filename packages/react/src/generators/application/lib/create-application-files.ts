@@ -57,6 +57,7 @@ export function getDefaultTemplateVariables(
     style: options.style === 'tailwind' ? 'css' : options.style,
     hasStyleFile,
     isUsingTsSolutionSetup: isUsingTsSolutionSetup(host),
+    port: options.port ?? 4200,
   };
 }
 

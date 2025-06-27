@@ -1,7 +1,8 @@
-import { dirname, join, sep } from 'path';
+import { join, sep } from 'path';
 import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
 import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
+import { readTsConfigWithoutFiles } from './typescript';
 
 const swcNodeInstalled = packageIsInstalled('@swc-node/register');
 const tsNodeInstalled = packageIsInstalled('ts-node/register');
@@ -79,11 +80,11 @@ export function registerTsProject(
   }
 
   const tsConfigPath = configFilename ? join(path, configFilename) : path;
-  const compilerOptions: CompilerOptions = readCompilerOptions(tsConfigPath);
+  const { compilerOptions, tsConfigRaw } = readCompilerOptions(tsConfigPath);
 
   const cleanupFunctions: ((...args: unknown[]) => unknown)[] = [
     registerTsConfigPaths(tsConfigPath),
-    registerTranspiler(compilerOptions),
+    registerTranspiler(compilerOptions, tsConfigRaw),
   ];
 
   // Add ESM support for `.ts` files.
@@ -128,13 +129,18 @@ export function getSwcTranspiler(
 }
 
 export function getTsNodeTranspiler(
-  compilerOptions: CompilerOptions
+  compilerOptions: CompilerOptions,
+  tsNodeOptions?: TsConfigOptions
 ): (...args: unknown[]) => unknown {
   const { register } = require('ts-node') as typeof import('ts-node');
   // ts-node doesn't provide a cleanup method
   const service = register({
+    ...tsNodeOptions,
     transpileOnly: true,
-    compilerOptions: getTsNodeCompilerOptions(compilerOptions),
+    compilerOptions: getTsNodeCompilerOptions({
+      ...tsNodeOptions?.compilerOptions,
+      ...compilerOptions,
+    }),
     // we already read and provide the compiler options, so prevent ts-node from reading them again
     skipProject: true,
   });
@@ -250,24 +256,36 @@ export function getTranspiler(
   compilerOptions.inlineSourceMap = true;
   compilerOptions.skipLibCheck = true;
 
+  let _getTranspiler: (
+    compilerOptions: CompilerOptions,
+    tsNodeOptions?: TsConfigOptions
+  ) => (...args: unknown[]) => unknown;
+
+  let registrationKey = JSON.stringify(compilerOptions);
+  let tsNodeOptions: TsConfigOptions | undefined;
+  if (swcNodeInstalled && !preferTsNode) {
+    _getTranspiler = getSwcTranspiler;
+  } else if (tsNodeInstalled) {
+    // We can fall back on ts-node if it's available
+    _getTranspiler = getTsNodeTranspiler;
+    tsNodeOptions = filterRecognizedTsConfigTsNodeOptions(
+      tsConfigRaw?.['ts-node']
+    ).recognized;
+    // include ts-node options in the registration key
+    registrationKey += JSON.stringify(tsNodeOptions);
+  } else {
+    _getTranspiler = undefined;
+  }
+
   // Just return if transpiler was already registered before.
-  const registrationKey = JSON.stringify(compilerOptions);
   const registrationEntry = registered.get(registrationKey);
   if (registered.has(registrationKey)) {
     registrationEntry.refCount++;
     return registrationEntry.cleanup;
   }
 
-  const _getTranspiler =
-    swcNodeInstalled && !preferTsNode
-      ? getSwcTranspiler
-      : tsNodeInstalled
-      ? // We can fall back on ts-node if it's available
-        getTsNodeTranspiler
-      : undefined;
-
   if (_getTranspiler) {
-    const transpilerCleanup = _getTranspiler(compilerOptions);
+    const transpilerCleanup = _getTranspiler(compilerOptions, tsNodeOptions);
     const currRegistrationEntry = {
       refCount: 1,
       cleanup: () => {
@@ -294,10 +312,11 @@ export function getTranspiler(
  * @returns cleanup method
  */
 export function registerTranspiler(
-  compilerOptions: CompilerOptions
+  compilerOptions: CompilerOptions,
+  tsConfigRaw?: unknown
 ): () => void {
   // Function to register transpiler that returns cleanup function
-  const transpiler = getTranspiler(compilerOptions);
+  const transpiler = getTranspiler(compilerOptions, tsConfigRaw);
 
   if (!transpiler) {
     warnNoTranspiler();
@@ -336,11 +355,16 @@ export function registerTsConfigPaths(tsConfigPath): () => void {
   throw new Error(`Unable to load ${tsConfigPath}`);
 }
 
-function readCompilerOptions(tsConfigPath): CompilerOptions {
+function readCompilerOptions(tsConfigPath): {
+  compilerOptions: CompilerOptions;
+  tsConfigRaw?: unknown;
+} {
   const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
 
   if (swcNodeInstalled && !preferTsNode) {
-    return readCompilerOptionsWithSwc(tsConfigPath);
+    return {
+      compilerOptions: readCompilerOptionsWithSwc(tsConfigPath),
+    };
   } else {
     return readCompilerOptionsWithTypescript(tsConfigPath);
   }
@@ -359,20 +383,15 @@ function readCompilerOptionsWithSwc(tsConfigPath) {
 }
 
 function readCompilerOptionsWithTypescript(tsConfigPath) {
-  if (!ts) {
-    ts = require('typescript');
-  }
-  const { readConfigFile, parseJsonConfigFileContent, sys } = ts;
-  const jsonContent = readConfigFile(tsConfigPath, sys.readFile);
-  const { options } = parseJsonConfigFileContent(
-    jsonContent.config,
-    sys,
-    dirname(tsConfigPath)
-  );
+  const { options, raw } = readTsConfigWithoutFiles(tsConfigPath);
   // This property is returned in compiler options for some reason, but not part of the typings.
   // ts-node fails on unknown props, so we have to remove it.
   delete options.configFilePath;
-  return options;
+
+  return {
+    compilerOptions: options,
+    tsConfigRaw: raw,
+  };
 }
 
 function loadTsConfigPaths(): typeof import('tsconfig-paths') | null {

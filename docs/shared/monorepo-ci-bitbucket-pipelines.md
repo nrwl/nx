@@ -24,7 +24,12 @@ pipelines:
             - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
             - npm ci
 
-            - npx nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # This requires connecting your workspace to Nx Cloud. Run "nx connect" to get started w/ Nx Cloud
+            # - npx nx-cloud record -- nx format:check
+
+            # Without Nx Cloud, run format:check directly
+            - npx nx format:check
             - npx nx affected -t lint test build e2e-ci --base=origin/main
 
   branches:
@@ -38,7 +43,12 @@ pipelines:
             # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
             - npm ci
 
-            - npx nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # This requires connecting your workspace to Nx Cloud. Run "nx connect" to get started w/ Nx Cloud
+            # - npx nx-cloud record -- nx format:check
+
+            # Without Nx Cloud, run format:check directly
+            - npx nx format:check
             - npx nx affected -t lint test build e2e-ci --base=HEAD~1
 ```
 

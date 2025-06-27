@@ -14,6 +14,11 @@ description: 'Explore how Nx monorepos amplify AI benefits by providing complete
 - [Nx MCP Now Available for VS Code Copilot](/blog/nx-mcp-vscode-copilot)
 - **Nx and AI: Why They Work so Well Together**
 - [Save Time: Connecting Your Editor, CI and LLMs](/blog/nx-editor-ci-llm-integration)
+- [Enhancing Nx Generators with AI: Predictability Meets Intelligence](/blog/nx-generators-ai-integration)
+- [Your AI Assistant Can Now Read Your Terminal: Real-Time Development Error Fixing](/blog/nx-terminal-integration-ai)
+- [Introducing Self-Healing CI for Nx and Nx Cloud](/blog/nx-self-healing-ci)
+- [Analyze Your Nx Cloud Runs With Your AI Assistant](/blog/nx-cloud-analyze-via-nx-mcp)
+- [Automatically Fix your CI Failures with JetBrains AI Assistant](/blog/jetbrains-ci-autofix)
 
 {% /callout %}
 

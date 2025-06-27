@@ -30,7 +30,7 @@ There is a popular package called `next-compose-plugins` that has not been maint
 
 ## `withNx` plugin
 
-The `withNx` Next.js plugin provides integration with Nx, including support for [workspace libraries](/nx-api/next/generators/library), SVGR, and more. It is included by default when you generate a Next.js [application](/nx-api/next/generators/application) with Nx. When you customize your `next.config.js` file, make sure to include the `withNx` plugin.
+The `withNx` Next.js plugin provides integration with Nx, including support for [workspace libraries](/technologies/react/next/api/generators/library), SVGR, and more. It is included by default when you generate a Next.js [application](/technologies/react/next/api/generators/application) with Nx. When you customize your `next.config.js` file, make sure to include the `withNx` plugin.
 
 ### Options
 

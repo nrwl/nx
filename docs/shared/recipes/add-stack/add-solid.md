@@ -321,7 +321,7 @@ Now when you serve your application, you'll see the content from the library bei
 
 ## More Documentation
 
-- [@nx/vite](/nx-api/vite)
-- [@nx/js](/nx-api/js)
-- [@nx/web](/nx-api/web)
+- [@nx/vite](/technologies/build-tools/vite/introduction)
+- [@nx/js](/technologies/typescript/introduction)
+- [@nx/web](/reference/core-api/web)
 - [Solid](https://www.solidjs.com/)

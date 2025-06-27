@@ -68,7 +68,7 @@ If defining a new target that needs to run a single shell command, there is a sh
 }
 ```
 
-For more info, see the [run-commands documentation](/nx-api/nx/executors/run-commands)
+For more info, see the [run-commands documentation](/reference/core-api/nx/executors/run-commands)
 
 ## Build your own Executor
 

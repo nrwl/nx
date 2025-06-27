@@ -198,9 +198,9 @@ If you are currently using the NxExt based Vite plugin, or even a Webpack based 
 npx nx g @nrwl/vite:configuration
 ```
 
-This will adjust the NxExt Vite plugin configuration to match the one provided by our core team. Check out our docs for more info: [/nx-api/vite/generators/configuration](/nx-api/vite/generators/configuration)
+This will adjust the NxExt Vite plugin configuration to match the one provided by our core team. Check out our docs for more info: [/technologies/build-tools/vite/generators/configuration](/technologies/build-tools/vite/api/generators/configuration)
 
-You can also find all the details about the new Vite package in our docs: [/nx-api/vite](/nx-api/vite)
+You can also find all the details about the new Vite package in our docs: [/technologies/build-tools/vite/introduction](/technologies/build-tools/vite/introduction)
 
 ## Adopting Nx has never been easier
 
@@ -227,7 +227,7 @@ Check out our docs for all the details on
 - [adding Nx to an existing monorepo](/recipes/adopting-nx/adding-to-monorepo)
 - [adding Nx to any non-monorepo setup](/recipes/adopting-nx/adding-to-existing-project)
 - [migrating your CRA project to Nx](/recipes/adopting-nx/adding-to-existing-project)
-- [migrating your Angular CLI app to Nx](/recipes/angular/migration/angular)
+- [migrating your Angular CLI app to Nx](/technologies/angular/migration/angular)
 
 Oh..you're wondering why you would want to add Nx to an existing non-monorepo project? Then keep reading 👇
 

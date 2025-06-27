@@ -6,17 +6,17 @@ Project configuration
 
 ### Properties
 
-- [generators](../../devkit/documents/ProjectConfiguration#generators): Object
-- [implicitDependencies](../../devkit/documents/ProjectConfiguration#implicitdependencies): string[]
-- [metadata](../../devkit/documents/ProjectConfiguration#metadata): ProjectMetadata
-- [name](../../devkit/documents/ProjectConfiguration#name): string
-- [namedInputs](../../devkit/documents/ProjectConfiguration#namedinputs): Object
-- [projectType](../../devkit/documents/ProjectConfiguration#projecttype): ProjectType
-- [release](../../devkit/documents/ProjectConfiguration#release): Object
-- [root](../../devkit/documents/ProjectConfiguration#root): string
-- [sourceRoot](../../devkit/documents/ProjectConfiguration#sourceroot): string
-- [tags](../../devkit/documents/ProjectConfiguration#tags): string[]
-- [targets](../../devkit/documents/ProjectConfiguration#targets): Object
+- [generators](/reference/core-api/devkit/documents/ProjectConfiguration#generators): Object
+- [implicitDependencies](/reference/core-api/devkit/documents/ProjectConfiguration#implicitdependencies): string[]
+- [metadata](/reference/core-api/devkit/documents/ProjectConfiguration#metadata): ProjectMetadata
+- [name](/reference/core-api/devkit/documents/ProjectConfiguration#name): string
+- [namedInputs](/reference/core-api/devkit/documents/ProjectConfiguration#namedinputs): Object
+- [projectType](/reference/core-api/devkit/documents/ProjectConfiguration#projecttype): ProjectType
+- [release](/reference/core-api/devkit/documents/ProjectConfiguration#release): Object
+- [root](/reference/core-api/devkit/documents/ProjectConfiguration#root): string
+- [sourceRoot](/reference/core-api/devkit/documents/ProjectConfiguration#sourceroot): string
+- [tags](/reference/core-api/devkit/documents/ProjectConfiguration#tags): string[]
+- [targets](/reference/core-api/devkit/documents/ProjectConfiguration#targets): Object
 
 ## Properties
 
@@ -84,7 +84,7 @@ Named inputs targets can refer to reduce duplication
 
 ### projectType
 
-• `Optional` **projectType**: [`ProjectType`](../../devkit/documents/ProjectType)
+• `Optional` **projectType**: [`ProjectType`](/reference/core-api/devkit/documents/ProjectType)
 
 Project type
 
@@ -136,4 +136,4 @@ Project's targets
 
 #### Index signature
 
-▪ [targetName: `string`]: [`TargetConfiguration`](../../devkit/documents/TargetConfiguration)
+▪ [targetName: `string`]: [`TargetConfiguration`](/reference/core-api/devkit/documents/TargetConfiguration)

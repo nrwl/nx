@@ -22,10 +22,7 @@ export function WebinarListItem({ webinar, episode }: WebinarListItemProps) {
         )
       : webinar.authors.map((a) => a.name)
   ).join(', ');
-  const link =
-    (webinar.status === 'Past - Ungated'
-      ? webinar.youtubeUrl
-      : webinar.registrationUrl) || '';
+  const link = webinar.registrationUrl || '';
   return (
     <div
       key={webinar.slug}

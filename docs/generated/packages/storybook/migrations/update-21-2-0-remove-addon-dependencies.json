@@ -1,0 +1,13 @@
+{
+  "name": "update-21-2-0-remove-addon-dependencies",
+  "cli": "nx",
+  "version": "21.2.0-beta.3",
+  "description": "Remove deprecated Storybook addon dependencies",
+  "implementation": "/packages/storybook/src/migrations/update-21-2-0/remove-addon-dependencies.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/storybook",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

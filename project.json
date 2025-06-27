@@ -18,7 +18,8 @@
           "input": "production",
           "projects": ["tag:npm:public"]
         },
-        "{workspaceRoot}/scripts/local-registry"
+        "{workspaceRoot}/scripts/local-registry",
+        "native"
       ],
       "dependsOn": [
         "local-registry",
@@ -37,7 +38,7 @@
           "projects": ["tag:npm:public"]
         }
       ],
-      "command": "ts-node -P ./scripts/tsconfig.release.json ./scripts/nx-release"
+      "command": "ts-node -P ./scripts/tsconfig.release.json ./scripts/nx-release.ts"
     },
     "documentation": {
       "executor": "nx:run-commands",

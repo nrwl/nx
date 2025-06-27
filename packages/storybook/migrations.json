@@ -5,6 +5,18 @@
       "version": "19.6.0-beta.0",
       "description": "Update workspace to use Storybook v8",
       "implementation": "./src/migrations/update-19-6-0/update-sb-8"
+    },
+    "update-21-2-0-migrate-storybook-v9": {
+      "cli": "nx",
+      "version": "21.2.0-beta.3",
+      "description": "Update workspace to use Storybook v9",
+      "implementation": "./src/migrations/update-21-1-0/update-sb-9"
+    },
+    "update-21-2-0-remove-addon-dependencies": {
+      "cli": "nx",
+      "version": "21.2.0-beta.3",
+      "description": "Remove deprecated Storybook addon dependencies",
+      "implementation": "./src/migrations/update-21-2-0/remove-addon-dependencies"
     }
   },
   "packageJsonUpdates": {
@@ -735,6 +747,103 @@
         },
         "@storybook/web-components": {
           "version": "^8.6.11",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "21.1.0": {
+      "version": "21.2.0-beta.3",
+      "packages": {
+        "@storybook/angular": {
+          "version": "^9.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/react": {
+          "version": "^9.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "storybook": {
+          "version": "^9.0.5",
+          "alwaysAddToPackageJson": true
+        },
+        "@storybook/addon-onboarding": {
+          "version": "^9.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-themes": {
+          "version": "^9.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/builder-webpack5": {
+          "version": "^9.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/core-webpack": {
+          "version": "^9.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/html": {
+          "version": "^9.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/html-vite": {
+          "version": "^9.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/nextjs": {
+          "version": "^9.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/preact": {
+          "version": "^9.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/preact-vite": {
+          "version": "^9.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/react-vite": {
+          "version": "^9.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/react-webpack5": {
+          "version": "^9.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/server": {
+          "version": "^9.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/server-webpack5": {
+          "version": "^9.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/svelte": {
+          "version": "^9.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/svelte-vite": {
+          "version": "^9.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/sveltekit": {
+          "version": "^9.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/vue3": {
+          "version": "^9.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/vue3-vite": {
+          "version": "^9.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/web-components": {
+          "version": "^9.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/web-components-vite": {
+          "version": "^9.0.5",
           "alwaysAddToPackageJson": false
         }
       }

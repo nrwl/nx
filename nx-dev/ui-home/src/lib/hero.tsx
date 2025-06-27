@@ -31,10 +31,16 @@ export function Hero(): ReactElement {
             variant="subtitle"
             className="mx-auto mt-6 max-w-3xl"
           >
-            <Strong>Build system</Strong>, optimized for monorepos, with{' '}
-            <Strong>AI-powered</Strong> <br className="hidden md:block" />
-            architectural awareness and <Strong>advanced CI</Strong>{' '}
-            capabilities.
+            An{' '}
+            <strong className="rounded-lg bg-gradient-to-r from-pink-500 to-fuchsia-500 bg-clip-text text-transparent">
+              AI-first
+            </strong>{' '}
+            build platform that connects everything{' '}
+            <strong className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
+              from your editor to CI
+            </strong>
+            . <br className="hidden md:block" />
+            Helping you deliver fast, without breaking things.
           </SectionHeading>
           <div className="mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row">
             <ButtonLink

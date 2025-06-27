@@ -9,7 +9,7 @@ There are a couple ways to ensure that a set up task has been run before you run
 
 The most common solution is to use the [`dependsOn` property](/reference/project-configuration#dependson). This works regardless of what executor the task is using. Once the dependent tasks have completed, the primary task will start. Reference the [project configuration documentation](/reference/project-configuration#dependson) for more information.
 
-If you are using the `@nx/js:node` executor, you can also use the [`waitUntilTargets` option](/nx-api/js/executors/node#waituntiltargets) of that executor. Once the dependent tasks emit something to the console, the primary task will start.
+If you are using the `@nx/js:node` executor, you can also use the [`waitUntilTargets` option](/technologies/typescript/api/executors/node#waituntiltargets) of that executor. Once the dependent tasks emit something to the console, the primary task will start.
 
 ## waitUntilTargets
 

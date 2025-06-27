@@ -87,7 +87,7 @@ If you want to load variables from `env` files other than the ones listed above:
 
 1. Use the [env-cmd](https://www.npmjs.com/package/env-cmd) package: `env-cmd -f .qa.env nx serve`
 2. Use [dotenvx](https://github.com/dotenvx/dotenvx): `dotenvx run --env-file=.qa.env -- nx serve`
-3. Use the `envFile` option of the [run-commands](/nx-api/nx/executors/run-commands#envfile) builder and execute your command inside of the builder
+3. Use the `envFile` option of the [run-commands](/reference/core-api/nx/executors/run-commands#envfile) builder and execute your command inside of the builder
 
 ### Ad-hoc Variables
 

@@ -6,7 +6,7 @@ description: Learn how to create, build, serve, and test Remix applications with
 {% callout type="warning" title="The future of Remix is React Router" %}
 Remix has announced its transition to React Router. The `@nx/remix` plugin is based on Remix v2 and is incompatible with the latest version of React Router unless you [upgrade](https://reactrouter.com/upgrading/remix) your Remix application. In the future, the `@nx/remix` plugin will be deprecated in favor of the `@nx/react/router` plugin. If you are starting a new project, we recommend using the `@nx/react/router` plugin instead.
 
-For an example of how to use React Router with Nx, see the [React Router with Nx](/recipes/react/react-router) recipe.
+For an example of how to use React Router with Nx, see the [React Router with Nx](/technologies/react/recipes/react-router) recipe.
 {% /callout %}
 
 # Remix with Nx

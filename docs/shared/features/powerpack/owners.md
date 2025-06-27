@@ -19,11 +19,11 @@ The `@nx/owners` plugin requires an Nx Powerpack license to function. [Activatin
 
 Then, add the Owners plugin to your workspace.
 
-{% link-card title="Owners" type="Nx Plugin" url="/nx-api/owners" icon="UserGroupIcon" /%}
+{% link-card title="Owners" type="Nx Plugin" url="/reference/core-api/owners/overview" icon="UserGroupIcon" /%}
 
 ## Project or File-based Configuration
 
-The ownership configuration is defined in the `nx.json` file or in individual project configuration files. Nx then uses a [sync generator](/concepts/sync-generators) to automatically compile those settings into a valid CODEOWNERS file for GitHub, Bitbucket or GitLab. See the [plugin documentation](/nx-api/owners) for more details.
+The ownership configuration is defined in the `nx.json` file or in individual project configuration files. Nx then uses a [sync generator](/concepts/sync-generators) to automatically compile those settings into a valid CODEOWNERS file for GitHub, Bitbucket or GitLab. See the [plugin documentation](/reference/core-api/owners) for more details.
 
 {% cards smCols="2" mdCols="2" lgCols="2" %}
 

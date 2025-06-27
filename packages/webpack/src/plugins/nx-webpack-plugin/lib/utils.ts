@@ -1,4 +1,74 @@
 import type { ProjectGraph, ProjectGraphProjectNode } from '@nx/devkit';
+import { readJsonFile } from '@nx/devkit';
+import { join } from 'path';
+
+function escapePackageName(packageName: string): string {
+  return packageName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function escapeRegexAndConvertWildcard(pattern: string): string {
+  return pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\*/g, '.*');
+}
+
+function resolveConditionalExport(target: any): string | null {
+  if (typeof target === 'string') {
+    return target;
+  }
+
+  if (typeof target === 'object' && target !== null) {
+    // Priority order for conditions
+    const conditions = ['development', 'import', 'require', 'default'];
+    for (const condition of conditions) {
+      if (target[condition] && typeof target[condition] === 'string') {
+        return target[condition];
+      }
+    }
+  }
+
+  return null;
+}
+
+export function createAllowlistFromExports(
+  packageName: string,
+  exports: Record<string, any> | string | undefined
+): (string | RegExp)[] {
+  if (!exports) {
+    return [packageName];
+  }
+
+  const allowlist: (string | RegExp)[] = [];
+  allowlist.push(packageName);
+
+  if (typeof exports === 'string') {
+    return allowlist;
+  }
+
+  if (typeof exports === 'object') {
+    for (const [exportPath, target] of Object.entries(exports)) {
+      if (typeof exportPath !== 'string') continue;
+
+      const resolvedTarget = resolveConditionalExport(target);
+      if (!resolvedTarget) continue;
+
+      if (exportPath === '.') {
+        continue;
+      } else if (exportPath.startsWith('./')) {
+        const subpath = exportPath.slice(2);
+
+        if (subpath.includes('*')) {
+          const regexPattern = escapeRegexAndConvertWildcard(subpath);
+          allowlist.push(
+            new RegExp(`^${escapePackageName(packageName)}/${regexPattern}$`)
+          );
+        } else {
+          allowlist.push(`${packageName}/${subpath}`);
+        }
+      }
+    }
+  }
+
+  return allowlist;
+}
 
 function isSourceFile(path: string): boolean {
   return ['.ts', '.tsx', '.mts', '.cts'].some((ext) => path.endsWith(ext));
@@ -122,10 +192,10 @@ export function getAllTransitiveDeps(
 export function getNonBuildableLibs(
   graph: ProjectGraph,
   projectName: string
-): string[] {
+): (string | RegExp)[] {
   const deps = graph?.dependencies?.[projectName] ?? [];
 
-  const allNonBuildable = new Set<string>();
+  const allNonBuildable = new Set<string | RegExp>();
 
   // First, find all direct non-buildable deps and add them App -> library
   const directNonBuildable = deps.filter((dep) => {
@@ -136,12 +206,38 @@ export function getNonBuildableLibs(
     return !isBuildableLibrary(node);
   });
 
-  // Add direct non-buildable dependencies
+  // Add direct non-buildable dependencies with expanded export patterns
   for (const dep of directNonBuildable) {
-    const packageName =
-      graph.nodes?.[dep.target]?.data?.metadata?.js?.packageName;
+    const node = graph.nodes?.[dep.target];
+    const packageName = node?.data?.metadata?.js?.packageName;
+
     if (packageName) {
-      allNonBuildable.add(packageName);
+      // Get exports from project metadata first (most reliable)
+      const packageExports = node?.data?.metadata?.js?.packageExports;
+
+      if (packageExports) {
+        // Use metadata exports if available
+        const allowlistPatterns = createAllowlistFromExports(
+          packageName,
+          packageExports
+        );
+        allowlistPatterns.forEach((pattern) => allNonBuildable.add(pattern));
+      } else {
+        // Fallback: try to read package.json directly
+        try {
+          const projectRoot = node.data.root;
+          const packageJsonPath = join(projectRoot, 'package.json');
+          const packageJson = readJsonFile(packageJsonPath);
+          const allowlistPatterns = createAllowlistFromExports(
+            packageName,
+            packageJson.exports
+          );
+          allowlistPatterns.forEach((pattern) => allNonBuildable.add(pattern));
+        } catch (error) {
+          // Final fallback: just add base package name
+          allNonBuildable.add(packageName);
+        }
+      }
     }
 
     // Get all transitive non-buildable dependencies App -> library1 -> library2

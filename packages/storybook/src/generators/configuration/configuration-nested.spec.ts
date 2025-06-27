@@ -71,14 +71,13 @@ describe('@nx/storybook:configuration for workspaces with Root project', () => {
       });
       writeJson(tree, 'package.json', {
         devDependencies: {
-          '@storybook/addon-essentials': storybookVersion,
-          '@storybook/react': storybookVersion,
-          '@storybook/core-server': storybookVersion,
+          '@storybook/react-webpack5': storybookVersion,
+          storybook: storybookVersion,
         },
       });
 
       jest.resetModules();
-      jest.doMock('@storybook/core-server/package.json', () => ({
+      jest.doMock('storybook/package.json', () => ({
         version: storybookVersion,
       }));
     });

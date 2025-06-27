@@ -102,7 +102,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
       writeFileSync(
         tmpProjPath(`src/app/test-button.stories.tsx`),
         `
-        import type { Meta } from '@storybook/react';
+        import type { Meta } from '@storybook/react-webpack5';
         import { TestButton } from './test-button';
 
         const Story: Meta<typeof TestButton> = {

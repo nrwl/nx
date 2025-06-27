@@ -28,8 +28,10 @@ const IGNORED_WEBPACK_WARNINGS = [
 ];
 
 const extensionAlias = {
-  '.js': ['.ts', '.js'],
+  '.js': ['.ts', '.tsx', '.js', '.jsx'],
   '.mjs': ['.mts', '.mjs'],
+  '.cjs': ['.cts', '.cjs'],
+  '.jsx': ['.tsx', '.jsx'],
 };
 const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
 const mainFields = ['module', 'main'];
@@ -96,9 +98,30 @@ function applyNxIndependentConfig(
 
   config.output = {
     ...config.output,
-    libraryTarget:
-      (config as Configuration).output?.libraryTarget ??
-      (options.target === 'node' ? 'commonjs' : undefined),
+    libraryTarget: (() => {
+      const existingOutputConfig = config.output as Configuration['output'];
+      const existingLibraryTarget = existingOutputConfig?.libraryTarget;
+      const existingLibraryType =
+        typeof existingOutputConfig?.library === 'object' &&
+        'type' in existingOutputConfig?.library
+          ? existingOutputConfig?.library?.type
+          : undefined;
+
+      // If user is using modern library.type, don't set the deprecated libraryTarget
+      if (existingLibraryType !== undefined) {
+        return undefined;
+      }
+
+      // If user has set libraryTarget explicitly, use it
+      if (existingLibraryTarget !== undefined) {
+        return existingLibraryTarget;
+      }
+
+      // Set defaults based on target when user hasn't configured anything
+      if (options.target === 'node') return 'commonjs';
+      if (options.target === 'async-node') return 'commonjs-module';
+      return undefined;
+    })(),
     path:
       config.output?.path ??
       (options.outputPath

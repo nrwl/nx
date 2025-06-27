@@ -4,7 +4,7 @@
     "name": "Intro",
     "description": "Learn about basic Nx Cloud knowledge.",
     "mediaImage": "",
-    "file": "",
+    "file": "nx-cloud/intro/ci-with-nx",
     "itemList": [
       {
         "id": "ci-with-nx",
@@ -479,7 +479,7 @@
   },
   "/ci/recipes": {
     "id": "recipes",
-    "name": "Recipes",
+    "name": "Guides",
     "description": "Learn how to set up Nx Cloud for your workspace.",
     "mediaImage": "",
     "file": "",
@@ -881,6 +881,39 @@
             "isExternal": false,
             "path": "/ci/recipes/enterprise/conformance",
             "tags": []
+          },
+          {
+            "id": "polygraph",
+            "name": "Polygraph",
+            "description": "Enterprise features for visualizing dependencies and enforcing standards across multiple repositories",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/polygraph",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/polygraph",
+            "tags": ["polygraph"]
+          },
+          {
+            "id": "metadata-only-workspace",
+            "name": "Metadata Only Workspaces",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/metadata-only-workspace",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/metadata-only-workspace",
+            "tags": ["polygraph"]
+          },
+          {
+            "id": "custom-workflows",
+            "name": "Custom Workflows",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/custom-workflows",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/custom-workflows",
+            "tags": ["polygraph"]
           }
         ],
         "isExternal": false,
@@ -1554,6 +1587,39 @@
         "isExternal": false,
         "path": "/ci/recipes/enterprise/conformance",
         "tags": []
+      },
+      {
+        "id": "polygraph",
+        "name": "Polygraph",
+        "description": "Enterprise features for visualizing dependencies and enforcing standards across multiple repositories",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/polygraph",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/polygraph",
+        "tags": ["polygraph"]
+      },
+      {
+        "id": "metadata-only-workspace",
+        "name": "Metadata Only Workspaces",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/metadata-only-workspace",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/metadata-only-workspace",
+        "tags": ["polygraph"]
+      },
+      {
+        "id": "custom-workflows",
+        "name": "Custom Workflows",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/custom-workflows",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/custom-workflows",
+        "tags": ["polygraph"]
       }
     ],
     "isExternal": false,
@@ -1781,6 +1847,39 @@
     "isExternal": false,
     "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
     "tags": ["conformance"]
+  },
+  "/ci/recipes/enterprise/polygraph": {
+    "id": "polygraph",
+    "name": "Polygraph",
+    "description": "Enterprise features for visualizing dependencies and enforcing standards across multiple repositories",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/polygraph",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/polygraph",
+    "tags": ["polygraph"]
+  },
+  "/ci/recipes/enterprise/metadata-only-workspace": {
+    "id": "metadata-only-workspace",
+    "name": "Metadata Only Workspaces",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/metadata-only-workspace",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/metadata-only-workspace",
+    "tags": ["polygraph"]
+  },
+  "/ci/recipes/enterprise/custom-workflows": {
+    "id": "custom-workflows",
+    "name": "Custom Workflows",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/custom-workflows",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/custom-workflows",
+    "tags": ["polygraph"]
   },
   "/ci/recipes/other": {
     "id": "other",

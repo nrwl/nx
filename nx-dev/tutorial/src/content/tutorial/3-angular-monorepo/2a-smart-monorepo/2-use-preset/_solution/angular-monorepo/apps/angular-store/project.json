@@ -7,11 +7,10 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@angular-devkit/build-angular:application",
+      "executor": "@angular/build:application",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/angular-store",
-        "index": "apps/angular-store/src/index.html",
         "browser": "apps/angular-store/src/main.ts",
         "polyfills": ["zone.js"],
         "tsConfig": "apps/angular-store/tsconfig.app.json",
@@ -21,8 +20,7 @@
             "input": "apps/angular-store/public"
           }
         ],
-        "styles": ["apps/angular-store/src/styles.css"],
-        "scripts": []
+        "styles": ["apps/angular-store/src/styles.css"]
       },
       "configurations": {
         "production": {
@@ -49,7 +47,7 @@
       "defaultConfiguration": "production"
     },
     "serve": {
-      "executor": "@angular-devkit/build-angular:dev-server",
+      "executor": "@angular/build:dev-server",
       "configurations": {
         "production": {
           "buildTarget": "angular-store:build:production"
@@ -61,7 +59,7 @@
       "defaultConfiguration": "development"
     },
     "extract-i18n": {
-      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "executor": "@angular/build:extract-i18n",
       "options": {
         "buildTarget": "angular-store:build"
       }

@@ -3,6 +3,8 @@ title: Nx Storybook Plugin Overview
 description: This is an overview page for the Storybook plugin in Nx. It explains what Storybook is and how to set it up in your Nx workspace.
 ---
 
+# @nx/storybook
+
 [Storybook](https://storybook.js.org) is a development environment for UI components. It allows you to browse a component library, view the different states of each component, and interactively develop and test components.
 
 This guide will briefly walk you through using Storybook within an Nx workspace.
@@ -94,34 +96,21 @@ nx g @nx/vue:storybook-configuration my-vue-project
 ```
 
 {% /tab %}
-{% tab label="React Native" %}
-
-```shell
-nx g @nx/react-native:storybook-configuration my-react-native-project
-```
-
-{% /tab %}
 {% /tabs %}
 
 These framework-specific generators will also **generate stories** and interaction tests for you.
 
-If you are NOT using a framework-specific generator (for [Angular](/nx-api/angular/generators/storybook-configuration), [React](/nx-api/react/generators/storybook-configuration), [React Native](/nx-api/react-native/generators/storybook-configuration), [Vue](/nx-api/vue/generators/storybook-configuration)), in the field `uiFramework` you must choose one of the following Storybook frameworks:
+If you are NOT using a framework-specific generator (for [Angular](/technologies/angular/api/generators/storybook-configuration), [React](/technologies/react/api/generators/storybook-configuration), [Vue](/technologies/vue/api/generators/storybook-configuration)), in the field `uiFramework` you must choose one of the following Storybook frameworks:
 
 - `@storybook/angular`
-- `@storybook/html-webpack5`
 - `@storybook/nextjs`
-- `@storybook/preact-webpack5`
 - `@storybook/react-webpack5`
 - `@storybook/react-vite`
 - `@storybook/server-webpack5`
-- `@storybook/svelte-webpack5`
 - `@storybook/svelte-vite`
 - `@storybook/sveltekit`
-- `@storybook/vue-webpack5`
 - `@storybook/vue-vite`
-- `@storybook/vue3-webpack5`
 - `@storybook/vue3-vite`
-- `@storybook/web-components-webpack5`
 - `@storybook/web-components-vite`
 
 Choosing one of these frameworks will have the following effects on your workspace:
@@ -132,7 +121,7 @@ Choosing one of these frameworks will have the following effects on your workspa
 
 3. Nx will create new `targets` in your project's `project.json`, called `storybook`, `test-storybook` and `build-storybook`, containing all the necessary configuration to serve, test and build Storybook.
 
-Make sure to **use the framework-specific generators** if your project is using Angular, React, Next.js, Vue, Nuxt, or React Native: [`@nx/angular:storybook-configuration`](/nx-api/angular/generators/storybook-configuration), [`@nx/react:storybook-configuration`](/nx-api/react/generators/storybook-configuration), [`@nx/react-native:storybook-configuration`](/nx-api/react-native/generators/storybook-configuration), [`@nx/vue:storybook-configuration`](/nx-api/vue/generators/storybook-configuration) as shown above.
+Make sure to **use the framework-specific generators** if your project is using Angular, React, Next.js, Vue, Nuxt, or React Native: [`@nx/angular:storybook-configuration`](/technologies/angular/api/generators/storybook-configuration), [`@nx/react:storybook-configuration`](/technologies/react/api/generators/storybook-configuration), [`@nx/vue:storybook-configuration`](/technologies/vue/api/generators/storybook-configuration) as shown above.
 
 ### Running Storybook
 
@@ -221,7 +210,7 @@ export default config;
 
 ### Setting up documentation
 
-To set up documentation, you can use [Storybook Autodocs](https://storybook.js.org/docs/react/writing-docs/autodocs). For Angular, [you can use `compodoc`](/recipes/storybook/angular-storybook-compodoc) to infer `argTypes`. You can read more about `argTypes` in the [official Storybook `argTypes` documentation](https://storybook.js.org/docs/angular/api/argtypes#automatic-argtype-inference).
+To set up documentation, you can use [Storybook Autodocs](https://storybook.js.org/docs/react/writing-docs/autodocs). For Angular, [you can use `compodoc`](/technologies/test-tools/storybook/recipes/angular-storybook-compodoc) to infer `argTypes`. You can read more about `argTypes` in the [official Storybook `argTypes` documentation](https://storybook.js.org/docs/angular/api/argtypes#automatic-argtype-inference).
 
 You can read more about how to best set up documentation using Storybook for your project in the [official Storybook documentation](https://storybook.js.org/docs/react/writing-docs/introduction).
 
@@ -229,11 +218,11 @@ You can read more about how to best set up documentation using Storybook for you
 
 You can find dedicated information for React and Angular:
 
-- [Set up Storybook for Angular Projects](/recipes/storybook/overview-angular)
-- [Set up Storybook for React Projects](/recipes/storybook/overview-react)
-- [Set up Storybook for Vue Projects](/recipes/storybook/overview-vue)
+- [Set up Storybook for Angular Projects](/technologies/test-tools/storybook/recipes/overview-angular)
+- [Set up Storybook for React Projects](/technologies/test-tools/storybook/recipes/overview-react)
+- [Set up Storybook for Vue Projects](/technologies/test-tools/storybook/recipes/overview-vue)
 
-You can find all Storybook-related Nx documentation in the [Storybook recipes section](/recipes/storybook).
+You can find all Storybook-related Nx documentation in the [Storybook recipes section](/technologies/test-tools/storybook/recipes).
 
 For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/basics/introduction/).
 
@@ -241,5 +230,5 @@ For more on using Storybook, see the [official Storybook documentation](https://
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 
-- [Storybook 7 migration generator](/nx-api/storybook/generators/migrate-7)
-- [Storybook 7 setup guide](/nx-api/storybook/documents/storybook-7-setup)
+- [Storybook 9 migration generator](/technologies/test-tools/storybook/api/generators/migrate-9)
+- [Storybook 9 setup guide](/technologies/test-tools/storybook/recipes/storybook-9-setup)

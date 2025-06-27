@@ -117,4 +117,4 @@ You can keep using `npm run docs` instead of the new `npx nx docs` version and s
 }
 ```
 
-Read more in the [Nx exec docs](/nx-api/nx/documents/exec).
+Read more in the [Nx exec docs](/reference/core-api/nx/documents/exec).

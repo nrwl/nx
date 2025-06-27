@@ -1,3 +1,4 @@
+pub mod glob_files;
 mod glob_group;
 mod glob_parser;
 pub mod glob_transform;

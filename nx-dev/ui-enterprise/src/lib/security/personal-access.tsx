@@ -69,6 +69,7 @@ export function PersonalAccess(): ReactElement {
             <div className="mt-4">
               <Link
                 href="/ci/recipes/security/personal-access-tokens"
+                prefetch={false}
                 title="Learn more about Personal Access Tokens"
                 className="text-sm/6 font-semibold"
               >

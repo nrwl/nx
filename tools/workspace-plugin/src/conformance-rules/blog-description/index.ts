@@ -1,21 +1,20 @@
-import { readFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { load as yamlLoad } from 'js-yaml';
-import { workspaceRoot } from '@nx/devkit';
-import { sync as globSync } from 'glob';
 import {
   createConformanceRule,
-  type ProjectFilesViolation,
+  type ConformanceViolation,
 } from '@nx/conformance';
+import { workspaceRoot } from '@nx/devkit';
+import { sync as globSync } from 'glob';
+import { load as yamlLoad } from 'js-yaml';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 export default createConformanceRule<{ mdGlobPattern: string }>({
   name: 'blog-description',
   category: 'consistency',
   description:
     'Ensures that markdown documentation files have a description in their frontmatter',
-  reporter: 'project-files-reporter',
   implementation: async ({ projectGraph, ruleOptions }) => {
-    const violations: ProjectFilesViolation[] = [];
+    const violations: ConformanceViolation[] = [];
     const { mdGlobPattern } = ruleOptions;
 
     // Look for the docs project

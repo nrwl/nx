@@ -12,19 +12,19 @@ Target's configuration
 
 ### Properties
 
-- [cache](../../devkit/documents/TargetConfiguration#cache): boolean
-- [command](../../devkit/documents/TargetConfiguration#command): string
-- [configurations](../../devkit/documents/TargetConfiguration#configurations): Object
-- [continuous](../../devkit/documents/TargetConfiguration#continuous): boolean
-- [defaultConfiguration](../../devkit/documents/TargetConfiguration#defaultconfiguration): string
-- [dependsOn](../../devkit/documents/TargetConfiguration#dependson): (string | TargetDependencyConfig)[]
-- [executor](../../devkit/documents/TargetConfiguration#executor): string
-- [inputs](../../devkit/documents/TargetConfiguration#inputs): (string | InputDefinition)[]
-- [metadata](../../devkit/documents/TargetConfiguration#metadata): TargetMetadata
-- [options](../../devkit/documents/TargetConfiguration#options): T
-- [outputs](../../devkit/documents/TargetConfiguration#outputs): string[]
-- [parallelism](../../devkit/documents/TargetConfiguration#parallelism): boolean
-- [syncGenerators](../../devkit/documents/TargetConfiguration#syncgenerators): string[]
+- [cache](/reference/core-api/devkit/documents/TargetConfiguration#cache): boolean
+- [command](/reference/core-api/devkit/documents/TargetConfiguration#command): string
+- [configurations](/reference/core-api/devkit/documents/TargetConfiguration#configurations): Object
+- [continuous](/reference/core-api/devkit/documents/TargetConfiguration#continuous): boolean
+- [defaultConfiguration](/reference/core-api/devkit/documents/TargetConfiguration#defaultconfiguration): string
+- [dependsOn](/reference/core-api/devkit/documents/TargetConfiguration#dependson): (string | TargetDependencyConfig)[]
+- [executor](/reference/core-api/devkit/documents/TargetConfiguration#executor): string
+- [inputs](/reference/core-api/devkit/documents/TargetConfiguration#inputs): (string | InputDefinition)[]
+- [metadata](/reference/core-api/devkit/documents/TargetConfiguration#metadata): TargetMetadata
+- [options](/reference/core-api/devkit/documents/TargetConfiguration#options): T
+- [outputs](/reference/core-api/devkit/documents/TargetConfiguration#outputs): string[]
+- [parallelism](/reference/core-api/devkit/documents/TargetConfiguration#parallelism): boolean
+- [syncGenerators](/reference/core-api/devkit/documents/TargetConfiguration#syncgenerators): string[]
 
 ## Properties
 
@@ -74,7 +74,7 @@ A default named configuration to use when a target configuration is not provided
 
 ### dependsOn
 
-• `Optional` **dependsOn**: (`string` \| [`TargetDependencyConfig`](../../devkit/documents/TargetDependencyConfig))[]
+• `Optional` **dependsOn**: (`string` \| [`TargetDependencyConfig`](/reference/core-api/devkit/documents/TargetDependencyConfig))[]
 
 This describes other targets that a target depends on.
 

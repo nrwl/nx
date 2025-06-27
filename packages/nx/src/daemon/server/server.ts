@@ -330,8 +330,13 @@ export async function handleResult(
   type: string,
   hrFn: () => Promise<HandlerResult>
 ) {
+  let hr: HandlerResult;
   const startMark = new Date();
-  const hr = await hrFn();
+  try {
+    hr = await hrFn();
+  } catch (error) {
+    hr = { description: `[${type}]`, error };
+  }
   const doneHandlingMark = new Date();
   if (hr.error) {
     await respondWithErrorAndExit(socket, hr.description, hr.error);

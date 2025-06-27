@@ -31,8 +31,6 @@ Features we'll use in this monorepo:
 - [Scaffold new code with generators](/features/generate-code)
 - [Updates dependencies with automated migrations](/features/automate-updating-dependencies)
 
-Visit our ["Why Nx" page](/getting-started/why-nx) for more details.
-
 ## Final Code
 
 Here's the source code of the final result for this tutorial.
@@ -321,6 +319,24 @@ As you can see, it generates a new application in the `apps/inventory/` folder. 
 npx nx g @nx/react:app apps/inventory
 ```
 
+### Handling Port Conflicts with Multiple Apps
+
+When you have multiple applications in your monorepo, running e2e tests in parallel can cause port conflicts if the generated apps use the same port. To ensure faster CI times with parallel execution, configure different ports for each app.
+
+Update the serve configuration for your second app to use a different port:
+
+```json {% fileName="apps/inventory/project.json" %}
+{
+  "targets": {
+    "serve": {
+      "options": {
+        "port": 4201
+      }
+    }
+  }
+}
+```
+
 ## Share Code with Local Libraries
 
 When you develop your React application, usually all your logic sits in the `app` folder. Ideally separated by various folder names which represent your "domains". As your app grows, however, the app becomes more and more monolithic and the code is unable to be shared with other applications.
@@ -364,7 +380,7 @@ npx nx g @nx/react:library libs/orders --unitTestRunner=vitest --bundler=none
 npx nx g @nx/react:library libs/shared/ui --unitTestRunner=vitest --bundler=none
 ```
 
-Note how we type out the full path in the `directory` flag to place the libraries into a subfolder. You can choose whatever folder structure you like to organize your projects. If you change your mind later, you can run the [move generator](/nx-api/workspace/generators/move) to move a project to a different folder.
+Note how we type out the full path in the `directory` flag to place the libraries into a subfolder. You can choose whatever folder structure you like to organize your projects. If you change your mind later, you can run the [move generator](/reference/core-api/workspace/generators/move) to move a project to a different folder.
 
 Running the above commands should lead to the following directory structure:
 
@@ -958,7 +974,7 @@ Next, let's come up with a set of rules based on these tags:
 - `scope:orders` should be able to import from `scope:orders`, `scope:shared` and `scope:products`
 - `scope:products` should be able to import from `scope:products` and `scope:shared`
 
-To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.base.json` at the root of the workspace and add the following `depConstraints` in the `@nx/enforce-module-boundaries` rule configuration:
+To enforce the rules, Nx ships with a custom ESLint rule. Open the `eslint.config.mjs` at the root of the workspace and add the following `depConstraints` in the `@nx/enforce-module-boundaries` rule configuration:
 
 ```js {% fileName="eslint.config.mjs" %}
 import nx from '@nx/eslint-plugin';
@@ -1178,8 +1194,8 @@ Here's some things you can dive into next:
 
 - Learn more about the [underlying mental model of Nx](/concepts/mental-model)
 - Learn how to [migrate your React app to Nx](/recipes/adopting-nx/adding-to-existing-project)
-- [Learn how to setup Tailwind](/recipes/react/using-tailwind-css-in-react)
-- [Setup Storybook for our shared UI library](/recipes/storybook/overview-react)
+- [Learn how to setup Tailwind](/technologies/react/recipes/using-tailwind-css-in-react)
+- [Setup Storybook for our shared UI library](/technologies/test-tools/storybook/recipes/overview-react)
 
 Also, make sure you
 

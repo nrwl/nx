@@ -39,7 +39,7 @@ export function isEven(n: number): boolean {
 }
 ```
 
-```ts {% fileName="is-even/index.ts" %}
+```ts {% fileName="is-odd/index.ts" %}
 import { isEven } from 'is-even';
 
 export function isOdd(n: number): boolean {

@@ -29,7 +29,7 @@ It will **still use the local cache if available**.
 
 ## Reset
 
-To clear the cache and metadata about the workspace and shuts down the Nx Daemon you can use the [reset](/nx-api/nx/documents/reset) command:
+To clear the cache and metadata about the workspace and shuts down the Nx Daemon you can use the [reset](/reference/core-api/nx/documents/reset) command:
 
 ```shell
 npx nx reset

@@ -21,16 +21,8 @@ import { performance } from 'perf_hooks';
 import { setupWorkspaceContext } from '../src/utils/workspace-context';
 import { daemonClient } from '../src/daemon/client/client';
 import { removeDbConnections } from '../src/utils/db-connection';
-import { signalToCode } from '../src/utils/exit-codes';
 
-// In case Nx Cloud forcibly exits while the TUI is running, ensure the terminal is restored etc.
-process.on('exit', (...args) => {
-  if (typeof globalThis.tuiOnProcessExit === 'function') {
-    globalThis.tuiOnProcessExit(...args);
-  }
-});
-
-function main() {
+async function main() {
   if (
     process.argv[2] !== 'report' &&
     process.argv[2] !== '--version' &&
@@ -44,16 +36,16 @@ function main() {
 
   const workspace = findWorkspaceRoot(process.cwd());
 
-  performance.mark('loading dotenv files:start');
   if (workspace) {
+    performance.mark('loading dotenv files:start');
     loadRootEnvFiles(workspace.dir);
+    performance.mark('loading dotenv files:end');
+    performance.measure(
+      'loading dotenv files',
+      'loading dotenv files:start',
+      'loading dotenv files:end'
+    );
   }
-  performance.mark('loading dotenv files:end');
-  performance.measure(
-    'loading dotenv files',
-    'loading dotenv files:start',
-    'loading dotenv files:end'
-  );
 
   // new is a special case because there is no local workspace to load
   if (
@@ -98,12 +90,12 @@ function main() {
     }
 
     if (!localNx) {
-      handleMissingLocalInstallation();
+      handleMissingLocalInstallation(workspace ? workspace.dir : null);
     }
 
     // this file is already in the local workspace
     if (isLocalInstall) {
-      initLocal(workspace);
+      await initLocal(workspace);
     } else {
       // Nx is being run from globally installed CLI - hand off to the local
       warnIfUsingOutdatedGlobalInstall(GLOBAL_NX_VERSION, LOCAL_NX_VERSION);
@@ -181,9 +173,11 @@ function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
   });
 }
 
-function handleMissingLocalInstallation() {
+function handleMissingLocalInstallation(detectedWorkspaceRoot: string | null) {
   output.error({
-    title: `Could not find Nx modules in this workspace.`,
+    title: detectedWorkspaceRoot
+      ? `Could not find Nx modules at "${detectedWorkspaceRoot}".`
+      : `Could not find Nx modules in this workspace.`,
     bodyLines: [`Have you run ${chalk.bold.white(`npm/yarn install`)}?`],
   });
   process.exit(1);
@@ -287,4 +281,7 @@ process.on('exit', () => {
   removeDbConnections();
 });
 
-main();
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

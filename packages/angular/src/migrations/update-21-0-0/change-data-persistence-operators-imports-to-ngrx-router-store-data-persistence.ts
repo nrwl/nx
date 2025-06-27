@@ -26,7 +26,6 @@ const newImportPath = '@ngrx/router-store/data-persistence';
 
 export default async function (tree: Tree): Promise<void> {
   const projects = await getProjectsFilteredByDependencies(
-    tree,
     angularPluginTargetNames
   );
 
@@ -39,7 +38,7 @@ export default async function (tree: Tree): Promise<void> {
   const cachedFileMap = readFileMapCache().fileMap.projectFileMap;
 
   const filesWithNxAngularImports: FileData[] = [];
-  for (const { graphNode } of projects) {
+  for (const graphNode of projects) {
     const files = filterFilesWithNxAngularDep(
       cachedFileMap[graphNode.name] || []
     );
