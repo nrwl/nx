@@ -86,7 +86,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
             globOptions: {
               dot: true,
               ignore: [
-                '.gitkeep',
+                '**/.gitkeep',
                 '**/.DS_Store',
                 '**/Thumbs.db',
                 ...(asset.ignore ?? []),
