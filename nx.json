@@ -299,21 +299,21 @@
   "conformance": {
     "rules": [
       {
-        "rule": "@nx/workspace-plugin/conformance-rules/blog-description",
+        "rule": "./tools/workspace-plugin/src/conformance-rules/blog-description",
         "projects": ["docs"],
         "options": {
           "mdGlobPattern": "{blog,shared}/**/!(sitemap).md"
         }
       },
       {
-        "rule": "@nx/workspace-plugin/conformance-rules/blog-cover-image",
+        "rule": "./tools/workspace-plugin/src/conformance-rules/blog-cover-image",
         "projects": ["docs"],
         "options": {
           "mdGlobPattern": "blog/**/!(sitemap).md"
         }
       },
       {
-        "rule": "@nx/workspace-plugin/conformance-rules/project-package-json",
+        "rule": "./tools/workspace-plugin/src/conformance-rules/project-package-json",
         "projects": [
           "!.",
           "!create-nx-*",
@@ -347,7 +347,7 @@
         ]
       },
       {
-        "rule": "@nx/workspace-plugin/conformance-rules/migration-groups",
+        "rule": "./tools/workspace-plugin/src/conformance-rules/migration-groups",
         "options": {
           "versionRange": ">= 19.8",
           "groups": [
