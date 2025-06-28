@@ -1,6 +1,6 @@
 {
   "name": "e2e-project",
-  "factory": "./src/generators/e2e-project/e2e#e2eProjectGeneratorInternal",
+  "factory": "./src/generators/e2e-project/e2e",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -55,7 +55,7 @@
     "presets": []
   },
   "description": "Create a E2E application for a Nx Plugin.",
-  "implementation": "/packages/plugin/src/generators/e2e-project/e2e#e2eProjectGeneratorInternal.ts",
+  "implementation": "/packages/plugin/src/generators/e2e-project/e2e.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/plugin/src/generators/e2e-project/schema.json",

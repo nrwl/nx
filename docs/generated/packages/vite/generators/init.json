@@ -1,6 +1,6 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init#initGeneratorInternal",
+  "factory": "./src/generators/init/init",
   "schema": {
     "cli": "nx",
     "title": "Initialize Vite in the workspace.",
@@ -48,7 +48,7 @@
   "description": "Initialize Vite in the workspace.",
   "aliases": ["ng-add"],
   "hidden": true,
-  "implementation": "/packages/vite/src/generators/init/init#initGeneratorInternal.ts",
+  "implementation": "/packages/vite/src/generators/init/init.ts",
   "path": "/packages/vite/src/generators/init/schema.json",
   "type": "generator"
 }

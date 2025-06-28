@@ -1,6 +1,6 @@
 {
   "name": "application",
-  "factory": "./src/generators/application/application#detoxApplicationGeneratorInternal",
+  "factory": "./src/generators/application/application",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "title": "Create Detox Configuration for the workspace",
@@ -70,7 +70,7 @@
   "aliases": ["app"],
   "x-type": "application",
   "description": "Create a Detox application.",
-  "implementation": "/packages/detox/src/generators/application/application#detoxApplicationGeneratorInternal.ts",
+  "implementation": "/packages/detox/src/generators/application/application.ts",
   "hidden": false,
   "path": "/packages/detox/src/generators/application/schema.json",
   "type": "generator"
