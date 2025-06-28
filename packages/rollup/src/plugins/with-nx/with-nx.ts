@@ -100,7 +100,7 @@ export function withNx(
       : createTmpTsConfig(
           options.tsConfig,
           workspaceRoot,
-          projectRoot,
+          projectNode.data.root,
           dependencies
         );
 
