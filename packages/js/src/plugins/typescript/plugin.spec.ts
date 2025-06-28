@@ -2738,6 +2738,135 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         `);
       });
     });
+
+    it('should use build config inputs and outputs when both typecheck and build targets are enabled', async () => {
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': JSON.stringify({
+          extends: '../../tsconfig.base.json',
+          include: [],
+          files: [],
+          references: [{ path: './tsconfig.lib.json' }],
+        }),
+        'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+          extends: '../../tsconfig.base.json',
+          compilerOptions: {
+            outDir: '../../dist/libs/my-lib',
+            declaration: true,
+            composite: true,
+          },
+          include: ['src/**/*.ts'],
+        }),
+        'libs/my-lib/package.json': JSON.stringify({
+          main: '../../dist/libs/my-lib/index.js',
+        }),
+        'tsconfig.base.json': JSON.stringify({
+          compilerOptions: { skipLibCheck: true },
+        }),
+      });
+
+      const result = await invokeCreateNodesOnMatchingFiles(context, {
+        typecheck: true,
+        build: true,
+      });
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "projectType": "library",
+              "targets": {
+                "build": {
+                  "cache": true,
+                  "command": "tsc --build tsconfig.lib.json",
+                  "dependsOn": [
+                    "^build",
+                  ],
+                  "inputs": [
+                    "{projectRoot}/package.json",
+                    "{workspaceRoot}/tsconfig.base.json",
+                    "{projectRoot}/tsconfig.lib.json",
+                    "{projectRoot}/src/**/*.ts",
+                    "^production",
+                    {
+                      "externalDependencies": [
+                        "typescript",
+                      ],
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{workspaceRoot}/dist/libs/my-lib",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+                "typecheck": {
+                  "cache": true,
+                  "command": "tsc --build --emitDeclarationOnly",
+                  "dependsOn": [
+                    "build",
+                    "^typecheck",
+                  ],
+                  "inputs": [
+                    "{projectRoot}/package.json",
+                    "{workspaceRoot}/tsconfig.base.json",
+                    "{projectRoot}/tsconfig.lib.json",
+                    "{projectRoot}/src/**/*.ts",
+                    "^production",
+                    {
+                      "externalDependencies": [
+                        "typescript",
+                      ],
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{workspaceRoot}/dist/libs/my-lib/**/*.d.ts",
+                    "{workspaceRoot}/dist/libs/my-lib/tsconfig.lib.tsbuildinfo",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
   });
 
   describe('build target', () => {
