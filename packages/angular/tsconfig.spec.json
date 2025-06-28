@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "../../dist/packages/angular/spec",
     "module": "commonjs",
-    "types": ["jest", "node"],
+    "types": ["jest", "node"]
   },
   "include": [
     "**/*.spec.ts",

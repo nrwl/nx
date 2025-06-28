@@ -5,7 +5,7 @@ import {
   uniq,
   readJson,
   updateJson,
-} from 'e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('@nx/detox', () => {
   let project: string;

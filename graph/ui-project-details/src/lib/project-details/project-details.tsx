@@ -57,7 +57,9 @@ export const ProjectDetails = ({
       [
         ...(projectData.metadata?.technologies ?? []),
         ...Object.values(projectData.targets ?? {})
-          .map((target: TargetConfiguration<any>) => target?.metadata?.technologies)
+          .map(
+            (target: TargetConfiguration<any>) => target?.metadata?.technologies
+          )
           .flat(),
       ].filter(Boolean)
     ),
