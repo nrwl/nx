@@ -429,13 +429,29 @@ function buildTscTargets(
     options.typecheck &&
     tsConfig.raw?.['nx']?.addTypecheckTarget !== false
   ) {
-    internalProjectReferences = resolveInternalProjectReferences(
-      tsConfig,
+    // Use build config for inputs/outputs if available, otherwise fall back to tsconfig.json
+    let typecheckConfigFilePath = configFilePath;
+    let typecheckTsConfig = tsConfig;
+    if (options.build) {
+      const buildConfigPath = join(
+        dirname(configFilePath),
+        options.build.configName
+      );
+      if (existsSync(buildConfigPath)) {
+        typecheckConfigFilePath = buildConfigPath;
+        typecheckTsConfig = retrieveTsConfigFromCache(
+          buildConfigPath,
+          context.workspaceRoot
+        );
+      }
+    }
+    const typecheckInternalProjectReferences = resolveInternalProjectReferences(
+      typecheckTsConfig,
       context.workspaceRoot,
       projectRoot
     );
     const externalProjectReferences = resolveShallowExternalProjectReferences(
-      tsConfig,
+      typecheckTsConfig,
       context.workspaceRoot,
       projectRoot
     );
@@ -445,8 +461,8 @@ function buildTscTargets(
         options.verboseOutput ? ' --verbose' : ''
       }`;
       if (
-        tsConfig.options.noEmit ||
-        Object.values(internalProjectReferences).some(
+        typecheckTsConfig.options.noEmit ||
+        Object.values(typecheckInternalProjectReferences).some(
           (ref) => ref.options.noEmit
         ) ||
         Object.values(externalProjectReferences).some(
@@ -486,16 +502,16 @@ function buildTscTargets(
         cache: true,
         inputs: getInputs(
           namedInputs,
-          configFilePath,
-          tsConfig,
-          internalProjectReferences,
+          typecheckConfigFilePath,
+          typecheckTsConfig,
+          typecheckInternalProjectReferences,
           context.workspaceRoot,
           projectRoot
         ),
         outputs: getOutputs(
-          configFilePath,
-          tsConfig,
-          internalProjectReferences,
+          typecheckConfigFilePath,
+          typecheckTsConfig,
+          typecheckInternalProjectReferences,
           context.workspaceRoot,
           projectRoot,
           /* emitDeclarationOnly */ true
@@ -834,6 +850,7 @@ function getOutputs(
           );
         }
       } else {
+        // When emitDeclarationOnly is false, include all outputs
         outputs.add(
           pathToInputOrOutput(config.options.outDir, workspaceRoot, projectRoot)
         );
