@@ -4,7 +4,6 @@
     "outDir": "../../dist/packages/angular/spec",
     "module": "commonjs",
     "types": ["jest", "node"],
-    "composite": true
   },
   "include": [
     "**/*.spec.ts",

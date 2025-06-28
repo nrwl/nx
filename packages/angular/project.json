@@ -98,5 +98,5 @@
       "dependsOn": ["^nx-release-publish"]
     }
   },
-  "implicitDependencies": []
+  "implicitDependencies": ["!@nx/cypress"]
 }

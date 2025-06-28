@@ -39,6 +39,9 @@
     },
     {
       "path": "./tsconfig.lib.runtime.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
     }
   ]
 }
