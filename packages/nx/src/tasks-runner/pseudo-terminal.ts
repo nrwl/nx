@@ -6,6 +6,11 @@ import { PseudoIPCServer } from './pseudo-ipc';
 import { RunningTask } from './running-tasks/running-task';
 import { codeToSignal } from '../utils/exit-codes';
 
+type ReadyWhenStatus = {
+  stringToMatch: string;
+  found: boolean;
+};
+
 // Register single event listeners for all pseudo-terminal instances
 const pseudoTerminalShutdownCallbacks: Array<(s: number) => void> = [];
 process.on('exit', (code) => {
@@ -67,12 +72,14 @@ export class PseudoTerminal {
       jsEnv,
       quiet,
       tty,
+      readyWhenStatus,
     }: {
       cwd?: string;
       execArgv?: string[];
       jsEnv?: Record<string, string>;
       quiet?: boolean;
       tty?: boolean;
+      readyWhenStatus?: ReadyWhenStatus[];
     } = {}
   ) {
     const cp = new PseudoTtyProcess(
@@ -84,7 +91,8 @@ export class PseudoTerminal {
         execArgv,
         quiet,
         tty
-      )
+      ),
+      readyWhenStatus
     );
     this.childProcesses.add(cp);
     return cp;
@@ -151,20 +159,35 @@ export class PseudoTtyProcess implements RunningTask {
 
   constructor(
     public rustPseudoTerminal: RustPseudoTerminal,
-    private childProcess: ChildProcess
+    private childProcess: ChildProcess,
+    private readyWhenStatus?: ReadyWhenStatus[]
   ) {
-    childProcess.onOutput((output) => {
+    this.handleChildProcesses();
+  }
+
+  handleChildProcesses() {
+    this.childProcess.onOutput((output) => {
+      if (
+        this.readyWhenStatus?.length &&
+        isReady(this.readyWhenStatus, output)
+      ) {
+        this.isAlive = false;
+        this.childProcess.cleanup();
+        this.exitCallbacks.forEach((cb) => cb(0));
+        return { success: true, code: 0, terminalOutput: this.terminalOutput };
+      }
       this.terminalOutput += output;
       this.outputCallbacks.forEach((cb) => cb(output));
     });
 
-    childProcess.onExit((message) => {
+    this.childProcess.onExit((message) => {
       this.isAlive = false;
 
       const code = messageToCode(message);
-      childProcess.cleanup();
+      this.childProcess.cleanup();
 
       this.exitCallbacks.forEach((cb) => cb(code));
+      return { success: true, code, terminalOutput: this.terminalOutput };
     });
   }
 
@@ -200,6 +223,18 @@ export class PseudoTtyProcess implements RunningTask {
   getParserAndWriter() {
     return this.childProcess.getParserAndWriter();
   }
+}
+
+function isReady(readyWhenStatus: ReadyWhenStatus[], output: string) {
+  if (output) {
+    for (const readyWhenElement of readyWhenStatus) {
+      if (output.toString().indexOf(readyWhenElement.stringToMatch) > -1) {
+        readyWhenElement.found = true;
+        break;
+      }
+    }
+  }
+  return readyWhenStatus.every((readyWhenElement) => readyWhenElement.found);
 }
 
 export class PseudoTtyProcessWithSend extends PseudoTtyProcess {
