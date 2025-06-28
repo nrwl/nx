@@ -19,6 +19,7 @@
       }
     },
     "build": {
+      "dependsOn": ["build-code-block-button"],
       "inputs": ["{projectRoot}/src/**/**"],
       "outputs": ["{projectRoot}/dist"]
     },
