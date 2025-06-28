@@ -1,5 +1,6 @@
 {
   "name": "@nx/nx-dev-data-access-careers",
+  "private": true,
   "version": "0.0.1",
   "type": "commonjs",
   "main": "./src/index.ts",
