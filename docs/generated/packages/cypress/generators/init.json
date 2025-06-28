@@ -1,6 +1,6 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init#cypressInitGeneratorInternal",
+  "factory": "./src/generators/init/init",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxCypressInit",
@@ -39,7 +39,7 @@
   "description": "Initialize the `@nx/cypress` plugin.",
   "aliases": ["ng-add"],
   "hidden": true,
-  "implementation": "/packages/cypress/src/generators/init/init#cypressInitGeneratorInternal.ts",
+  "implementation": "/packages/cypress/src/generators/init/init.ts",
   "path": "/packages/cypress/src/generators/init/schema.json",
   "type": "generator"
 }

@@ -1,6 +1,6 @@
 {
   "name": "library",
-  "factory": "./src/generators/library/library#expoLibraryGeneratorInternal",
+  "factory": "./src/generators/library/library",
   "schema": {
     "cli": "nx",
     "$id": "NxExpoLibrary",
@@ -101,7 +101,7 @@
   "aliases": ["lib"],
   "x-type": "library",
   "description": "Create a library",
-  "implementation": "/packages/expo/src/generators/library/library#expoLibraryGeneratorInternal.ts",
+  "implementation": "/packages/expo/src/generators/library/library.ts",
   "hidden": false,
   "path": "/packages/expo/src/generators/library/schema.json",
   "type": "generator"

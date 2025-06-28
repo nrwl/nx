@@ -1,6 +1,6 @@
 {
   "name": "convert-to-inferred",
-  "factory": "./src/generators/convert-to-inferred/convert-to-inferred#convertToInferred",
+  "factory": "./src/generators/convert-to-inferred/convert-to-inferred",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxWebpackConvertToInferred",
@@ -22,7 +22,7 @@
     "presets": []
   },
   "description": "Convert existing Webpack project(s) using `@nx/webpack:wepack` executor to use `@nx/webpack/plugin`.",
-  "implementation": "/packages/webpack/src/generators/convert-to-inferred/convert-to-inferred#convertToInferred.ts",
+  "implementation": "/packages/webpack/src/generators/convert-to-inferred/convert-to-inferred.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/webpack/src/generators/convert-to-inferred/schema.json",

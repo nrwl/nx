@@ -9,7 +9,7 @@
     "directory": "packages/nx"
   },
   "scripts": {
-    "postinstall": "node ./bin/post-install"
+    "postinstall": "node ./bin/post-install || exit 0"
   },
   "keywords": [
     "Monorepo",

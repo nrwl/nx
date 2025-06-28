@@ -1,6 +1,6 @@
 {
   "name": "cypress-component-configuration",
-  "implementation": "/packages/remix/src/generators/cypress-component-configuration/cypress-component-configuration.impl#cypressComponentConfigurationGeneratorInternal.ts",
+  "implementation": "/packages/remix/src/generators/cypress-component-configuration/cypress-component-configuration.impl.ts",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",

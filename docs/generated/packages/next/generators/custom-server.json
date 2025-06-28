@@ -1,6 +1,6 @@
 {
   "name": "custom-server",
-  "factory": "./src/generators/custom-server/custom-server#customServerGenerator",
+  "factory": "./src/generators/custom-server/custom-server",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -30,7 +30,7 @@
     "presets": []
   },
   "description": "Set up a custom server.",
-  "implementation": "/packages/next/src/generators/custom-server/custom-server#customServerGenerator.ts",
+  "implementation": "/packages/next/src/generators/custom-server/custom-server.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/next/src/generators/custom-server/schema.json",

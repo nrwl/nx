@@ -1,6 +1,6 @@
 {
   "name": "federate-module",
-  "factory": "./src/generators/federate-module/federate-module#federateModuleGenerator",
+  "factory": "./src/generators/federate-module/federate-module",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -91,7 +91,7 @@
   },
   "description": "Federate a module.",
   "hidden": false,
-  "implementation": "/packages/react/src/generators/federate-module/federate-module#federateModuleGenerator.ts",
+  "implementation": "/packages/react/src/generators/federate-module/federate-module.ts",
   "aliases": [],
   "path": "/packages/react/src/generators/federate-module/schema.json",
   "type": "generator"
