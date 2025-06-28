@@ -1,6 +1,7 @@
 import { readJsonFile } from '../../../utils/fileutils';
 import { sortObjectByKeys } from '../../../utils/object-sort';
 import {
+  DependencyType,
   fileDataDepTarget,
   ProjectFileMap,
   ProjectGraph,
@@ -311,9 +312,15 @@ function findAllNpmDeps(
   const projectDependencies = new Set<string>();
 
   projectFiles.forEach((fileData) =>
-    fileData.deps?.forEach((dep) =>
-      projectDependencies.add(fileDataDepTarget(dep))
-    )
+    fileData.deps?.forEach((dep) => {
+      // Only add if not a type-only import
+      if (
+        typeof dep === 'string' ||
+        (Array.isArray(dep) && dep[2] !== DependencyType.type)
+      ) {
+        projectDependencies.add(fileDataDepTarget(dep));
+      }
+    })
   );
 
   for (const dep of projectDependencies) {

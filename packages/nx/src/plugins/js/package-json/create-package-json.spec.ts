@@ -2,6 +2,7 @@ import * as fs from 'fs';
 
 import * as configModule from '../../../config/configuration';
 import {
+  DependencyType,
   FileData,
   FileDataDependency,
   ProjectFileMap,
@@ -49,6 +50,67 @@ describe('createPackageJson', () => {
       },
       name: 'lib1',
       version: '0.0.1',
+    });
+  });
+
+  it('should NOT include dependencies that are only type imports', () => {
+    jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+    jest.spyOn(fileutilsModule, 'readJsonFile').mockReturnValue({
+      dependencies: {
+        lodash: '4.17.21',
+        tslib: '2.4.0',
+      },
+    });
+
+    // Use DependencyType.type for type-only import
+    const fileMap: ProjectFileMap = {
+      lib1: [
+        {
+          file: 'libs/lib1/src/main.ts',
+          hash: '',
+          deps: [
+            // [source, target, type]
+            ['libs/lib1/src/main.ts', 'npm:lodash', DependencyType.type], // type-only
+            ['libs/lib1/src/main.ts', 'npm:tslib', DependencyType.static], // value import
+          ],
+        },
+      ],
+    };
+
+    expect(
+      createPackageJson(
+        'lib1',
+        {
+          nodes: {
+            lib1: {
+              type: 'lib',
+              name: 'lib1',
+              data: { targets: {}, root: 'libs/lib1' },
+            },
+          },
+          externalNodes: {
+            'npm:lodash': {
+              type: 'npm',
+              name: 'npm:lodash',
+              data: { version: '4.17.21', hash: '', packageName: 'lodash' },
+            },
+            'npm:tslib': {
+              type: 'npm',
+              name: 'npm:tslib',
+              data: { version: '2.4.0', hash: '', packageName: 'tslib' },
+            },
+          },
+          dependencies: {},
+        },
+        { root: '' },
+        fileMap
+      )
+    ).toEqual({
+      name: 'lib1',
+      version: '0.0.1',
+      dependencies: {
+        tslib: '2.4.0',
+      },
     });
   });
 
