@@ -121,7 +121,7 @@ pub fn partition_glob(glob: &str) -> anyhow::Result<(String, Vec<String>)> {
         .into_iter()
         .filter(|group| !group.is_empty())
         .partition_map(|group| match &group[0] {
-            GlobGroup::NonSpecial(value) if !contains_glob_pattern(&value) && !has_patterns => {
+            GlobGroup::NonSpecial(value) if !contains_glob_pattern(value) && !has_patterns => {
                 Left(value.to_string())
             }
             _ => {
