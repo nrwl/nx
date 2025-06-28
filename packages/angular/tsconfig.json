@@ -8,9 +8,6 @@
   "files": [],
   "references": [
     {
-      "path": "../nx"
-    },
-    {
       "path": "../workspace"
     },
     {
@@ -33,6 +30,12 @@
     },
     {
       "path": "../devkit"
+    },
+    {
+      "path": "../cypress"
+    },
+    {
+      "path": "../nx"
     },
     {
       "path": "./tsconfig.lib.json"

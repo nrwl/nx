@@ -1,6 +1,6 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type { ProjectGraphProjectNode } from '../types/graph-types';
+import type { ProjectGraphProjectNode, TargetConfiguration } from '@nx/devkit';
 // nx-ignore-next-line
 import { GraphError } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
@@ -57,7 +57,7 @@ export const ProjectDetails = ({
       [
         ...(projectData.metadata?.technologies ?? []),
         ...Object.values(projectData.targets ?? {})
-          .map((target) => target?.metadata?.technologies)
+          .map((target: TargetConfiguration<any>) => target?.metadata?.technologies)
           .flat(),
       ].filter(Boolean)
     ),

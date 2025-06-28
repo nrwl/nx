@@ -1,11 +1,13 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "jsx": "react-jsx",
     "outDir": "dist",
     "declaration": true,
     "types": ["node"],
-    "lib": ["DOM"],
-    "composite": true
+    "lib": ["ES2022", "DOM"],
+    "composite": true,
+    "noEmit": false
   },
   "exclude": [
     "jest.config.ts",

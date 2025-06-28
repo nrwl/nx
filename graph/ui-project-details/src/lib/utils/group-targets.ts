@@ -1,6 +1,6 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type { ProjectGraphProjectNode } from '../types/graph-types';
+import type { ProjectGraphProjectNode } from '@nx/devkit';
 
 /**
  * This function groups targets based on the targetGroups metadata
