@@ -587,6 +587,8 @@ For more details on configuring Nx Cloud, see the [Nx Cloud Configuration Option
 
 The `maxCacheSize` property in `nx.json` allows you to set a limit on the size of the local cache. If it is not set, Nx defaults to a maximum size of 10% of the size of the disk where the cache is stored, up to a maximum of 10GB. This means that if your disk is 100GB, the maximum cache size will be 10GB. If the cache exceeds the specified size, Nx removes the least recently used cache entries until the total size is below 90% of the specified limit.
 
+You can also override this value using the `NX_MAX_CACHE_SIZE` environment variable, which accepts the same units and takes precedence over the `maxCacheSize` option in `nx.json`.
+
 This behavior can be opted out by setting `maxCacheSize` to `0`.
 
 Valid values for `maxCacheSize` can be specified in bytes, kilobytes (KB), megabytes (MB), or gigabytes (GB). For example, any of the following would be valid values:
