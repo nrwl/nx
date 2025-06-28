@@ -3,8 +3,6 @@ import {
   logger,
   workspaceRoot,
   readJsonFile,
-  createProjectGraphAsync,
-  ProjectGraph,
 } from '@nx/devkit';
 import { CopyAssetsHandler } from '@nx/js/src/utils/assets/copy-assets-handler';
 import * as path from 'path';
@@ -31,29 +29,7 @@ export interface CopyAssetsExecutorOptions {
 function ensureOutputDir(outputPath: string) {
   if (!fs.existsSync(outputPath)) {
     fs.mkdirSync(outputPath, { recursive: true });
-    logger.info(`Created output directory: ${outputPath}`);
   }
-}
-
-/**
- * Print asset details for debugging
- */
-function printAssetDetails(assets: CopyAssetsExecutorOptions['assets']) {
-  logger.info('Asset configuration:');
-  assets.forEach((asset, index) => {
-    if (typeof asset === 'string') {
-      logger.info(`  ${index + 1}. "${asset}"`);
-    } else {
-      logger.info(
-        `  ${index + 1}. Input: "${asset.input}", Glob: "${
-          asset.glob
-        }", Output: "${asset.output}"`
-      );
-      if (asset.ignore) {
-        logger.info(`      Ignore: [${asset.ignore.join(', ')}]`);
-      }
-    }
-  });
 }
 
 /**
@@ -78,17 +54,8 @@ export async function copyAssetsExecutor(
   options: CopyAssetsExecutorOptions,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
-  // Need to ensure the project graph is created before accessing project details
-  let projectGraph: ProjectGraph;
-  try {
-    projectGraph = await createProjectGraphAsync();
-  } catch (error) {
-    logger.error(`Failed to create project graph: ${error.message || error}`);
-    throw error;
-  }
-
   const projectName = context.projectName;
-  const projectRoot = projectGraph.nodes[projectName].data.root;
+  const projectRoot = context.projectGraph.nodes[projectName].data.root;
 
   if (!options.assets || options.assets.length === 0) {
     logger.info(`No assets to copy for project: ${projectName}`);
@@ -149,15 +116,11 @@ Or with TypeScript config:
     logger.info('Watch mode enabled - will monitor for file changes...');
   }
 
-  // Print asset details for debugging
-  printAssetDetails(options.assets);
-
   // Ensure output directory exists
   ensureOutputDir(outputPath);
 
   // Copy the assets using Nx's CopyAssetsHandler
   const projectDir = path.join(workspaceRoot, projectRoot);
-  logger.info(`Project root: ${projectDir}`);
 
   const assetHandler = new CopyAssetsHandler({
     projectDir: projectDir,
