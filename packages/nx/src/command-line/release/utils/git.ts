@@ -25,6 +25,11 @@ export interface Reference {
   value: string;
 }
 
+export interface GitTagAndVersion {
+  tag: string;
+  extractedVersion: string;
+}
+
 export interface GitCommit extends RawGitCommit {
   description: string;
   type: string;
@@ -44,11 +49,66 @@ function escapeRegExp(string) {
 const SEMVER_REGEX =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/g;
 
+/**
+ * Check if a semver string is for a stable release (i.e. no prerelease or build metadata)
+ * @param semver - The semver string to check
+ * @returns True if the semver string is stable, false otherwise
+ */
+export function isStableSemver(semver: string): boolean {
+  const semverMatch = new RegExp(SEMVER_REGEX).exec(semver);
+  if (!semverMatch) return false;
+  
+  // Check that we have major, minor, patch but no prerelease or build metadata
+  const [, , , , prerelease, buildMetadata] = semverMatch;
+  return !prerelease && !buildMetadata;
+}
+
+/**
+ * Extract the tag and version from a tag string
+ * 
+ * @param tag - The tag string to extract the tag and version from
+ * @param tagRegexp - The regex to use to extract the tag and version from the tag string
+ * 
+ * @returns The tag and version
+ */
+export function extractTagAndVersion(tag: string, tagRegexp: string): GitTagAndVersion {
+  const [latestMatchingTag, ...rest] = tag.match(tagRegexp);
+  const version = rest.filter((r) => {
+    return r.match(SEMVER_REGEX);
+  })[0] ?? null;
+
+  return {
+    tag: latestMatchingTag,
+    extractedVersion: version,
+  };
+}
+
+/**
+ * Get the latest git tag for the configured release tag pattern.
+ * 
+ * This function will:
+ * - Get all tags from the git repo, sorted by version
+ * - Filter the tags into a list with SEMVER-compliant tags, matching the release tag pattern
+ * - If a preid is provided, prioritise tags for that preid
+ * - If no preid is provided, prioritise stable semver tags (i.e. no pre-release or build metadata)
+ * - If no stable semver tags are found, prioritise the highest version tag (i.e. any pre-release tag)
+ * 
+ * @param releaseTagPattern - The pattern to filter the tags list by
+ * @param additionalInterpolationData - Additional data used when interpolating the release tag pattern
+ * @param options - The options to use when getting the latest git tag for the pattern
+ * 
+ * @returns The tag and version
+ */
 export async function getLatestGitTagForPattern(
   releaseTagPattern: string,
   additionalInterpolationData = {},
-  checkAllBranchesWhen?: boolean | string[]
-): Promise<{ tag: string; extractedVersion: string } | null> {
+  options: {
+    checkAllBranchesWhen?: boolean | string[],
+    preId?: string
+  } = {}
+): Promise<GitTagAndVersion | null> {
+  const { checkAllBranchesWhen = false, preId = '' } = options;
+
   /**
    * By default, we will try and resolve the latest match for the releaseTagPattern from the current branch,
    * falling back to all branches if no match is found on the current branch.
@@ -149,15 +209,34 @@ export async function getLatestGitTagForPattern(
       return null;
     }
 
-    const [latestMatchingTag, ...rest] = matchingSemverTags[0].match(tagRegexp);
-    const version = rest.filter((r) => {
-      return r.match(SEMVER_REGEX);
-    })[0];
+    if (preId && preId.length > 0) {
+      // When a preid is provided, first try to find a tag for it
+      const preIdReleaseTags = matchingSemverTags.filter((tag) => {
+        const match = tag.match(tagRegexp);
+        if (!match) return false;
+        
+        const version = match.find(part => part.match(SEMVER_REGEX));
+        return version && version.includes(`-${preId}.`);
+      });
 
-    return {
-      tag: latestMatchingTag,
-      extractedVersion: version,
-    };
+      if (preIdReleaseTags.length > 0) {
+        return extractTagAndVersion(preIdReleaseTags[0], tagRegexp);
+      }
+    } 
+    
+    // Then try to find the latest stable release tag
+    const stableReleaseTags = matchingSemverTags.filter((tag) => {
+      return !!tag.match(tagRegexp) &&
+        tag.match(tagRegexp).some(isStableSemver)
+    });
+
+    // If there are stable release tags, use the latest one
+    if (stableReleaseTags.length > 0) {
+      return extractTagAndVersion(stableReleaseTags[0], tagRegexp);
+    }
+
+    // Otherwise use the highest version tag (i.e. any pre-release tag)
+    return extractTagAndVersion(matchingSemverTags[0], tagRegexp);
   } catch {
     return null;
   }

@@ -343,7 +343,10 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           await getLatestGitTagForPattern(
             nxReleaseConfig.releaseTagPattern,
             {},
-            nxReleaseConfig.releaseTagPatternCheckAllBranchesWhen
+            {
+              checkAllBranchesWhen: nxReleaseConfig.releaseTagPatternCheckAllBranchesWhen,
+              preId: args.preid,
+            }
           )
         )?.tag;
       if (!workspaceChangelogFromRef) {
@@ -527,7 +530,10 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                     projectName: project.name,
                     releaseGroupName: releaseGroup.name,
                   },
-                  releaseGroup.releaseTagPatternCheckAllBranchesWhen
+                  {
+                    checkAllBranchesWhen: releaseGroup.releaseTagPatternCheckAllBranchesWhen,
+                    preId: args.preid,
+                  }
                 )
               )?.tag;
 
@@ -669,7 +675,10 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
               await getLatestGitTagForPattern(
                 releaseGroup.releaseTagPattern,
                 {},
-                releaseGroup.releaseTagPatternCheckAllBranchesWhen
+                {
+                  checkAllBranchesWhen: releaseGroup.releaseTagPatternCheckAllBranchesWhen,
+                  preId: args.preid,
+                }
               )
             )?.tag;
           if (!fromRef) {
