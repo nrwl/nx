@@ -8,9 +8,6 @@ import org.gradle.api.file.FileCollection
 
 const val testCiTargetGroup = "verification"
 
-private val testFileNameRegex =
-    Regex("^(?!(abstract|fake)).*?(Test)(s)?\\d*", RegexOption.IGNORE_CASE)
-
 private val packageDeclarationRegex =
     Regex(
         """^\s*package\s+([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)""",
@@ -43,26 +40,56 @@ fun addTestCiTargets(
     workspaceRoot: String,
     ciTestTargetName: String
 ) {
+  testTask.logger.info("${testTask.path}: Starting addTestCiTargets")
+
   ensureTargetGroupExists(targetGroups, testCiTargetGroup)
 
   val ciDependsOn = mutableListOf<Map<String, String>>()
 
-  testFiles
-      .filter { isTestFile(it, workspaceRoot) }
-      .forEach { testFile ->
-        val classNames = getAllVisibleClassesWithNestedAnnotation(testFile)
-
-        classNames?.entries?.forEach { (className, testClassPackagePath) ->
-          val targetName = "$ciTestTargetName--$className"
-          targets[targetName] =
-              buildTestCiTarget(
-                  projectBuildPath, testClassPackagePath, testTask, projectRoot, workspaceRoot)
-          targetGroups[testCiTargetGroup]?.add(targetName)
-
-          ciDependsOn.add(
-              mapOf("target" to targetName, "projects" to "self", "params" to "forward"))
-        }
+  // Always try to use compiled class analysis first
+  testTask.logger.info("${testTask.path}: Getting compiled test class names")
+  val testClassNames =
+      try {
+        getCompiledTestClassNames(testTask)
+      } catch (e: Exception) {
+        testTask.logger.warn(
+            "${testTask.path}: Error getting compiled test class names: ${e.message}")
+        emptyMap<String, String>()
       }
+
+  testTask.logger.info("${testTask.path}: Found ${testClassNames.size} compiled test classes")
+
+  if (testClassNames.isNotEmpty()) {
+    // Use compiled class analysis if classes are available
+    testTask.logger.info(
+        "${testTask.path}: Processing ${testClassNames.size} compiled test classes")
+    processTestClasses(
+        testClassNames,
+        ciTestTargetName,
+        projectBuildPath,
+        testTask,
+        projectRoot,
+        workspaceRoot,
+        targets,
+        targetGroups,
+        ciDependsOn)
+    testTask.logger.info("${testTask.path}: Finished processing compiled test classes")
+  } else {
+    // Fall back to regex-based source analysis if compiled classes not available
+    testTask.logger.info(
+        "${testTask.path}: No compiled test classes found, falling back to regex analysis")
+    processTestFilesWithRegex(
+        testFiles,
+        workspaceRoot,
+        ciTestTargetName,
+        projectBuildPath,
+        testTask,
+        projectRoot,
+        targets,
+        targetGroups,
+        ciDependsOn)
+    testTask.logger.info("${testTask.path}: Finished regex-based test file processing")
+  }
 
   testTask.logger.info("${testTask.path} generated CI targets: ${ciDependsOn.map { it["target"] }}")
 
@@ -78,11 +105,230 @@ fun addTestCiTargets(
   }
 }
 
+private fun processTestFilesWithRegex(
+    testFiles: FileCollection,
+    workspaceRoot: String,
+    ciTestTargetName: String,
+    projectBuildPath: String,
+    testTask: Task,
+    projectRoot: String,
+    targets: NxTargets,
+    targetGroups: TargetGroups,
+    ciDependsOn: MutableList<Map<String, String>>
+) {
+  testFiles
+      .filter { it.path.startsWith(workspaceRoot) }
+      .forEach { testFile ->
+        val content = testFile.takeIf { it.exists() }?.readText()
+        if (content != null && containsEssentialTestAnnotations(content)) {
+          val classNames = getAllVisibleClassesWithNestedAnnotation(testFile)
+          classNames?.let {
+            processTestClasses(
+                it,
+                ciTestTargetName,
+                projectBuildPath,
+                testTask,
+                projectRoot,
+                workspaceRoot,
+                targets,
+                targetGroups,
+                ciDependsOn)
+          }
+        }
+      }
+}
+
+internal fun processTestClasses(
+    testClassNames: Map<String, String>,
+    ciTestTargetName: String,
+    projectBuildPath: String,
+    testTask: Task,
+    projectRoot: String,
+    workspaceRoot: String,
+    targets: NxTargets,
+    targetGroups: TargetGroups,
+    ciDependsOn: MutableList<Map<String, String>>
+) {
+  testClassNames.forEach { (className, testClassPackagePath) ->
+    val targetName = "$ciTestTargetName--$className"
+    targets[targetName] =
+        buildTestCiTarget(
+            projectBuildPath, testClassPackagePath, testTask, projectRoot, workspaceRoot)
+    targetGroups[testCiTargetGroup]?.add(targetName)
+
+    ciDependsOn.add(mapOf("target" to targetName, "projects" to "self", "params" to "forward"))
+  }
+}
+
+internal fun getCompiledTestClassNames(
+    testTask: Task
+): Map<String, String> {
+  val result = mutableMapOf<String, String>()
+  val project = testTask.project
+
+  try {
+    // Use Gradle's built-in testClassesDirs from Test tasks
+    val testClassesDirs = if (testTask is org.gradle.api.tasks.testing.Test) {
+      testTask.testClassesDirs.files.toList()
+    } else {
+      // Fallback: look for Test tasks in the project
+      project.tasks.withType(org.gradle.api.tasks.testing.Test::class.java)
+        .flatMap { it.testClassesDirs.files }
+        .distinct()
+    }
+
+    if (testClassesDirs.isEmpty() || testClassesDirs.none { it.exists() }) {
+      testTask.logger.info("No test classes directories found or they don't exist")
+      return result
+    }
+
+    testClassesDirs.forEach { testClassesDir ->
+      if (testClassesDir.exists() && testClassesDir.isDirectory) {
+        testTask.logger.info("Analyzing test classes directory: ${testClassesDir.absolutePath}")
+        analyzeTestClassesDir(testClassesDir, "", result, testTask)
+        testTask.logger.info(
+            "Finished analyzing ${testClassesDir.absolutePath}, found ${result.size} test classes so far")
+      }
+    }
+  } catch (e: Exception) {
+    testTask.logger.warn("Error getting compiled test class names: ${e.message}")
+    testTask.logger.debug("Stack trace:", e)
+  }
+
+  testTask.logger.info("Total compiled test classes found: ${result.size}")
+  return result
+}
+
+
+internal fun analyzeTestClassesDir(
+    dir: File,
+    packagePath: String,
+    result: MutableMap<String, String>,
+    testTask: Task,
+    visitedDirs: MutableSet<String> = mutableSetOf(),
+    maxDepth: Int = 20,
+    currentDepth: Int = 0
+) {
+  // Prevent infinite recursion due to symlinks or circular references
+  val canonicalPath =
+      try {
+        dir.canonicalPath
+      } catch (e: Exception) {
+        testTask.logger.warn("Unable to get canonical path for $dir: ${e.message}")
+        return
+      }
+
+  if (canonicalPath in visitedDirs || currentDepth >= maxDepth) {
+    testTask.logger.debug(
+        "Skipping directory $canonicalPath (already visited or max depth reached)")
+    return
+  }
+
+  visitedDirs.add(canonicalPath)
+
+  dir.listFiles()?.forEach { file ->
+    when {
+      file.isDirectory -> {
+        val newPackagePath = if (packagePath.isEmpty()) file.name else "$packagePath.${file.name}"
+        analyzeTestClassesDir(
+            file, newPackagePath, result, testTask, visitedDirs, maxDepth, currentDepth + 1)
+      }
+      file.name.endsWith(".class") -> {
+        val className = file.name.removeSuffix(".class")
+        if (isTestClass(file, testTask)) {
+          val fullClassName = if (packagePath.isEmpty()) className else "$packagePath.$className"
+          result[className] = fullClassName
+          testTask.logger.info("Found test class: $fullClassName")
+        }
+      }
+    }
+  }
+}
+
+internal fun isTestClass(classFile: File, testTask: Task): Boolean {
+  return try {
+    val className = classFile.name.removeSuffix(".class")
+    
+    // Filter out invalid class names but allow nested classes for now
+    if (className.contains(" ") || className.isBlank()) {
+      testTask.logger.debug("Skipping class with invalid name: $className")
+      return false
+    }
+    
+    // For classes with $, filter out anonymous/lambda classes but allow named nested classes
+    if (className.contains("$")) {
+      // Anonymous classes have numeric suffixes: MyClass$1, MyClass$2
+      // Lambda classes: MyClass$$Lambda$1
+      val afterDollar = className.substringAfterLast("$")
+      val lambdaPattern = "$" + "$" + "Lambda" + "$"
+      val isAnonymousOrLambda = afterDollar.all { it.isDigit() } || 
+                               className.contains(lambdaPattern) ||
+                               afterDollar.startsWith("WhenMappings") // Kotlin when mappings
+      
+      if (isAnonymousOrLambda) {
+        testTask.logger.debug("Skipping anonymous/lambda class: $className")
+        return false
+      }
+    }
+    
+    // Try bytecode analysis first
+    if (classFile.length() > 0) {
+      try {
+        val bytes = classFile.readBytes()
+        val bytecodeString = String(bytes, Charsets.ISO_8859_1)
+        
+        // Check for @Nested classes first (these can have $ in name)
+        val isNestedTestClass = bytecodeString.contains("Lorg/junit/jupiter/api/Nested;")
+        if (isNestedTestClass) {
+          testTask.logger.debug("Class $className identified as nested test class")
+          return true
+        }
+        
+        // Look for test annotations in the bytecode
+        val hasTestAnnotations = listOf(
+            "Lorg/junit/Test;",           // JUnit 4 @Test
+            "Lorg/junit/jupiter/api/Test;", // JUnit 5 @Test
+            "Lorg/testng/annotations/Test;", // TestNG @Test
+            "Lkotlin/test/Test;",          // Kotlin test @Test
+            "TestTemplate",               // JUnit 5 @TestTemplate
+            "ParameterizedTest",          // JUnit 5 @ParameterizedTest
+            "RepeatedTest"                // JUnit 5 @RepeatedTest
+        ).any { annotation ->
+          bytecodeString.contains(annotation)
+        }
+        
+        if (hasTestAnnotations) {
+          testTask.logger.debug("Class $className identified as test class by bytecode analysis")
+          return true
+        }
+      } catch (e: Exception) {
+        testTask.logger.debug("Bytecode analysis failed for ${classFile.name}: ${e.message}, falling back to naming patterns")
+      }
+    }
+    
+    // Fallback to naming patterns for test scenarios or when bytecode analysis fails
+    val isTestByName = className.endsWith("Test") ||
+                      className.endsWith("Tests") ||
+                      className.startsWith("Test") ||
+                      className.contains("Test")
+    
+    if (isTestByName) {
+      testTask.logger.debug("Class $className identified as test class by naming pattern (fallback)")
+      return true
+    }
+    
+    false
+  } catch (e: Exception) {
+    testTask.logger.debug("Error analyzing class file ${classFile.name}: ${e.message}")
+    false
+  }
+}
+
 private fun containsEssentialTestAnnotations(content: String): Boolean {
   return essentialTestAnnotations.any { content.contains(it) }
 }
 
-// This function return all class names and nested class names inside a file
+// This function returns all class names and nested class names inside a file
 fun getAllVisibleClassesWithNestedAnnotation(file: File): MutableMap<String, String>? {
   val content = file.takeIf { it.exists() }?.readText() ?: return null
 
@@ -148,11 +394,6 @@ fun getAllVisibleClassesWithNestedAnnotation(file: File): MutableMap<String, Str
 
 fun ensureTargetGroupExists(targetGroups: TargetGroups, group: String) {
   targetGroups.getOrPut(group) { mutableListOf() }
-}
-
-private fun isTestFile(file: File, workspaceRoot: String): Boolean {
-  val fileName = file.name.substringBefore(".")
-  return file.path.startsWith(workspaceRoot) && testFileNameRegex.matches(fileName)
 }
 
 private fun buildTestCiTarget(

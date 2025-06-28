@@ -31,6 +31,7 @@ class NxProjectGraphReportPlugin : Plugin<Project> {
               project.properties
                   .filterKeys { it.endsWith("TargetName") }
                   .mapValues { it.value.toString() }
+
           task.projectName.set(project.name)
           task.projectRef.set(project)
           task.hash.set(hashProperty)

@@ -159,11 +159,25 @@ fun getOutputsForTask(task: Task, projectRoot: String, workspaceRoot: String): L
  * @param targetNameOverrides optional map of overrides (e.g., test -> ci)
  * @return list of dependsOn task names (possibly replaced), or null if none found or error occurred
  */
+// Add a thread-local cache to prevent infinite recursion in dependency resolution
+private val taskDependencyCache = ThreadLocal.withInitial { mutableMapOf<String, List<String>?>() }
+
 fun getDependsOnForTask(
     task: Task,
     dependencies: MutableSet<Dependency>?, // Assuming Dependency class is defined elsewhere
     targetNameOverrides: Map<String, String> = emptyMap()
 ): List<String>? {
+
+  // Check cache to prevent infinite recursion
+  val cache = taskDependencyCache.get()
+  val taskKey = task.path
+  if (cache.containsKey(taskKey)) {
+    task.logger.debug("Returning cached dependencies for ${task.path}")
+    return cache[taskKey]
+  }
+
+  // Add a placeholder to prevent infinite recursion
+  cache[taskKey] = null
 
   fun mapTasksToNames(tasks: Collection<Task>): List<String> {
     return tasks.map { depTask ->
@@ -209,14 +223,21 @@ fun getDependsOnForTask(
         "Dependencies from task.dependsOn property for $task: $dependsOnFromDependsOnProperty")
     task.logger.info("Combined dependencies for $task: $combinedDependsOn")
 
-    if (combinedDependsOn.isNotEmpty()) {
-      return mapTasksToNames(combinedDependsOn)
-    }
+    val result =
+        if (combinedDependsOn.isNotEmpty()) {
+          mapTasksToNames(combinedDependsOn)
+        } else {
+          null
+        }
 
-    null
+    // Cache the result
+    cache[taskKey] = result
+    result
   } catch (e: Exception) {
     task.logger.info("Unexpected error getting dependencies for ${task.path}: ${e.message}")
     task.logger.debug("Stack trace:", e)
+    // Cache the null result
+    cache[taskKey] = null
     null
   }
 }
