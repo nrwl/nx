@@ -67,7 +67,8 @@
   },
   "devDependencies": {
     "jest": "^29.4.1",
-    "nx": "workspace:*"
+    "nx": "workspace:*",
+    "@nx/cypress": "workspace:*"
   },
   "peerDependencies": {
     "@angular/build": ">= 18.0.0 < 21.0.0",
