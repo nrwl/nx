@@ -10,7 +10,7 @@ import {
   checkFilesExist,
   runE2ETests,
   updateFile,
-} from 'e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('@nx/react-native', () => {
   let proj: string;
