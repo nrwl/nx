@@ -745,7 +745,28 @@
           "manifestRootsToUpdate": {
             "type": "array",
             "items": {
-              "type": "string"
+              "oneOf": [
+                {
+                  "type": "string",
+                  "description": "Path to the directory containing manifest files to update. Supports placeholders like {projectRoot} and {projectName}."
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "path": {
+                      "type": "string",
+                      "description": "Path to the directory containing manifest files to update. Supports placeholders like {projectRoot} and {projectName}."
+                    },
+                    "preserveLocalDependencyProtocols": {
+                      "type": "boolean",
+                      "description": "Whether to preserve local dependency references using protocols like 'workspace:' or 'file:'. Set to false for dist files that need to be published.",
+                      "default": true
+                    }
+                  },
+                  "required": ["path"],
+                  "additionalProperties": false
+                }
+              ]
             },
             "description": "A list of directories containing manifest files (such as package.json) to apply updates to when versioning. By default, only the project root will be used, but you could customize this to only version a manifest in a dist directory, or even version multiple manifests in different directories, such as both source and dist."
           },
