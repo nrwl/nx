@@ -748,6 +748,10 @@
         "@storybook/web-components": {
           "version": "^8.6.11",
           "alwaysAddToPackageJson": false
+        },
+        "storybook": {
+          "version": "^8.6.11",
+          "alwaysAddToPackageJson": false
         }
       }
     },
