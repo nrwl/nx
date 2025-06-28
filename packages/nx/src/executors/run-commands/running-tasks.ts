@@ -434,6 +434,25 @@ class RunningNodeProcess implements RunningTask {
         }
       }
     });
+    // Terminate any task processes on exit
+    process.on('exit', () => {
+      this.childProcess.kill();
+    });
+    process.on('SIGINT', () => {
+      this.childProcess.kill('SIGTERM');
+      // we exit here because we don't need to write anything to cache.
+      process.exit(signalToCode('SIGINT'));
+    });
+    process.on('SIGTERM', () => {
+      this.childProcess.kill('SIGTERM');
+      // no exit here because we expect child processes to terminate which
+      // will store results to the cache and will terminate this process
+    });
+    process.on('SIGHUP', () => {
+      this.childProcess.kill('SIGTERM');
+      // no exit here because we expect child processes to terminate which
+      // will store results to the cache and will terminate this process
+    });
   }
 }
 
