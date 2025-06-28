@@ -65,6 +65,7 @@ export type ChangelogOptions = NxReleaseArgs &
     from?: string;
     interactive?: string;
     createRelease?: false | 'github' | 'gitlab';
+    preid?: VersionOptions['preid'];
   };
 
 export type PublishOptions = NxReleaseArgs &
