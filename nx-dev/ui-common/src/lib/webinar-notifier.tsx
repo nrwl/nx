@@ -11,7 +11,7 @@ import {
 export function WebinarNotifier(): ReactElement | null {
   const [isMounted, setIsMounted] = useState(false);
   const [isVisible, setIsVisible] = useState<boolean>(true);
-  const localStorageKey = 'webinar-may-28-2025--notifier-closed';
+  const localStorageKey = 'webinar-july-9-2025--notifier-closed';
 
   useEffect(() => {
     setIsMounted(true);

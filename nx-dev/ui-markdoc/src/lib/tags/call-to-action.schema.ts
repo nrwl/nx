@@ -25,5 +25,12 @@ export const callToAction: Schema = {
       type: 'String',
       required: false,
     },
+    size: {
+      // 'Size of the call to action.  Defaults to "sm".',
+      type: 'String',
+      required: false,
+      default: 'md',
+      matches: ['sm', 'md', 'lg'],
+    },
   },
 };
