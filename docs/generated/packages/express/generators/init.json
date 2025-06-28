@@ -1,6 +1,6 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init#initGenerator",
+  "factory": "./src/generators/init/init",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -32,7 +32,7 @@
   "description": "Initialize the `@nx/express` plugin.",
   "aliases": ["ng-add"],
   "hidden": true,
-  "implementation": "/packages/express/src/generators/init/init#initGenerator.ts",
+  "implementation": "/packages/express/src/generators/init/init.ts",
   "path": "/packages/express/src/generators/init/schema.json",
   "type": "generator"
 }

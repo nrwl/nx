@@ -1,6 +1,6 @@
 {
   "name": "library",
-  "factory": "./src/generators/library/library#libraryGeneratorInternal",
+  "factory": "./src/generators/library/library",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -135,7 +135,7 @@
   "aliases": ["lib"],
   "x-type": "library",
   "description": "Create a node library.",
-  "implementation": "/packages/node/src/generators/library/library#libraryGeneratorInternal.ts",
+  "implementation": "/packages/node/src/generators/library/library.ts",
   "hidden": false,
   "path": "/packages/node/src/generators/library/schema.json",
   "type": "generator"

@@ -1,6 +1,6 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init#initGeneratorInternal",
+  "factory": "./src/generators/init/init",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "$id": "Init",
@@ -38,7 +38,7 @@
   "description": "Initialize the `@nx/rsbuild` plugin.",
   "aliases": ["ng-add"],
   "hidden": true,
-  "implementation": "/packages/rsbuild/src/generators/init/init#initGeneratorInternal.ts",
+  "implementation": "/packages/rsbuild/src/generators/init/init.ts",
   "path": "/packages/rsbuild/src/generators/init/schema.json",
   "type": "generator"
 }
