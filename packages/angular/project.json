@@ -20,10 +20,11 @@
     "build-base": {
       "executor": "@nx/js:tsc"
     },
-    "copy-assets": {
-      "executor": "@nx/workspace-plugin:copy-assets",
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
         "tsConfig": "./tsconfig.lib.json",
+        "addPackageJsonFields": false,
         "assets": [
           {
             "input": "packages/angular",
@@ -83,7 +84,7 @@
           "projects": "self"
         },
         {
-          "target": "copy-assets",
+          "target": "legacy-post-build",
           "projects": "self"
         }
       ],

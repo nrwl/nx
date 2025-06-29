@@ -68,11 +68,7 @@
           "projects": "self"
         },
         {
-          "target": "copy-assets",
-          "projects": "self"
-        },
-        {
-          "target": "add-package-json-fields",
+          "target": "legacy-post-build",
           "projects": "self"
         }
       ]
@@ -145,8 +141,8 @@
         }
       }
     },
-    "copy-assets": {
-      "executor": "@nx/workspace-plugin:copy-assets",
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
         "tsConfig": "./tsconfig.lib.json",
         "assets": [
@@ -196,15 +192,6 @@
       "dependsOn": [
         {
           "target": "build-base-ts",
-          "projects": "self"
-        }
-      ]
-    },
-    "add-package-json-fields": {
-      "executor": "@nx/workspace-plugin:add-package-json-fields",
-      "dependsOn": [
-        {
-          "target": "copy-assets",
           "projects": "self"
         }
       ]

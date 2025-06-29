@@ -1,14 +1,9 @@
 {
   "executors": {
-    "copy-assets": {
-      "implementation": "./src/executors/copy-assets/executor",
-      "schema": "./src/executors/copy-assets/schema.json",
-      "description": "Copies assets to the output directory"
-    },
-    "add-package-json-fields": {
-      "implementation": "./src/executors/add-package-json-fields/executor",
-      "schema": "./src/executors/add-package-json-fields/schema.json",
-      "description": "Add required package.json fields like 'types' and 'type' to built packages"
+    "legacy-post-build": {
+      "implementation": "./src/executors/legacy-post-build/executor",
+      "schema": "./src/executors/legacy-post-build/schema.json",
+      "description": "Legacy post-build executor that combines asset copying and package.json field updates"
     }
   }
 }
