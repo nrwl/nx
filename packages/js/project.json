@@ -4,8 +4,8 @@
   "sourceRoot": "packages/js/src",
   "projectType": "library",
   "targets": {
-    "copy-assets": {
-      "executor": "@nx/workspace-plugin:copy-assets",
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "inputs": ["default"],
       "options": {
         "tsConfig": "./tsconfig.lib.json",
@@ -87,24 +87,11 @@
           "projects": "self"
         },
         {
-          "target": "copy-assets",
+          "target": "legacy-post-build",
           "projects": "self"
         },
         {
           "target": "copy-readme",
-          "projects": "self"
-        },
-        {
-          "target": "add-package-json-fields",
-          "projects": "self"
-        }
-      ]
-    },
-    "add-package-json-fields": {
-      "executor": "@nx/workspace-plugin:add-package-json-fields",
-      "dependsOn": [
-        {
-          "target": "copy-assets",
           "projects": "self"
         }
       ]

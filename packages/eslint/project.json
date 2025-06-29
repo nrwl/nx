@@ -12,8 +12,42 @@
         }
       ]
     },
-    "copy-assets": {
-      "executor": "@nx/workspace-plugin:copy-assets",
+    "copy-readme": {
+      "outputs": ["{workspaceRoot}/dist/packages/eslint/README.md"],
+      "command": "node ./scripts/copy-readme.js eslint",
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
+    },
+    "build-base": {
+      "dependsOn": [
+        "^build",
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        },
+        {
+          "target": "legacy-post-build",
+          "projects": "self"
+        },
+        {
+          "target": "copy-readme",
+          "projects": "self"
+        }
+      ]
+    },
+    "nx-release-publish": {
+      "executor": "@nx/js:release-publish",
+      "options": {
+        "packageRoot": "dist/packages/eslint"
+      },
+      "dependsOn": ["^nx-release-publish"]
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
         "tsConfig": "./tsconfig.lib.json",
         "assets": [
@@ -54,53 +88,6 @@
       "dependsOn": [
         {
           "target": "build-base-ts",
-          "projects": "self"
-        }
-      ]
-    },
-    "copy-readme": {
-      "outputs": ["{workspaceRoot}/dist/packages/eslint/README.md"],
-      "command": "node ./scripts/copy-readme.js eslint",
-      "dependsOn": [
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        }
-      ]
-    },
-    "build-base": {
-      "dependsOn": [
-        "^build",
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        },
-        {
-          "target": "copy-assets",
-          "projects": "self"
-        },
-        {
-          "target": "copy-readme",
-          "projects": "self"
-        },
-        {
-          "target": "add-package-json-fields",
-          "projects": "self"
-        }
-      ]
-    },
-    "nx-release-publish": {
-      "executor": "@nx/js:release-publish",
-      "options": {
-        "packageRoot": "dist/packages/eslint"
-      },
-      "dependsOn": ["^nx-release-publish"]
-    },
-    "add-package-json-fields": {
-      "executor": "@nx/workspace-plugin:add-package-json-fields",
-      "dependsOn": [
-        {
-          "target": "copy-assets",
           "projects": "self"
         }
       ]

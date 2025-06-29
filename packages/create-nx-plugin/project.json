@@ -31,8 +31,21 @@
         }
       ]
     },
-    "copy-assets": {
-      "executor": "@nx/workspace-plugin:copy-assets",
+    "build-base": {
+      "dependsOn": [
+        "^build",
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        },
+        {
+          "target": "legacy-post-build",
+          "projects": "self"
+        }
+      ]
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
         "tsConfig": "./tsconfig.lib.json",
         "assets": [
@@ -73,32 +86,6 @@
       "dependsOn": [
         {
           "target": "build-base-ts",
-          "projects": "self"
-        }
-      ]
-    },
-    "build-base": {
-      "dependsOn": [
-        "^build",
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        },
-        {
-          "target": "copy-assets",
-          "projects": "self"
-        },
-        {
-          "target": "add-package-json-fields",
-          "projects": "self"
-        }
-      ]
-    },
-    "add-package-json-fields": {
-      "executor": "@nx/workspace-plugin:add-package-json-fields",
-      "dependsOn": [
-        {
-          "target": "copy-assets",
           "projects": "self"
         }
       ]

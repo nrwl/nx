@@ -94,12 +94,6 @@
         "command": "node ./scripts/replace-workspace-protocols.js {projectName}"
       }
     },
-    "add-package-json-fields": {
-      "executor": "@nx/workspace-plugin:add-package-json-fields",
-      "options": {
-        "packageRoot": "dist/packages/{projectName}"
-      }
-    },
     "build": {
       "dependsOn": ["build-base", "build-native"],
       "inputs": ["production", "^production"],
@@ -192,9 +186,6 @@
     "build-ng": {
       "cache": true
     },
-    "build-base-ts": {
-      "cache": true
-    },
     "sitemap": {
       "cache": true
     },
@@ -204,7 +195,7 @@
     "copy-readme": {
       "cache": true
     },
-    "copy-assets": {
+    "legacy-post-build": {
       "cache": true,
       "inputs": ["production", "^production"],
       "outputs": ["{workspaceRoot}/dist/packages/{projectName}"]

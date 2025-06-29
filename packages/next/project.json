@@ -12,8 +12,8 @@
         }
       ]
     },
-    "copy-assets": {
-      "executor": "@nx/workspace-plugin:copy-assets",
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
         "tsConfig": "./tsconfig.lib.json",
         "assets": [
@@ -81,15 +81,11 @@
           "projects": "self"
         },
         {
-          "target": "copy-assets",
+          "target": "legacy-post-build",
           "projects": "self"
         },
         {
           "target": "copy-readme",
-          "projects": "self"
-        },
-        {
-          "target": "add-package-json-fields",
           "projects": "self"
         }
       ]
@@ -100,15 +96,6 @@
         "packageRoot": "dist/packages/next"
       },
       "dependsOn": ["^nx-release-publish"]
-    },
-    "add-package-json-fields": {
-      "executor": "@nx/workspace-plugin:add-package-json-fields",
-      "dependsOn": [
-        {
-          "target": "copy-assets",
-          "projects": "self"
-        }
-      ]
     }
   }
 }
