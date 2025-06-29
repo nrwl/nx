@@ -1,4 +1,10 @@
-import { cleanupProject, newProject, runCLI, updateJson } from '@nx/e2e/utils';
+import {
+  cleanupProject,
+  newProject,
+  runCLI,
+  updateFile,
+  updateJson,
+} from '@nx/e2e/utils';
 
 describe('nx-cloud CI message', () => {
   beforeAll(() => {
@@ -8,6 +14,21 @@ describe('nx-cloud CI message', () => {
   afterAll(() => cleanupProject());
 
   it('should show warning when running in CI without nx-cloud', () => {
+    updateFile(
+      `apps/my-app/project.json`,
+      JSON.stringify({
+        name: 'my-app',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            options: {
+              command: 'echo "Building my-app"',
+            },
+          },
+        },
+      })
+    );
+
     // Remove nx-cloud if present
     updateJson('package.json', (json) => {
       delete json.dependencies?.['nx-cloud'];
@@ -30,7 +51,7 @@ describe('nx-cloud CI message', () => {
       env: { CI: 'true' },
     });
 
-    expect(output).toContain('NX SETUP WARNING: Remote caching disabled');
+    expect(output).toContain('##[error] [CI_SETUP_WARNING]');
     expect(output).toContain('https://cloud.nx.app/get-started');
   });
 
@@ -59,7 +80,7 @@ describe('nx-cloud CI message', () => {
 
     // Add nx-cloud token
     updateJson('nx.json', (json) => {
-      json.nxCloudAccessToken = 'test-token';
+      json.nxCloudAccessToken = process.env.NX_CLOUD_ACCESS_TOKEN;
       return json;
     });
 
@@ -114,7 +135,7 @@ describe('nx-cloud CI message', () => {
     });
 
     // Count occurrences of the warning title
-    const warningCount = (output.match(/NX SETUP WARNING/g) || []).length;
+    const warningCount = (output.match(/\[CI_SETUP_WARNING\]/g) || []).length;
     expect(warningCount).toBe(1);
   });
 
