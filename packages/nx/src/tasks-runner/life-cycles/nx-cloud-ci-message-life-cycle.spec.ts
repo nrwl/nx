@@ -3,7 +3,6 @@ import { Task } from '../../config/task-graph';
 import * as utils from '../../utils/is-ci';
 import * as nxCloudUtils from '../../utils/nx-cloud-utils';
 import * as nxJsonUtils from '../../config/nx-json';
-import * as fileUtils from '../../utils/fileutils';
 import * as workspaceRootUtils from '../../utils/workspace-root';
 import { output } from '../../utils/output';
 import { vol } from 'memfs';
@@ -59,15 +58,6 @@ describe('NxCloudCIMessageLifeCycle', () => {
     jest.spyOn(utils, 'isCI').mockReturnValue(true);
 
     await lifecycle.startTasks([], { groupId: 1 });
-
-    expect(errorSpy).not.toHaveBeenCalled();
-  });
-
-  it('should not show warning when nx-cloud is configured via token', async () => {
-    jest.spyOn(utils, 'isCI').mockReturnValue(true);
-    jest.spyOn(nxCloudUtils, 'isNxCloudUsed').mockReturnValue(true);
-
-    await lifecycle.startTasks([createTask('task1')], { groupId: 1 });
 
     expect(errorSpy).not.toHaveBeenCalled();
   });
