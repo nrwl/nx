@@ -14,12 +14,12 @@ This will **remove** `react` and `jest` from the dependencies and devDependencie
 
 #### Parameters
 
-| Name               | Type                                                | Description                                                                 |
-| :----------------- | :-------------------------------------------------- | :-------------------------------------------------------------------------- |
-| `tree`             | [`Tree`](/reference/core-api/devkit/documents/Tree) | -                                                                           |
-| `dependencies`     | `string`[]                                          | Dependencies to be removed from the dependencies section of package.json    |
-| `devDependencies`  | `string`[]                                          | Dependencies to be removed from the devDependencies section of package.json |
-| `packageJsonPath?` | `string`                                            | -                                                                           |
+| Name              | Type                                                | Default value    | Description                                                                 |
+| :---------------- | :-------------------------------------------------- | :--------------- | :-------------------------------------------------------------------------- |
+| `tree`            | [`Tree`](/reference/core-api/devkit/documents/Tree) | `undefined`      | -                                                                           |
+| `dependencies`    | `string`[]                                          | `undefined`      | Dependencies to be removed from the dependencies section of package.json    |
+| `devDependencies` | `string`[]                                          | `undefined`      | Dependencies to be removed from the devDependencies section of package.json |
+| `packageJsonPath` | `string`                                            | `'package.json'` | -                                                                           |
 
 #### Returns
 

@@ -1,6 +1,6 @@
 import { CLIOutput } from '../output';
 import { getMessageFactory } from './messages';
-import * as ora from 'ora';
+import ora = require('ora');
 
 export type NxCloud =
   | 'yes'

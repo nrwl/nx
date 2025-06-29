@@ -3,7 +3,7 @@ import {
   HubspotForm,
   Strong,
   SectionDescription,
-} from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev-ui-common';
 import { type ReactElement } from 'react';
 import {
   BillIcon,
@@ -17,7 +17,7 @@ import {
   StorybookIcon,
   VmwareIcon,
   ZipariIcon,
-} from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-icons';
 
 export function NxLabsContact(): ReactElement {
   return (

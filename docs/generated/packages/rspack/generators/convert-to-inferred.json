@@ -1,6 +1,6 @@
 {
   "name": "convert-to-inferred",
-  "factory": "./src/generators/convert-to-inferred/convert-to-inferred#convertToInferred",
+  "factory": "./src/generators/convert-to-inferred/convert-to-inferred",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxRspackConvertToInferred",
@@ -22,7 +22,7 @@
     "presets": []
   },
   "description": "Convert existing Rspack project(s) using `@nx/rspack:rspack` executor to use `@nx/rspack/plugin`.",
-  "implementation": "/packages/rspack/src/generators/convert-to-inferred/convert-to-inferred#convertToInferred.ts",
+  "implementation": "/packages/rspack/src/generators/convert-to-inferred/convert-to-inferred.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/rspack/src/generators/convert-to-inferred/schema.json",

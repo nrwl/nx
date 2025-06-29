@@ -1,11 +1,11 @@
-import { DefaultLayout } from '@nx/nx-dev/ui-common';
+import { DefaultLayout } from '@nx/nx-dev-ui-common';
 import {
   Hero,
   LernaBrand,
   NxBrand,
   NxCloudBrand,
   NxConsoleBrand,
-} from '@nx/nx-dev/ui-brands';
+} from '@nx/nx-dev-ui-brands';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {

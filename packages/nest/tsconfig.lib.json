@@ -1,10 +1,12 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "module": "commonjs",
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/packages/nest",
     "declaration": true,
-    "types": ["node"]
+    "types": ["node"],
+    "composite": true,
+    "noEmit": false
   },
   "exclude": [
     "**/*.spec.ts",
@@ -14,5 +16,19 @@
     "jest.config.ts",
     "test-setup.ts"
   ],
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "**/*.json"],
+  "references": [
+    {
+      "path": "../node/tsconfig.lib.json"
+    },
+    {
+      "path": "../eslint/tsconfig.lib.json"
+    },
+    {
+      "path": "../js/tsconfig.lib.json"
+    },
+    {
+      "path": "../devkit/tsconfig.lib.json"
+    }
+  ]
 }

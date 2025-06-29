@@ -7,8 +7,8 @@ import {
   TransitionChild,
 } from '@headlessui/react';
 import { ChangeEvent, Fragment, useMemo, useState } from 'react';
-import { GithubIcon } from '@nx/nx-dev/ui-common';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { GithubIcon } from '@nx/nx-dev-ui-common';
+import { cx } from '@nx/nx-dev-ui-primitives';
 
 import styles from './feature-feedback.module.css';
 

@@ -1,12 +1,18 @@
 'use client';
-import { Fragment, type MouseEvent, ReactElement } from 'react';
-import { NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev/ui-icons';
+import {
+  Fragment,
+  type MouseEvent,
+  ReactElement,
+  useState,
+  useEffect,
+} from 'react';
+import { NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev-ui-icons';
 import {
   Bars3Icon,
   ChevronDownIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
+import { AlgoliaSearch } from '@nx/nx-dev-feature-search';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -59,18 +65,29 @@ export function DocumentationHeader({
   toggleNav: (value: boolean) => void;
 }): ReactElement {
   const router = useRouter();
-  let routerPath = router.asPath;
-  const isCI: boolean = routerPath.startsWith('/ci');
-  const isExtendingNx: boolean = routerPath.startsWith('/extending-nx');
-  const isPlugins: boolean = routerPath.startsWith('/plugin-registry');
-  const isChangelog: boolean = routerPath.startsWith('/changelog');
-  const isAiChat: boolean = router.asPath.startsWith('/ai-chat');
+  const [currentPath, setCurrentPath] = useState<string>('');
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    setCurrentPath(router.asPath);
+  }, [router.asPath]);
+
+  const isCI: boolean = isClient && currentPath.startsWith('/ci');
+  const isExtendingNx: boolean =
+    isClient && currentPath.startsWith('/extending-nx');
+  const isPlugins: boolean =
+    isClient && currentPath.startsWith('/plugin-registry');
+  const isChangelog: boolean = isClient && currentPath.startsWith('/changelog');
+  const isAiChat: boolean = isClient && currentPath.startsWith('/ai-chat');
   const isNx: boolean =
     !isCI && !isExtendingNx && !isPlugins && !isChangelog && !isAiChat;
 
   const handleContextMenu = (e: MouseEvent) => {
     e.preventDefault();
-    router.push('/brands');
+    if (isClient) {
+      router.push('/brands');
+    }
   };
 
   const sections = [

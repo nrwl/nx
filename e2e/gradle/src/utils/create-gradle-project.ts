@@ -3,7 +3,7 @@ import {
   isWindows,
   runCommand,
   tmpProjPath,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { execSync } from 'child_process';
 import { readFileSync } from 'fs';
 import { createFileSync, writeFileSync } from 'fs-extra';

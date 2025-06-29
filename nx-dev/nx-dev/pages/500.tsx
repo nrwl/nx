@@ -1,4 +1,4 @@
-import { Footer, Header } from '@nx/nx-dev/ui-common';
+import { Footer, Header } from '@nx/nx-dev-ui-common';
 import { NextSeo } from 'next-seo';
 import Image from 'next/image';
 import Link from 'next/link';

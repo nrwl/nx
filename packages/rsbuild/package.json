@@ -28,10 +28,14 @@
   "main": "index.js",
   "generators": "./generators.json",
   "executors": "./executors.json",
+  "devDependencies": {
+    "jest": "^29.4.1"
+  },
   "dependencies": {
     "tslib": "^2.3.0",
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
+    "@nx/devkit": "workspace:*",
+    "nx": "workspace:*",
+    "@nx/js": "workspace:*",
     "@rsbuild/core": "1.1.8",
     "minimatch": "9.0.3",
     "@phenomnomnominal/tsquery": "~5.0.1"

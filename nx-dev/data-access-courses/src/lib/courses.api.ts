@@ -1,6 +1,6 @@
 import { readFile, readdir } from 'fs/promises';
 import { join } from 'path';
-import { extractFrontmatter } from '@nx/nx-dev/ui-markdoc';
+import { extractFrontmatter } from '@nx/nx-dev-ui-markdoc';
 import { readFileSync, lstatSync } from 'fs';
 import { Course, Lesson } from './course.types';
 import { calculateTotalDuration } from './duration.utils';

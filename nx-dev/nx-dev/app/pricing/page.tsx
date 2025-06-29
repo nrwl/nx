@@ -5,13 +5,13 @@ import {
   CreditPricing,
   PlansDisplay,
   TrialCallout,
-} from '@nx/nx-dev/ui-pricing';
+} from '@nx/nx-dev-ui-pricing';
 import {
   CallToAction,
   DefaultLayout,
   Testimonials,
   TrustedBy,
-} from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev-ui-common';
 import { gotoAppButton } from '../../lib/components/headerCtaConfigs';
 
 export const metadata: Metadata = {

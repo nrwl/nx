@@ -4,13 +4,13 @@
   "extends": ["@nx/react"],
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init#nextInitGeneratorInternal",
+      "factory": "./src/generators/init/init",
       "schema": "./src/generators/init/schema.json",
       "description": "Initialize the `@nx/next` plugin.",
       "hidden": true
     },
     "application": {
-      "factory": "./src/generators/application/application#applicationGeneratorInternal",
+      "factory": "./src/generators/application/application",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
@@ -27,19 +27,19 @@
       "description": "Create a component."
     },
     "library": {
-      "factory": "./src/generators/library/library#libraryGeneratorInternal",
+      "factory": "./src/generators/library/library",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
       "description": "Create a library."
     },
     "custom-server": {
-      "factory": "./src/generators/custom-server/custom-server#customServerGenerator",
+      "factory": "./src/generators/custom-server/custom-server",
       "schema": "./src/generators/custom-server/schema.json",
       "description": "Set up a custom server."
     },
     "cypress-component-configuration": {
-      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigurationInternal",
+      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration",
       "schema": "./src/generators/cypress-component-configuration/schema.json",
       "description": "cypress-component-configuration generator"
     },

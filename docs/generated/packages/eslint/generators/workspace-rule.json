@@ -1,6 +1,6 @@
 {
   "name": "workspace-rule",
-  "factory": "./src/generators/workspace-rule/workspace-rule#lintWorkspaceRuleGenerator",
+  "factory": "./src/generators/workspace-rule/workspace-rule",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxWorkspaceRule",
@@ -26,7 +26,7 @@
     "presets": []
   },
   "description": "Create a new Workspace ESLint rule.",
-  "implementation": "/packages/eslint/src/generators/workspace-rule/workspace-rule#lintWorkspaceRuleGenerator.ts",
+  "implementation": "/packages/eslint/src/generators/workspace-rule/workspace-rule.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/eslint/src/generators/workspace-rule/schema.json",

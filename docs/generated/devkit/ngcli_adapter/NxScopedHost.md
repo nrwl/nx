@@ -16,7 +16,7 @@
 
 - [\_delegate](/reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#_delegate): Host<any>
 - [\_root](/reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#_root): Path
-- [root](/reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#root): string
+- [root](/reference/core-api/devkit/documents/ngcli_adapter/NxScopedHost#root): any
 
 ### Accessors
 
@@ -84,7 +84,7 @@ virtualFs.ScopedHost.\_root
 
 ### root
 
-• `Private` **root**: `string`
+• `Private` **root**: `any`
 
 ## Accessors
 

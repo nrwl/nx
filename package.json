@@ -4,7 +4,7 @@
   "homepage": "https://nx.dev",
   "private": true,
   "scripts": {
-    "build": "nx run-many --target build --parallel 8 --exclude nx-dev,typedoc-theme,tools-documentation-create-embeddings,nx-dev-util-ai",
+    "build": "nx run-many --target build --parallel 10 --exclude nx-dev,typedoc-theme,tools-documentation-create-embeddings,nx-dev-util-ai",
     "commit": "czg",
     "check-commit": "node ./scripts/commit-lint.js",
     "check-format": "nx format:check --all",
@@ -79,28 +79,29 @@
     "@notionhq/client": "^2.2.15",
     "@nuxt/kit": "^3.10.0",
     "@nuxt/schema": "^3.10.0",
-    "@nx/angular": "21.2.0-beta.4",
+    "@nx/angular": "21.3.0-beta.0",
     "@nx/conformance": "3.0.0",
-    "@nx/cypress": "21.2.0-beta.4",
-    "@nx/devkit": "21.2.0-beta.4",
+    "@nx/cypress": "21.3.0-beta.0",
+    "@nx/devkit": "21.3.0-beta.0",
     "@nx/enterprise-cloud": "3.0.0",
-    "@nx/esbuild": "21.2.0-beta.4",
-    "@nx/eslint": "21.2.0-beta.4",
-    "@nx/eslint-plugin": "21.2.0-beta.4",
-    "@nx/gradle": "21.2.0-beta.4",
-    "@nx/jest": "21.2.0-beta.4",
-    "@nx/js": "21.2.0-beta.4",
+    "@nx/esbuild": "21.3.0-beta.0",
+    "@nx/eslint": "21.3.0-beta.0",
+    "@nx/eslint-plugin": "21.3.0-beta.0",
+    "@nx/gradle": "21.3.0-beta.0",
+    "@nx/jest": "21.3.0-beta.0",
+    "@nx/js": "21.3.0-beta.0",
     "@nx/key": "3.0.0",
-    "@nx/next": "21.2.0-beta.4",
-    "@nx/playwright": "21.2.0-beta.4",
+    "@nx/next": "21.3.0-beta.0",
+    "@nx/playwright": "21.3.0-beta.0",
     "@nx/powerpack-license": "3.0.0",
-    "@nx/react": "21.2.0-beta.4",
-    "@nx/rsbuild": "21.2.0-beta.4",
-    "@nx/rspack": "21.2.0-beta.4",
-    "@nx/storybook": "21.2.0-beta.4",
-    "@nx/vite": "21.2.0-beta.4",
-    "@nx/web": "21.2.0-beta.4",
-    "@nx/webpack": "21.2.0-beta.4",
+    "@nx/react": "21.3.0-beta.0",
+    "@nx/rollup": "21.3.0-beta.0",
+    "@nx/rsbuild": "21.3.0-beta.0",
+    "@nx/rspack": "21.3.0-beta.0",
+    "@nx/storybook": "21.3.0-beta.0",
+    "@nx/vite": "21.3.0-beta.0",
+    "@nx/web": "21.3.0-beta.0",
+    "@nx/webpack": "21.3.0-beta.0",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "@playwright/test": "^1.36.1",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
@@ -146,8 +147,6 @@
     "@types/flat": "^5.0.1",
     "@types/fs-extra": "^11.0.0",
     "@types/is-ci": "^3.0.0",
-    "@types/jasmine": "~2.8.6",
-    "@types/jasminewd2": "~2.0.3",
     "@types/jest": "29.5.12",
     "@types/js-yaml": "^4.0.9",
     "@types/marked": "^2.0.0",
@@ -203,7 +202,6 @@
     "enhanced-resolve": "^5.8.3",
     "esbuild": "0.25.0",
     "eslint": "8.57.0",
-    "eslint-config-next": "15.3.0",
     "eslint-config-prettier": "10.1.2",
     "eslint-plugin-cypress": "2.14.0",
     "eslint-plugin-import": "2.31.0",
@@ -268,7 +266,7 @@
     "ng-packagr": "~20.0.0",
     "npm-package-arg": "11.0.1",
     "nuxt": "^3.10.0",
-    "nx": "21.2.0-beta.4",
+    "nx": "21.3.0-beta.0",
     "nx-mcp": "^0.1.0",
     "octokit": "^2.0.14",
     "open": "^8.4.0",
@@ -372,6 +370,7 @@
     "cliui": "^8.0.1",
     "core-js": "3.36.1",
     "enquirer": "~2.3.6",
+    "eslint-config-next": "14.2.28",
     "fast-glob": "3.3.3",
     "form-data": "^4.0.2",
     "framer-motion": "^11.3.0",
@@ -404,6 +403,15 @@
     "minimist": "^1.2.6",
     "underscore": "^1.12.1"
   },
+  "pnpm": {
+    "patchedDependencies": {
+      "@tutorialkit/react": "patches/@tutorialkit__react.patch"
+    },
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "nx"
+    ]
+  },
   "nx": {
     "includedScripts": [
       "lint-pnpm-lock",
@@ -416,14 +424,5 @@
       "check-codeowners"
     ]
   },
-  "packageManager": "pnpm@10.11.1",
-  "pnpm": {
-    "patchedDependencies": {
-      "@tutorialkit/react": "patches/@tutorialkit__react.patch"
-    },
-    "onlyBuiltDependencies": [
-      "@nestjs/core",
-      "nx"
-    ]
-  }
+  "packageManager": "pnpm@10.11.1"
 }

@@ -4,13 +4,52 @@
   "sourceRoot": "packages/vite",
   "projectType": "library",
   "targets": {
+    "build": {
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "projects": "self"
+        }
+      ]
+    },
+    "copy-readme": {
+      "outputs": ["{workspaceRoot}/dist/packages/vite/README.md"],
+      "command": "node ./scripts/copy-readme.js vite",
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
+    },
     "build-base": {
-      "dependsOn": ["^build-base"],
-      "executor": "@nx/js:swc",
+      "dependsOn": [
+        "^build",
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        },
+        {
+          "target": "legacy-post-build",
+          "projects": "self"
+        },
+        {
+          "target": "copy-readme",
+          "projects": "self"
+        }
+      ]
+    },
+    "nx-release-publish": {
+      "executor": "@nx/js:release-publish",
       "options": {
-        "outputPath": "build/packages/vite",
-        "tsConfig": "packages/vite/tsconfig.lib.json",
-        "main": "packages/vite/index.ts",
+        "packageRoot": "dist/packages/vite"
+      },
+      "dependsOn": ["^nx-release-publish"]
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
+      "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/vite",
@@ -46,11 +85,12 @@
           }
         ]
       },
-      "outputs": ["{options.outputPath}"]
-    },
-    "build": {
-      "outputs": ["{workspaceRoot}/build/packages/vite/README.md"],
-      "command": "node ./scripts/copy-readme.js vite"
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
     }
   }
 }

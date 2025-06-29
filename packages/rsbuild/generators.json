@@ -3,7 +3,7 @@
   "version": "0.1",
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init#initGeneratorInternal",
+      "factory": "./src/generators/init/init",
       "schema": "./src/generators/init/schema.json",
       "description": "Initialize the `@nx/rsbuild` plugin.",
       "aliases": ["ng-add"],

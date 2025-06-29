@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "LegacyPostBuild",
+  "type": "object",
+  "title": "Legacy Post-Build Executor",
+  "description": "Performs post-build tasks like copying assets and adding package.json fields (legacy - will be replaced in future).",
+  "properties": {
+    "assets": {
+      "type": "array",
+      "description": "List of files and globs to copy to the output directory.",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "string",
+                "description": "The input directory path."
+              },
+              "glob": {
+                "type": "string",
+                "description": "Glob pattern to match files within the input directory."
+              },
+              "output": {
+                "type": "string",
+                "description": "The output path relative to the project's output directory."
+              },
+              "ignore": {
+                "type": "array",
+                "description": "List of glob patterns to exclude from copying.",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": ["input", "glob", "output"]
+          }
+        ]
+      }
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "The output path for copied assets, relative to the project root."
+    },
+    "tsConfig": {
+      "type": "string",
+      "description": "Path to TypeScript config file to derive output path from (if outputPath is not specified)."
+    },
+    "packageRoot": {
+      "type": "string",
+      "description": "Path to the package directory where package.json is located."
+    },
+    "addPackageJsonFields": {
+      "type": "boolean",
+      "description": "Whether to add required package.json fields like 'types' and 'type'.",
+      "default": true
+    }
+  }
+}

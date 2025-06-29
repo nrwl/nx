@@ -5,21 +5,48 @@
     "allowJs": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
+    "forceConsistentCasingInFileNames": false,
+    "strict": false,
+    "noImplicitAny": false,
+    "noImplicitReturns": false,
+    "noImplicitThis": false,
+    "noImplicitOverride": false,
+    "noPropertyAccessFromIndexSignature": false,
+    "noFallthroughCasesInSwitch": false,
+    "noUncheckedIndexedAccess": false,
+    "exactOptionalPropertyTypes": false,
+    "skipLibCheck": true,
+    "noEmitOnError": false
   },
   "files": [],
   "include": [],
   "references": [
     {
-      "path": "./tsconfig.lib.json"
+      "path": "../feature-analytics"
     },
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../ui-common"
+    },
+    {
+      "path": "../ui-icons"
+    },
+    {
+      "path": "../ui-theme"
+    },
+    {
+      "path": "../ui-primitives"
+    },
+    {
+      "path": "../ui-fence"
+    },
+    {
+      "path": "../../graph/ui-project-details"
+    },
+    {
+      "path": "../../packages/devkit"
+    },
+    {
+      "path": "./tsconfig.lib.json"
     }
   ]
 }

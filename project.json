@@ -7,7 +7,7 @@
       "options": {
         "port": 4873,
         "config": ".verdaccio/config.yml",
-        "storage": "build/local-registry/storage",
+        "storage": "dist/local-registry/storage",
         "clear": false
       }
     },
@@ -29,7 +29,7 @@
         }
       ],
       "command": "node ./scripts/local-registry/run-populate-storage.mjs",
-      "outputs": ["{workspaceRoot}/build/local-registry/storage"]
+      "outputs": ["{workspaceRoot}/dist/local-registry/storage"]
     },
     "nx-release": {
       "dependsOn": [

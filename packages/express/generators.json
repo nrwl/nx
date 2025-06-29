@@ -4,14 +4,14 @@
   "extends": ["@nx/workspace"],
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init#initGenerator",
+      "factory": "./src/generators/init/init",
       "schema": "./src/generators/init/schema.json",
       "description": "Initialize the `@nx/express` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },
     "application": {
-      "factory": "./src/generators/application/application#applicationGeneratorInternal",
+      "factory": "./src/generators/application/application",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",

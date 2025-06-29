@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import { NextSeo } from 'next-seo';
-import { ButtonLinkProps, DefaultLayout } from '@nx/nx-dev/ui-common';
+import { ButtonLinkProps, DefaultLayout } from '@nx/nx-dev-ui-common';
 import {
   AllSpeedNoStress,
   CustomerLogos,
@@ -11,7 +11,7 @@ import {
   SolutionsEngineeringTestimonials,
   SolutionsFaq,
   SolutionsTopCallToAction,
-} from '@nx/nx-dev/ui-enterprise';
+} from '@nx/nx-dev-ui-enterprise';
 import { type ReactElement } from 'react';
 
 export function EnterpriseSolutionsEngineering(): ReactElement {

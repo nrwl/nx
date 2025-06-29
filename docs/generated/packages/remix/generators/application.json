@@ -1,6 +1,6 @@
 {
   "name": "application",
-  "implementation": "/packages/remix/src/generators/application/application.impl#remixApplicationGeneratorInternal.ts",
+  "implementation": "/packages/remix/src/generators/application/application.impl.ts",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxRemixApplication",

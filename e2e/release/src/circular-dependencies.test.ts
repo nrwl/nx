@@ -6,7 +6,7 @@ import {
   runCommandAsync,
   uniq,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { execSync } from 'node:child_process';
 import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 

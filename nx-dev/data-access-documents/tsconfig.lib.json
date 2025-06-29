@@ -4,9 +4,26 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "outDir": "../../dist/out-tsc",
-    "types": ["node"]
+    "outDir": "../../dist/out-tsc/nx-dev/data-access-documents",
+    "types": ["node"],
+    "composite": true,
+    "declaration": true,
+    "jsx": "react-jsx"
   },
+  "references": [
+    {
+      "path": "../ui-markdoc/tsconfig.lib.json"
+    },
+    {
+      "path": "../models-package/tsconfig.lib.json"
+    },
+    {
+      "path": "../models-document/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/devkit/tsconfig.lib.json"
+    }
+  ],
   "include": ["**/*.ts"],
   "exclude": ["**/*.spec.ts", "**/*.test.ts", "jest.config.ts"]
 }

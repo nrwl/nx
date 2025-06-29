@@ -1,6 +1,6 @@
 {
   "name": "setup-ssr",
-  "factory": "./src/generators/setup-ssr/setup-ssr#setupSsrGenerator",
+  "factory": "./src/generators/setup-ssr/setup-ssr",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "GeneratorReactSSRSetup",
@@ -53,7 +53,7 @@
   },
   "description": "Set up SSR configuration for a project.",
   "hidden": false,
-  "implementation": "/packages/react/src/generators/setup-ssr/setup-ssr#setupSsrGenerator.ts",
+  "implementation": "/packages/react/src/generators/setup-ssr/setup-ssr.ts",
   "aliases": [],
   "path": "/packages/react/src/generators/setup-ssr/schema.json",
   "type": "generator"

@@ -1,4 +1,4 @@
-import { BlogPostDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
+import { BlogPostDataEntry } from '@nx/nx-dev-data-access-documents/node-only';
 import { BlogEntry } from './blog-entry';
 
 interface FeaturedBlogsProps {

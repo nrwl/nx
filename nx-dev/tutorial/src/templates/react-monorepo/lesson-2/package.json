@@ -1,9 +1,9 @@
 {
   "name": "@react-monorepo/source",
   "version": "0.0.0",
+  "private": true,
   "license": "MIT",
   "scripts": {},
-  "private": true,
   "dependencies": {
     "react": "19.0.0",
     "react-dom": "19.0.0",

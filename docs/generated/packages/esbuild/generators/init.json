@@ -1,6 +1,6 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init#esbuildInitGenerator",
+  "factory": "./src/generators/init/init",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxEsbuildInit",
@@ -32,7 +32,7 @@
   "description": "Initialize the `@nx/esbuild` plugin.",
   "aliases": ["ng-add"],
   "hidden": true,
-  "implementation": "/packages/esbuild/src/generators/init/init#esbuildInitGenerator.ts",
+  "implementation": "/packages/esbuild/src/generators/init/init.ts",
   "path": "/packages/esbuild/src/generators/init/schema.json",
   "type": "generator"
 }

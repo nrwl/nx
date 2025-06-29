@@ -93,8 +93,6 @@ Error.cause
 
 • `Readonly` **errors**: [file: string, error: Error][]
 
-An array of tuples that represent errors encountered when processing a given file. An example entry might look like ['path/to/project.json', [Error: 'Invalid JSON. Unexpected token 'a' in JSON at position 0]]
-
 ---
 
 ### message
@@ -120,8 +118,6 @@ Error.name
 ### partialResults
 
 • `Readonly` **partialResults**: [`CreateNodesResultV2`](/reference/core-api/devkit/documents/CreateNodesResultV2)
-
-The partial results of the `createNodesV2` function. This should be the results for each file that didn't encounter an issue.
 
 ---
 

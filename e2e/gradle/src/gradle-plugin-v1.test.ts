@@ -9,7 +9,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { basename, dirname, join } from 'path';
 
 import { createGradleProject } from './utils/create-gradle-project';

@@ -8,12 +8,12 @@ import {
   Statistics,
   TrustedBy,
   UnderstandWorkspace,
-} from '@nx/nx-dev/ui-cloud';
+} from '@nx/nx-dev-ui-cloud';
 import {
   ButtonLinkProps,
   CallToAction,
   DefaultLayout,
-} from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev-ui-common';
 import type { Metadata } from 'next';
 import { ReactElement } from 'react';
 

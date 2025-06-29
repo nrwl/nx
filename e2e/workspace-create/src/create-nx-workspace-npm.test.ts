@@ -8,7 +8,7 @@ import {
   runCommand,
   runCreateWorkspace,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('create-nx-workspace --preset=npm', () => {
   const wsName = uniq('npm');

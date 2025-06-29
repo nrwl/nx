@@ -6,7 +6,7 @@ import {
   runCLI,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { execSync } from 'child_process';
 
 describe('inlining', () => {

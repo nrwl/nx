@@ -14,10 +14,16 @@
   "include": [],
   "references": [
     {
-      "path": "./tsconfig.lib.json"
+      "path": "../ui-common"
     },
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../ui-member-card"
+    },
+    {
+      "path": "../ui-sponsor-card"
+    },
+    {
+      "path": "./tsconfig.lib.json"
     }
   ]
 }

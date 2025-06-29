@@ -18,10 +18,6 @@
         "cwd": "{projectRoot}"
       }
     },
-    "build": {
-      "inputs": ["{projectRoot}/src/**/**"],
-      "outputs": ["{projectRoot}/dist"]
-    },
     "lint": {
       "command": "echo no linting",
       "cache": true

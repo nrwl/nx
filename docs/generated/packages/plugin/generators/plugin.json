@@ -1,6 +1,6 @@
 {
   "name": "plugin",
-  "factory": "./src/generators/plugin/plugin#pluginGeneratorInternal",
+  "factory": "./src/generators/plugin/plugin",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -102,7 +102,7 @@
     "presets": []
   },
   "description": "Create a Nx Plugin.",
-  "implementation": "/packages/plugin/src/generators/plugin/plugin#pluginGeneratorInternal.ts",
+  "implementation": "/packages/plugin/src/generators/plugin/plugin.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/plugin/src/generators/plugin/schema.json",

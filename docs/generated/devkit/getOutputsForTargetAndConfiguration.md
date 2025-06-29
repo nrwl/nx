@@ -19,8 +19,6 @@ Pass the target and overrides instead. This will be removed in v20.
 
 ▸ **getOutputsForTargetAndConfiguration**(`target`, `overrides`, `node`): `string`[]
 
-Returns the list of outputs that will be cached.
-
 #### Parameters
 
 | Name        | Type                                                                                                                              |

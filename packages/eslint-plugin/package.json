@@ -34,8 +34,8 @@
     }
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
+    "@nx/devkit": "workspace:*",
+    "@nx/js": "workspace:*",
     "@typescript-eslint/type-utils": "^8.0.0",
     "@typescript-eslint/utils": "^8.0.0",
     "chalk": "^4.1.0",
@@ -44,6 +44,9 @@
     "jsonc-eslint-parser": "^2.1.0",
     "semver": "^7.5.3",
     "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "jest": "^29.4.1"
   },
   "publishConfig": {
     "access": "public"

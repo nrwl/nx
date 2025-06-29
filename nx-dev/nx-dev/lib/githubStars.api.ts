@@ -24,7 +24,7 @@ export async function fetchGithubStarCount() {
       });
 
       return responseData.data.stargazers_count;
-    } catch (e) {
+    } catch {
       return 0; // fallback, will hide GitHub star widget
     }
   })();
