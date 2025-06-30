@@ -30,6 +30,6 @@ export function isJsonMessage(message: string): boolean {
     // strings
     (message.startsWith('"') && message.endsWith('"')) ||
     // numbers
-    /^[0-9]+(.?[0-9]+)?$/.test(message)
+/^[0-9]+(\\.?[0-9]+)?$/.test(message)
   );
 }
