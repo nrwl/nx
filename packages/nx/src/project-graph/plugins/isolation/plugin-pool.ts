@@ -329,7 +329,9 @@ function getPendingPromise(tx: string, pending: Map<string, PendingPromise>) {
   if (!pendingPromise) {
     throw new Error(
       `No pending promise found for transaction "${tx}". This may indicate a bug in the plugin pool. Currently pending promises:\n` +
-        Object.keys(pending).map((t) => `  -  ${t}`).join('\n')
+        Array.from(pending.keys())
+          .map((t) => `  -  ${t}`)
+          .join('\n')
     );
   }
 
