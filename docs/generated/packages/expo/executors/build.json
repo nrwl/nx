@@ -1,0 +1,96 @@
+{
+  "name": "build",
+  "implementation": "/packages/expo/src/executors/build/build.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "$schema": "https://json-schema.org/schema",
+    "$id": "NxExpoEasBuild",
+    "cli": "nx",
+    "title": "Expo EAS Build executor",
+    "description": "Start an EAS build for your expo project.",
+    "type": "object",
+    "presets": [
+      { "name": "Build for a specific platform", "keys": ["platform"] },
+      { "name": "Build using a specific profile", "keys": ["profile"] },
+      { "name": "Run build locally", "keys": ["local"] },
+      { "name": "Clear cache before the build", "keys": ["clearCache"] }
+    ],
+    "properties": {
+      "platform": {
+        "enum": ["ios", "android", "all"],
+        "alias": "p",
+        "description": "The platform to build the app, exaple values: ios, android, all.",
+        "x-priority": "important"
+      },
+      "json": {
+        "type": "boolean",
+        "description": "Enable JSON output, non-JSON messages will be printed to stderr",
+        "default": false
+      },
+      "profile": {
+        "type": "string",
+        "description": "Name of the build profile from eas.json. Defaults to \"production\" if defined in eas.json.",
+        "examples": ["production", "development", "preview"],
+        "x-priority": "important"
+      },
+      "interactive": {
+        "type": "boolean",
+        "description": "Run command in interactive mode",
+        "default": true
+      },
+      "local": {
+        "type": "boolean",
+        "description": "Run build locally [experimental]",
+        "default": false
+      },
+      "output": {
+        "type": "string",
+        "description": "Output path for local build",
+        "examples": ["../../dist/MyApp.tar.gz", "../../dist"]
+      },
+      "wait": {
+        "type": "boolean",
+        "description": "Wait for build(s) to complete",
+        "default": true
+      },
+      "clearCache": {
+        "type": "boolean",
+        "description": "Clear cache before the build",
+        "default": false
+      },
+      "autoSubmit": {
+        "type": "boolean",
+        "description": "Submit on build complete using the submit profile with the same name as the build profile",
+        "default": false
+      },
+      "autoSubmitWithProfile": {
+        "type": "string",
+        "description": "Submit on build complete using the submit profile with provided name",
+        "examples": ["production", "development", "preview"]
+      },
+      "message": {
+        "type": "string",
+        "description": "A short message describing the build",
+        "examples": ["My message"]
+      },
+      "buildLoggerLevel": {
+        "type": "string",
+        "description": "The level of logs to output during the build process.",
+        "enum": ["trace", "debug", "info", "warn", "error", "fatal"],
+        "default": "info"
+      },
+      "freezeCredentials": {
+        "type": "boolean",
+        "description": "Prevent the build from updating credentials in non-interactive mode",
+        "default": false
+      }
+    },
+    "required": []
+  },
+  "description": "Start an EAS build for your expo project",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/expo/src/executors/build/schema.json",
+  "type": "executor"
+}

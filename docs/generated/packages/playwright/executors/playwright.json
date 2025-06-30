@@ -1,0 +1,167 @@
+{
+  "name": "playwright",
+  "implementation": "/packages/playwright/src/executors/playwright/playwright.impl.ts",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "version": 2,
+    "title": "Playwright executor",
+    "description": "Run Playwright tests.",
+    "type": "object",
+    "properties": {
+      "browser": {
+        "type": "string",
+        "description": "Browser to use for tests, one of 'all', 'chromium', 'firefox' or 'webkit'. If a playwright config is provided/discovered then the browserName value is expected from the configured 'projects'",
+        "x-priority": "important"
+      },
+      "config": {
+        "type": "string",
+        "description": "Configuration file, or a test directory with optional",
+        "x-completion-type": "file",
+        "x-completion-glob": "playwright?(*)@(.js|.cjs|.mjs|.ts|.cts|.mtx)",
+        "x-priority": "important"
+      },
+      "debug": {
+        "type": "boolean",
+        "description": "Run tests with Playwright Inspector. Shortcut for 'PWDEBUG=1' environment variable and '--timeout=0',--max-failures=1 --headed --workers=1' options"
+      },
+      "lastFailed": {
+        "type": "boolean",
+        "description": "Run only the tests that failed in the last run"
+      },
+      "forbidOnly": {
+        "type": "boolean",
+        "description": "Fail if test.only is called"
+      },
+      "fullyParallel": {
+        "type": "boolean",
+        "description": "Run all tests in parallel"
+      },
+      "grep": {
+        "alias": "g",
+        "type": "string",
+        "description": "Only run tests matching this regular expression"
+      },
+      "globalTimeout": {
+        "type": "number",
+        "description": "Maximum time this test suite can run in milliseconds"
+      },
+      "grepInvert": {
+        "alias": "gv",
+        "type": "string",
+        "description": "Only run tests that do not match this regular expression"
+      },
+      "testFiles": {
+        "alias": "t",
+        "type": "array",
+        "description": "Test files to run",
+        "items": { "type": "string" }
+      },
+      "headed": {
+        "type": "boolean",
+        "description": "Run tests in headed browsers",
+        "x-priority": "important"
+      },
+      "ignoreSnapshots": {
+        "type": "boolean",
+        "description": "Ignore screenshot and snapshot expectations"
+      },
+      "workers": {
+        "alias": "j",
+        "oneOf": [{ "type": "number" }, { "type": "string" }],
+        "description": "Number of concurrent workers or percentage of logical CPU cores, use 1 to run in a single worker"
+      },
+      "list": {
+        "type": "boolean",
+        "description": "Collect all the tests and report them, but do not run"
+      },
+      "maxFailures": {
+        "alias": "x",
+        "oneOf": [{ "type": "number" }, { "type": "boolean" }],
+        "description": "Stop after the first N failures"
+      },
+      "noDeps": {
+        "type": "boolean",
+        "description": "Do not run project dependencies"
+      },
+      "output": {
+        "type": "string",
+        "description": "Folder for output artifacts"
+      },
+      "passWithNoTests": {
+        "type": "boolean",
+        "description": "Makes test run succeed even if no tests were found",
+        "default": true
+      },
+      "project": {
+        "description": "Only run tests from the specified list of projects",
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "quiet": {
+        "alias": "q",
+        "type": "boolean",
+        "description": "Suppress stdio"
+      },
+      "repeatEach": {
+        "type": "number",
+        "description": "Run each test N times"
+      },
+      "reporter": {
+        "type": "string",
+        "description": "Common Reporter values to use, comma-separated, 'list', 'line', 'dot', 'json', 'junit', 'null', 'github', 'html', 'blob'. To configure reporter options, use the playwright configuration."
+      },
+      "retries": {
+        "type": "number",
+        "description": "Maximum retry count for flaky tests, zero for no retries"
+      },
+      "shard": {
+        "type": "string",
+        "description": "Shard tests and execute only the selected shard, specify in the form 'current/all', 1-based, for example '3/5'"
+      },
+      "timeout": {
+        "type": "number",
+        "description": "Specify test timeout threshold in milliseconds, zero for unlimited"
+      },
+      "trace": {
+        "type": "string",
+        "enum": [
+          "on",
+          "off",
+          "on-first-retry",
+          "on-all-retries",
+          "retain-on-failure"
+        ],
+        "description": "Force tracing mode, can be 'on', 'off', 'on-first-retry', 'on-all-retries', 'retain-on-failure'"
+      },
+      "updateSnapshots": {
+        "alias": "u",
+        "type": "boolean",
+        "description": "Update snapshots with actual results. Snapshots will be created if missing."
+      },
+      "ui": {
+        "type": "boolean",
+        "description": "Run tests in interactive UI mode"
+      },
+      "uiHost": {
+        "type": "string",
+        "description": "Host to serve UI on; specifying this option opens UI in a browser tab"
+      },
+      "uiPort": {
+        "type": "number",
+        "description": "Port to serve UI on, 0 for any free port; specifying this option opens UI in a browser tab"
+      },
+      "skipInstall": {
+        "type": "boolean",
+        "description": "Skip running playwright install before running playwright tests. This is to ensure that playwright browsers are installed before running tests.",
+        "default": false
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "Run Playwright tests.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/playwright/src/executors/playwright/schema.json",
+  "type": "executor"
+}

@@ -1,0 +1,44 @@
+{
+  "name": "sync-deps",
+  "implementation": "/packages/expo/src/executors/sync-deps/sync-deps.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "cli": "nx",
+    "$id": "NxExpoSyncDeps",
+    "$schema": "https://json-schema.org/schema",
+    "title": "Sync Deps for Expo",
+    "description": "Updates package.json with project dependencies.",
+    "type": "object",
+    "properties": {
+      "include": {
+        "type": "array",
+        "items": { "type": "string" },
+        "default": [],
+        "description": "An array of additional npm packages to include."
+      },
+      "exclude": {
+        "type": "array",
+        "items": { "type": "string" },
+        "default": [],
+        "description": "An array of npm packages to exclude."
+      },
+      "all": {
+        "type": "boolean",
+        "description": "Copy all dependencies and devDependencies from the workspace root package.json.",
+        "default": false
+      },
+      "excludeImplicit": {
+        "type": "boolean",
+        "description": "This will ignore npm packages from projects listed in implicitDependencies (e.g. backend API projects)",
+        "default": false
+      }
+    },
+    "presets": []
+  },
+  "description": "Syncs dependencies to package.json (required for autolinking).",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/expo/src/executors/sync-deps/schema.json",
+  "type": "executor"
+}

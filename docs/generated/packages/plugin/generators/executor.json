@@ -1,0 +1,62 @@
+{
+  "name": "executor",
+  "factory": "./src/generators/executor/executor",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "NxPluginExecutor",
+    "title": "Create an Executor for an Nx Plugin",
+    "description": "Create an Executor for an Nx Plugin.",
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Basic executor\" %}\n\nCreate a new executor called `build` at `tools/my-plugin/src/executors/build.ts`:\n\n```bash\nnx g @nx/plugin:executor tools/my-plugin/src/executors/build.ts\n```\n\n{% /tab %}\n{% tab label=\"Without providing the file extension\" %}\n\nCreate a new executor called `build` at `tools/my-plugin/src/executors/build.ts`:\n\n```bash\nnx g @nx/plugin:executor tools/my-plugin/src/executors/build\n```\n\n{% /tab %}\n{% tab label=\"With different exported name\" %}\n\nCreate a new executor called `custom` at `tools/my-plugin/src/executors/build.ts`:\n\n```bash\nnx g @nx/plugin:executor tools/my-plugin/src/executors/build.ts --name=custom\n```\n\n{% /tab %}\n{% tab label=\"With custom hashing\" %}\n\nCreate a new executor called `build` at `tools/my-plugin/src/executors/build.ts`, that uses a custom hashing function:\n\n```bash\nnx g @nx/plugin:executor tools/my-plugin/src/executors/build --includeHasher\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string",
+        "description": "The file path to the executor. Relative to the current working directory.",
+        "x-prompt": "What is the executor file path?",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-priority": "important"
+      },
+      "name": {
+        "type": "string",
+        "description": "The executor name to export in the plugin executors collection."
+      },
+      "description": {
+        "type": "string",
+        "description": "Executor description.",
+        "x-priority": "important"
+      },
+      "unitTestRunner": {
+        "type": "string",
+        "enum": ["jest", "vitest", "none"],
+        "description": "Test runner to use for unit tests.",
+        "default": "jest"
+      },
+      "includeHasher": {
+        "type": "boolean",
+        "default": false,
+        "description": "Should the boilerplate for a custom hasher be generated?"
+      },
+      "skipLintChecks": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not add an eslint configuration for plugin json files."
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "description": "Skip formatting files.",
+        "default": false,
+        "x-priority": "internal"
+      }
+    },
+    "required": ["path"],
+    "additionalProperties": false,
+    "presets": []
+  },
+  "description": "Create an executor for an Nx Plugin.",
+  "implementation": "/packages/plugin/src/generators/executor/executor.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/plugin/src/generators/executor/schema.json",
+  "type": "generator"
+}

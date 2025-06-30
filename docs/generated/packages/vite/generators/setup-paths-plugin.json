@@ -1,0 +1,25 @@
+{
+  "name": "setup-paths-plugin",
+  "factory": "./src/generators/setup-paths-plugin/setup-paths-plugin",
+  "schema": {
+    "cli": "nx",
+    "title": "Sets up the nxViteTsPaths plugin.",
+    "description": "Updates vite config files to enable support for workspace libraries via the nxViteTsPaths plugin.",
+    "$id": "setup-paths-plugin-vite-plugin",
+    "type": "object",
+    "properties": {
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "presets": []
+  },
+  "description": "Sets up the nxViteTsPaths plugin to enable support for workspace libraries.",
+  "implementation": "/packages/vite/src/generators/setup-paths-plugin/setup-paths-plugin.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/vite/src/generators/setup-paths-plugin/schema.json",
+  "type": "generator"
+}

@@ -1,0 +1,46 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/init#jestInitGeneratorInternal",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "$id": "NxJestInit",
+    "cli": "nx",
+    "title": "Jest init",
+    "description": "Add Jest Configuration to a workspace.",
+    "type": "object",
+    "properties": {
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      },
+      "skipPackageJson": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not add dependencies to `package.json`.",
+        "x-priority": "internal"
+      },
+      "keepExistingVersions": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Keep existing dependencies versions",
+        "default": false
+      },
+      "updatePackageScripts": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Update `package.json` scripts with inferred targets",
+        "default": false
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "Initialize the `@nx/jest` plugin.",
+  "aliases": ["ng-add"],
+  "hidden": true,
+  "implementation": "/packages/jest/src/generators/init/init#jestInitGeneratorInternal.ts",
+  "path": "/packages/jest/src/generators/init/schema.json",
+  "type": "generator"
+}

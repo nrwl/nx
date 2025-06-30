@@ -1,0 +1,39 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/init#webInitGenerator",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "$id": "NxWebInit",
+    "cli": "nx",
+    "title": "Init Web Plugin",
+    "description": "Init Web Plugin.",
+    "type": "object",
+    "properties": {
+      "skipFormat": {
+        "description": "Skip formatting files",
+        "type": "boolean",
+        "default": false
+      },
+      "skipPackageJson": {
+        "description": "Do not add dependencies to `package.json`.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      },
+      "keepExistingVersions": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Keep existing dependencies versions",
+        "default": false
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "Add `@nrwl/web` to a project.",
+  "hidden": true,
+  "implementation": "/packages/web/src/generators/init/init#webInitGenerator.ts",
+  "aliases": [],
+  "path": "/packages/web/src/generators/init/schema.json",
+  "type": "generator"
+}

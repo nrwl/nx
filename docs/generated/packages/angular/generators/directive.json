@@ -1,0 +1,99 @@
+{
+  "name": "directive",
+  "factory": "./src/generators/directive/directive",
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "GeneratorAngularDirective",
+    "cli": "nx",
+    "title": "Nx Angular Directive Options Schema",
+    "type": "object",
+    "description": "Creates a new Angular directive.",
+    "additionalProperties": false,
+    "examples": [
+      {
+        "description": "Generate a directive with the exported symbol matching the file name. It results in the directive `FooDirective` at `mylib/src/lib/foo.directive.ts`",
+        "command": "nx g @nx/angular:directive mylib/src/lib/foo.directive.ts"
+      },
+      {
+        "description": "Generate a directive without providing the file extension. It results in the directive `Foo` at `mylib/src/lib/foo.ts`",
+        "command": "nx g @nx/angular:directive mylib/src/lib/foo"
+      },
+      {
+        "description": "Generate a directive with a given type/suffix. It results in the directive `FooDirective` at `mylib/src/lib/foo.directive.ts`",
+        "command": "nx g @nx/angular:directive mylib/src/lib/foo --type=directive"
+      },
+      {
+        "description": "Generate a directive with the exported symbol different from the file name. It results in the directive `Custom` at `mylib/src/lib/foo.ts`",
+        "command": "nx g @nx/angular:directive mylib/src/lib/foo --name=custom"
+      }
+    ],
+    "properties": {
+      "path": {
+        "type": "string",
+        "description": "The file path to the directive. Relative to the current working directory.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What is the directive file path?"
+      },
+      "name": {
+        "type": "string",
+        "description": "The directive symbol name. Defaults to the last segment of the file path."
+      },
+      "prefix": {
+        "type": "string",
+        "description": "A prefix to apply to generated selectors.",
+        "alias": "p",
+        "oneOf": [
+          { "maxLength": 0 },
+          { "minLength": 1, "format": "html-selector" }
+        ]
+      },
+      "skipTests": {
+        "type": "boolean",
+        "description": "Do not create \"spec.ts\" test files for the new class.",
+        "default": false
+      },
+      "skipImport": {
+        "type": "boolean",
+        "description": "Do not import this directive into the owning NgModule.",
+        "default": false
+      },
+      "selector": {
+        "type": "string",
+        "format": "html-selector",
+        "description": "The HTML selector to use for this directive."
+      },
+      "standalone": {
+        "description": "Whether the generated directive is standalone.",
+        "type": "boolean",
+        "default": true
+      },
+      "module": {
+        "type": "string",
+        "description": "The filename of the declaring NgModule.",
+        "alias": "m"
+      },
+      "export": {
+        "type": "boolean",
+        "default": false,
+        "description": "The declaring NgModule exports this directive."
+      },
+      "type": {
+        "type": "string",
+        "description": "Append a custom type to the directive's filename. It defaults to 'directive' for Angular versions below v20. For Angular v20 and above, no type is appended unless specified."
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "default": false,
+        "description": "Skip formatting of files."
+      }
+    },
+    "required": ["path"],
+    "presets": []
+  },
+  "aliases": ["d"],
+  "description": "Generate an Angular directive.",
+  "implementation": "/packages/angular/src/generators/directive/directive.ts",
+  "hidden": false,
+  "path": "/packages/angular/src/generators/directive/schema.json",
+  "type": "generator"
+}

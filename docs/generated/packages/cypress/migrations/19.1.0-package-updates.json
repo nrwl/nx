@@ -1,0 +1,19 @@
+{
+  "name": "19.1.0-package-updates",
+  "version": "19.1.0-beta.0",
+  "requires": { "cypress": "^13.0.0" },
+  "packages": {
+    "cypress": { "version": "^13.8.0", "alwaysAddToPackageJson": false },
+    "@cypress/webpack-dev-server": {
+      "version": "^3.8.0",
+      "alwaysAddToPackageJson": false
+    }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/cypress",
+  "schema": null,
+  "type": "migration"
+}

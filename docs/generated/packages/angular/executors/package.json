@@ -1,0 +1,49 @@
+{
+  "name": "package",
+  "implementation": "/packages/angular/src/executors/package/package.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "$schema": "https://json-schema.org/schema",
+    "title": "ng-packagr Target",
+    "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\n\nThis executor is a drop-in replacement for the `@angular-devkit/build-angular:ng-packagr` and `@angular/build:ng-packagr` builders, with additional support for incremental builds.",
+    "cli": "nx",
+    "type": "object",
+    "presets": [
+      {
+        "name": "Updating Project Dependencies for Publishable Library",
+        "keys": [
+          "project"
+        ]
+      }
+    ],
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The file path for the ng-packagr configuration file, relative to the workspace root."
+      },
+      "tsConfig": {
+        "type": "string",
+        "description": "The full path for the TypeScript configuration file, relative to the workspace root.",
+        "x-completion-type": "file",
+        "x-completion-glob": "tsconfig.*.json",
+        "x-priority": "important"
+      },
+      "watch": {
+        "type": "boolean",
+        "description": "Whether to run a build when any file changes.",
+        "default": false
+      },
+      "poll": {
+        "type": "number",
+        "description": "Enable and define the file watching poll time period in milliseconds."
+      }
+    },
+    "additionalProperties": false
+  },
+  "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\n\nThis executor is a drop-in replacement for the `@angular-devkit/build-angular:ng-packagr` and `@angular/build:ng-packagr` builders, with additional support for incremental builds.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/executors/package/schema.json",
+  "type": "executor"
+}

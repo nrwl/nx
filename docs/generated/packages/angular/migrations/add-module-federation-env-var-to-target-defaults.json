@@ -1,0 +1,14 @@
+{
+  "name": "add-module-federation-env-var-to-target-defaults",
+  "cli": "nx",
+  "version": "18.0.0-beta.0",
+  "description": "Add NX_MF_DEV_SERVER_STATIC_REMOTES to inputs for task hashing when '@nx/angular:webpack-browser' is used for Module Federation.",
+  "factory": "./src/migrations/update-18-0-0/add-mf-env-var-to-target-defaults",
+  "implementation": "/packages/angular/src/migrations/update-18-0-0/add-mf-env-var-to-target-defaults.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

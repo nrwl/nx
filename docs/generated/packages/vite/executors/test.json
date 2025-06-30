@@ -1,0 +1,43 @@
+{
+  "name": "test",
+  "implementation": "/packages/vite/src/executors/test/vitest.impl.ts",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "version": 2,
+    "cli": "nx",
+    "title": "Vitest executor",
+    "description": "Test using Vitest.",
+    "type": "object",
+    "properties": {
+      "configFile": {
+        "type": "string",
+        "description": "The path to the local vitest config, relative to the workspace root.",
+        "x-completion-type": "file",
+        "x-completion-glob": "@(vitest|vite).config@(.js|.ts)",
+        "aliases": ["config"]
+      },
+      "reportsDirectory": {
+        "type": "string",
+        "description": "Directory to write coverage report to."
+      },
+      "mode": { "type": "string", "description": "Mode for Vite." },
+      "testFiles": {
+        "aliases": ["testFile"],
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "watch": {
+        "description": "Watch files for changes and rerun tests related to changed files.",
+        "type": "boolean"
+      }
+    },
+    "required": [],
+    "examplesFile": "---\ntitle: Examples for the Vitest executor\ndescription: This page contains examples for the Vitest @nx/vite:test executor.\n---\n\n`project.json`:\n\n```json\n//...\n\"my-app\": {\n    \"targets\": {\n        //...\n        \"test\": {\n            \"executor\": \"@nx/vite:test\",\n            //...\n            //...\n            \"options\": {\n                \"config\": \"apps/my-app/vite.config.ts\"\n            }\n            //...\n        }\n    }\n}\n```\n\n```bash\nnx test my-app\n```\n\n## Examples\n\n{% tabs %}\n\n{% tab label=\"Running in watch mode\" %}\nTo run testing in watch mode, you can create a new configuration within your test target, and have watch set to true. For example:\n\n```json\n\"my-app\": {\n    \"targets\": {\n        //...\n        \"test\": {\n            \"executor\": \"@nx/vite:test\",\n            //...\n            //...\n            \"options\": {\n                \"config\": \"apps/my-app/vite.config.ts\"\n            },\n            \"configurations\": {\n                \"watch\": {\n                    \"watch\": true\n                }\n            }\n        }\n    }\n}\n```\n\nAnd then run `nx run my-app:test:watch`.\n\nAlternatively, you can just run the default test target with the `--watch` flag preset, like so:\n\n```bash\nnx run my-app:test --watch\n```\n\n{% /tab %}\n{% tab label=\"Updating snapshots\" %}\nWhenever a test fails because of an outdated snapshot, you can tell vitest to update them with the following:\n\n```bash\nnx run my-app:test -u\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
+    "presets": []
+  },
+  "description": "Test with Vitest",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/vite/src/executors/test/schema.json",
+  "type": "executor"
+}

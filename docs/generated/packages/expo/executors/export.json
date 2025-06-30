@@ -1,0 +1,56 @@
+{
+  "name": "export",
+  "implementation": "/packages/expo/src/executors/export/export.impl.ts",
+  "schema": {
+    "cli": "nx",
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "$id": "NxExpoExport",
+    "$schema": "https://json-schema.org/schema",
+    "title": "Expo Export",
+    "description": "Export the JavaScript and assets for your app using Metro/webpack bundler.",
+    "type": "object",
+    "properties": {
+      "platform": {
+        "description": "Choose the platform to compile for",
+        "enum": ["ios", "android", "all", "web"],
+        "default": "all",
+        "alias": "p",
+        "x-priority": "important"
+      },
+      "dev": {
+        "type": "boolean",
+        "description": "Configure static files for developing locally using a non-https server"
+      },
+      "clear": {
+        "type": "boolean",
+        "description": "Clear the bundler cache before exporting"
+      },
+      "minify": { "type": "boolean", "description": "Minify source" },
+      "outputDir": {
+        "type": "string",
+        "description": "Relative to workspace root, the directory to export the static files to. Default: dist"
+      },
+      "maxWorkers": {
+        "type": "number",
+        "description": "When bundler is metro, the maximum number of tasks to allow the bundler to spawn"
+      },
+      "dumpAssetmap": {
+        "type": "boolean",
+        "description": "When bundler is metro, whether to dump the asset map for further processing"
+      },
+      "sourceMaps": {
+        "type": "boolean",
+        "description": "When bundler is metro, whether to emit JavaScript source maps"
+      }
+    },
+    "required": ["platform"],
+    "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"export\": {\n      \"executor\": \"@nx/expo:export\",\n      \"options\": {\n        \"outputs\": [\"{options.outputDir}\"],\n        \"platform\": \"all\",\n        \"outputDir\": \"dist/apps/mobile\"\n      },\n      \"dependsOn\": [\"sync-deps\"]\n    }\n    //...\n  }\n}\n```\n\n```shell\nnx run mobile:export\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Specify outputDir\" %}\nThe `outputDir` option allows you to specify the output directory of your bundle:\n\n```json\n    \"export\": {\n      \"executor\": \"@nx/expo:export\",\n      \"outputs\": [\"{options.outputDir}\"],\n      \"options\": {\n        \"platform\": \"all\",\n        \"bundler\": \"metro\",\n        \"outputDir\": \"dist/apps/mobile\"\n      },\n      \"dependsOn\": [\"sync-deps\"]\n    },\n```\n\nor run command: `nx run mobile:export --outputDir=dist/apps/mobile`.\n\n{% /tab %}\n{% tab label=\"Specify the platform\" %}\nThe `platform` option allows you to specify the platform to compile with metro bundler: \"ios\", \"android\", \"all\", and \"web\".\n\nFor example, to bundle for web:\n\n```json\n    \"export\": {\n      \"executor\": \"@nx/expo:export\",\n      \"outputs\": [\"{options.outputDir}\"],\n      \"options\": {\n        \"platform\": \"web\",\n        \"bundler\": \"metro\",\n        \"outputDir\": \"dist/apps/dogs\"\n      },\n      \"dependsOn\": [\"sync-deps\"]\n    },\n```\n\nor run command `nx export mobile --platform=web`.\n\n{% /tab %}\n{% tab label=\"Bundle for development\" %}\n\nThe `dev` option allows you to bundle for development environments.\n\n```json\n    \"export\": {\n      \"executor\": \"@nx/expo:export\",\n      \"outputs\": [\"{options.outputDir}\"],\n      \"options\": {\n        \"platform\": \"web\",\n        \"bundler\": \"metro\",\n        \"outputDir\": \"dist/apps/dogs\",\n        \"dev\": true\n      },\n      \"dependsOn\": [\"sync-deps\"]\n    },\n```\n\nor run command `nx export mobile --dev`.\n\n{% /tab %}\n{% tab label=\"Clear bundle cache\" %}\n\nThe `clear` option allows you to clear bundle cache.\n\n```json\n    \"export\": {\n      \"executor\": \"@nx/expo:export\",\n      \"outputs\": [\"{options.outputDir}\"],\n      \"options\": {\n        \"platform\": \"web\",\n        \"bundler\": \"metro\",\n        \"outputDir\": \"dist/apps/dogs\",\n        \"clear\": true\n      },\n      \"dependsOn\": [\"sync-deps\"]\n    },\n```\n\nor run command `nx export mobile --clear`.\n\n{% /tab %}\n{% /tabs %}\n",
+    "presets": []
+  },
+  "description": "Export the JavaScript and assets for your app using Metro/webpack bundler",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/expo/src/executors/export/schema.json",
+  "type": "executor"
+}

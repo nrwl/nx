@@ -1,0 +1,86 @@
+{
+  "name": "pipe",
+  "factory": "./src/generators/pipe/pipe",
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "SchematicsAngularPipe",
+    "title": "Angular Pipe Options Schema",
+    "type": "object",
+    "cli": "nx",
+    "additionalProperties": false,
+    "description": "Creates an Angular pipe.",
+    "examples": [
+      {
+        "description": "Generate a pipe with the exported symbol matching the file name. It results in the pipe `FooPipe` at `mylib/src/lib/foo.pipe.ts`",
+        "command": "nx g @nx/angular:pipe mylib/src/lib/foo.pipe.ts"
+      },
+      {
+        "description": "Generate a pipe without providing the file extension. It results in the pipe `FooPipe` at `mylib/src/lib/foo-pipe.ts`",
+        "command": "nx g @nx/angular:pipe mylib/src/lib/foo"
+      },
+      {
+        "description": "Generate a pipe with a different type separator. It results in the pipe `FooPipe` at `mylib/src/lib/foo.pipe.ts`",
+        "command": "nx g @nx/angular:pipe mylib/src/lib/foo --typeSeparator=."
+      },
+      {
+        "description": "Generate a pipe with the exported symbol different from the file name. It results in the pipe `CustomPipe` at `mylib/src/lib/foo-pipe.ts`",
+        "command": "nx g @nx/angular:pipe mylib/src/lib/foo --name=custom"
+      }
+    ],
+    "properties": {
+      "path": {
+        "type": "string",
+        "description": "The file path to the pipe. Relative to the current working directory.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What is the pipe file path?"
+      },
+      "name": {
+        "type": "string",
+        "description": "The pipe symbol name. Defaults to the last segment of the file path."
+      },
+      "skipTests": {
+        "type": "boolean",
+        "description": "Do not create \"spec.ts\" test files for the new pipe.",
+        "default": false
+      },
+      "skipImport": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not import this pipe into the owning NgModule."
+      },
+      "standalone": {
+        "description": "Whether the generated pipe is standalone.",
+        "type": "boolean",
+        "default": true
+      },
+      "module": {
+        "type": "string",
+        "description": "The filename of the declaring NgModule.",
+        "alias": "m"
+      },
+      "export": {
+        "type": "boolean",
+        "default": false,
+        "description": "The declaring NgModule exports this pipe."
+      },
+      "typeSeparator": {
+        "type": "string",
+        "enum": ["-", "."],
+        "description": "The separator character to use before the type within the generated file's name. For example, if you set the option to `.`, the file will be named `example.pipe.ts`. It defaults to '-' for Angular v20+. For versions below v20, it defaults to '.'."
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "default": false,
+        "description": "Skip formatting of files."
+      }
+    },
+    "required": ["path"],
+    "presets": []
+  },
+  "description": "Generate an Angular Pipe",
+  "aliases": ["p"],
+  "implementation": "/packages/angular/src/generators/pipe/pipe.ts",
+  "hidden": false,
+  "path": "/packages/angular/src/generators/pipe/schema.json",
+  "type": "generator"
+}

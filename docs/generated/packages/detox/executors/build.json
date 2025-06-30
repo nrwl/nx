@@ -1,0 +1,33 @@
+{
+  "name": "build",
+  "implementation": "/packages/detox/src/executors/build/build.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "title": "Run detox build",
+    "description": "Run detox build options.",
+    "type": "object",
+    "cli": "nx",
+    "properties": {
+      "detoxConfiguration": {
+        "type": "string",
+        "description": "Select a device configuration from your defined configurations, if not supplied, and there's only one configuration, detox will default to it.",
+        "alias": "C"
+      },
+      "configPath": {
+        "type": "string",
+        "description": "Specify Detox config file path. If not supplied, detox searches for `.detoxrc[.js]` or `detox` section in `package.json`.",
+        "alias": "cp",
+        "x-completion-type": "file",
+        "x-completion-glob": ".detoxrc?(.js)"
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "Run the command defined in build property of the specified configuration.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/detox/src/executors/build/schema.json",
+  "type": "executor"
+}

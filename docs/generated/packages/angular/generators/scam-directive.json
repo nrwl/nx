@@ -1,0 +1,92 @@
+{
+  "name": "scam-directive",
+  "factory": "./src/generators/scam-directive/scam-directive",
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "SCAMDirectiveGenerator",
+    "cli": "nx",
+    "title": "SCAM Directive Generator Options Schema",
+    "type": "object",
+    "examples": [
+      {
+        "description": "Generate a directive with the exported symbol matching the file name. It results in the directive `FooDirective` at `mylib/src/lib/foo.directive.ts`",
+        "command": "nx g @nx/angular:scam-directive mylib/src/lib/foo.directive.ts"
+      },
+      {
+        "description": "Generate a directive without providing the file extension. It results in the directive `Foo` at `mylib/src/lib/foo.ts`",
+        "command": "nx g @nx/angular:scam-directive mylib/src/lib/foo"
+      },
+      {
+        "description": "Generate a directive with a given type/suffix. It results in the directive `FooDirective` at `mylib/src/lib/foo.directive.ts`",
+        "command": "nx g @nx/angular:scam-directive mylib/src/lib/foo --type=directive"
+      },
+      {
+        "description": "Generate a directive with the exported symbol different from the file name. It results in the directive `Custom` at `mylib/src/lib/foo.ts`",
+        "command": "nx g @nx/angular:scam-directive mylib/src/lib/foo --name=custom"
+      }
+    ],
+    "description": "Creates a new, generic Angular directive definition in the given or default project.",
+    "additionalProperties": false,
+    "properties": {
+      "path": {
+        "type": "string",
+        "description": "The file path to the SCAM directive. Relative to the current working directory.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What is the SCAM directive file path?"
+      },
+      "name": {
+        "type": "string",
+        "description": "The directive symbol name. Defaults to the last segment of the file path."
+      },
+      "skipTests": {
+        "type": "boolean",
+        "description": "Do not create `spec.ts` test files for the new directive.",
+        "default": false
+      },
+      "inlineScam": {
+        "type": "boolean",
+        "description": "Create the `NgModule` in the same file as the Directive.",
+        "default": true,
+        "x-priority": "important"
+      },
+      "selector": {
+        "type": "string",
+        "format": "html-selector",
+        "description": "The `HTML` selector to use for this directive."
+      },
+      "prefix": {
+        "type": "string",
+        "description": "The prefix to apply to the generated directive selector.",
+        "alias": "p",
+        "oneOf": [
+          { "maxLength": 0 },
+          { "minLength": 1, "format": "html-selector" }
+        ]
+      },
+      "export": {
+        "type": "boolean",
+        "description": "Specifies if the SCAM should be exported from the project's entry point (normally `index.ts`). It only applies to libraries.",
+        "default": true,
+        "x-priority": "important"
+      },
+      "type": {
+        "type": "string",
+        "description": "Append a custom type to the directive's filename. It defaults to 'directive' for Angular versions below v20. For Angular v20 and above, no type is appended unless specified."
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      }
+    },
+    "required": ["path"],
+    "presets": []
+  },
+  "description": "Generate a directive with an accompanying Single Component Angular Module (SCAM).",
+  "implementation": "/packages/angular/src/generators/scam-directive/scam-directive.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/generators/scam-directive/schema.json",
+  "type": "generator"
+}

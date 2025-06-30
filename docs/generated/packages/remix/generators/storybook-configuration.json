@@ -1,0 +1,83 @@
+{
+  "name": "storybook-configuration",
+  "implementation": "/packages/remix/src/generators/storybook-configuration/storybook-configuration.impl#remixStorybookConfiguration.ts",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "NxRemixStorybookConfigure",
+    "title": "Remix Storybook Configuration",
+    "description": "Set up Storybook for a Remix library.",
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "aliases": ["name", "projectName"],
+        "description": "Project for which to generate Storybook configuration.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "For which project do you want to generate Storybook configuration?",
+        "x-dropdown": "projects",
+        "x-priority": "important"
+      },
+      "interactionTests": {
+        "type": "boolean",
+        "description": "Set up Storybook interaction tests.",
+        "x-prompt": "Do you want to set up Storybook interaction tests?",
+        "x-priority": "important",
+        "alias": ["configureTestRunner"],
+        "default": true
+      },
+      "generateStories": {
+        "type": "boolean",
+        "description": "Automatically generate `*.stories.ts` files for components declared in this project?",
+        "x-prompt": "Automatically generate *.stories.ts files for components declared in this project?",
+        "default": true,
+        "x-priority": "important"
+      },
+      "configureStaticServe": {
+        "type": "boolean",
+        "description": "Specifies whether to configure a static file server target for serving storybook. Helpful for speeding up CI build/test times.",
+        "x-prompt": "Configure a static file server for the storybook instance?",
+        "default": true,
+        "x-priority": "important"
+      },
+      "js": {
+        "type": "boolean",
+        "description": "Generate JavaScript story files rather than TypeScript story files.",
+        "default": false
+      },
+      "tsConfiguration": {
+        "type": "boolean",
+        "description": "Configure your project with TypeScript. Generate main.ts and preview.ts files, instead of main.js and preview.js.",
+        "default": false
+      },
+      "linter": {
+        "description": "The tool to use for running lint checks.",
+        "type": "string",
+        "enum": ["eslint"],
+        "default": "eslint"
+      },
+      "ignorePaths": {
+        "type": "array",
+        "description": "Paths to ignore when looking for components.",
+        "items": { "type": "string", "description": "Path to ignore." },
+        "examples": [
+          "**/**/src/**/not-stories/**",
+          "libs/my-lib/**/*.something.ts",
+          "**/**/src/**/*.other.*",
+          "libs/my-lib/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts"
+        ]
+      },
+      "configureTestRunner": {
+        "type": "boolean",
+        "description": "Add a Storybook Test-Runner target."
+      }
+    },
+    "required": ["project"],
+    "presets": []
+  },
+  "description": "Generates a Storybook configuration for a Remix application",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/remix/src/generators/storybook-configuration/schema.json",
+  "type": "generator"
+}

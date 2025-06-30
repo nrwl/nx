@@ -1,0 +1,91 @@
+{
+  "name": "node",
+  "implementation": "/packages/js/src/executors/node/node.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "$schema": "https://json-schema.org/schema",
+    "cli": "nx",
+    "title": "Node executor",
+    "description": "Execute Nodejs applications.",
+    "type": "object",
+    "properties": {
+      "buildTarget": {
+        "type": "string",
+        "description": "The target to run to build you the app."
+      },
+      "buildTargetOptions": {
+        "type": "object",
+        "description": "Additional options to pass into the build target.",
+        "default": {}
+      },
+      "waitUntilTargets": {
+        "type": "array",
+        "description": "The targets to run before starting the node app. Listed in the form <project>:<target>. The main target will run once all listed targets have output something to the console.",
+        "default": [],
+        "items": { "type": "string" }
+      },
+      "host": {
+        "type": "string",
+        "default": "localhost",
+        "description": "The host to inspect the process on.",
+        "x-priority": "important"
+      },
+      "port": {
+        "type": "number",
+        "default": 9229,
+        "description": "The port to inspect the process on. Setting port to 0 will assign random free ports to all forked processes.",
+        "x-priority": "important"
+      },
+      "inspect": {
+        "oneOf": [
+          { "type": "string", "enum": ["inspect", "inspect-brk"] },
+          { "type": "boolean" }
+        ],
+        "description": "Ensures the app is starting with debugging.",
+        "default": "inspect",
+        "x-priority": "important"
+      },
+      "runtimeArgs": {
+        "type": "array",
+        "description": "Extra args passed to the node process.",
+        "default": [],
+        "items": { "type": "string" },
+        "x-priority": "important"
+      },
+      "args": {
+        "type": "array",
+        "description": "Extra args when starting the app.",
+        "default": [],
+        "items": { "type": "string" },
+        "x-priority": "important"
+      },
+      "watch": {
+        "type": "boolean",
+        "description": "Enable re-building when files change.",
+        "default": true,
+        "x-priority": "important"
+      },
+      "debounce": {
+        "type": "number",
+        "description": "Delay in milliseconds to wait before restarting. Useful to batch multiple file changes events together. Set to zero (0) to disable.",
+        "default": 500,
+        "x-priority": "important"
+      },
+      "runBuildTargetDependencies": {
+        "type": "boolean",
+        "description": "Whether to run dependencies before running the build. Set this to true if the project does not build libraries from source (e.g. 'buildLibsFromSource: false').",
+        "default": false
+      }
+    },
+    "additionalProperties": false,
+    "required": ["buildTarget"],
+    "examplesFile": "---\ntitle: JS Node executor examples\ndescription: This page contains examples for the @nx/js:node executor.\n---\n\nThe `@nx/js:node` executor runs the output of a build target. For example, an application uses esbuild ([`@nx/esbuild:esbuild`](/nx-api/esbuild/executors/esbuild)) to output the bundle to `dist/my-app` folder, which can then be executed by `@nx/js:node`.\n\n`project.json`:\n\n```json\n\"my-app\": {\n  \"targets\": {\n    \"serve\": {\n      \"executor\": \"@nx/js:node\",\n      \"options\": {\n        \"buildTarget\": \"my-app:build\"\n      }\n    },\n    \"build\": {\n      \"executor\": \"@nx/esbuild:esbuild\",\n      \"options\": {\n        \"main\": \"my-app/src/main.ts\",\n        \"output\": [\"dist/my-app\"],\n        //...\n      }\n    },\n  }\n}\n```\n\n```bash\nnpx nx serve my-app\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Pass extra Node CLI arguments\" %}\n\nUsing `runtimeArgs`, you can pass arguments to the underlying `node` command. For example, if you want to set [`--no-warnings`](https://nodejs.org/api/cli.html#--no-warnings) to silence all Node warnings, then add the following to the `project.json` file.\n\n```json\n\"my-app\": {\n  \"targets\": {\n    \"serve\": {\n      \"executor\": \"@nx/js:node\",\n      \"options\": {\n        \"runtimeArgs\": [\"--no-warnings\"],\n        //...\n      },\n    },\n  }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"Run all task dependencies\" %}\n\nIf your application build depends on other tasks, and you want those tasks to also be executed, then set the `runBuildTargetDependencies` to `true`. For example, a library may have a task to generate GraphQL schemas, which is consume by the application. In this case, you want to run the generate task before building and running the application.\n\nThis option is also useful when the build consumes a library from its output, not its source. For example, if an executor that supports `buildLibsFromSource` option has it set to `false` (e.g. [`@nx/webpack:webpack`](/nx-api/webpack/executors/webpack)).\n\nNote that this option will increase the build time, so use it only when necessary.\n\n```json\n\"my-app\": {\n  \"targets\": {\n    \"serve\": {\n      \"executor\": \"@nx/js:node\",\n      \"options\": {\n        \"runBuildTargetDependencies\": true,\n        //...\n      },\n    },\n  }\n}\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
+    "presets": []
+  },
+  "description": "Execute a Node application.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/js/src/executors/node/schema.json",
+  "type": "executor"
+}

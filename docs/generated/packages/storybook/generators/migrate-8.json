@@ -1,0 +1,36 @@
+{
+  "name": "migrate-8",
+  "factory": "./src/generators/migrate-8/migrate-8",
+  "schema": {
+    "cli": "nx",
+    "title": "Migrate Storybook to version 8.",
+    "description": "Migrate Storybook to version 8.",
+    "$id": "migrate-8",
+    "type": "object",
+    "properties": {
+      "autoAcceptAllPrompts": {
+        "type": "boolean",
+        "description": "Say yes to all the prompts from the Storybook CLI migration scripts.",
+        "default": false
+      },
+      "onlyShowListOfCommands": {
+        "type": "boolean",
+        "description": "Only show the steps that you need to follow in order to migrate. This does NOT make any changes to your code.",
+        "default": false
+      },
+      "noUpgrade": {
+        "type": "boolean",
+        "description": "Skip upgrading Storybook packages. Only use this option if you are already on version 8, and you do not want the latest beta.",
+        "default": false
+      }
+    },
+    "examplesFile": "---\ntitle: Storybook 8 Migration Generator Examples\ndescription: This page contains examples for the @nx/storybook:migrate-8 generator.\n---\n\nStorybook 8 is a major release that brings a lot of new features and improvements. You can read more about it in the [Storybook 8.0.0 release article](https://storybook.js.org/blog/storybook-8/). Apart from the new features and improvements it introduces, it also brings some breaking changes. You can read more about them in the [Storybook 8 migration docs](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#from-version-7x-to-800) and the [Storybook 8.0.0 migration guide](https://storybook.js.org/docs/react/migration-guide).\n\nYou can now migrate your existing Nx workspace with Storybook configuration to use Storybook version 8. To help you, Nx offers the `@nx/storybook:migrate-8` generator. This generator will help you migrate your existing Storybook setup to version 8.\n\n## How to use it\n\nJust call:\n\n```bash\nnpx nx g @nx/storybook:migrate-8\n```\n\n{% callout type=\"warning\" title=\"Commit your changes\" %}\nIt is advised that you start with a clean git history before running this generator, since it is going to be making lots of changes to your workspace.\n{% /callout %}\n\nYou can run this generator using the above command, without passing any options. This will start the migration process for all your projects that have Storybook configured. The logs will explain what is happening in every step, and the logs are mixed Nx and Storybook CLI logs. During the process you will be prompted by the Storybook CLI to accept the automigration scripts. You can read more about that in the next section.\n\nWhen the generator finishes, you will see a summary of the changes that were made to your workspace, and it will also create a new file, called `storybook-migration-summary.md` at the root of your project, which will contain a list of all the changes that were made to your workspace.\n\n### Accept the automigration prompts\n\nThe Storybook CLI (running through our generator) will prompt you to run some code generators and modifiers.\n\nYou can say `yes` to these prompts, which are usually the following (there may be more or less, depending on your setup,\nand depending on the latest versions of the Storybook CLI - this code is NOT managed by Nx, but by Storybook):\n\n- `mainjsFramework`: It will try to add the `framework` field in your project's `.storybook/main.js|ts` file.\n- `eslintPlugin`: installs the `eslint-plugin-storybook`\n- `newFrameworks`: removes unused dependencies (eg. `@storybook/builder-webpack5`, `@storybook/manager-webpack5`, `@storybook/builder-vite`)\n- `autodocsTrue`: adds `autodocs: true` to your project's `.storybook/main.js|ts` file\n\n### Check the result\n\nOnce the generator finishes, and the Storybook CLI automigration scripts have run, you should check the result. Examples of migrated `.storybook/main.js|ts` files would look like this:\n\n#### Full example for Angular projects\n\nHere is an example of a project-level `.storybook/main.js|ts` file for an Angular project that has been migrated to Storybook version 8:\n\n```ts {% fileName=\"apps/my-angular-app/.storybook/main.js\" %}\nconst config = {\n  stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx)'],\n  addons: ['@storybook/addon-essentials'],\n  framework: {\n    name: '@storybook/angular',\n    options: {},\n  },\n};\n\nexport default config;\n```\n\n#### Full example for React projects with Vite\n\nHere is an example of a project-level `.storybook/main.js|ts` file for a React project using Vite that has been migrated to Storybook version 8:\n\n```ts {% fileName=\"apps/my-react-app/.storybook/main.js\" %}\nconst config = {\n  stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx)'],\n  addons: ['@storybook/addon-essentials'],\n  framework: {\n    name: '@storybook/react-vite',\n    options: {\n      builder: {\n        viteConfigPath: 'apps/rv1/vite.config.ts',\n      },\n    },\n  },\n};\n\nexport default config;\n```\n\n### Make sure that all works by running Storybook\n\nYou can now use Storybook 8! 🎉\n\n```bash\nnpx nx build-storybook PROJECT_NAME\n```\n\nand\n\n```bash\nnpx nx storybook PROJECT_NAME\n```\n\n## Run the generator by automatically accepting the Storybook CLI prompts\n\nYou can run the generator with the `--autoAcceptAllPrompts` flag, which will automatically accept all the Storybook CLI prompts. This is useful if you want to run the generator in a CI environment, or if you want to run the generator in a script. Or if you are sure that you want to accept all the prompts!\n\n```bash\nnpx nx g @nx/storybook:migrate-8 --autoAcceptAllPrompts\n```\n\nThe Storybook CLI may still ask you about some things, but mostly it should just run the whole migration suite uninterrupted.\n\n## Run the migration manually\n\nNx gives you the ability to run all the migration steps one by one, manually, but still with the help of our migrator. To help you out with the commands that you need to run, Nx will print out the instructions if you run the generator with the `--onlyShowListOfCommands` flag, like this:\n\n```bash\nnpx nx g @nx/storybook:migrate-8 --onlyShowListOfCommands\n```\n\nEssentially, the way to run the migration manually is the following:\n\n1. Call the Nx generator to show you the list of commands:\n   `npx nx g @nx/storybook:migrate-8 --onlyShowListOfCommands`\n2. Call the Storybook upgrade script:\n   `npx storybook@latest upgrade`\n3. Call the Storybook automigrate scripts for each one of the projects using Storybook (the `@nx/storybook:migrate-8` will give you the list of all the commands)\n\n## Report any issues and bugs\n\nPlease report any issues and bugs you find [on the Nx GitHub page](https://github.com/nrwl/nx/issues/new/choose) or on the [Storybook GitHub page](https://github.com/storybookjs/storybook/issues/new/choose).\n",
+    "presets": []
+  },
+  "description": "Migrate to Storybook version 8.",
+  "hidden": false,
+  "implementation": "/packages/storybook/src/generators/migrate-8/migrate-8.ts",
+  "aliases": [],
+  "path": "/packages/storybook/src/generators/migrate-8/schema.json",
+  "type": "generator"
+}

@@ -1,0 +1,14 @@
+{
+  "name": "update-19-6-1-ensure-module-federation-target-defaults",
+  "cli": "nx",
+  "version": "19.6.1-beta.0",
+  "description": "Ensure Target Defaults are set correctly for Module Federation.",
+  "factory": "./src/migrations/update-19-6-1/ensure-depends-on-for-mf",
+  "implementation": "/packages/angular/src/migrations/update-19-6-1/ensure-depends-on-for-mf.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}
