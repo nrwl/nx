@@ -490,14 +490,40 @@ export type ImplicitDependency = {
 };
 
 /**
+ * A type-only {@link ProjectGraph} dependency between 2 projects
+ *
+ * This type of dependency indicates the source project depends on the target project for TypeScript types only.
+ * These dependencies do not exist at runtime and are only used for type-checking purposes.
+ */
+export type TypeDependency = {
+  /**
+   * The name of a {@link ProjectGraphProjectNode} or {@link ProjectGraphExternalNode} depending on the target project
+   */
+  source: string;
+
+  /**
+   * The name of a {@link ProjectGraphProjectNode} or {@link ProjectGraphExternalNode} that the source project depends on
+   */
+  target: string;
+
+  /**
+   * The path of a file (relative from the workspace root) where the type dependency is made
+   */
+  sourceFile?: string;
+
+  type: typeof DependencyType.type;
+};
+
+/**
  * A {@link ProjectGraph} dependency between 2 projects
  *
- * See {@link DynamicDependency}, {@link ImplicitDependency}, or {@link StaticDependency}
+ * See {@link DynamicDependency}, {@link ImplicitDependency}, {@link StaticDependency}, or {@link TypeDependency}
  */
 export type RawProjectGraphDependency =
   | ImplicitDependency
   | StaticDependency
-  | DynamicDependency;
+  | DynamicDependency
+  | TypeDependency;
 
 /**
  * A function to validate dependencies in a {@link CreateDependencies} function
