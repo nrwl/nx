@@ -14,6 +14,107 @@ import { join } from 'path';
 import { getNxCloudUrl, isNxCloudUsed } from 'nx/src/utils/nx-cloud-utils';
 import { isUsingTsSolutionSetup } from '../../utilities/typescript/ts-solution-setup';
 
+function getCiCommands(
+  ci: Schema['ci'],
+  packageManagerPrefix: string,
+  mainBranch: string,
+  hasTypecheck: boolean,
+  hasE2E: boolean
+): Command[] {
+  // Build task list
+  const tasks = `lint test build${hasTypecheck ? ' typecheck' : ''}${
+    hasE2E ? ' e2e' : ''
+  }`;
+
+  // Create nx-cloud record example comment with CI-specific prefix
+  const baseCommand = `${packageManagerPrefix} nx-cloud record -- echo Hello World`;
+  const prefix = getCiPrefix(ci);
+  const exampleComment = `${prefix}${baseCommand}`;
+
+  // Build nx-cloud record comments
+  const nxCloudComments = [
+    `Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud`,
+    exampleComment,
+  ];
+
+  // Build nx affected comments
+  const nxAffectedComments = [
+    `As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
+  ];
+
+  if (hasE2E) {
+    nxAffectedComments.push(
+      `When you enable task distribution, run the e2e-ci task instead of e2e`
+    );
+  }
+
+  // Build nx affected command with CI-specific args
+  const args = getCiArgs(ci, mainBranch);
+  const affectedCommand = `${packageManagerPrefix} nx run-many ${args}-t ${tasks}`;
+
+  return [
+    {
+      comments: nxCloudComments,
+    },
+    {
+      comments: nxAffectedComments,
+      command: affectedCommand,
+    },
+  ];
+}
+
+function getCiPrefix(ci: Schema['ci']): string {
+  if (ci === 'github' || ci === 'circleci') {
+    return '- run: ';
+  } else if (ci === 'azure') {
+    return '- script: ';
+  } else if (ci === 'gitlab') {
+    return '- ';
+  }
+  // Bitbucket expects just the command without prefix for pull requests
+  return '';
+}
+
+function getCiArgs(ci: Schema['ci'], mainBranch: string): string {
+  if (ci === 'azure') {
+    return '--base=$(BASE_SHA) --head=$(HEAD_SHA) ';
+  } else if (ci === 'bitbucket-pipelines') {
+    return `--base=origin/${mainBranch} `;
+  }
+  return '';
+}
+
+function getBitbucketBranchCommands(
+  packageManagerPrefix: string,
+  hasTypecheck: boolean,
+  hasE2E: boolean
+): Command[] {
+  const tasks = `lint test build${hasTypecheck ? ' typecheck' : ''}${
+    hasE2E ? ' e2e-ci' : ''
+  }`;
+
+  const nxCloudComments = [
+    `Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud`,
+    `- ${packageManagerPrefix} nx-cloud record -- echo Hello World`,
+  ];
+
+  const nxAffectedComments = [
+    `Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
+  ];
+
+  return [
+    {
+      comments: nxCloudComments,
+    },
+    {
+      comments: nxAffectedComments,
+      command: `${packageManagerPrefix} nx affected -t ${tasks} --base=HEAD~1`,
+    },
+  ];
+}
+
+export type Command = { command?: string; comments?: string[] };
+
 export interface Schema {
   name: string;
   ci: 'github' | 'azure' | 'circleci' | 'bitbucket-pipelines' | 'gitlab';
@@ -53,6 +154,8 @@ interface Substitutes {
   tmpl: '';
   connectedToCloud: boolean;
   packageManagerVersion: string;
+  commands: Command[];
+  branchCommands?: Command[];
 }
 
 function normalizeOptions(options: Schema, tree: Tree): Substitutes {
@@ -85,6 +188,19 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
 
   const connectedToCloud = isNxCloudUsed(readJson(tree, 'nx.json'));
 
+  const mainBranch = deduceDefaultBase();
+  const commands = getCiCommands(
+    options.ci,
+    packageManagerPrefix,
+    mainBranch,
+    hasTypecheck,
+    hasE2E
+  );
+  const branchCommands =
+    options.ci === 'bitbucket-pipelines'
+      ? getBitbucketBranchCommands(packageManagerPrefix, hasTypecheck, hasE2E)
+      : undefined;
+
   return {
     workflowName,
     workflowFileName,
@@ -92,7 +208,7 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
     packageManagerInstall,
     packageManagerPrefix,
     packageManagerPreInstallPrefix,
-    mainBranch: deduceDefaultBase(),
+    mainBranch,
     packageManagerVersion: packageJson?.packageManager?.split('@')[1],
     hasCypress,
     hasE2E,
@@ -101,6 +217,8 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
     nxCloudHost,
     tmpl: '',
     connectedToCloud,
+    commands,
+    branchCommands,
   };
 }
 
