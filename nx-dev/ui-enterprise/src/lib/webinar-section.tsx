@@ -14,7 +14,7 @@ export const WebinarSection: React.FC = () => {
           Live event
         </span>
         <span className="inline-flex items-center space-x-2 text-sm/6 font-medium">
-          <span>Webinar + live Q&A on July 9th</span>
+          <span>Webinar + live Q&A on July 9th and 16th</span>
           <ChevronRightIcon
             aria-hidden="true"
             className="size-5 transform transition-all group-hover/event-link:translate-x-1"
