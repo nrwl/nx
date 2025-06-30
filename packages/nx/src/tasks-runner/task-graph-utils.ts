@@ -210,7 +210,7 @@ class NonParallelTaskDependsOnContinuousTasksError extends Error {
 class NonParallelContinuousTaskIsDependedOnError extends Error {
   constructor(public invalidTasks: Task[], taskGraph: TaskGraph) {
     let message =
-      'The following continous tasks do not support parallelism but are depended on:';
+      'The following continuous tasks do not support parallelism but are depended on:';
 
     for (const task of invalidTasks) {
       const dependents = Object.keys(taskGraph.continuousDependencies).filter(
