@@ -478,8 +478,7 @@ export function validateImplementationNode(
 
     if (identifier) {
       try {
-        const m = require(resolvedPath);
-        if (!(identifier in m && typeof m[identifier] === 'function')) {
+        if (!checkIfIdentifierIsFunction(resolvedPath, identifier)) {
           context.report({
             messageId: 'invalidImplementationModule',
             node: implementationNode.value as any,
@@ -490,6 +489,7 @@ export function validateImplementationNode(
           });
         }
       } catch {
+        // require.resolve() can throw if the module is not found
         context.report({
           messageId: 'unableToReadImplementationExports',
           node: implementationNode.value as any,
@@ -587,4 +587,49 @@ export function validateVersionJsonExpression(
     (valid(node.value) ||
       context.options[0]?.allowedVersionStrings.includes(node.value))
   );
+}
+
+function checkIfIdentifierIsFunction(
+  filePath: string,
+  identifier: string
+): boolean {
+  try {
+    const ts = require('typescript');
+
+    const program = ts.createProgram([filePath], {
+      target: ts.ScriptTarget.ES2018,
+      module: ts.ModuleKind.CommonJS,
+      allowJs: true,
+      skipLibCheck: true,
+      skipDefaultLibCheck: true,
+      noResolve: true,
+    });
+
+    const sourceFile = program.getSourceFile(filePath);
+    if (sourceFile) {
+      const typeChecker = program.getTypeChecker();
+      const moduleSymbol = typeChecker.getSymbolAtLocation(sourceFile);
+
+      if (moduleSymbol) {
+        const exportSymbols = typeChecker.getExportsOfModule(moduleSymbol);
+        const targetSymbol = exportSymbols.find(
+          (s: any) => s.getName() === identifier
+        );
+
+        if (targetSymbol) {
+          const type = typeChecker.getTypeOfSymbolAtLocation(
+            targetSymbol,
+            sourceFile
+          );
+          return type.getCallSignatures().length > 0;
+        }
+      }
+    }
+  } catch {
+    return false;
+  }
+
+  // Fallback to require()
+  const m = require(filePath);
+  return identifier in m && typeof m[identifier] === 'function';
 }
