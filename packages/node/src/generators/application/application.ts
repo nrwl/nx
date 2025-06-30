@@ -173,7 +173,11 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     const projectConfig = readProjectConfiguration(tree, options.name);
     projectConfig.targets ??= {};
     projectConfig.targets.test = {
-      options: { passWithNoTests: true },
+      ...projectConfig.targets.test,
+      options: {
+        ...projectConfig.targets.test?.options,
+        passWithNoTests: true,
+      },
     };
     updateProjectConfiguration(tree, options.name, projectConfig);
   } else {
