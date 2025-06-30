@@ -4,6 +4,7 @@ import { docsSchema } from '@astrojs/starlight/schema';
 import { PluginLoader } from './plugins/loaders/plugin-loader';
 import { CliLoader } from './plugins/loaders/cli-loader';
 import { DevKitLoader } from './plugins/loaders/devkit-loader';
+import { file } from 'astro/loaders';
 
 // Default docs collection handled by Starlight
 const docs = defineCollection({
@@ -42,8 +43,32 @@ const devkitDocs = defineCollection({
   }),
 });
 
+const webinars = defineCollection({
+  // TODO(caleb): any extra parsing we need to do? i.e. date time/derived values
+  loader: file('src/content/webinars.json'),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    // TODO(caleb): should parse this to a date object
+    date: z.string(),
+    // slug will be dismiss key for the banner
+    slug: z.string(),
+    authors: z.array(z.string()),
+    // these have to contain the tag webinar??
+    tags: z.array(z.string()),
+    cover_image: z.string(),
+    // tbf this can probs be derived if given a full timestamp for `date`
+    time: z.string(),
+    // TODO(caleb); get all possible statues, some of these could be derived such as 'Upcoming' or 'Past - *'
+    //  we just really want to know if something is gated or not etc
+    status: z.enum(['Upcoming', 'Past - Gated']),
+    registrationUrl: z.string(),
+  }),
+});
+
 export const collections = {
   docs,
+  webinars,
   'nx-cli-docs': nxCliDocs,
   'plugin-docs': pluginDocs,
   'devkit-docs': devkitDocs,
