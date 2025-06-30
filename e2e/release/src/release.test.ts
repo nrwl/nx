@@ -382,7 +382,7 @@ describe('nx release', () => {
       - {project-name}
 
       With additional flags:
-      --registry=http://localhost:7190
+      --registry=${customRegistryUrl}
       --tag=next
       --dryRun=true
 
@@ -417,7 +417,7 @@ describe('nx release', () => {
       integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       total files:   3
 
-      Would publish to http://localhost:7190 with tag "next", but [dry-run] was set
+      Would publish to ${customRegistryUrl} with tag "next", but [dry-run] was set
 
       > nx run {project-name}:nx-release-publish
 
@@ -438,7 +438,7 @@ describe('nx release', () => {
       integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       total files:   3
 
-      Would publish to http://localhost:7190 with tag "next", but [dry-run] was set
+      Would publish to ${customRegistryUrl} with tag "next", but [dry-run] was set
 
       > nx run {project-name}:nx-release-publish
 
@@ -459,7 +459,7 @@ describe('nx release', () => {
       integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       total files:   3
 
-      Would publish to http://localhost:7190 with tag "next", but [dry-run] was set
+      Would publish to ${customRegistryUrl} with tag "next", but [dry-run] was set
 
 
 
@@ -497,7 +497,7 @@ describe('nx release', () => {
       - {project-name}
 
       With additional flags:
-      --registry=http://localhost:7190
+      --registry=${customRegistryUrl}
       --tag=next
 
 
@@ -531,7 +531,7 @@ describe('nx release', () => {
       integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       total files:   3
 
-      Published to http://localhost:7190 with tag "next"
+      Published to ${customRegistryUrl} with tag "next"
 
       > nx run {project-name}:nx-release-publish
 
@@ -552,7 +552,7 @@ describe('nx release', () => {
       integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       total files:   3
 
-      Published to http://localhost:7190 with tag "next"
+      Published to ${customRegistryUrl} with tag "next"
 
       > nx run {project-name}:nx-release-publish
 
@@ -573,7 +573,7 @@ describe('nx release', () => {
       integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       total files:   3
 
-      Published to http://localhost:7190 with tag "next"
+      Published to ${customRegistryUrl} with tag "next"
 
 
 
@@ -594,7 +594,7 @@ describe('nx release', () => {
       - {project-name}
 
       With additional flags:
-      --registry=http://localhost:7190
+      --registry=${customRegistryUrl}
       --tag=next
 
 
@@ -611,15 +611,15 @@ describe('nx release', () => {
 
       > nx run {project-name}:nx-release-publish
 
-      Skipped package "@proj/{project-name}" from project "{project-name}" because v1000.0.0-next.0 already exists in http://localhost:7190 with tag "next"
+      Skipped package "@proj/{project-name}" from project "{project-name}" because v1000.0.0-next.0 already exists in ${customRegistryUrl} with tag "next"
 
       > nx run {project-name}:nx-release-publish
 
-      Skipped package "@proj/{project-name}" from project "{project-name}" because v1000.0.0-next.0 already exists in http://localhost:7190 with tag "next"
+      Skipped package "@proj/{project-name}" from project "{project-name}" because v1000.0.0-next.0 already exists in ${customRegistryUrl} with tag "next"
 
       > nx run {project-name}:nx-release-publish
 
-      Skipped package "@proj/{project-name}" from project "{project-name}" because v1000.0.0-next.0 already exists in http://localhost:7190 with tag "next"
+      Skipped package "@proj/{project-name}" from project "{project-name}" because v1000.0.0-next.0 already exists in ${customRegistryUrl} with tag "next"
 
 
 
@@ -642,7 +642,7 @@ describe('nx release', () => {
       - {project-name}
 
       With additional flags:
-      --registry=http://localhost:7190
+      --registry=${customRegistryUrl}
       --tag=next2
 
 
@@ -659,17 +659,17 @@ describe('nx release', () => {
 
       > nx run {project-name}:nx-release-publish
 
-      Added the dist-tag next2 to v1000.0.0-next.0 for registry http://localhost:7190.
+      Added the dist-tag next2 to v1000.0.0-next.0 for registry ${customRegistryUrl}.
 
 
       > nx run {project-name}:nx-release-publish
 
-      Added the dist-tag next2 to v1000.0.0-next.0 for registry http://localhost:7190.
+      Added the dist-tag next2 to v1000.0.0-next.0 for registry ${customRegistryUrl}.
 
 
       > nx run {project-name}:nx-release-publish
 
-      Added the dist-tag next2 to v1000.0.0-next.0 for registry http://localhost:7190.
+      Added the dist-tag next2 to v1000.0.0-next.0 for registry ${customRegistryUrl}.
 
 
 
