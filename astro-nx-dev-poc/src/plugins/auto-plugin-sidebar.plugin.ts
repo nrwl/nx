@@ -50,7 +50,7 @@ function getStaticPluginFiles(
   return staticFiles;
 }
 
-export function autoPluginSidebar(): StarlightPlugin {
+export function autoPluginSidebarPlugin(): StarlightPlugin {
   return {
     name: 'auto-plugin-sidebar',
     hooks: {

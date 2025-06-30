@@ -8,9 +8,7 @@ export async function getStaticPaths() {
     (doc) => doc.data.category !== 'Projects'
   );
 
-  console.log('DevKit docs found:', docs.length);
   const categories = docs.reduce((acc, doc) => {
-    console.log('Processing doc:', doc.id);
     const category = doc.data.category || 'Uncategorized';
     if (!acc[category]) {
       acc[category] = [];
@@ -19,12 +17,11 @@ export async function getStaticPaths() {
     return acc;
   }, {});
 
-  console.log('Categories found:', Object.keys(categories).length);
   return Object.entries(categories).map(([category, docs]) => ({
     params: { type: category },
     props: {
-      docs,
-    },
+      docs
+    }
   }));
 }
 
@@ -36,11 +33,10 @@ if (!docs) {
 
 const docContent = await Promise.all(
   docs.map(
-    async (doc) =>
-      console.log(doc) || {
-        doc,
-        Content: (await render(doc)).Content,
-      }
+    async (doc) => ({
+      doc,
+      Content: (await render(doc)).Content
+    })
   )
 );
 ---
@@ -48,7 +44,7 @@ const docContent = await Promise.all(
 <StarlightPage
   frontmatter={{
     title: `DevKit Documentation - ${type}`,
-    description: `Documentation for the ${type} category in DevKit`,
+    description: `Documentation for the ${type} category in DevKit`
   }}
 >
   {

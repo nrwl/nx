@@ -1,9 +1,9 @@
 import { defineCollection, z } from 'astro:content';
 import { docsLoader } from '@astrojs/starlight/loaders';
 import { docsSchema } from '@astrojs/starlight/schema';
-import { PluginLoader } from './plugins/loaders/plugin-loader';
-import { CliLoader } from './plugins/loaders/cli-loader';
-import { DevKitLoader } from './plugins/loaders/devkit-loader';
+import { PluginLoader } from './plugins/plugin.loader';
+import { CliLoader } from './plugins/cli.loader';
+import { DevkitLoader } from './plugins/devkit.loader';
 import { file } from 'astro/loaders';
 
 // Default docs collection handled by Starlight
@@ -33,7 +33,7 @@ const pluginDocs = defineCollection({
 });
 
 const devkitDocs = defineCollection({
-  loader: DevKitLoader(),
+  loader: DevkitLoader(),
   schema: z.object({
     title: z.string(),
     docType: z.literal('devkit'),
@@ -43,9 +43,12 @@ const devkitDocs = defineCollection({
   }),
 });
 
-const webinars = defineCollection({
-  // TODO(caleb): any extra parsing we need to do? i.e. date time/derived values
-  loader: file('src/content/webinars.json'),
+// general notification collection for showing time based notifications
+//  in app, i.e. webinars, or confs etc.
+// goal is that different pages/parts of the app can query for their specific needs.
+// i.e. show banner for webinar, or show a dynamic sidebars item for a conf signups etc.
+const notifications = defineCollection({
+  loader: file('src/content/notifications.json'),
   schema: z.object({
     title: z.string(),
     description: z.string(),
@@ -55,7 +58,7 @@ const webinars = defineCollection({
     slug: z.string(),
     authors: z.array(z.string()),
     // these have to contain the tag webinar??
-    tags: z.array(z.string()),
+    type: z.enum(['webinar', 'event', 'release']),
     cover_image: z.string(),
     // tbf this can probs be derived if given a full timestamp for `date`
     time: z.string(),
@@ -68,7 +71,7 @@ const webinars = defineCollection({
 
 export const collections = {
   docs,
-  webinars,
+  notifications,
   'nx-cli-docs': nxCliDocs,
   'plugin-docs': pluginDocs,
   'devkit-docs': devkitDocs,

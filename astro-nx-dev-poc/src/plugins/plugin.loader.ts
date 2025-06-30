@@ -317,8 +317,6 @@ export async function generateAllPluginDocs(
 export function PluginLoader(options: any = {}): Loader {
   return {
     name: 'nx-plugin-loader',
-    // @ts-expect-error renderMarkdown is real idk why TS is complaining
-    // https://docs.astro.build/en/reference/content-loader-reference/#rendermarkdown
     async load({ store, logger, watcher, renderMarkdown }: LoaderContext) {
       const docs = await generateAllPluginDocs(logger, watcher);
       logger.info(`Loaded ${docs.length} plugin documentation entries`);

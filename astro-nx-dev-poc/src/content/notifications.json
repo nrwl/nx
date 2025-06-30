@@ -7,9 +7,7 @@
     "authors": [
       "James Henry"
     ],
-    "tags": [
-      "webinar"
-    ],
+    "type": "webinar",
     "cover_image": "/blog/images/2025-06-18/June-2025-Webinar-Card.avif",
     "time": "10am ET/2pm UTC",
     "status": "Past - Gated",
@@ -24,9 +22,7 @@
       "Jeff Cross",
       "Victor Savkin"
     ],
-    "tags": [
-      "webinar"
-    ],
+    "type": "webinar",
     "cover_image": ",/blog/images/2025-07-09/2025-July-Webinar-Card.avif",
     "time": "1pm ET/5pm UTC",
     "status": "Upcoming",

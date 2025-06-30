@@ -1,6 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
-const webinars = await getCollection('webinars');
+const webinars = await getCollection('notifications', item => item.data.type === 'webinar');
 
 webinars.sort((a, b) => {
   return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();

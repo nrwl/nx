@@ -121,7 +121,7 @@ export async function generateNxCliDocs(
     // Run the CLI parser in a subprocess to avoid ESM/CJS issues
     const subprocessPath = join(
       workspaceRoot,
-      'astro-nx-dev-poc/src/plugins/loaders/utils/cli-subprocess.cjs'
+      'astro-nx-dev-poc/src/plugins/utils/cli-subprocess.cjs'
     );
 
     // Run subprocess and get results
@@ -199,8 +199,6 @@ export async function generateNxCliDocs(
 export function CliLoader(options: any = {}): Loader {
   return {
     name: 'nx-cli-loader',
-    // @ts-expect-error renderMarkdown is real idk why TS is complaining
-    // https://docs.astro.build/en/reference/content-loader-reference/#rendermarkdown
     async load({ store, logger, watcher, renderMarkdown }: LoaderContext) {
       const doc = await generateNxCliDocs(logger, watcher);
       logger.info('Loaded CLI documentation');

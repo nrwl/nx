@@ -22,7 +22,7 @@ interface DocumentRecord {
   category?: string;
 }
 
-export function DevKitLoader() {
+export function DevkitLoader() {
   return {
     name: 'nx-devkit-loader',
     async load({ store, logger, watcher, renderMarkdown }: LoaderContext) {

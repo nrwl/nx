@@ -1,7 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
-import { sectionSidebar } from './src/plugins/section-sidebar';
+import { sectionSidebarPlugin } from './src/plugins/section-sidebar.plugin';
 import netlify from '@astrojs/netlify';
 import linkValidator from 'starlight-links-validator';
 import react from '@astrojs/react';
@@ -20,7 +20,8 @@ export default defineConfig({
         src: './src/assets/nx/Nx-light.png',
         replacesTitle: true,
       },
-      plugins: [linkValidator(), sectionSidebar()],
+      plugins: [linkValidator(), sectionSidebarPlugin()],
+      routeMiddleware: ['./src/plugins/banner.middleware.ts'],
       markdown: {
         // this breaks the renderMarkdown function in the plugin loader due to starlight path normalization
         // as to _why_ it has to normalize a path?
@@ -55,12 +56,11 @@ export default defineConfig({
           autogenerate: { directory: 'getting-started' },
         },
         {
-          label: "Guides",
+          label: 'Guides',
           autogenerate: { directory: 'guides' },
         },
         {
-
-          label: "Concepts",
+          label: 'Concepts',
           autogenerate: { directory: 'concepts' },
         },
         {
