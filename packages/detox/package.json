@@ -35,9 +35,6 @@
     "nx": "workspace:*",
     "tslib": "^2.3.0"
   },
-  "devDependencies": {
-    "jest": "^29.4.1"
-  },
   "peerDependencies": {
     "detox": "^20.9.0"
   },

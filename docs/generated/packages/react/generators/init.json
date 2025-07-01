@@ -1,6 +1,6 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init",
+  "factory": "./src/generators/init/init#reactInitGenerator",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxReactNgInit",
@@ -32,7 +32,7 @@
   "description": "Initialize the `@nx/react` plugin.",
   "aliases": ["ng-add"],
   "hidden": true,
-  "implementation": "/packages/react/src/generators/init/init.ts",
+  "implementation": "/packages/react/src/generators/init/init#reactInitGenerator.ts",
   "path": "/packages/react/src/generators/init/schema.json",
   "type": "generator"
 }

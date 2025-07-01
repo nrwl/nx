@@ -3,7 +3,7 @@
   "version": "0.1",
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init",
+      "factory": "./src/generators/init/init#webpackInitGeneratorInternal",
       "schema": "./src/generators/init/schema.json",
       "description": "Initialize the `@nx/webpack` plugin.",
       "aliases": ["ng-add"],
@@ -11,7 +11,7 @@
     },
     "configuration": {
       "aliases": ["webpack-project"],
-      "factory": "./src/generators/configuration/configuration",
+      "factory": "./src/generators/configuration/configuration#configurationGeneratorInternal",
       "schema": "./src/generators/configuration/schema.json",
       "description": "Add webpack configuration to a project.",
       "hidden": true
@@ -22,7 +22,7 @@
       "description": "Convert the project to use the `NxAppWebpackPlugin` and `NxReactWebpackPlugin`."
     },
     "convert-to-inferred": {
-      "factory": "./src/generators/convert-to-inferred/convert-to-inferred",
+      "factory": "./src/generators/convert-to-inferred/convert-to-inferred#convertToInferred",
       "schema": "./src/generators/convert-to-inferred/schema.json",
       "description": "Convert existing Webpack project(s) using `@nx/webpack:wepack` executor to use `@nx/webpack/plugin`."
     }

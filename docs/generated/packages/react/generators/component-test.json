@@ -1,6 +1,6 @@
 {
   "name": "component-test",
-  "factory": "./src/generators/component-test/component-test",
+  "factory": "./src/generators/component-test/component-test#componentTestGenerator",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -35,7 +35,7 @@
   },
   "description": "Generate a Cypress component test for a React component",
   "hidden": false,
-  "implementation": "/packages/react/src/generators/component-test/component-test.ts",
+  "implementation": "/packages/react/src/generators/component-test/component-test#componentTestGenerator.ts",
   "aliases": [],
   "path": "/packages/react/src/generators/component-test/schema.json",
   "type": "generator"

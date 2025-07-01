@@ -1,6 +1,6 @@
 {
   "name": "component-story",
-  "factory": "./src/generators/component-story/component-story",
+  "factory": "./src/generators/component-story/component-story#componentStoryGenerator",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -43,7 +43,7 @@
   },
   "description": "Generate storybook story for a React component",
   "hidden": false,
-  "implementation": "/packages/react/src/generators/component-story/component-story.ts",
+  "implementation": "/packages/react/src/generators/component-story/component-story#componentStoryGenerator.ts",
   "aliases": [],
   "path": "/packages/react/src/generators/component-story/schema.json",
   "type": "generator"

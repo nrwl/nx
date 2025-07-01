@@ -23,6 +23,8 @@
   "bin": {
     "create-nx-workspace": "./bin/index.js"
   },
+  "main": "./index.js",
+  "types": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -38,9 +40,6 @@
     "tslib": "^2.3.0",
     "yargs": "^17.6.2",
     "axios": "^1.8.3"
-  },
-  "devDependencies": {
-    "jest": "^29.4.1"
   },
   "publishConfig": {
     "access": "public"

@@ -1,6 +1,6 @@
 {
   "name": "create-package",
-  "factory": "./src/generators/create-package/create-package",
+  "factory": "./src/generators/create-package/create-package#createPackageGeneratorInternal",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -70,7 +70,7 @@
     "presets": []
   },
   "description": "Create a package which can be used by npx to create a new workspace",
-  "implementation": "/packages/plugin/src/generators/create-package/create-package.ts",
+  "implementation": "/packages/plugin/src/generators/create-package/create-package#createPackageGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/plugin/src/generators/create-package/schema.json",

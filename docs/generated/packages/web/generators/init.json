@@ -1,6 +1,6 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init",
+  "factory": "./src/generators/init/init#webInitGenerator",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxWebInit",
@@ -32,7 +32,7 @@
   },
   "description": "Add `@nrwl/web` to a project.",
   "hidden": true,
-  "implementation": "/packages/web/src/generators/init/init.ts",
+  "implementation": "/packages/web/src/generators/init/init#webInitGenerator.ts",
   "aliases": [],
   "path": "/packages/web/src/generators/init/schema.json",
   "type": "generator"

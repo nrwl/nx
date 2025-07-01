@@ -1,6 +1,6 @@
 {
   "name": "application",
-  "factory": "./src/generators/application/application",
+  "factory": "./src/generators/application/application#reactNativeApplicationGeneratorInternal",
   "schema": {
     "cli": "nx",
     "$id": "NxReactNativeApplication",
@@ -107,7 +107,7 @@
   "aliases": ["app"],
   "x-type": "application",
   "description": "Create a React Native application.",
-  "implementation": "/packages/react-native/src/generators/application/application.ts",
+  "implementation": "/packages/react-native/src/generators/application/application#reactNativeApplicationGeneratorInternal.ts",
   "hidden": false,
   "path": "/packages/react-native/src/generators/application/schema.json",
   "type": "generator"

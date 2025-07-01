@@ -1,6 +1,6 @@
 {
   "name": "library",
-  "factory": "./src/generators/library/library",
+  "factory": "./src/generators/library/library#reactNativeLibraryGeneratorInternal",
   "schema": {
     "cli": "nx",
     "$id": "NxReactNativeLibrary",
@@ -105,7 +105,7 @@
   "aliases": ["lib"],
   "x-type": "library",
   "description": "Create a React Native library.",
-  "implementation": "/packages/react-native/src/generators/library/library.ts",
+  "implementation": "/packages/react-native/src/generators/library/library#reactNativeLibraryGeneratorInternal.ts",
   "hidden": false,
   "path": "/packages/react-native/src/generators/library/schema.json",
   "type": "generator"

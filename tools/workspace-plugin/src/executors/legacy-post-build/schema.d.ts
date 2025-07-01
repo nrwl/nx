@@ -12,4 +12,6 @@ export interface LegacyPostBuildExecutorSchema {
   tsConfig?: string;
   packageRoot?: string;
   addPackageJsonFields?: boolean;
+  main?: string;
+  types?: string;
 }

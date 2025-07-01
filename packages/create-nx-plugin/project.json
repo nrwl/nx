@@ -48,6 +48,8 @@
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
         "tsConfig": "./tsconfig.lib.json",
+        "main": "./bin/create-nx-plugin.js",
+        "types": "./bin/create-nx-plugin.d.ts",
         "assets": [
           {
             "input": "packages/create-nx-plugin",

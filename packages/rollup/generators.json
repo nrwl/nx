@@ -3,7 +3,7 @@
   "version": "0.1",
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init",
+      "factory": "./src/generators/init/init#rollupInitGenerator",
       "schema": "./src/generators/init/schema.json",
       "description": "Initialize the `@nx/rollup` plugin.",
       "aliases": ["ng-add"],

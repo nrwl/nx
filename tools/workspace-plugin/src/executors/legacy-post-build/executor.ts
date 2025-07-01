@@ -29,6 +29,8 @@ export interface LegacyPostBuildExecutorOptions {
   // Package.json field options
   packageRoot?: string;
   addPackageJsonFields?: boolean;
+  main?: string;
+  types?: string;
 }
 
 /**
@@ -59,15 +61,26 @@ function getOutputPathFromTsConfig(tsConfigPath: string): string | null {
 }
 
 /**
+ * Convert .ts extension to .js for compiled output references
+ */
+function convertTsToJs(filePath: string): string {
+  if (filePath.endsWith('.ts')) {
+    return filePath.replace(/\.ts$/, '.js');
+  }
+  return filePath;
+}
+
+/**
  * Add required package.json fields
  */
 async function addPackageJsonFields(
   packageRoot: string,
-  workspaceRoot: string
+  workspaceRoot: string,
+  customMain?: string,
+  customTypes?: string
 ): Promise<boolean> {
   const pkgPath = path.join(workspaceRoot, packageRoot, 'package.json');
 
-  // Check if package.json exists
   if (!fs.existsSync(pkgPath)) {
     return true;
   }
@@ -75,8 +88,18 @@ async function addPackageJsonFields(
   const packageJson = readJson(pkgPath);
   let hasChanges = false;
 
-  // Add types field if missing (use existing typings field or default to src/index.d.ts)
-  if (!packageJson.types) {
+  if (customMain) {
+    packageJson.main = customMain;
+    hasChanges = true;
+  } else if (!packageJson.main) {
+    packageJson.main = 'index.js';
+    hasChanges = true;
+  }
+
+  if (customTypes) {
+    packageJson.types = customTypes;
+    hasChanges = true;
+  } else if (!packageJson.types) {
     if (packageJson.typings) {
       packageJson.types = packageJson.typings;
       hasChanges = true;
@@ -86,7 +109,6 @@ async function addPackageJsonFields(
     }
   }
 
-  // Add type field if missing (defaulting to commonjs for existing packages)
   if (!packageJson.type) {
     packageJson.type = 'commonjs';
     hasChanges = true;
@@ -175,7 +197,12 @@ Or with TypeScript config:
   // Step 2: Add package.json fields if enabled (default is true)
   if (options.addPackageJsonFields !== false) {
     const packageRoot = options.packageRoot || `dist/packages/${projectName}`;
-    const success = await addPackageJsonFields(packageRoot, context.root);
+    const success = await addPackageJsonFields(
+      packageRoot,
+      context.root,
+      options.main,
+      options.types
+    );
     if (!success) {
       return { success: false };
     }

@@ -57,9 +57,6 @@
     "webpack": "^5.80.0",
     "webpack-node-externals": "^3.0.0"
   },
-  "devDependencies": {
-    "jest": "^29.4.1"
-  },
   "peerDependencies": {
     "@module-federation/enhanced": "^0.15.0",
     "@module-federation/node": "^2.6.26"

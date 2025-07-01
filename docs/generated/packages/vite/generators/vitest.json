@@ -1,6 +1,6 @@
 {
   "name": "vitest",
-  "factory": "./src/generators/vitest/vitest-generator",
+  "factory": "./src/generators/vitest/vitest-generator#vitestGeneratorInternal",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -66,7 +66,7 @@
     "presets": []
   },
   "description": "Generate a vitest configuration.",
-  "implementation": "/packages/vite/src/generators/vitest/vitest-generator.ts",
+  "implementation": "/packages/vite/src/generators/vitest/vitest-generator#vitestGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/vite/src/generators/vitest/schema.json",

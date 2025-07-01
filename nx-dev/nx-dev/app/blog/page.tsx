@@ -5,6 +5,9 @@ import { DefaultLayout } from '@nx/nx-dev-ui-common';
 import { Suspense } from 'react';
 import { tryNxCloudForFree } from '../../lib/components/headerCtaConfigs';
 
+// Use ISR for pages with data fetching
+export const revalidate = 3600; // Revalidate every hour
+
 export const metadata: Metadata = {
   title: 'Nx Blog - Updates from the Nx & Nx Cloud team',
   description: 'Latest news from the Nx & Nx Cloud core team',

@@ -34,6 +34,8 @@ CHANGELOG.md
 # Next.js
 .next
 out
+nx-dev/nx-dev/public/documentation
+nx-dev/nx-dev/public/site*
 
 # Angular Cache
 .angular
@@ -106,4 +108,3 @@ tasks/
 
 # Raw docs local configuration (machine-specific)
 .rawdocs.local.json
-

@@ -206,6 +206,7 @@
     {
       "plugin": "@nx/js/typescript",
       "include": ["packages/**/*", "graph/**/*"],
+      "exclude": ["packages/angular/**"],
       "options": {
         "typecheck": true,
         "build": {

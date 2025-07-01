@@ -1,6 +1,6 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init",
+  "factory": "./src/generators/init/init#expoInitGeneratorInternal",
   "schema": {
     "cli": "nx",
     "$id": "NxExpoInit",
@@ -37,7 +37,7 @@
   },
   "description": "Initialize the @nx/expo plugin",
   "hidden": true,
-  "implementation": "/packages/expo/src/generators/init/init.ts",
+  "implementation": "/packages/expo/src/generators/init/init#expoInitGeneratorInternal.ts",
   "aliases": [],
   "path": "/packages/expo/src/generators/init/schema.json",
   "type": "generator"

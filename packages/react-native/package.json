@@ -44,9 +44,6 @@
     "@nx/react": "workspace:*",
     "@nx/workspace": "workspace:*"
   },
-  "devDependencies": {
-    "jest": "^29.4.1"
-  },
   "executors": "./executors.json",
   "ng-update": {
     "requirements": {},

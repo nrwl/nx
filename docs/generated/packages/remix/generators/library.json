@@ -1,6 +1,6 @@
 {
   "name": "library",
-  "implementation": "/packages/remix/src/generators/library/library.impl.ts",
+  "implementation": "/packages/remix/src/generators/library/library.impl#remixLibraryGeneratorInternal.ts",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxRemixLibrary",

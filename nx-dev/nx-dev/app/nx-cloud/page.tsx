@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function NxCloudPage(): ReactElement {
+export default async function NxCloudPage(): Promise<ReactElement> {
   const headerCTAConfig: ButtonLinkProps[] = [
     {
       href: 'https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=nx-cloud-header&utm_campaign=get-started',

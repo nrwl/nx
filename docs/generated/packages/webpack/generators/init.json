@@ -1,6 +1,6 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init",
+  "factory": "./src/generators/init/init#webpackInitGeneratorInternal",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxWebpackInit",
@@ -38,7 +38,7 @@
   "description": "Initialize the `@nx/webpack` plugin.",
   "aliases": ["ng-add"],
   "hidden": true,
-  "implementation": "/packages/webpack/src/generators/init/init.ts",
+  "implementation": "/packages/webpack/src/generators/init/init#webpackInitGeneratorInternal.ts",
   "path": "/packages/webpack/src/generators/init/schema.json",
   "type": "generator"
 }

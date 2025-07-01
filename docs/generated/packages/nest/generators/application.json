@@ -1,6 +1,6 @@
 {
   "name": "application",
-  "factory": "./src/generators/application/application",
+  "factory": "./src/generators/application/application#applicationGeneratorInternal",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxNestApplicationGenerator",
@@ -91,7 +91,7 @@
   "aliases": ["app"],
   "x-type": "application",
   "description": "Create a NestJS application.",
-  "implementation": "/packages/nest/src/generators/application/application.ts",
+  "implementation": "/packages/nest/src/generators/application/application#applicationGeneratorInternal.ts",
   "hidden": false,
   "path": "/packages/nest/src/generators/application/schema.json",
   "type": "generator"
