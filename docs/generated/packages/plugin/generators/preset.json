@@ -1,6 +1,6 @@
 {
   "name": "preset",
-  "factory": "./src/generators/preset/generator",
+  "factory": "./src/generators/preset/generator#presetGeneratorInternal",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -39,7 +39,7 @@
   "description": "Initializes a workspace with an nx-plugin inside of it. Use as: `create-nx-workspace --preset @nx/plugin`.",
   "hidden": true,
   "x-use-standalone-layout": true,
-  "implementation": "/packages/plugin/src/generators/preset/generator.ts",
+  "implementation": "/packages/plugin/src/generators/preset/generator#presetGeneratorInternal.ts",
   "aliases": [],
   "path": "/packages/plugin/src/generators/preset/schema.json",
   "type": "generator"

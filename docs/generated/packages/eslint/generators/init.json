@@ -1,6 +1,6 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init",
+  "factory": "./src/generators/init/init#initEsLint",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -32,7 +32,7 @@
   },
   "description": "Set up the ESLint plugin.",
   "hidden": true,
-  "implementation": "/packages/eslint/src/generators/init/init.ts",
+  "implementation": "/packages/eslint/src/generators/init/init#initEsLint.ts",
   "aliases": [],
   "path": "/packages/eslint/src/generators/init/schema.json",
   "type": "generator"

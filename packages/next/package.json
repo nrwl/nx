@@ -52,9 +52,6 @@
     "@nx/webpack": "workspace:*",
     "@phenomnomnominal/tsquery": "~5.0.1"
   },
-  "devDependencies": {
-    "jest": "^29.4.1"
-  },
   "publishConfig": {
     "access": "public"
   }

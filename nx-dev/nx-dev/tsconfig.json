@@ -35,7 +35,8 @@
     "next-env.d.ts",
     ".next/types/**/*.ts",
     "../../dist/nx-dev/nx-dev/.next/types/**/*.ts",
-    "public/documentation/**/*.json"
+    "public/documentation/**/*.json",
+    "dist/nx-dev/nx-dev/.next/types/**/*.ts"
   ],
   "references": [
     {

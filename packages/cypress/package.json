@@ -35,9 +35,6 @@
     "requirements": {},
     "migrations": "./migrations.json"
   },
-  "devDependencies": {
-    "jest": "^29.4.1"
-  },
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@nx/eslint": "workspace:*",

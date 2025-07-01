@@ -1,6 +1,6 @@
 {
   "name": "configuration",
-  "factory": "./src/generators/configuration/configuration",
+  "factory": "./src/generators/configuration/configuration#viteConfigurationGeneratorInternal",
   "schema": {
     "cli": "nx",
     "title": "Configure a project to use Vite.js.",
@@ -67,7 +67,7 @@
   "description": "Add Vite configuration to an application.",
   "aliases": ["config"],
   "hidden": false,
-  "implementation": "/packages/vite/src/generators/configuration/configuration.ts",
+  "implementation": "/packages/vite/src/generators/configuration/configuration#viteConfigurationGeneratorInternal.ts",
   "path": "/packages/vite/src/generators/configuration/schema.json",
   "type": "generator"
 }

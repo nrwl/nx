@@ -1,6 +1,6 @@
 {
   "name": "upgrade-native",
-  "factory": "./src/generators/upgrade-native/upgrade-native",
+  "factory": "./src/generators/upgrade-native/upgrade-native#reactNativeUpgradeNativeGenerator",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -41,7 +41,7 @@
     "presets": []
   },
   "description": "Destructive command to upgrade native iOS and Android code to latest.",
-  "implementation": "/packages/react-native/src/generators/upgrade-native/upgrade-native.ts",
+  "implementation": "/packages/react-native/src/generators/upgrade-native/upgrade-native#reactNativeUpgradeNativeGenerator.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/react-native/src/generators/upgrade-native/schema.json",

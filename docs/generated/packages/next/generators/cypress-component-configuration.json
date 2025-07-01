@@ -1,6 +1,6 @@
 {
   "name": "cypress-component-configuration",
-  "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration",
+  "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigurationInternal",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -45,7 +45,7 @@
     "presets": []
   },
   "description": "cypress-component-configuration generator",
-  "implementation": "/packages/next/src/generators/cypress-component-configuration/cypress-component-configuration.ts",
+  "implementation": "/packages/next/src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigurationInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/next/src/generators/cypress-component-configuration/schema.json",

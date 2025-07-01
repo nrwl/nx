@@ -2671,9 +2671,6 @@ importers:
       '@nx/cypress':
         specifier: workspace:*
         version: link:../cypress
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@20.16.10)(typescript@5.8.3))
       nx:
         specifier: workspace:*
         version: link:../nx
@@ -2695,10 +2692,6 @@ importers:
       yargs:
         specifier: ^17.6.2
         version: 17.6.2
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/create-nx-workspace:
     dependencies:
@@ -2726,10 +2719,6 @@ importers:
       yargs:
         specifier: ^17.6.2
         version: 17.6.2
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/cypress:
     dependencies:
@@ -2763,10 +2752,6 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/detox:
     dependencies:
@@ -2794,10 +2779,6 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/devkit:
     dependencies:
@@ -2886,10 +2867,6 @@ importers:
       typescript:
         specifier: ~5.8.2
         version: 5.8.3
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/eslint-plugin:
     dependencies:
@@ -2932,10 +2909,6 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/expo:
     dependencies:
@@ -2984,10 +2957,6 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/express:
     dependencies:
@@ -3006,10 +2975,6 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/gradle:
     dependencies:
@@ -3019,10 +2984,6 @@ importers:
       nx:
         specifier: workspace:*
         version: link:../nx
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/jest:
     dependencies:
@@ -3173,10 +3134,6 @@ importers:
       verdaccio:
         specifier: ^6.0.5
         version: 6.0.5(encoding@0.1.13)(typanion@3.14.0)
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/module-federation:
     dependencies:
@@ -3219,10 +3176,6 @@ importers:
       webpack:
         specifier: ^5.88.0
         version: 5.99.8(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.25.0)(webpack-cli@5.1.4)
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/nest:
     dependencies:
@@ -3244,10 +3197,6 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/next:
     dependencies:
@@ -3302,10 +3251,6 @@ importers:
       webpack-merge:
         specifier: ^5.8.0
         version: 5.10.0
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/node:
     dependencies:
@@ -3333,10 +3278,6 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/nuxt:
     dependencies:
@@ -3370,10 +3311,6 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/nx:
     dependencies:
@@ -3488,10 +3425,6 @@ importers:
       yargs-parser:
         specifier: 21.1.1
         version: 21.1.1
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
     optionalDependencies:
       '@nx/nx-darwin-arm64':
         specifier: '*'
@@ -3550,10 +3483,6 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/plugin:
     dependencies:
@@ -3575,10 +3504,6 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/react:
     dependencies:
@@ -3630,10 +3555,6 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/react-native:
     dependencies:
@@ -3688,10 +3609,6 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/remix:
     dependencies:
@@ -3719,10 +3636,6 @@ importers:
       tslib:
         specifier: ^2.3.1
         version: 2.8.1
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/rollup:
     dependencies:
@@ -3780,10 +3693,6 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/rsbuild:
     dependencies:
@@ -3808,10 +3717,6 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/rspack:
     dependencies:
@@ -3917,10 +3822,6 @@ importers:
       webpack-node-externals:
         specifier: ^3.0.0
         version: 3.0.0
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/storybook:
     dependencies:
@@ -3951,10 +3852,6 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/vite:
     dependencies:
@@ -3994,10 +3891,6 @@ importers:
       vitest:
         specifier: ^1.3.1 || ^2.0.0 || ^3.0.0
         version: 3.0.5(@types/debug@4.1.12)(@types/node@20.16.10)(jiti@1.21.6)(jsdom@20.0.3(bufferutil@4.0.7))(less@4.3.0)(sass-embedded@1.85.1)(sass@1.88.0)(stylus@0.64.0)(terser@5.39.1)(yaml@2.6.1)
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/vue:
     dependencies:
@@ -4025,10 +3918,6 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/web:
     dependencies:
@@ -4053,10 +3942,6 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/webpack:
     dependencies:
@@ -4177,10 +4062,6 @@ importers:
       webpack-subresource-integrity:
         specifier: ^5.1.0
         version: 5.1.0(html-webpack-plugin@5.5.0(webpack@5.99.8))(webpack@5.99.8)
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   packages/workspace:
     dependencies:
@@ -4208,10 +4089,6 @@ importers:
       yargs-parser:
         specifier: 21.1.1
         version: 21.1.1
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))
 
   tools/workspace-plugin:
     dependencies:

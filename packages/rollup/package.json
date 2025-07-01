@@ -48,9 +48,6 @@
     "rollup-plugin-typescript2": "^0.36.0",
     "tslib": "^2.3.0"
   },
-  "devDependencies": {
-    "jest": "^29.4.1"
-  },
   "publishConfig": {
     "access": "public"
   }

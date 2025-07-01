@@ -28,9 +28,6 @@
   "main": "index.js",
   "generators": "./generators.json",
   "executors": "./executors.json",
-  "devDependencies": {
-    "jest": "^29.4.1"
-  },
   "dependencies": {
     "tslib": "^2.3.0",
     "@nx/devkit": "workspace:*",

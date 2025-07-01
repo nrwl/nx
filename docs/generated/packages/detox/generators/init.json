@@ -1,6 +1,6 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init",
+  "factory": "./src/generators/init/init#detoxInitGeneratorInternal",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "title": "Add Detox Schematics",
@@ -37,7 +37,7 @@
   },
   "description": "Initialize the `@nx/detox` plugin.",
   "hidden": true,
-  "implementation": "/packages/detox/src/generators/init/init.ts",
+  "implementation": "/packages/detox/src/generators/init/init#detoxInitGeneratorInternal.ts",
   "aliases": [],
   "path": "/packages/detox/src/generators/init/schema.json",
   "type": "generator"

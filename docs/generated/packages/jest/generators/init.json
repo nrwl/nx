@@ -1,6 +1,6 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init",
+  "factory": "./src/generators/init/init#jestInitGeneratorInternal",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxJestInit",
@@ -40,7 +40,7 @@
   "description": "Initialize the `@nx/jest` plugin.",
   "aliases": ["ng-add"],
   "hidden": true,
-  "implementation": "/packages/jest/src/generators/init/init.ts",
+  "implementation": "/packages/jest/src/generators/init/init#jestInitGeneratorInternal.ts",
   "path": "/packages/jest/src/generators/init/schema.json",
   "type": "generator"
 }

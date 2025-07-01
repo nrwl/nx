@@ -37,9 +37,6 @@
     "tslib": "^2.3.1",
     "@phenomnomnominal/tsquery": "~5.0.1"
   },
-  "devDependencies": {
-    "jest": "^29.4.1"
-  },
   "peerDependencies": {
     "@remix-run/dev": "^2.14.0"
   },

@@ -89,33 +89,37 @@
           "projects": "self"
         }
       ]
-    }
-  },
-  "deploy-build": {
-    "executor": "nx:run-commands",
-    "outputs": ["{projectRoot}/public/documentation"],
-    "dependsOn": ["@nx/nx-source:documentation"],
-    "options": {
-      "commands": [
-        {
-          "command": "nx run nx-dev:generate-og-images",
-          "description": "OG images generation"
-        },
-        {
-          "command": "nx copy-docs nx-dev",
-          "description": "Copy generated docs to build output"
-        },
-        {
-          "command": "npx ts-node -P scripts/tsconfig.scripts.json scripts/documentation/plugin-quality-indicators.ts",
-          "description": "Fetch plugin data"
-        },
-        {
-          "command": "nx run nx-dev:build",
-          "description": "NextJs build step"
-        }
-      ],
-      "color": true,
-      "parallel": false
+    },
+    "deploy-build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRooti}/public/documentation"],
+      "dependsOn": ["@nx/nx-source:documentation"],
+      "options": {
+        "commands": [
+          {
+            "command": "nx run nx-dev:generate-og-images",
+            "description": "OG images generation"
+          },
+          {
+            "command": "nx copy-docs nx-dev",
+            "description": "Copy generated docs to build output"
+          },
+          {
+            "command": "npx ts-node -P scripts/tsconfig.scripts.json scripts/documentation/plugin-quality-indicators.ts",
+            "description": "Fetch plugin data"
+          },
+          {
+            "command": "nx build nx-dev",
+            "description": "NextJs build step"
+          },
+          {
+            "command": "cp -r nx-dev/nx-dev/.next dist/nx-dev/nx-dev/.next && cp -r nx-dev/nx-dev/public dist/nx-dev/nx-dev/public",
+            "description": "Copy NextJs build output to dist"
+          }
+        ],
+        "color": true,
+        "parallel": false
+      }
     }
   },
   "tags": ["scope:nx-dev", "type:app"],

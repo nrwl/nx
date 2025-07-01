@@ -1,6 +1,6 @@
 {
   "name": "storybook-configuration",
-  "factory": "./src/generators/storybook-configuration/configuration",
+  "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGeneratorInternal",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -78,7 +78,7 @@
   },
   "description": "Set up storybook for a Vue app or library.",
   "hidden": false,
-  "implementation": "/packages/vue/src/generators/storybook-configuration/configuration.ts",
+  "implementation": "/packages/vue/src/generators/storybook-configuration/configuration#storybookConfigurationGeneratorInternal.ts",
   "aliases": [],
   "path": "/packages/vue/src/generators/storybook-configuration/schema.json",
   "type": "generator"

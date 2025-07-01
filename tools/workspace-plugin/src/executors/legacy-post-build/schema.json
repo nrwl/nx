@@ -57,6 +57,14 @@
       "type": "boolean",
       "description": "Whether to add required package.json fields like 'types' and 'type'.",
       "default": true
+    },
+    "main": {
+      "type": "string",
+      "description": "Custom main entry point path to set in package.json. If not provided, defaults to existing main field or index.js."
+    },
+    "types": {
+      "type": "string",
+      "description": "Custom types declaration file path to set in package.json. If not provided, defaults to existing types/typings field or src/index.d.ts."
     }
   }
 }

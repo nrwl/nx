@@ -39,9 +39,6 @@
     "@nx/vite": "workspace:*",
     "@phenomnomnominal/tsquery": "~5.0.1"
   },
-  "devDependencies": {
-    "jest": "^29.4.1"
-  },
   "peerDependencies": {
     "@nuxt/schema": "^3.10.0"
   },

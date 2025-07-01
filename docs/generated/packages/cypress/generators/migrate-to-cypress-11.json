@@ -1,6 +1,6 @@
 {
   "name": "migrate-to-cypress-11",
-  "factory": "./src/generators/migrate-to-cypress-11/migrate-to-cypress-11",
+  "factory": "./src/generators/migrate-to-cypress-11/migrate-to-cypress-11#migrateCypressProject",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxCypressMigrateTo11",
@@ -18,7 +18,7 @@
     "presets": []
   },
   "description": "Migrate existing Cypress e2e projects to Cypress v11",
-  "implementation": "/packages/cypress/src/generators/migrate-to-cypress-11/migrate-to-cypress-11.ts",
+  "implementation": "/packages/cypress/src/generators/migrate-to-cypress-11/migrate-to-cypress-11#migrateCypressProject.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/cypress/src/generators/migrate-to-cypress-11/schema.json",

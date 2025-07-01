@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function BrandsPage() {
+export default async function BrandsPage() {
   return (
     <DefaultLayout>
       <Hero />

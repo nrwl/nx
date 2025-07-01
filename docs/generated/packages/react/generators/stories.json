@@ -1,6 +1,6 @@
 {
   "name": "stories",
-  "factory": "./src/generators/stories/stories",
+  "factory": "./src/generators/stories/stories#storiesGenerator",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -57,7 +57,7 @@
   },
   "description": "Create stories/specs for all components declared in an app or library.",
   "hidden": false,
-  "implementation": "/packages/react/src/generators/stories/stories.ts",
+  "implementation": "/packages/react/src/generators/stories/stories#storiesGenerator.ts",
   "aliases": [],
   "path": "/packages/react/src/generators/stories/schema.json",
   "type": "generator"

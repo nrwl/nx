@@ -144,6 +144,8 @@
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
+        "main": "./bin/nx.js",
+        "types": "./bin/nx.d.ts",
         "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {

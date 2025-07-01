@@ -1,6 +1,6 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init",
+  "factory": "./src/generators/init/init#rollupInitGenerator",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxWebpackInit",
@@ -38,7 +38,7 @@
   "description": "Initialize the `@nx/rollup` plugin.",
   "aliases": ["ng-add"],
   "hidden": true,
-  "implementation": "/packages/rollup/src/generators/init/init.ts",
+  "implementation": "/packages/rollup/src/generators/init/init#rollupInitGenerator.ts",
   "path": "/packages/rollup/src/generators/init/schema.json",
   "type": "generator"
 }

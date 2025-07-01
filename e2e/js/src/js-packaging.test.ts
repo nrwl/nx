@@ -10,7 +10,6 @@ import {
   getPackageManagerCommand,
   readJson,
   updateFile,
-  renameFile,
 } from '@nx/e2e-utils';
 import { join } from 'path';
 
