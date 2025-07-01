@@ -5,8 +5,8 @@ import { DefaultLayout } from '@nx/nx-dev-ui-common';
 import { Suspense } from 'react';
 import { tryNxCloudForFree } from '../../lib/components/headerCtaConfigs';
 
-// Use ISR for pages with data fetching
-export const revalidate = 3600; // Revalidate every hour
+// Needed without it Next.js will fail to serve the page with start
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: 'Nx Blog - Updates from the Nx & Nx Cloud team',

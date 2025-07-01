@@ -8,6 +8,9 @@ import {
 } from '@nx/nx-dev-ui-brands';
 import type { Metadata } from 'next';
 
+// Needed without it Next.js will fail to serve the page with start
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: 'Brands & Guidelines',
   alternates: {
@@ -34,7 +37,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function BrandsPage() {
+export default function BrandsPage() {
   return (
     <DefaultLayout>
       <Hero />

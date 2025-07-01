@@ -17,6 +17,9 @@ import {
 import type { Metadata } from 'next';
 import { ReactElement } from 'react';
 
+// Needed without it Next.js will fail to serve the page with start
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: 'Nx Cloud',
   description:
@@ -43,7 +46,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function NxCloudPage(): Promise<ReactElement> {
+export default function NxCloudPage(): ReactElement {
   const headerCTAConfig: ButtonLinkProps[] = [
     {
       href: 'https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=nx-cloud-header&utm_campaign=get-started',
