@@ -35,7 +35,8 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit"
+    "@nx/devkit": "file:../devkit",
+    "minimatch": "9.0.3"
   },
   "publishConfig": {
     "access": "public"

@@ -1,8 +1,10 @@
 import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { basename, dirname } from 'node:path';
+import { minimatch } from 'minimatch';
 
-export const GRADLE_BUILD_FILES = new Set(['build.gradle', 'build.gradle.kts']);
-export const GRALDEW_FILES = new Set(['gradlew', 'gradlew.bat']);
+export const GRADLE_BUILD_PATTERNS = ['*.gradle', '*.gradle.kts'];
+export const SETTINGS_GRADLE_FILES = ['settings.gradle', 'settings.gradle.kts'];
+export const GRADLEW_FILES = new Set(['gradlew', 'gradlew.bat']);
 export const GRADLE_TEST_FILES = [
   '**/src/test/java/**/*Test.java',
   '**/src/test/kotlin/**/*Test.kt',
@@ -13,16 +15,23 @@ export const GRADLE_TEST_FILES = [
 ];
 
 export const gradleConfigGlob = combineGlobPatterns(
-  ...Array.from(GRADLE_BUILD_FILES).map((file) => `**/${file}`)
+  ...GRADLE_BUILD_PATTERNS.map((file) => `**/${file}`)
 );
 
 export const gradleConfigAndTestGlob = combineGlobPatterns(
-  ...Array.from(GRADLE_BUILD_FILES),
-  ...Array.from(GRALDEW_FILES),
-  ...Array.from(GRADLE_BUILD_FILES).map((file) => `**/${file}`),
-  ...Array.from(GRALDEW_FILES).map((file) => `**/${file}`),
+  ...GRADLE_BUILD_PATTERNS,
+  ...GRADLE_BUILD_PATTERNS.map((file) => `**/${file}`),
+  ...Array.from(GRADLEW_FILES),
+  ...Array.from(GRADLEW_FILES).map((file) => `**/${file}`),
   ...GRADLE_TEST_FILES
 );
+
+export function isGradleBuildFile(filename: string): boolean {
+  return (
+    GRADLE_BUILD_PATTERNS.some((pattern) => minimatch(filename, pattern)) &&
+    !SETTINGS_GRADLE_FILES.includes(filename)
+  );
+}
 
 /**
  * This function split config files into build files, settings files, test files and project roots
@@ -33,21 +42,25 @@ export const gradleConfigAndTestGlob = combineGlobPatterns(
 export function splitConfigFiles(files: readonly string[]): {
   buildFiles: string[];
   gradlewFiles: string[];
+  settingsFiles: string[];
   testFiles: string[];
   projectRoots: string[];
 } {
   const buildFiles = [];
   const testFiles = [];
   const gradlewFiles = [];
+  const settingsFiles = [];
   const projectRoots = new Set<string>();
 
   files.forEach((file) => {
     const filename = basename(file);
     const fileDirectory = dirname(file);
-    if (GRADLE_BUILD_FILES.has(filename)) {
+    if (SETTINGS_GRADLE_FILES.includes(filename)) {
+      settingsFiles.push(file);
+    } else if (isGradleBuildFile(filename)) {
       buildFiles.push(file);
       projectRoots.add(fileDirectory);
-    } else if (GRALDEW_FILES.has(filename)) {
+    } else if (GRADLEW_FILES.has(filename)) {
       if (process.platform.startsWith('win')) {
         if (filename === 'gradlew.bat') {
           gradlewFiles.push(file);
@@ -57,7 +70,7 @@ export function splitConfigFiles(files: readonly string[]): {
           gradlewFiles.push(file);
         }
       }
-    } else {
+    } else if (GRADLE_TEST_FILES.some((pattern) => minimatch(file, pattern))) {
       testFiles.push(file);
     }
   });
@@ -66,6 +79,7 @@ export function splitConfigFiles(files: readonly string[]): {
     buildFiles,
     testFiles,
     gradlewFiles,
+    settingsFiles,
     projectRoots: Array.from(projectRoots),
   };
 }

@@ -9,7 +9,7 @@ import {
 import { basename, dirname } from 'node:path';
 
 import { getCurrentGradleReport } from './utils/get-gradle-report';
-import { GRADLE_BUILD_FILES } from '../utils/split-config-files';
+import { isGradleBuildFile } from '../utils/split-config-files';
 
 export const createDependencies: CreateDependencies = async (
   _,
@@ -86,7 +86,7 @@ function findGradleFiles(fileMap: FileMap): string[] {
 
   for (const [_, files] of Object.entries(fileMap.projectFileMap)) {
     for (const file of files) {
-      if (GRADLE_BUILD_FILES.has(basename(file.file))) {
+      if (isGradleBuildFile(basename(file.file))) {
         gradleFiles.push(file.file);
       }
     }
