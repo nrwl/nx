@@ -1,5 +1,11 @@
 # Enterprise Release Notes
 
+### 2025.06.3
+
+- Fix: add timeouts to GitLab requests
+  - the defaults are now 5 and 10 seconds for connect and read
+  - these should help prevent issues with certain unstable GitLab environments
+
 ### 2025.06.2
 
 - Fix: Terminal outputs not loading in the browser in restricted environments
