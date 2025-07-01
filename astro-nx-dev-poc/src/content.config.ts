@@ -28,7 +28,6 @@ const pluginDocs = defineCollection({
     pluginName: z.string(),
     packageName: z.string(),
     docType: z.enum(['generators', 'executors', 'migrations']),
-    content: z.string(),
   }),
 });
 
@@ -36,8 +35,8 @@ const devkitDocs = defineCollection({
   loader: DevkitLoader(),
   schema: z.object({
     title: z.string(),
-    docType: z.literal('devkit'),
-    content: z.string().optional(),
+    docType: z.enum(['devkit', 'ngcli_adapter']),
+    description: z.string().optional(),
     category: z.string().optional(),
     kind: z.string().optional(),
   }),

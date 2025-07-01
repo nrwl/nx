@@ -2,14 +2,14 @@ import { existsSync } from 'fs';
 import { join, relative } from 'path';
 import { workspaceRoot } from '@nx/devkit';
 import {
-  parseGenerators,
-  parseExecutors,
-  parseMigrations,
-  type PluginDocEntry,
-  getPropertyType,
   getPropertyDefault,
+  getPropertyType,
+  parseExecutors,
+  parseGenerators,
+  parseMigrations,
 } from './utils/plugin-schema-parser';
 import type { Loader, LoaderContext } from 'astro/loaders';
+import type { CollectionEntry, RenderedContent } from 'astro:content';
 
 // TODO: make this a glob pattern or something so we don't have to manually update
 // Define the plugins to generate documentation for
@@ -38,22 +38,24 @@ const PLUGIN_PATHS = [
   'js',
   'web',
   'workspace',
-  'devkit',
   'nx',
   'plugin',
   'nuxt',
   'gradle',
 ];
 
+type DocEntry = CollectionEntry<'plugin-docs'>;
+
 function generateMarkdown(
   pluginName: string,
   items: Map<string, any>,
   docType: 'generators' | 'executors' | 'migrations'
-): string {
+) {
   const packageName = `@nx/${pluginName}`;
   const typeLabel = docType.charAt(0).toUpperCase() + docType.slice(1);
 
-  let markdown = `The ${packageName} plugin provides various ${docType} to help you create and configure ${pluginName} projects within your Nx workspace.
+  let markdown = `
+  The ${packageName} plugin provides various ${docType} to help you create and configure ${pluginName} projects within your Nx workspace.
 Below is a complete reference for all available ${docType} and their options.
 
 ## Available ${typeLabel}
@@ -121,7 +123,7 @@ nx run project:${name} [options]
 **Arguments:**
 \`\`\`bash
 nx generate ${fullItemName} ${positionalArgs
-        .map((arg) => `&lt;${arg}&gt;`)
+        .map((arg) => `<${arg}>`)
         .join(' ')} [options]
 \`\`\`
 `;
@@ -157,8 +159,9 @@ nx generate ${fullItemName} ${positionalArgs
         const isRequired = required.includes(propName);
 
         let optionName = `\`--${propName}\``;
+
         if (isRequired) {
-          optionName += ' **[required]**';
+          optionName += '[**required**]';
         }
 
         markdown += `\n| ${optionName} | ${type} | ${description} | ${defaultValue} |`;
@@ -167,29 +170,8 @@ nx generate ${fullItemName} ${positionalArgs
       markdown += '\n';
     }
 
-    // Add examples if we can detect common patterns
-    if (
-      docType === 'generators' &&
-      (name === 'init' ||
-        name === 'configuration' ||
-        name === 'component-configuration')
-    ) {
+    if (docType === 'generators') {
       markdown += `
-#### Examples
-
-\`\`\`bash
-# Initialize ${pluginName} in your workspace
-nx generate ${packageName}:init
-
-# Add ${pluginName} configuration to a project
-nx generate ${packageName}:configuration --project=my-app
-\`\`\`
-`;
-    }
-  }
-
-  if (docType === 'generators') {
-    markdown += `
 ## Getting Help
 
 You can get help for any generator by adding the \`--help\` flag:
@@ -198,8 +180,8 @@ You can get help for any generator by adding the \`--help\` flag:
 nx generate ${packageName}:<generator> --help
 \`\`\`
 `;
-  } else if (docType === 'executors') {
-    markdown += `
+    } else if (docType === 'executors') {
+      markdown += `
 ## Getting Help
 
 You can get help for any executor by adding the \`--help\` flag:
@@ -208,6 +190,7 @@ You can get help for any executor by adding the \`--help\` flag:
 nx run project:${docType} --help
 \`\`\`
 `;
+    }
   }
 
   return markdown;
@@ -215,10 +198,11 @@ nx run project:${docType} --help
 
 export async function generateAllPluginDocs(
   logger: LoaderContext['logger'],
-  watcher: LoaderContext['watcher']
-): Promise<PluginDocEntry[]> {
+  watcher: LoaderContext['watcher'],
+  renderMarkdown: (content: string) => Promise<RenderedContent>
+): Promise<DocEntry[]> {
   logger.info('Generating plugin documentation...');
-  const entries: PluginDocEntry[] = [];
+  const entries: DocEntry[] = [];
   let successCount = 0;
   let skipCount = 0;
 
@@ -247,6 +231,8 @@ export async function generateAllPluginDocs(
             join(workspaceRoot, 'astro-nx-dev-poc'),
             join(pluginPath, 'generators.json')
           ),
+          collection: 'plugin-docs',
+          rendered: await renderMarkdown(markdown),
           data: {
             title: `@nx/${pluginName} Generators`,
             pluginName,
@@ -267,6 +253,8 @@ export async function generateAllPluginDocs(
             join(workspaceRoot, 'astro-nx-dev-poc'),
             join(pluginPath, 'executors.json')
           ),
+          collection: 'plugin-docs',
+          rendered: await renderMarkdown(markdown),
           data: {
             title: `@nx/${pluginName} Executors`,
             pluginName,
@@ -283,6 +271,8 @@ export async function generateAllPluginDocs(
         entries.push({
           id: `${pluginName}-migrations`,
           body: markdown,
+          collection: 'plugin-docs',
+          rendered: await renderMarkdown(markdown),
           filePath: relative(
             join(workspaceRoot, 'astro-nx-dev-poc'),
             join(pluginPath, 'migration.json')
@@ -292,7 +282,6 @@ export async function generateAllPluginDocs(
             pluginName,
             packageName: `@nx/${pluginName}`,
             docType: 'migrations',
-            content: markdown,
           },
         });
       }
@@ -318,19 +307,10 @@ export function PluginLoader(options: any = {}): Loader {
   return {
     name: 'nx-plugin-loader',
     async load({ store, logger, watcher, renderMarkdown }: LoaderContext) {
-      const docs = await generateAllPluginDocs(logger, watcher);
-      logger.info(`Loaded ${docs.length} plugin documentation entries`);
-
       store.clear();
-
-      for (const doc of docs) {
-        if (doc.body) {
-          doc.rendered = await renderMarkdown(doc.body);
-        }
-        logger.info(`Processing documentation for ${doc.id}`);
-        store.set(doc);
-      }
-
+      // @ts-expect-error - astro:content types seem to always be out of sync w/ generated types
+      const docs = await generateAllPluginDocs(logger, watcher, renderMarkdown);
+      docs.forEach(store.set);
       logger.info(`Generated plugin documentation with ${docs.length} entries`);
     },
   };

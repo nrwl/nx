@@ -3,12 +3,31 @@
   "targets": {
     "comment": "package.json#scripts runs in the project root directory with astro assumes is where the node_modules is. which fails. so run the scripts in project.json#targets with --root command instead",
     "serve": {
+      "dependsOn": [
+        {
+          "projects": [
+            "devkit"
+          ],
+          "target": "build"
+        }
+      ],
       "command": "astro dev --root=astro-nx-dev-poc"
     },
     "build": {
+      "dependsOn": [
+        {
+          "projects": [
+            "devkit"
+          ],
+          "target": "build"
+        }
+      ],
       "command": "astro build --root=astro-nx-dev-poc"
     },
     "preview": {
+      "dependsOn": [
+        "build"
+      ],
       "command": "astro preview --root=astro-nx-dev-poc"
     },
     "astro": {

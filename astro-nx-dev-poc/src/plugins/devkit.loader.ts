@@ -1,157 +1,88 @@
 import * as typedoc from 'typedoc';
-import { join, resolve } from 'path';
+import { join } from 'path';
 import {
-  existsSync,
-  readFileSync,
-  writeFileSync,
   cpSync,
-  rmSync,
+  existsSync,
   mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
-import { randomUUID } from 'crypto';
-import type { DataStore, RenderedContent } from 'astro:content';
+import type { CollectionEntry, RenderedContent } from 'astro:content';
 import type { LoaderContext } from 'astro/loaders';
-import type { PluginDocEntry } from './utils/plugin-schema-parser';
+import { workspaceRoot } from '@nx/devkit';
+import NxMarkdownTheme from './utils/typedoc/theme.ts';
 
-interface DocumentRecord {
-  title: string;
-  description?: string;
-  path?: string;
-  kind?: string;
-  category?: string;
-}
+type DocEntry = CollectionEntry<'devkit-docs'>;
+
+const categoryMap: Record<number, string> = {
+  [typedoc.ReflectionKind.Class]: 'Classes',
+  [typedoc.ReflectionKind.Enum]: 'Enumerations',
+  [typedoc.ReflectionKind.Function]: 'Functions',
+  [typedoc.ReflectionKind.Interface]: 'Interfaces',
+  [typedoc.ReflectionKind.TypeAlias]: 'Type Aliases',
+  [typedoc.ReflectionKind.Variable]: 'Variables',
+};
+
+const allowedReflections = [
+  typedoc.ReflectionKind.Class,
+  typedoc.ReflectionKind.Enum,
+  typedoc.ReflectionKind.Function,
+  typedoc.ReflectionKind.Interface,
+  typedoc.ReflectionKind.TypeAlias,
+  typedoc.ReflectionKind.Variable,
+];
 
 export function DevkitLoader() {
   return {
     name: 'nx-devkit-loader',
-    async load({ store, logger, watcher, renderMarkdown }: LoaderContext) {
+    async load({ store, logger, renderMarkdown }: LoaderContext) {
       logger.info('Generating DevKit documentation');
       store.clear();
 
-      const tempDir = join(tmpdir(), `nx-devkit-docs-${randomUUID()}`);
-      const projectRoot = process.cwd();
+      const { defaultTypedocOptions, outDir, buildDir, projectRoot } =
+        setupTypeDoc(logger);
 
-      // Setup temporary build directory
-      const buildDir = join(tempDir, 'build', 'packages', 'devkit');
-      const outDir = join(tempDir, 'docs', 'generated', 'devkit');
-
-      // Create necessary directories
-      mkdirSync(buildDir, { recursive: true });
-      mkdirSync(outDir, { recursive: true });
-      mkdirSync(join(tempDir, 'packages', 'devkit'), { recursive: true });
-
-      // Copy the actual tsconfig.json files
-      const devkitPath = join(projectRoot, 'packages', 'devkit');
-      const tsconfigLibPath = join(devkitPath, 'tsconfig.lib.json');
-      const tsconfigPath = join(devkitPath, 'tsconfig.json');
-      const tsconfigBasePath = join(projectRoot, 'tsconfig.base.json');
-
-      if (!existsSync(tsconfigLibPath)) {
-        logger.warn(
-          'tsconfig.lib.json not found, skipping DevKit documentation generation'
-        );
-        return;
-      }
-
-      // Copy tsconfig files to temp directory
-      cpSync(tsconfigLibPath, join(buildDir, 'tsconfig.lib.json'));
-      if (existsSync(tsconfigPath)) {
-        cpSync(
-          tsconfigPath,
-          join(tempDir, 'packages', 'devkit', 'tsconfig.json')
-        );
-      }
-      // Copy tsconfig.base.json if it exists
-      if (existsSync(tsconfigBasePath)) {
-        cpSync(tsconfigBasePath, join(tempDir, 'tsconfig.base.json'));
-      }
-
-      // Update tsconfig paths to point to the absolute paths
-      let tsconfigContent = readFileSync(
-        join(buildDir, 'tsconfig.lib.json'),
-        'utf-8'
-      );
-
-      // Replace relative extends with absolute path
-      if (tsconfigContent.includes('"extends": "./tsconfig.json"')) {
-        tsconfigContent = tsconfigContent.replace(
-          '"extends": "./tsconfig.json"',
-          `"extends": "${join(tempDir, 'packages', 'devkit', 'tsconfig.json')}"`
-        );
-      }
-
-      // Add explicit rootDir and outDir to avoid issues
-      const tsconfigObj = JSON.parse(tsconfigContent);
-      tsconfigObj.compilerOptions = tsconfigObj.compilerOptions || {};
-      tsconfigObj.compilerOptions.rootDir = projectRoot;
-      tsconfigObj.compilerOptions.typeRoots = [
-        join(projectRoot, 'node_modules', '@types'),
-      ];
-
-      // Exclude test files to avoid type conflicts
-      tsconfigObj.exclude = [
-        ...(tsconfigObj.exclude || []),
-        '**/*.spec.ts',
-        '**/*.test.ts',
-        '**/test/**',
-        '**/tests/**',
-        'node_modules/@types/jasmine/**',
-        'node_modules/@types/jest/**',
-      ];
-
-      writeFileSync(
-        join(buildDir, 'tsconfig.lib.json'),
-        JSON.stringify(tsconfigObj, null, 2)
-      );
-
-      // Common TypeDoc options
-      const commonTypedocOptions: Partial<typedoc.TypeDocOptions> & {
-        [key: string]: unknown;
-      } = {
-        plugin: ['typedoc-plugin-markdown'],
-        disableSources: true,
-        theme: 'markdown',
-        readme: 'none',
-        hideBreadcrumbs: true,
-        allReflectionsHaveOwnDocument: true,
-        skipErrorChecking: true, // Skip TypeScript errors
-        compilerOptions: {
-          skipLibCheck: true,
-          skipDefaultLibCheck: true,
-          noEmit: true,
-        },
-      };
-
-      // Generate main devkit documentation
-      const mainEntryPoint = join(
+      const devkitEntryPoint = join(
         projectRoot,
         'build',
         'packages',
         'devkit',
         'index.d.ts'
       );
-      if (!existsSync(mainEntryPoint)) {
+      if (!existsSync(devkitEntryPoint)) {
         logger.warn(
           'build/packages/devkit/index.d.ts not found, please run build first'
         );
-        return;
+        throw new Error(
+          `build/packages/devkit/index.d.ts not found, unable to generate docs. Make sure to run devkit build first. ${devkitEntryPoint}`
+        );
       }
 
-      await generateDocsForEntry(
+      const devkitDocs = await generateDocsForEntry(
         {
-          ...commonTypedocOptions,
-          entryPoints: [mainEntryPoint],
+          ...defaultTypedocOptions,
+          entryPoints: [devkitEntryPoint],
           tsconfig: join(buildDir, 'tsconfig.lib.json'),
           out: outDir,
           excludePrivate: true,
           publicPath: '/reference/core-api/devkit/',
         },
-        store,
-        logger,
+        // @ts-expect-error typemismatch bc auto generated types in .astro vs astro:content etc
         renderMarkdown,
         'devkit'
       );
+
+      devkitDocs.forEach(store.set);
+
+      const devkitOverviewPage = await createOverview(
+        devkitDocs,
+        // @ts-expect-error typemismatch bc auto generated types in .astro vs astro:content etc
+        renderMarkdown,
+        'devkit'
+      );
+      store.set(devkitOverviewPage);
 
       // Generate ngcli-adapter documentation
       const ngcliEntryPoint = join(
@@ -161,32 +92,104 @@ export function DevkitLoader() {
         'devkit',
         'ngcli-adapter.d.ts'
       );
-      await generateDocsForEntry(
+
+      if (!existsSync(ngcliEntryPoint)) {
+        logger.warn(
+          'build/packages/devkit/ngcli-adapter.d.ts not found, skipping ngcli_adapter documentation generation'
+        );
+        throw new Error(
+          `build/packages/devkit/ngcli-adapter.d.ts not found, unable to generate docs. Make sure to run devkit build first. ${ngcliEntryPoint}`
+        );
+      }
+      const ngcliDocs = await generateDocsForEntry(
         {
-          ...commonTypedocOptions,
+          ...defaultTypedocOptions,
           entryPoints: [ngcliEntryPoint],
           tsconfig: join(buildDir, 'tsconfig.lib.json'),
           out: join(outDir, 'ngcli_adapter'),
           publicPath: '/reference/core-api/devkit/ngcli_adapter/',
         },
-        store,
-        logger,
+        // @ts-expect-error typemismatch bc auto generated types in .astro vs astro:content etc
         renderMarkdown,
-        'devkit/ngcli_adapter'
+        'ngcli_adapter'
       );
+      ngcliDocs.forEach(store.set);
+
+      const ngcliOverviewPage = await createOverview(
+        ngcliDocs,
+        // @ts-expect-error typemismatch bc auto generated types in .astro vs astro:content etc
+        renderMarkdown,
+        'ngcli_adapter'
+      );
+      console.log('ngcli overview page', ngcliOverviewPage);
+
+      store.set(ngcliOverviewPage);
 
       logger.info('DevKit documentation generated successfully');
     },
   };
 }
 
+async function createOverview(
+  records: DocEntry[],
+  renderMarkdown: (content: string) => Promise<RenderedContent>,
+  baseSlug: DocEntry['data']['docType']
+): Promise<DocEntry> {
+  const record: DocEntry = {
+    id: `${baseSlug}-overview`,
+    body: '',
+    collection: 'devkit-docs',
+    data: {
+      kind: 'Project',
+      category: 'Project',
+      docType: baseSlug,
+      title: `${baseSlug} Overview`,
+      description: `${baseSlug} description`,
+    },
+  };
+
+  // alphabetize categories
+  const categories = Object.values(categoryMap).toSorted((a, b) =>
+    a.localeCompare(b)
+  );
+
+  const baseUrl =
+    `/api/plugins/devkit` +
+    (baseSlug === 'ngcli_adapter' ? `/${baseSlug}` : '');
+
+  for (const name of categories) {
+    const ofKind = records
+      .filter((r) => r.data.category === name)
+      .toSorted((a, b) => a.data.title.localeCompare(b.data.title));
+
+    if (ofKind.length === 0) {
+      continue;
+    }
+
+    record.body += `\n## ${name}\n\n`;
+    record.body +=
+      `- ` +
+      ofKind
+        .map(
+          (r) =>
+            `[${r.data.title}](${baseUrl}/${r.data.title
+              .toLowerCase()
+              .replaceAll(' ', '')})`
+        )
+        .join('\n- ');
+  }
+
+  record.rendered = await renderMarkdown(record.body!);
+
+  return record;
+}
+
 async function generateDocsForEntry(
   options: Partial<typedoc.TypeDocOptions> & { [key: string]: unknown },
-  store: LoaderContext['store'],
-  logger: LoaderContext['logger'],
   renderMarkdown: (content: string) => Promise<RenderedContent>,
-  baseSlug: string
+  baseSlug: DocEntry['data']['docType']
 ) {
+  const records: DocEntry[] = [];
   const app = await typedoc.Application.bootstrapWithPlugins(
     options as Partial<typedoc.TypeDocOptions>,
     [
@@ -196,85 +199,79 @@ async function generateDocsForEntry(
     ]
   );
 
+  app.renderer.defineTheme('nx-markdown-theme', NxMarkdownTheme);
+
   const project = await app.convert();
   if (!project) {
     throw new Error('Failed to convert the project');
   }
 
-  // Instead of writing to filesystem, we'll capture the output
-  const renderer = app.renderer;
-  const theme = renderer.theme as any;
-
   // Process all reflections and generate markdown content
   const reflections = project.getReflectionsByKind(typedoc.ReflectionKind.All);
 
   for (const reflection of reflections) {
-    if (!reflection.name || reflection.flags.isPrivate) continue;
+    if (
+      !reflection.name ||
+      reflection.flags.isPrivate ||
+      !allowedReflections.includes(reflection.kind)
+    )
+      continue;
 
     // Generate markdown content for this reflection
     const markdownContent = generateMarkdownForReflection(
-      reflection,
-      options.publicPath as string
+      reflection as typedoc.DeclarationReflection,
+      baseSlug
     );
 
     if (markdownContent) {
-      const slug = `${baseSlug}/${reflection.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, '-')}`;
       const rendered = await renderMarkdown(markdownContent);
 
-      logger.info(
-        `Rendered content for ${reflection.name}: ${
-          rendered ? 'success' : 'empty'
-        }`
-      );
-
-      const documentRecord: PluginDocEntry<DocumentRecord> = {
-        id: slug,
+      const documentRecord: DocEntry = {
+        id: `${baseSlug}_${reflection.name.toLowerCase().replaceAll(' ', '')}`,
         body: markdownContent,
         rendered,
+        collection: 'devkit-docs',
         data: {
           title: reflection.name,
-          description: reflection.comment?.summary?.[0]?.text || '',
-          path: `${options.publicPath}${reflection.name}`,
+          docType: baseSlug,
+          description: reflection.comment?.summary
+            ? parseComment(reflection.comment.summary, baseSlug)
+            : 'No description available',
           kind: typedoc.ReflectionKind[reflection.kind],
-          category: getReflectionCategory(reflection.kind),
+          category: categoryMap[reflection.kind] || 'Other',
         },
       };
 
-      store.set(documentRecord);
-      logger.info(`Added documentation for ${reflection.name}`);
+      records.push(documentRecord);
     }
   }
+
+  return records;
 }
 
 function generateMarkdownForReflection(
-  reflection: typedoc.Reflection,
-  publicPath: string
+  reflection: typedoc.DeclarationReflection,
+  baseSlug: DocEntry['data']['docType']
 ): string | null {
   let content = '';
-
-  // Title
-  content += `# ${reflection.name}\n\n`;
-
-  // Kind badge and category
-  const kindName = typedoc.ReflectionKind[reflection.kind] || 'Unknown';
-  const category = getReflectionCategory(reflection.kind);
-  content += `**Kind**: ${kindName}\n`;
-  content += `**Category**: ${category}\n\n`;
 
   // Comment/description
   if (reflection.comment) {
     if (reflection.comment.summary) {
-      content +=
-        reflection.comment.summary.map((part) => part.text).join('') + '\n\n';
+      content += parseComment(reflection.comment.summary, baseSlug) + '\n\n';
     }
     if (reflection.comment.blockTags) {
       for (const tag of reflection.comment.blockTags) {
-        content += `**@${tag.tag}**: ${tag.content
-          .map((part) => part.text)
-          .join('')}\n\n`;
+        // TODO: any other tags we need to handle inside a description?
+        if (tag.tag === '@deprecated') {
+          content += `:::caution[Deprecated]\n`;
+          content += parseComment(tag.content, baseSlug) + '\n';
+          content += `:::\n`;
+        } else {
+          content += `**@${tag.tag}**: ${parseComment(tag.content, baseSlug)}`;
+        }
       }
+      content += '\n\n';
     }
   }
 
@@ -289,8 +286,7 @@ function generateMarkdownForReflection(
       content += '```\n\n';
 
       if (sig.comment?.summary) {
-        content +=
-          sig.comment.summary.map((part) => part.text).join('') + '\n\n';
+        content += parseComment(sig.comment.summary, baseSlug) + '\n\n';
       }
 
       if (sig.parameters && sig.parameters.length > 0) {
@@ -298,8 +294,7 @@ function generateMarkdownForReflection(
         for (const param of sig.parameters) {
           content += `- **${param.name}**: \`${formatType(param.type)}\``;
           if (param.comment?.summary) {
-            content +=
-              ' - ' + param.comment.summary.map((part) => part.text).join('');
+            content += ' - ' + parseComment(param.comment.summary, baseSlug);
           }
           content += '\n';
         }
@@ -319,11 +314,9 @@ function generateMarkdownForReflection(
     if (properties.length > 0) {
       content += '## Properties\n\n';
       for (const prop of properties) {
-        content += `### ${prop.name}\n\n`;
-        content += `\`${formatType(prop.type)}\`\n\n`;
+        content += `**${prop.name}**: \`${formatType(prop.type)}\`\n\n`;
         if (prop.comment?.summary) {
-          content +=
-            prop.comment.summary.map((part) => part.text).join('') + '\n\n';
+          content += parseComment(prop.comment.summary, baseSlug) + '\n\n';
         }
       }
     }
@@ -353,39 +346,167 @@ function formatType(type?: typedoc.SomeType): string {
   } else if (type.type === 'literal') {
     return (type as any).value ? `'${(type as any).value}'` : 'any';
   } else if (type.type === 'reflection') {
-    return 'object';
+    return 'Object';
   }
 
   return 'any';
 }
 
-function getReflectionCategory(kind: typedoc.ReflectionKind): string {
-  // Map TypeDoc ReflectionKind to plural category names
-  const categoryMap: Record<number, string> = {
-    [typedoc.ReflectionKind.Project]: 'Projects',
-    [typedoc.ReflectionKind.Module]: 'Modules',
-    [typedoc.ReflectionKind.Namespace]: 'Namespaces',
-    [typedoc.ReflectionKind.Enum]: 'Enumerations',
-    [typedoc.ReflectionKind.EnumMember]: 'Enumeration Members',
-    [typedoc.ReflectionKind.Variable]: 'Variables',
-    [typedoc.ReflectionKind.Function]: 'Functions',
-    [typedoc.ReflectionKind.Class]: 'Classes',
-    [typedoc.ReflectionKind.Interface]: 'Interfaces',
-    [typedoc.ReflectionKind.Constructor]: 'Constructors',
-    [typedoc.ReflectionKind.Property]: 'Properties',
-    [typedoc.ReflectionKind.Method]: 'Methods',
-    [typedoc.ReflectionKind.CallSignature]: 'Call Signatures',
-    [typedoc.ReflectionKind.IndexSignature]: 'Index Signatures',
-    [typedoc.ReflectionKind.ConstructorSignature]: 'Constructor Signatures',
-    [typedoc.ReflectionKind.Parameter]: 'Parameters',
-    [typedoc.ReflectionKind.TypeLiteral]: 'Type Literals',
-    [typedoc.ReflectionKind.TypeParameter]: 'Type Parameters',
-    [typedoc.ReflectionKind.Accessor]: 'Accessors',
-    [typedoc.ReflectionKind.GetSignature]: 'Get Signatures',
-    [typedoc.ReflectionKind.SetSignature]: 'Set Signatures',
-    [typedoc.ReflectionKind.TypeAlias]: 'Type Aliases',
-    [typedoc.ReflectionKind.Reference]: 'References',
+function parseComment(
+  comment: typedoc.CommentDisplayPart[],
+  baseSlug: DocEntry['data']['docType']
+) {
+  const result: string[] = [];
+  for (const part of comment) {
+    switch (part.kind) {
+      case 'text':
+      case 'code':
+        result.push(part.text);
+        break;
+      case 'inline-tag':
+        switch (part.tag) {
+          case '@label':
+          case '@inheritdoc':
+            break;
+          case '@link':
+          case '@linkcode':
+          case '@linkplain': {
+            if (part.target) {
+              const baseUrl =
+                `/api/plugins/devkit` +
+                (baseSlug === 'ngcli_adapter' ? `/${baseSlug}` : '');
+              const url =
+                typeof part.target === 'string'
+                  ? part.target
+                  : // TODO: there are cases where links are to a specific header inside another document that we need to handle
+                    //  i.e. Workspace -> NxJsonConfiguration#<tasksDefaultOptions>
+
+                    `${baseUrl}/${part.text.toLowerCase().replaceAll(' ', '')}`;
+              const wrap = part.tag === '@linkcode' ? '`' : '';
+              result.push(
+                url ? `[${wrap}${part.text}${wrap}](${url})` : part.text
+              );
+            } else {
+              result.push(part.text);
+            }
+            break;
+          }
+          default:
+            result.push(`{${part.tag} ${part.text}}`);
+            break;
+        }
+        break;
+      default:
+        result.push('');
+    }
+  }
+
+  return result
+    .join('')
+    .split('\n')
+    .filter((line) => !line.startsWith('@note'))
+    .join('\n');
+}
+
+function setupTypeDoc(logger: LoaderContext['logger']) {
+  const tempDir = join(tmpdir(), `nx-devkit-docs`);
+  const projectRoot = process.cwd();
+
+  // Setup temporary build directory
+  const buildDir = join(workspaceRoot, 'build', 'packages', 'devkit');
+  const outDir = join(tempDir, 'docs', 'generated', 'devkit');
+
+  // Create necessary directories
+  mkdirSync(buildDir, { recursive: true });
+  mkdirSync(outDir, { recursive: true });
+  mkdirSync(join(tempDir, 'packages', 'devkit'), { recursive: true });
+
+  // Copy the actual tsconfig.json files
+  const devkitPath = join(workspaceRoot, 'packages', 'devkit');
+  const tsconfigLibPath = join(devkitPath, 'tsconfig.lib.json');
+  const tsconfigPath = join(devkitPath, 'tsconfig.json');
+  const tsconfigBasePath = join(workspaceRoot, 'tsconfig.base.json');
+
+  if (!existsSync(tsconfigLibPath)) {
+    logger.warn(
+      'tsconfig.lib.json not found, skipping DevKit documentation generation'
+    );
+    throw new Error(
+      `tsconfig.lib.json not found, unable to generate docs. ${tsconfigLibPath}`
+    );
+  }
+
+  // Copy tsconfig files to temp directory
+  cpSync(tsconfigLibPath, join(buildDir, 'tsconfig.lib.json'));
+  if (existsSync(tsconfigPath)) {
+    cpSync(tsconfigPath, join(tempDir, 'packages', 'devkit', 'tsconfig.json'));
+  }
+  // Copy tsconfig.base.json if it exists
+  if (existsSync(tsconfigBasePath)) {
+    cpSync(tsconfigBasePath, join(tempDir, 'tsconfig.base.json'));
+  }
+
+  // Update tsconfig paths to point to the absolute paths
+  let tsconfigContent = readFileSync(
+    join(buildDir, 'tsconfig.lib.json'),
+    'utf-8'
+  );
+
+  // Replace relative extends with absolute path
+  if (tsconfigContent.includes('"extends": "./tsconfig.json"')) {
+    tsconfigContent = tsconfigContent.replace(
+      '"extends": "./tsconfig.json"',
+      `"extends": "${join(tempDir, 'packages', 'devkit', 'tsconfig.json')}"`
+    );
+  }
+
+  // Add explicit rootDir and outDir to avoid issues
+  const tsconfigObj = JSON.parse(tsconfigContent);
+  tsconfigObj.compilerOptions = tsconfigObj.compilerOptions || {};
+  tsconfigObj.compilerOptions.rootDir = projectRoot;
+  tsconfigObj.compilerOptions.typeRoots = [
+    join(projectRoot, 'node_modules', '@types'),
+  ];
+
+  // Exclude test files to avoid type conflicts
+  tsconfigObj.exclude = [
+    ...(tsconfigObj.exclude || []),
+    '**/*.spec.ts',
+    '**/*.test.ts',
+    '**/test/**',
+    '**/tests/**',
+    'node_modules/@types/jasmine/**',
+    'node_modules/@types/jest/**',
+  ];
+
+  writeFileSync(
+    join(buildDir, 'tsconfig.lib.json'),
+    JSON.stringify(tsconfigObj, null, 2)
+  );
+
+  rmSync(outDir, { recursive: true, force: true });
+
+  const defaultTypedocOptions: Partial<typedoc.TypeDocOptions> & {
+    [key: string]: unknown;
+  } = {
+    plugin: ['typedoc-plugin-markdown'],
+    disableSources: true,
+    theme: 'markdown',
+    readme: 'none',
+    hideBreadcrumbs: true,
+    allReflectionsHaveOwnDocument: true,
+    skipErrorChecking: true, // Skip TypeScript errors
+    compilerOptions: {
+      skipLibCheck: true,
+      skipDefaultLibCheck: true,
+      noEmit: true,
+    },
   };
 
-  return categoryMap[kind] || 'Other';
+  return {
+    projectRoot,
+    outDir,
+    buildDir,
+    defaultTypedocOptions,
+  };
 }
