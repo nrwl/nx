@@ -14,6 +14,8 @@ import {
 } from '@nx/nx-dev-ui-common';
 import { gotoAppButton } from '../../lib/components/headerCtaConfigs';
 
+// Needed without it Next.js will fail to serve the page with startexport const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: 'Nx Cloud - Available Plans',
   description:

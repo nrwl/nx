@@ -113,7 +113,7 @@
             "description": "NextJs build step"
           },
           {
-            "command": "cp -r nx-dev/nx-dev/.next dist/nx-dev/nx-dev/.next && cp -r nx-dev/nx-dev/public dist/nx-dev/nx-dev/public",
+            "command": "mkdir -p dist/nx-dev/nx-dev && cp -r nx-dev/nx-dev/.next dist/nx-dev/nx-dev/.next && cp -r nx-dev/nx-dev/public dist/nx-dev/nx-dev/public",
             "description": "Copy NextJs build output to dist"
           }
         ],
