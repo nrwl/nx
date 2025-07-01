@@ -1,18 +1,18 @@
-import { NxCloudCIMessageLifeCycle } from './nx-cloud-ci-message-life-cycle';
+import { vol } from 'memfs';
+import * as nxJsonUtils from '../../config/nx-json';
 import { Task } from '../../config/task-graph';
 import * as utils from '../../utils/is-ci';
 import * as nxCloudUtils from '../../utils/nx-cloud-utils';
-import * as nxJsonUtils from '../../config/nx-json';
-import * as workspaceRootUtils from '../../utils/workspace-root';
 import { output } from '../../utils/output';
-import { vol } from 'memfs';
+import * as workspaceRootUtils from '../../utils/workspace-root';
+import { NxCloudCIMessageLifeCycle } from './nx-cloud-ci-message-life-cycle';
 
 jest.mock('fs');
 jest.mock('../../utils/workspace-root');
 
 describe('NxCloudCIMessageLifeCycle', () => {
   let lifecycle: NxCloudCIMessageLifeCycle;
-  let errorSpy: jest.SpyInstance;
+  let errorSpy: jest.Spied<typeof output.error>;
 
   beforeEach(() => {
     lifecycle = new NxCloudCIMessageLifeCycle();

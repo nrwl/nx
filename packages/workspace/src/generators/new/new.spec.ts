@@ -1,5 +1,5 @@
-import { readJson, Tree, writeJson } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
+import { readJson, Tree, writeJson } from '@nx/devkit';
 import { createTree } from '@nx/devkit/testing';
 import {
   angularCliVersion,
@@ -7,9 +7,9 @@ import {
   typescriptVersion,
 } from '../../utils/versions';
 import { Preset } from '../utils/presets';
-import { newGenerator, NormalizedSchema } from './new';
 import * as getNpmPackageVersion from './../utils/get-npm-package-version';
 import * as generatePreset from './generate-preset';
+import { newGenerator, NormalizedSchema } from './new';
 
 const DEFAULT_PACKAGE_VERSION = '1.0.0';
 
@@ -25,9 +25,9 @@ const defaultOptions: Omit<
 
 describe('new', () => {
   let tree: Tree;
-  let installPackagesTaskSpy: jest.SpyInstance;
-  let generatePresetSpy: jest.SpyInstance;
-  let getNpmPackageVersionSpy: jest.SpyInstance;
+  let installPackagesTaskSpy: jest.Spied<typeof devkit.installPackagesTask>;
+  let generatePresetSpy: jest.Spied<typeof generatePreset.generatePreset>;
+  let getNpmPackageVersionSpy: jest.Spied<typeof getNpmPackageVersion.getNpmPackageVersion>;
 
   beforeEach(() => {
     tree = createTree();

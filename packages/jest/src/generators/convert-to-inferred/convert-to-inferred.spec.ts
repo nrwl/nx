@@ -389,7 +389,7 @@ describe('Jest - Convert Executors To Plugin', () => {
       expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
     });
 
-    it('should make "testFile" relative to the project root and turn it into "testPathPattern"', async () => {
+    it('should make "testFile" relative to the project root and turn it into "testPathPatterns"', async () => {
       const project = createTestProject(tree, undefined, {
         testFile: `${defaultTestProjectOptions.appRoot}/src/app/test.spec.ts`,
       });
@@ -407,7 +407,7 @@ describe('Jest - Convert Executors To Plugin', () => {
       // assert updated project configuration
       const updatedProject = readProjectConfiguration(tree, project.name);
       expect(updatedProject.targets.test.options).toStrictEqual({
-        testPathPattern: 'src/app/test.spec.ts',
+        testPathPatterns: 'src/app/test.spec.ts',
       });
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
@@ -437,7 +437,7 @@ describe('Jest - Convert Executors To Plugin', () => {
         // assert updated project configuration
         const updatedProject = readProjectConfiguration(tree, project.name);
         expect(updatedProject.targets.test.options).toStrictEqual({
-          testPathPattern: '.*',
+          testPathPatterns: '.*',
         });
         // assert other projects were not modified
         const updatedProject2 = readProjectConfiguration(tree, project2.name);
@@ -445,9 +445,9 @@ describe('Jest - Convert Executors To Plugin', () => {
       }
     );
 
-    it('should make "testPathPattern" paths relative to the project root', async () => {
+    it('should make "testPathPatterns" paths relative to the project root', async () => {
       const project = createTestProject(tree, undefined, {
-        testPathPattern: [
+        testPathPatterns: [
           `${defaultTestProjectOptions.appRoot}/src/app/test1.spec.ts`,
           `${defaultTestProjectOptions.appRoot}/src/app/test2.spec.ts`,
         ],
@@ -466,7 +466,7 @@ describe('Jest - Convert Executors To Plugin', () => {
       // assert updated project configuration
       const updatedProject = readProjectConfiguration(tree, project.name);
       expect(updatedProject.targets.test.options).toStrictEqual({
-        testPathPattern: '"src/app/test1.spec.ts|src/app/test2.spec.ts"',
+        testPathPatterns: '"src/app/test1.spec.ts|src/app/test2.spec.ts"',
       });
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
@@ -479,9 +479,9 @@ describe('Jest - Convert Executors To Plugin', () => {
       [[`./${defaultTestProjectOptions.appRoot}`]],
       [[`./${defaultTestProjectOptions.appRoot}/`]],
     ])(
-      'should make "testPathPattern" a catch-all wildcard when it is set to the project root (%s)',
-      async (testPathPattern) => {
-        const project = createTestProject(tree, undefined, { testPathPattern });
+      'should make "testPathPatterns" a catch-all wildcard when it is set to the project root (%s)',
+      async (testPathPatterns) => {
+        const project = createTestProject(tree, undefined, { testPathPatterns });
         const project2 = createTestProject(tree, {
           appRoot: 'apps/project2',
           appName: 'project2',
@@ -496,7 +496,7 @@ describe('Jest - Convert Executors To Plugin', () => {
         // assert updated project configuration
         const updatedProject = readProjectConfiguration(tree, project.name);
         expect(updatedProject.targets.test.options).toStrictEqual({
-          testPathPattern: '.*',
+          testPathPatterns: '.*',
         });
         // assert other projects were not modified
         const updatedProject2 = readProjectConfiguration(tree, project2.name);
@@ -504,10 +504,10 @@ describe('Jest - Convert Executors To Plugin', () => {
       }
     );
 
-    it('should merge "testFile" and "testPathPattern" paths', async () => {
+    it('should merge "testFile" and "testPathPatterns" paths', async () => {
       const project = createTestProject(tree, undefined, {
         testFile: `${defaultTestProjectOptions.appRoot}/src/app/test1.spec.ts`,
-        testPathPattern: [
+        testPathPatterns: [
           `${defaultTestProjectOptions.appRoot}/src/app/test2.spec.ts`,
           `${defaultTestProjectOptions.appRoot}/src/app/test3.spec.ts`,
         ],
@@ -526,7 +526,7 @@ describe('Jest - Convert Executors To Plugin', () => {
       // assert updated project configuration
       const updatedProject = readProjectConfiguration(tree, project.name);
       expect(updatedProject.targets.test.options).toStrictEqual({
-        testPathPattern:
+        testPathPatterns:
           '"src/app/test1.spec.ts|src/app/test2.spec.ts|src/app/test3.spec.ts"',
       });
       // assert other projects were not modified

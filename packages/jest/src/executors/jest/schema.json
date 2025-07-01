@@ -123,7 +123,7 @@
       "type": "string"
     },
     "passWithNoTests": {
-      "description": "Will not fail if no tests are found (for example while using `--testPathPattern`.) (https://jestjs.io/docs/cli#--passwithnotests)",
+      "description": "Will not fail if no tests are found (for example while using `--testPathPatterns`.) (https://jestjs.io/docs/cli#--passwithnotests)",
       "type": "boolean"
     },
     "randomize": {
@@ -155,7 +155,7 @@
         "type": "string"
       }
     },
-    "testPathPattern": {
+    "testPathPatterns": {
       "description": "An array of regexp pattern strings that is matched against all tests paths before executing the test. (https://jestjs.io/docs/cli#--testpathpatternregex)",
       "type": "array",
       "items": {

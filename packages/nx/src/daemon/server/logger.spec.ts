@@ -6,7 +6,7 @@ jest.mock('../../utils/versions', () => ({
 }));
 
 describe('serverLogger', () => {
-  let consoleLogSpy: jest.SpyInstance;
+  let consoleLogSpy: jest.Spied<typeof console.log>;
 
   beforeEach(() => {
     jest

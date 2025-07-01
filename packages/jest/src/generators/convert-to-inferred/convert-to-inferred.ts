@@ -182,18 +182,18 @@ async function updateOptions(
     delete targetOptions.testFile;
   }
 
-  if ('testPathPattern' in targetOptions) {
+  if ('testPathPatterns' in targetOptions) {
     testPathPatterns.push(
-      ...targetOptions.testPathPattern.map((pattern: string) =>
+      ...targetOptions.testPathPatterns.map((pattern: string) =>
         toProjectRelativeRegexPath(pattern, projectRoot)
       )
     );
   }
 
   if (testPathPatterns.length > 1) {
-    targetOptions.testPathPattern = `\"${testPathPatterns.join('|')}\"`;
+    targetOptions.testPathPatterns = `\"${testPathPatterns.join('|')}\"`;
   } else if (testPathPatterns.length === 1) {
-    targetOptions.testPathPattern = testPathPatterns[0];
+    targetOptions.testPathPatterns = testPathPatterns[0];
   }
 
   if ('testPathIgnorePatterns' in targetOptions) {
