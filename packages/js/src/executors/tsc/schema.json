@@ -111,6 +111,11 @@
       "type": "boolean",
       "description": "Generate package.json file in the output folder.",
       "default": true
+    },
+    "includeIgnoredAssetFiles": {
+      "type": "boolean",
+      "description": "Include files that are ignored by .gitignore and .nxignore when copying assets.",
+      "default": false
     }
   },
   "required": ["main", "outputPath", "tsConfig"],
@@ -138,6 +143,11 @@
             "output": {
               "type": "string",
               "description": "Absolute path within the output."
+            },
+            "includeIgnoredFiles": {
+              "type": "boolean",
+              "description": "Include files that are ignored by .gitignore and .nxignore for this specific asset pattern.",
+              "default": false
             }
           },
           "additionalProperties": false,
