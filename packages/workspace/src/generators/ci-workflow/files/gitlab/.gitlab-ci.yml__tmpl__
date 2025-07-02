@@ -23,9 +23,9 @@ variables:
 
     - <%= packageManagerInstall %><% if(hasCypress){ %>
     - <%= packageManagerPrefix %> cypress install<% } %><% if(hasPlaywright){ %>
-    - <%= packageManagerPrefix %> playwright install --with-deps<% } %>
+    - <%= packageManagerPrefix %> playwright install --with-deps<% } %><% if(!useRunMany){ %>
     - NX_HEAD=$CI_COMMIT_SHA
-    - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+    - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}<% } %>
 
 <% for (const command of commands) { %><% if (command.comments) { %><% for (const comment of command.comments) { %>
     # <%- comment %><% } %><% } %><% if (command.command) { %>

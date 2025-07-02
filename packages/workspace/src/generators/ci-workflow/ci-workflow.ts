@@ -55,7 +55,7 @@ function getCiCommands(
   }
 
   // Build nx command with CI-specific args
-  const args = getCiArgs(ci, mainBranch);
+  const args = getCiArgs(ci, mainBranch, useRunMany);
   const nxCommand = `${packageManagerPrefix} nx ${commandType} ${args}-t ${tasks}`;
 
   return [
@@ -81,7 +81,12 @@ function getCiPrefix(ci: Schema['ci']): string {
   return '';
 }
 
-function getCiArgs(ci: Schema['ci'], mainBranch: string): string {
+function getCiArgs(ci: Schema['ci'], mainBranch: string, useRunMany: boolean = false): string {
+  // When using run-many, we don't need base/head SHA args
+  if (useRunMany) {
+    return '';
+  }
+  
   if (ci === 'azure') {
     return '--base=$(BASE_SHA) --head=$(HEAD_SHA) ';
   } else if (ci === 'bitbucket-pipelines') {
@@ -105,18 +110,27 @@ function getBitbucketBranchCommands(
     `- ${packageManagerPrefix} nx-cloud record -- echo Hello World`,
   ];
 
-  // BitBucket branches always use affected for now, regardless of useRunMany flag
-  const nxAffectedComments = [
-    `Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
-  ];
+  // Build nx command comments and command
+  const commandType = useRunMany ? 'run-many' : 'affected';
+  const nxCommandComments = useRunMany
+    ? [
+        `As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
+      ]
+    : [
+        `Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
+      ];
+
+  // Build command with conditional base arg
+  const baseArg = useRunMany ? '' : ' --base=HEAD~1';
+  const command = `${packageManagerPrefix} nx ${commandType} -t ${tasks}${baseArg}`;
 
   return [
     {
       comments: nxCloudComments,
     },
     {
-      comments: nxAffectedComments,
-      command: `${packageManagerPrefix} nx affected -t ${tasks} --base=HEAD~1`,
+      comments: nxCommandComments,
+      command,
     },
   ];
 }
@@ -163,6 +177,7 @@ interface Substitutes {
   tmpl: '';
   connectedToCloud: boolean;
   packageManagerVersion: string;
+  useRunMany: boolean;
   commands: Command[];
   branchCommands?: Command[];
 }
@@ -232,6 +247,7 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
     nxCloudHost,
     tmpl: '',
     connectedToCloud,
+    useRunMany: options.useRunMany ?? false,
     commands,
     branchCommands,
   };

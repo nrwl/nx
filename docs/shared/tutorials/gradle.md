@@ -326,10 +326,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
 
-      - uses: nrwl/nx-set-shas@v4
-
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: ./nx affected -t test build
+      # As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - run: ./nx run-many -t test build
 ```
 
 ### Open a Pull Request {% highlightColor="green" %}

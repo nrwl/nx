@@ -856,7 +856,6 @@ jobs:
 
       - run: npm ci --legacy-peer-deps
       - run: npx playwright install --with-deps
-      - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World

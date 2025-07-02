@@ -1018,7 +1018,6 @@ jobs:
           node-version: 20
           cache: 'npm'
       - run: npm ci --legacy-peer-deps
-      - uses: nrwl/nx-set-shas@v4
       # As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run: npx nx run-many -t lint test build e2e
