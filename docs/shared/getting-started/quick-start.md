@@ -5,6 +5,12 @@ description: Get up and running with Nx in minutes - install Nx, set up your edi
 
 # Getting Started
 
+{% callout type="announcement" title="Nx Essentials Online Workshop - July 29-30" %}
+Join us for an interactive deep-dive into Nx covering everything from foundational concepts to more advanced enterprise techniques. Early bird pricing available until July 18th.
+
+[Save your seat today!](https://bit.ly/44AfKAb)
+{% /callout %}
+
 Get up and running with Nx in just a few minutes by following these simple steps.
 
 {% steps %}
