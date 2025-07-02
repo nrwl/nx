@@ -6,13 +6,13 @@ pr:
   - <%= mainBranch %>
 
 variables:
-  CI: 'true'<% if(!useRunMany){ %>
+  CI: 'true'
   ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)<% if(!useRunMany){ %>
     TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
-    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)<% } %>
   ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
-    NX_BRANCH: $(Build.SourceBranchName)
+    NX_BRANCH: $(Build.SourceBranchName)<% if(!useRunMany){ %>
     BASE_SHA: $(git rev-parse HEAD~1)
   HEAD_SHA: $(git rev-parse HEAD)<% } %>
 
