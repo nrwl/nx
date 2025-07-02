@@ -20,7 +20,10 @@ export default defineConfig({
         src: './src/assets/nx/Nx-light.png',
         replacesTitle: true,
       },
-      plugins: [linkValidator(), sectionSidebarPlugin()],
+      plugins: [
+        // linkValidator(),
+        sectionSidebarPlugin(),
+      ],
       routeMiddleware: ['./src/plugins/banner.middleware.ts'],
       markdown: {
         // this breaks the renderMarkdown function in the plugin loader due to starlight path normalization

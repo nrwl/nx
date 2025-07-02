@@ -227,10 +227,6 @@ export async function generateAllPluginDocs(
         entries.push({
           id: `${pluginName}-generators`,
           body: markdown,
-          filePath: relative(
-            join(workspaceRoot, 'astro-nx-dev-poc'),
-            join(pluginPath, 'generators.json')
-          ),
           collection: 'plugin-docs',
           rendered: await renderMarkdown(markdown),
           data: {
@@ -249,10 +245,6 @@ export async function generateAllPluginDocs(
         entries.push({
           id: `${pluginName}-executors`,
           body: markdown,
-          filePath: relative(
-            join(workspaceRoot, 'astro-nx-dev-poc'),
-            join(pluginPath, 'executors.json')
-          ),
           collection: 'plugin-docs',
           rendered: await renderMarkdown(markdown),
           data: {
@@ -273,10 +265,6 @@ export async function generateAllPluginDocs(
           body: markdown,
           collection: 'plugin-docs',
           rendered: await renderMarkdown(markdown),
-          filePath: relative(
-            join(workspaceRoot, 'astro-nx-dev-poc'),
-            join(pluginPath, 'migration.json')
-          ),
           data: {
             title: `@nx/${pluginName} Migrations`,
             pluginName,
