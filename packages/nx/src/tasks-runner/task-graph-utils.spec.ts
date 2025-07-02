@@ -376,7 +376,7 @@ describe('task graph utils', () => {
       expect(() => {
         assertTaskGraphDoesNotContainInvalidTargets(taskGraph);
       }).toThrowErrorMatchingInlineSnapshot(`
-        "The following continous tasks do not support parallelism but are depended on:
+        "The following continuous tasks do not support parallelism but are depended on:
          - b:watch <- a:build
         Parallelism must be enabled for a continuous task if it is depended on, as the tasks that depend on it will run in parallel with it."
       `);
