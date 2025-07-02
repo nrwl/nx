@@ -18,6 +18,7 @@ import {
 } from '../src/internal-utils/prompts';
 import {
   withAllPrompts,
+  withCIOptions,
   withGitOptions,
   withUseGitHub,
   withNxCloud,
@@ -221,7 +222,8 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
         withUseGitHub,
         withAllPrompts,
         withPackageManager,
-        withGitOptions
+        withGitOptions,
+        withCIOptions
       ),
 
     async function handler(argv: yargs.ArgumentsCamelCase<Arguments>) {

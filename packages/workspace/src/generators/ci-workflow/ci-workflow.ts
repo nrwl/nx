@@ -19,7 +19,8 @@ function getCiCommands(
   packageManagerPrefix: string,
   mainBranch: string,
   hasTypecheck: boolean,
-  hasE2E: boolean
+  hasE2E: boolean,
+  useRunMany: boolean = false
 ): Command[] {
   // Build task list
   const tasks = `lint test build${hasTypecheck ? ' typecheck' : ''}${
@@ -37,28 +38,33 @@ function getCiCommands(
     exampleComment,
   ];
 
-  // Build nx affected comments
-  const nxAffectedComments = [
-    `As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
-  ];
+  // Build nx command comments and command
+  const commandType = useRunMany ? 'run-many' : 'affected';
+  const nxCommandComments = useRunMany
+    ? [
+        `As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
+      ]
+    : [
+        `Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
+      ];
 
   if (hasE2E) {
-    nxAffectedComments.push(
+    nxCommandComments.push(
       `When you enable task distribution, run the e2e-ci task instead of e2e`
     );
   }
 
-  // Build nx affected command with CI-specific args
+  // Build nx command with CI-specific args
   const args = getCiArgs(ci, mainBranch);
-  const affectedCommand = `${packageManagerPrefix} nx run-many ${args}-t ${tasks}`;
+  const nxCommand = `${packageManagerPrefix} nx ${commandType} ${args}-t ${tasks}`;
 
   return [
     {
       comments: nxCloudComments,
     },
     {
-      comments: nxAffectedComments,
-      command: affectedCommand,
+      comments: nxCommandComments,
+      command: nxCommand,
     },
   ];
 }
@@ -87,7 +93,8 @@ function getCiArgs(ci: Schema['ci'], mainBranch: string): string {
 function getBitbucketBranchCommands(
   packageManagerPrefix: string,
   hasTypecheck: boolean,
-  hasE2E: boolean
+  hasE2E: boolean,
+  useRunMany: boolean = false
 ): Command[] {
   const tasks = `lint test build${hasTypecheck ? ' typecheck' : ''}${
     hasE2E ? ' e2e-ci' : ''
@@ -98,6 +105,7 @@ function getBitbucketBranchCommands(
     `- ${packageManagerPrefix} nx-cloud record -- echo Hello World`,
   ];
 
+  // BitBucket branches always use affected for now, regardless of useRunMany flag
   const nxAffectedComments = [
     `Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
   ];
@@ -118,6 +126,7 @@ export type Command = { command?: string; comments?: string[] };
 export interface Schema {
   name: string;
   ci: 'github' | 'azure' | 'circleci' | 'bitbucket-pipelines' | 'gitlab';
+  useRunMany?: boolean;
 }
 
 export async function ciWorkflowGenerator(tree: Tree, schema: Schema) {
@@ -194,11 +203,17 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
     packageManagerPrefix,
     mainBranch,
     hasTypecheck,
-    hasE2E
+    hasE2E,
+    options.useRunMany ?? false
   );
   const branchCommands =
     options.ci === 'bitbucket-pipelines'
-      ? getBitbucketBranchCommands(packageManagerPrefix, hasTypecheck, hasE2E)
+      ? getBitbucketBranchCommands(
+          packageManagerPrefix,
+          hasTypecheck,
+          hasE2E,
+          options.useRunMany ?? false
+        )
       : undefined;
 
   return {

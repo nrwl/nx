@@ -70,6 +70,14 @@ export function withGitOptions<T = unknown>(argv: yargs.Argv<T>) {
     });
 }
 
+export function withCIOptions<T = unknown>(argv: yargs.Argv<T>) {
+  return argv.option('useRunMany', {
+    describe: chalk.dim`Use 'nx run-many' instead of 'nx affected' in CI workflows.`,
+    type: 'boolean',
+    default: true,
+  });
+}
+
 export function withOptions<T>(
   argv: yargs.Argv<T>,
   ...options: ((argv: yargs.Argv<T>) => yargs.Argv<T>)[]

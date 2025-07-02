@@ -405,8 +405,8 @@ describe('CI Workflow generator', () => {
 
               # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
               # - run: npx nx-cloud record -- echo Hello World
-              # As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-              - run: npx nx run-many -t lint test build typecheck
+              # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+              - run: npx nx affected -t lint test build typecheck
         "
       `);
     });
@@ -439,8 +439,8 @@ describe('CI Workflow generator', () => {
 
               # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
               # - run: npx nx-cloud record -- echo Hello World
-              # As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-              - run: npx nx run-many -t lint test build typecheck
+              # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+              - run: npx nx affected -t lint test build typecheck
 
         workflows:
           version: 2
@@ -512,8 +512,8 @@ describe('CI Workflow generator', () => {
 
               # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
               # - script: npx nx-cloud record -- echo Hello World
-              # As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-              - script: npx nx run-many --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build typecheck
+              # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+              - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build typecheck
         "
       `);
     });
@@ -549,8 +549,8 @@ describe('CI Workflow generator', () => {
 
                     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
                     # npx nx-cloud record -- echo Hello World
-                    # As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-                    - npx nx run-many --base=origin/main -t lint test build typecheck
+                    # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+                    - npx nx affected --base=origin/main -t lint test build typecheck
 
           branches:
             main:
@@ -601,10 +601,53 @@ describe('CI Workflow generator', () => {
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - npx nx-cloud record -- echo Hello World
-            # As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-            - npx nx run-many -t lint test build typecheck
+            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+            - npx nx affected -t lint test build typecheck
         "
       `);
+    });
+  });
+
+  describe('useRunMany flag', () => {
+    it('should use nx affected when useRunMany is false', async () => {
+      await ciWorkflowGenerator(tree, {
+        ci: 'github',
+        name: 'CI',
+        useRunMany: false,
+      });
+
+      const content = tree.read('.github/workflows/ci.yml', 'utf-8');
+      expect(content).toContain('nx affected -t lint test build');
+      expect(content).toContain(
+        'Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected'
+      );
+      expect(content).not.toContain('nx run-many');
+    });
+
+    it('should use nx run-many when useRunMany is true', async () => {
+      await ciWorkflowGenerator(tree, {
+        ci: 'github',
+        name: 'CI',
+        useRunMany: true,
+      });
+
+      const content = tree.read('.github/workflows/ci.yml', 'utf-8');
+      expect(content).toContain('nx run-many -t lint test build');
+      expect(content).toContain(
+        'As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected'
+      );
+      expect(content).not.toContain('nx affected');
+    });
+
+    it('should default to nx affected when useRunMany is not specified', async () => {
+      await ciWorkflowGenerator(tree, {
+        ci: 'github',
+        name: 'CI',
+      });
+
+      const content = tree.read('.github/workflows/ci.yml', 'utf-8');
+      expect(content).toContain('nx affected -t lint test build');
+      expect(content).not.toContain('nx run-many');
     });
   });
 });
