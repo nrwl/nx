@@ -27,9 +27,4 @@ export interface CreateWorkspaceOptions {
     message: string; // Message to use for the initial commit
   };
   cliName?: string; // Name of the CLI, used when displaying outputs. e.g. nx, Nx
-  /**
-   * @description Use 'nx run-many' instead of 'nx affected' in CI workflows
-   * @default true
-   */
-  useRunMany?: boolean;
 }

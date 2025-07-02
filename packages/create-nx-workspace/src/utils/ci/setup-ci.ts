@@ -8,14 +8,13 @@ import { getPackageManagerCommand, PackageManager } from '../package-manager';
 export async function setupCI(
   directory: string,
   ci: string,
-  packageManager: PackageManager,
-  useRunMany: boolean = true
+  packageManager: PackageManager
 ) {
   const ciSpinner = ora(`Generating CI workflow`).start();
   try {
     const pmc = getPackageManagerCommand(packageManager);
     const res = await execAndWait(
-      `${pmc.exec} nx g @nx/workspace:ci-workflow --ci=${ci} --useRunMany=${useRunMany}`,
+      `${pmc.exec} nx g @nx/workspace:ci-workflow --ci=${ci} --useRunMany=true`,
       directory
     );
     ciSpinner.succeed('CI workflow has been generated successfully');

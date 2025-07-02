@@ -23,7 +23,6 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     commit,
     cliName,
     useGitHub,
-    useRunMany = true,
   } = options;
 
   if (cliName) {
@@ -61,7 +60,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     const token = readNxCloudToken(directory) as string;
 
     if (nxCloud !== 'yes') {
-      await setupCI(directory, nxCloud, packageManager, useRunMany);
+      await setupCI(directory, nxCloud, packageManager);
     }
 
     const { connectCloudUrl, output } = await getOnboardingInfo(

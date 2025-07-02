@@ -830,7 +830,7 @@ npx nx generate ci-workflow --useRunMany
 
 The key lines in the CI pipeline are:
 
-```yml {% fileName=".github/workflows/ci.yml" highlightLines=["12-16", "28-32"] %}
+```yml {% fileName=".github/workflows/ci.yml" highlightLines=["12-16", "27-31"] %}
 name: CI
 # ...
 jobs:
