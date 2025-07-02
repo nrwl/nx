@@ -1,6 +1,8 @@
 import type { TSESLint } from '@typescript-eslint/utils';
 import { ESLintUtils } from '@typescript-eslint/utils';
 import type { AST } from 'jsonc-eslint-parser';
+import { readFileSync } from 'fs';
+import { tsquery } from '@phenomnomnominal/tsquery';
 
 import {
   ProjectGraphProjectNode,
@@ -489,7 +491,7 @@ export function validateImplementationNode(
           });
         }
       } catch {
-        // require.resolve() can throw if the module is not found
+        // require can throw if the module is not found
         context.report({
           messageId: 'unableToReadImplementationExports',
           node: implementationNode.value as any,
@@ -589,44 +591,36 @@ export function validateVersionJsonExpression(
   );
 }
 
-function checkIfIdentifierIsFunction(
+export function checkIfIdentifierIsFunction(
   filePath: string,
   identifier: string
 ): boolean {
   try {
     const ts = require('typescript');
+    const sourceCode = readFileSync(filePath, 'utf-8');
+    const sourceFile = ts.createSourceFile(
+      filePath,
+      sourceCode,
+      ts.ScriptTarget.Latest,
+      true
+    );
 
-    const program = ts.createProgram([filePath], {
-      target: ts.ScriptTarget.ES2018,
-      module: ts.ModuleKind.CommonJS,
-      allowJs: true,
-      skipLibCheck: true,
-      skipDefaultLibCheck: true,
-      noResolve: true,
-    });
+    const exportedFunctions = tsquery(
+      sourceFile,
+      `
+      FunctionDeclaration[name.text="${identifier}"][modifiers],
+      ExportDeclaration > FunctionDeclaration[name.text="${identifier}"],
+      VariableStatement[modifiers] VariableDeclaration[name.text="${identifier}"] ArrowFunction,
+      VariableStatement[modifiers] VariableDeclaration[name.text="${identifier}"] FunctionExpression,
+      ExportDeclaration > VariableStatement VariableDeclaration[name.text="${identifier}"] ArrowFunction,
+      ExportDeclaration > VariableStatement VariableDeclaration[name.text="${identifier}"] FunctionExpression,
+      ExportDeclaration ExportSpecifier[name.text="${identifier}"]
+    `
+    );
 
-    const sourceFile = program.getSourceFile(filePath);
-    if (sourceFile) {
-      const typeChecker = program.getTypeChecker();
-      const moduleSymbol = typeChecker.getSymbolAtLocation(sourceFile);
-
-      if (moduleSymbol) {
-        const exportSymbols = typeChecker.getExportsOfModule(moduleSymbol);
-        const targetSymbol = exportSymbols.find(
-          (s: any) => s.getName() === identifier
-        );
-
-        if (targetSymbol) {
-          const type = typeChecker.getTypeOfSymbolAtLocation(
-            targetSymbol,
-            sourceFile
-          );
-          return type.getCallSignatures().length > 0;
-        }
-      }
-    }
+    return exportedFunctions.length > 0;
   } catch {
-    return false;
+    // ignore
   }
 
   // Fallback to require()
