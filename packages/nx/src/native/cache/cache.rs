@@ -1,13 +1,13 @@
 use std::fs::{create_dir_all, read_to_string, write};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
+use tracing::{debug, trace};
 
 use fs_extra::remove_items;
 use napi::bindgen_prelude::*;
 use regex::Regex;
 use rusqlite::params;
 use sysinfo::Disks;
-use tracing::trace;
 
 use crate::native::cache::expand_outputs::_expand_outputs;
 use crate::native::cache::file_ops::_copy;
@@ -136,6 +136,7 @@ impl NxCache {
         outputs: Vec<String>,
         code: i16,
     ) -> anyhow::Result<()> {
+        let start = Instant::now();
         trace!("PUT {}", &hash);
         let task_dir = self.cache_path.join(&hash);
 
@@ -143,30 +144,47 @@ impl NxCache {
         //
         trace!("Removing task directory: {:?}", &task_dir);
         remove_items(&[&task_dir])?;
+        trace!("Successfully removed task directory: {:?}", &task_dir);
+
         // Create the task directory again
         trace!("Creating task directory: {:?}", &task_dir);
         create_dir_all(&task_dir)?;
+        trace!("Successfully created task directory: {:?}", &task_dir);
 
         // Write the terminal outputs into a file
         let task_outputs_path = self.get_task_outputs_path_internal(&hash);
         trace!("Writing terminal outputs to: {:?}", &task_outputs_path);
         let mut total_size: i64 = terminal_output.len() as i64;
         write(task_outputs_path, terminal_output)?;
+        trace!("Successfully wrote terminal outputs ({} bytes)", total_size);
 
         // Expand the outputs
         let expanded_outputs = _expand_outputs(&self.workspace_root, outputs)?;
+        trace!("Successfully expanded {} outputs", expanded_outputs.len());
 
         // Copy the outputs to the cache
+        let mut copied_files = 0;
         for expanded_output in expanded_outputs.iter() {
             let p = self.workspace_root.join(expanded_output);
             if p.exists() {
                 let cached_outputs_dir = task_dir.join(expanded_output);
                 trace!("Copying {:?} -> {:?}", &p, &cached_outputs_dir);
-                total_size += _copy(p, cached_outputs_dir)?;
+                let copied_size = _copy(p, cached_outputs_dir)?;
+                total_size += copied_size;
+                copied_files += 1;
+                trace!(
+                    "Successfully copied {} ({} bytes)",
+                    expanded_output, copied_size
+                );
             }
         }
+        trace!(
+            "Successfully copied {} files, total cache size: {} bytes",
+            copied_files, total_size
+        );
 
-        self.record_to_cache(hash, code, total_size)?;
+        self.record_to_cache(hash.clone(), code, total_size)?;
+        debug!("PUT {} {:?}", &hash, start.elapsed());
         Ok(())
     }
 
