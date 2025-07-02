@@ -224,7 +224,6 @@ Again, because Nx cached the tasks when the application was built, most of the t
 ones which needed to be done is the root project's build. Running the command one more time, will be near instant as
 then all the tasks will be restored from the cache.
 
-
 ## Fast CI ⚡ {% highlightColor="green" %}
 
 {% callout type="check" title="Repository with Nx" %}

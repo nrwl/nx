@@ -81,12 +81,16 @@ function getCiPrefix(ci: Schema['ci']): string {
   return '';
 }
 
-function getCiArgs(ci: Schema['ci'], mainBranch: string, useRunMany: boolean = false): string {
+function getCiArgs(
+  ci: Schema['ci'],
+  mainBranch: string,
+  useRunMany: boolean = false
+): string {
   // When using run-many, we don't need base/head SHA args
   if (useRunMany) {
     return '';
   }
-  
+
   if (ci === 'azure') {
     return '--base=$(BASE_SHA) --head=$(HEAD_SHA) ';
   } else if (ci === 'bitbucket-pipelines') {

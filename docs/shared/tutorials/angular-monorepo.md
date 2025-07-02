@@ -900,7 +900,6 @@ Nx read the output from the cache instead of running the command for 10 out of 1
 
 Not all tasks might be cacheable though. You can [configure which tasks are cacheable](/features/cache-task-results) in [the project configuration](/reference/project-configuration#cache) or in [the global Nx configuration](/reference/nx-json#cache). You can also [learn more about how caching works](/concepts/how-caching-works).
 
-
 ## Building the Apps for Deployment
 
 {% video-link link="https://youtu.be/ZzTP4bVJEnI?t=608" /%}
@@ -949,7 +948,6 @@ With the `deploy` tasks defined, you can deploy a single application with `npx n
 ```shell
 npx nx run-many -t deploy
 ```
-
 
 ## Fast CI ⚡ {% highlightColor="green" %}
 
