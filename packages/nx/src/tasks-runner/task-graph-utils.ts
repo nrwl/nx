@@ -160,7 +160,7 @@ export function assertTaskGraphDoesNotContainInvalidTargets(
   taskGraph: TaskGraph
 ) {
   const nonParallelTasksThatDependOnContinuousTasks = [];
-  const nonParallelContinousTasksThatAreDependedOn = [];
+  const nonParallelContinuousTasksThatAreDependedOn = [];
   for (const task of Object.values(taskGraph.tasks)) {
     if (
       task.parallelism === false &&
@@ -170,7 +170,7 @@ export function assertTaskGraphDoesNotContainInvalidTargets(
     }
     for (const dependency of taskGraph.continuousDependencies[task.id]) {
       if (taskGraph.tasks[dependency].parallelism === false) {
-        nonParallelContinousTasksThatAreDependedOn.push(
+        nonParallelContinuousTasksThatAreDependedOn.push(
           taskGraph.tasks[dependency]
         );
       }
@@ -183,9 +183,9 @@ export function assertTaskGraphDoesNotContainInvalidTargets(
       taskGraph
     );
   }
-  if (nonParallelContinousTasksThatAreDependedOn.length > 0) {
-    throw new NonParallelContinuousTaskIsDependedOnError(
-      nonParallelContinousTasksThatAreDependedOn,
+  if (nonParallelContinuousTasksThatAreDependedOn.length > 0) {
+    throw new DependingOnNonParallelContinuousTaskError(
+      nonParallelContinuousTasksThatAreDependedOn,
       taskGraph
     );
   }
@@ -207,7 +207,7 @@ class NonParallelTaskDependsOnContinuousTasksError extends Error {
   }
 }
 
-class NonParallelContinuousTaskIsDependedOnError extends Error {
+class DependingOnNonParallelContinuousTaskError extends Error {
   constructor(public invalidTasks: Task[], taskGraph: TaskGraph) {
     let message =
       'The following continuous tasks do not support parallelism but are depended on:';
@@ -225,7 +225,7 @@ class NonParallelContinuousTaskIsDependedOnError extends Error {
       '\nParallelism must be enabled for a continuous task if it is depended on, as the tasks that depend on it will run in parallel with it.';
 
     super(message);
-    this.name = 'NonParallelContinuousTaskIsDependedOnError';
+    this.name = 'DependingOnNonParallelContinuousTaskError';
   }
 }
 

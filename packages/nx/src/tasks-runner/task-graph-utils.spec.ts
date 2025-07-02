@@ -1,4 +1,3 @@
-import exp = require('node:constants');
 import '../internal-testing-utils/mock-fs';
 
 import {
