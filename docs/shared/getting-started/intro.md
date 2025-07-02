@@ -5,6 +5,12 @@ description: 'Nx is an AI-first build platform that connects everything from you
 
 # What is Nx?
 
+{% callout type="announcement" title="Nx Essentials Online Workshop - July 29-30" %}
+Join us for an interactive deep-dive into Nx covering everything from foundational concepts to more advanced enterprise techniques. Early bird pricing available until July 18th.
+
+[Save your seat today!](https://bit.ly/44AfKAb)
+{% /callout %}
+
 Nx is a powerful, open source, technology-agnostic build platform designed to efficiently manage codebases of any scale. From small single projects to large enterprise monorepos, Nx is designed to **streamline your development workflows**, **minimize errors** and **dramatically reduce waste** by [saving engineering time](https://youtu.be/2BLqiNnBPuU) and cutting compute costs.
 
 {% youtube
