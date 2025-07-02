@@ -162,7 +162,8 @@ private fun buildTestCiTarget(
     projectRoot: String,
     workspaceRoot: String,
 ): MutableMap<String, Any?> {
-  val taskInputs = getInputsForTask(testTask, projectRoot, workspaceRoot, null)
+  val dependsOnTasks = getDependsOnTask(testTask)
+  val taskInputs = getInputsForTask(dependsOnTasks, testTask, projectRoot, workspaceRoot)
 
   val target =
       mutableMapOf<String, Any?>(
@@ -176,7 +177,7 @@ private fun buildTestCiTarget(
           "cache" to true,
           "inputs" to taskInputs)
 
-  getDependsOnForTask(testTask, null)
+  getDependsOnForTask(dependsOnTasks, testTask)
       ?.takeIf { it.isNotEmpty() }
       ?.let {
         testTask.logger.info("${testTask.path}: found ${it.size} dependsOn entries")
