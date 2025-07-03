@@ -13,6 +13,7 @@ import type { CollectionEntry, RenderedContent } from 'astro:content';
 import type { LoaderContext } from 'astro/loaders';
 import { workspaceRoot } from '@nx/devkit';
 import NxMarkdownTheme from './utils/typedoc/theme.ts';
+import { watchAndCall } from './utils/watch.ts';
 
 type DocEntry = CollectionEntry<'devkit-docs'>;
 
@@ -37,94 +38,107 @@ const allowedReflections = [
 export function DevkitLoader() {
   return {
     name: 'nx-devkit-loader',
-    async load({ store, logger, renderMarkdown }: LoaderContext) {
-      logger.info('Generating DevKit documentation');
-      store.clear();
+    async load({ store, logger, watcher, renderMarkdown }: LoaderContext) {
+      const generate = async () => {
+        logger.info('Generating DevKit documentation');
+        store.clear();
 
-      const { defaultTypedocOptions, outDir, buildDir, projectRoot } =
-        setupTypeDoc(logger);
+        const { defaultTypedocOptions, outDir, buildDir, projectRoot } =
+          setupTypeDoc(logger);
 
-      const devkitEntryPoint = join(
-        projectRoot,
-        'build',
-        'packages',
-        'devkit',
-        'index.d.ts'
-      );
-      if (!existsSync(devkitEntryPoint)) {
-        logger.warn(
-          'build/packages/devkit/index.d.ts not found, please run build first'
+        const devkitEntryPoint = join(
+          projectRoot,
+          'build',
+          'packages',
+          'devkit',
+          'index.d.ts'
         );
-        throw new Error(
-          `build/packages/devkit/index.d.ts not found, unable to generate docs. Make sure to run devkit build first. ${devkitEntryPoint}`
+        if (!existsSync(devkitEntryPoint)) {
+          logger.warn(
+            'build/packages/devkit/index.d.ts not found, please run build first'
+          );
+          throw new Error(
+            `build/packages/devkit/index.d.ts not found, unable to generate docs. Make sure to run devkit build first. ${devkitEntryPoint}`
+          );
+        }
+
+        const devkitDocs = await generateDocsForEntry(
+          {
+            ...defaultTypedocOptions,
+            entryPoints: [devkitEntryPoint],
+            tsconfig: join(buildDir, 'tsconfig.lib.json'),
+            out: outDir,
+            excludePrivate: true,
+            publicPath: '/reference/core-api/devkit/',
+          },
+          // @ts-expect-error typemismatch bc auto generated types in .astro vs astro:content etc
+          renderMarkdown,
+          'devkit'
         );
+
+        devkitDocs.forEach(store.set);
+
+        const devkitOverviewPage = await createOverview(
+          devkitDocs,
+          // @ts-expect-error typemismatch bc auto generated types in .astro vs astro:content etc
+          renderMarkdown,
+          'devkit'
+        );
+        store.set(devkitOverviewPage);
+
+        const ngcliEntryPoint = join(
+          projectRoot,
+          'build',
+          'packages',
+          'devkit',
+          'ngcli-adapter.d.ts'
+        );
+
+        if (!existsSync(ngcliEntryPoint)) {
+          logger.warn(
+            'build/packages/devkit/ngcli-adapter.d.ts not found, skipping ngcli_adapter documentation generation'
+          );
+          throw new Error(
+            `build/packages/devkit/ngcli-adapter.d.ts not found, unable to generate docs. Make sure to run devkit build first. ${ngcliEntryPoint}`
+          );
+        }
+
+        const ngcliDocs = await generateDocsForEntry(
+          {
+            ...defaultTypedocOptions,
+            entryPoints: [ngcliEntryPoint],
+            tsconfig: join(buildDir, 'tsconfig.lib.json'),
+            out: join(outDir, 'ngcli_adapter'),
+            publicPath: '/reference/core-api/devkit/ngcli_adapter/',
+          },
+          // @ts-expect-error typemismatch bc auto generated types in .astro vs astro:content etc
+          renderMarkdown,
+          'ngcli_adapter'
+        );
+        ngcliDocs.forEach(store.set);
+
+        const ngcliOverviewPage = await createOverview(
+          ngcliDocs,
+          // @ts-expect-error typemismatch bc auto generated types in .astro vs astro:content etc
+          renderMarkdown,
+          'ngcli_adapter'
+        );
+
+        store.set(ngcliOverviewPage);
+
+        logger.info('DevKit documentation generated successfully');
+      };
+
+      if (watcher) {
+        // Watch for changes in the devkit loader files themselves
+        const pathsToWatch = [
+          join(import.meta.dirname, 'devkit.loader.ts'),
+          join(import.meta.dirname, 'utils', 'typedoc'),
+        ];
+        watchAndCall(watcher, pathsToWatch, generate);
       }
 
-      const devkitDocs = await generateDocsForEntry(
-        {
-          ...defaultTypedocOptions,
-          entryPoints: [devkitEntryPoint],
-          tsconfig: join(buildDir, 'tsconfig.lib.json'),
-          out: outDir,
-          excludePrivate: true,
-          publicPath: '/reference/core-api/devkit/',
-        },
-        // @ts-expect-error typemismatch bc auto generated types in .astro vs astro:content etc
-        renderMarkdown,
-        'devkit'
-      );
-
-      devkitDocs.forEach(store.set);
-
-      const devkitOverviewPage = await createOverview(
-        devkitDocs,
-        // @ts-expect-error typemismatch bc auto generated types in .astro vs astro:content etc
-        renderMarkdown,
-        'devkit'
-      );
-      store.set(devkitOverviewPage);
-
-      // Generate ngcli-adapter documentation
-      const ngcliEntryPoint = join(
-        projectRoot,
-        'build',
-        'packages',
-        'devkit',
-        'ngcli-adapter.d.ts'
-      );
-
-      if (!existsSync(ngcliEntryPoint)) {
-        logger.warn(
-          'build/packages/devkit/ngcli-adapter.d.ts not found, skipping ngcli_adapter documentation generation'
-        );
-        throw new Error(
-          `build/packages/devkit/ngcli-adapter.d.ts not found, unable to generate docs. Make sure to run devkit build first. ${ngcliEntryPoint}`
-        );
-      }
-      const ngcliDocs = await generateDocsForEntry(
-        {
-          ...defaultTypedocOptions,
-          entryPoints: [ngcliEntryPoint],
-          tsconfig: join(buildDir, 'tsconfig.lib.json'),
-          out: join(outDir, 'ngcli_adapter'),
-          publicPath: '/reference/core-api/devkit/ngcli_adapter/',
-        },
-        // @ts-expect-error typemismatch bc auto generated types in .astro vs astro:content etc
-        renderMarkdown,
-        'ngcli_adapter'
-      );
-      ngcliDocs.forEach(store.set);
-
-      const ngcliOverviewPage = await createOverview(
-        ngcliDocs,
-        // @ts-expect-error typemismatch bc auto generated types in .astro vs astro:content etc
-        renderMarkdown,
-        'ngcli_adapter'
-      );
-
-      store.set(ngcliOverviewPage);
-
-      logger.info('DevKit documentation generated successfully');
+      await generate();
     },
   };
 }

@@ -3,6 +3,7 @@ import { join, relative } from 'path';
 import { fork } from 'child_process';
 import type { ParsedCommand } from './utils/nx-command-parser';
 import type { Loader, LoaderContext } from 'astro/loaders';
+import { watchAndCall } from './utils/watch.ts';
 
 function generateCLIMarkdown(commands: Record<string, ParsedCommand>): string {
   const commandNames = Object.keys(commands).sort();
@@ -200,19 +201,33 @@ export function CliLoader(options: any = {}): Loader {
   return {
     name: 'nx-cli-loader',
     async load({ store, logger, watcher, renderMarkdown }: LoaderContext) {
-      const doc = await generateNxCliDocs(logger, watcher);
-      logger.info('Loaded CLI documentation');
+      const generate = async () => {
+        const doc = await generateNxCliDocs(logger, watcher);
+        logger.info('Loaded CLI documentation');
 
-      store.clear();
+        store.clear();
 
-      if (doc.body) {
-        doc.rendered = await renderMarkdown(doc.body);
+        if (doc.body) {
+          doc.rendered = await renderMarkdown(doc.body);
+        }
+
+        logger.info(`Processing CLI documentation`);
+        store.set(doc);
+
+        logger.info('Generated CLI documentation');
+      };
+
+      const pathsToWatch = [
+        join(import.meta.dirname, 'cli.loader.ts'),
+        join(import.meta.dirname, 'utils/cli-subprocess.cjs'),
+        join(import.meta.dirname, 'utils/typedoc'),
+      ];
+
+      if (watcher) {
+        watchAndCall(watcher, pathsToWatch, generate);
       }
 
-      logger.info(`Processing CLI documentation`);
-      store.set(doc);
-
-      logger.info('Generated CLI documentation');
+      await generate();
     },
   };
 }

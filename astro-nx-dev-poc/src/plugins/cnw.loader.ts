@@ -3,6 +3,7 @@ import { join, relative } from 'path';
 import { fork } from 'child_process';
 import type { Loader, LoaderContext } from 'astro/loaders';
 import type { CollectionEntry, RenderedContent } from 'astro:content';
+import { watchAndCall } from './utils/watch.ts';
 
 type DocEntry = CollectionEntry<'cnw-docs'>;
 
@@ -110,12 +111,25 @@ npx ${command.commandString}
 export function CnwLoader(): Loader {
   return {
     name: 'cnw-loader',
-    load: async ({ store, logger, renderMarkdown }) => {
-      store.clear();
-      // @ts-expect-error - astro:content types seem to always be out of sync w/ generated types
-      const entry = await generateCnwDocs(logger, renderMarkdown);
-      store.set(entry);
-      logger.info(`Generated CNW documentation`);
+    load: async ({ store, logger, watcher, renderMarkdown }) => {
+      // Function to regenerate CNW docs
+      const generate = async () => {
+        store.clear();
+        // @ts-expect-error - astro:content types seem to always be out of sync w/ generated types
+        const entry = await generateCnwDocs(logger, renderMarkdown);
+        store.set(entry);
+        logger.info(`Generated CNW documentation`);
+      };
+
+      if (watcher) {
+        const pathsToWatch = [
+          join(import.meta.dirname, 'cnw.loader.ts'),
+          join(import.meta.dirname, 'utils', 'cnw-subprocess.cjs'),
+        ];
+
+        watchAndCall(watcher, pathsToWatch, generate);
+      }
+      await generate();
     },
   };
 }

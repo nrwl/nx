@@ -10,6 +10,7 @@ import {
 } from './utils/plugin-schema-parser';
 import type { Loader, LoaderContext } from 'astro/loaders';
 import type { CollectionEntry, RenderedContent } from 'astro:content';
+import { watchAndCall } from './utils/watch.ts';
 
 // TODO: make this a glob pattern or something so we don't have to manually update
 // Define the plugins to generate documentation for
@@ -46,33 +47,39 @@ const PLUGIN_PATHS = [
 
 type DocEntry = CollectionEntry<'plugin-docs'>;
 
-function generateMigrationItem(name: string, item: any, packageName: string): string {
+function generateMigrationItem(
+  name: string,
+  item: any,
+  packageName: string
+): string {
   const { config } = item;
   let markdown = `\n#### \`${name}\`\n`;
-  
+
   if (config.description) {
     markdown += `${config.description}\n\n`;
   }
-  
+
   return markdown;
 }
 
 function generatePackageUpdateItem(item: any): string {
   const { config } = item;
   let markdown = `\n#### Package Updates for ${config.name}\n`;
-  
+
   if (config.packages && Object.keys(config.packages).length > 0) {
     markdown += `\nThe following packages will be updated:\n\n`;
     markdown += `| Package | Version |\n`;
     markdown += `|---------|----------|\n`;
-    
-    for (const [packageName, packageConfig] of Object.entries(config.packages) as [string, any][]) {
+
+    for (const [packageName, packageConfig] of Object.entries(
+      config.packages
+    ) as [string, any][]) {
       markdown += `| \`${packageName}\` | \`${packageConfig.version}\` |\n`;
     }
-    
+
     markdown += `\n`;
   }
-  
+
   return markdown;
 }
 
@@ -92,13 +99,15 @@ Below is a complete reference for all available ${docType} and their options.
   if (docType === 'migrations') {
     // Group migrations by major.minor version
     const versionGroups = new Map<string, Array<{ name: string; item: any }>>();
-    
+
     for (const [name, item] of items.entries()) {
       const fullVersion = item.config.version || 'unknown';
       // Extract major.minor from version (e.g., "21.2.3-beta.1" -> "21.2")
       const majorMinorMatch = fullVersion.match(/^(\d+)\.(\d+)/);
-      const majorMinor = majorMinorMatch ? `${majorMinorMatch[1]}.${majorMinorMatch[2]}` : fullVersion;
-      
+      const majorMinor = majorMinorMatch
+        ? `${majorMinorMatch[1]}.${majorMinorMatch[2]}`
+        : fullVersion;
+
       if (!versionGroups.has(majorMinor)) {
         versionGroups.set(majorMinor, []);
       }
@@ -113,14 +122,14 @@ Below is a complete reference for all available ${docType} and their options.
         if (!match) return [0, 0];
         return [parseInt(match[1]), parseInt(match[2])];
       };
-      
+
       const [aMajor, aMinor] = parseVersion(a);
       const [bMajor, bMinor] = parseVersion(b);
-      
+
       // Compare major, minor in descending order
       if (bMajor !== aMajor) return bMajor - aMajor;
       if (bMinor !== aMinor) return bMinor - aMinor;
-      
+
       // If versions are equal, fall back to string comparison
       return b.localeCompare(a);
     });
@@ -128,22 +137,24 @@ Below is a complete reference for all available ${docType} and their options.
     for (const version of sortedVersions) {
       const items = versionGroups.get(version)!;
       markdown += `\n## ${version}.x\n`;
-      
+
       // Combine all items without sub-headers
       const generators = items.filter(({ item }) => item.type === 'generator');
-      const packageUpdates = items.filter(({ item }) => item.type === 'packageJsonUpdate');
-      
+      const packageUpdates = items.filter(
+        ({ item }) => item.type === 'packageJsonUpdate'
+      );
+
       // Add generators first
       for (const { name, item } of generators) {
         markdown += generateMigrationItem(name, item, packageName);
       }
-      
+
       // Add package updates
       for (const { item } of packageUpdates) {
         markdown += generatePackageUpdateItem(item);
       }
     }
-    
+
     return markdown;
   }
 
@@ -381,11 +392,29 @@ export function PluginLoader(options: any = {}): Loader {
   return {
     name: 'nx-plugin-loader',
     async load({ store, logger, watcher, renderMarkdown }: LoaderContext) {
-      store.clear();
-      // @ts-expect-error - astro:content types seem to always be out of sync w/ generated types
-      const docs = await generateAllPluginDocs(logger, watcher, renderMarkdown);
-      docs.forEach(store.set);
-      logger.info(`Generated plugin documentation with ${docs.length} entries`);
+      const generate = async () => {
+        store.clear();
+        const docs = await generateAllPluginDocs(
+          logger,
+          watcher,
+          // @ts-expect-error - astro:content types seem to always be out of sync w/ generated types
+          renderMarkdown
+        );
+        docs.forEach(store.set);
+        logger.info(
+          `Generated plugin documentation with ${docs.length} entries`
+        );
+      };
+
+      if (watcher) {
+        const pathsToWatch = [
+          join(import.meta.dirname, 'plugin.loader.ts'),
+          join(import.meta.dirname, 'utils', 'plugin-schema-parser.ts'),
+        ];
+        watchAndCall(watcher, pathsToWatch, generate);
+      }
+
+      await generate();
     },
   };
 }
