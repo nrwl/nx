@@ -25,6 +25,7 @@ export interface ProjectGraphReport {
   };
   dependencies: Array<StaticDependency>;
   externalNodes?: Record<string, ProjectGraphExternalNode>;
+  buildFiles?: string[];
 }
 
 export interface ProjectGraphReportCache extends ProjectGraphReport {
@@ -80,6 +81,11 @@ export function getCurrentProjectGraphReport(): ProjectGraphReport {
     );
   }
   return projectGraphReportCache;
+}
+
+export function getCurrentBuildFiles(): string[] {
+  const report = getCurrentProjectGraphReport();
+  return report.buildFiles || [];
 }
 
 /**
@@ -168,6 +174,8 @@ export function processNxProjectGraph(
     dependencies: [],
     externalNodes: {},
   };
+  const allBuildFiles = new Set<string>();
+
   while (index < projectGraphLines.length) {
     const line = projectGraphLines[index].trim();
     if (line.startsWith('> Task ') && line.endsWith(':nxProjectGraph')) {
@@ -195,9 +203,17 @@ export function processNxProjectGraph(
           ...projectGraphReportJson.externalNodes,
         };
       }
+      if (projectGraphReportJson.buildFiles) {
+        projectGraphReportJson.buildFiles.forEach((buildFile) =>
+          allBuildFiles.add(buildFile)
+        );
+      }
     }
     index++;
   }
+
+  // Convert Set to array for the final result
+  projectGraphReportForAllProjects.buildFiles = Array.from(allBuildFiles);
 
   return projectGraphReportForAllProjects;
 }
