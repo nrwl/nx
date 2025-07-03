@@ -5,13 +5,6 @@
   "dependencies": {
     "nx": "workspace:*",
     "@nx/devkit": "workspace:*",
-    "@nx/e2e-utils": "workspace:*",
-    "@nx/e2e-utils": "workspace:*",
-    "@nx/react": "workspace:*",
-    "@nx/jest": "workspace:*",
-    "@nx/js": "workspace:*",
-    "@nx/webpack": "workspace:*",
-    "@nx/vite": "workspace:*",
-    "@nx/workspace": "workspace:*"
+    "@nx/e2e-utils": "workspace:*"
   }
 }

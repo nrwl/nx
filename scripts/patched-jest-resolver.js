@@ -84,7 +84,13 @@ module.exports = function (modulePath, options) {
   try {
     // Detect if we're running from e2e directory
     const isE2E = options.rootDir.includes('/e2e/');
-    const packagesPath = isE2E ? '../../packages/' : '../';
+
+    // For e2e tests, skip workspace resolution and use default resolver
+    if (isE2E) {
+      return options.defaultResolver(modulePath, options);
+    }
+
+    const packagesPath = '../';
 
     // TS Solution: Allow specific workspace packages to be resolved to TypeScript source
     const tsWorkspacePackages = {

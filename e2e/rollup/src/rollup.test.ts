@@ -9,6 +9,7 @@ import {
   runCommand,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e-utils';
 
 describe('Rollup Plugin', () => {

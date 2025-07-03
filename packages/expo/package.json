@@ -35,6 +35,7 @@
     "@nx/jest": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/react": "workspace:*",
+    "@nx/rollup": "workspace:*",
     "@nx/web": "workspace:*",
     "@nx/webpack": "workspace:*",
     "enhanced-resolve": "^5.8.3",

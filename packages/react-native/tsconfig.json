@@ -7,6 +7,9 @@
       "path": "../workspace"
     },
     {
+      "path": "../rollup"
+    },
+    {
       "path": "../react"
     },
     {

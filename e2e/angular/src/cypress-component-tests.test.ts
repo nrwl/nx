@@ -10,7 +10,7 @@ import {
   removeFile,
   checkFilesExist,
   updateJson,
-} from '../../utils';
+} from '@nx/e2e-utils';
 import { names } from '@nx/devkit';
 import { join } from 'path';
 

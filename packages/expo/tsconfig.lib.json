@@ -18,6 +18,9 @@
       "path": "../web/tsconfig.lib.json"
     },
     {
+      "path": "../rollup/tsconfig.lib.json"
+    },
+    {
       "path": "../react/tsconfig.lib.json"
     },
     {
