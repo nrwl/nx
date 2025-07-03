@@ -21,6 +21,7 @@ export function getImplementationFactory<T>(
   const [implementationModulePath, implementationExportName] =
     implementation.split('#');
   return () => {
+    console.log('resolving implementation');
     const modulePath = resolveImplementation(
       implementationModulePath,
       directory,

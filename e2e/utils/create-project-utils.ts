@@ -344,11 +344,13 @@ export function runCreateWorkspace(
   try {
     const create = execSync(`${command}${isVerbose() ? ' --verbose' : ''}`, {
       cwd,
-      stdio: 'pipe',
+      stdio: 'inherit',
       env: {
         CI: 'true',
         NX_VERBOSE_LOGGING: isCI ? 'true' : 'false',
         ...process.env,
+        COREPACK_ENABLE_STRICT: '0',
+        COREPACK_ENABLE_AUTO_PIN: '0',
       },
       encoding: 'utf-8',
     });

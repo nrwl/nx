@@ -281,6 +281,20 @@
         "testStorybookTargetName": "test-storybook",
         "staticStorybookTargetName": "static:storybook"
       }
+    },
+    {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "typecheck": {
+          "targetName": "tsc:typecheck"
+        },
+        "build": {
+          "targetName": "tsc:build",
+          "configName": "tsconfig.lib.json",
+          "buildDepsName": "tsc:build-deps",
+          "watchDepsName": "tsc:watch-deps"
+        }
+      }
     }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",

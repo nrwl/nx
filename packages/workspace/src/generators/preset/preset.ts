@@ -14,6 +14,7 @@ export async function presetGenerator(tree: Tree, options: Schema) {
 export default presetGenerator;
 
 async function createPreset(tree: Tree, options: Schema) {
+  console.log('reading nx.json');
   const nxJson = readNxJson(tree);
   const addPlugin =
     process.env.NX_ADD_PLUGINS !== 'false' &&
@@ -277,6 +278,7 @@ async function createPreset(tree: Tree, options: Schema) {
       useProjectJson: options.useProjectJson,
     });
   } else if (options.preset === Preset.TS) {
+    console.log('Requiring @nx/js');
     const { initGenerator } = require('@nx' + '/js');
     return initGenerator(tree, {
       formatter: options.formatter,
