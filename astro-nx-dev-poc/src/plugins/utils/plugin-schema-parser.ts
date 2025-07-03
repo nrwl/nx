@@ -114,9 +114,9 @@ export function parseMigrations(pluginPath: string): Map<string, any> | null {
   for (const [version, config] of Object.entries(
     migrationsJson.packageJsonUpdates || {}
   ) as [string, any][]) {
-    migrations.set(`packageJsonUpdates-${version}`, { 
-      config: { ...config, name: version }, 
-      type: 'packageJsonUpdate' 
+    migrations.set(`packageJsonUpdates-${version}`, {
+      config: { ...config, name: version },
+      type: 'packageJsonUpdate',
     });
   }
 

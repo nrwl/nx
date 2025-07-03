@@ -77,7 +77,9 @@ async function parseCommand(name, command) {
       Object.keys(builderDescriptions).map((key) => ({
         name: [key, ...(builderOptions.alias[key] || [])],
         description: builderDescriptions[key]
-          ? stripVTControlCharacters(builderDescriptions[key].replace('__yargsString__:', ''))
+          ? stripVTControlCharacters(
+              builderDescriptions[key].replace('__yargsString__:', '')
+            )
           : '',
         default: builderDefaultOptions[key] ?? builderAutomatedOptions[key],
         type: builderOptionTypes[key],

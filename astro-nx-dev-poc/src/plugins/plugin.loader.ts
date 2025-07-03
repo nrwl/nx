@@ -1,4 +1,4 @@
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { join, relative } from 'path';
 import { workspaceRoot } from '@nx/devkit';
 import {
@@ -293,6 +293,23 @@ nx run project:${docType} --help
   return markdown;
 }
 
+function getPluginDescription(pluginPath: string, pluginName: string): string {
+  const packageJsonPath = join(pluginPath, 'package.json');
+
+  try {
+    if (existsSync(packageJsonPath)) {
+      const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
+      if (packageJson.description && packageJson.description.trim()) {
+        return packageJson.description.trim();
+      }
+    }
+  } catch (error) {
+    // If we can't read the package.json, fall back to default
+  }
+
+  return `The Nx Plugin for ${pluginName}`;
+}
+
 export async function generateAllPluginDocs(
   logger: LoaderContext['logger'],
   watcher: LoaderContext['watcher'],
@@ -316,6 +333,9 @@ export async function generateAllPluginDocs(
     // Extract plugin name from path
     const pluginName = relativePath.split('/').pop() || '';
 
+    // Get plugin description from package.json
+    const pluginDescription = getPluginDescription(pluginPath, pluginName);
+
     try {
       // Process generators
       const generators = parseGenerators(pluginPath);
@@ -331,6 +351,7 @@ export async function generateAllPluginDocs(
             pluginName,
             packageName: `@nx/${pluginName}`,
             docType: 'generators',
+            description: pluginDescription,
           },
         });
       }
@@ -349,6 +370,7 @@ export async function generateAllPluginDocs(
             pluginName,
             packageName: `@nx/${pluginName}`,
             docType: 'executors',
+            description: pluginDescription,
           },
         });
       }
@@ -367,6 +389,7 @@ export async function generateAllPluginDocs(
             pluginName,
             packageName: `@nx/${pluginName}`,
             docType: 'migrations',
+            description: pluginDescription,
           },
         });
       }

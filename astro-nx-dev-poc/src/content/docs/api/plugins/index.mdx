@@ -25,9 +25,7 @@ export const sortedPluginNames = Object.keys(pluginsByName).sort();
 <ul>
   {sortedPluginNames.map((pluginName) => (
     <li key={pluginName}>
-      <a href={`/api/plugins/${pluginName}`}>
-        @nx/{pluginName}
-      </a>
+      <a href={`/api/plugins/${pluginName}`}>@nx/{pluginName}</a>
     </li>
   ))}
 </ul>
