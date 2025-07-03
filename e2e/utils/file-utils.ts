@@ -116,14 +116,8 @@ export function getSize(filePath: string): number {
   return statSync(filePath).size;
 }
 
-export function tmpBackupProjPath(packageManager?: string, preset?: string) {
-  const basePath = `${e2eCwd}/proj-backup`;
-  if (!packageManager) {
-    return basePath;
-  }
-
-  const cacheKey = preset ? `${packageManager}-${preset}` : packageManager;
-  return `${basePath}/${cacheKey}`;
+export function tmpBackupProjPath(path?: string) {
+  return path ? `${e2eCwd}/proj-backup/${path}` : `${e2eCwd}/proj-backup`;
 }
 
 export function tmpBackupNgCliProjPath(path?: string) {

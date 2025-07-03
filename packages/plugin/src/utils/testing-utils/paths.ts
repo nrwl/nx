@@ -19,16 +19,11 @@ export function tmpProjPath(path?: string) {
 /**
  * The workspace backup directory. This is used for caching of the creation of the workspace.
  *
- * @param packageManager package manager used for the workspace
- * @param preset preset used for the workspace
- * @returns `'${process.cwd()}/tmp/nx-e2e/proj-backup/<packageManager>-<preset>'`
+ * @param path path within the e2e directory
+ * @returns `'${process.cwd()}/tmp/nx-e2e/proj-backup/<path>'`
  */
-export function tmpBackupProjPath(packageManager?: string, preset?: string) {
-  const basePath = `${workspaceRoot}/tmp/nx-e2e/proj-backup`;
-  if (!packageManager) {
-    return basePath;
-  }
-
-  const cacheKey = preset ? `${packageManager}-${preset}` : packageManager;
-  return `${basePath}/${cacheKey}`;
+export function tmpBackupProjPath(path?: string) {
+  return path
+    ? `${workspaceRoot}/tmp/nx-e2e/proj-backup/${path}`
+    : `${workspaceRoot}/tmp/nx-e2e/proj-backup`;
 }
