@@ -1,20 +1,5 @@
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
-import type { RenderedContent } from 'astro:content';
-
-export interface PluginDocEntry<TData = Record<string, unknown>> {
-  /** The ID of the entry. Must be unique per collection. */
-  id: string;
-  /** The data to store. */
-  data: TData;
-  /** The raw body of the content, if applicable. */
-  body?: string;
-  /** The file path of the content, if applicable. Relative to the site root. */
-  filePath?: string;
-  /** A content digest, to check if the content has changed. */
-  digest?: number | string;
-  rendered?: RenderedContent;
-}
 
 export function getPropertyType(property: any): string {
   if (property.type) {
@@ -118,6 +103,7 @@ export function parseMigrations(pluginPath: string): Map<string, any> | null {
   const migrationsJson = JSON.parse(readFileSync(migrationsJsonPath, 'utf-8'));
   const migrations = new Map();
 
+  // TODO(caleb): add the packageJson updates as well
   for (const [name, config] of Object.entries(
     migrationsJson.generators || {}
   ) as [string, any][]) {

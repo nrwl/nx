@@ -73,6 +73,7 @@ export default defineConfig({
             // have to use link bc slug is mapped to the /docs/ folder but we need the astro component in the pages/ dir
             { label: 'Nx CLI', link: 'api/nx-cli' },
             { label: 'Nx Cloud CLI', slug: 'api/nx-cloud-cli' },
+            { label: 'create-nx-workspace', link: 'api/create-nx-workspace' },
             {
               label: 'devkit',
               collapsed: true,

@@ -121,7 +121,6 @@ export function DevkitLoader() {
         renderMarkdown,
         'ngcli_adapter'
       );
-      console.log('ngcli overview page', ngcliOverviewPage);
 
       store.set(ngcliOverviewPage);
 

@@ -136,8 +136,7 @@ async function runCliParser() {
       }
 
       try {
-        const parsedCommand = await parseCommand(name, commandConfig);
-        commands[name] = parsedCommand;
+        commands[name] = await parseCommand(name, commandConfig);
       } catch (error) {
         console.warn(`⚠️ Could not parse command ${name}:`, error.message);
       }

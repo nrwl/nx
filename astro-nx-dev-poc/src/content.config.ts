@@ -5,6 +5,7 @@ import { PluginLoader } from './plugins/plugin.loader';
 import { CliLoader } from './plugins/cli.loader';
 import { DevkitLoader } from './plugins/devkit.loader';
 import { file } from 'astro/loaders';
+import { CnwLoader } from './plugins/cnw.loader.ts';
 
 // Default docs collection handled by Starlight
 const docs = defineCollection({
@@ -17,7 +18,6 @@ const nxCliDocs = defineCollection({
   schema: z.object({
     title: z.string(),
     docType: z.literal('cli'),
-    content: z.string(),
   }),
 });
 
@@ -39,6 +39,14 @@ const devkitDocs = defineCollection({
     description: z.string().optional(),
     category: z.string().optional(),
     kind: z.string().optional(),
+  }),
+});
+
+const cnwDocs = defineCollection({
+  loader: CnwLoader(),
+  schema: z.object({
+    title: z.string(),
+    docType: z.enum(['cnw']),
   }),
 });
 
@@ -74,4 +82,5 @@ export const collections = {
   'nx-cli-docs': nxCliDocs,
   'plugin-docs': pluginDocs,
   'devkit-docs': devkitDocs,
+  'cnw-docs': cnwDocs,
 };

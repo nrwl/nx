@@ -6,7 +6,8 @@
       "dependsOn": [
         {
           "projects": [
-            "devkit"
+            "devkit",
+            "create-nx-workspace"
           ],
           "target": "build"
         }
@@ -17,18 +18,13 @@
       "dependsOn": [
         {
           "projects": [
-            "devkit"
+            "devkit",
+            "create-nx-workspace"
           ],
           "target": "build"
         }
       ],
       "command": "astro build --root=astro-nx-dev-poc"
-    },
-    "preview": {
-      "dependsOn": [
-        "build"
-      ],
-      "command": "astro preview --root=astro-nx-dev-poc"
     },
     "astro": {
       "command": "astro --root=astro-nx-dev-poc"
