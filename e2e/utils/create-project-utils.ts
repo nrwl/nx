@@ -342,7 +342,7 @@ export function runCreateWorkspace(
   }
 
   try {
-    const create = execSync(`${command}${isVerbose() ? ' --verbose' : ''}`, {
+    const create = execSync(command, {
       cwd,
       stdio: 'pipe',
       env: {
