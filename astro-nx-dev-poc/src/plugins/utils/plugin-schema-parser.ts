@@ -103,11 +103,21 @@ export function parseMigrations(pluginPath: string): Map<string, any> | null {
   const migrationsJson = JSON.parse(readFileSync(migrationsJsonPath, 'utf-8'));
   const migrations = new Map();
 
-  // TODO(caleb): add the packageJson updates as well
+  // Parse generators (migrations)
   for (const [name, config] of Object.entries(
     migrationsJson.generators || {}
   ) as [string, any][]) {
-    migrations.set(name, { config });
+    migrations.set(name, { config, type: 'generator' });
+  }
+
+  // Parse packageJsonUpdates
+  for (const [version, config] of Object.entries(
+    migrationsJson.packageJsonUpdates || {}
+  ) as [string, any][]) {
+    migrations.set(`packageJsonUpdates-${version}`, { 
+      config: { ...config, name: version }, 
+      type: 'packageJsonUpdate' 
+    });
   }
 
   return migrations;

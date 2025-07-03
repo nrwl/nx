@@ -46,6 +46,36 @@ const PLUGIN_PATHS = [
 
 type DocEntry = CollectionEntry<'plugin-docs'>;
 
+function generateMigrationItem(name: string, item: any, packageName: string): string {
+  const { config } = item;
+  let markdown = `\n#### \`${name}\`\n`;
+  
+  if (config.description) {
+    markdown += `${config.description}\n\n`;
+  }
+  
+  return markdown;
+}
+
+function generatePackageUpdateItem(item: any): string {
+  const { config } = item;
+  let markdown = `\n#### Package Updates for ${config.name}\n`;
+  
+  if (config.packages && Object.keys(config.packages).length > 0) {
+    markdown += `\nThe following packages will be updated:\n\n`;
+    markdown += `| Package | Version |\n`;
+    markdown += `|---------|----------|\n`;
+    
+    for (const [packageName, packageConfig] of Object.entries(config.packages) as [string, any][]) {
+      markdown += `| \`${packageName}\` | \`${packageConfig.version}\` |\n`;
+    }
+    
+    markdown += `\n`;
+  }
+  
+  return markdown;
+}
+
 function generateMarkdown(
   pluginName: string,
   items: Map<string, any>,
@@ -57,11 +87,67 @@ function generateMarkdown(
   let markdown = `
   The ${packageName} plugin provides various ${docType} to help you create and configure ${pluginName} projects within your Nx workspace.
 Below is a complete reference for all available ${docType} and their options.
-
-## Available ${typeLabel}
 `;
 
-  // Sort items alphabetically
+  if (docType === 'migrations') {
+    // Group migrations by major.minor version
+    const versionGroups = new Map<string, Array<{ name: string; item: any }>>();
+    
+    for (const [name, item] of items.entries()) {
+      const fullVersion = item.config.version || 'unknown';
+      // Extract major.minor from version (e.g., "21.2.3-beta.1" -> "21.2")
+      const majorMinorMatch = fullVersion.match(/^(\d+)\.(\d+)/);
+      const majorMinor = majorMinorMatch ? `${majorMinorMatch[1]}.${majorMinorMatch[2]}` : fullVersion;
+      
+      if (!versionGroups.has(majorMinor)) {
+        versionGroups.set(majorMinor, []);
+      }
+      versionGroups.get(majorMinor)!.push({ name, item });
+    }
+
+    // Sort versions by descending order (highest first)
+    const sortedVersions = Array.from(versionGroups.keys()).sort((a, b) => {
+      // Handle major.minor version comparison
+      const parseVersion = (version: string) => {
+        const match = version.match(/^(\d+)\.(\d+)/);
+        if (!match) return [0, 0];
+        return [parseInt(match[1]), parseInt(match[2])];
+      };
+      
+      const [aMajor, aMinor] = parseVersion(a);
+      const [bMajor, bMinor] = parseVersion(b);
+      
+      // Compare major, minor in descending order
+      if (bMajor !== aMajor) return bMajor - aMajor;
+      if (bMinor !== aMinor) return bMinor - aMinor;
+      
+      // If versions are equal, fall back to string comparison
+      return b.localeCompare(a);
+    });
+
+    for (const version of sortedVersions) {
+      const items = versionGroups.get(version)!;
+      markdown += `\n## ${version}.x\n`;
+      
+      // Combine all items without sub-headers
+      const generators = items.filter(({ item }) => item.type === 'generator');
+      const packageUpdates = items.filter(({ item }) => item.type === 'packageJsonUpdate');
+      
+      // Add generators first
+      for (const { name, item } of generators) {
+        markdown += generateMigrationItem(name, item, packageName);
+      }
+      
+      // Add package updates
+      for (const { item } of packageUpdates) {
+        markdown += generatePackageUpdateItem(item);
+      }
+    }
+    
+    return markdown;
+  }
+
+  // Sort items alphabetically for non-migration types
   const sortedItems = Array.from(items.entries()).sort(([a], [b]) =>
     a.localeCompare(b)
   );
