@@ -1,8 +1,0 @@
-{
-  "label": "Plugins",
-  "position": 2,
-  "link": {
-    "type": "generated-index",
-    "description": "API documentation for Nx plugins."
-  }
-}
