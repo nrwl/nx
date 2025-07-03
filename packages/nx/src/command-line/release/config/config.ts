@@ -238,6 +238,7 @@ export async function createNxReleaseConfig(
    */
   const defaultFixedGroupReleaseTagPattern = '{releaseGroupName}-v{version}';
   const defaultIndependentReleaseTagPattern = '{projectName}@{version}';
+  const defaultReleaseTagPatternRequireSemver = true;
 
   const workspaceProjectsRelationship =
     userConfig.projectsRelationship || 'fixed';
@@ -341,6 +342,9 @@ export async function createNxReleaseConfig(
         : defaultFixedReleaseTagPattern),
     releaseTagPatternCheckAllBranchesWhen:
       userConfig.releaseTagPatternCheckAllBranchesWhen ?? undefined,
+    releaseTagPatternRequireSemver:
+      userConfig.releaseTagPatternRequireSemver ||
+      defaultReleaseTagPatternRequireSemver,
     conventionalCommits: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
     versionPlans: (userConfig.versionPlans ||
       false) as NxReleaseConfig['versionPlans'],
@@ -388,6 +392,10 @@ export async function createNxReleaseConfig(
         : WORKSPACE_DEFAULTS.releaseTagPattern,
     releaseTagPatternCheckAllBranchesWhen:
       userConfig.releaseTagPatternCheckAllBranchesWhen ?? undefined,
+    releaseTagPatternRequireSemver:
+      WORKSPACE_DEFAULTS.releaseTagPatternRequireSemver ??
+      userConfig.releaseTagPatternRequireSemver ??
+      defaultReleaseTagPatternRequireSemver,
     versionPlans: false,
   };
 
@@ -541,6 +549,9 @@ export async function createNxReleaseConfig(
             // If the user has set something custom for releaseTagPattern at the top level, respect it for the implicit default group
             releaseTagPattern:
               userConfig.releaseTagPattern || GROUP_DEFAULTS.releaseTagPattern,
+            releaseTagPatternRequireSemver:
+              userConfig.releaseTagPatternRequireSemver ||
+              GROUP_DEFAULTS.releaseTagPatternRequireSemver,
             // Directly inherit the root level config for projectChangelogs, if set
             changelog: rootChangelogConfig.projectChangelogs || false,
             versionPlans: rootVersionPlansConfig || GROUP_DEFAULTS.versionPlans,
@@ -648,6 +659,10 @@ export async function createNxReleaseConfig(
         releaseGroup.releaseTagPatternCheckAllBranchesWhen ??
         userConfig.releaseTagPatternCheckAllBranchesWhen ??
         undefined,
+      releaseTagPatternRequireSemver:
+        releaseGroup.releaseTagPatternRequireSemver ??
+        userConfig.releaseTagPatternRequireSemver ??
+        defaultReleaseTagPatternRequireSemver,
       versionPlans: releaseGroup.versionPlans ?? rootVersionPlansConfig,
     };
 
@@ -743,6 +758,8 @@ export async function createNxReleaseConfig(
       releaseTagPattern: WORKSPACE_DEFAULTS.releaseTagPattern,
       releaseTagPatternCheckAllBranchesWhen:
         WORKSPACE_DEFAULTS.releaseTagPatternCheckAllBranchesWhen,
+      releaseTagPatternRequireSemver:
+        WORKSPACE_DEFAULTS.releaseTagPatternRequireSemver,
       git: rootGitConfig,
       version: rootVersionConfig,
       changelog: rootChangelogConfig,

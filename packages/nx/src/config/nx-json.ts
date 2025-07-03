@@ -384,6 +384,13 @@ export interface NxReleaseConfiguration {
        */
       releaseTagPatternCheckAllBranchesWhen?: boolean | string[];
       /**
+       * By default, we will use semver when searching through the tags to find the latest matching tag.
+       *
+       * - Setting this to true will cause us to use semver to match the version
+       * - Setting this to false will cause us to not use semver to match the version allowing for non-semver versions
+       */
+      releaseTagPatternRequireSemver?: boolean;
+      /**
        * Enables using version plans as a specifier source for versioning and
        * to determine changes for changelog generation.
        */
@@ -455,6 +462,13 @@ export interface NxReleaseConfiguration {
    * - Setting it to an array of strings will cause us to check all branches WHEN the current branch matches one of the strings in the array. Glob patterns are supported.
    */
   releaseTagPatternCheckAllBranchesWhen?: boolean | string[];
+  /**
+   * By default, we will use semver when searching through the tags to find the latest matching tag.
+   *
+   * - Setting this to true will cause us to use semver to match the version
+   * - Setting this to false will cause us to not use semver to match the version allowing for non-semver versions
+   */
+  releaseTagPatternRequireSemver?: boolean;
   /**
    * Enable and configure automatic git operations as part of the release
    */
