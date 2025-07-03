@@ -89,10 +89,15 @@ export function newProject({
     let createNxWorkspaceMeasure: PerformanceMeasure;
     let packageInstallMeasure: PerformanceMeasure;
 
-    // Namespace by package manager to avoid conflicts in test suites which include multiple package managers
-    const backupPath = tmpBackupProjPath(packageManager);
+    // Namespace by package manager and preset to avoid conflicts in test suites which include multiple package managers and presets
+    const backupPath = tmpBackupProjPath(packageManager, preset);
 
     if (!directoryExists(backupPath)) {
+      // Clean up any existing workspace before creating new one
+      if (directoryExists(`${e2eCwd}/proj`)) {
+        removeSync(`${e2eCwd}/proj`);
+      }
+
       const createNxWorkspaceStart = performance.mark(
         'create-nx-workspace:start'
       );
@@ -139,6 +144,15 @@ export function newProject({
     projName = name;
 
     const projectDirectory = tmpProjPath();
+
+    // Always clean up the target directory before copying to ensure fresh state
+    if (directoryExists(projectDirectory)) {
+      removeSync(projectDirectory);
+    }
+
+    // Reset any global state that might interfere with workspace detection
+    resetWorkspaceContext();
+
     copySync(backupPath, projectDirectory);
 
     const dependencies = readJsonFile(
@@ -702,16 +716,6 @@ export function cleanupProject({
   skipReset,
   ...opts
 }: RunCmdOpts & { skipReset?: boolean } = {}) {
-  if (isCI) {
-    // Stopping the daemon is not required for tests to pass, but it cleans up background processes
-    try {
-      if (!skipReset) {
-        runCLI('reset', opts);
-      }
-    } catch {} // ignore crashed daemon
-    try {
-      removeSync(tmpProjPath());
-    } catch {}
-  }
+  // Always clean up the workspace context, not just in CI
   resetWorkspaceContext();
 }
