@@ -44,7 +44,7 @@ function getNxInitDate(): string | null {
     const nxInitDate = new Date(nxInitIso);
     return nxInitDate.toISOString();
   } catch (e) {
-    return null;
+    return new Date().toISOString();
   }
 }
 
