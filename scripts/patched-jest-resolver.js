@@ -1,5 +1,6 @@
 'use strict';
 const path = require('path');
+const fs = require('fs');
 
 /**
  * Custom resolver which will respect package exports (until Jest supports it natively
@@ -9,6 +10,20 @@ const enhancedResolver = require('enhanced-resolve').create.sync({
   conditionNames: ['require', 'node', 'default'],
   extensions: ['.js', '.json', '.node', '.ts', '.tsx'],
 });
+
+// Setup test environment for Jest workers (important for native functionality)
+if (
+  process.argv[1].indexOf('jest-worker') > -1 ||
+  (process.argv.length >= 4 && process.argv[3].split(':')[1] === 'test')
+) {
+  const root = path.join(__dirname, '..', 'tmp', 'unit');
+  try {
+    if (!fs.existsSync(root)) {
+      fs.mkdirSync(root);
+    }
+  } catch (_err) {}
+  process.env.NX_WORKSPACE_ROOT_PATH = root;
+}
 
 const excludedPackages = [
   '@nx/conformance',
