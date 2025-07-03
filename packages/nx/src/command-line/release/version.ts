@@ -282,6 +282,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     changed.forEach((f) => additionalChangedFiles.add(f));
     deleted.forEach((f) => additionalDeletedFiles.add(f));
 
+    // TODO(colum): Handle Docker
+
     // Only applicable when there is a single release group with a fixed relationship
     let workspaceVersion: string | null | undefined = undefined;
     if (releaseGroups.length === 1) {
