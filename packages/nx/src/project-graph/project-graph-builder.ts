@@ -155,6 +155,22 @@ export class ProjectGraphBuilder {
   }
 
   /**
+   * Adds type dependency from source project to target project
+   */
+  addTypeDependency(
+    sourceProjectName: string,
+    targetProjectName: string,
+    sourceProjectFile?: string
+  ): void {
+    this.addDependency(
+      sourceProjectName,
+      targetProjectName,
+      DependencyType.type,
+      sourceProjectFile
+    );
+  }
+
+  /**
    * Adds implicit dependency from source project to target project
    */
   addImplicitDependency(
@@ -537,6 +553,8 @@ export function validateDependency(
     validateImplicitDependency(dependency, ctx);
   } else if (dependency.type === DependencyType.dynamic) {
     validateDynamicDependency(dependency, ctx);
+  } else if (dependency.type === DependencyType.type) {
+    validateTypeDependency(dependency, ctx);
   } else if (dependency.type === DependencyType.static) {
     validateStaticDependency(dependency, ctx);
   }
@@ -599,6 +617,15 @@ function validateDynamicDependency(
     throw new Error(
       `Source project file is required for "dynamic" dependencies`
     );
+  }
+}
+
+function validateTypeDependency(
+  d: TypeDependency,
+  { externalNodes }: CreateDependenciesContext
+) {
+  if (externalNodes[d.source]) {
+    throw new Error(`External projects can't have "type" dependencies`);
   }
 }
 

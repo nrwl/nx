@@ -316,7 +316,9 @@ function findAllNpmDeps(
       // Only add if not a type-only import
       if (
         typeof dep === 'string' ||
-        (Array.isArray(dep) && dep[2] !== DependencyType.type)
+        (Array.isArray(dep) &&
+          ((dep.length === 2 && dep[1] !== DependencyType.type) ||
+            (dep.length === 3 && dep[2] !== DependencyType.type)))
       ) {
         projectDependencies.add(fileDataDepTarget(dep));
       }
