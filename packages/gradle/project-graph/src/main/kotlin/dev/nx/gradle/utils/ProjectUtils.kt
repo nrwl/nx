@@ -1,6 +1,7 @@
 package dev.nx.gradle.utils
 
 import dev.nx.gradle.data.*
+import java.io.File
 import java.util.*
 import org.gradle.api.Project
 
@@ -49,7 +50,8 @@ fun createNodeForProject(
     nodes = emptyMap()
     externalNodes = emptyMap()
   }
-  return GradleNodeReport(nodes, dependencies, externalNodes)
+  val buildFileRelativePath = project.buildFile.relativeTo(File(workspaceRoot)).path
+  return GradleNodeReport(nodes, dependencies, externalNodes, listOf(buildFileRelativePath))
 }
 
 /**
