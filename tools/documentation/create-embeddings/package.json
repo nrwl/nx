@@ -2,7 +2,6 @@
   "name": "tools-documentation-create-embeddings",
   "version": "0.0.1",
   "private": true,
-  "type": "module",
   "dependencies": {
     "@supabase/supabase-js": "*",
     "dotenv": "*",
