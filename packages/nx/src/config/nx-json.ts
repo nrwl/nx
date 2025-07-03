@@ -85,6 +85,40 @@ export type ManifestRootToUpdate =
 // NOTE: It's important to keep the nx-schema.json in sync with this interface. If you make changes here, make sure they are reflected in the schema.
 export interface NxReleaseVersionConfiguration {
   /**
+   * Configure options to handle versioning docker projects. Docker projects will be identified via the presence of a Dockerfile.
+   */
+  docker?: {
+    /**
+     * A command to run after validation of nx release configuration, but before versioning begins.
+     * Useful for preparing build artifacts. If --dry-run is passed, the command is still executed,
+     * but with the NX_DRY_RUN environment variable set to 'true'.
+     */
+    preVersionCommand?: string;
+    /**
+     * Array of projects which should use a no-op VersionActions implementation rather than any potentially inferred by default or via Inference Plugins.
+     */
+    ignoreVersionActions?: string[];
+    /**
+     * Record of named version patterns to choose between when versioning docker projects.
+     *
+     * e.g.
+     * ```
+     * "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
+     * "hotfix": "{currentDate|YYMM.DD}-hotfix"
+     * ```
+     */
+    versionSchemes?: Record<string, string>;
+    /**
+     * Url of the Docker Image/Container Registry to push images to.
+     * Defaults to Docker Hub.
+     */
+    registryUrl?: string;
+    /**
+     * Repository name of the image to push.
+     */
+    repositoryName?: string;
+  };
+  /**
    * Whether to use the legacy versioning strategy. This value was true in Nx v20 and became false in Nx v21.
    * The legacy versioning implementation will be removed in Nx v22, as will this flag.
    */
