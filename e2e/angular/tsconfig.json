@@ -10,24 +10,6 @@
       "path": "../../packages/workspace"
     },
     {
-      "path": "../../packages/webpack"
-    },
-    {
-      "path": "../../packages/web"
-    },
-    {
-      "path": "../../packages/js"
-    },
-    {
-      "path": "../../packages/jest"
-    },
-    {
-      "path": "../../packages/cypress"
-    },
-    {
-      "path": "../../packages/angular"
-    },
-    {
       "path": "../utils"
     },
     {

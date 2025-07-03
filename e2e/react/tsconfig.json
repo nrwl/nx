@@ -7,24 +7,6 @@
   "files": [],
   "references": [
     {
-      "path": "../../packages/workspace"
-    },
-    {
-      "path": "../../packages/vite"
-    },
-    {
-      "path": "../../packages/webpack"
-    },
-    {
-      "path": "../../packages/js"
-    },
-    {
-      "path": "../../packages/jest"
-    },
-    {
-      "path": "../../packages/react"
-    },
-    {
       "path": "../utils"
     },
     {
