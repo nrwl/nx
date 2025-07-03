@@ -185,7 +185,7 @@ describe('task graph utils', () => {
   });
 
   describe('validateNoAtomizedTasks', () => {
-    let mockProcessExit: jest.SpyInstance;
+    let mockProcessExit: jest.Spied<typeof process.exit>;
     let env: NodeJS.ProcessEnv;
 
     beforeEach(() => {

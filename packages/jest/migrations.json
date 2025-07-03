@@ -1,5 +1,11 @@
 {
   "generators": {
+    "replace-testPathPattern-with-testPathPatterns": {
+      "cli": "nx",
+      "version": "21.3.0-beta.2",
+      "description": "Replace usage of `getJestProjects` with `getJestProjectsAsync`.",
+      "implementation": "./src/migrations/update-21-3-0/replace-testPathPattern-with-testPathPatterns"
+    },
     "replace-getJestProjects-with-getJestProjectsAsync": {
       "cli": "nx",
       "version": "20.0.0-beta.5",

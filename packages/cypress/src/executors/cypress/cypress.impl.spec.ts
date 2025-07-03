@@ -17,8 +17,8 @@ jest.mock('../../utils/ct-helpers');
 const Cypress = require('cypress');
 
 describe('Cypress builder', () => {
-  let cypressRun: jest.SpyInstance;
-  let cypressOpen: jest.SpyInstance;
+  let cypressRun: jest.Spied<typeof Cypress.run>;
+  let cypressOpen: jest.Spied<typeof Cypress.open>;
   const cypressOptions: CypressExecutorOptions = {
     cypressConfig: 'apps/my-app-e2e/cypress.json',
     parallel: false,

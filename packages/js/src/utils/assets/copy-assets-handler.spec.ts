@@ -1,11 +1,11 @@
 import * as fs from 'node:fs';
-import * as path from 'path';
 import * as os from 'os';
+import * as path from 'path';
 
 import { CopyAssetsHandler } from './copy-assets-handler';
 
-import { Subject } from 'rxjs';
 import type { ChangedFile } from 'nx/src/daemon/client/client';
+import { Subject } from 'rxjs';
 
 const mockWatcher = new Subject<ChangedFile>();
 
@@ -65,7 +65,7 @@ describe('AssetInputOutputHandler', () => {
   let rootDir: string;
   let projectDir: string;
   let outputDir: string;
-  let callback: jest.SpyInstance;
+  let callback: jest.Spied<typeof jest.fn>;
   let originalCwd: string;
 
   beforeEach(() => {
