@@ -83,15 +83,15 @@
     }
   },
   "targetDefaults": {
+    "cleanup-tsconfig": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node ./scripts/cleanup-tsconfig-files.js dist/packages/{projectName}"
+      }
+    },
     "nx-release-publish": {
       "options": {
         "packageRoot": "dist/packages/{projectName}"
-      }
-    },
-    "add-extra-dependencies": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "node ./scripts/replace-workspace-protocols.js {projectName}"
       }
     },
     "build": {

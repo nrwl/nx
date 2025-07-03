@@ -98,9 +98,6 @@
         }
       ]
     },
-    "add-extra-dependencies": {
-      "command": "node ./scripts/add-dependency-to-build.js workspace nx"
-    },
     "build-base": {
       "dependsOn": [
         "^build",

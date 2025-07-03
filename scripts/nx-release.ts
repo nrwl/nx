@@ -174,6 +174,14 @@ const VALID_AUTHORS_FOR_LATEST = [
     }
   }
 
+  // Clean up tsconfig files before publishing
+  console.log('Cleaning up tsconfig files...');
+  execSync('pnpm nx run-many -t cleanup-tsconfig --parallel=8', {
+    stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
+    maxBuffer: LARGE_BUFFER,
+    windowsHide: false,
+  });
+
   // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
   let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=${distTag} --output-style=dynamic --parallel=8`;
   if (options.dryRun) {
