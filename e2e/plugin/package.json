@@ -4,11 +4,6 @@
   "private": true,
   "dependencies": {
     "nx": "workspace:*",
-    "@nx/devkit": "workspace:*",
-    "@nx/e2e-utils": "workspace:*",
-    "@nx/plugin": "workspace:*",
-    "@nx/jest": "workspace:*",
-    "@nx/js": "workspace:*",
-    "@nx/workspace": "workspace:*"
+    "@nx/e2e-utils": "workspace:*"
   }
 }

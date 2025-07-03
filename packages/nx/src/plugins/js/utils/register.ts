@@ -263,8 +263,13 @@ export function getTranspiler(
 
   let registrationKey = JSON.stringify(compilerOptions);
   let tsNodeOptions: TsConfigOptions | undefined;
-  // In test environment, prefer ts-node to avoid SWC transpiler issues in TS solution setup
-  const forcePreferTsNode = preferTsNode || process.env.NODE_ENV === 'test';
+  // In unit test environment within Nx repo, prefer ts-node to avoid SWC transpiler issues in TS solution setup
+  // Only apply this for unit tests, not e2e tests which test real-world scenarios
+  const isNxRepoUnitTest =
+    process.env.NODE_ENV === 'test' &&
+    process.cwd().includes('nx') &&
+    !process.cwd().includes('/tmp/nx-e2e');
+  const forcePreferTsNode = preferTsNode || isNxRepoUnitTest;
   if (swcNodeInstalled && !forcePreferTsNode) {
     _getTranspiler = getSwcTranspiler;
   } else if (tsNodeInstalled) {
@@ -332,7 +337,7 @@ export function registerTranspiler(
  * @param tsConfigPath Adds the paths from a tsconfig file into node resolutions
  * @returns cleanup function
  */
-export function registerTsConfigPaths(tsConfigPath): () => void {
+export function registerTsConfigPaths(tsConfigPath: string): () => void {
   try {
     /**
      * Load the ts config from the source project
@@ -340,9 +345,13 @@ export function registerTsConfigPaths(tsConfigPath): () => void {
     const tsconfigPaths = loadTsConfigPaths();
     const tsConfigResult = tsconfigPaths.loadConfig(tsConfigPath);
 
-    // In Jest test environment with TS solution setup, provide minimal path mappings for tests
-    if (
+    // In unit test environment within Nx repo with TS solution setup, provide minimal path mappings for tests
+    const isNxRepoUnitTest =
       process.env.NODE_ENV === 'test' &&
+      process.cwd().includes('nx') &&
+      !process.cwd().includes('/tmp/nx-e2e');
+    if (
+      isNxRepoUnitTest &&
       tsConfigResult.resultType === 'success' &&
       (!tsConfigResult.paths || Object.keys(tsConfigResult.paths).length === 0)
     ) {

@@ -6,12 +6,6 @@
     "nx": "workspace:*",
     "@nx/devkit": "workspace:*",
     "@nx/e2e-utils": "workspace:*",
-    "@nx/angular": "workspace:*",
-    "@nx/cypress": "workspace:*",
-    "@nx/jest": "workspace:*",
-    "@nx/js": "workspace:*",
-    "@nx/web": "workspace:*",
-    "@nx/webpack": "workspace:*",
     "@nx/workspace": "workspace:*"
   }
 }

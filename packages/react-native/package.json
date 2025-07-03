@@ -42,6 +42,7 @@
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/react": "workspace:*",
+    "@nx/rollup": "workspace:*",
     "@nx/workspace": "workspace:*"
   },
   "executors": "./executors.json",

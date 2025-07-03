@@ -1086,30 +1086,12 @@ importers:
 
   e2e/angular:
     dependencies:
-      '@nx/angular':
-        specifier: workspace:*
-        version: link:../../packages/angular
-      '@nx/cypress':
-        specifier: workspace:*
-        version: link:../../packages/cypress
       '@nx/devkit':
         specifier: workspace:*
         version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/web':
-        specifier: workspace:*
-        version: link:../../packages/web
-      '@nx/webpack':
-        specifier: workspace:*
-        version: link:../../packages/webpack
       '@nx/workspace':
         specifier: workspace:*
         version: link:../../packages/workspace
@@ -1119,243 +1101,63 @@ importers:
 
   e2e/cypress:
     dependencies:
-      '@nx/cypress':
-        specifier: workspace:*
-        version: link:../../packages/cypress
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   e2e/detox:
     dependencies:
-      '@nx/detox':
-        specifier: workspace:*
-        version: link:../../packages/detox
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   e2e/esbuild:
     dependencies:
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/esbuild':
-        specifier: workspace:*
-        version: link:../../packages/esbuild
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   e2e/eslint:
     dependencies:
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/eslint':
-        specifier: workspace:*
-        version: link:../../packages/eslint
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   e2e/expo:
     dependencies:
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/expo':
-        specifier: workspace:*
-        version: link:../../packages/expo
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   e2e/gradle:
     dependencies:
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/gradle':
-        specifier: workspace:*
-        version: link:../../packages/gradle
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   e2e/jest:
     dependencies:
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   e2e/js:
     dependencies:
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/esbuild':
-        specifier: workspace:*
-        version: link:../../packages/esbuild
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   e2e/lerna-smoke-tests:
     dependencies:
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   e2e/next:
     dependencies:
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/next':
-        specifier: workspace:*
-        version: link:../../packages/next
-      '@nx/react':
-        specifier: workspace:*
-        version: link:../../packages/react
-      '@nx/webpack':
-        specifier: workspace:*
-        version: link:../../packages/webpack
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   e2e/node:
     dependencies:
@@ -1365,147 +1167,39 @@ importers:
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/esbuild':
-        specifier: workspace:*
-        version: link:../../packages/esbuild
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/node':
-        specifier: workspace:*
-        version: link:../../packages/node
-      '@nx/webpack':
-        specifier: workspace:*
-        version: link:../../packages/webpack
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   e2e/nuxt:
     dependencies:
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/nuxt':
-        specifier: workspace:*
-        version: link:../../packages/nuxt
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   e2e/nx:
     dependencies:
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
       nx:
         specifier: workspace:*
         version: link:../../packages/nx
 
   e2e/nx-init:
     dependencies:
-      '@nx/angular':
-        specifier: workspace:*
-        version: link:../../packages/angular
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/nest':
-        specifier: workspace:*
-        version: link:../../packages/nest
-      '@nx/react':
-        specifier: workspace:*
-        version: link:../../packages/react
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   e2e/playwright:
     dependencies:
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/playwright':
-        specifier: workspace:*
-        version: link:../../packages/playwright
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   e2e/plugin:
     dependencies:
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/plugin':
-        specifier: workspace:*
-        version: link:../../packages/plugin
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
       nx:
         specifier: workspace:*
         version: link:../../packages/nx
@@ -1518,51 +1212,15 @@ importers:
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/react':
-        specifier: workspace:*
-        version: link:../../packages/react
-      '@nx/vite':
-        specifier: workspace:*
-        version: link:../../packages/vite
-      '@nx/webpack':
-        specifier: workspace:*
-        version: link:../../packages/webpack
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
       nx:
         specifier: workspace:*
         version: link:../../packages/nx
 
   e2e/react-native:
     dependencies:
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/react-native':
-        specifier: workspace:*
-        version: link:../../packages/react-native
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   e2e/release:
     dependencies:
@@ -1572,87 +1230,27 @@ importers:
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
       nx:
         specifier: workspace:*
         version: link:../../packages/nx
 
   e2e/remix:
     dependencies:
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/remix':
-        specifier: workspace:*
-        version: link:../../packages/remix
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   e2e/rollup:
     dependencies:
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/rollup':
-        specifier: workspace:*
-        version: link:../../packages/rollup
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   e2e/rspack:
     dependencies:
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/rspack':
-        specifier: workspace:*
-        version: link:../../packages/rspack
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   e2e/storybook:
     dependencies:
@@ -1704,126 +1302,30 @@ importers:
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/vite':
-        specifier: workspace:*
-        version: link:../../packages/vite
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   e2e/vue:
     dependencies:
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/vite':
-        specifier: workspace:*
-        version: link:../../packages/vite
-      '@nx/vue':
-        specifier: workspace:*
-        version: link:../../packages/vue
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   e2e/web:
     dependencies:
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/vite':
-        specifier: workspace:*
-        version: link:../../packages/vite
-      '@nx/web':
-        specifier: workspace:*
-        version: link:../../packages/web
-      '@nx/webpack':
-        specifier: workspace:*
-        version: link:../../packages/webpack
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   e2e/webpack:
     dependencies:
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/webpack':
-        specifier: workspace:*
-        version: link:../../packages/webpack
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   e2e/workspace-create:
     dependencies:
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../../packages/jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../../packages/js
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
-      create-nx-workspace:
-        specifier: workspace:*
-        version: link:../../packages/create-nx-workspace
-      nx:
-        specifier: workspace:*
-        version: link:../../packages/nx
 
   graph/client:
     dependencies:
@@ -2930,6 +2432,9 @@ importers:
       '@nx/react':
         specifier: workspace:*
         version: link:../react
+      '@nx/rollup':
+        specifier: workspace:*
+        version: link:../rollup
       '@nx/web':
         specifier: workspace:*
         version: link:../web
@@ -3576,6 +3081,9 @@ importers:
       '@nx/react':
         specifier: workspace:*
         version: link:../react
+      '@nx/rollup':
+        specifier: workspace:*
+        version: link:../rollup
       '@nx/workspace':
         specifier: workspace:*
         version: link:../workspace
