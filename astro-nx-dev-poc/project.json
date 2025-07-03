@@ -5,10 +5,7 @@
     "serve": {
       "dependsOn": [
         {
-          "projects": [
-            "devkit",
-            "create-nx-workspace"
-          ],
+          "projects": ["devkit", "create-nx-workspace"],
           "target": "build"
         }
       ],
@@ -17,10 +14,7 @@
     "build": {
       "dependsOn": [
         {
-          "projects": [
-            "devkit",
-            "create-nx-workspace"
-          ],
+          "projects": ["devkit", "create-nx-workspace"],
           "target": "build"
         }
       ],
