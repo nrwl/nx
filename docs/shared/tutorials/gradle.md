@@ -313,7 +313,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-jvm" --stop-agents-after="build"
+      # - run: ./nx start-ci-run --distribute-on="3 linux-medium-jvm" --stop-agents-after="build"
 
       - name: Set up JDK 21 for x64
         uses: actions/setup-java@v4
@@ -327,6 +327,8 @@ jobs:
 
       # As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: './nx run-many -t test build'
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
+      - run: ./nx fix-ci
 ```
 
 ### Open a Pull Request {% highlightColor="green" %}
