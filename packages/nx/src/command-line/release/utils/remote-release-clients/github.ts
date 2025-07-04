@@ -9,12 +9,12 @@ import type { PostGitTask } from '../../changelog';
 import { type ResolvedCreateRemoteReleaseProvider } from '../../config/config';
 import { Reference } from '../git';
 import { ReleaseVersion } from '../shared';
+import { extractGitHubRepoSlug } from './extract-repo-slug';
 import {
   RemoteReleaseClient,
   RemoteReleaseOptions,
   RemoteReleaseResult,
   RemoteRepoData,
-  RemoteRepoSlug,
 } from './remote-release-client';
 
 // axios types and values don't seem to match
@@ -70,28 +70,18 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
         apiBaseUrl = createReleaseConfig.apiBaseUrl;
       }
 
-      // Extract the 'user/repo' part from the `remoteUrl`, expecting the following formats:
-      // - HTTPS: https://github.com/user/repo.git
-      // - SSH: git@github.com:user/repo.git
-      // - SSH over HTTPS: ssh://git@ssh.github.com:443/user/repo.git
-      const escapedHostname = hostname.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regexString = `${escapedHostname}(?::\\d+)?[/:]([\\w.-]+/[\\w.-]+)(?:\\.git)?/?$`;
-      const regex = new RegExp(regexString);
-      const match = remoteUrl.match(regex);
-
-      if (match && match[1]) {
-        return {
-          hostname,
-          apiBaseUrl,
-          // Ensure any trailing .git is stripped
-          slug: match[1].replace(/\.git$/, '') as RemoteRepoSlug,
-        };
+      const slug = extractGitHubRepoSlug(remoteUrl, hostname);
+      if (slug) {
+        return { hostname, apiBaseUrl, slug };
       } else {
         throw new Error(
           `Could not extract "user/repo" data from the resolved remote URL: ${remoteUrl}`
         );
       }
     } catch (error) {
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        console.error(error);
+      }
       return null;
     }
   }
