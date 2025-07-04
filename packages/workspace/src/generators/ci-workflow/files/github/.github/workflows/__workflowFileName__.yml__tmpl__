@@ -47,11 +47,9 @@ jobs:
        <% } %>
       - run: <%= packageManagerInstall %><% if(hasCypress){ %>
       - run: <%= packageManagerPrefix %> cypress install<% } %><% if(hasPlaywright){ %>
-      - run: <%= packageManagerPrefix %> playwright install --with-deps<% } %>
-      - uses: nrwl/nx-set-shas@v4
+      - run: <%= packageManagerPrefix %> playwright install --with-deps<% } %><% if(!useRunMany){ %>
+      - uses: nrwl/nx-set-shas@v4<% } %>
 
-      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: <%= packageManagerPrefix %> nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected<% if(hasE2E){ %>
-      # When you enable task distribution, run the e2e-ci task instead of e2e<% } %>
-      - run: <%= packageManagerPrefix %> nx affected -t lint test build<% if(hasTypecheck){ %> typecheck<% } %><% if(hasE2E){ %> e2e<% } %>
+<% for (const command of commands) { %><% if (command.comments) { %><% for (const comment of command.comments) { %>
+      # <%- comment %><% } %><% } %><% if (command.command) { %>
+      - run: <%= command.command %><% } %><% } %>
