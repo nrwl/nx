@@ -109,14 +109,14 @@ export interface NxReleaseVersionConfiguration {
      */
     versionSchemes?: Record<string, string>;
     /**
+     * Repository name for the image on the configured registry
+     */
+    repositoryName?: string;
+    /**
      * Url of the Docker Image/Container Registry to push images to.
      * Defaults to Docker Hub.
      */
     registryUrl?: string;
-    /**
-     * Repository name of the image to push.
-     */
-    repositoryName?: string;
   };
   /**
    * Whether to use the legacy versioning strategy. This value was true in Nx v20 and became false in Nx v21.
@@ -418,6 +418,13 @@ export interface NxReleaseConfiguration {
        */
       releaseTagPatternCheckAllBranchesWhen?: boolean | string[];
       /**
+       * By default, we will use the version defined in any existing manifest files or passed through from `nx release`.
+       *
+       * - Setting this to true will cause us to use the version calculated for corresponding docker images.
+       * - Setting it to false will use the version found within manifest files or passed through from `nx release`.
+       */
+      releaseTagPatternPreferDockerVersion?: boolean;
+      /**
        * By default, we will use semver when searching through the tags to find the latest matching tag.
        *
        * - Setting this to true will cause us to use semver to match the version
@@ -516,6 +523,13 @@ export interface NxReleaseConfiguration {
    * - Setting it to an array of strings will cause us to check all branches WHEN the current branch matches one of the strings in the array. Glob patterns are supported.
    */
   releaseTagPatternCheckAllBranchesWhen?: boolean | string[];
+  /**
+   * By default, we will use the version defined in any existing manifest files or passed through from `nx release`.
+   *
+   * - Setting this to true will cause us to use the version calculated for corresponding docker images.
+   * - Setting it to false will use the version found within manifest files or passed through from `nx release`.
+   */
+  releaseTagPatternPreferDockerVersion?: boolean;
   /**
    * By default, we will use semver when searching through the tags to find the latest matching tag.
    *

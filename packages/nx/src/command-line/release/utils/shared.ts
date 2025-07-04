@@ -22,6 +22,11 @@ export interface VersionDataEntry {
    */
   newVersion: string | null;
   /**
+   * dockerVersion will be populated if the project is a docker project and has been
+   * included within this release.
+   */
+  dockerVersion?: string;
+  /**
    * The list of projects which depend upon the current project.
    */
   dependentProjects: {
@@ -247,7 +252,9 @@ export function createGitTagValues(
         if (projectVersionData.newVersion !== null) {
           tags.push(
             interpolate(releaseGroup.releaseTagPattern, {
-              version: projectVersionData.newVersion,
+              version: releaseGroup.releaseTagPatternPreferDockerVersion
+                ? projectVersionData.dockerVersion
+                : projectVersionData.newVersion,
               projectName: project,
             })
           );
@@ -260,7 +267,9 @@ export function createGitTagValues(
     if (projectVersionData.newVersion !== null) {
       tags.push(
         interpolate(releaseGroup.releaseTagPattern, {
-          version: projectVersionData.newVersion,
+          version: releaseGroup.releaseTagPatternPreferDockerVersion
+            ? projectVersionData.dockerVersion
+            : projectVersionData.newVersion,
           releaseGroupName: releaseGroup.name,
         })
       );

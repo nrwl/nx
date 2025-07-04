@@ -1,26 +1,11 @@
 import { ExecutorContext, ProjectGraphProjectNode, logger } from '@nx/devkit';
-import type { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
 import { execSync } from 'child_process';
 import {
   DockerReleasePublishSchema,
   NormalizedDockerReleasePublishSchema,
 } from './schema';
-import { DockerVersionActionsOptions } from '../../release/version-actions-options';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
-
-type NxReleaseProjectConfiguration = Pick<
-  // Expose a subset of version config options at the project level
-  NxReleaseVersionConfiguration,
-  | 'versionActions'
-  | 'versionActionsOptions'
-  | 'manifestRootsToUpdate'
-  | 'currentVersionResolver'
-  | 'currentVersionResolverMetadata'
-  | 'fallbackCurrentVersionResolver'
-  | 'versionPrefix'
-  | 'preserveLocalDependencyProtocols'
->;
 
 export default async function dockerReleasePublish(
   schema: DockerReleasePublishSchema,
@@ -57,21 +42,7 @@ function findImageReference(
   projectConfig: ProjectGraphProjectNode,
   schema: DockerReleasePublishSchema
 ) {
-  const versionActionsOptions: DockerVersionActionsOptions =
-    (projectConfig.data?.release?.version as NxReleaseProjectConfiguration)
-      ?.versionActionsOptions ?? {};
-  let imageRef = readVersionFromFile(projectConfig.data.root) ?? 'latest';
-
-  if (schema.repositoryName || versionActionsOptions.repositoryName) {
-    imageRef = `${
-      schema.repositoryName ?? versionActionsOptions.repositoryName
-    }${imageRef ? `:${imageRef}` : ''}`;
-  }
-  if (schema.registry || versionActionsOptions.registry) {
-    imageRef = `${schema.registry ?? versionActionsOptions.registry}${
-      imageRef ? `/${imageRef}` : ''
-    }`;
-  }
+  let imageRef = readVersionFromFile(projectConfig.data.root);
   if (imageRef) {
     if (checkDockerImageExistsLocally(imageRef)) {
       return imageRef;

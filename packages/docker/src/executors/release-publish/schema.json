@@ -5,14 +5,6 @@
   "description": "DO NOT INVOKE DIRECTLY WITH `nx run`. Use `nx release publish` instead.",
   "type": "object",
   "properties": {
-    "registry": {
-      "type": "string",
-      "description": "Url of the registry to publish the image to. Used to help identify the image to push."
-    },
-    "repositoryName": {
-      "type": "string",
-      "description": "Repository name on the registry to push the image to. Used to help identify the image to push."
-    },
     "dryRun": {
       "type": "boolean",
       "description": "Whether to run the command without actually publishing the image to the registry."
