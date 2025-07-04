@@ -151,12 +151,18 @@ export function newProject({
     } else if (packageManager === 'pnpm') {
       // pnpm creates sym links to the pnpm store,
       // we need to run the install again after copying the temp folder
-      execSync(getPackageManagerCommand().install, {
-        cwd: projectDirectory,
-        stdio: 'pipe',
-        env: { CI: 'true', ...process.env },
-        encoding: 'utf-8',
-      });
+      try {
+        execSync(getPackageManagerCommand().install, {
+          cwd: projectDirectory,
+          stdio: 'pipe',
+          env: { CI: 'true', ...process.env },
+          encoding: 'utf-8',
+        });
+      } catch (e) {
+        console.log('newProject() - reinstall pnpm dependencies failed');
+        console.error('Full error:', e);
+        throw e;
+      }
     }
 
     const newProjectEnd = performance.mark('new-project:end');
@@ -196,7 +202,13 @@ ${
     }
     return projScope;
   } catch (e) {
-    logError(`Failed to set up project for e2e tests.`, e.message);
+    logError(
+      `Failed to set up project for e2e tests.`,
+      `${e.message}\n\nSTDOUT:\n${e.stdout || 'N/A'}\n\nSTDERR:\n${
+        e.stderr || 'N/A'
+      }`
+    );
+    console.error(`Full error:`, e);
     throw e;
   }
 }
