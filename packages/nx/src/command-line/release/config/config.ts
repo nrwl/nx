@@ -343,7 +343,7 @@ export async function createNxReleaseConfig(
     releaseTagPatternCheckAllBranchesWhen:
       userConfig.releaseTagPatternCheckAllBranchesWhen ?? undefined,
     releaseTagPatternRequireSemver:
-      userConfig.releaseTagPatternRequireSemver ||
+      userConfig.releaseTagPatternRequireSemver ??
       defaultReleaseTagPatternRequireSemver,
     conventionalCommits: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
     versionPlans: (userConfig.versionPlans ||
