@@ -550,7 +550,7 @@ export async function createNxReleaseConfig(
             releaseTagPattern:
               userConfig.releaseTagPattern || GROUP_DEFAULTS.releaseTagPattern,
             releaseTagPatternRequireSemver:
-              userConfig.releaseTagPatternRequireSemver ||
+              userConfig.releaseTagPatternRequireSemver ??
               GROUP_DEFAULTS.releaseTagPatternRequireSemver,
             // Directly inherit the root level config for projectChangelogs, if set
             changelog: rootChangelogConfig.projectChangelogs || false,
