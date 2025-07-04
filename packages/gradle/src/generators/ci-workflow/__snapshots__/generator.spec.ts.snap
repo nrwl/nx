@@ -31,9 +31,12 @@ jobs:
 
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.
       # Change from check to check-ci if you turn on the atomizer. Learn more: https://nx.dev/nx-api/gradle#splitting-e2e-tests.
-      - run: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t assemble check
+      - run:
+          command: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t assemble check
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: ./nx fix-ci
+      - run:
+          command: ./nx fix-ci
+          when: always
 
 workflows:
   version: 2
@@ -92,6 +95,7 @@ jobs:
       - run: ./nx affected -t assemble check
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
       - run: ./nx fix-ci
+        if: always()
 "
 `;
 
@@ -126,9 +130,12 @@ jobs:
 
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.
       # Change from check to check-ci if you turn on the atomizer. Learn more: https://nx.dev/nx-api/gradle#splitting-e2e-tests.
-      - run: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t assemble check
+      - run:
+          command: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t assemble check
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: ./nx fix-ci
+      - run:
+          command: ./nx fix-ci
+          when: always
 
 workflows:
   version: 2
@@ -187,5 +194,6 @@ jobs:
       - run: ./nx affected -t assemble check
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
       - run: ./nx fix-ci
+        if: always()
 "
 `;
