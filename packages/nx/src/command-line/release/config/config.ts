@@ -238,6 +238,7 @@ export async function createNxReleaseConfig(
    */
   const defaultFixedGroupReleaseTagPattern = '{releaseGroupName}-v{version}';
   const defaultIndependentReleaseTagPattern = '{projectName}@{version}';
+  const defaultReleaseTagPatternPreferDockerVersion = false;
 
   const workspaceProjectsRelationship =
     userConfig.projectsRelationship || 'fixed';
@@ -341,6 +342,9 @@ export async function createNxReleaseConfig(
         : defaultFixedReleaseTagPattern),
     releaseTagPatternCheckAllBranchesWhen:
       userConfig.releaseTagPatternCheckAllBranchesWhen ?? undefined,
+    releaseTagPatternPreferDockerVersion:
+      userConfig.releaseTagPatternPreferDockerVersion ??
+      defaultReleaseTagPatternPreferDockerVersion,
     conventionalCommits: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
     versionPlans: (userConfig.versionPlans ||
       false) as NxReleaseConfig['versionPlans'],
@@ -388,6 +392,10 @@ export async function createNxReleaseConfig(
         : WORKSPACE_DEFAULTS.releaseTagPattern,
     releaseTagPatternCheckAllBranchesWhen:
       userConfig.releaseTagPatternCheckAllBranchesWhen ?? undefined,
+    releaseTagPatternPreferDockerVersion:
+      WORKSPACE_DEFAULTS.releaseTagPatternPreferDockerVersion ??
+      userConfig.releaseTagPatternPreferDockerVersion ??
+      defaultReleaseTagPatternPreferDockerVersion,
     versionPlans: false,
   };
 
@@ -541,6 +549,10 @@ export async function createNxReleaseConfig(
             // If the user has set something custom for releaseTagPattern at the top level, respect it for the implicit default group
             releaseTagPattern:
               userConfig.releaseTagPattern || GROUP_DEFAULTS.releaseTagPattern,
+            releaseTagPatternPreferDockerVersion:
+              GROUP_DEFAULTS.releaseTagPatternPreferDockerVersion ??
+              userConfig.releaseTagPatternPreferDockerVersion ??
+              defaultReleaseTagPatternPreferDockerVersion,
             // Directly inherit the root level config for projectChangelogs, if set
             changelog: rootChangelogConfig.projectChangelogs || false,
             versionPlans: rootVersionPlansConfig || GROUP_DEFAULTS.versionPlans,
@@ -648,6 +660,10 @@ export async function createNxReleaseConfig(
         releaseGroup.releaseTagPatternCheckAllBranchesWhen ??
         userConfig.releaseTagPatternCheckAllBranchesWhen ??
         undefined,
+      releaseTagPatternPreferDockerVersion:
+        releaseGroup.releaseTagPatternPreferDockerVersion ??
+        userConfig.releaseTagPatternPreferDockerVersion ??
+        defaultReleaseTagPatternPreferDockerVersion,
       versionPlans: releaseGroup.versionPlans ?? rootVersionPlansConfig,
     };
 
@@ -743,6 +759,8 @@ export async function createNxReleaseConfig(
       releaseTagPattern: WORKSPACE_DEFAULTS.releaseTagPattern,
       releaseTagPatternCheckAllBranchesWhen:
         WORKSPACE_DEFAULTS.releaseTagPatternCheckAllBranchesWhen,
+      releaseTagPatternPreferDockerVersion:
+        WORKSPACE_DEFAULTS.releaseTagPatternPreferDockerVersion,
       git: rootGitConfig,
       version: rootVersionConfig,
       changelog: rootChangelogConfig,

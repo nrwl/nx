@@ -1,0 +1,55 @@
+{
+  "name": "docker",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/docker",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "command": "node ./scripts/copy-readme.js docker",
+      "outputs": ["{workspaceRoot}/build/packages/docker/README.md"]
+    },
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "build/packages/docker",
+        "tsConfig": "packages/docker/tsconfig.lib.json",
+        "main": "packages/docker/index.ts",
+        "assets": [
+          {
+            "input": "packages/docker",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/docker",
+            "glob": "**files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/docker",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/docker",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/docker",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    }
+  }
+}
