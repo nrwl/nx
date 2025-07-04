@@ -4,16 +4,26 @@ import { Preset } from '../utils/presets';
 import { join } from 'path';
 
 export async function presetGenerator(tree: Tree, options: Schema) {
-  const presetTask = await createPreset(tree, options);
-  return async () => {
-    installPackagesTask(tree);
-    if (presetTask) await presetTask();
-  };
+  
+  console.log(`Running preset generator with preset: ${options.preset} and workspaces: ${options.workspaces}`);
+  
+  try {
+    const presetTask = await createPreset(tree, options);
+    return async () => {
+      installPackagesTask(tree);
+      if (presetTask) await presetTask();
+    };
+  } catch (e) {
+    console.log(`Preset generation error: ${e.stack}`);
+    throw new Error(e);
+  }
 }
 
 export default presetGenerator;
 
 async function createPreset(tree: Tree, options: Schema) {
+  console.log(`Creating preset: ${options.preset}`);
+  
   console.log('reading nx.json');
   const nxJson = readNxJson(tree);
   const addPlugin =
