@@ -329,6 +329,7 @@ jobs:
       - run: './nx run-many -t test build'
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
       - run: ./nx fix-ci
+        if: always()
 ```
 
 ### Open a Pull Request {% highlightColor="green" %}

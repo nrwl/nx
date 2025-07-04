@@ -864,6 +864,7 @@ jobs:
       - run: npx nx run-many -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
       - run: npx nx fix-ci
+        if: always()
 ```
 
 ### Open a Pull Request {% highlightColor="green" %}

@@ -44,10 +44,15 @@ function getNxCloudFixCiCommand(): Command {
       `Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai`,
     ],
     command: `./nx fix-ci`,
+    alwaysRun: true,
   };
 }
 
-export type Command = { command: string } | { comments: string[] } | string;
+export type Command = {
+  command?: string;
+  comments?: string[];
+  alwaysRun?: boolean;
+};
 
 export interface Schema {
   name: string;
