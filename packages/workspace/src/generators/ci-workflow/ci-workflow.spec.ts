@@ -407,6 +407,8 @@ describe('CI Workflow generator', () => {
               # - run: npx nx-cloud record -- echo Hello World
               # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
               - run: npx nx affected -t lint test build typecheck
+              # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
+              - run: npx nx-cloud fix-ci
         "
       `);
     });
@@ -441,6 +443,8 @@ describe('CI Workflow generator', () => {
               # - run: npx nx-cloud record -- echo Hello World
               # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
               - run: npx nx affected -t lint test build typecheck
+              # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
+              - run: npx nx-cloud fix-ci
 
         workflows:
           version: 2
@@ -514,6 +518,8 @@ describe('CI Workflow generator', () => {
               # - script: npx nx-cloud record -- echo Hello World
               # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
               - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build typecheck
+              # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
+              - script: npx nx-cloud fix-ci
         "
       `);
     });
@@ -551,6 +557,8 @@ describe('CI Workflow generator', () => {
                     # npx nx-cloud record -- echo Hello World
                     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
                     - npx nx affected --base=origin/main -t lint test build typecheck
+                    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
+                    - npx nx-cloud fix-ci
 
           branches:
             main:
@@ -603,6 +611,8 @@ describe('CI Workflow generator', () => {
             # - npx nx-cloud record -- echo Hello World
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - npx nx affected -t lint test build typecheck
+            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
+            - npx nx-cloud fix-ci
         "
       `);
     });
