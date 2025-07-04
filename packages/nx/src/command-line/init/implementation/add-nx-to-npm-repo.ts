@@ -13,7 +13,7 @@ import {
   runInstall,
   updateGitIgnore,
 } from './utils';
-import { connectExistingRepoToNxCloudPrompt } from '../../connect/connect-to-nx-cloud';
+import { connectExistingRepoToNxCloudPrompt } from '../../nx-cloud/connect/connect-to-nx-cloud';
 
 type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'> & {
   legacy?: boolean;

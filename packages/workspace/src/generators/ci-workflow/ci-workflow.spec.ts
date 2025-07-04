@@ -392,7 +392,7 @@ describe('CI Workflow generator', () => {
               # Run this command as early as possible, before dependencies are installed
               # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
               # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-              # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+              # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
               # Cache node_modules
               - uses: actions/setup-node@v4
@@ -408,7 +408,7 @@ describe('CI Workflow generator', () => {
               # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
               - run: npx nx affected -t lint test build typecheck
               # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-              - run: npx nx-cloud fix-ci
+              - run: npx nx fix-ci
         "
       `);
     });
@@ -433,7 +433,7 @@ describe('CI Workflow generator', () => {
               # Run this command as early as possible, before dependencies are installed
               # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
               # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-              # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+              # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
               - run: npm ci --legacy-peer-deps
               - nx/set-shas:
@@ -444,7 +444,7 @@ describe('CI Workflow generator', () => {
               # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
               - run: npx nx affected -t lint test build typecheck
               # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-              - run: npx nx-cloud fix-ci
+              - run: npx nx fix-ci
 
         workflows:
           version: 2
@@ -508,7 +508,7 @@ describe('CI Workflow generator', () => {
               # Run this command as early as possible, before dependencies are installed
               # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
               # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-              # - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+              # - script: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
               - script: npm ci --legacy-peer-deps
               - script: git branch --track main origin/main
@@ -519,7 +519,7 @@ describe('CI Workflow generator', () => {
               # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
               - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build typecheck
               # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-              - script: npx nx-cloud fix-ci
+              - script: npx nx fix-ci
         "
       `);
     });
@@ -549,7 +549,7 @@ describe('CI Workflow generator', () => {
                     # Run this command as early as possible, before dependencies are installed
                     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
                     # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-                    # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+                    # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
                     - npm ci --legacy-peer-deps
 
@@ -558,7 +558,7 @@ describe('CI Workflow generator', () => {
                     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
                     - npx nx affected --base=origin/main -t lint test build typecheck
                     # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-                    - npx nx-cloud fix-ci
+                    - npx nx fix-ci
 
           branches:
             main:
@@ -570,7 +570,7 @@ describe('CI Workflow generator', () => {
                     # Run this command as early as possible, before dependencies are installed
                     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
                     # Connect your workspace by running "nx connect" and uncomment this
-                    # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+                    # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
                     - npm ci --legacy-peer-deps
 
@@ -601,7 +601,7 @@ describe('CI Workflow generator', () => {
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm ci --legacy-peer-deps
             - NX_HEAD=$CI_COMMIT_SHA
@@ -612,7 +612,7 @@ describe('CI Workflow generator', () => {
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - npx nx affected -t lint test build typecheck
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-            - npx nx-cloud fix-ci
+            - npx nx fix-ci
         "
       `);
     });

@@ -68,8 +68,10 @@ function getNxTasksCommand(
 
 function getNxCloudFixCiCommand(packageManagerPrefix: string): Command {
   return {
-    comments: [`Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai`],
-    command: `${packageManagerPrefix} nx-cloud fix-ci`,
+    comments: [
+      `Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai`,
+    ],
+    command: `${packageManagerPrefix} nx fix-ci`,
   };
 }
 
@@ -83,7 +85,14 @@ function getCiCommands(
 ): Command[] {
   return [
     getNxCloudRecordCommand(ci, packageManagerPrefix),
-    getNxTasksCommand(ci, packageManagerPrefix, mainBranch, hasTypecheck, hasE2E, useRunMany),
+    getNxTasksCommand(
+      ci,
+      packageManagerPrefix,
+      mainBranch,
+      hasTypecheck,
+      hasE2E,
+      useRunMany
+    ),
     getNxCloudFixCiCommand(packageManagerPrefix),
   ];
 }

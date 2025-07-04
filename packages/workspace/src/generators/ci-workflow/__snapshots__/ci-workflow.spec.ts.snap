@@ -49,7 +49,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # - script: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       - script: npm ci --legacy-peer-deps
       - script: npx cypress install
@@ -62,7 +62,7 @@ jobs:
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - script: npx nx-cloud fix-ci
+      - script: npx nx fix-ci
 "
 `;
 
@@ -84,7 +84,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Uncomment this line to enable task distribution
-            # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
             - npm ci --legacy-peer-deps
             - npx cypress install
@@ -95,7 +95,7 @@ pipelines:
             # When you enable task distribution, run the e2e-ci task instead of e2e
             - npx nx affected --base=origin/main -t lint test build e2e
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-            - npx nx-cloud fix-ci
+            - npx nx fix-ci
 
   branches:
     main:
@@ -106,7 +106,7 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+            - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
             - npm ci --legacy-peer-deps
 
@@ -134,7 +134,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       - run: npm ci --legacy-peer-deps
       - run: npx cypress install
@@ -147,7 +147,7 @@ jobs:
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run: npx nx affected -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: npx nx-cloud fix-ci
+      - run: npx nx fix-ci
 
 workflows:
   version: 2
@@ -184,7 +184,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -202,7 +202,7 @@ jobs:
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run: npx nx affected -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: npx nx-cloud fix-ci
+      - run: npx nx fix-ci
 "
 `;
 
@@ -232,7 +232,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -250,7 +250,7 @@ jobs:
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run: npx nx affected -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: npx nx-cloud fix-ci
+      - run: npx nx fix-ci
 "
 `;
 
@@ -306,7 +306,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - script: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: bun install --no-cache
       - script: git branch --track main origin/main
@@ -317,7 +317,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: bun nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - script: bun nx-cloud fix-ci
+      - script: bun nx fix-ci
 "
 `;
 
@@ -373,7 +373,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - script: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: bun install --no-cache
       - script: git branch --track main origin/main
@@ -384,7 +384,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: bun nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - script: bun nx-cloud fix-ci
+      - script: bun nx fix-ci
 "
 `;
 
@@ -408,7 +408,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Uncomment this line to enable task distribution
-            # - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - bun install --no-cache
 
@@ -417,7 +417,7 @@ pipelines:
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - bun nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-            - bun nx-cloud fix-ci
+            - bun nx fix-ci
 
   branches:
     main:
@@ -428,7 +428,7 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            - bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm install --prefix=$HOME/.local -g bun
 
@@ -461,7 +461,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Uncomment this line to enable task distribution
-            # - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - bun install --no-cache
 
@@ -470,7 +470,7 @@ pipelines:
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - bun nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-            - bun nx-cloud fix-ci
+            - bun nx fix-ci
 
   branches:
     main:
@@ -481,7 +481,7 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            - bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm install --prefix=$HOME/.local -g bun
 
@@ -515,7 +515,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
       - nx/set-shas:
@@ -526,7 +526,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: bun nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: bun nx-cloud fix-ci
+      - run: bun nx fix-ci
 
 workflows:
   version: 2
@@ -558,7 +558,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
       - nx/set-shas:
@@ -569,7 +569,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: bun nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: bun nx-cloud fix-ci
+      - run: bun nx fix-ci
 
 workflows:
   version: 2
@@ -610,7 +610,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
       - uses: nrwl/nx-set-shas@v4
@@ -620,7 +620,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: bun nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: bun nx-cloud fix-ci
+      - run: bun nx fix-ci
 "
 `;
 
@@ -654,7 +654,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
       - uses: nrwl/nx-set-shas@v4
@@ -664,7 +664,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: bun nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: bun nx-cloud fix-ci
+      - run: bun nx fix-ci
 "
 `;
 
@@ -698,7 +698,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
       - uses: nrwl/nx-set-shas@v4
@@ -708,7 +708,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: bun nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: bun nx-cloud fix-ci
+      - run: bun nx fix-ci
 "
 `;
 
@@ -730,7 +730,7 @@ CI:
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
     # Uncomment this line to enable task distribution
-    # - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+    # - bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - bun install --no-cache
     - NX_HEAD=$CI_COMMIT_SHA
@@ -741,7 +741,7 @@ CI:
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
     - bun nx affected -t lint test build
     # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-    - bun nx-cloud fix-ci
+    - bun nx fix-ci
 "
 `;
 
@@ -794,7 +794,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: npm ci --legacy-peer-deps
       - script: git branch --track main origin/main
@@ -805,7 +805,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - script: npx nx-cloud fix-ci
+      - script: npx nx fix-ci
 "
 `;
 
@@ -858,7 +858,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: npm ci --legacy-peer-deps
       - script: git branch --track main origin/main
@@ -869,7 +869,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - script: npx nx-cloud fix-ci
+      - script: npx nx fix-ci
 "
 `;
 
@@ -891,7 +891,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Uncomment this line to enable task distribution
-            # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm ci --legacy-peer-deps
 
@@ -900,7 +900,7 @@ pipelines:
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - npx nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-            - npx nx-cloud fix-ci
+            - npx nx fix-ci
 
   branches:
     main:
@@ -911,7 +911,7 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm ci --legacy-peer-deps
 
@@ -940,7 +940,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Uncomment this line to enable task distribution
-            # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm ci --legacy-peer-deps
 
@@ -949,7 +949,7 @@ pipelines:
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - npx nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-            - npx nx-cloud fix-ci
+            - npx nx fix-ci
 
   branches:
     main:
@@ -960,7 +960,7 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm ci --legacy-peer-deps
 
@@ -988,7 +988,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: npm ci --legacy-peer-deps
       - nx/set-shas:
@@ -999,7 +999,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: npx nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: npx nx-cloud fix-ci
+      - run: npx nx fix-ci
 
 workflows:
   version: 2
@@ -1027,7 +1027,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: npm ci --legacy-peer-deps
       - nx/set-shas:
@@ -1038,7 +1038,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: npx nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: npx nx-cloud fix-ci
+      - run: npx nx fix-ci
 
 workflows:
   version: 2
@@ -1075,7 +1075,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -1091,7 +1091,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: npx nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: npx nx-cloud fix-ci
+      - run: npx nx fix-ci
 "
 `;
 
@@ -1121,7 +1121,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -1137,7 +1137,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: npx nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: npx nx-cloud fix-ci
+      - run: npx nx fix-ci
 "
 `;
 
@@ -1167,7 +1167,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -1183,7 +1183,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: npx nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: npx nx-cloud fix-ci
+      - run: npx nx fix-ci
 "
 `;
 
@@ -1203,7 +1203,7 @@ CI:
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
     # Uncomment this line to enable task distribution
-    # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+    # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - npm ci --legacy-peer-deps
     - NX_HEAD=$CI_COMMIT_SHA
@@ -1214,7 +1214,7 @@ CI:
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
     - npx nx affected -t lint test build
     # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-    - npx nx-cloud fix-ci
+    - npx nx fix-ci
 "
 `;
 
@@ -1270,7 +1270,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - script: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: pnpm install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -1281,7 +1281,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - script: pnpm exec nx-cloud fix-ci
+      - script: pnpm exec nx fix-ci
 "
 `;
 
@@ -1337,7 +1337,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - script: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: pnpm install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -1348,7 +1348,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - script: pnpm exec nx-cloud fix-ci
+      - script: pnpm exec nx fix-ci
 "
 `;
 
@@ -1372,7 +1372,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Uncomment this line to enable task distribution
-            # - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - pnpm install --frozen-lockfile
 
@@ -1381,7 +1381,7 @@ pipelines:
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - pnpm exec nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-            - pnpm exec nx-cloud fix-ci
+            - pnpm exec nx fix-ci
 
   branches:
     main:
@@ -1392,7 +1392,7 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            - pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm install --prefix=$HOME/.local -g pnpm@8
 
@@ -1425,7 +1425,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Uncomment this line to enable task distribution
-            # - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - pnpm install --frozen-lockfile
 
@@ -1434,7 +1434,7 @@ pipelines:
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - pnpm exec nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-            - pnpm exec nx-cloud fix-ci
+            - pnpm exec nx fix-ci
 
   branches:
     main:
@@ -1445,7 +1445,7 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            - pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm install --prefix=$HOME/.local -g pnpm@8
 
@@ -1479,7 +1479,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: pnpm install --frozen-lockfile
       - nx/set-shas:
@@ -1490,7 +1490,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: pnpm exec nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: pnpm exec nx-cloud fix-ci
+      - run: pnpm exec nx fix-ci
 
 workflows:
   version: 2
@@ -1522,7 +1522,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: pnpm install --frozen-lockfile
       - nx/set-shas:
@@ -1533,7 +1533,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: pnpm exec nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: pnpm exec nx-cloud fix-ci
+      - run: pnpm exec nx fix-ci
 
 workflows:
   version: 2
@@ -1576,7 +1576,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -1592,7 +1592,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: pnpm exec nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: pnpm exec nx-cloud fix-ci
+      - run: pnpm exec nx fix-ci
 "
 `;
 
@@ -1627,7 +1627,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -1643,7 +1643,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: pnpm exec nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: pnpm exec nx-cloud fix-ci
+      - run: pnpm exec nx fix-ci
 "
 `;
 
@@ -1679,7 +1679,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -1695,7 +1695,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: pnpm exec nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: pnpm exec nx-cloud fix-ci
+      - run: pnpm exec nx fix-ci
 "
 `;
 
@@ -1717,7 +1717,7 @@ CI:
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
     # Uncomment this line to enable task distribution
-    # - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+    # - pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - pnpm install --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
@@ -1728,7 +1728,7 @@ CI:
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
     - pnpm exec nx affected -t lint test build
     # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-    - pnpm exec nx-cloud fix-ci
+    - pnpm exec nx fix-ci
 "
 `;
 
@@ -1781,7 +1781,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - script: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: yarn install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -1792,7 +1792,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - script: yarn nx-cloud fix-ci
+      - script: yarn nx fix-ci
 "
 `;
 
@@ -1845,7 +1845,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - script: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: yarn install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -1856,7 +1856,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - script: yarn nx-cloud fix-ci
+      - script: yarn nx fix-ci
 "
 `;
 
@@ -1878,7 +1878,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Uncomment this line to enable task distribution
-            # - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - yarn install --frozen-lockfile
 
@@ -1887,7 +1887,7 @@ pipelines:
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - yarn nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-            - yarn nx-cloud fix-ci
+            - yarn nx fix-ci
 
   branches:
     main:
@@ -1898,7 +1898,7 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            - yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - yarn install --frozen-lockfile
 
@@ -1927,7 +1927,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Uncomment this line to enable task distribution
-            # - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - yarn install --frozen-lockfile
 
@@ -1936,7 +1936,7 @@ pipelines:
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - yarn nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-            - yarn nx-cloud fix-ci
+            - yarn nx fix-ci
 
   branches:
     main:
@@ -1947,7 +1947,7 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            - yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - yarn install --frozen-lockfile
 
@@ -1975,7 +1975,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: yarn install --frozen-lockfile
       - nx/set-shas:
@@ -1986,7 +1986,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: yarn nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: yarn nx-cloud fix-ci
+      - run: yarn nx fix-ci
 
 workflows:
   version: 2
@@ -2014,7 +2014,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: yarn install --frozen-lockfile
       - nx/set-shas:
@@ -2025,7 +2025,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: yarn nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: yarn nx-cloud fix-ci
+      - run: yarn nx fix-ci
 
 workflows:
   version: 2
@@ -2062,7 +2062,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -2078,7 +2078,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: yarn nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: yarn nx-cloud fix-ci
+      - run: yarn nx fix-ci
 "
 `;
 
@@ -2110,7 +2110,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -2126,7 +2126,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: yarn nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: yarn nx-cloud fix-ci
+      - run: yarn nx fix-ci
 "
 `;
 
@@ -2156,7 +2156,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
-      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -2172,7 +2172,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: yarn nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: yarn nx-cloud fix-ci
+      - run: yarn nx fix-ci
 "
 `;
 
@@ -2192,7 +2192,7 @@ CI:
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
     # Uncomment this line to enable task distribution
-    # - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+    # - yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - yarn install --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
@@ -2203,7 +2203,7 @@ CI:
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
     - yarn nx affected -t lint test build
     # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-    - yarn nx-cloud fix-ci
+    - yarn nx fix-ci
 "
 `;
 
@@ -2256,7 +2256,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # - script: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       - script: npm ci --legacy-peer-deps
       - script: npx cypress install
@@ -2269,7 +2269,7 @@ jobs:
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - script: npx nx-cloud fix-ci
+      - script: npx nx fix-ci
 "
 `;
 
@@ -2291,7 +2291,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
             - npm ci --legacy-peer-deps
             - npx cypress install
@@ -2302,7 +2302,7 @@ pipelines:
             # When you enable task distribution, run the e2e-ci task instead of e2e
             - npx nx affected --base=origin/main -t lint test build e2e
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-            - npx nx-cloud fix-ci
+            - npx nx fix-ci
 
   branches:
     main:
@@ -2314,7 +2314,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
             - npm ci --legacy-peer-deps
 
@@ -2342,7 +2342,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       - run: npm ci --legacy-peer-deps
       - run: npx cypress install
@@ -2355,7 +2355,7 @@ jobs:
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run: npx nx affected -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: npx nx-cloud fix-ci
+      - run: npx nx fix-ci
 
 workflows:
   version: 2
@@ -2392,7 +2392,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -2410,7 +2410,7 @@ jobs:
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run: npx nx affected -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: npx nx-cloud fix-ci
+      - run: npx nx fix-ci
 "
 `;
 
@@ -2440,7 +2440,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -2458,7 +2458,7 @@ jobs:
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run: npx nx affected -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: npx nx-cloud fix-ci
+      - run: npx nx fix-ci
 "
 `;
 
@@ -2514,7 +2514,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: bun install --no-cache
       - script: git branch --track main origin/main
@@ -2525,7 +2525,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: bun nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - script: bun nx-cloud fix-ci
+      - script: bun nx fix-ci
 "
 `;
 
@@ -2581,7 +2581,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: bun install --no-cache
       - script: git branch --track main origin/main
@@ -2592,7 +2592,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: bun nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - script: bun nx-cloud fix-ci
+      - script: bun nx fix-ci
 "
 `;
 
@@ -2616,7 +2616,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - bun install --no-cache
 
@@ -2625,7 +2625,7 @@ pipelines:
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - bun nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-            - bun nx-cloud fix-ci
+            - bun nx fix-ci
 
   branches:
     main:
@@ -2637,7 +2637,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm install --prefix=$HOME/.local -g bun
 
@@ -2670,7 +2670,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - bun install --no-cache
 
@@ -2679,7 +2679,7 @@ pipelines:
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - bun nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-            - bun nx-cloud fix-ci
+            - bun nx fix-ci
 
   branches:
     main:
@@ -2691,7 +2691,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm install --prefix=$HOME/.local -g bun
 
@@ -2725,7 +2725,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
       - nx/set-shas:
@@ -2736,7 +2736,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: bun nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: bun nx-cloud fix-ci
+      - run: bun nx fix-ci
 
 workflows:
   version: 2
@@ -2768,7 +2768,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
       - nx/set-shas:
@@ -2779,7 +2779,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: bun nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: bun nx-cloud fix-ci
+      - run: bun nx fix-ci
 
 workflows:
   version: 2
@@ -2820,7 +2820,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
       - uses: nrwl/nx-set-shas@v4
@@ -2830,7 +2830,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: bun nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: bun nx-cloud fix-ci
+      - run: bun nx fix-ci
 "
 `;
 
@@ -2864,7 +2864,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
       - uses: nrwl/nx-set-shas@v4
@@ -2874,7 +2874,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: bun nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: bun nx-cloud fix-ci
+      - run: bun nx fix-ci
 "
 `;
 
@@ -2908,7 +2908,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
       - uses: nrwl/nx-set-shas@v4
@@ -2918,7 +2918,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: bun nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: bun nx-cloud fix-ci
+      - run: bun nx fix-ci
 "
 `;
 
@@ -2940,7 +2940,7 @@ CI:
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
     # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-    # - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+    # - bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - bun install --no-cache
     - NX_HEAD=$CI_COMMIT_SHA
@@ -2951,7 +2951,7 @@ CI:
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
     - bun nx affected -t lint test build
     # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-    - bun nx-cloud fix-ci
+    - bun nx fix-ci
 "
 `;
 
@@ -3004,7 +3004,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: npm ci --legacy-peer-deps
       - script: git branch --track main origin/main
@@ -3015,7 +3015,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - script: npx nx-cloud fix-ci
+      - script: npx nx fix-ci
 "
 `;
 
@@ -3068,7 +3068,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: npm ci --legacy-peer-deps
       - script: git branch --track main origin/main
@@ -3079,7 +3079,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - script: npx nx-cloud fix-ci
+      - script: npx nx fix-ci
 "
 `;
 
@@ -3101,7 +3101,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm ci --legacy-peer-deps
 
@@ -3110,7 +3110,7 @@ pipelines:
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - npx nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-            - npx nx-cloud fix-ci
+            - npx nx fix-ci
 
   branches:
     main:
@@ -3122,7 +3122,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm ci --legacy-peer-deps
 
@@ -3151,7 +3151,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm ci --legacy-peer-deps
 
@@ -3160,7 +3160,7 @@ pipelines:
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - npx nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-            - npx nx-cloud fix-ci
+            - npx nx fix-ci
 
   branches:
     main:
@@ -3172,7 +3172,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm ci --legacy-peer-deps
 
@@ -3200,7 +3200,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: npm ci --legacy-peer-deps
       - nx/set-shas:
@@ -3211,7 +3211,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: npx nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: npx nx-cloud fix-ci
+      - run: npx nx fix-ci
 
 workflows:
   version: 2
@@ -3239,7 +3239,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: npm ci --legacy-peer-deps
       - nx/set-shas:
@@ -3250,7 +3250,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: npx nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: npx nx-cloud fix-ci
+      - run: npx nx fix-ci
 
 workflows:
   version: 2
@@ -3287,7 +3287,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -3303,7 +3303,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: npx nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: npx nx-cloud fix-ci
+      - run: npx nx fix-ci
 "
 `;
 
@@ -3333,7 +3333,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -3349,7 +3349,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: npx nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: npx nx-cloud fix-ci
+      - run: npx nx fix-ci
 "
 `;
 
@@ -3379,7 +3379,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -3395,7 +3395,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: npx nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: npx nx-cloud fix-ci
+      - run: npx nx fix-ci
 "
 `;
 
@@ -3415,7 +3415,7 @@ CI:
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
     # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-    # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+    # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - npm ci --legacy-peer-deps
     - NX_HEAD=$CI_COMMIT_SHA
@@ -3426,7 +3426,7 @@ CI:
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
     - npx nx affected -t lint test build
     # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-    - npx nx-cloud fix-ci
+    - npx nx fix-ci
 "
 `;
 
@@ -3482,7 +3482,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: pnpm install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -3493,7 +3493,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - script: pnpm exec nx-cloud fix-ci
+      - script: pnpm exec nx fix-ci
 "
 `;
 
@@ -3549,7 +3549,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: pnpm install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -3560,7 +3560,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - script: pnpm exec nx-cloud fix-ci
+      - script: pnpm exec nx fix-ci
 "
 `;
 
@@ -3584,7 +3584,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - pnpm install --frozen-lockfile
 
@@ -3593,7 +3593,7 @@ pipelines:
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - pnpm exec nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-            - pnpm exec nx-cloud fix-ci
+            - pnpm exec nx fix-ci
 
   branches:
     main:
@@ -3605,7 +3605,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm install --prefix=$HOME/.local -g pnpm@8
 
@@ -3638,7 +3638,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - pnpm install --frozen-lockfile
 
@@ -3647,7 +3647,7 @@ pipelines:
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - pnpm exec nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-            - pnpm exec nx-cloud fix-ci
+            - pnpm exec nx fix-ci
 
   branches:
     main:
@@ -3659,7 +3659,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm install --prefix=$HOME/.local -g pnpm@8
 
@@ -3693,7 +3693,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: pnpm install --frozen-lockfile
       - nx/set-shas:
@@ -3704,7 +3704,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: pnpm exec nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: pnpm exec nx-cloud fix-ci
+      - run: pnpm exec nx fix-ci
 
 workflows:
   version: 2
@@ -3736,7 +3736,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: pnpm install --frozen-lockfile
       - nx/set-shas:
@@ -3747,7 +3747,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: pnpm exec nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: pnpm exec nx-cloud fix-ci
+      - run: pnpm exec nx fix-ci
 
 workflows:
   version: 2
@@ -3790,7 +3790,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -3806,7 +3806,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: pnpm exec nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: pnpm exec nx-cloud fix-ci
+      - run: pnpm exec nx fix-ci
 "
 `;
 
@@ -3841,7 +3841,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -3857,7 +3857,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: pnpm exec nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: pnpm exec nx-cloud fix-ci
+      - run: pnpm exec nx fix-ci
 "
 `;
 
@@ -3893,7 +3893,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -3909,7 +3909,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: pnpm exec nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: pnpm exec nx-cloud fix-ci
+      - run: pnpm exec nx fix-ci
 "
 `;
 
@@ -3931,7 +3931,7 @@ CI:
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
     # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-    # - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+    # - pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - pnpm install --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
@@ -3942,7 +3942,7 @@ CI:
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
     - pnpm exec nx affected -t lint test build
     # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-    - pnpm exec nx-cloud fix-ci
+    - pnpm exec nx fix-ci
 "
 `;
 
@@ -3995,7 +3995,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: yarn install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -4006,7 +4006,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - script: yarn nx-cloud fix-ci
+      - script: yarn nx fix-ci
 "
 `;
 
@@ -4059,7 +4059,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - script: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: yarn install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -4070,7 +4070,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - script: yarn nx-cloud fix-ci
+      - script: yarn nx fix-ci
 "
 `;
 
@@ -4092,7 +4092,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - yarn install --frozen-lockfile
 
@@ -4101,7 +4101,7 @@ pipelines:
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - yarn nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-            - yarn nx-cloud fix-ci
+            - yarn nx fix-ci
 
   branches:
     main:
@@ -4113,7 +4113,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - yarn install --frozen-lockfile
 
@@ -4142,7 +4142,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - yarn install --frozen-lockfile
 
@@ -4151,7 +4151,7 @@ pipelines:
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - yarn nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-            - yarn nx-cloud fix-ci
+            - yarn nx fix-ci
 
   branches:
     main:
@@ -4163,7 +4163,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - yarn install --frozen-lockfile
 
@@ -4191,7 +4191,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: yarn install --frozen-lockfile
       - nx/set-shas:
@@ -4202,7 +4202,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: yarn nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: yarn nx-cloud fix-ci
+      - run: yarn nx fix-ci
 
 workflows:
   version: 2
@@ -4230,7 +4230,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: yarn install --frozen-lockfile
       - nx/set-shas:
@@ -4241,7 +4241,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: yarn nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: yarn nx-cloud fix-ci
+      - run: yarn nx fix-ci
 
 workflows:
   version: 2
@@ -4278,7 +4278,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -4294,7 +4294,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: yarn nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: yarn nx-cloud fix-ci
+      - run: yarn nx fix-ci
 "
 `;
 
@@ -4326,7 +4326,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -4342,7 +4342,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: yarn nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: yarn nx-cloud fix-ci
+      - run: yarn nx fix-ci
 "
 `;
 
@@ -4372,7 +4372,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # - run: yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -4388,7 +4388,7 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: yarn nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-      - run: yarn nx-cloud fix-ci
+      - run: yarn nx fix-ci
 "
 `;
 
@@ -4408,7 +4408,7 @@ CI:
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
     # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-    # - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+    # - yarn nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - yarn install --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
@@ -4419,6 +4419,6 @@ CI:
     # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
     - yarn nx affected -t lint test build
     # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
-    - yarn nx-cloud fix-ci
+    - yarn nx fix-ci
 "
 `;
