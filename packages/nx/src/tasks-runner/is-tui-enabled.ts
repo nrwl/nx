@@ -37,6 +37,13 @@ export function shouldUseTui(
     return false;
   }
 
+  if (typeof nxArgs.tui === 'boolean') {
+    if (nxArgs.tui && !isCapable) {
+      return false;
+    }
+    return nxArgs.tui;
+  }
+
   if (['static', 'stream', 'dynamic-legacy'].includes(nxArgs.outputStyle)) {
     // If the user has specified a non-TUI output style, we disable the TUI
     return false;
