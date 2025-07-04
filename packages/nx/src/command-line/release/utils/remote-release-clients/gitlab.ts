@@ -6,12 +6,12 @@ import type { PostGitTask } from '../../changelog';
 import type { ResolvedCreateRemoteReleaseProvider } from '../../config/config';
 import type { Reference } from '../git';
 import { ReleaseVersion } from '../shared';
+import { extractGitLabRepoSlug } from './extract-repo-slug';
 import {
   RemoteReleaseClient,
   RemoteReleaseOptions,
   RemoteReleaseResult,
   RemoteRepoData,
-  RemoteRepoSlug,
 } from './remote-release-client';
 
 export interface GitLabRepoData extends RemoteRepoData {
@@ -64,28 +64,18 @@ export class GitLabRemoteReleaseClient extends RemoteReleaseClient<GitLabRelease
       // Use the default provider if custom one is not specified or releases are disabled
       let hostname = defaultCreateReleaseProvider.hostname;
       let apiBaseUrl = defaultCreateReleaseProvider.apiBaseUrl;
-
       if (
         createReleaseConfig !== false &&
         typeof createReleaseConfig !== 'string'
       ) {
-        hostname = createReleaseConfig.hostname || hostname;
-        apiBaseUrl = createReleaseConfig.apiBaseUrl || apiBaseUrl;
+        hostname = createReleaseConfig.hostname;
+        apiBaseUrl = createReleaseConfig.apiBaseUrl;
       }
 
-      // Extract the project path from the URL
-      const escapedHostname = hostname.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regexString = `${escapedHostname}[/:]([\\w.-]+/[\\w.-]+(?:/[\\w.-]+)*)(\\.git)?`;
-      const regex = new RegExp(regexString);
-      const match = remoteUrl.match(regex);
-
-      if (match && match[1]) {
-        // Remove trailing .git if present
-        const slug = match[1].replace(/\.git$/, '') as RemoteRepoSlug;
-
+      const slug = extractGitLabRepoSlug(remoteUrl, hostname);
+      if (slug) {
         // Encode the project path for use in API URLs
         const projectId = encodeURIComponent(slug);
-
         return {
           hostname,
           apiBaseUrl,
