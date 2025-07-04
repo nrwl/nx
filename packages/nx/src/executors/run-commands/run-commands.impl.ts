@@ -231,6 +231,11 @@ export function interpolateArgsIntoCommand(
   >,
   forwardAllArgs: boolean
 ): string {
+  if (command.indexOf('{args.') > -1 && command.indexOf('{args}') > -1) {
+    throw new Error(
+      'Command should not contain both {args} and {args.*} values. Please choose one to use.'
+    );
+  }
   if (command.indexOf('{args.') > -1) {
     const regex = /{args\.([^}]+)}/g;
     return command.replace(regex, (_, group: string) =>
