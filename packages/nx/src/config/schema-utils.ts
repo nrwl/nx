@@ -4,6 +4,7 @@ import { resolve as resolveExports } from 'resolve.exports';
 import { getWorkspacePackagesMetadata } from '../plugins/js/utils/packages';
 import { registerPluginTSTranspiler } from '../project-graph/plugins';
 import { normalizePath } from '../utils/path';
+import { workspaceRootInner } from '../utils/workspace-root';
 import type { ProjectConfiguration } from './workspace-json-project-json';
 
 /**
@@ -97,6 +98,18 @@ export function resolveImplementation(
       const resolved = require.resolve(maybeImplementation, {
         paths: [directory],
       });
+      console.log(`Resolved via require.resolve: ${resolved}`);
+      console.log(`Checking against directory: ${directory}`);
+      const resolvedWorkspaceRoot = workspaceRootInner(resolved, null);
+      const expectedWorkspaceRoot = workspaceRootInner(directory, null);
+
+      if (resolvedWorkspaceRoot !== expectedWorkspaceRoot) {
+        console.log(
+          `Skipping resolved path from different workspace: ${resolved} (workspace: ${resolvedWorkspaceRoot}) vs expected (${expectedWorkspaceRoot})`
+        );
+        continue;
+      }
+
       console.log(`Resolved via require.resolve: ${resolved}`);
       return resolved;
     } catch (e) {

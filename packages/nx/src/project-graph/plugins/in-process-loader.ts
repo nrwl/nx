@@ -1,5 +1,7 @@
 // This file contains methods and utilities that should **only** be used by the plugin worker.
 
+import { existsSync } from 'fs';
+import { join } from 'path';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
 import { getNxRequirePaths } from '../../utils/installation-directory';
@@ -32,6 +34,23 @@ export function readPluginPackageJson(
   console.log(
     `Reading plugin package.json for: ${pluginName} from paths: ${paths} at root: ${workspaceRoot}`
   );
+
+  for (const searchPath of paths) {
+    const directPackageJsonPath = join(
+      searchPath,
+      'node_modules',
+      pluginName,
+      'package.json'
+    );
+    if (existsSync(directPackageJsonPath)) {
+      console.log(`Found package.json directly at: ${directPackageJsonPath}`);
+      return {
+        json: readJsonFile(directPackageJsonPath),
+        path: directPackageJsonPath,
+      };
+    }
+  }
+
   try {
     const result = readModulePackageJsonWithoutFallbacks(pluginName, paths);
     console.log(
