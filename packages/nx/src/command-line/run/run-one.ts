@@ -3,7 +3,7 @@ import {
   readGraphFileFromGraphArg,
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
-import { connectToNxCloudIfExplicitlyAsked } from '../connect/connect-to-nx-cloud';
+import { connectToNxCloudIfExplicitlyAsked } from '../nx-cloud/connect/connect-to-nx-cloud';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,

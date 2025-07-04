@@ -1661,5 +1661,51 @@
       "name": "affected",
       "path": "/reference/core-api/nx/documents/affected"
     }
+  ],
+  "nx-cloud": [
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/fix-ci",
+      "id": "fix-ci",
+      "name": "fix-ci",
+      "path": "/reference/core-api/nx/documents/fix-ci"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/record",
+      "id": "record",
+      "name": "record",
+      "path": "/reference/core-api/nx/documents/record"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/start-ci-run",
+      "id": "start-ci-run",
+      "name": "start-ci-run",
+      "path": "/reference/core-api/nx/documents/start-ci-run"
+    }
+  ],
+  "ci": [
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/fix-ci",
+      "id": "fix-ci",
+      "name": "fix-ci",
+      "path": "/reference/core-api/nx/documents/fix-ci"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/record",
+      "id": "record",
+      "name": "record",
+      "path": "/reference/core-api/nx/documents/record"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/start-ci-run",
+      "id": "start-ci-run",
+      "name": "start-ci-run",
+      "path": "/reference/core-api/nx/documents/start-ci-run"
+    }
   ]
 }

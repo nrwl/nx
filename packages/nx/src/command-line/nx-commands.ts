@@ -12,7 +12,7 @@ import {
 import {
   yargsConnectCommand,
   yargsViewLogsCommand,
-} from './connect/command-object';
+} from './nx-cloud/connect/command-object';
 import { yargsDaemonCommand } from './daemon/command-object';
 import { yargsGraphCommand } from './graph/command-object';
 import { yargsExecCommand } from './exec/command-object';
@@ -38,8 +38,11 @@ import { yargsWatchCommand } from './watch/command-object';
 import { yargsResetCommand } from './reset/command-object';
 import { yargsReleaseCommand } from './release/command-object';
 import { yargsAddCommand } from './add/command-object';
-import { yargsLoginCommand } from './login/command-object';
-import { yargsLogoutCommand } from './logout/command-object';
+import { yargsLoginCommand } from './nx-cloud/login/command-object';
+import { yargsLogoutCommand } from './nx-cloud/logout/command-object';
+import { yargsRecordCommand } from './nx-cloud/record/command-object';
+import { yargsStartCiRunCommand } from './nx-cloud/start-ci-run/command-object';
+import { yargsFixCiCommand } from './nx-cloud/fix-ci/command-object';
 import {
   yargsPrintAffectedCommand,
   yargsAffectedGraphCommand,
@@ -101,6 +104,9 @@ export const commandsObject = yargs
   .command(yargsNxInfixCommand)
   .command(yargsLoginCommand)
   .command(yargsLogoutCommand)
+  .command(yargsRecordCommand)
+  .command(yargsStartCiRunCommand)
+  .command(yargsFixCiCommand)
   .command(resolveConformanceCommandObject())
   .command(resolveConformanceCheckCommandObject())
   .scriptName('nx')

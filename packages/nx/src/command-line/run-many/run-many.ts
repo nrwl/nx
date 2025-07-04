@@ -5,7 +5,7 @@ import {
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
 import { projectHasTarget } from '../../utils/project-graph-utils';
-import { connectToNxCloudIfExplicitlyAsked } from '../connect/connect-to-nx-cloud';
+import { connectToNxCloudIfExplicitlyAsked } from '../nx-cloud/connect/connect-to-nx-cloud';
 import { performance } from 'perf_hooks';
 import {
   ProjectGraph,

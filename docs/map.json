@@ -3106,6 +3106,24 @@
               "id": "logout",
               "tags": ["login"],
               "file": "generated/cli/logout"
+            },
+            {
+              "name": "fix-ci",
+              "id": "fix-ci",
+              "tags": ["nx-cloud", "ci"],
+              "file": "generated/cli/fix-ci"
+            },
+            {
+              "name": "record",
+              "id": "record",
+              "tags": ["nx-cloud", "ci"],
+              "file": "generated/cli/record"
+            },
+            {
+              "name": "start-ci-run",
+              "id": "start-ci-run",
+              "tags": ["nx-cloud", "ci"],
+              "file": "generated/cli/start-ci-run"
             }
           ]
         },

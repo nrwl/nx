@@ -465,9 +465,14 @@ jobs:
           node-version: 20
           cache: 'npm'
       - run: npm ci --legacy-peer-deps
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: npx nx-cloud record -- echo Hello World
       # As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run: npx nx run-many -t lint test build e2e
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
+      - run: npx nx fix-ci
+        if: always()
 ```
 
 ### Open a Pull Request {% highlightColor="green" %}
