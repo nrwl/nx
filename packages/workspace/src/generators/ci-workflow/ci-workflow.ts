@@ -72,6 +72,7 @@ function getNxCloudFixCiCommand(packageManagerPrefix: string): Command {
       `Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai`,
     ],
     command: `${packageManagerPrefix} nx fix-ci`,
+    alwaysRun: true,
   };
 }
 
@@ -167,7 +168,11 @@ function getBitbucketBranchCommands(
   ];
 }
 
-export type Command = { command?: string; comments?: string[] };
+export type Command = {
+  command?: string;
+  comments?: string[];
+  alwaysRun?: boolean;
+};
 
 export interface Schema {
   name: string;

@@ -28,5 +28,12 @@ variables:
     - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}<% } %>
 
 <% for (const command of commands) { %><% if (command.comments) { %><% for (const comment of command.comments) { %>
-    # <%- comment %><% } %><% } %><% if (command.command) { %>
+    # <%- comment %><% } %><% } %><% if (command.command && !command.alwaysRun) { %>
     - <%= command.command %><% } %><% } %>
+<% const alwaysRunCommands = commands.filter(c => c.alwaysRun && c.command) %>
+<% if (alwaysRunCommands.length > 0) { %>
+  after_script:
+<% for (const command of alwaysRunCommands) { %>
+    - <%= command.command %>
+<% } %>
+<% } %>
