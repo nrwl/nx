@@ -1,6 +1,6 @@
 // This file contains methods and utilities that should **only** be used by the plugin worker.
 
-import { existsSync } from 'fs';
+import { existsSync, lstatSync } from 'fs';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
 import { getNxRequirePaths } from '../../utils/installation-directory';
@@ -9,6 +9,7 @@ import {
   readModulePackageJsonWithoutFallbacks,
 } from '../../utils/package-json';
 import { readJsonFile } from '../../utils/fileutils';
+import { output } from '../../utils/output';
 
 import type { PluginConfiguration } from '../../config/nx-json';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
@@ -20,6 +21,24 @@ import {
   pluginTranspilerIsRegistered,
   registerPluginTSTranspiler,
 } from './transpiler';
+
+function checkSymLink(filePath: string): void {
+  console.log(`Checking if ${filePath} is a symlink...`);
+  try {
+    const stats = lstatSync(filePath);
+    if (stats.isSymbolicLink()) {
+      console.log(`SYMLINK DETECTED: ${filePath}`);
+      try {
+        const realPath = require('fs').realpathSync(filePath);
+        console.log(`SYMLINK TARGET: ${realPath}`);
+      } catch (e) {
+        console.log(`SYMLINK TARGET: <could not resolve> (${e.message})`);
+      }
+    }
+  } catch (e) {
+    console.error(`Error checking symlink for ${filePath}, `);
+  }
+}
 
 export function readPluginPackageJson(
   pluginName: string,
@@ -45,17 +64,31 @@ export function readPluginPackageJson(
     );
     console.log(`Checking direct path: ${directPackageJsonPath}`);
 
+    // Always check if the plugin directory is a symlink (whether package.json exists or not)
+    const pluginDir = path.join(searchPath, 'node_modules', pluginName);
+    if (existsSync(pluginDir)) {
+      checkSymLink(pluginDir);
+    }
+
     if (existsSync(directPackageJsonPath)) {
       console.log(`Found package.json directly at: ${directPackageJsonPath}`);
+      
       return {
         json: readJsonFile(directPackageJsonPath),
         path: directPackageJsonPath,
       };
+    } else {
+      if (existsSync(pluginDir)) {
+        console.log(`Plugin directory exists but no package.json found: ${pluginDir}`);
+      }
     }
 
     // Check pnpm .pnpm directory structure (only for pnpm)
     const nodeModulesPath = path.join(searchPath, 'node_modules');
     if (existsSync(nodeModulesPath)) {
+      // Check if node_modules itself is a symlink
+      checkSymLink(nodeModulesPath);
+      
       try {
         const pnpmDir = path.join(nodeModulesPath, '.pnpm');
         // pnpm can have a .pnpm directory if it is being used for example /tmp/tmp-6029-6bm08pq05OfH/node_modules/.pnpm/@nx+workspace@22.0.0/node_modules/@nx/workspace/src/generators/new/new.js\n'
@@ -79,6 +112,16 @@ export function readPluginPackageJson(
                 console.log(
                   `Found package.json in pnpm structure: ${possiblePath}`
                 );
+                
+                // Check if the plugin package directory in pnpm structure is a symlink
+                const pluginDir = path.join(
+                  pnpmDir,
+                  entry,
+                  'node_modules',
+                  pluginName
+                );
+                checkSymLink(pluginDir);
+                
                 return {
                   json: readJsonFile(possiblePath),
                   path: possiblePath,
@@ -101,6 +144,10 @@ export function readPluginPackageJson(
       'package.json'
     );
     console.log(`Found local plugin at: ${localPluginPackageJson}`);
+    
+    // Check if the local plugin directory is a symlink
+    checkSymLink(localPluginPath.path);
+    
     if (!pluginTranspilerIsRegistered()) {
       registerPluginTSTranspiler();
     }
