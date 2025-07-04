@@ -11,9 +11,8 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { existsSync } from 'fs';
-import { basename, dirname, join } from 'path';
+import { dirname, join } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { DockerVersionActionsOptions } from '../release/version-actions-options';
 
 export interface DockerPluginOptions {
   buildTarget?: string;
@@ -129,7 +128,7 @@ async function createDockerTargets(
 
   targets[options.runTarget] = {
     dependsOn: [options.buildTarget],
-    command: `docker run ${imageRef}`,
+    command: `docker run {args} ${imageRef}`,
     options: {
       cwd: projectRoot,
     },

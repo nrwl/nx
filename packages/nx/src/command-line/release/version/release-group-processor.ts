@@ -28,6 +28,7 @@ import {
   SemverBumpType,
   VersionActions,
 } from './version-actions';
+import { NOOP_VERSION_ACTIONS } from './noop-version-actions';
 
 /**
  * The final configuration for a project after applying release group and project level overrides,
@@ -44,6 +45,7 @@ export interface FinalConfigForProject {
   versionActionsOptions: NxReleaseVersionConfiguration['versionActionsOptions'];
   // Consistently expanded to the object form for easier processing in VersionActions
   manifestRootsToUpdate: Array<Exclude<ManifestRootToUpdate, string>>;
+  dockerOptions: NxReleaseVersionConfiguration['docker'];
 }
 
 interface GroupNode {
@@ -489,7 +491,21 @@ export class ReleaseGroupProcessor {
               afterAllProjectsVersioned
             );
           }
-          this.projectsToVersionActions.set(project, versionActions);
+          let versionActionsToUse = versionActions;
+          // TODO we may need to use glob matching here rather than a simple project name lookup
+          if (
+            finalConfigForProject.dockerOptions?.ignoreVersionActions &&
+            finalConfigForProject.dockerOptions?.ignoreVersionActions.includes(
+              project
+            )
+          ) {
+            versionActionsToUse = new NOOP_VERSION_ACTIONS(
+              releaseGroup,
+              projectGraphNode,
+              finalConfigForProject
+            ) as VersionActions;
+          }
+          this.projectsToVersionActions.set(project, versionActionsToUse);
         });
       }
     }
@@ -734,6 +750,39 @@ export class ReleaseGroupProcessor {
       changedFiles: Array.from(changedFiles),
       deletedFiles: Array.from(deletedFiles),
     };
+  }
+
+  async processDockerProjects() {
+    const dockerProjects = new Map<string, FinalConfigForProject>();
+    for (const project of this.versionData.keys()) {
+      const finalConfigForProject = this.finalConfigsByProject.get(project);
+      if (Object.keys(finalConfigForProject.dockerOptions).length === 0) {
+        continue;
+      }
+      dockerProjects.set(project, finalConfigForProject);
+    }
+    // If no docker projects to process, exit early to avoid unnecessary loading of docker handling
+    if (dockerProjects.size === 0) {
+      return;
+    }
+    const { handleDockerVersion } = await import(
+      // @ts-ignore
+      '@nx/docker/release/version-utils'
+    );
+    for (const [project, finalConfigForProject] of dockerProjects.entries()) {
+      const projectNode = this.projectGraph.nodes[project];
+      const { newVersion, logs } = await handleDockerVersion(
+        projectNode,
+        finalConfigForProject
+      );
+
+      logs.forEach((log) => console.log(log));
+      const newVersionData = {
+        ...this.versionData.get(project),
+        dockerVersion: newVersion,
+      };
+      this.versionData.set(project, newVersionData);
+    }
   }
 
   private async processGroup(releaseGroupName: string): Promise<void> {
@@ -1276,6 +1325,13 @@ Valid values are: ${validReleaseVersionPrefixes
       return manifestRoot;
     });
 
+    // Merge docker options configured in project with release group config
+    // Project level configuration should take preference
+    const dockerOptions = {
+      ...(releaseGroupVersionConfig?.docker ?? {}),
+      ...(projectVersionConfig?.docker ?? {}),
+    };
+
     return {
       specifierSource,
       currentVersionResolver,
@@ -1285,6 +1341,7 @@ Valid values are: ${validReleaseVersionPrefixes
       preserveLocalDependencyProtocols,
       versionActionsOptions,
       manifestRootsToUpdate,
+      dockerOptions,
     };
   }
 

@@ -28,9 +28,9 @@
       "types": "./index.d.ts",
       "default": "./index.js"
     },
-    "./release/version-actions": {
-      "types": "./src/release/version-actions.d.ts",
-      "default": "./src/release/version-actions.js"
+    "./release/version-utils": {
+      "types": "./src/release/version-utils.d.ts",
+      "default": "./src/release/version-utils.js"
     },
     "./package.json": {
       "default": "./package.json"

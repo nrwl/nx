@@ -238,6 +238,7 @@ export async function createNxReleaseConfig(
    */
   const defaultFixedGroupReleaseTagPattern = '{releaseGroupName}-v{version}';
   const defaultIndependentReleaseTagPattern = '{projectName}@{version}';
+  const defaultReleaseTagPatternPreferDockerVersion = false;
   const defaultReleaseTagPatternRequireSemver = true;
   /**
    * TODO(v22): in v22, set this to true by default
@@ -346,6 +347,9 @@ export async function createNxReleaseConfig(
         : defaultFixedReleaseTagPattern),
     releaseTagPatternCheckAllBranchesWhen:
       userConfig.releaseTagPatternCheckAllBranchesWhen ?? undefined,
+    releaseTagPatternPreferDockerVersion:
+      userConfig.releaseTagPatternPreferDockerVersion ??
+      defaultReleaseTagPatternPreferDockerVersion,
     releaseTagPatternRequireSemver:
       userConfig.releaseTagPatternRequireSemver ??
       defaultReleaseTagPatternRequireSemver,
@@ -405,6 +409,10 @@ export async function createNxReleaseConfig(
         : WORKSPACE_DEFAULTS.releaseTagPattern,
     releaseTagPatternCheckAllBranchesWhen:
       userConfig.releaseTagPatternCheckAllBranchesWhen ?? undefined,
+    releaseTagPatternPreferDockerVersion:
+      WORKSPACE_DEFAULTS.releaseTagPatternPreferDockerVersion ??
+      userConfig.releaseTagPatternPreferDockerVersion ??
+      defaultReleaseTagPatternPreferDockerVersion,
     releaseTagPatternRequireSemver: groupReleaseTagPatternRequireSemver,
     releaseTagPatternStrictPreid: groupReleaseTagPatternStrictPreid,
     versionPlans: false,
@@ -560,6 +568,10 @@ export async function createNxReleaseConfig(
             // If the user has set something custom for releaseTagPattern at the top level, respect it for the implicit default group
             releaseTagPattern:
               userConfig.releaseTagPattern || GROUP_DEFAULTS.releaseTagPattern,
+            releaseTagPatternPreferDockerVersion:
+              GROUP_DEFAULTS.releaseTagPatternPreferDockerVersion ??
+              userConfig.releaseTagPatternPreferDockerVersion ??
+              defaultReleaseTagPatternPreferDockerVersion,
             releaseTagPatternRequireSemver:
               userConfig.releaseTagPatternRequireSemver ??
               GROUP_DEFAULTS.releaseTagPatternRequireSemver,
@@ -670,6 +682,10 @@ export async function createNxReleaseConfig(
         releaseGroup.releaseTagPatternCheckAllBranchesWhen ??
         userConfig.releaseTagPatternCheckAllBranchesWhen ??
         undefined,
+      releaseTagPatternPreferDockerVersion:
+        releaseGroup.releaseTagPatternPreferDockerVersion ??
+        userConfig.releaseTagPatternPreferDockerVersion ??
+        defaultReleaseTagPatternPreferDockerVersion,
       releaseTagPatternRequireSemver:
         releaseGroup.releaseTagPatternRequireSemver ??
         userConfig.releaseTagPatternRequireSemver ??
@@ -773,6 +789,8 @@ export async function createNxReleaseConfig(
       releaseTagPattern: WORKSPACE_DEFAULTS.releaseTagPattern,
       releaseTagPatternCheckAllBranchesWhen:
         WORKSPACE_DEFAULTS.releaseTagPatternCheckAllBranchesWhen,
+      releaseTagPatternPreferDockerVersion:
+        WORKSPACE_DEFAULTS.releaseTagPatternPreferDockerVersion,
       releaseTagPatternRequireSemver:
         WORKSPACE_DEFAULTS.releaseTagPatternRequireSemver,
       releaseTagPatternStrictPreid:

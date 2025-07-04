@@ -258,6 +258,58 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
      */
     await formatChangedFilesWithPrettierIfAvailable(tree, { silent: true });
 
+    printAndFlushChanges(tree, !!args.dryRun);
+
+    const { changedFiles: changed, deletedFiles: deleted } =
+      await processor.afterAllProjectsVersioned({
+        ...(nxReleaseConfig.version as NxReleaseVersionConfiguration)
+          .versionActionsOptions,
+        ...(args.versionActionsOptionsOverrides ?? {}),
+      });
+    changed.forEach((f) => additionalChangedFiles.add(f));
+    deleted.forEach((f) => additionalDeletedFiles.add(f));
+
+    // After all version actions have run, process docker projects as a layer above
+    if (
+      'docker' in nxReleaseConfig.version &&
+      nxReleaseConfig.version.docker.preVersionCommand
+    ) {
+      /**
+       * Run any configured top level docker pre-version command
+       */
+      runPreVersionCommand(
+        nxReleaseConfig.version.docker.preVersionCommand,
+        {
+          dryRun: args.dryRun,
+          verbose: args.verbose,
+        },
+        undefined,
+        true
+      );
+    }
+
+    /**
+     * Run any configured docker pre-version command for the selected release groups
+     */
+    for (const releaseGroup of releaseGroups) {
+      if (
+        'docker' in releaseGroup.version &&
+        releaseGroup.version.docker.preVersionCommand
+      ) {
+        runPreVersionCommand(
+          releaseGroup.version.docker.preVersionCommand,
+          {
+            dryRun: args.dryRun,
+            verbose: args.verbose,
+          },
+          releaseGroup,
+          true
+        );
+      }
+    }
+
+    await processor.processDockerProjects();
+
     const versionData = processor.getVersionData();
 
     // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command
@@ -270,19 +322,6 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           )
         : [];
     handleDuplicateGitTags(gitTagValues);
-
-    printAndFlushChanges(tree, !!args.dryRun);
-
-    const { changedFiles: changed, deletedFiles: deleted } =
-      await processor.afterAllProjectsVersioned({
-        ...(nxReleaseConfig.version as NxReleaseVersionConfiguration)
-          .versionActionsOptions,
-        ...(args.versionActionsOptionsOverrides ?? {}),
-      });
-    changed.forEach((f) => additionalChangedFiles.add(f));
-    deleted.forEach((f) => additionalDeletedFiles.add(f));
-
-    // TODO(colum): Handle Docker
 
     // Only applicable when there is a single release group with a fixed relationship
     let workspaceVersion: string | null | undefined = undefined;
@@ -415,7 +454,8 @@ function printAndFlushChanges(tree: Tree, isDryRun: boolean) {
 function runPreVersionCommand(
   preVersionCommand: string,
   { dryRun, verbose }: { dryRun: boolean; verbose: boolean },
-  releaseGroup?: ReleaseGroupWithName
+  releaseGroup?: ReleaseGroupWithName,
+  dockerPreVersionCommand: boolean = false
 ) {
   if (!preVersionCommand) {
     return;
@@ -423,8 +463,12 @@ function runPreVersionCommand(
 
   output.logSingleLine(
     releaseGroup
-      ? `Executing release group pre-version command for "${releaseGroup.name}"`
-      : `Executing pre-version command`
+      ? `Executing ${
+          dockerPreVersionCommand ? `docker` : `release group`
+        } pre-version command for "${releaseGroup.name}"`
+      : `Executing ${
+          dockerPreVersionCommand ? `docker` : ``
+        } pre-version command`
   );
   if (verbose) {
     console.log(`Executing the following pre-version command:`);
