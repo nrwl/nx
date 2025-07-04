@@ -303,12 +303,15 @@ To fix this you will either need to add a package.json file at that location, or
             options.releaseGroup.projectsRelationship === 'independent'
           ) {
             const releaseTagPattern = options.releaseGroup.releaseTagPattern;
+            const releaseTagPatternRequireSemver =
+              options.releaseGroup.releaseTagPatternRequireSemver;
             latestMatchingGitTag = await getLatestGitTagForPattern(
               releaseTagPattern,
               {
                 projectName: project.name,
               },
-              options.releaseGroup.releaseTagPatternCheckAllBranchesWhen
+              options.releaseGroup.releaseTagPatternCheckAllBranchesWhen,
+              releaseTagPatternRequireSemver ?? true
             );
             if (!latestMatchingGitTag) {
               if (options.fallbackCurrentVersionResolver === 'disk') {

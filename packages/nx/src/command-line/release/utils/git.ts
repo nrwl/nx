@@ -47,7 +47,8 @@ const SEMVER_REGEX =
 export async function getLatestGitTagForPattern(
   releaseTagPattern: string,
   additionalInterpolationData = {},
-  checkAllBranchesWhen?: boolean | string[]
+  checkAllBranchesWhen?: boolean | string[],
+  releaseTagPatternRequireSemver: boolean = true
 ): Promise<{ tag: string; extractedVersion: string } | null> {
   /**
    * By default, we will try and resolve the latest match for the releaseTagPattern from the current branch,
@@ -138,21 +139,28 @@ export async function getLatestGitTagForPattern(
       .replace('%v%', '(.+)')
       .replace('%p%', '(.+)')}`;
 
-    const matchingSemverTags = tags.filter(
-      (tag) =>
-        // Do the match against SEMVER_REGEX to ensure that we skip tags that aren't valid semver versions
-        !!tag.match(tagRegexp) &&
-        tag.match(tagRegexp).some((r) => r.match(SEMVER_REGEX))
-    );
+    const matchingTags = tags.filter((tag) => {
+      if (releaseTagPatternRequireSemver) {
+        // Match against Semver Regex when using semverVersioning to ensure only valid semver tags are matched
+        return (
+          !!tag.match(tagRegexp) &&
+          tag.match(tagRegexp).some((r) => r.match(SEMVER_REGEX))
+        );
+      } else {
+        return !!tag.match(tagRegexp);
+      }
+    });
 
-    if (!matchingSemverTags.length) {
+    if (!matchingTags.length) {
       return null;
     }
 
-    const [latestMatchingTag, ...rest] = matchingSemverTags[0].match(tagRegexp);
-    const version = rest.filter((r) => {
-      return r.match(SEMVER_REGEX);
-    })[0];
+    const [latestMatchingTag, ...rest] = matchingTags[0].match(tagRegexp);
+    const version = releaseTagPatternRequireSemver
+      ? rest.filter((r) => {
+          return r.match(SEMVER_REGEX);
+        })[0]
+      : rest[0];
 
     return {
       tag: latestMatchingTag,
