@@ -1,6 +1,6 @@
 // This file contains methods and utilities that should **only** be used by the plugin worker.
 
-import { existsSync } from 'fs';
+import { existsSync, realpathSync } from 'fs';
 import { join } from 'path';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
@@ -10,6 +10,7 @@ import {
   readModulePackageJsonWithoutFallbacks,
 } from '../../utils/package-json';
 import { readJsonFile } from '../../utils/fileutils';
+import { workspaceRootInner } from '../../utils/workspace-root';
 
 import type { PluginConfiguration } from '../../config/nx-json';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
@@ -42,12 +43,34 @@ export function readPluginPackageJson(
       pluginName,
       'package.json'
     );
+    console.log(`Checking direct path: ${directPackageJsonPath}`);
+    console.log(`Path exists: ${existsSync(directPackageJsonPath)}`);
+    
     if (existsSync(directPackageJsonPath)) {
-      console.log(`Found package.json directly at: ${directPackageJsonPath}`);
-      return {
-        json: readJsonFile(directPackageJsonPath),
-        path: directPackageJsonPath,
-      };
+      // Check if this is a symlink that points to a different workspace
+      try {
+        const realPath = realpathSync(directPackageJsonPath);
+        const expectedWorkspaceRoot = workspaceRootInner(searchPath, null);
+        const resolvedWorkspaceRoot = workspaceRootInner(realPath, null);
+        
+        console.log(`Real path: ${realPath}`);
+        console.log(`Expected workspace root: ${expectedWorkspaceRoot}`);
+        console.log(`Resolved workspace root: ${resolvedWorkspaceRoot}`);
+        
+        if (resolvedWorkspaceRoot !== expectedWorkspaceRoot) {
+          console.log(`Skipping symlinked path from different workspace: ${realPath} (workspace: ${resolvedWorkspaceRoot}) vs expected (${expectedWorkspaceRoot})`);
+          continue;
+        }
+        
+        console.log(`Found package.json directly at: ${directPackageJsonPath} (real path: ${realPath})`);
+        return {
+          json: readJsonFile(directPackageJsonPath),
+          path: directPackageJsonPath,
+        };
+      } catch (e) {
+        console.log(`Error resolving real path for ${directPackageJsonPath}:`, e.message);
+        continue;
+      }
     }
   }
 
