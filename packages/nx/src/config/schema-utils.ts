@@ -21,7 +21,9 @@ export function getImplementationFactory<T>(
   const [implementationModulePath, implementationExportName] =
     implementation.split('#');
   return () => {
-    console.log(`Resolving implementation: ${implementation} from ${directory}`);
+    console.log(
+      `Resolving implementation: ${implementation} from ${directory}`
+    );
     const modulePath = resolveImplementation(
       implementationModulePath,
       directory,
@@ -33,10 +35,10 @@ export function getImplementationFactory<T>(
       registerPluginTSTranspiler();
     }
     try {
-    const module = require(modulePath);
-    return implementationExportName
-      ? module[implementationExportName]
-      : module.default ?? module;
+      const module = require(modulePath);
+      return implementationExportName
+        ? module[implementationExportName]
+        : module.default ?? module;
     } catch (e) {
       console.error(`Failed to require implementation at ${modulePath}:`, e);
       throw new Error(
@@ -58,8 +60,9 @@ export function resolveImplementation(
   packageName: string,
   projects: Record<string, ProjectConfiguration>
 ): string {
-  
-  console.log(`Resolving implementation: ${implementationModulePath} from ${directory}`);
+  console.log(
+    `Resolving implementation: ${implementationModulePath} from ${directory}`
+  );
 
   const validImplementations = ['', '.js', '.ts'].map(
     (x) => implementationModulePath + x
@@ -96,8 +99,11 @@ export function resolveImplementation(
       });
       console.log(`Resolved via require.resolve: ${resolved}`);
       return resolved;
-    } catch(e) {
-      console.error(`Failed to resolve "${maybeImplementation}" from "${directory}":`, e);
+    } catch (e) {
+      console.error(
+        `Failed to resolve "${maybeImplementation}" from "${directory}":`,
+        e
+      );
       // If it fails, we continue to the next valid implementation
       // This is useful for cases where the implementation might be in a different format
       // or if the file is not found in the expected location.
@@ -105,7 +111,7 @@ export function resolveImplementation(
     }
   }
 
-throw new Error(
+  throw new Error(
     `Could not resolve "${implementationModulePath}" from "${directory}".`
   );
 }
@@ -148,18 +154,22 @@ function tryResolveFromSource(
   packageName: string,
   projects: Record<string, ProjectConfiguration>
 ): string | null {
-  console.log(`Trying to resolve from source: ${path} in ${directory} for package: ${packageName}`);
+  console.log(
+    `Trying to resolve from source: ${path} in ${directory} for package: ${packageName}`
+  );
 
   packageToProjectMap ??=
     getWorkspacePackagesMetadata(projects).packageToProjectMap;
   const localProject = packageToProjectMap[packageName];
   if (!localProject) {
     console.log(`No local project found for package: ${packageName}`);
-        // it doesn't match any of the package names from the local projects
+    // it doesn't match any of the package names from the local projects
     return null;
   }
 
-  console.log(`Found local project for package: ${packageName} at ${localProject.root}`);
+  console.log(
+    `Found local project for package: ${packageName} at ${localProject.root}`
+  );
 
   try {
     const fromExports = resolveExports(

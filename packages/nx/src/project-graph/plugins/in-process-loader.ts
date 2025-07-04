@@ -19,6 +19,7 @@ import {
   pluginTranspilerIsRegistered,
   registerPluginTSTranspiler,
 } from './transpiler';
+import { workspaceRoot } from '@nx/devkit';
 
 export function readPluginPackageJson(
   pluginName: string,
@@ -28,19 +29,32 @@ export function readPluginPackageJson(
   path: string;
   json: PackageJson;
 } {
+  console.log(
+    `Reading plugin package.json for: ${pluginName} from paths: ${paths} at root: ${workspaceRoot}`
+  );
   try {
     const result = readModulePackageJsonWithoutFallbacks(pluginName, paths);
+    console.log(
+      `Found package.json via readModulePackageJsonWithoutFallbacks at: ${result.path}`
+    );
     return {
       json: result.packageJson,
       path: result.path,
     };
   } catch (e) {
+    console.log(
+      `readModulePackageJsonWithoutFallbacks failed for ${pluginName}:`,
+      e.message
+    );
     if (e.code === 'MODULE_NOT_FOUND') {
       const localPluginPath = resolveLocalNxPlugin(pluginName, projects);
       if (localPluginPath) {
         const localPluginPackageJson = path.join(
           localPluginPath.path,
           'package.json'
+        );
+        console.log(
+          `Falling back to local plugin at: ${localPluginPackageJson}`
         );
         if (!pluginTranspilerIsRegistered()) {
           registerPluginTSTranspiler();
