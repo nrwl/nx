@@ -1,8 +1,8 @@
 import { readNxJson } from '../../config/nx-json';
 import { shouldUseTui } from '../../tasks-runner/is-tui-enabled';
 import { NxArgs } from '../../utils/command-line-utils';
-import { Argv, coerce, ParserConfigurationOptions } from 'yargs';
-import { availableParallelism, cpus } from 'node:os';
+import { Argv, ParserConfigurationOptions } from 'yargs';
+import { concurrency } from '../../utils/concurrency';
 
 interface ExcludeOptions {
   exclude: string[];
@@ -408,13 +408,3 @@ const coerceTuiAutoExit = (value: string) => {
   }
   throw new Error(`Invalid value for --tui-auto-exit: ${value}`);
 };
-
-function concurrency(val: string | number) {
-  let parallel = typeof val === 'number' ? val : parseInt(val);
-
-  if (typeof val === 'string' && val.at(-1) === '%') {
-    const maxCores = availableParallelism?.() ?? cpus().length;
-    parallel = (maxCores * parallel) / 100;
-  }
-  return Math.max(1, Math.floor(parallel));
-}
