@@ -1,25 +1,21 @@
+import { readJson, Tree, writeJson } from 'nx/src/devkit-exports';
+import {
+  isUsingPrettierInTree,
+  sortObjectByKeys,
+} from 'nx/src/devkit-internals';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
-
-import { readJson, Tree, updateJson } from 'nx/src/devkit-exports';
-import {
-  sortObjectByKeys,
-  isUsingPrettierInTree,
-} from 'nx/src/devkit-internals';
 
 /**
  * Formats all the created or updated files using Prettier
  * @param tree - the file system tree
+ * @param options - options for the formatFiles function
  */
 export async function formatFiles(
   tree: Tree,
-  options = {
-    /**
-     * TODO(v21): Stop sorting tsconfig paths by default, paths are now less common/important
-     * in Nx workspace setups, and the sorting causes comments to be lost.
-     */
-    sortRootTsconfigPaths: true,
-  }
+  options: {
+    sortRootTsconfigPaths?: boolean;
+  } = {}
 ): Promise<void> {
   let prettier: typeof Prettier;
   try {
@@ -32,6 +28,13 @@ export async function formatFiles(
       return;
     }
   } catch {}
+
+  /**
+   * TODO(v22): Stop sorting tsconfig paths by default, paths are now less common/important
+   * in Nx workspace setups, and the sorting causes comments to be lost.
+   */
+  options.sortRootTsconfigPaths ??=
+    process.env.NX_FORMAT_SORT_TSCONFIG_PATHS !== 'false';
 
   if (options.sortRootTsconfigPaths) {
     sortTsConfig(tree);
@@ -89,13 +92,18 @@ function sortTsConfig(tree: Tree) {
     if (!tsConfigPath) {
       return;
     }
-    updateJson(tree, tsConfigPath, (tsconfig) => ({
+    const tsconfig = readJson(tree, tsConfigPath);
+    if (!tsconfig.compilerOptions?.paths) {
+      // no paths to sort
+      return;
+    }
+    writeJson(tree, tsConfigPath, {
       ...tsconfig,
       compilerOptions: {
         ...tsconfig.compilerOptions,
         paths: sortObjectByKeys(tsconfig.compilerOptions.paths),
       },
-    }));
+    });
   } catch (e) {
     // catch noop
   }
