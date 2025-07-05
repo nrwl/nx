@@ -100,8 +100,8 @@ jobs:
       - name: Run Checks/Lint/Test/Build
         run: |
           pids=()
-
-          pnpm nx e2e-ci e2e-vite &
+          
+          pnpm nx affected --targets=e2e,e2e-ci &
           pids+=($!)
 
           for pid in "${pids[@]}"; do
