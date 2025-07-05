@@ -31,6 +31,7 @@ class NxProjectGraphReportPlugin : Plugin<Project> {
               project.properties
                   .filterKeys { it.endsWith("TargetName") }
                   .mapValues { it.value.toString() }
+
           task.projectName.set(project.name)
           task.projectRef.set(project)
           task.hash.set(hashProperty)
@@ -41,45 +42,37 @@ class NxProjectGraphReportPlugin : Plugin<Project> {
           task.group = "Reporting"
 
           task.doFirst { it.logger.info("${Date()} Running nxProjectReport for ${project.name}") }
+
+          // Configure dependencies during configuration phase
+          project.gradle.includedBuilds.distinct().forEach { includedBuild ->
+            task.dependsOn(includedBuild.task(":nxProjectReport"))
+          }
+
+          project.subprojects.distinct().forEach { subProject ->
+            task.dependsOn(subProject.tasks.matching { it.name == "nxProjectReport" })
+          }
         }
 
-    // Ensure all included builds are processed only once using lazy evaluation
-    project.gradle.includedBuilds.distinct().forEach { includedBuild ->
-      nxProjectReportTask.configure { it.dependsOn(includedBuild.task(":nxProjectReport")) }
-    }
+    val nxProjectGraphTask =
+        project.tasks.register("nxProjectGraph") { task ->
+          task.dependsOn(nxProjectReportTask)
+          task.description = "Create Nx project graph for ${project.name}"
+          task.group = "Reporting"
 
-    // Ensure all subprojects are processed only once using lazy evaluation
-    project.subprojects.distinct().forEach { subProject ->
-      // Add a dependency on each subproject's nxProjectReport task
-      nxProjectReportTask.configure {
-        it.dependsOn(subProject.tasks.matching { it.name == "nxProjectReport" })
-      }
-    }
+          val outputFileProvider = nxProjectReportTask.map { it.outputFile }
 
-    project.tasks.register("nxProjectGraph").configure { task ->
-      task.dependsOn(nxProjectReportTask)
-      task.description = "Create Nx project graph for ${project.name}"
-      task.group = "Reporting"
+          task.doFirst { it.logger.info("${Date()} Running nxProjectGraph for ${project.name}") }
 
-      val outputFileProvider = nxProjectReportTask.map { it.outputFile }
+          task.doLast { println(outputFileProvider.get().path) }
 
-      task.doFirst { it.logger.info("${Date()} Running nxProjectGraph for ${project.name}") }
+          // Configure dependencies during configuration phase
+          project.gradle.includedBuilds.distinct().forEach { includedBuild ->
+            task.dependsOn(includedBuild.task(":nxProjectGraph"))
+          }
 
-      task.doLast { println(outputFileProvider.get().path) }
-    }
-
-    // Ensure all included builds are processed only once using lazy evaluation
-    project.gradle.includedBuilds.distinct().forEach { includedBuild ->
-      project.tasks.named("nxProjectGraph").configure {
-        it.dependsOn(includedBuild.task(":nxProjectGraph"))
-      }
-    }
-
-    // Ensure all subprojects are processed only once using lazy evaluation
-    project.subprojects.distinct().forEach { subProject ->
-      project.tasks.named("nxProjectGraph").configure {
-        it.dependsOn(subProject.tasks.matching { it.name == "nxProjectGraph" })
-      }
-    }
+          project.subprojects.distinct().forEach { subProject ->
+            task.dependsOn(subProject.tasks.matching { it.name == "nxProjectGraph" })
+          }
+        }
   }
 }

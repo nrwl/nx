@@ -229,12 +229,24 @@ fun getDependsOnTask(task: Task): Set<Task> {
  * @param targetNameOverrides optional map of overrides (e.g., test -> ci)
  * @return list of dependsOn task names (possibly replaced), or null if none found or error occurred
  */
+// Add a thread-local cache to prevent infinite recursion in dependency resolution
+internal val taskDependencyCache = ThreadLocal.withInitial { mutableMapOf<String, List<String>?>() }
+
 fun getDependsOnForTask(
     dependsOnTasks: Set<Task>?,
     task: Task,
     dependencies: MutableSet<Dependency>? = null,
     targetNameOverrides: Map<String, String> = emptyMap()
 ): List<String>? {
+
+  // Check cache to prevent infinite recursion, but only if dependsOnTasks is null
+  // When dependsOnTasks is provided, we should not use cache since dependencies might be different
+  val cache = taskDependencyCache.get()
+  val taskKey = task.path
+  if (dependsOnTasks == null && cache.containsKey(taskKey)) {
+    task.logger.debug("Returning cached dependencies for ${task.path}")
+    return cache[taskKey]
+  }
 
   fun mapTasksToNames(tasks: Collection<Task>): List<String> {
     return tasks.map { depTask ->
@@ -254,16 +266,46 @@ fun getDependsOnForTask(
     }
   }
 
-  return try {
-    val combinedDependsOn = dependsOnTasks ?: getDependsOnTask(task)
-    if (combinedDependsOn.isNotEmpty()) {
-      return mapTasksToNames(combinedDependsOn)
+  // Add a placeholder to prevent infinite recursion only when not using pre-computed dependencies
+  if (dependsOnTasks == null) {
+    try {
+      cache[taskKey] = null
+      // Compute dependencies
+      val combinedDependsOn = getDependsOnTask(task)
+      val result =
+          if (combinedDependsOn.isNotEmpty()) {
+            mapTasksToNames(combinedDependsOn)
+          } else {
+            null
+          }
+      // Cache the actual result before returning
+      cache[taskKey] = result
+      return result
+    } catch (e: Exception) {
+      task.logger.info("Unexpected error getting dependencies for ${task.path}: ${e.message}")
+      task.logger.debug("Stack trace:", e)
+      return null
+    } finally {
+      // Ensure null placeholder is removed if computation failed and result wasn't cached
+      if (cache[taskKey] == null) {
+        cache.remove(taskKey)
+      }
     }
-    null
-  } catch (e: Exception) {
-    task.logger.info("Unexpected error getting dependencies for ${task.path}: ${e.message}")
-    task.logger.debug("Stack trace:", e)
-    null
+  } else {
+    // When using pre-computed dependencies, don't use cache
+    return try {
+      val result =
+          if (dependsOnTasks.isNotEmpty()) {
+            mapTasksToNames(dependsOnTasks)
+          } else {
+            null
+          }
+      result
+    } catch (e: Exception) {
+      task.logger.info("Unexpected error getting dependencies for ${task.path}: ${e.message}")
+      task.logger.debug("Stack trace:", e)
+      null
+    }
   }
 }
 
