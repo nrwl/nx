@@ -26,6 +26,7 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { NX_PLUGIN_OPTIONS } from '../utils/constants';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { hashObject } from 'nx/src/devkit-internals';
+import { normalizeOptions } from 'nx/src/utils/normalize-options';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 export interface CypressPluginOptions {
@@ -34,6 +35,13 @@ export interface CypressPluginOptions {
   openTargetName?: string;
   componentTestingTargetName?: string;
 }
+
+const defaultOptions: Required<CypressPluginOptions> = {
+  ciTargetName: 'e2e-ci',
+  targetName: 'e2e',
+  openTargetName: 'open-cypress',
+  componentTestingTargetName: 'component-test',
+};
 
 function readTargetsCache(cachePath: string): Record<string, CypressTargets> {
   try {
@@ -56,7 +64,8 @@ const pmc = getPackageManagerCommand();
 export const createNodesV2: CreateNodesV2<CypressPluginOptions> = [
   cypressConfigGlob,
   async (configFiles, options, context) => {
-    const optionsHash = hashObject(options);
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
+    const optionsHash = hashObject(normalizedOptions);
     const cachePath = join(
       workspaceDataDirectory,
       `cypress-${optionsHash}.hash`
@@ -67,7 +76,7 @@ export const createNodesV2: CreateNodesV2<CypressPluginOptions> = [
         (configFile, options, context) =>
           createNodesInternal(configFile, options, context, targetsCache),
         configFiles,
-        options,
+        normalizedOptions,
         context
       );
     } finally {
@@ -86,7 +95,8 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
-    return createNodesInternal(configFile, options, context, {});
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
+    return createNodesInternal(configFile, normalizedOptions, context, {});
   },
 ];
 
@@ -96,7 +106,6 @@ async function createNodesInternal(
   context: CreateNodesContext,
   targetsCache: CypressTargets
 ) {
-  options = normalizeOptions(options);
   const projectRoot = dirname(configFilePath);
 
   // Do not create a project if package.json and project.json isn't there.
@@ -476,15 +485,6 @@ async function buildCypressTargets(
   };
 
   return { targets, metadata };
-}
-
-function normalizeOptions(options: CypressPluginOptions): CypressPluginOptions {
-  options ??= {};
-  options.targetName ??= 'e2e';
-  options.openTargetName ??= 'open-cypress';
-  options.componentTestingTargetName ??= 'component-test';
-  options.ciTargetName ??= 'e2e-ci';
-  return options;
 }
 
 function getInputs(

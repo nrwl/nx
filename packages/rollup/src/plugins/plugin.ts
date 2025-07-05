@@ -1,4 +1,3 @@
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { basename, dirname, join } from 'path';
 import { existsSync, readdirSync } from 'fs';
 import {
@@ -20,8 +19,22 @@ import { getLockFileName } from '@nx/js';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { type RollupOptions } from 'rollup';
 import { hashObject } from 'nx/src/hasher/file-hasher';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { normalizeOptions } from 'nx/src/utils/normalize-options';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
+
+export interface RollupPluginOptions {
+  buildTargetName?: string;
+  buildDepsTargetName?: string;
+  watchDepsTargetName?: string;
+}
+
+const defaultOptions: Required<RollupPluginOptions> = {
+  buildTargetName: 'build',
+  buildDepsTargetName: 'build-deps',
+  watchDepsTargetName: 'watch-deps',
+};
 
 const pmc = getPackageManagerCommand();
 
@@ -45,12 +58,6 @@ export const createDependencies: CreateDependencies = () => {
   return [];
 };
 
-export interface RollupPluginOptions {
-  buildTargetName?: string;
-  buildDepsTargetName?: string;
-  watchDepsTargetName?: string;
-}
-
 const rollupConfigGlob = '**/rollup.config.{js,cjs,mjs,ts,cts,mts}';
 
 export const createNodes: CreateNodes<RollupPluginOptions> = [
@@ -59,9 +66,10 @@ export const createNodes: CreateNodes<RollupPluginOptions> = [
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
     return createNodesInternal(
       configFilePath,
-      normalizeOptions(options),
+      normalizedOptions,
       context,
       {},
       isUsingTsSolutionSetup()
@@ -72,7 +80,7 @@ export const createNodes: CreateNodes<RollupPluginOptions> = [
 export const createNodesV2: CreateNodesV2<RollupPluginOptions> = [
   rollupConfigGlob,
   async (configFilePaths, options, context) => {
-    const normalizedOptions = normalizeOptions(options);
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
     const optionsHash = hashObject(normalizedOptions);
     const cachePath = join(
       workspaceDataDirectory,
@@ -80,13 +88,12 @@ export const createNodesV2: CreateNodesV2<RollupPluginOptions> = [
     );
     const targetsCache = readTargetsCache(cachePath);
     const isTsSolutionSetup = isUsingTsSolutionSetup();
-
     try {
       return await createNodesFromFiles(
-        (configFile, _, context) =>
+        (configFile, options, context) =>
           createNodesInternal(
             configFile,
-            normalizedOptions,
+            options,
             context,
             targetsCache,
             isTsSolutionSetup
@@ -267,14 +274,4 @@ function getOutputs(
     }
   }
   return Array.from(outputs);
-}
-
-function normalizeOptions(
-  options: RollupPluginOptions
-): Required<RollupPluginOptions> {
-  return {
-    buildTargetName: options.buildTargetName ?? 'build',
-    buildDepsTargetName: options.buildDepsTargetName ?? 'build-deps',
-    watchDepsTargetName: options.watchDepsTargetName ?? 'watch-deps',
-  };
 }

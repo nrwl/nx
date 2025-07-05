@@ -22,6 +22,7 @@ import {
   calculateHashForCreateNodes,
 } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { normalizeOptions } from 'nx/src/utils/normalize-options';
 import { getLockFileName } from '@nx/js';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import { hashObject } from 'nx/src/hasher/file-hasher';
@@ -45,6 +46,15 @@ export interface VitePluginOptions {
   watchDepsTargetName?: string;
   buildDepsTargetName?: string;
 }
+
+const defaultOptions: VitePluginOptions = {
+  buildTargetName: 'build',
+  testTargetName: 'test',
+  devTargetName: 'dev',
+  previewTargetName: 'preview',
+  serveStaticTargetName: 'serve-static',
+  typecheckTargetName: 'typecheck',
+};
 
 type ViteTargets = Pick<
   ProjectConfiguration,
@@ -74,7 +84,7 @@ export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
   viteVitestConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
-    const normalizedOptions = normalizeOptions(options);
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
     const cachePath = join(workspaceDataDirectory, `vite-${optionsHash}.hash`);
     const targetsCache = readTargetsCache(cachePath);
     const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
@@ -202,7 +212,7 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
       );
     });
 
-    const normalizedOptions = normalizeOptions(options);
+    const normalizedOptions = normalizeOptions(options, defaultOptions);
 
     const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
 
@@ -615,18 +625,6 @@ function normalizeOutputPath(
       }
     }
   }
-}
-
-function normalizeOptions(options: VitePluginOptions): VitePluginOptions {
-  options ??= {};
-  options.buildTargetName ??= 'build';
-  options.serveTargetName ??= 'serve';
-  options.devTargetName ??= 'dev';
-  options.previewTargetName ??= 'preview';
-  options.testTargetName ??= 'test';
-  options.serveStaticTargetName ??= 'serve-static';
-  options.typecheckTargetName ??= 'typecheck';
-  return options;
 }
 
 function checkIfConfigFileShouldBeProject(
