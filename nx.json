@@ -88,12 +88,6 @@
         "packageRoot": "dist/packages/{projectName}"
       }
     },
-    "add-extra-dependencies": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "node ./scripts/replace-workspace-protocols.js {projectName}"
-      }
-    },
     "build": {
       "dependsOn": ["build-base", "build-native"],
       "inputs": ["production", "^production"],
