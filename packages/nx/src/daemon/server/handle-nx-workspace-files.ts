@@ -10,7 +10,7 @@ export async function handleNxWorkspaceFiles(
     projectRootMap
   );
   return {
-    response: JSON.stringify(files),
+    response: files,
     description: 'handleNxWorkspaceFiles',
   };
 }
