@@ -62,6 +62,8 @@ module.exports = {
     '^@nx/react/src/(.*)$': '<rootDir>/../react/src/$1',
     '^@nx/next$': '<rootDir>/../next/index.ts',
     '^@nx/next/src/(.*)$': '<rootDir>/../next/src/$1',
+    '^@nx/nuxt$': '<rootDir>/../nuxt/index.ts',
+    '^@nx/nuxt/src/(.*)$': '<rootDir>/../nuxt/src/$1',
     '^@nx/node$': '<rootDir>/../node/index.ts',
     '^@nx/node/src/(.*)$': '<rootDir>/../node/src/$1',
     '^@nx/web/src/(.*)$': '<rootDir>/../web/src/$1',
