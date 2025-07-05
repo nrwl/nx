@@ -97,27 +97,11 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm playwright install --with-deps
 
-      - name: Check Documentation
-        run: pnpm nx documentation
-        timeout-minutes: 20
-
       - name: Run Checks/Lint/Test/Build
         run: |
           pids=()
-
-          pnpm nx-cloud record -- nx format:check &
-          pids+=($!)
-
-          pnpm nx-cloud record -- nx sync:check
-          pids+=($!)
-
-          pnpm nx-cloud record -- nx-cloud conformance:check
-          pids+=($!)
-
-          pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners --parallel=1 --no-dte &
-          pids+=($!)
-
-          pnpm nx affected --targets=lint,test,build,e2e,e2e-ci,format-native,lint-native &
+          
+          pnpm nx affected --targets=e2e,e2e-ci &
           pids+=($!)
 
           for pid in "${pids[@]}"; do

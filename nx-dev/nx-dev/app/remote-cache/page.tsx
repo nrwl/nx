@@ -1,9 +1,11 @@
-import { CallToAction, DefaultLayout } from '@nx/nx-dev/ui-common';
+import { CallToAction, DefaultLayout } from '@nx/nx-dev-ui-common';
 
 import type { Metadata } from 'next';
 import { type ReactElement } from 'react';
 import { contactButton } from '../../lib/components/headerCtaConfigs';
-import { Faq, RemoteCacheSolutions } from '@nx/nx-dev/ui-remote-cache';
+import { Faq, RemoteCacheSolutions } from '@nx/nx-dev-ui-remote-cache';
+
+// Needed without it Next.js will fail to serve the page with startexport const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: 'Nx - Remote Cache',

@@ -1,8 +1,8 @@
 'use client';
 import { motion } from 'framer-motion';
 import { ReactElement, useEffect, useState } from 'react';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
-import { usePrefersReducedMotion } from '@nx/nx-dev/ui-animations';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
+import { usePrefersReducedMotion } from '@nx/nx-dev-ui-animations';
 
 /**
  * Calculate the total number of years worth of compute.

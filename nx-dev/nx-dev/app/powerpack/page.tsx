@@ -1,14 +1,16 @@
-import { ButtonLinkProps, DefaultLayout } from '@nx/nx-dev/ui-common';
+import { ButtonLinkProps, DefaultLayout } from '@nx/nx-dev-ui-common';
 import {
   CallToAction,
   Faq,
   GetStarted,
   Hero,
   PowerpackFeatures,
-} from '@nx/nx-dev/ui-powerpack';
+} from '@nx/nx-dev-ui-powerpack';
 
 import type { Metadata } from 'next';
 import { type ReactElement } from 'react';
+
+// Needed without it Next.js will fail to serve the page with startexport const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: 'Nx Powerpack',

@@ -6,7 +6,7 @@ import {
   runCLI,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('angular.json v1 config', () => {
   const app1 = uniq('app1');

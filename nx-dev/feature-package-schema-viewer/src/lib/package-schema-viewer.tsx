@@ -1,8 +1,8 @@
 import {
   ProcessedPackageMetadata,
   SchemaMetadata,
-} from '@nx/nx-dev/models-package';
-import { Breadcrumbs, Footer } from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev-models-package';
+import { Breadcrumbs, Footer } from '@nx/nx-dev-ui-common';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import Content from './content';

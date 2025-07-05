@@ -1,6 +1,5 @@
-import * as createSpinner from 'ora';
+import createSpinner = require('ora');
 import { bold } from 'chalk';
-import { execSync } from 'child_process';
 
 import {
   getPackageManagerCommand,

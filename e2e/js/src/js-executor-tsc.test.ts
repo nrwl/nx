@@ -19,7 +19,7 @@ import {
   updateFile,
   updateJson,
   waitUntil,
-} from '../../utils';
+} from '@nx/e2e-utils';
 
 describe('js:tsc executor', () => {
   let scope;

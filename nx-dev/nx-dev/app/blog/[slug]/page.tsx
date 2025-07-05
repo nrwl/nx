@@ -1,7 +1,7 @@
 import type { Metadata, ResolvingMetadata } from 'next';
 import { blogApi } from '../../../lib/blog.api';
-import { BlogDetails } from '@nx/nx-dev/ui-blog';
-import { DefaultLayout } from '@nx/nx-dev/ui-common';
+import { BlogDetails } from '@nx/nx-dev-ui-blog';
+import { DefaultLayout } from '@nx/nx-dev-ui-common';
 import { tryNxCloudForFree } from '../../../lib/components/headerCtaConfigs';
 
 interface BlogPostDetailProps {

@@ -23,7 +23,7 @@
   },
   "license": "MIT",
   "author": "Victor Savkin",
-  "main": "./index",
+  "main": "./index.js",
   "types": "index.d.ts",
   "dependencies": {
     "ajv": "^8.12.0",
@@ -35,12 +35,15 @@
     "picocolors": "^1.1.0",
     "tsconfig-paths": "^4.1.2",
     "tslib": "^2.3.0",
-    "@nx/devkit": "file:../devkit",
-    "@nx/jest": "file:../jest",
-    "@nx/js": "file:../js",
-    "@nx/eslint": "file:../eslint",
-    "@nx/react": "file:../react",
-    "@nx/workspace": "file:../workspace"
+    "@nx/detox": "workspace:*",
+    "@nx/devkit": "workspace:*",
+    "nx": "workspace:*",
+    "@nx/jest": "workspace:*",
+    "@nx/js": "workspace:*",
+    "@nx/eslint": "workspace:*",
+    "@nx/react": "workspace:*",
+    "@nx/rollup": "workspace:*",
+    "@nx/workspace": "workspace:*"
   },
   "executors": "./executors.json",
   "ng-update": {

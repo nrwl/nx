@@ -112,7 +112,9 @@ export class HubspotForm extends Component<
     return (
       <>
         <div
-          ref={(el) => (this.el = el)}
+          ref={(el) => {
+            this.el = el;
+          }}
           id={`reactHubspotForm${this.id}`}
           style={{ display: this.state.loaded ? 'block' : 'none' }}
         />

@@ -1,5 +1,5 @@
-import { ButtonLink } from '@nx/nx-dev/ui-common';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { ButtonLink } from '@nx/nx-dev-ui-common';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import React, { ReactElement } from 'react';
 import Link from 'next/link';
 

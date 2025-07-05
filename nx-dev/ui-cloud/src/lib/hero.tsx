@@ -5,14 +5,14 @@ import {
   Transition,
   TransitionChild,
 } from '@headlessui/react';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { PlayIcon } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 import { ComponentProps, Fragment, useState } from 'react';
-import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
-import { MovingBorder } from '@nx/nx-dev/ui-animations';
+import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
+import { MovingBorder } from '@nx/nx-dev-ui-animations';
 import Image from 'next/image';
-import { NxCloudAnimatedIcon } from '@nx/nx-dev/ui-icons';
+import { NxCloudAnimatedIcon } from '@nx/nx-dev-ui-icons';
 
 export function Hero(): JSX.Element {
   const [isOpen, setIsOpen] = useState(false);

@@ -10,7 +10,7 @@ import {
   uniq,
   readJson,
   readFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { bold } from 'chalk';
 
 describe('nx wrapper / .nx installation', () => {

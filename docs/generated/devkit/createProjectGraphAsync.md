@@ -28,7 +28,7 @@ stored in the daemon process. To reset both run: `nx reset`.
 
 | Name                      | Type      |
 | :------------------------ | :-------- |
-| `opts`                    | `Object`  |
+| `opts?`                   | `Object`  |
 | `opts.exitOnError`        | `boolean` |
 | `opts.resetDaemonClient?` | `boolean` |
 

@@ -1,9 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/out-tsc/nx-dev/ui-member-card",
     "types": ["node"],
-    "lib": ["DOM"]
+    "lib": ["DOM"],
+    "composite": true,
+    "declaration": true
   },
   "files": [
     "../../node_modules/@nx/react/typings/cssmodule.d.ts",

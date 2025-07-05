@@ -1,0 +1,18 @@
+{
+  "name": "@nx/nx-dev-ui-home",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "devDependencies": {
+    "jest": "^29.4.1"
+  },
+  "dependencies": {
+    "@nx/nx-dev-ui-common": "workspace:*",
+    "@nx/nx-dev-ui-icons": "workspace:*",
+    "@nx/nx-dev-ui-animations": "workspace:*",
+    "@nx/nx-dev-ui-primitives": "workspace:*",
+    "@nx/nx-dev-feature-analytics": "workspace:*"
+  }
+}

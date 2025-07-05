@@ -76,7 +76,7 @@
       },
       "currentVersionResolver": "registry",
       "preserveLocalDependencyProtocols": false,
-      "manifestRootsToUpdate": ["build/packages/{projectName}"],
+      "manifestRootsToUpdate": ["dist/packages/{projectName}"],
       "versionActionsOptions": {
         "skipLockFileUpdate": true
       }
@@ -85,7 +85,7 @@
   "targetDefaults": {
     "nx-release-publish": {
       "options": {
-        "packageRoot": "build/packages/{projectName}"
+        "packageRoot": "dist/packages/{projectName}"
       }
     },
     "build": {
@@ -101,7 +101,7 @@
       "dependsOn": ["^build-base", "build-native"],
       "inputs": ["production", "^production"],
       "options": {
-        "outputPath": "build/{projectRoot}",
+        "outputPath": "dist/{projectRoot}",
         "tsConfig": "{projectRoot}/tsconfig.lib.json",
         "main": "{projectRoot}/index.ts"
       },
@@ -185,10 +185,29 @@
     },
     "copy-docs": {
       "cache": true
+    },
+    "copy-readme": {
+      "cache": true
+    },
+    "legacy-post-build": {
+      "cache": true,
+      "inputs": ["production", "^production"],
+      "outputs": ["{workspaceRoot}/dist/packages/{projectName}"]
     }
   },
   "plugins": [
     "@monodon/rust",
+    {
+      "plugin": "@nx/js/typescript",
+      "include": ["packages/**/*", "graph/**/*"],
+      "exclude": ["packages/angular/**"],
+      "options": {
+        "typecheck": true,
+        "build": {
+          "targetName": "build-base-ts"
+        }
+      }
+    },
     {
       "plugin": "@nx/playwright/plugin",
       "options": {
@@ -243,8 +262,8 @@
       "options": {
         "startTargetName": "next:start",
         "buildTargetName": "next:build",
-        "devTargetName": "dev",
-        "serveStaticTargetName": "serve-static"
+        "devTargetName": "next:dev",
+        "serveStaticTargetName": "next:serve-static"
       }
     },
     "@nx/enterprise-cloud",
@@ -256,6 +275,20 @@
         "testStorybookTargetName": "test-storybook",
         "staticStorybookTargetName": "static:storybook"
       }
+    },
+    {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "typecheck": {
+          "targetName": "tsc:typecheck"
+        },
+        "build": {
+          "targetName": "tsc:build",
+          "configName": "tsconfig.lib.json",
+          "buildDepsName": "tsc:build-deps",
+          "watchDepsName": "tsc:watch-deps"
+        }
+      }
     }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",
@@ -266,21 +299,21 @@
   "conformance": {
     "rules": [
       {
-        "rule": "@nx/workspace-plugin/conformance-rules/blog-description",
+        "rule": "./tools/workspace-plugin/src/conformance-rules/blog-description",
         "projects": ["docs"],
         "options": {
           "mdGlobPattern": "{blog,shared}/**/!(sitemap).md"
         }
       },
       {
-        "rule": "@nx/workspace-plugin/conformance-rules/blog-cover-image",
+        "rule": "./tools/workspace-plugin/src/conformance-rules/blog-cover-image",
         "projects": ["docs"],
         "options": {
           "mdGlobPattern": "blog/**/!(sitemap).md"
         }
       },
       {
-        "rule": "@nx/workspace-plugin/conformance-rules/project-package-json",
+        "rule": "./tools/workspace-plugin/src/conformance-rules/project-package-json",
         "projects": [
           "!.",
           "!create-nx-*",
@@ -314,7 +347,7 @@
         ]
       },
       {
-        "rule": "@nx/workspace-plugin/conformance-rules/migration-groups",
+        "rule": "./tools/workspace-plugin/src/conformance-rules/migration-groups",
         "options": {
           "versionRange": ">= 19.8",
           "groups": [
@@ -366,12 +399,5 @@
         }
       }
     ]
-  },
-  "generators": {
-    "@nx/react": {
-      "library": {
-        "unitTestRunner": "jest"
-      }
-    }
   }
 }

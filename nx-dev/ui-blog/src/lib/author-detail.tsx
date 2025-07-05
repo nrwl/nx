@@ -1,5 +1,5 @@
-import type { BlogAuthor } from '@nx/nx-dev/data-access-documents/node-only';
-import { GithubIcon, XIcon } from '@nx/nx-dev/ui-common';
+import type { BlogAuthor } from '@nx/nx-dev-data-access-documents/node-only';
+import { GithubIcon, XIcon } from '@nx/nx-dev-ui-common';
 import Image from 'next/image';
 
 interface AuthorDetailProps {

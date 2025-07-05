@@ -29,9 +29,11 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
-    "@nx/react": "file:../react",
+    "@nx/devkit": "workspace:*",
+    "nx": "workspace:*",
+    "@nx/js": "workspace:*",
+    "@nx/react": "workspace:*",
+    "@nx/workspace": "workspace:*",
     "tslib": "^2.3.1",
     "@phenomnomnominal/tsquery": "~5.0.1"
   },

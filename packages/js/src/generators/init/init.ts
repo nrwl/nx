@@ -69,6 +69,7 @@ export async function initGenerator(
   tree: Tree,
   schema: InitSchema
 ): Promise<GeneratorCallback> {
+  console.log('Running @nx/js init generator');
   schema.addTsPlugin ??= false;
   const isUsingNewTsSetup = schema.addTsPlugin || isUsingTsSolutionSetup(tree);
   schema.formatter ??= isUsingNewTsSetup ? 'none' : 'prettier';
@@ -92,6 +93,7 @@ export async function initGeneratorInternal(
   schema.addTsPlugin ??= schema.addPlugin;
 
   if (schema.addTsPlugin) {
+    console.log('Adding plugin');
     await addPlugin(
       tree,
       await createProjectGraphAsync(),
@@ -128,6 +130,7 @@ export async function initGeneratorInternal(
     );
   }
 
+  console.log('Generating files');
   if (schema.addTsConfigBase && !getRootTsConfigFileName(tree)) {
     if (schema.addTsPlugin) {
       const platform = schema.platform ?? 'node';
@@ -149,8 +152,10 @@ export async function initGeneratorInternal(
     '@swc-node/register': swcNodeVersion,
     '@swc/core': swcCoreVersion,
     '@swc/helpers': swcHelpersVersion,
+    '@nx/rollup': nxVersion,
   };
 
+  console.log('Checking typescript version');
   if (!schema.js && !schema.keepExistingVersions) {
     const installedTsVersion = await getInstalledTypescriptVersion(tree);
 
@@ -164,6 +169,7 @@ export async function initGeneratorInternal(
     }
   }
 
+  console.log('Generating prettier setup');
   if (schema.formatter === 'prettier') {
     const prettierTask = generatePrettierSetup(tree, {
       skipPackageJson: schema.skipPackageJson,
@@ -171,6 +177,7 @@ export async function initGeneratorInternal(
     tasks.push(prettierTask);
   }
 
+  console.log('Getting root ts config');
   const rootTsConfigFileName = getRootTsConfigFileName(tree);
   // If the root tsconfig file uses `importHelpers` then we must install tslib
   // in order to run tsc for build and typecheck.
@@ -181,6 +188,7 @@ export async function initGeneratorInternal(
     }
   }
 
+  console.log('Adding dependencies');
   const installTask = !schema.skipPackageJson
     ? addDependenciesToPackageJson(
         tree,
@@ -192,6 +200,7 @@ export async function initGeneratorInternal(
     : () => {};
   tasks.push(installTask);
 
+  console.log('Ensuring prettier');
   if (
     !schema.skipPackageJson &&
     // For `create-nx-workspace` or `nx g @nx/js:init`, we want to make sure users didn't set formatter to none.
@@ -201,12 +210,14 @@ export async function initGeneratorInternal(
     ensurePackage('prettier', prettierVersion);
   }
 
+  console.log('Formatting files');
   if (!schema.skipFormat) {
     // even if skipPackageJson === true, we can safely run formatFiles, prettier might
     // have been installed earlier and if not, the formatFiles function still handles it
     await formatFiles(tree);
   }
 
+  console.log('Return tasks');
   return runTasksInSerial(...tasks);
 }
 

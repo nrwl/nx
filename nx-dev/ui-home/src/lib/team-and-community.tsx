@@ -12,11 +12,11 @@ import {
   SectionHeading,
   Strong,
   TextLink,
-} from '@nx/nx-dev/ui-common';
-import { XIcon, YoutubeIcon } from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-common';
+import { XIcon, YoutubeIcon } from '@nx/nx-dev-ui-icons';
 import Link from 'next/link';
 import type { ReactElement } from 'react';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 const yearsAgo = new Date().getFullYear() - 2017;
 

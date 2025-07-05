@@ -12,7 +12,7 @@ import {
   runCommand,
   runCreateWorkspace,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { readFileSync } from 'fs';
 import { existsSync, mkdirSync, rmSync } from 'fs-extra';
 

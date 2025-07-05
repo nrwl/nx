@@ -1,0 +1,9 @@
+{
+  "name": "@nx/e2e-node",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@nx/devkit": "workspace:*",
+    "@nx/e2e-utils": "workspace:*"
+  }
+}

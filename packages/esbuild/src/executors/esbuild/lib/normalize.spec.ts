@@ -15,6 +15,10 @@ jest.mock<typeof import('@nx/js')>('@nx/js', () => {
   };
 });
 
+jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
+  isUsingTsSolutionSetup: jest.fn(() => false),
+}));
+
 describe('normalizeOptions', () => {
   const context: ExecutorContext = {
     root: '/',

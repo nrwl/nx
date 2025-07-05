@@ -47,14 +47,14 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit",
-    "@nx/eslint": "file:../eslint",
-    "@nx/js": "file:../js",
-    "@nx/module-federation": "file:../module-federation",
-    "@nx/rspack": "file:../rspack",
-    "@nx/web": "file:../web",
-    "@nx/webpack": "file:../webpack",
-    "@nx/workspace": "file:../workspace",
+    "@nx/devkit": "workspace:*",
+    "@nx/eslint": "workspace:*",
+    "@nx/js": "workspace:*",
+    "@nx/module-federation": "workspace:*",
+    "@nx/rspack": "workspace:*",
+    "@nx/web": "workspace:*",
+    "@nx/webpack": "workspace:*",
+    "@nx/workspace": "workspace:*",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "@typescript-eslint/type-utils": "^8.0.0",
     "enquirer": "~2.3.6",
@@ -64,6 +64,10 @@
     "semver": "^7.5.3",
     "tslib": "^2.3.0",
     "webpack-merge": "^5.8.0"
+  },
+  "devDependencies": {
+    "nx": "workspace:*",
+    "@nx/cypress": "workspace:*"
   },
   "peerDependencies": {
     "@angular/build": ">= 18.0.0 < 21.0.0",

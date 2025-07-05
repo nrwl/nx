@@ -1,10 +1,12 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/out-tsc/nx-dev/data-access-menu",
     "declaration": true,
-    "types": []
+    "types": [],
+    "composite": true
   },
   "include": ["**/*.ts"],
-  "exclude": ["jest.config.ts", "**/*.spec.ts"]
+  "exclude": ["jest.config.ts", "**/*.spec.ts"],
+  "references": [{ "path": "../models-menu/tsconfig.lib.json" }]
 }

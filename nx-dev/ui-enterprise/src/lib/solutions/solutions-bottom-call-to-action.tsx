@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ReactElement } from 'react';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 
 export function SolutionsBottomCallToAction(): ReactElement {
   return (

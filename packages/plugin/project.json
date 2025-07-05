@@ -4,9 +4,52 @@
   "sourceRoot": "packages/plugin/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "projects": "self"
+        }
+      ]
+    },
+    "copy-readme": {
+      "outputs": ["{workspaceRoot}/dist/packages/plugin/README.md"],
+      "command": "node ./scripts/copy-readme.js plugin",
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
+    },
     "build-base": {
-      "executor": "@nx/js:tsc",
+      "dependsOn": [
+        "^build",
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        },
+        {
+          "target": "legacy-post-build",
+          "projects": "self"
+        },
+        {
+          "target": "copy-readme",
+          "projects": "self"
+        }
+      ]
+    },
+    "nx-release-publish": {
+      "executor": "@nx/js:release-publish",
       "options": {
+        "packageRoot": "dist/packages/plugin"
+      },
+      "dependsOn": ["^nx-release-publish"]
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
+      "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/plugin",
@@ -41,11 +84,13 @@
             "output": "/"
           }
         ]
-      }
-    },
-    "build": {
-      "outputs": ["{workspaceRoot}/build/packages/plugin/README.md"],
-      "command": "node ./scripts/copy-readme.js plugin"
+      },
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
     }
   }
 }
