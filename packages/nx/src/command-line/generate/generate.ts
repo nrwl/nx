@@ -351,6 +351,7 @@ export async function generate(args: { [k: string]: any }) {
 
     const cwd = getCwd();
 
+    console.log('getting combined options');
     const combinedOpts = await combineOptionsForGenerator(
       opts.generatorOptions,
       opts.collectionName,
@@ -369,6 +370,7 @@ export async function generate(args: { [k: string]: any }) {
       args.verbose
     );
 
+    console.log('getting generator information');
     if (
       getGeneratorInformation(
         opts.collectionName,
@@ -390,6 +392,7 @@ export async function generate(args: { [k: string]: any }) {
         host.write('libs/.gitkeep', '');
       }
 
+      console.log('Calling generator');
       const task = await implementation(host, combinedOpts);
       host.lock();
 
