@@ -454,7 +454,11 @@ export function packageInstall(
     const install = execSync(command, {
       cwd,
       stdio: isVerbose() ? 'inherit' : 'pipe',
-      env: process.env,
+      env: {
+        ...process.env,
+        COREPACK_ENABLE_STRICT: '0',
+        COREPACK_ENABLE_AUTO_PIN: '0',
+      },
       encoding: 'utf-8',
     });
 
