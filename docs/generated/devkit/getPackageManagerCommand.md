@@ -1,6 +1,6 @@
 # Function: getPackageManagerCommand
 
-▸ **getPackageManagerCommand**(`packageManager?`, `root?`): [`PackageManagerCommands`](/reference/core-api/devkit/documents/PackageManagerCommands)
+▸ **getPackageManagerCommand**(`packageManager?`, `root?`): `PackageManagerCommands`
 
 Returns commands for the package manager used in the workspace.
 By default, the package manager is derived based on the lock file,
@@ -21,4 +21,4 @@ execSync(`${getPackageManagerCommand().addDev} my-dev-package`);
 
 #### Returns
 
-[`PackageManagerCommands`](/reference/core-api/devkit/documents/PackageManagerCommands)
+`PackageManagerCommands`

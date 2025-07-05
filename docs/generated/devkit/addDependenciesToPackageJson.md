@@ -14,13 +14,13 @@ This will **add** `react` and `jest` to the dependencies and devDependencies sec
 
 #### Parameters
 
-| Name                    | Type                                                | Default value    | Description                                                                 |
-| :---------------------- | :-------------------------------------------------- | :--------------- | :-------------------------------------------------------------------------- |
-| `tree`                  | [`Tree`](/reference/core-api/devkit/documents/Tree) | `undefined`      | Tree representing file system to modify                                     |
-| `dependencies`          | `Record`\<`string`, `string`\>                      | `undefined`      | Dependencies to be added to the dependencies section of package.json        |
-| `devDependencies`       | `Record`\<`string`, `string`\>                      | `undefined`      | Dependencies to be added to the devDependencies section of package.json     |
-| `packageJsonPath`       | `string`                                            | `'package.json'` | Path to package.json                                                        |
-| `keepExistingVersions?` | `boolean`                                           | `undefined`      | If true, prevents existing dependencies from being bumped to newer versions |
+| Name                    | Type                                                | Description                                                                 |
+| :---------------------- | :-------------------------------------------------- | :-------------------------------------------------------------------------- |
+| `tree`                  | [`Tree`](/reference/core-api/devkit/documents/Tree) | Tree representing file system to modify                                     |
+| `dependencies`          | `Record`\<`string`, `string`\>                      | Dependencies to be added to the dependencies section of package.json        |
+| `devDependencies`       | `Record`\<`string`, `string`\>                      | Dependencies to be added to the devDependencies section of package.json     |
+| `packageJsonPath?`      | `string`                                            | Path to package.json                                                        |
+| `keepExistingVersions?` | `boolean`                                           | If true, prevents existing dependencies from being bumped to newer versions |
 
 #### Returns
 

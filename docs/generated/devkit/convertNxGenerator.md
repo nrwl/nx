@@ -12,10 +12,10 @@ Convert an Nx Generator into an Angular Devkit Schematic.
 
 #### Parameters
 
-| Name                           | Type                                                                 | Default value | Description                                                 |
-| :----------------------------- | :------------------------------------------------------------------- | :------------ | :---------------------------------------------------------- |
-| `generator`                    | [`Generator`](/reference/core-api/devkit/documents/Generator)\<`T`\> | `undefined`   | The Nx generator to convert to an Angular Devkit Schematic. |
-| `skipWritingConfigInOldFormat` | `boolean`                                                            | `false`       | -                                                           |
+| Name                            | Type                                                                 | Description                                                 |
+| :------------------------------ | :------------------------------------------------------------------- | :---------------------------------------------------------- |
+| `generator`                     | [`Generator`](/reference/core-api/devkit/documents/Generator)\<`T`\> | The Nx generator to convert to an Angular Devkit Schematic. |
+| `skipWritingConfigInOldFormat?` | `boolean`                                                            | -                                                           |
 
 #### Returns
 

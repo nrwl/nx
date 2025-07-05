@@ -67,6 +67,7 @@ describe('nx wrapper / .nx installation', () => {
     const output = runNxWrapper('report');
     expect(output).toMatch(new RegExp(`nx.*:.*${getPublishedVersion()}`));
     expect(output).toMatch(new RegExp(`@nx/js.*:.*${getPublishedVersion()}`));
+    // nx express exists in the workspace, but it is not installed
     expect(output).not.toContain('@nx/express');
   });
 

@@ -2,6 +2,7 @@ import * as chalk from 'chalk';
 import { readFileSync } from 'fs';
 import { codeBlock, h1, h2, h3, lines } from 'markdown-factory';
 import { join } from 'path';
+import { register as registerTsConfigPaths } from 'tsconfig-paths';
 
 import { examples } from '../../../packages/nx/src/command-line/examples';
 import {
@@ -12,6 +13,7 @@ import {
   parseCommand,
   ParsedCommand,
 } from '../utils';
+import { readJsonSync } from 'fs-extra';
 
 const importFresh = require('import-fresh');
 
@@ -37,6 +39,10 @@ export async function generateCliDocumentation(
    */
   process.env.NX_GENERATE_DOCS_PROCESS = 'true';
 
+  const config = readJsonSync(
+    join(__dirname, '../../tsconfig.scripts.json')
+  ).compilerOptions;
+  registerTsConfigPaths(config);
   console.log(`\n${chalk.blue('i')} Generating Documentation for Nx Commands`);
 
   const { commandsObject } = importFresh(
