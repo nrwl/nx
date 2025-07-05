@@ -17,6 +17,9 @@ youtubeUrl: https://youtu.be/PXNjedYhZDs
 - [Save Time: Connecting Your Editor, CI and LLMs](/blog/nx-editor-ci-llm-integration)
 - **Enhancing Nx Generators with AI: Predictability Meets Intelligence**
 - [Your AI Assistant Can Now Read Your Terminal: Real-Time Development Error Fixing](/blog/nx-terminal-integration-ai)
+- [Introducing Self-Healing CI for Nx and Nx Cloud](/blog/nx-self-healing-ci)
+- [Analyze Your Nx Cloud Runs With Your AI Assistant](/blog/nx-cloud-analyze-via-nx-mcp)
+- [Automatically Fix your CI Failures with JetBrains AI Assistant](/blog/jetbrains-ci-autofix)
 
 {% /callout %}
 
@@ -119,7 +122,7 @@ To use this feature, you'll need:
 
 Once set up, you can start leveraging this powerful combination of predictable generators and intelligent AI assistance.
 
-This integration is just one example of our broader vision for AI-enhanced development with Nx, providing useful and deep integration of LLMs into your development workflow. Currently we're looking into integrating our [new Nx terminal UI](blog/nx-21-terminal-ui) with your coding assistant, allowing for some interesting new AI powered workflows.
+This integration is just one example of our broader vision for AI-enhanced development with Nx, providing useful and deep integration of LLMs into your development workflow. Currently we're looking into integrating our [new Nx terminal UI](/blog/nx-21-terminal-ui) with your coding assistant, allowing for some interesting new AI powered workflows.
 
 That said, don't forget to subscribe to our [YouTube channel](https://www.youtube.com/@nxdevtools) or [subscribe to our newsletter](https://go.nx.dev/nx-newsletter) for future announcements and demonstrations.
 

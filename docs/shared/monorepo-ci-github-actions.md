@@ -38,10 +38,14 @@ jobs:
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
       - run: npm ci
-
       - uses: nrwl/nx-set-shas@v4
 
-      - run: npx nx-cloud record -- nx format:check
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # This requires connecting your workspace to Nx Cloud. Run "nx connect" to get started w/ Nx Cloud
+      # - run: npx nx-cloud record -- nx format:check
+
+      # Without Nx Cloud, run format:check directly
+      - run: npx nx format:check
       - run: npx nx affected -t lint test build e2e-ci
 ```
 

@@ -1,4 +1,41 @@
 {
+  "init": [
+    {
+      "description": "",
+      "file": "shared/getting-started/start-with-existing-project",
+      "id": "adding-to-existing",
+      "name": "Add to existing project",
+      "path": "/getting-started/adding-to-existing"
+    },
+    {
+      "description": "",
+      "file": "shared/migration/adding-to-monorepo",
+      "id": "adding-to-monorepo",
+      "name": "NPM/Yarn/PNPM workspaces",
+      "path": "/recipes/adopting-nx/adding-to-monorepo"
+    },
+    {
+      "description": "",
+      "file": "shared/migration/adding-to-existing-project",
+      "id": "adding-to-existing-project",
+      "name": "Add to any Project",
+      "path": "/recipes/adopting-nx/adding-to-existing-project"
+    },
+    {
+      "description": "",
+      "file": "shared/migration/migration-angular",
+      "id": "angular",
+      "name": "Migrating from Angular CLI",
+      "path": "/technologies/angular/migration/angular"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/init",
+      "id": "init",
+      "name": "init",
+      "path": "/reference/core-api/nx/documents/init"
+    }
+  ],
   "editor-setup": [
     {
       "description": "Learn about Nx Console, an extension for VS Code and WebStorm. (formerly Editor Setup)",
@@ -48,6 +85,15 @@
       "id": "console-migrate-ui",
       "name": "Migrate UI",
       "path": "/recipes/nx-console/console-migrate-ui"
+    }
+  ],
+  "ai-integration": [
+    {
+      "description": "Learn about how to integrate Nx with your favorite AI assistant.",
+      "file": "shared/getting-started/ai-setup",
+      "id": "ai-integration",
+      "name": "AI Integration",
+      "path": "/getting-started/ai-integration"
     }
   ],
   "run-tasks": [
@@ -148,27 +194,6 @@
       "id": "affected",
       "name": "Run Only Tasks Affected by a PR",
       "path": "/ci/features/affected"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/run",
-      "id": "run",
-      "name": "run",
-      "path": "/nx-api/nx/documents/run"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/run-many",
-      "id": "run-many",
-      "name": "run-many",
-      "path": "/nx-api/nx/documents/run-many"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/affected",
-      "id": "affected",
-      "name": "affected",
-      "path": "/nx-api/nx/documents/affected"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -282,20 +307,6 @@
       "file": "generated/packages/nx/documents/connect-to-nx-cloud",
       "id": "connect-to-nx-cloud",
       "name": "connect-to-nx-cloud",
-      "path": "/nx-api/nx/documents/connect-to-nx-cloud"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/reset",
-      "id": "reset",
-      "name": "reset",
-      "path": "/nx-api/nx/documents/reset"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/connect-to-nx-cloud",
-      "id": "connect-to-nx-cloud",
-      "name": "connect-to-nx-cloud",
       "path": "/reference/core-api/nx/documents/connect-to-nx-cloud"
     },
     {
@@ -343,20 +354,6 @@
       "id": "project-graph-plugins",
       "name": "Infer Tasks or Projects",
       "path": "/extending-nx/recipes/project-graph-plugins"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/dep-graph",
-      "id": "dep-graph",
-      "name": "graph",
-      "path": "/nx-api/nx/documents/dep-graph"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/show",
-      "id": "show",
-      "name": "show",
-      "path": "/nx-api/nx/documents/show"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -436,13 +433,6 @@
       "id": "create-sync-generator",
       "name": "Create a Sync Generator",
       "path": "/extending-nx/recipes/create-sync-generator"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/generate",
-      "id": "generate",
-      "name": "generate",
-      "path": "/nx-api/nx/documents/generate"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -546,20 +536,6 @@
       "file": "generated/packages/nx/documents/sync",
       "id": "sync",
       "name": "sync",
-      "path": "/nx-api/nx/documents/sync"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/sync-check",
-      "id": "sync-check",
-      "name": "sync:check",
-      "path": "/nx-api/nx/documents/sync-check"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/sync",
-      "id": "sync",
-      "name": "sync",
       "path": "/reference/core-api/nx/documents/sync"
     },
     {
@@ -598,13 +574,6 @@
       "id": "advanced-update",
       "name": "Altering Migration Process",
       "path": "/recipes/tips-n-tricks/advanced-update"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/migrate",
-      "id": "migrate",
-      "name": "migrate",
-      "path": "/nx-api/nx/documents/migrate"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -677,20 +646,6 @@
       "id": "nxignore",
       "name": ".nxignore",
       "path": "/reference/nxignore"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/format-check",
-      "id": "format-check",
-      "name": "format:check",
-      "path": "/nx-api/nx/documents/format-check"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/format-write",
-      "id": "format-write",
-      "name": "format:write",
-      "path": "/nx-api/nx/documents/format-write"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -825,13 +780,6 @@
       "file": "generated/packages/nx/documents/release",
       "id": "release",
       "name": "release",
-      "path": "/nx-api/nx/documents/release"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/release",
-      "id": "release",
-      "name": "release",
       "path": "/reference/core-api/nx/documents/release"
     }
   ],
@@ -856,13 +804,6 @@
       "id": "activate-powerpack",
       "name": "Activate Powerpack",
       "path": "/nx-enterprise/activate-powerpack"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/create-nx-workspace",
-      "id": "create-nx-workspace",
-      "name": "create-nx-workspace",
-      "path": "/nx-api/nx/documents/create-nx-workspace"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -894,13 +835,6 @@
       "file": "generated/packages/nx/documents/exec",
       "id": "exec",
       "name": "exec",
-      "path": "/nx-api/nx/documents/exec"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/exec",
-      "id": "exec",
-      "name": "exec",
       "path": "/reference/core-api/nx/documents/exec"
     }
   ],
@@ -917,60 +851,16 @@
       "file": "generated/packages/nx/documents/watch",
       "id": "watch",
       "name": "watch",
-      "path": "/nx-api/nx/documents/watch"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/watch",
-      "id": "watch",
-      "name": "watch",
       "path": "/reference/core-api/nx/documents/watch"
     }
   ],
   "self-hosted-caching": [
     {
-      "description": "Host the remote cache without using Nx Cloud",
+      "description": "Different options of hosting remote cache",
       "file": "shared/recipes/running-tasks/self-hosted-caching",
       "id": "self-hosted-caching",
-      "name": "Self-Host the Remote Cache",
+      "name": "Remote Cache",
       "path": "/recipes/running-tasks/self-hosted-caching"
-    }
-  ],
-  "init": [
-    {
-      "description": "",
-      "file": "shared/migration/adding-to-monorepo",
-      "id": "adding-to-monorepo",
-      "name": "NPM/Yarn/PNPM workspaces",
-      "path": "/recipes/adopting-nx/adding-to-monorepo"
-    },
-    {
-      "description": "",
-      "file": "shared/migration/adding-to-existing-project",
-      "id": "adding-to-existing-project",
-      "name": "Add to any Project",
-      "path": "/recipes/adopting-nx/adding-to-existing-project"
-    },
-    {
-      "description": "",
-      "file": "shared/migration/migration-angular",
-      "id": "angular",
-      "name": "Migrating from Angular CLI",
-      "path": "/technologies/angular/migration/angular"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/init",
-      "id": "init",
-      "name": "init",
-      "path": "/nx-api/nx/documents/init"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/init",
-      "id": "init",
-      "name": "init",
-      "path": "/reference/core-api/nx/documents/init"
     }
   ],
   "import": [
@@ -980,13 +870,6 @@
       "id": "import-project",
       "name": "Import an Existing Project into an Nx Workspace",
       "path": "/recipes/adopting-nx/import-project"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/import",
-      "id": "import",
-      "name": "import",
-      "path": "/nx-api/nx/documents/import"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -1010,13 +893,6 @@
       "id": "nx-plugins",
       "name": "What Are Nx Plugins",
       "path": "/concepts/nx-plugins"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/add",
-      "id": "add",
-      "name": "add",
-      "path": "/nx-api/nx/documents/add"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -1100,6 +976,13 @@
     },
     {
       "description": "",
+      "file": "shared/guides/nx-devkit-angular-devkit",
+      "id": "nx-devkit-angular-devkit",
+      "name": "Nx Devkit and Angular Devkit",
+      "path": "/technologies/angular/recipes/nx-devkit-angular-devkit"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/plugins/migration-generators",
       "id": "migration-generators",
       "name": "Write a Migration",
@@ -1132,20 +1015,6 @@
       "id": "publish-plugin",
       "name": "Publish a Plugin",
       "path": "/extending-nx/recipes/publish-plugin"
-    },
-    {
-      "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
-      "file": "generated/packages/angular/documents/nx-devkit-angular-devkit",
-      "id": "nx-devkit-angular-devkit",
-      "name": "Nx Devkit and Angular Devkit",
-      "path": "/nx-api/angular/documents/nx-devkit-angular-devkit"
-    },
-    {
-      "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
-      "file": "generated/packages/angular/documents/nx-devkit-angular-devkit",
-      "id": "nx-devkit-angular-devkit",
-      "name": "Nx Devkit and Angular Devkit",
-      "path": "/technologies/angular/api/documents/nx-devkit-angular-devkit"
     }
   ],
   "daemon": [
@@ -1155,13 +1024,6 @@
       "id": "nx-daemon",
       "name": "Nx Daemon",
       "path": "/concepts/nx-daemon"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/daemon",
-      "id": "daemon",
-      "name": "daemon",
-      "path": "/nx-api/nx/documents/daemon"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -1329,6 +1191,38 @@
       "id": "internationalization",
       "name": "Internationalization (i18n)",
       "path": "/technologies/angular/angular-rspack/recipes/internationalization"
+    }
+  ],
+  "create-config": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-config",
+      "id": "create-config",
+      "name": "Create Config",
+      "path": "/technologies/angular/angular-rspack/api/create-config"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-config",
+      "id": "create-config",
+      "name": "Create Config",
+      "path": "/technologies/angular/angular-rsbuild/api/create-config"
+    }
+  ],
+  "create-server": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-server",
+      "id": "create-server",
+      "name": "Create Server",
+      "path": "/technologies/angular/angular-rspack/api/create-server"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-server",
+      "id": "create-server",
+      "name": "Create Server",
+      "path": "/technologies/angular/angular-rsbuild/api/create-server"
     }
   ],
   "react": [
@@ -1665,13 +1559,6 @@
       "file": "generated/packages/nx/documents/connect-to-nx-cloud",
       "id": "connect-to-nx-cloud",
       "name": "connect-to-nx-cloud",
-      "path": "/nx-api/nx/documents/connect-to-nx-cloud"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/connect-to-nx-cloud",
-      "id": "connect-to-nx-cloud",
-      "name": "connect-to-nx-cloud",
       "path": "/reference/core-api/nx/documents/connect-to-nx-cloud"
     }
   ],
@@ -1706,20 +1593,6 @@
       "file": "generated/packages/nx/documents/login",
       "id": "login",
       "name": "login",
-      "path": "/nx-api/nx/documents/login"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/logout",
-      "id": "logout",
-      "name": "logout",
-      "path": "/nx-api/nx/documents/logout"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/login",
-      "id": "login",
-      "name": "login",
       "path": "/reference/core-api/nx/documents/login"
     },
     {
@@ -1737,6 +1610,29 @@
       "id": "overview",
       "name": "Single Tenant Nx Cloud Hosting",
       "path": "/ci/recipes/enterprise/single-tenant/overview"
+    }
+  ],
+  "polygraph": [
+    {
+      "description": "Enterprise features for visualizing dependencies and enforcing standards across multiple repositories",
+      "file": "nx-cloud/enterprise/polygraph",
+      "id": "polygraph",
+      "name": "Polygraph",
+      "path": "/ci/recipes/enterprise/polygraph"
+    },
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/metadata-only-workspace",
+      "id": "metadata-only-workspace",
+      "name": "Metadata Only Workspaces",
+      "path": "/ci/recipes/enterprise/metadata-only-workspace"
+    },
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/custom-workflows",
+      "id": "custom-workflows",
+      "name": "Custom Workflows",
+      "path": "/ci/recipes/enterprise/custom-workflows"
     }
   ],
   "docker": [
@@ -1758,13 +1654,6 @@
     }
   ],
   "affected": [
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/affected",
-      "id": "affected",
-      "name": "affected",
-      "path": "/nx-api/nx/documents/affected"
-    },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/nx/documents/affected",

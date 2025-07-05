@@ -137,7 +137,7 @@ describe('addLinting generator', () => {
                       "error",
                       {
                           ignoredFiles: [
-                              "{projectRoot}/eslint.config.{js,cjs,mjs}"
+                              "{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}"
                           ]
                       }
                   ]
@@ -168,9 +168,7 @@ describe('addLinting generator', () => {
                           prefix: "my-org",
                           style: "kebab-case"
                       }
-                  ],
-                  "@angular-eslint/component-class-suffix": "off",
-                  "@angular-eslint/directive-class-suffix": "off"
+                  ]
               }
           },
           {
@@ -208,7 +206,7 @@ describe('addLinting generator', () => {
                       {
                           enforceBuildableLibDependency: true,
                           allow: [
-                              "^.*/eslint(\\\\.base)?\\\\.config\\\\.[cm]?js$"
+                              "^.*/eslint(\\\\.base)?\\\\.config\\\\.[cm]?[jt]s$"
                           ],
                           depConstraints: [
                               {
@@ -291,9 +289,7 @@ describe('addLinting generator', () => {
                   "prefix": "my-org",
                   "style": "kebab-case"
                 }
-              ],
-              "@angular-eslint/component-class-suffix": "off",
-              "@angular-eslint/directive-class-suffix": "off"
+              ]
             }
           },
           {

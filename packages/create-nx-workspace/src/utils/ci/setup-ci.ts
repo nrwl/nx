@@ -14,7 +14,7 @@ export async function setupCI(
   try {
     const pmc = getPackageManagerCommand(packageManager);
     const res = await execAndWait(
-      `${pmc.exec} nx g @nx/workspace:ci-workflow --ci=${ci}`,
+      `${pmc.exec} nx g @nx/workspace:ci-workflow --ci=${ci} --useRunMany=true`,
       directory
     );
     ciSpinner.succeed('CI workflow has been generated successfully');

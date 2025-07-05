@@ -3,6 +3,8 @@ title: Overview of the Nx JS Plugin
 description: The Nx JS plugin contains executors and generators that are useful for JavaScript/TypeScript projects in an Nx workspace.
 ---
 
+# @nx/js
+
 The JS plugin contains executors and generators that are useful for JavaScript/TypeScript projects in an Nx workspace.
 
 ## Setting Up @nx/js

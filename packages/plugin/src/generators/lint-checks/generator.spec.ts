@@ -159,7 +159,7 @@ describe('lint-checks generator', () => {
               "error",
               {
                 "ignoredFiles": [
-                  "{projectRoot}/eslint.config.{js,cjs,mjs}",
+                  "{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}",
                 ],
               },
             ],

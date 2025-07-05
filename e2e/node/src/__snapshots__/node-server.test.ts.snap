@@ -18,6 +18,7 @@ RUN addgroup --system docker-express-app && \\
           adduser --system -G docker-express-app docker-express-app
 
 COPY dist/apps/docker-express-app docker-express-app/
+COPY apps/docker-express-app/package.json docker-express-app/
 RUN chown -R docker-express-app:docker-express-app .
 
 # You can remove this install step if you build with \`--bundle\` option.

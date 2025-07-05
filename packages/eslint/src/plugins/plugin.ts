@@ -135,7 +135,12 @@ const internalCreateNodes = async (
       );
       const hash = await calculateHashForCreateNodes(
         childProjectRoot,
-        options,
+        {
+          ...options,
+          // change this to bust the cache when making changes that would yield
+          // different results for the same hash
+          bust: 1,
+        },
         context,
         [...parentConfigs, join(childProjectRoot, '.eslintignore')]
       );
@@ -277,7 +282,12 @@ export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
     );
     const hashes = await calculateHashesForCreateNodes(
       projectRoots,
-      options,
+      {
+        ...options,
+        // change this to bust the cache when making changes that would yield
+        // different results for the same hash
+        bust: 1,
+      },
       context,
       projectRoots.map((root) => {
         const parentConfigs = eslintConfigFiles.filter((eslintConfig) =>
@@ -493,14 +503,9 @@ function buildEslintTargets(
       'default',
       // Certain lint rules can be impacted by changes to dependencies
       '^default',
-      ...eslintConfigs.map((config) =>
-        `{workspaceRoot}/${config}`.replace(
-          `{workspaceRoot}/${projectRoot}`,
-          isRootProject ? '{projectRoot}/' : '{projectRoot}'
-        )
-      ),
+      ...eslintConfigs.map((config) => `{workspaceRoot}/${config}`),
       ...(existsSync(join(workspaceRoot, projectRoot, '.eslintignore'))
-        ? ['{projectRoot}/.eslintignore']
+        ? [join('{workspaceRoot}', projectRoot, '.eslintignore')]
         : []),
       '{workspaceRoot}/tools/eslint-rules/**/*',
       { externalDependencies: ['eslint'] },

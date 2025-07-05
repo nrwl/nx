@@ -59,7 +59,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 9.8.0
+          version: 10.11.1
           run_install: false
 
       - uses: actions/setup-node@v4
@@ -166,10 +166,100 @@ jobs:
 
       - name: Configure Detox Environment, Install applesimutils
         run: |
-          HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
-          HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
-          xcrun simctl shutdown all && xcrun simctl erase all
-        timeout-minutes: 20
+          # Ensure Xcode command line tools are installed and configured
+          xcode-select --print-path || sudo xcode-select --reset
+          sudo xcode-select -s /Applications/Xcode.app
+          
+          # Install or update applesimutils with error handling
+          if ! brew list applesimutils &>/dev/null; then
+            echo "Installing applesimutils..."
+            HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null || {
+              echo "Failed to install applesimutils, retrying with update..."
+              brew update
+              HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils
+            }
+          else
+            echo "Updating applesimutils..."
+            HOMEBREW_NO_AUTO_UPDATE=1 brew upgrade applesimutils || true
+          fi
+          
+          # Verify applesimutils installation
+          applesimutils --version || (echo "applesimutils installation failed" && exit 1)
+          
+          # Configure environment for M-series Mac
+          echo "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer" >> $GITHUB_ENV
+          echo "PLATFORM_NAME=iOS Simulator" >> $GITHUB_ENV
+          
+          # Set additional environment variables for better debugging
+          echo "DETOX_DISABLE_TELEMETRY=1" >> $GITHUB_ENV
+          echo "DETOX_LOG_LEVEL=trace" >> $GITHUB_ENV
+          
+          # Verify Xcode installation
+          xcodebuild -version
+          
+          # List available simulators
+          xcrun simctl list devices available
+        timeout-minutes: 10
+        continue-on-error: false
+  
+      - name: Reset iOS Simulators
+        id: reset-simulators
+        run: |
+          echo "Resetting iOS Simulators..."
+          
+          # Kill simulator processes
+          sudo killall -9 com.apple.CoreSimulator.CoreSimulatorService 2>/dev/null || true
+          killall "Simulator" 2>/dev/null || true
+          killall "iOS Simulator" 2>/dev/null || true
+          
+          # Wait for processes to terminate
+          sleep 3
+          
+          # Shutdown and erase all simulators (ignore failures)
+          xcrun simctl shutdown all 2>/dev/null || true
+          sleep 5
+          xcrun simctl erase all 2>/dev/null || true
+          
+          # If erase failed, try the nuclear option
+          if xcrun simctl list devices | grep -q "Booted" 2>/dev/null; then
+            echo "Standard reset failed, using nuclear option..."
+            rm -rf ~/Library/Developer/CoreSimulator/Devices/* 2>/dev/null || true
+            launchctl remove com.apple.CoreSimulator.CoreSimulatorService 2>/dev/null || true
+            sleep 3
+          fi
+          
+          # Clean up additional directories
+          rm -rf ~/Library/Developer/CoreSimulator/Caches/* 2>/dev/null || true
+          rm -rf ~/Library/Logs/CoreSimulator/* 2>/dev/null || true
+          rm -rf ~/Library/Developer/Xcode/DerivedData/* 2>/dev/null || true
+          
+          echo "Simulator reset completed"
+        timeout-minutes: 5
+        continue-on-error: true
+
+      - name: Verify Simulator Reset
+        if: ${{ steps.reset-simulators.outcome == 'success' }}
+        run: |
+          # Verify CoreSimulator service restarted
+          pgrep -fl "CoreSimulator" || (echo "CoreSimulator service not running" && exit 1)
+          
+          # Check simulator list is clean
+          xcrun simctl list devices
+          
+          # Verify simulator runtime paths exist and are writable
+          test -d ~/Library/Developer/CoreSimulator/Devices || (echo "Simulator devices directory missing" && exit 1)
+          touch ~/Library/Developer/CoreSimulator/Devices/test || (echo "Simulator devices directory not writable" && exit 1)
+          rm ~/Library/Developer/CoreSimulator/Devices/test
+        timeout-minutes: 5
+
+      - name: Diagnose Simulator Reset Failure
+        if: ${{ steps.reset-simulators.outcome == 'failure' }}
+        run: |
+          echo "Simulator reset failed. Collecting diagnostic information..."
+          xcrun simctl list
+          echo "Checking simulator logs..."
+          ls -la ~/Library/Logs/CoreSimulator/ || echo "No simulator logs found"
 
       - name: Save Homebrew Cache
         uses: actions/cache@v4
@@ -182,7 +272,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 9.8.0
+          version: 10.11.1
           run_install: false
 
       - uses: actions/setup-node@v4

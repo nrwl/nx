@@ -160,6 +160,9 @@ describe('@nx/cypress/plugin', () => {
                     },
                     "options": {
                       "cwd": ".",
+                      "env": {
+                        "TS_NODE_COMPILER_OPTIONS": "{"customConditions":null}",
+                      },
                     },
                   },
                 },
@@ -259,6 +262,9 @@ describe('@nx/cypress/plugin', () => {
                     },
                     "options": {
                       "cwd": ".",
+                      "env": {
+                        "TS_NODE_COMPILER_OPTIONS": "{"customConditions":null}",
+                      },
                     },
                   },
                 },
@@ -455,6 +461,9 @@ describe('@nx/cypress/plugin', () => {
                     },
                     "options": {
                       "cwd": ".",
+                      "env": {
+                        "TS_NODE_COMPILER_OPTIONS": "{"customConditions":null}",
+                      },
                     },
                   },
                 },
@@ -662,6 +671,9 @@ describe('@nx/cypress/plugin', () => {
                     },
                     "options": {
                       "cwd": ".",
+                      "env": {
+                        "TS_NODE_COMPILER_OPTIONS": "{"customConditions":null}",
+                      },
                     },
                   },
                 },
@@ -859,6 +871,9 @@ describe('@nx/cypress/plugin', () => {
                     },
                     "options": {
                       "cwd": ".",
+                      "env": {
+                        "TS_NODE_COMPILER_OPTIONS": "{"customConditions":null}",
+                      },
                     },
                   },
                 },

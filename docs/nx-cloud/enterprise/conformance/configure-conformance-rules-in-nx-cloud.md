@@ -8,6 +8,34 @@ Once you have one or more rules published to your Nx Cloud Organization, you can
 
 [https://cloud.nx.app/go/organization/conformance-rules](https://cloud.nx.app/go/organization/conformance-rules)
 
+## Understanding the Conformance Rules Dashboard
+
+The conformance rules dashboard provides comprehensive visibility into your organization's rule adoption and compliance across all workspaces. The interface is designed with two main views to help platform and engineering leaders track and manage conformance standards effectively.
+
+### Rule Overview
+
+The **Rule Overview** screen provides a summary of all conformance rules that have been applied across your organization's workspaces. This view displays:
+
+- The current status of each rule (such as "evaluate" or "enforced")
+- Which workspaces the rule is active in
+- Any violations detected across your repositories
+- Overall compliance metrics at a glance
+
+This overview enables you to quickly track adoption and compliance with organizational standards across both Nx and non-Nx repositories.
+
+### Rule Metadata Overview
+
+The **Rule Metadata Overview** screen gives you a detailed dive into the technical and organizational metadata attached to each rule. This comprehensive view includes:
+
+- Information about the rule's purpose and description
+- History of changes and rule evolution
+- Current evaluation mode and enforcement status
+- Enforcement schedule and timeline information
+- Detailed breakdown of which specific workspaces or repositories are in or out of compliance
+- Audit trail and rule lifecycle management details
+
+This detailed view supports thorough auditing and makes it easier to manage the lifecycle of rules across a large set of codebases. Both screens are designed to streamline governance and visibility, allowing you to evaluate rollout effectiveness and adoption patterns across your entire organization.
+
 ## Choose the Scope of Configured Rules
 
 The value in the dropdown will determine what workspace(s) the rules will be applied to. By default, "All Workspaces" is the selected value, but you can change this to focus on a specific workspace instead.

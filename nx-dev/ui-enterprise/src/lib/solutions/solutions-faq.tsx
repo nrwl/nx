@@ -32,12 +32,12 @@ export function SolutionsFaq(): ReactElement {
     {
       question: 'Do I need to migrate to Nx all at once?',
       answerJson:
-        'Not at all. Nx can be incrementally adopted. You can start with just your team – and expand at your own pace.',
+        'Not at all. Nx can be incrementally adopted. You can start with just your team — and expand at your own pace.',
       answerUi: (
         <>
           <p>
             Not at all. Nx can be incrementally adopted. You can start with just
-            your team – and expand at your own pace.
+            your team — and expand at your own pace.
           </p>
         </>
       ),

@@ -2,7 +2,7 @@
 
 Nx Cloud directly integrates with your existing CI setup.
 
-{% youtube src="https://youtu.be/8mqHXYIl_qI?si=fug4PsNGbxTloBpy" title="Connect your workspace to Nx Cloud" /%}
+{% course-video src="https://youtu.be/8mqHXYIl_qI" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="/courses/pnpm-nx-next/lessons-06-nx-cloud-setup" title="Connect Your Workspace to Nx Cloud" /%}
 
 Here's how you get set up.
 

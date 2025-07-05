@@ -24,13 +24,10 @@ export default async function gradleExecutor(
     args.push(`--tests`, options.testClassName);
   }
 
-  getExcludeTasks(context.projectGraph, [
-    {
-      project: context.projectName,
-      target: context.targetName,
-      excludeDependsOn: options.excludeDependsOn,
-    },
-  ]).forEach((task) => {
+  getExcludeTasks(
+    new Set([`${context.projectName}:${context.targetName}`]),
+    context.projectGraph.nodes
+  ).forEach((task) => {
     if (task) {
       args.push('--exclude-task', task);
     }

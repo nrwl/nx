@@ -89,21 +89,9 @@ export async function storiesGenerator(
     schema.ignorePaths
   );
 
-  const tasks: GeneratorCallback[] = [];
-
-  if (schema.interactionTests) {
-    const { interactionTestsDependencies, addInteractionsInAddons } =
-      ensurePackage<typeof import('@nx/storybook')>('@nx/storybook', nxVersion);
-    tasks.push(
-      addDependenciesToPackageJson(host, {}, interactionTestsDependencies())
-    );
-    addInteractionsInAddons(host, projectConfiguration);
-  }
-
   if (!schema.skipFormat) {
     await formatFiles(host);
   }
-  return runTasksInSerial(...tasks);
 }
 
 export default storiesGenerator;

@@ -27,6 +27,7 @@ import {
 import { ButtonLink, ButtonLinkProps } from '../button';
 import {
   enterpriseItems,
+  professionalServicesItems,
   resourceMenuItems,
   solutionsItems,
 } from './menu-items';
@@ -157,10 +158,12 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                     leaveFrom="opacity-100 translate-y-0"
                     leaveTo="opacity-0 translate-y-1"
                   >
-                    <Popover.Panel className="absolute left-60 z-30 mt-3 w-max max-w-xl -translate-x-1/2 transform lg:left-20 xl:max-w-2xl">
+                    <Popover.Panel className="absolute left-60 z-30 mt-3 w-max max-w-xl -translate-x-1/2 transform lg:left-20">
                       <SectionsMenu
                         sections={{
-                          'Speed, Reliability and AI': solutionsItems,
+                          'By roles': solutionsItems,
+                          'For enterprises': enterpriseItems,
+                          'Professional services': professionalServicesItems,
                         }}
                       />
                     </Popover.Panel>
@@ -210,12 +213,12 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
             </Popover>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
             <Link
-              href="/remote-cache"
-              title="Nx Remote Cache"
+              href="/ai"
+              title="AI"
               className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
               prefetch={false}
             >
-              Remote Cache
+              AI
             </Link>
             <Link
               href="/nx-cloud"
@@ -235,49 +238,14 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
             </Link>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
             {/*ENTERPRISE*/}
-            <Popover className="relative">
-              {({ open }) => (
-                <>
-                  <PopoverButton
-                    className={cx(
-                      open ? 'text-blue-500 dark:text-sky-500' : '',
-                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
-                    )}
-                  >
-                    <span className="transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500">
-                      Enterprise
-                    </span>
-                    <ChevronDownIcon
-                      className={cx(
-                        open
-                          ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
-                          : '',
-                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
-                      )}
-                      aria-hidden="true"
-                    />
-                  </PopoverButton>
-
-                  <Transition
-                    as={Fragment}
-                    enter="transition ease-out duration-200"
-                    enterFrom="opacity-0 translate-y-1"
-                    enterTo="opacity-100 translate-y-0"
-                    leave="transition ease-in duration-150"
-                    leaveFrom="opacity-100 translate-y-0"
-                    leaveTo="opacity-0 translate-y-1"
-                  >
-                    <Popover.Panel className="absolute left-60 z-30 mt-3 w-max max-w-xl -translate-x-1/2 transform lg:left-20 xl:max-w-2xl">
-                      <SectionsMenu
-                        sections={{
-                          'Nx for Enterprises': enterpriseItems,
-                        }}
-                      />
-                    </Popover.Panel>
-                  </Transition>
-                </>
-              )}
-            </Popover>
+            <Link
+              href="/enterprise"
+              title="Nx for Enterprises"
+              className="hidden gap-2 px-3 py-2 font-semibold leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
+            >
+              Nx Enterprise
+            </Link>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
             <div className="px-3 opacity-50 hover:opacity-100">
               <AlgoliaSearch tiny={true} />
@@ -287,9 +255,11 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
         {/*SECONDARY NAVIGATION*/}
         <div className="flex-shrink-0 text-sm">
           <nav className="flex items-center justify-center space-x-1">
-            {buttonsToRender.map((buttonProps, index) => (
-              <ButtonLink key={index} {...buttonProps} />
-            ))}
+            <div className="hidden xl:block">
+              {buttonsToRender.map((buttonProps, index) => (
+                <ButtonLink key={index} {...buttonProps} />
+              ))}
+            </div>
             <a
               title="Nx is open source, check the code on GitHub"
               href="https://github.com/nrwl/nx"
@@ -455,14 +425,18 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                                   as="ul"
                                   className="space-y-1 pb-2"
                                 >
-                                  {Object.values(solutionsItems)
-                                    .flat()
-                                    .map((item) => (
-                                      <MobileMenuItem
-                                        key={item.name}
-                                        item={item}
-                                      />
-                                    ))}
+                                  {[
+                                    ...Object.values(solutionsItems).flat(),
+                                    ...Object.values(enterpriseItems).flat(),
+                                    ...Object.values(
+                                      professionalServicesItems
+                                    ).flat(),
+                                  ].map((item) => (
+                                    <MobileMenuItem
+                                      key={item.name}
+                                      item={item}
+                                    />
+                                  ))}
                                 </Disclosure.Panel>
                               </>
                             )}
@@ -507,6 +481,14 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                             )}
                           </Disclosure>
                           <Link
+                            href="/ai"
+                            title="AI"
+                            className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
+                            prefetch={false}
+                          >
+                            AI
+                          </Link>
+                          <Link
                             href="/nx-cloud"
                             title="Nx Cloud"
                             className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
@@ -522,14 +504,6 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                           >
                             Pricing
                           </Link>
-                          <Link
-                            href="/remote-cache"
-                            title="Nx Remote Cache"
-                            className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
-                            prefetch={false}
-                          >
-                            Remote Cache
-                          </Link>
                           <Disclosure as="div">
                             {({ open }) => (
                               <>
@@ -541,7 +515,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                                     'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none'
                                   )}
                                 >
-                                  <span>Enterprise</span>
+                                  <span>Nx Enterprise</span>
                                   <ChevronDownIcon
                                     aria-hidden="true"
                                     className={cx(

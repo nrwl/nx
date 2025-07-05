@@ -1,5 +1,45 @@
 # Enterprise Release Notes
 
+### 2025.06.3
+
+- Fix: add timeouts to GitLab requests
+  - the defaults are now 5 and 10 seconds for connect and read
+  - these should help prevent issues with certain unstable GitLab environments
+
+### 2025.06.2
+
+- Fix: Terminal outputs not loading in the browser in restricted environments
+  - Requires an update to the latest current nx-cloud Helm chart version 0.16.3
+
+### 2025.06.1
+
+- Fix: GitHub connection issue on nx-api startup when Nx Agents are active
+
+### 2025.06
+
+- Feat: Define your own custom resource classes (CPU, RAM etc.) for use with Nx Agents
+  - See [configuration details](https://github.com/nrwl/nx-cloud-helm/blob/main/EXTERNAL-RESOURCE-CLASSES.md)
+- Feat: Flaky task retry configuration
+  - Configure in the workspace settings how Nx Cloud should handle flaky tasks
+- Feat: Full GitLab integration
+  - Allows automatic members sync to your Nx Cloud workspace
+- Feat: Agent logs timestamps and full-screen mode
+- Feat: Assignment rules updates
+  - Parallelism configuration
+  - Target globs
+  - See [here](/ci/reference/assignment-rules#how-to-define-an-assignment-rule) for examples
+- Feat: Parallel agent steps and step groups (docs [here](/ci/reference/launch-templates#launchtemplatestemplatenamegroupname))
+- Feat: Reusable agent launch template snippets via yaml anchors
+  - See example [here](/ci/reference/launch-templates#full-example)
+  - Specifically how `common-init-steps: &common-init-steps` is defined
+- Feat: Individual GitHub commit statuses for each run group
+  - This is configurable in your workspace settings
+  - See [here](/ci/recipes/source-control-integration/github#github-status-checks) for branch settings configuration
+  - You might also need [to update your GitHub app permissions](/ci/recipes/enterprise/single-tenant/custom-github-app#configure-permissions-for-the-github-app)
+- Misc: CIPE list is sortable by duration
+- Fix: early DTE job termination improvements
+- Fix: run details page performance improvements
+
 ### 2025.03.3
 
 - Feat: provide prebuilt Java cert store to NxAPI

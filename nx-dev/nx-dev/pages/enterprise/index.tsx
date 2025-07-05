@@ -22,11 +22,11 @@ export function Enterprise(): ReactElement {
   return (
     <>
       <NextSeo
-        title="Solving the Performance Paradox, get speed and scale"
+        title="Develop like an enterprise. Deliver like a startup."
         description="Accelerate your organization's journey to tighter collaboration, better developer experience, and speed…lots of speed."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'Solving the Performance Paradox, get speed and scale',
+          title: 'Develop like an enterprise. Deliver like a startup.',
           description:
             "Accelerate your organization's journey to tighter collaboration, better developer experience, and speed…lots of speed.",
           images: [

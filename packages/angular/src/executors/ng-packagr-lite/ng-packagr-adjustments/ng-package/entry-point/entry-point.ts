@@ -93,7 +93,6 @@ export function createNgEntryPoint(
         ),
         // changed to use esm2022
         declarationsBundled: pathJoinWithDest(
-          'esm2022',
           secondaryDir,
           `${flatModuleFile}.d.ts`
         ),

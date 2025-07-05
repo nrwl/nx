@@ -1,118 +1,87 @@
 ---
 title: Intro to Nx
-description: Nx is a powerful open-source build system that enhances developer productivity, optimizes CI performance, and maintains code quality with features like task caching and distribution.
+description: 'Nx is an AI-first build platform that connects everything from your editor to CI Helping you deliver fast, without breaking things.'
 ---
 
-# Intro to Nx
+# What is Nx?
 
-Nx is a powerful open-source build system that provides tools and techniques for enhancing developer productivity, optimizing CI performance, and maintaining code quality. [Check out our video](/getting-started/why-nx) to learn more about what Nx is about.
+{% callout type="announcement" title="Nx Essentials Online Workshop - July 29-30" %}
+Join us for an interactive deep-dive into Nx covering everything from foundational concepts to more advanced enterprise techniques. Early bird pricing available until July 18th.
 
-{% github-repository title="Star Nx on GitHub" url="https://github.com/nrwl/nx" /%}
+[Save your seat today!](https://bit.ly/44AfKAb)
+{% /callout %}
 
-## Core Features
+Nx is a powerful, open source, technology-agnostic build platform designed to efficiently manage codebases of any scale. From small single projects to large enterprise monorepos, Nx is designed to **streamline your development workflows**, **minimize errors** and **dramatically reduce waste** by [saving engineering time](https://youtu.be/2BLqiNnBPuU) and cutting compute costs.
 
-- **Run Tasks Efficiently**: Nx [runs tasks in parallel](/features/run-tasks) and orders the tasks based on the dependencies between them.
-- **Distribute Tasks in CI**: Nx scales your CI by [distributing tasks](/ci/features/distribute-task-execution) across many VMs. Your CI is fast no matter how big your repository is.
-- **Cache Locally & Remotely**: With [local](/features/cache-task-results) and [remote caching](/ci/features/remote-cache), Nx prevents unnecessary re-runs of tasks, saving you valuable dev time.
-- **Split E2E Tests and Rerun Flaky Tests**: Nx [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across VMs. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
-- **Automate Dependency Updates**: if you leverage [Nx plugins](/concepts/nx-plugins) you gain additional features such as [code generation](/features/generate-code) and tools to [automatically upgrade](features/automate-updating-dependencies) your codebase and dependencies.
-- **Make it Your Own**: Nx is highly customizable and extensible. Fine-tune it by [creating a plugin for your organization](/extending-nx/tutorials/organization-specific-plugin) or [creating a tooling plugin](/extending-nx/tutorials/tooling-plugin).
+{% youtube
+src="https://www.youtube.com/embed/-_4WMl-Fn0w"
+title="What is Nx?"
+width="100%" /%}
 
-<!-- - **Monorepo and Single Projects**: Nx supports both, monorepos as well as single-project (standalone) workspaces. -->
+As teams and codebases grow, productivity bottlenecks multiply: build times increase, CI becomes flaky, and code sharing becomes complex. **Nx reduces friction across your entire development cycle.**
 
-Find out more about [why you should use Nx](/getting-started/why-nx) or browse our [features](/features).
+## Start small, extend as you grow
 
-## Try Nx Yourself!
+Nx is built in a modular fashion, allowing you to adopt as little or as much as you'd like at any moment in your development lifecycle. You can **start with just the core and add additional capabilities incrementally** as your needs grow and complexity increases.
 
-{% side-by-side %}
+At the **foundation is Nx Core**, a Rust-based, technology-agnostic task runner. Nx Core creates a knowledge graph of your workspace, understanding project relationships and dependencies. This enables highly optimized and fast task execution regardless of technology stack. It runs `package.json` scripts in [TypeScript monorepos](/technologies/typescript/introduction) or Gradle tasks in [Java projects](/technologies/java/introduction) or [can be extended](/extending-nx/intro/getting-started) to meet your projects specific needs
 
-```shell {% title="Create a new workspace" %}
-npx create-nx-workspace
+{% callout type="deepdive" title="What do you mean by 'running NPM scripts'?" %}
+
+At the very core, Nx is a super fast, intelligent task runner. Let's take the example of an NPM workspace. This could be a project's `package.json`:
+
+```json
+{
+  "name": "my-project",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  }
+}
 ```
 
-```shell {% title="Add Nx to an existing workspace" %}
-npx nx init
+Then you can simply add Nx to your root `package.json`:
+
+```json
+{
+  "devDependencies": {
+    "nx": "latest"
+  }
+}
 ```
 
-{% /side-by-side %}
+And once that's done, you can run your tasks via Nx.
 
-Also, here are some recipes that give you more details based on the technology stack you're using:
+```shell
+nx build my-project
+```
 
-{% cards cols="2" mdCols="4" smCols="2" moreLink="/recipes/adopting-nx" %}
+This will execute the `build` script from `my-project`'s `package.json`, equivalent to running `npm run build` in that project directory.
 
-{% link-card title="Add to Existing Monorepo" appearance="small" url="/recipes/adopting-nx/adding-to-monorepo" icon="pnpm" /%}
+Similarly you [can run tasks across all projects](/features/run-tasks), just specific ones or just those from projects you touched.
 
-{% link-card title="Add to Any Project" appearance="small" url="/recipes/adopting-nx/adding-to-existing-project" icon="nx" /%}
+From there, you can gradually enhance your setup by adding features like [task caching](/features/cache-task-results), adding [plugins](/technologies), optimizing your CI via [task distribution](/ci/features/distribute-task-execution), and many more powerful capabilities as your needs grow.
 
-{% link-card title="Migrate from Angular CLI" appearance="small" url="technologies/angular/migration/angular" icon="angular" /%}
+{% /callout %}
 
-{% link-card title="Import Projects into Your Nx Workspace" appearance="small" url="/recipes/adopting-nx/import-project" icon="ArrowDownOnSquareStackIcon" /%}
+Nx Core works great alone, but you can incrementally add capabilities as needed. Speed up your CI with [**Nx Cloud**](/ci) through remote caching and distributed task execution. Add [**Nx Console**](/getting-started/editor-setup) integrating Nx with your editor, giving you powerful autocomplete support, project graph visualization, CI run notifications and an MCP to [make your AI coding assistant smarter](/features/enhance-AI). Add [**Nx Plugins**](/technologies) for technology-specific automation and DX improvements and build custom capabilities using [Nx Devkit](/extending-nx/intro/getting-started).
 
-{% /cards %}
+## Where to go from here?
 
-## Learn Nx
+{% cards %}
 
-{% cards cols="2" lgCols="4" mdCols="4" smCols="2" %}
+{% card title="Get set up and ready with Nx" description="Dive right in with our getting started steps to install Nx, set up your editor, and create your first project" type="documentation" url="/getting-started" icon="RocketLaunchIcon" /%}
 
-{% link-card title="Nx in 10 minutes!" type="video" url="https://youtu.be/-_4WMl-Fn0w" icon="nx" /%}
+{% card title="Step by step with our tutorials" description="Learn more about Nx through hands-on tutorials for different technology stacks" type="documentation" url="/getting-started/tutorials" icon="AcademicCapIcon" /%}
 
-{% link-card title="What is Nx Cloud?" type="video" url="https://youtu.be/4VI-q943J3o" icon="nxcloud" /%}
+{% card title="Learn with our video courses" description="Dive deeper with comprehensive video courses that walk you through Nx concepts" type="documentation" url="/courses" icon="PlayCircleIcon" /%}
 
-{% link-card title="PNPM Workspaces to Distributed CI" type="course" url="/courses/pnpm-nx-next" icon="pnpm" /%}
+{% card title="Dive deep into Nx features" description="Discover all the powerful features that Nx provides to streamline your workflow" type="documentation" url="/features" icon="SparklesIcon" /%}
 
-{% link-card title="More On Youtube" type="video" url="https://www.youtube.com/@nxdevtools" icon="youtube" /%}
+{% card title="Understand underlying concepts" description="Improve your understanding of the core concepts of how Nx works under the hood" type="documentation" url="/concepts" icon="LightBulbIcon" /%}
 
-{% /cards %}
-
-{% cards cols="2" lgCols="4" mdCols="4" smCols="2" %}
-
-{% link-card title="TypeScript Monorepo" type="tutorial" url="/getting-started/tutorials/typescript-packages-tutorial" icon="jsMono" /%}
-
-{% link-card title="React Monorepo" type="tutorial" url="/getting-started/tutorials/react-monorepo-tutorial" icon="reactMono" /%}
-
-{% link-card title="Angular Monorepo" type="tutorial" url="/getting-started/tutorials/angular-monorepo-tutorial" icon="angularMono" /%}
-
-{% link-card title="Gradle Monorepo" type="tutorial" url="/getting-started/tutorials/gradle-tutorial" icon="gradle" /%}
+{% card title="Explore Technologies" description="Explore Nx's technology integrations and how it can support your specific stack" type="documentation" url="/technologies" icon="CodeBracketIcon" /%}
 
 {% /cards %}
 
-## Pick Your Stack!
-
-{% cards cols="3" lgCols="8" mdCols="6" smCols="5" moreLink="/showcase/example-repos" %}
-
-{% link-card title="Express" appearance="small" url="/nx-api/express" icon="express" /%}
-{% link-card title="Vue" appearance="small" url="/nx-api/vue" icon="vue" /%}
-{% link-card title="Next" appearance="small" url="/nx-api/next" icon="nextjs" /%}
-{% link-card title="Nuxt" appearance="small" url="/nx-api/nuxt" icon="nuxt" /%}
-{% link-card title="Nest" appearance="small" url="/nx-api/nest" icon="nestjs" /%}
-{% link-card title="Remix" appearance="small" url="/nx-api/remix" icon="remix" /%}
-{% link-card title="Expo" appearance="small" url="/nx-api/expo" icon="expo" /%}
-{% link-card title="React Native" appearance="small" url="/nx-api/react-native" icon="react" /%}
-{% link-card title="Fastify" appearance="small" url="/showcase/example-repos/mongo-fastify" icon="fastify" /%}
-{% link-card title="Svelte" appearance="small" url="/showcase/example-repos/add-svelte" icon="svelte" /%}
-{% link-card title="Solid" appearance="small" url="/showcase/example-repos/add-solid" icon="solid" /%}
-{% link-card title="Lit" appearance="small" url="/showcase/example-repos/add-lit" icon="lit" /%}
-{% link-card title="Astro" appearance="small" url="/showcase/example-repos/add-astro" icon="astro" /%}
-{% link-card title="Qwik" appearance="small" url="/showcase/example-repos/add-qwik" icon="qwik" /%}
-
-{% link-card title="Rust" appearance="small" url="/showcase/example-repos/add-rust" icon="rust" /%}
-{% link-card title="Go" appearance="small" url="https://github.com/nrwl/nx-recipes/blob/main/go/README.md" icon="go" /%}
-{% link-card title=".NET" appearance="small" url="https://github.com/nrwl/nx-recipes/tree/main/dot-net-standalone" icon="dotnet" /%}
-{% link-card title="Cypress" appearance="small" url="/nx-api/cypress" icon="cypress" /%}
-{% link-card title="Playwright" appearance="small" url="/nx-api/playwright" icon="playwright" /%}
-{% link-card title="Vite" appearance="small" url="/nx-api/vite" icon="vite" /%}
-{% link-card title="Storybook" appearance="small" url="/nx-api/storybook" icon="storybook" /%}
-{% link-card title="Jest" appearance="small" url="/nx-api/jest" icon="jest" /%}
-{% link-card title="Rspack" appearance="small" url="/nx-api/rspack" icon="rspack" /%}
-
-{% /cards %}
-
-## Connect With Us
-
-Connect on our channels and with the Nx Community to ask questions, get help and keep up to date with the latest news.
-
-- ⭐️ [Star us on GitHub](https://github.com/nrwl/nx) to show your support and stay updated on new releases!
-- Join our [Discord Community](https://go.nx.dev/community)
-- Subscribe to our [Youtube Channel](https://www.youtube.com/@nxdevtools)
-- Follow us on [Twitter](https://twitter.com/nxdevtools)
-- Subscribe [to our tech newsletter](https://go.nrwl.io/nx-newsletter)
+**Stay up to date** with our latest news by [⭐️ starring us on Github](https://github.com/nrwl/nx), [subscribing to our Youtube channel](https://www.youtube.com/@nxdevtools), [joining our Discord](https://go.nx.dev/community), [subscribe to our monthly tech newsletter](https://go.nrwl.io/nx-newsletter) or follow us [on X](https://x.com/nxdevtools), [Bluesky](https://bsky.app/profile/nx.dev) and [LinkedIn](https://www.linkedin.com/company/nxdevtools).

@@ -160,7 +160,8 @@ const anchorUrls = ['nx.json', 'ci.json', 'extending-nx.json'].flatMap(
   (manifestFileName) => readApiJson(manifestFileName)
 );
 const ignoreAnchorUrls = [
-  '/nx-api',
+  '/reference/core-api',
+  '/technologies',
   '/nx-cloud',
   '/blog',
   '/pricing',
@@ -173,14 +174,6 @@ const errors: Array<{ file: string; link: string }> = [];
 const localLinkErrors: Array<{ file: string; link: string }> = [];
 for (let file in documentLinks) {
   for (let link of documentLinks[file]) {
-    if (
-      link.includes('/nx-api/angular-rspack') ||
-      link.includes('/nx-api/angular-rsbuild') ||
-      // These legacy devkit links are handled by the Next.js app and will not actually be at the expected location in docs/generated. Just ignore them.
-      link.includes('/reference/core-api/devkit')
-    ) {
-      continue;
-    }
     if (
       link.startsWith('https://nx.dev') ||
       link.startsWith('https://nx-dev')

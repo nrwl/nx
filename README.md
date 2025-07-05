@@ -21,7 +21,7 @@
 
 # Smart Repos · Fast Builds
 
-Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.
+An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.
 
 Create a new Nx workspace with
 
@@ -35,7 +35,7 @@ npx create-nx-workspace
 npx nx init
 ```
 
-to add Nx to your existing workspace to get faster task scheduling, caching and more. More [in the docs](https://nx.dev/getting-started/intro#try-nx-yourself).
+to add Nx to your existing workspace to get faster task scheduling, caching and more. More [in the docs](https://nx.dev/getting-started/intro).
 
 ## Learn about CI with Nx Cloud
 

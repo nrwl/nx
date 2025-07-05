@@ -17,7 +17,7 @@ Ensure that Nx is installed in your monorepo. Check out the [Installation docs](
 
 ### Add the JavaScript Plugin
 
-The [`@nx/js` package](/nx-api/js) is required for Nx Release to manage and release JavaScript packages. Add it if it is not already installed:
+The [`@nx/js` package](/technologies/typescript/introduction) is required for Nx Release to manage and release JavaScript packages. Add it if it is not already installed:
 
 ```shell {% skipRescope=true %}
 nx add @nx/js
@@ -31,7 +31,7 @@ If you want to release all of the projects in your workspace, such as when deali
 
 If you have a mixed workspace in which you also have some applications, e2e testing projects or other things you don't want to release, you can configure `nx release` to target only the projects you want to release.
 
-Configure which projects to release by adding the `release.projects` property to nx.json. The value is an array of strings, and you can use any of the same specifiers that are supported by `nx run-many`'s [projects filtering](/nx-api/nx/documents/run-many), such as explicit project names, Nx tags, directories and glob patterns, including negation using the `!` character.
+Configure which projects to release by adding the `release.projects` property to nx.json. The value is an array of strings, and you can use any of the same specifiers that are supported by `nx run-many`'s [projects filtering](/reference/core-api/nx/documents/run-many), such as explicit project names, Nx tags, directories and glob patterns, including negation using the `!` character.
 
 For example, to release just the projects in the `packages` directory:
 

@@ -196,7 +196,7 @@ export async function reportHandler() {
     bodyLines.push('Local workspace plugins:');
 
     for (const plugin of localPlugins) {
-      bodyLines.push(`\t ${chalk.green(plugin)}`);
+      bodyLines.push(`${chalk.green(plugin)}`);
     }
   }
 

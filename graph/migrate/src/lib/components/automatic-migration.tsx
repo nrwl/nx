@@ -6,8 +6,7 @@ import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate
 import { useSelector } from '@xstate/react';
 import {
   currentMigrationHasChanges,
-  currentMigrationHasFailed,
-  currentMigrationHasSucceeded,
+  getCurrentMigrationType,
 } from '../state/automatic/selectors';
 import { MigrationTimeline } from './migration-timeline';
 import { Interpreter } from 'xstate';
@@ -45,17 +44,18 @@ export function AutomaticMigration(props: {
     (migration) => migration.id === currentMigration?.id
   );
 
-  const currentMigrationRunning = useSelector(
+  const currentMigrationFailed = useSelector(
     props.actor,
-    (state) => state.context.currentMigrationRunning
+    (state) => getCurrentMigrationType(state.context) === 'failed'
   );
 
-  const currentMigrationFailed = useSelector(props.actor, (state) =>
-    currentMigrationHasFailed(state.context)
+  const isCurrentMigrationStopped = useSelector(
+    props.actor,
+    (state) => getCurrentMigrationType(state.context) === 'stopped'
   );
-
-  const currentMigrationSuccess = useSelector(props.actor, (state) =>
-    currentMigrationHasSucceeded(state.context)
+  const currentMigrationSuccess = useSelector(
+    props.actor,
+    (state) => getCurrentMigrationType(state.context) === 'successful'
   );
 
   const currentMigrationChanges = useSelector(props.actor, (state) =>
@@ -75,15 +75,16 @@ export function AutomaticMigration(props: {
 
   return (
     <MigrationTimeline
+      actor={props.actor}
       migrations={props.migrations}
       nxConsoleMetadata={props.nxConsoleMetadata}
       currentMigrationIndex={
         currentMigrationIndex >= 0 ? currentMigrationIndex : 0
       }
-      currentMigrationRunning={currentMigrationRunning}
       currentMigrationFailed={currentMigrationFailed}
       currentMigrationSuccess={currentMigrationSuccess}
       currentMigrationHasChanges={currentMigrationChanges}
+      currentMigrationStopped={isCurrentMigrationStopped}
       isDone={isDone}
       isInit={isInit}
       onRunMigration={props.onRunMigration}

@@ -4,6 +4,8 @@ description: Learn how to use the @nx/nest plugin to create and manage Nest.js a
 keywords: [nest, nestjs]
 ---
 
+# @nx/nest
+
 Nest.js is a framework designed for building scalable server-side applications. In many ways, Nest is familiar to Angular developers:
 
 - It has excellent TypeScript support.
@@ -203,4 +205,4 @@ Bundling dependencies is typically not recommended for Node applications.
 
 ## More Documentation
 
-- [Using Jest](/nx-api/jest)
+- [Using Jest](/technologies/test-tools/jest/introduction)

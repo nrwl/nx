@@ -459,7 +459,10 @@ async function buildCypressTargets(
 
   targets[options.openTargetName] = {
     command: `cypress open`,
-    options: { cwd: projectRoot },
+    options: {
+      cwd: projectRoot,
+      env: { TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions },
+    },
     metadata: {
       technologies: ['cypress'],
       description: 'Opens Cypress',

@@ -5,7 +5,10 @@
   "sourceRoot": "packages/gradle/batch-runner/src",
   "targets": {
     "assemble": {
-      "command": "./gradlew :batch-runner:assemble",
+      "executor": "@nx/gradle:gradle",
+      "options": {
+        "taskName": "batch-runner:assemble"
+      },
       "inputs": [
         "{projectRoot}/src/**",
         "{projectRoot}/build.gradle.kts",

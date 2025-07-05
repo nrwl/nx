@@ -17,7 +17,7 @@ import {
   getTaskDetails,
   hashTasksThatDoNotDependOnOutputsOfOtherTasks,
 } from '../hasher/hash-task';
-import { logError, logInfo, RunMode } from '../native';
+import { logDebug, RunMode } from '../native';
 import {
   runPostTasksExecution,
   runPreTasksExecution,
@@ -57,6 +57,7 @@ import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle'
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
 import { getTuiTerminalSummaryLifeCycle } from './life-cycles/tui-summary-life-cycle';
+import { NxCloudCIMessageLifeCycle } from './life-cycles/nx-cloud-ci-message-life-cycle';
 import {
   assertTaskGraphDoesNotContainInvalidTargets,
   findCycle,
@@ -216,13 +217,13 @@ async function getTerminalOutputLifeCycle(
         // @ts-ignore
         return (chunk, encoding, callback) => {
           if (isError) {
-            logError(
+            logDebug(
               Buffer.isBuffer(chunk)
                 ? chunk.toString(encoding)
                 : chunk.toString()
             );
           } else {
-            logInfo(
+            logDebug(
               Buffer.isBuffer(chunk)
                 ? chunk.toString(encoding)
                 : chunk.toString()
@@ -1038,6 +1039,7 @@ export async function invokeTasksRunner({
 export function constructLifeCycles(lifeCycle: LifeCycle): LifeCycle[] {
   const lifeCycles = [] as LifeCycle[];
   lifeCycles.push(new StoreRunInformationLifeCycle());
+  lifeCycles.push(new NxCloudCIMessageLifeCycle());
   lifeCycles.push(lifeCycle);
   if (process.env.NX_PERF_LOGGING === 'true') {
     lifeCycles.push(new TaskTimingsLifeCycle());

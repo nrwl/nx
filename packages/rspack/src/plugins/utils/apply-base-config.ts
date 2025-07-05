@@ -8,6 +8,7 @@ import {
   SwcJsMinimizerRspackPlugin,
   CopyRspackPlugin,
   RspackOptionsNormalized,
+  Output,
 } from '@rspack/core';
 import { getRootTsConfigPath } from '@nx/js';
 
@@ -27,6 +28,13 @@ const IGNORED_RSPACK_WARNINGS = [
 ];
 
 const extensions = ['...', '.ts', '.tsx', '.mjs', '.js', '.jsx'];
+
+const extensionAlias = {
+  '.js': ['.ts', '.tsx', '.js', '.jsx'],
+  '.mjs': ['.mts', '.mjs'],
+  '.cjs': ['.cts', '.cjs'],
+  '.jsx': ['.tsx', '.jsx'],
+};
 const mainFields = ['module', 'main'];
 
 export function applyBaseConfig(
@@ -99,12 +107,30 @@ function applyNxIndependentConfig(
 
   config.output = {
     ...(config.output ?? {}),
-    libraryTarget:
-      options.target === 'node'
-        ? 'commonjs'
-        : options.target === 'async-node'
-        ? 'commonjs-module'
-        : undefined,
+    libraryTarget: (() => {
+      const existingOutputConfig = config.output as Output;
+      const existingLibraryTarget = existingOutputConfig?.libraryTarget;
+      const existingLibraryType =
+        typeof existingOutputConfig?.library === 'object' &&
+        'type' in existingOutputConfig?.library
+          ? existingOutputConfig?.library?.type
+          : undefined;
+
+      // If user is using modern library.type, don't set the deprecated libraryTarget
+      if (existingLibraryType !== undefined) {
+        return undefined;
+      }
+
+      // If user has set libraryTarget explicitly, use it
+      if (existingLibraryTarget !== undefined) {
+        return existingLibraryTarget;
+      }
+
+      // Set defaults based on target when user hasn't configured anything
+      if (options.target === 'node') return 'commonjs';
+      if (options.target === 'async-node') return 'commonjs-module';
+      return undefined;
+    })(),
     path:
       config.output?.path ??
       (options.outputPath
@@ -385,6 +411,10 @@ function applyNxDependentConfig(
   config.resolve = {
     ...config.resolve,
     extensions: [...(config?.resolve?.extensions ?? []), ...extensions],
+    extensionAlias: {
+      ...(config.resolve?.extensionAlias ?? {}),
+      ...extensionAlias,
+    },
     alias: {
       ...(config.resolve?.alias ?? {}),
       ...(options.fileReplacements?.reduce(

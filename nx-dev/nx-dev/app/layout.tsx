@@ -38,6 +38,12 @@ export const metadata: Metadata = {
       rel: 'mask-icon',
     },
   ],
+  alternates: {
+    types: {
+      'application/rss+xml': '/blog/rss.xml',
+      'application/atom+xml': '/blog/atom.xml',
+    },
+  },
 };
 
 // Viewport settings for the entire site
@@ -61,6 +67,18 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           name="msapplication-TileColor"
           content="#DA532C"
           key="windows-tile-color"
+        />
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="Nx Blog RSS Feed"
+          href="/blog/rss.xml"
+        />
+        <link
+          rel="alternate"
+          type="application/atom+xml"
+          title="Nx Blog Atom Feed"
+          href="/blog/atom.xml"
         />
         <script
           type="text/javascript"
