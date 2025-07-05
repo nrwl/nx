@@ -4,12 +4,52 @@
   "sourceRoot": "packages/rsbuild",
   "projectType": "library",
   "targets": {
+    "build": {
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "projects": "self"
+        }
+      ]
+    },
+    "copy-readme": {
+      "outputs": ["{workspaceRoot}/dist/packages/rsbuild/README.md"],
+      "command": "node ./scripts/copy-readme.js rsbuild",
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
+    },
     "build-base": {
-      "executor": "@nx/js:tsc",
+      "dependsOn": [
+        "^build",
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        },
+        {
+          "target": "legacy-post-build",
+          "projects": "self"
+        },
+        {
+          "target": "copy-readme",
+          "projects": "self"
+        }
+      ]
+    },
+    "nx-release-publish": {
+      "executor": "@nx/js:release-publish",
       "options": {
-        "outputPath": "build/packages/rsbuild",
-        "tsConfig": "packages/rsbuild/tsconfig.lib.json",
-        "main": "packages/rsbuild/index.ts",
+        "packageRoot": "dist/packages/rsbuild"
+      },
+      "dependsOn": ["^nx-release-publish"]
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
+      "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/rsbuild",
@@ -45,11 +85,12 @@
           }
         ]
       },
-      "outputs": ["{options.outputPath}"]
-    },
-    "build": {
-      "command": "node ./scripts/copy-readme.js rsbuild",
-      "outputs": ["{workspaceRoot}/build/packages/rsbuild/README.md"]
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
     }
   }
 }

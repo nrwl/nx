@@ -1,9 +1,16 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
-    "types": ["node"]
+    "outDir": "../../dist/out-tsc/nx-dev/ui-conference",
+    "types": ["node"],
+    "composite": true,
+    "declaration": true
   },
+  "references": [
+    { "path": "../ui-common/tsconfig.lib.json" },
+    { "path": "../ui-member-card/tsconfig.lib.json" },
+    { "path": "../ui-sponsor-card/tsconfig.lib.json" }
+  ],
   "files": [
     "../../node_modules/@nx/react/typings/cssmodule.d.ts",
     "../../node_modules/@nx/react/typings/image.d.ts"

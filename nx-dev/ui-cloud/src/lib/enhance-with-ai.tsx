@@ -7,7 +7,7 @@ import {
   RectangleGroupIcon,
   ServerStackIcon,
 } from '@heroicons/react/24/outline';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 import Link from 'next/link';
 import { ReactElement } from 'react';
 

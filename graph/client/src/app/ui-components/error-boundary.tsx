@@ -1,4 +1,4 @@
-import { ProjectDetailsHeader } from '@nx/graph-internal/project-details';
+import { ProjectDetailsHeader } from '@nx/graph-internal-project-details';
 import {
   fetchProjectGraph,
   getProjectGraphDataService,

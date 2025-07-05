@@ -10,6 +10,18 @@
   "include": [],
   "references": [
     {
+      "path": "../ui-icons"
+    },
+    {
+      "path": "../data-access-documents"
+    },
+    {
+      "path": "../ui-blog"
+    },
+    {
+      "path": "../ui-common"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ],

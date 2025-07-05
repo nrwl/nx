@@ -8,16 +8,30 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "moduleResolution": "bundler",
+    "module": "esnext"
   },
   "files": [],
   "include": [],
   "references": [
     {
-      "path": "./tsconfig.lib.json"
+      "path": "../ui-markdoc"
     },
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../ui-common"
+    },
+    {
+      "path": "../ui-primitives"
+    },
+    {
+      "path": "../util-ai"
+    },
+    {
+      "path": "../feature-analytics"
+    },
+    {
+      "path": "./tsconfig.lib.json"
     }
   ]
 }

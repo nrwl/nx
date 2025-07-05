@@ -6,12 +6,12 @@ import {
   createDocumentMetadata,
   DocumentMetadata,
   pkgToGeneratedApiDocs,
-} from '@nx/nx-dev/models-document';
-import { MenuItem } from '@nx/nx-dev/models-menu';
+} from '@nx/nx-dev-models-document';
+import { MenuItem } from '@nx/nx-dev-models-menu';
 import {
   PackageMetadata,
   ProcessedPackageMetadata,
-} from '@nx/nx-dev/models-package';
+} from '@nx/nx-dev-models-package';
 import { generateIndexMarkdownFile, generateJsonFile } from '../utils';
 import { convertToDictionary } from './utils-generator/convert-to-dictionary';
 

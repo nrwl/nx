@@ -1,4 +1,4 @@
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { Children, ReactNode } from 'react';
 
 export function SideBySide({

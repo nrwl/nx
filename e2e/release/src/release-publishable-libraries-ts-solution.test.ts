@@ -5,7 +5,7 @@ import {
   runCommandAsync,
   tmpProjPath,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { emptydirSync } from 'fs-extra';
 import { execSync } from 'node:child_process';
 

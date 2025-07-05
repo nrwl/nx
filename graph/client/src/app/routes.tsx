@@ -16,7 +16,7 @@ import {
   getProjectGraphDataService,
 } from '@nx/graph/legacy/shared';
 import { TasksSidebarErrorBoundary } from './feature-tasks/tasks-sidebar-error-boundary';
-import { ProjectDetailsPage } from '@nx/graph-internal/project-details';
+import { ProjectDetailsPage } from '@nx/graph-internal-project-details';
 import { ErrorBoundary } from './ui-components/error-boundary';
 
 const { appConfig } = getEnvironmentConfig();

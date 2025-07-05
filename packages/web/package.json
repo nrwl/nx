@@ -16,7 +16,7 @@
     "CLI",
     "Front-end"
   ],
-  "main": "./index",
+  "main": "./index.js",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -35,8 +35,9 @@
     "http-server": "^14.1.0",
     "picocolors": "^1.1.0",
     "tslib": "^2.3.0",
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js"
+    "@nx/devkit": "workspace:*",
+    "nx": "workspace:*",
+    "@nx/js": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

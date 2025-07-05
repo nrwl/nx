@@ -1,8 +1,8 @@
 import { execSync } from 'child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import * as yargs from 'yargs';
-import { ensureDirSync, statSync } from 'fs-extra';
+import { ensureDirSync } from 'fs-extra';
 
 async function generateGraph(directory: string, name: string) {
   if (!existsSync(directory)) {

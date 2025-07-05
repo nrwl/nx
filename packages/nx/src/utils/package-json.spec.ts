@@ -410,6 +410,9 @@ const exclusions = new Set([
   // exports doesn't contain 'package.json', and main is an empty line.
   // This means the function fails.
   '@types/js-yaml',
+  // tutorialkit is not used anymore, ignore these dependencies
+  '@tutorialkit/theme',
+  '@webcontainer/api',
 ]);
 
 describe('readModulePackageJson', () => {

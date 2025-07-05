@@ -1,0 +1,28 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../../packages/workspace"
+    },
+    {
+      "path": "../../packages/devkit"
+    },
+    {
+      "path": "../../packages/nx"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ]
+}

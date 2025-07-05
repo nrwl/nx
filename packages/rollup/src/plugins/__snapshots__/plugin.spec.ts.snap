@@ -1,7 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`@nx/rollup/plugin non-root project should create nodes 1`
-] = `
+exports[`@nx/rollup/plugin non-root project should create nodes 1`] = `
 [
   [
     "mylib/rollup.config.cjs",
@@ -47,6 +46,9 @@ exports[`@nx/rollup/plugin non-root project should create nodes 1`
                 "{workspaceRoot}/mylib/build",
                 "{workspaceRoot}/mylib/dist",
               ],
+              "syncGenerators": [
+                "@nx/js:typescript-sync",
+              ],
             },
             "build-deps": {
               "dependsOn": [
@@ -68,8 +70,7 @@ exports[`@nx/rollup/plugin non-root project should create nodes 1`
 ]
 `;
 
-exports[`@nx/rollup/plugin non-root project should create nodes 2`
-] = `
+exports[`@nx/rollup/plugin non-root project should create nodes 2`] = `
 [
   [
     "mylib/rollup.config.cts",
@@ -115,6 +116,9 @@ exports[`@nx/rollup/plugin non-root project should create nodes 2`
                 "{workspaceRoot}/mylib/build",
                 "{workspaceRoot}/mylib/dist",
               ],
+              "syncGenerators": [
+                "@nx/js:typescript-sync",
+              ],
             },
             "build-deps": {
               "dependsOn": [
@@ -136,8 +140,7 @@ exports[`@nx/rollup/plugin non-root project should create nodes 2`
 ]
 `;
 
-exports[`@nx/rollup/plugin root project should create nodes 1`
-] = `
+exports[`@nx/rollup/plugin root project should create nodes 1`] = `
 [
   [
     "rollup.config.cjs",
@@ -182,6 +185,9 @@ exports[`@nx/rollup/plugin root project should create nodes 1`
               "outputs": [
                 "{workspaceRoot}/dist",
               ],
+              "syncGenerators": [
+                "@nx/js:typescript-sync",
+              ],
             },
             "build-deps": {
               "dependsOn": [
@@ -203,8 +209,7 @@ exports[`@nx/rollup/plugin root project should create nodes 1`
 ]
 `;
 
-exports[`@nx/rollup/plugin root project should create nodes 2`
-] = `
+exports[`@nx/rollup/plugin root project should create nodes 2`] = `
 [
   [
     "rollup.config.cts",
@@ -248,6 +253,9 @@ exports[`@nx/rollup/plugin root project should create nodes 2`
               },
               "outputs": [
                 "{workspaceRoot}/dist",
+              ],
+              "syncGenerators": [
+                "@nx/js:typescript-sync",
               ],
             },
             "build-deps": {

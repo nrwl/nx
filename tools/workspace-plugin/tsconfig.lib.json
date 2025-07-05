@@ -1,10 +1,25 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/workspace-plugin",
     "declaration": true,
-    "types": ["node"]
+    "types": ["node"],
+    "composite": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
+  "references": [
+    {
+      "path": "../../packages/nx/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/plugin/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/eslint/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/devkit/tsconfig.lib.json"
+    }
+  ]
 }

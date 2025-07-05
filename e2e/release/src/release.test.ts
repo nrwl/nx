@@ -17,7 +17,7 @@ import {
   tmpProjPath,
   uniq,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { execSync } from 'node:child_process';
 import type { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
 

@@ -1,10 +1,17 @@
 export { readTsConfig } from './src/utilities/ts-config';
+export {
+  TypeScriptCompilationOptions,
+  compileTypeScript,
+  compileTypeScriptWatcher,
+} from './src/utilities/typescript/compilation';
 export { ProjectType, projectRootDir } from './src/utils/project-type';
 export {
   renameSync,
   updateJsonFile,
   copyFile,
   createDirectory,
+  directoryExists,
+  fileExists,
 } from './src/utilities/fileutils';
 
 export { names } from '@nx/devkit';

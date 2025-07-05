@@ -1,10 +1,13 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "module": "commonjs",
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/packages/nx",
+    "tsBuildInfoFile": "../../dist/packages/nx/tsconfig.tsbuildinfo",
     "declaration": true,
-    "types": ["node"]
+    "types": ["node"],
+    "composite": true,
+    "noEmit": false
   },
   "exclude": [
     "**/*.spec.ts",
@@ -13,5 +16,5 @@
     "**/__fixtures__/**/*.*",
     "./src/internal-testing-utils/**/*.ts"
   ],
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "**/*.json", "migrations.json"]
 }

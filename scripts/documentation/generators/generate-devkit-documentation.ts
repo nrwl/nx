@@ -1,7 +1,7 @@
 import * as chalk from 'chalk';
 import * as typedoc from 'typedoc';
 import { execSync, ExecSyncOptions } from 'child_process';
-import { cpSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'fs';
+import { cpSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
 export async function generateDevkitDocumentation() {
@@ -21,17 +21,21 @@ export async function generateDevkitDocumentation() {
 
   cpSync(
     'packages/devkit/tsconfig.lib.json',
-    'build/packages/devkit/tsconfig.lib.json',
+    'dist/packages/devkit/tsconfig.lib.json',
     { recursive: true }
   );
 
   writeFileSync(
-    'build/packages/devkit/tsconfig.lib.json',
-    readFileSync('build/packages/devkit/tsconfig.lib.json')
+    'dist/packages/devkit/tsconfig.lib.json',
+    readFileSync('dist/packages/devkit/tsconfig.lib.json')
       .toString()
       .replace(
-        '"extends": "./tsconfig.json"',
-        '"extends": "../../../packages/devkit/tsconfig.json"'
+        '"extends": "../../tsconfig.base.json"',
+        '"extends": "../../../tsconfig.base.json"'
+      )
+      .replace(
+        '"include": ["**/*.ts", "*.json", "migrations.json"]',
+        '"include": ["**/*.ts", "**/*.d.ts", "*.json", "migrations.json"]'
       )
   );
 
@@ -50,8 +54,8 @@ export async function generateDevkitDocumentation() {
 
   await runTypedoc({
     ...commonTypedocOptions,
-    entryPoints: ['build/packages/devkit/index.d.ts'],
-    tsconfig: 'build/packages/devkit/tsconfig.lib.json',
+    entryPoints: ['dist/packages/devkit/index.d.ts'],
+    tsconfig: 'dist/packages/devkit/tsconfig.lib.json',
     out: 'docs/generated/devkit',
     excludePrivate: true,
     publicPath: '/reference/core-api/devkit/',
@@ -59,13 +63,13 @@ export async function generateDevkitDocumentation() {
 
   await runTypedoc({
     ...commonTypedocOptions,
-    entryPoints: ['build/packages/devkit/ngcli-adapter.d.ts'],
-    tsconfig: 'build/packages/devkit/tsconfig.lib.json',
+    entryPoints: ['dist/packages/devkit/ngcli-adapter.d.ts'],
+    tsconfig: 'dist/packages/devkit/tsconfig.lib.json',
     out: 'docs/generated/devkit/ngcli_adapter',
     publicPath: '/reference/core-api/devkit/ngcli_adapter/',
   });
 
-  rmSync('build/packages/devkit/tsconfig.lib.json', {
+  rmSync('dist/packages/devkit/tsconfig.lib.json', {
     recursive: true,
     force: true,
   });

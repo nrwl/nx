@@ -12,7 +12,7 @@ import {
   useState,
 } from 'react';
 import { motion, MotionConfig, useAnimation } from 'framer-motion';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 
 export interface CarouselHandle {
   /**

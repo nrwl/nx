@@ -27,7 +27,7 @@ import {
 import { FC, SVGProps } from 'react';
 import { DiscordIcon } from '../discord-icon';
 import { BuildingOfficeIcon } from '@heroicons/react/24/solid';
-import { NxAgentsIcon, NxReplayIcon } from '@nx/nx-dev/ui-icons';
+import { NxAgentsIcon, NxReplayIcon } from '@nx/nx-dev-ui-icons';
 
 export interface MenuItem {
   name: string;

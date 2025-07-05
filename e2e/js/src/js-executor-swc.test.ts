@@ -9,7 +9,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '../../utils';
+} from '@nx/e2e-utils';
 
 describe('js:swc executor', () => {
   let scope: string;

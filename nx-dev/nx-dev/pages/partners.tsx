@@ -1,5 +1,5 @@
-import { DefaultLayout } from '@nx/nx-dev/ui-common';
-import { Hero, PartnersList } from '@nx/nx-dev/ui-partners';
+import { DefaultLayout } from '@nx/nx-dev-ui-common';
+import { Hero, PartnersList } from '@nx/nx-dev-ui-partners';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { contactButton } from '../lib/components/headerCtaConfigs';

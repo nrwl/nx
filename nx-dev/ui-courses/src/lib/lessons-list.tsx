@@ -1,6 +1,6 @@
-import { Course, Lesson } from '@nx/nx-dev/data-access-courses';
+import { Course, Lesson } from '@nx/nx-dev-data-access-courses';
 import Link from 'next/link';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 
 export function LessonsList({
   course,
