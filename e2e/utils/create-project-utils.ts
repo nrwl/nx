@@ -21,7 +21,7 @@ import { output, readJsonFile } from '@nx/devkit';
 import { angularCliVersion as defaultAngularCliVersion } from '@nx/workspace/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
 import { execSync, ExecSyncOptions } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { performance, PerformanceMeasure } from 'node:perf_hooks';
 import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
@@ -67,6 +67,25 @@ const nxPackages = [
 
 type NxPackage = (typeof nxPackages)[number];
 
+function getPackageManagerVersion(packageManager: string): string {
+  try {
+    const version = execSync(`${packageManager} --version`, {
+      encoding: 'utf-8',
+      stdio: 'pipe',
+    }).trim();
+    return `${packageManager}@${version}`;
+  } catch {
+    // Fallback to known working versions on CI agent
+    const fallbackVersions = {
+      pnpm: 'pnpm@9.15.9',
+      yarn: 'yarn@1.22.22',
+      npm: 'npm@10.8.2',
+      bun: 'bun@1.0.0',
+    };
+    return fallbackVersions[packageManager] || `${packageManager}@latest`;
+  }
+}
+
 /**
  * Sets up a new project in the temporary project path
  * for the currently selected CLI.
@@ -107,6 +126,14 @@ export function newProject({
         createNxWorkspaceEnd.name
       );
 
+      // Ensure the package manager is correctly set in the created workspace
+      if (packageManager) {
+        updateJson(`package.json`, (json) => {
+          json.packageManager = getPackageManagerVersion(packageManager);
+          return json;
+        });
+      }
+
       // Temporary hack to prevent installing with `--frozen-lockfile`
       if (isCI && packageManager === 'pnpm') {
         updateFile(
@@ -129,7 +156,7 @@ export function newProject({
         packageInstallEnd.name
       );
       // stop the daemon
-      execSync(`${getPackageManagerCommand().runNx} reset`, {
+      execSync(`${getPackageManagerCommand({ packageManager }).runNx} reset`, {
         cwd: `${e2eCwd}/proj`,
         stdio: isVerbose() ? 'inherit' : 'pipe',
       });
@@ -151,12 +178,18 @@ export function newProject({
     } else if (packageManager === 'pnpm') {
       // pnpm creates sym links to the pnpm store,
       // we need to run the install again after copying the temp folder
-      execSync(getPackageManagerCommand().install, {
-        cwd: projectDirectory,
-        stdio: 'pipe',
-        env: { CI: 'true', ...process.env },
-        encoding: 'utf-8',
-      });
+      try {
+        execSync(getPackageManagerCommand().install, {
+          cwd: projectDirectory,
+          stdio: 'pipe',
+          env: { CI: 'true', ...process.env },
+          encoding: 'utf-8',
+        });
+      } catch (e) {
+        console.log('newProject() - reinstall pnpm dependencies failed');
+        console.error('Full error:', e);
+        throw e;
+      }
     }
 
     const newProjectEnd = performance.mark('new-project:end');
@@ -439,7 +472,7 @@ export function packageInstall(
   try {
     const install = execSync(command, {
       cwd,
-      stdio: isVerbose() ? 'inherit' : 'ignore',
+      stdio: isVerbose() ? 'inherit' : 'pipe',
       env: process.env,
       encoding: 'utf-8',
     });
