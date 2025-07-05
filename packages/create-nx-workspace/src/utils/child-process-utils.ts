@@ -38,6 +38,7 @@ export function execAndWait(command: string, cwd: string) {
       command,
       { cwd, env: { ...process.env, NX_DAEMON: 'false' }, windowsHide: false },
       (error, stdout, stderr) => {
+        console.log({ command, error, stdout, stderr });
         if (error) {
           const logFile = join(cwd, 'error.log');
           writeFileSync(logFile, `${stdout}\n${stderr}`);
