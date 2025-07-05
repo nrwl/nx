@@ -1,7 +1,6 @@
 // This file contains methods and utilities that should **only** be used by the plugin worker.
 
-import { existsSync, realpathSync } from 'fs';
-import { join } from 'path';
+import { existsSync } from 'fs';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
 import { getNxRequirePaths } from '../../utils/installation-directory';
@@ -10,7 +9,6 @@ import {
   readModulePackageJsonWithoutFallbacks,
 } from '../../utils/package-json';
 import { readJsonFile } from '../../utils/fileutils';
-import { workspaceRootInner } from '../../utils/workspace-root';
 
 import type { PluginConfiguration } from '../../config/nx-json';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
@@ -22,7 +20,6 @@ import {
   pluginTranspilerIsRegistered,
   registerPluginTSTranspiler,
 } from './transpiler';
-import { workspaceRoot } from '../../utils/workspace-root';
 
 export function readPluginPackageJson(
   pluginName: string,
@@ -33,89 +30,97 @@ export function readPluginPackageJson(
   json: PackageJson;
 } {
   console.log(
-    `Reading plugin package.json for: ${pluginName} from paths: ${paths} at root: ${workspaceRoot}`
+    `Reading plugin package.json for: ${pluginName} from paths: ${paths}`
   );
 
+  // First try to find the plugin directly in node_modules
+  // This handles pnpm's symlink structure correctly
   for (const searchPath of paths) {
-    const directPackageJsonPath = join(
+    // Check standard node_modules location (symlink)
+    const directPackageJsonPath = path.join(
       searchPath,
       'node_modules',
       pluginName,
       'package.json'
     );
     console.log(`Checking direct path: ${directPackageJsonPath}`);
-    console.log(`Path exists: ${existsSync(directPackageJsonPath)}`);
 
     if (existsSync(directPackageJsonPath)) {
-      // Check if this is a symlink that points to a different workspace
+      console.log(`Found package.json directly at: ${directPackageJsonPath}`);
+      return {
+        json: readJsonFile(directPackageJsonPath),
+        path: directPackageJsonPath,
+      };
+    }
+
+    // If we are in the Nx repo that uses ts solutions `require.resolve` will find the source @nx/workspace instead of the installed version.
+    // We need to customize the resolution logic to ensure we read the package.json from the installed version.
+    const nodeModulesPath = path.join(searchPath, 'node_modules');
+    if (existsSync(nodeModulesPath)) {
       try {
-        const realPath = realpathSync(directPackageJsonPath);
-        const expectedWorkspaceRoot = workspaceRootInner(searchPath, null);
-        const resolvedWorkspaceRoot = workspaceRootInner(realPath, null);
-
-        console.log(`Real path: ${realPath}`);
-        console.log(`Expected workspace root: ${expectedWorkspaceRoot}`);
-        console.log(`Resolved workspace root: ${resolvedWorkspaceRoot}`);
-
-        if (resolvedWorkspaceRoot !== expectedWorkspaceRoot) {
-          console.log(
-            `Skipping symlinked path from different workspace: ${realPath} (workspace: ${resolvedWorkspaceRoot}) vs expected (${expectedWorkspaceRoot})`
-          );
-          continue;
+        const pnpmDir = path.join(nodeModulesPath, '.pnpm');
+        // pnpm can have a .pnpm directory if it is being used for example /tmp/tmp-6029-6bm08pq05OfH/node_modules/.pnpm/@nx+workspace@22.0.0/node_modules/@nx/workspace/src/generators/new/new.js\n'
+        if (existsSync(pnpmDir)) {
+          console.log(`Scanning pnpm .pnpm directory: ${pnpmDir}`);
+          const pnpmEntries = require('fs').readdirSync(pnpmDir);
+          for (const entry of pnpmEntries) {
+            // Convert @nx/workspace to @nx+workspace pattern like above
+            const expectedPattern = pluginName
+              .replace('/', '+')
+              .replace('@', '');
+            if (entry.includes(expectedPattern)) {
+              const possiblePath = path.join(
+                pnpmDir,
+                entry,
+                'node_modules',
+                pluginName,
+                'package.json'
+              );
+              // We skip the local package.json of the plugin itself
+              console.log(
+                `Checking possible pnpm package.json path: ${possiblePath}`
+              );
+              if (
+                existsSync(possiblePath) &&
+                !possiblePath.endsWith(`packages/${pluginName}/package.json`)
+              ) {
+                console.log(
+                  `Found package.json in pnpm structure: ${possiblePath}`
+                );
+                return {
+                  json: readJsonFile(possiblePath),
+                  path: possiblePath,
+                };
+              }
+            }
+          }
         }
-
-        console.log(
-          `Found package.json directly at: ${directPackageJsonPath} (real path: ${realPath})`
-        );
-        return {
-          json: readJsonFile(directPackageJsonPath),
-          path: directPackageJsonPath,
-        };
       } catch (e) {
-        console.log(
-          `Error resolving real path for ${directPackageJsonPath}:`,
-          e.message
-        );
-        continue;
+        console.error(`Error scanning pnpm, ${e.message}`);
       }
     }
   }
 
-  try {
-    const result = readModulePackageJsonWithoutFallbacks(pluginName, paths);
-    console.log(
-      `Found package.json via readModulePackageJsonWithoutFallbacks at: ${result.path}`
+  // Try local plugin as fallback
+  const localPluginPath = resolveLocalNxPlugin(pluginName, projects);
+  if (localPluginPath) {
+    const localPluginPackageJson = path.join(
+      localPluginPath.path,
+      'package.json'
     );
-    return {
-      json: result.packageJson,
-      path: result.path,
-    };
-  } catch (e) {
-    console.log(
-      `readModulePackageJsonWithoutFallbacks failed for ${pluginName}:`,
-      e.message
-    );
-    if (e.code === 'MODULE_NOT_FOUND') {
-      const localPluginPath = resolveLocalNxPlugin(pluginName, projects);
-      if (localPluginPath) {
-        const localPluginPackageJson = path.join(
-          localPluginPath.path,
-          'package.json'
-        );
-        console.log(
-          `Falling back to local plugin at: ${localPluginPackageJson}`
-        );
-        if (!pluginTranspilerIsRegistered()) {
-          registerPluginTSTranspiler();
-        }
-        return {
-          path: localPluginPackageJson,
-          json: readJsonFile(localPluginPackageJson),
-        };
-      }
+    console.log(`Found local plugin at: ${localPluginPackageJson}`);
+    if (!pluginTranspilerIsRegistered()) {
+      registerPluginTSTranspiler();
     }
-    throw e;
+    return {
+      path: localPluginPackageJson,
+      json: readJsonFile(localPluginPackageJson),
+    };
   }
+
+  throw new Error(
+    `Plugin ${pluginName} not found in workspace. Ensure it is properly installed as a dependency.`
+  );
 }
 
 export function loadNxPlugin(plugin: PluginConfiguration, root: string) {
