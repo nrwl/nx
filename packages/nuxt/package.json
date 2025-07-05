@@ -25,6 +25,17 @@
   "homepage": "https://nx.dev",
   "generators": "./generators.json",
   "executors": "./executors.json",
+  "exports": {
+    ".": {
+      "default": "./index.js",
+      "types": "./index.d.ts"
+    },
+    "./package.json": "./package.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./migrations.json": "./migrations.json",
+    "./plugin": "./plugin.js"
+  },
   "nx-migrations": {
     "migrations": "./migrations.json"
   },

@@ -2109,6 +2109,9 @@ importers:
       '@angular/build':
         specifier: '>= 18.0.0 < 21.0.0'
         version: 20.0.0(7531b49d8d97f3b540275db0a7e02249)
+      '@nx/cypress':
+        specifier: workspace:*
+        version: link:../cypress
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
@@ -2151,6 +2154,9 @@ importers:
       ng-packagr:
         specifier: '>= 18.0.0 < 21.0.0'
         version: 20.0.0(@angular/compiler-cli@20.0.0(@angular/compiler@20.0.0)(typescript@5.8.3))(tailwindcss@3.4.4(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@20.16.10)(typescript@5.8.3)))(tslib@2.8.1)(typescript@5.8.3)
+      nx:
+        specifier: workspace:*
+        version: link:../nx
       picocolors:
         specifier: ^1.1.0
         version: 1.1.1
@@ -2169,13 +2175,6 @@ importers:
       webpack-merge:
         specifier: ^5.8.0
         version: 5.10.0
-    devDependencies:
-      '@nx/cypress':
-        specifier: workspace:*
-        version: link:../cypress
-      nx:
-        specifier: workspace:*
-        version: link:../nx
 
   packages/create-nx-plugin:
     dependencies:

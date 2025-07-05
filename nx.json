@@ -193,7 +193,9 @@
       "cache": true
     },
     "copy-readme": {
-      "cache": true
+      "cache": true,
+      "inputs": ["production", "^production"],
+      "outputs": ["{workspaceRoot}/dist/packages/{projectName}/README.md"]
     },
     "legacy-post-build": {
       "cache": true,

@@ -70,9 +70,6 @@ export function readPluginPackageJson(
                 'package.json'
               );
               // We skip the local package.json of the plugin itself since we are using ts solutions
-              console.log(
-                `Checking possible pnpm package.json path: ${possiblePath}`
-              );
               if (
                 existsSync(possiblePath) &&
                 !possiblePath.endsWith(`packages/${pluginName}/package.json`)

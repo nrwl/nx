@@ -17,6 +17,20 @@
   ],
   "main": "./index.js",
   "typings": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./package.json": "./package.json",
+    "./tailwind": {
+      "types": "./src/tailwind.d.ts",
+      "default": "./src/tailwind.js"
+    },
+    "./executors": "./executors.json",
+    "./generators": "./generators.json",
+    "./migrations": "./migrations.json"
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
