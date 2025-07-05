@@ -67,6 +67,25 @@ const nxPackages = [
 
 type NxPackage = (typeof nxPackages)[number];
 
+function getPackageManagerVersion(packageManager: string): string {
+  try {
+    const version = execSync(`${packageManager} --version`, {
+      encoding: 'utf-8',
+      stdio: 'pipe',
+    }).trim();
+    return `${packageManager}@${version}`;
+  } catch {
+    // Fallback to known working versions
+    const fallbackVersions = {
+      pnpm: 'pnpm@9.15.9',
+      yarn: 'yarn@1.22.22',
+      npm: 'npm@10.8.2',
+      bun: 'bun@1.0.0',
+    };
+    return fallbackVersions[packageManager] || `${packageManager}@latest`;
+  }
+}
+
 /**
  * Sets up a new project in the temporary project path
  * for the currently selected CLI.
@@ -107,10 +126,18 @@ export function newProject({
         createNxWorkspaceEnd.name
       );
 
+      // Ensure the package manager is correctly set in the created workspace
+      if (packageManager) {
+        updateJson(`package.json`, (json) => {
+          json.packageManager = getPackageManagerVersion(packageManager);
+          return json;
+        });
+      }
+
       // Temporary hack to prevent installing with `--frozen-lockfile`
       if (isCI && packageManager === 'pnpm') {
         updateFile(
-          '.npmrc',
+          `.npmrc`,
           'prefer-frozen-lockfile=false\nstrict-peer-dependencies=false\nauto-install-peers=true'
         );
       }
@@ -129,7 +156,7 @@ export function newProject({
         packageInstallEnd.name
       );
       // stop the daemon
-      execSync(`${getPackageManagerCommand().runNx} reset`, {
+      execSync(`${getPackageManagerCommand({ packageManager }).runNx} reset`, {
         cwd: `${e2eCwd}/proj`,
         stdio: isVerbose() ? 'inherit' : 'pipe',
       });
