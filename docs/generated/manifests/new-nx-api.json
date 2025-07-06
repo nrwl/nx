@@ -1981,14 +1981,14 @@
       }
     },
     "migrations": {
-      "/technologies/react/expo/api/migrations/update-21-2-0-remove-deprecated-deps": {
+      "/technologies/react/expo/api/migrations/update-21-3-0-remove-deprecated-deps": {
         "description": "Remove deprecated dependencies from package.json",
-        "file": "generated/packages/expo/migrations/update-21-2-0-remove-deprecated-deps.json",
+        "file": "generated/packages/expo/migrations/update-21-3-0-remove-deprecated-deps.json",
         "hidden": false,
-        "name": "update-21-2-0-remove-deprecated-deps",
-        "version": "21.2.0-beta.0",
+        "name": "update-21-3-0-remove-deprecated-deps",
+        "version": "21.3.0-beta.0",
         "originalFilePath": "/packages/expo",
-        "path": "/technologies/react/expo/api/migrations/update-21-2-0-remove-deprecated-deps",
+        "path": "/technologies/react/expo/api/migrations/update-21-3-0-remove-deprecated-deps",
         "type": "migration"
       },
       "/technologies/react/expo/api/migrations/21.2.0-package-updates": {
@@ -4376,14 +4376,14 @@
       }
     },
     "migrations": {
-      "/technologies/react/react-native/api/migrations/update-21-2-0-remove-deprecated-deps": {
+      "/technologies/react/react-native/api/migrations/update-21-3-0-remove-deprecated-deps": {
         "description": "Remove deprecated dependencies from package.json",
-        "file": "generated/packages/react-native/migrations/update-21-2-0-remove-deprecated-deps.json",
+        "file": "generated/packages/react-native/migrations/update-21-3-0-remove-deprecated-deps.json",
         "hidden": false,
-        "name": "update-21-2-0-remove-deprecated-deps",
-        "version": "21.2.0-beta.0",
+        "name": "update-21-3-0-remove-deprecated-deps",
+        "version": "21.3.0-beta.0",
         "originalFilePath": "/packages/react-native",
-        "path": "/technologies/react/react-native/api/migrations/update-21-2-0-remove-deprecated-deps",
+        "path": "/technologies/react/react-native/api/migrations/update-21-3-0-remove-deprecated-deps",
         "type": "migration"
       },
       "/technologies/react/react-native/api/migrations/21.2.0-beta.0-package-updates": {
