@@ -391,6 +391,8 @@ describe('app', () => {
           "name",
           "version",
           "private",
+          "scripts",
+          "dependencies",
         ]
       `);
       expect(readJson(tree, 'my-app/tsconfig.json')).toMatchInlineSnapshot(`
@@ -450,6 +452,8 @@ describe('app', () => {
             "**/*.tsx",
             "**/*.js",
             "**/*.jsx",
+            ".expo/types/**/*.ts",
+            "expo-env.d.ts",
           ],
         }
       `);
@@ -515,9 +519,13 @@ describe('app', () => {
           "name",
           "version",
           "private",
+          "scripts",
           "nx",
+          "dependencies",
         ]
       `);
+
+      expect(packageJson).toHaveProperty('dependencies.expo');
     });
 
     it('should generate project.json if useProjectJson is true', async () => {
