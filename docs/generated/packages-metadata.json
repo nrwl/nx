@@ -2094,12 +2094,12 @@
     "migrations": [
       {
         "description": "Remove deprecated dependencies from package.json",
-        "file": "generated/packages/expo/migrations/update-21-2-0-remove-deprecated-deps.json",
+        "file": "generated/packages/expo/migrations/update-21-3-0-remove-deprecated-deps.json",
         "hidden": false,
-        "name": "update-21-2-0-remove-deprecated-deps",
-        "version": "21.2.0-beta.0",
+        "name": "update-21-3-0-remove-deprecated-deps",
+        "version": "21.3.0-beta.0",
         "originalFilePath": "/packages/expo",
-        "path": "expo/migrations/update-21-2-0-remove-deprecated-deps",
+        "path": "expo/migrations/update-21-3-0-remove-deprecated-deps",
         "type": "migration"
       },
       {
@@ -4498,12 +4498,12 @@
     "migrations": [
       {
         "description": "Remove deprecated dependencies from package.json",
-        "file": "generated/packages/react-native/migrations/update-21-2-0-remove-deprecated-deps.json",
+        "file": "generated/packages/react-native/migrations/update-21-3-0-remove-deprecated-deps.json",
         "hidden": false,
-        "name": "update-21-2-0-remove-deprecated-deps",
-        "version": "21.2.0-beta.0",
+        "name": "update-21-3-0-remove-deprecated-deps",
+        "version": "21.3.0-beta.0",
         "originalFilePath": "/packages/react-native",
-        "path": "react-native/migrations/update-21-2-0-remove-deprecated-deps",
+        "path": "react-native/migrations/update-21-3-0-remove-deprecated-deps",
         "type": "migration"
       },
       {
