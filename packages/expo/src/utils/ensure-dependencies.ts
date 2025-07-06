@@ -35,11 +35,8 @@ export function ensureDependencies(
   }
 
   if (unitTestRunner === 'jest') {
-    devDependencies['react-test-renderer'] = reactTestRendererVersion;
     devDependencies['@testing-library/react-native'] =
       testingLibraryReactNativeVersion;
-    devDependencies['@testing-library/jest-native'] =
-      testingLibraryJestNativeVersion;
     devDependencies['jest-expo'] = jestExpoVersion;
   }
 

@@ -452,6 +452,8 @@ describe('app', () => {
             "**/*.tsx",
             "**/*.js",
             "**/*.jsx",
+            ".expo/types/**/*.ts",
+            "expo-env.d.ts",
           ],
         }
       `);
