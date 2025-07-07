@@ -10,6 +10,7 @@ import {
   updateJson,
   workspaceRoot,
 } from '@nx/devkit';
+import { existsSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path/posix';
 import { FsTree } from 'nx/src/generators/tree';
 import {
@@ -294,11 +295,18 @@ export function getProjectSourceRoot(
   project: ProjectConfiguration,
   tree?: Tree
 ): string {
-  tree ??= new FsTree(workspaceRoot, false);
+  if (tree) {
+    return (
+      project.sourceRoot ??
+      (tree.exists(joinPathFragments(project.root, 'src'))
+        ? joinPathFragments(project.root, 'src')
+        : project.root)
+    );
+  }
 
   return (
     project.sourceRoot ??
-    (tree.exists(joinPathFragments(project.root, 'src'))
+    (existsSync(join(workspaceRoot, project.root, 'src'))
       ? joinPathFragments(project.root, 'src')
       : project.root)
   );
