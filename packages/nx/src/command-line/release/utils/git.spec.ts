@@ -1,4 +1,4 @@
-import { extractReferencesFromCommit, getLatestGitTagForPattern, isStableSemver } from './git';
+import { extractReferencesFromCommit, getLatestGitTagForPattern } from './git';
 
 jest.mock('./exec-command', () => ({
   execCommand: jest.fn(() =>
@@ -23,6 +23,8 @@ my-lib-4@1.2.4-alpha.1
 my-lib-4@1.2.3
 alpha-lib@1.2.4
 alpha-lib@1.2.4-beta.1
+lib-only-pre-release@1.2.4-beta.1
+lib-only-pre-release@1.2.4-beta.1+build.1
 `)
   ),
 }));
@@ -260,6 +262,32 @@ See merge request nx-release-test/nx-release-test!2`,
       expectedTag: 'my-lib-4@1.2.3',
       expectedVersion: '1.2.3',
     },
+    {
+      pattern: '{projectName}@{version}',
+      projectName: 'lib-no-tags',
+      expectedTag: undefined,
+      expectedVersion: undefined,
+    },
+    {
+      pattern: '{projectName}@{version}',
+      projectName: 'lib-only-pre-release',
+      expectedTag: undefined,
+      expectedVersion: undefined,
+    },
+    {
+      pattern: '{projectName}@{version}',
+      projectName: 'lib-only-pre-release',
+      expectedTag: 'lib-only-pre-release@1.2.4-beta.1',
+      expectedVersion: '1.2.4-beta.1',
+      preId: 'beta',
+    },
+    {
+      pattern: '{projectName}@{version}',
+      projectName: 'lib-only-pre-release',
+      expectedTag: undefined,
+      expectedVersion: undefined,
+      preId: 'alpha',
+    },
   ];
 
   describe('getLatestGitTagForPattern', () => {
@@ -268,7 +296,7 @@ See merge request nx-release-test/nx-release-test!2`,
     });
 
     it.each(releaseTagPatternTestCases)(
-      'should return tag $expectedTag for pattern $pattern',
+      'should return tag $expectedTag for pattern $pattern and preId $preId',
       async ({
         pattern,
         projectName,
@@ -288,8 +316,8 @@ See merge request nx-release-test/nx-release-test!2`,
           }
         );
 
-        expect(result.tag).toEqual(expectedTag);
-        expect(result.extractedVersion).toEqual(expectedVersion);
+        expect(result?.tag).toEqual(expectedTag);
+        expect(result?.extractedVersion).toEqual(expectedVersion);
       }
     );
 
@@ -312,35 +340,6 @@ See merge request nx-release-test/nx-release-test!2`,
       });
 
       expect(result).toEqual(null);
-    });
-  });
-
-  describe('isStableSemver', () => {
-    const versionTestCases = [
-      {
-        version: '0.0.0',
-        expected: true,
-      },
-      {
-        version: '1.0.0',
-        expected: true,
-      },
-      {
-        version: '1.0.0-beta.1',
-        expected: false,
-      },
-      {
-        version: '1.0.0+build.1',
-        expected: false,
-      },
-      {
-        version: '1.0.0-beta.1+build.1',
-        expected: false,
-      },
-    ];
-
-    it.each(versionTestCases)('should return $expected for version $version', ({ version, expected }) => {
-      expect(isStableSemver(version)).toEqual(expected);
     });
   });
 });
