@@ -277,7 +277,7 @@
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 1,
+  "bust": 3,
   "defaultBase": "master",
   "conformance": {
     "rules": [

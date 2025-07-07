@@ -22,6 +22,13 @@
         "legacy-post-build"
       ]
     },
+    "build-base-ts": {
+      "dependsOn": [
+        "^build-base-ts",
+        "build-native",
+        "gradle-batch-runner:assemble"
+      ]
+    },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
