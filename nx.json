@@ -107,7 +107,7 @@
       "dependsOn": ["^build-base", "build-native"],
       "inputs": ["production", "^production"],
       "options": {
-        "outputPath": "dist/packages/{projectRoot}",
+        "outputPath": "dist/{projectRoot}",
         "tsConfig": "{projectRoot}/tsconfig.lib.json",
         "main": "{projectRoot}/index.ts"
       },
@@ -199,7 +199,7 @@
     "legacy-post-build": {
       "cache": true,
       "inputs": ["production", "^production"],
-      "outputs": ["{workspaceRoot}/dist/packages/{projectRoot}/**/*"]
+      "outputs": ["{workspaceRoot}/dist/packages/{projectName}"]
     }
   },
   "plugins": [

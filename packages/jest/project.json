@@ -9,14 +9,6 @@
       "command": "node ./scripts/copy-readme.js jest",
       "dependsOn": ["^build", "build-base-ts", "legacy-post-build"]
     },
-    "copy-readme": {
-      "dependsOn": [
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        }
-      ]
-    },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
