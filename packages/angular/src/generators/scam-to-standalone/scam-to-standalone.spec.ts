@@ -17,22 +17,21 @@ describe('scam-to-standalone', () => {
 
     tree.write(
       'foo/src/app/mymodule.module.ts',
-      `import { BarComponentModule } from './bar/bar.component';
+      `import { BarModule } from './bar/bar';
       import { ExtraBarComponentModule } from './bar/extra-bar.component';
       
       @NgModule({
-        imports: [BarComponentModule, ExtraBarComponentModule]
+        imports: [BarModule, ExtraBarComponentModule]
       })
       export class MyModule {}`
     );
 
     await scamToStandalone(tree, {
-      component: 'src/app/bar/bar.component.ts',
+      component: 'src/app/bar/bar.ts',
       project: 'foo',
     });
 
-    expect(tree.read('foo/src/app/bar/bar.component.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
+    expect(tree.read('foo/src/app/bar/bar.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { Component, NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
 
@@ -40,40 +39,40 @@ describe('scam-to-standalone', () => {
         imports: [CommonModule],
         selector: 'app-bar',
         standalone: false,
-        templateUrl: './bar.component.html',
-        styleUrl: './bar.component.css',
+        templateUrl: './bar.html',
+        styleUrl: './bar.css',
       })
-      export class BarComponent {}
+      export class Bar {}
       "
     `);
 
     expect(tree.read('foo/src/app/mymodule.module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { BarComponent } from './bar/bar.component';
+      "import { Bar } from './bar/bar';
       import { ExtraBarComponentModule } from './bar/extra-bar.component';
 
       @NgModule({
-        imports: [BarComponent, ExtraBarComponentModule],
+        imports: [Bar, ExtraBarComponentModule],
       })
       export class MyModule {}
       "
     `);
 
-    expect(tree.read('foo/src/app/bar/bar.component.spec.ts', 'utf-8'))
+    expect(tree.read('foo/src/app/bar/bar.spec.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { ComponentFixture, TestBed } from '@angular/core/testing';
-      import { BarComponent } from './bar.component';
+      import { Bar } from './bar';
 
-      describe('BarComponent', () => {
-        let component: BarComponent;
-        let fixture: ComponentFixture<BarComponent>;
+      describe('Bar', () => {
+        let component: Bar;
+        let fixture: ComponentFixture<Bar>;
 
         beforeEach(async () => {
           await TestBed.configureTestingModule({
-            imports: [BarComponent],
+            imports: [Bar],
           }).compileComponents();
 
-          fixture = TestBed.createComponent(BarComponent);
+          fixture = TestBed.createComponent(Bar);
           component = fixture.componentInstance;
           fixture.detectChanges();
         });

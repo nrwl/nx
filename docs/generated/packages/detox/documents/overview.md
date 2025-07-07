@@ -3,6 +3,8 @@ title: Detox Plugin for Nx
 description: Learn how to set up and use Detox for end-to-end testing of mobile applications in your Nx workspace, including environment setup and configuration options.
 ---
 
+# @nx/detox
+
 Detox is gray box end-to-end testing and automation library for mobile apps. It has a lot of great features:
 
 - Cross Platform

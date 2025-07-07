@@ -125,12 +125,12 @@ module.exports = {
 `;
 
 exports[`remote generator bundler=rspack should create the remote with the correct config files when --typescriptConfiguration=true 1`] = `
-"import { NxAppRspackPlugin } from '@nx/rspack/app-plugin';
-import { NxReactRspackPlugin } from '@nx/rspack/react-plugin';
+"import { NxAppRspackPlugin } from '@nx/rspack/app-plugin.js';
+import { NxReactRspackPlugin } from '@nx/rspack/react-plugin.js';
 import {
   NxModuleFederationPlugin,
   NxModuleFederationDevServerPlugin,
-} from '@nx/module-federation/rspack';
+} from '@nx/module-federation/rspack.js';
 import { join } from 'path';
 
 import config from './module-federation.config';

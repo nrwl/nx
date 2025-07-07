@@ -8,12 +8,12 @@ description: This guide explains how to set up Storybook for Angular projects in
 This guide will walk you through setting up [Storybook](https://storybook.js.org) for Angular projects in your Nx workspace.
 
 {% callout type="warning" title="Set up Storybook in your workspace" %}
-You first need to set up Storybook for your Nx workspace, if you haven't already. You can read the [Storybook plugin overview guide](/nx-api/storybook) to get started.
+You first need to set up Storybook for your Nx workspace, if you haven't already. You can read the [Storybook plugin overview guide](/technologies/test-tools/storybook/introduction) to get started.
 {% /callout %}
 
 ## Generate Storybook Configuration for an Angular project
 
-You can generate Storybook configuration for an individual Angular project by using the [`@nx/angular:storybook-configuration` generator](/nx-api/angular/generators/storybook-configuration), like this:
+You can generate Storybook configuration for an individual Angular project by using the [`@nx/angular:storybook-configuration` generator](/technologies/angular/api/generators/storybook-configuration), like this:
 
 ```shell
 nx g @nx/angular:storybook-configuration project-name
@@ -21,15 +21,15 @@ nx g @nx/angular:storybook-configuration project-name
 
 ## Auto-generate Stories
 
-The [`@nx/angular:storybook-configuration` generator](/nx-api/angular/generators/storybook-configuration) has the option to automatically generate `*.stories.ts` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
+The [`@nx/angular:storybook-configuration` generator](/technologies/angular/api/generators/storybook-configuration) has the option to automatically generate `*.stories.ts` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
 
 ```text
 <some-folder>/
-├── my.component.ts
-└── my.component.stories.ts
+├── my-component.ts
+└── my-component.stories.ts
 ```
 
-If you add more components to your project, and want to generate stories for all your (new) components at any point, you can use the [`@nx/angular:stories` generator](/nx-api/angular/generators/stories):
+If you add more components to your project, and want to generate stories for all your (new) components at any point, you can use the [`@nx/angular:stories` generator](/technologies/angular/api/generators/stories):
 
 ```shell
 nx g @nx/angular:stories --project=<project-name>
@@ -56,8 +56,8 @@ and the result would be the following:
 |   |   |   ├── src/
 |   |   |   |   ├──lib
 |   |   |   |   |   ├──my-button
-|   |   |   |   |   |   ├── my-button.component.ts
-|   |   |   |   |   |   ├── my-button.component.stories.ts
+|   |   |   |   |   |   ├── my-button.ts
+|   |   |   |   |   |   ├── my-button.stories.ts
 |   |   |   |   |   |   └── etc...
 |   |   |   |   |   └── etc...
 |   |   |   ├── README.md
@@ -79,7 +79,7 @@ Let's take for example a library in your workspace, under `libs/feature/ui`, cal
 
 Let's say that the template for that component looks like this:
 
-```html {% fileName="libs/feature/ui/src/lib/my-button/my-button.component.html" %}
+```html {% fileName="libs/feature/ui/src/lib/my-button/my-button.html" %}
 <button [disabled]="disabled" [ngStyle]="{ 'padding.px': padding }">
   {{ text }}
 </button>
@@ -87,16 +87,16 @@ Let's say that the template for that component looks like this:
 
 and the component looks like this:
 
-```typescript {% fileName="libs/feature/ui/src/lib/my-button/my-button.component.ts" %}
+```typescript {% fileName="libs/feature/ui/src/lib/my-button/my-button.ts" %}
 import { Component, Input } from '@angular/core';
 
 @Component({
   selector: 'feature-ui-my-button',
   standalone: true,
-  templateUrl: './my-button.component.html',
-  styleUrls: ['./my-button.component.css'],
+  templateUrl: './my-button.html',
+  styleUrls: ['./my-button.css'],
 })
-export class MyButtonComponent {
+export class MyButton {
   @Input() text = 'Click me!';
   @Input() padding = 10;
   @Input() disabled = true;
@@ -105,20 +105,20 @@ export class MyButtonComponent {
 
 ### Story file
 
-The [`@nx/angular:storybook-configuration` generator](/nx-api/angular/generators/storybook-configuration) would generate a Story file that looks like this:
+The [`@nx/angular:storybook-configuration` generator](/technologies/angular/api/generators/storybook-configuration) would generate a Story file that looks like this:
 
-```typescript {% fileName="libs/feature/ui/src/lib/my-button/my-button.component.stories.ts" %}
+```typescript {% fileName="libs/feature/ui/src/lib/my-button/my-button.stories.ts" %}
 import type { Meta, StoryObj } from '@storybook/angular';
-import { MyButtonComponent } from './my-button.component';
+import { MyButton } from './my-button';
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
-const meta: Meta<MyButtonComponent> = {
-  component: MyButtonComponent,
-  title: 'MyButtonComponent',
+const meta: Meta<MyButton> = {
+  component: MyButton,
+  title: 'MyButton',
 };
 export default meta;
-type Story = StoryObj<MyButtonComponent>;
+type Story = StoryObj<MyButton>;
 
 export const Primary: Story = {
   args: {
@@ -176,10 +176,10 @@ This setup instructs Nx to use the configuration under the `build` target of `my
 
 ## More Documentation
 
-- [Set up Compodoc for Storybook on Nx](/recipes/storybook/angular-storybook-compodoc)
-- [Configuring styles and preprocessor options](/recipes/storybook/angular-configuring-styles)
+- [Set up Compodoc for Storybook on Nx](/technologies/test-tools/storybook/recipes/angular-storybook-compodoc)
+- [Configuring styles and preprocessor options](/technologies/test-tools/storybook/recipes/angular-configuring-styles)
 
-You can find all Storybook-related Nx topics [here](/nx-api#storybook).
+You can find all Storybook-related Nx topics [here](/technologies/test-tools/storybook/introduction).
 
 For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/angular/get-started/introduction).
 
@@ -187,5 +187,5 @@ For more on using Storybook, see the [official Storybook documentation](https://
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 
-- [Set up Storybook version 7](/nx-api/storybook/documents/storybook-7-setup)
-- [Migrate to Storybook version 7](/nx-api/storybook/generators/migrate-7)
+- [Set up Storybook version 9](/technologies/test-tools/storybook/recipes/storybook-9-setup)
+- [Migrate to Storybook version 9](/technologies/test-tools/storybook/api/generators/migrate-9)

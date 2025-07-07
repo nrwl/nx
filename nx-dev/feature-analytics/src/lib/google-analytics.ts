@@ -12,6 +12,7 @@ export function sendPageViewEvent(data: {
   path?: string;
   title?: string;
 }): void {
+  if (process.env.NODE_ENV !== 'production') return;
   try {
     gtag('config', data.gaId, {
       ...(!!data.path && { page_path: data.path }),
@@ -29,6 +30,7 @@ export function sendCustomEvent(
   value?: number,
   customObject?: Record<string, unknown>
 ): void {
+  if (process.env.NODE_ENV !== 'production') return;
   try {
     gtag('event', action, {
       event_category: category,

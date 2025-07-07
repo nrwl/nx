@@ -1,3 +1,5 @@
+import { processRuntimeRemoteUrl } from './url-helpers';
+
 export type ResolveRemoteUrlFunction = (
   remoteName: string
 ) => string | Promise<string>;
@@ -131,12 +133,7 @@ async function loadRemoteContainer(remoteName: string) {
     ? remoteUrlDefinitions[remoteName]
     : await resolveRemoteUrl(remoteName);
 
-  let containerUrl = remoteUrl;
-  if (!remoteUrl.endsWith('.mjs') && !remoteUrl.endsWith('.js')) {
-    containerUrl = `${remoteUrl}${
-      remoteUrl.endsWith('/') ? '' : '/'
-    }remoteEntry.mjs`;
-  }
+  const containerUrl = processRuntimeRemoteUrl(remoteUrl, 'mjs');
 
   const container = await loadModule(containerUrl);
   await container.init(__webpack_share_scopes__.default);

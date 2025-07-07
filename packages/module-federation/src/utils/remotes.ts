@@ -1,5 +1,5 @@
 import { Remotes } from './models';
-import { extname } from 'path';
+import { processRemoteLocation } from './url-helpers';
 
 /**
  * Map remote names to a format that can be understood and used by Module
@@ -45,33 +45,17 @@ function handleArrayRemote(
   remoteEntryExt: 'js' | 'mjs',
   isRemoteGlobal: boolean
 ): string {
-  let [nxRemoteProjectName, remoteLocation] = remote;
+  const [nxRemoteProjectName, remoteLocation] = remote;
   const mfRemoteName = normalizeRemoteName(nxRemoteProjectName);
-  const remoteLocationExt = extname(remoteLocation);
 
-  // If remote location already has .js or .mjs extension
-  if (['.js', '.mjs', '.json'].includes(remoteLocationExt)) {
-    if (isRemoteGlobal && !remoteLocation.startsWith(`${mfRemoteName}@`)) {
-      return `${mfRemoteName}@${remoteLocation}`;
-    }
-    return remoteLocation;
+  const finalRemoteUrl = processRemoteLocation(remoteLocation, remoteEntryExt);
+
+  // Promise-based remotes should not use the global prefix format
+  if (remoteLocation.startsWith('promise new Promise')) {
+    return finalRemoteUrl;
   }
 
-  const baseRemote = remoteLocation.endsWith('/')
-    ? remoteLocation.slice(0, -1)
-    : remoteLocation;
-
-  const globalPrefix = isRemoteGlobal
-    ? `${normalizeRemoteName(nxRemoteProjectName)}@`
-    : '';
-
-  // if the remote is defined with anything other than http then we assume it's a promise based remote
-  // In that case we should use what the user provides as the remote location
-  if (!remoteLocation.startsWith('promise new Promise')) {
-    return `${globalPrefix}${baseRemote}/remoteEntry.${remoteEntryExt}`;
-  } else {
-    return remoteLocation;
-  }
+  return isRemoteGlobal ? `${mfRemoteName}@${finalRemoteUrl}` : finalRemoteUrl;
 }
 
 // Helper function to deal with remotes that are strings
@@ -106,16 +90,18 @@ export function mapRemotesForSSR(
     if (Array.isArray(remote)) {
       let [nxRemoteProjectName, remoteLocation] = remote;
       const mfRemoteName = normalizeRemoteName(nxRemoteProjectName);
-      const remoteLocationExt = extname(remoteLocation);
-      mappedRemotes[mfRemoteName] = `${mfRemoteName}@${
-        ['.js', '.mjs', '.json'].includes(remoteLocationExt)
-          ? remoteLocation
-          : `${
-              remoteLocation.endsWith('/')
-                ? remoteLocation.slice(0, -1)
-                : remoteLocation
-            }/remoteEntry.${remoteEntryExt}`
-      }`;
+
+      const finalRemoteUrl = processRemoteLocation(
+        remoteLocation,
+        remoteEntryExt
+      );
+
+      // Promise-based remotes should not use the global prefix format
+      if (remoteLocation.startsWith('promise new Promise')) {
+        mappedRemotes[mfRemoteName] = finalRemoteUrl;
+      } else {
+        mappedRemotes[mfRemoteName] = `${mfRemoteName}@${finalRemoteUrl}`;
+      }
     } else if (typeof remote === 'string') {
       const mfRemoteName = normalizeRemoteName(remote);
       mappedRemotes[mfRemoteName] = `${mfRemoteName}@${determineRemoteUrl(

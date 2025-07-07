@@ -34,7 +34,7 @@ first rename the file to `apps/demo/vite.config.ts` before running the generator
 
 ## Next.js: Unable to Migrate `outputPath`, `generateLockfile` and `includeDevDependenciesInPackageJson` Options
 
-The [`outputPath`](/nx-api/remix/executors/build#outputpath) option from `@nx/next:build` is ignored because it
+The [`outputPath`](/technologies/react/remix/api/executors/build#outputpath) option from `@nx/next:build` is ignored because it
 conflicts with Next.js' requirement that [`distDir`](https://nextjs.org/docs/app/api-reference/next-config-js/distDir)
 remain inside the project directory. Previously, the `@nx/next:build` executor performed workarounds to bring it outside
 the project root, but those workarounds lead to other issues, such as Turbopack not working.
@@ -74,7 +74,7 @@ migration, `nx run <proj>:serve --prod` not longer starts the prod server. Use `
 
 ## Remix: Unable to Migrate `outputPath` Option
 
-The [`outputPath`](/nx-api/remix/executors/build#outputpath) option from `@nx/remix:build` is ignored because it often
+The [`outputPath`](/technologies/react/remix/api/executors/build#outputpath) option from `@nx/remix:build` is ignored because it often
 leads to ESM errors when the output path is outside the project root. The ESM error occurs because the
 root `package.json` may not have `"type": "module"` set, which means that the compiled ESM code will fail to run. To
 guarantee that `serve` works, we migrate the outputs to the Remix defaults (`build` and `public/build` inside the
@@ -97,9 +97,9 @@ to `"type": "module"`.
 
 ## Remix: Unsupported `generatePackageJson` and `generateLockFile` Options
 
-The `generatePackageJson` and `generateLockFile` options in [`@nx/remix:build`](/nx-api/remix/executors/build) cannot
+The `generatePackageJson` and `generateLockFile` options in [`@nx/remix:build`](/technologies/react/remix/api/executors/build) cannot
 currently be migrated. There is support for this feature in
-the [Nx Vite plugin](/recipes/vite/configure-vite#typescript-paths), so in the future we may be able to support it if
+the [Nx Vite plugin](/technologies/build-tools/vite/recipes/configure-vite#typescript-paths), so in the future we may be able to support it if
 using Remix+Vite.
 
 ## Storybook: Conflicting `staticDir` Options
@@ -126,7 +126,7 @@ export default config;
 
 ## Vite: Unsupported `proxyConfig` Option
 
-Projects that used the [`proxyConfig`](/nx-api/vite/executors/dev-server#proxyconfig) option of `@nx/vite:dev-server`
+Projects that used the [`proxyConfig`](/technologies/build-tools/vite/api/executors/dev-server#proxyconfig) option of `@nx/vite:dev-server`
 will need to inline the proxy configuration from the original file into `vite.config.ts`.
 
 For example, if you previously used this in `proxy.config.json`:
@@ -158,7 +158,7 @@ export default defineConfig({
 ## Webpack: Project Cannot Be Migrated
 
 Projects that
-use [Nx-enhanced Webpack configuration](/recipes/webpack/webpack-config-setup#nxenhanced-configuration-with-composable-plugins)
+use [Nx-enhanced Webpack configuration](/technologies/build-tools/webpack/recipes/webpack-config-setup#nxenhanced-configuration-with-composable-plugins)
 files cannot be migrated to use Webpack CLI. Nx-enhanced configuration files that contain `composePlugins` and `withNx`
 require the `@nx/webpack:webpack` executor to work.
 
@@ -167,7 +167,7 @@ To solve this issue, run `nx g @nx/webpack:convert-config-to-webpack-plugin` fir
 ## Webpack: Usage of `useLegacyNxPlugin`
 
 When converting
-from [Nx-enhanced](/recipes/webpack/webpack-config-setup#nxenhanced-configuration-with-composable-plugins) to basic
+from [Nx-enhanced](/technologies/build-tools/webpack/recipes/webpack-config-setup#nxenhanced-configuration-with-composable-plugins) to basic
 Webpack configuration, we add the `useLegacyNxPlugin` utility function to
 ensure that your build tasks behave the same after the migration. We recommend that you refactor the configuration such
 that `useLegacyNxPlugin` is not needed.

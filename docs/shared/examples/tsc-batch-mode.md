@@ -35,4 +35,4 @@ The `@nx/js:tsc` batch implementation addresses this by creating the required pr
 
 ## See Also
 
-- [Enable Typescript Batch Mode](/recipes/tips-n-tricks/enable-tsc-batch-mode)
+- [Enable Typescript Batch Mode](/technologies/typescript/recipes/enable-tsc-batch-mode)

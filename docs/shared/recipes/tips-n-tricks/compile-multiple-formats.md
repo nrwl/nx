@@ -63,7 +63,7 @@ You can then configure Rollup to compile your library by adding a `build` target
 {% /tab%}
 {% /tabs %}
 
-If you happen to use the `@nx/js:tsc` executor already, you can also use the [Rollup configuration](/nx-api/rollup/generators/configuration) generator from the Nx Rollup plugin to automatically configure your project's build target.
+If you happen to use the `@nx/js:tsc` executor already, you can also use the [Rollup configuration](/technologies/build-tools/rollup/api/generators/configuration) generator from the Nx Rollup plugin to automatically configure your project's build target.
 
 ## Configure Rollup to Create Multiple Formats
 

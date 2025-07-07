@@ -190,6 +190,16 @@ export function addOrChangeBuildTarget(
     assets,
   };
 
+  const existingProjectConfigurations = {};
+  const buildTarget = project.targets.build;
+  if (buildTarget && buildTarget.configurations) {
+    for (const [configurationName, configuration] of Object.entries(
+      buildTarget.configurations
+    )) {
+      existingProjectConfigurations[configurationName] = configuration;
+    }
+  }
+
   project.targets ??= {};
 
   project.targets[target] = {
@@ -199,9 +209,11 @@ export function addOrChangeBuildTarget(
     options: buildOptions,
     configurations: {
       development: {
+        ...(existingProjectConfigurations['development'] ?? {}),
         mode: 'development',
       },
       production: {
+        ...(existingProjectConfigurations['production'] ?? {}),
         mode: 'production',
         optimization: options.target === 'web' ? true : undefined,
         sourceMap: false,
@@ -371,7 +383,7 @@ function generateNestConfig(
   project: ProjectConfiguration,
   buildOptions: RspackExecutorSchema
 ): string {
-  if (hasPlugin(tree)) {
+  if (hasPlugin(tree) && options.addPlugin !== false) {
     return `
 const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
 const rspack = require('@rspack/core');

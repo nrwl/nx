@@ -191,20 +191,20 @@ describe('nx release multiple release branches', () => {
       +   "version": "0.1.0",
       "scripts": {
 
-
-      "name": "@proj/{project-name}",
-      -   "version": "0.0.7",
-      +   "version": "0.1.0",
-      "scripts": {
-
-
-      "name": "@proj/{project-name}",
-      -   "version": "0.0.7",
-      +   "version": "0.1.0",
-      "scripts": {
-
       }
       +
+
+
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.7",
+      +   "version": "0.1.0",
+      "scripts": {
+
+
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.7",
+      +   "version": "0.1.0",
+      "scripts": {
 
 
       NX   Committing changes with git
@@ -330,20 +330,20 @@ describe('nx release multiple release branches', () => {
       +   "version": "0.1.0",
       "scripts": {
 
-
-      "name": "@proj/{project-name}",
-      -   "version": "0.0.0",
-      +   "version": "0.1.0",
-      "scripts": {
-
-
-      "name": "@proj/{project-name}",
-      -   "version": "0.0.0",
-      +   "version": "0.1.0",
-      "scripts": {
-
       }
       +
+
+
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.0",
+      +   "version": "0.1.0",
+      "scripts": {
+
+
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.0",
+      +   "version": "0.1.0",
+      "scripts": {
 
 
       NX   Committing changes with git

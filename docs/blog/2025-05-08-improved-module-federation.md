@@ -27,9 +27,9 @@ However, before even being able to contemplate that, a different feature needed 
 
 We have introduced three new [Rspack](https://rspack.dev) Plugins for Module Federation that can be used with Nx.
 
-- [NxModuleFederationPlugin](/nx-api/module-federation/documents/nx-module-federation-plugin): Gathers information from the Nx Workspace to correctly configure `rspack.ModuleFederationPlugin`
-- [NxModuleFederationDevServerPlugin](/nx-api/module-federation/documents/nx-module-federation-dev-server-plugin): Used to handle the static-serving of non-dev remotes for CSR applications
-- [NxModuleFederationSSRDevServerPlugin](/nx-api/module-federation/documents/nx-module-federation-dev-server-plugin#server-side-rendering): Used to handle the static-serving of non-dev remotes for SSR applications
+- [NxModuleFederationPlugin](/technologies/module-federation/recipes/nx-module-federation-plugin): Gathers information from the Nx Workspace to correctly configure `rspack.ModuleFederationPlugin`
+- [NxModuleFederationDevServerPlugin](/technologies/module-federation/recipes/nx-module-federation-dev-server-plugin): Used to handle the static-serving of non-dev remotes for CSR applications
+- [NxModuleFederationSSRDevServerPlugin](/technologies/module-federation/recipes/nx-module-federation-dev-server-plugin#server-side-rendering): Used to handle the static-serving of non-dev remotes for SSR applications
 
 These are true Rspack Plugins that should be added to the `plugins: []` of an `rspack.config` file.
 
@@ -133,8 +133,8 @@ With the new [Terminal UI](/recipes/running-tasks/terminal-ui) you can very easi
 
 ## Further Reading
 
-- [Module Federation and Nx](/concepts/module-federation/module-federation-and-nx)
-- [Nx Module Federation Technical Overview](/concepts/module-federation/nx-module-federation-technical-overview)
+- [Module Federation and Nx](/technologies/module-federation/concepts/module-federation-and-nx)
+- [Nx Module Federation Technical Overview](/technologies/module-federation/concepts/nx-module-federation-technical-overview)
 - 🧠 [**Nx Docs**](/getting-started/intro)
 - 👩‍💻 [**Nx GitHub**](https://github.com/nrwl/nx)
 - 💬 [**Nx Official Discord Server**](https://go.nx.dev/community)

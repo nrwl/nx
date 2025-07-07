@@ -1,11 +1,12 @@
 import { ExecutorContext } from '@nx/devkit';
-import { gradleExecutorSchema } from './schema';
+import { GradleExecutorSchema } from './schema';
 import { findGradlewFile } from '../../utils/exec-gradle';
 import { dirname, join } from 'node:path';
 import runCommandsImpl from 'nx/src/executors/run-commands/run-commands.impl';
+import { getExcludeTasks } from './get-exclude-task';
 
 export default async function gradleExecutor(
-  options: gradleExecutorSchema,
+  options: GradleExecutorSchema,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
   let projectRoot =
@@ -22,6 +23,16 @@ export default async function gradleExecutor(
   if (options.testClassName) {
     args.push(`--tests`, options.testClassName);
   }
+
+  getExcludeTasks(
+    new Set([`${context.projectName}:${context.targetName}`]),
+    context.projectGraph.nodes
+  ).forEach((task) => {
+    if (task) {
+      args.push('--exclude-task', task);
+    }
+  });
+
   try {
     const { success } = await runCommandsImpl(
       {

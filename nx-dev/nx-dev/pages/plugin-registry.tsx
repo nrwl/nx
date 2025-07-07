@@ -12,7 +12,7 @@ import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { menusApi } from '../lib/menus.api';
 import { useNavToggle } from '../lib/navigation-toggle.effect';
-import { nxPackagesApi } from '../lib/packages.api';
+import { nxNewPackagesApi } from '../lib/new-packages.api';
 import { ScrollableContent } from '@nx/ui-scrollable-content';
 
 declare const fetch: any;
@@ -35,7 +35,9 @@ export async function getStaticProps(): Promise<{ props: BrowseProps }> {
   );
   const pluginList = await res.json();
 
-  const officialPluginList = (nxPackagesApi.getRootPackageIndex() ?? []).filter(
+  const officialPluginList = (
+    nxNewPackagesApi.getRootPackageIndex() ?? []
+  ).filter(
     (m) =>
       m.name !== 'add-nx-to-monorepo' &&
       m.name !== 'cra-to-nx' &&
@@ -92,7 +94,7 @@ export default function Browse(props: BrowseProps): JSX.Element {
               url: 'https://nx.dev/images/nx-media.jpg',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart Monorepos · Fast CI',
+              alt: 'Nx: Smart Repos · Fast Builds',
               type: 'image/jpeg',
             },
           ],

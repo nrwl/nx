@@ -41,6 +41,11 @@ export declare class FileLock {
   lock(): void
 }
 
+export declare class HashPlanInspector {
+  constructor(allWorkspaceFiles: ExternalObject<Array<FileData>>, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>)
+  inspect(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, string[]>
+}
+
 export declare class HashPlanner {
   constructor(nxJson: NxJson, projectGraph: ExternalObject<ProjectGraph>)
   getPlans(taskIds: Array<string>, taskGraph: TaskGraph): Record<string, string[]>
@@ -71,6 +76,12 @@ export declare class NxCache {
   copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): number
   removeOldCacheRecords(): void
   checkCacheFsInSync(): boolean
+}
+
+export declare class NxConsolePreferences {
+  constructor(homeDir: string)
+  getAutoInstallPreference(): boolean | null
+  setAutoInstallPreference(autoInstall: boolean): void
 }
 
 export declare class NxTaskHistory {
@@ -147,6 +158,8 @@ export interface CachedResult {
   outputsPath: string
   size?: number
 }
+
+export declare export declare function canInstallNxConsole(): boolean
 
 export declare export declare function closeDbConnection(connection: ExternalObject<NxDbConnection>): void
 
@@ -235,11 +248,11 @@ export interface InputsInput {
   projects?: string | Array<string>
 }
 
+export declare export declare function installNxConsole(): void
+
 export const IS_WASM: boolean
 
-export declare export declare function logError(message: string): void
-
-export declare export declare function logInfo(message: string): void
+export declare export declare function logDebug(message: string): void
 
 /** Stripped version of the NxJson interface for use in rust */
 export interface NxJson {

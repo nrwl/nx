@@ -129,7 +129,11 @@ export async function* viteBuildExecutor(
 
     // Here, we want the outdir relative to the workspace root.
     // So, we calculate the relative path from the workspace root to the outdir.
-    const outDirRelativeToWorkspaceRoot = outDir.replaceAll('../', '');
+    const absoluteOutDir = resolve(resolve(context.root, projectRoot), outDir);
+    const outDirRelativeToWorkspaceRoot = relative(
+      context.root,
+      absoluteOutDir
+    );
     const distPackageJson = resolve(
       outDirRelativeToWorkspaceRoot,
       'package.json'
@@ -164,18 +168,24 @@ export async function* viteBuildExecutor(
       );
       const packageManager = detectPackageManager(context.root);
 
-      const lockFile = createLockFile(
-        builtPackageJson,
-        context.projectGraph,
-        packageManager
-      );
-      writeFileSync(
-        `${outDirRelativeToWorkspaceRoot}/${getLockFileName(packageManager)}`,
-        lockFile,
-        {
-          encoding: 'utf-8',
-        }
-      );
+      if (packageManager === 'bun') {
+        logger.warn(
+          'Bun lockfile generation is not supported. The generated package.json will not include a lockfile. Run "bun install" in the output directory after deployment if needed.'
+        );
+      } else {
+        const lockFile = createLockFile(
+          builtPackageJson,
+          context.projectGraph,
+          packageManager
+        );
+        writeFileSync(
+          `${outDirRelativeToWorkspaceRoot}/${getLockFileName(packageManager)}`,
+          lockFile,
+          {
+            encoding: 'utf-8',
+          }
+        );
+      }
     }
     // For buildable libs, copy package.json if it exists.
     else if (

@@ -1,6 +1,6 @@
 package dev.nx.gradle.utils
 
-import dev.nx.gradle.data.*
+import java.io.File
 import kotlin.test.*
 import org.gradle.testfixtures.ProjectBuilder
 
@@ -10,7 +10,7 @@ class CreateNodeForProjectTest {
   fun `should return GradleNodeReport with targets and metadata`() {
     // Arrange
     val workspaceRoot = createTempDir("workspace").absolutePath
-    val projectDir = createTempDir("project")
+    val projectDir = File(workspaceRoot, "project-a").apply { mkdirs() }
     val project = ProjectBuilder.builder().withProjectDir(projectDir).build()
 
     // Create a couple of dummy tasks
@@ -32,7 +32,7 @@ class CreateNodeForProjectTest {
             project = project,
             targetNameOverrides = targetNameOverrides,
             workspaceRoot = workspaceRoot,
-            cwd = "{projectRoot}")
+            atomized = true)
 
     // Assert
     val projectRoot = project.projectDir.absolutePath

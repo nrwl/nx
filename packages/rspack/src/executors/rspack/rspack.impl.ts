@@ -30,7 +30,7 @@ export default async function* runExecutor(
     normalizedOptions.mode = process.env.NODE_ENV;
   }
 
-  if (normalizedOptions.typeCheck) {
+  if (!normalizedOptions.skipTypeChecking) {
     await executeTypeCheck(normalizedOptions, context);
   }
 

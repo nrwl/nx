@@ -6,7 +6,6 @@ import {
   NxModuleFederationConfigOverride,
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
-import { type ExecutorContext } from '@nx/devkit';
 
 const isVarOrWindow = (libType?: string) =>
   libType === 'var' || libType === 'window';
@@ -43,9 +42,10 @@ export async function withModuleFederation(
 
     config.optimization = {
       ...(config.optimization ?? {}),
-      runtimeChunk: isDevServer
-        ? config.optimization?.runtimeChunk ?? undefined
-        : false,
+      runtimeChunk:
+        isDevServer && !options.exposes
+          ? config.optimization?.runtimeChunk ?? undefined
+          : false,
     };
 
     if (

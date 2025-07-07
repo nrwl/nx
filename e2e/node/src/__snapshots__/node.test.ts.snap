@@ -18,6 +18,7 @@ RUN addgroup --system node-nest-docker-test && \\
           adduser --system -G node-nest-docker-test node-nest-docker-test
 
 COPY dist/node-nest-docker-test node-nest-docker-test/
+COPY node-nest-docker-test/package.json node-nest-docker-test/
 RUN chown -R node-nest-docker-test:node-nest-docker-test .
 
 # You can remove this install step if you build with \`--bundle\` option.

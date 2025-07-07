@@ -35,8 +35,13 @@ export function normalizeOptions(
     project.sourceRoot,
     'app/app.config.ts'
   );
-  const appMainPath =
+  let appMainPath =
     project.targets.build.options.main ?? project.targets.build.options.browser;
+  if (!appMainPath) {
+    const sourceRoot =
+      project.sourceRoot ?? joinPathFragments(project.root, 'src');
+    appMainPath = joinPathFragments(sourceRoot, 'main.ts');
+  }
 
   /** If NgModule App
    * -> Use App Module
@@ -45,10 +50,10 @@ export function normalizeOptions(
    * --> If so, use that
    * --> If not, use main.ts
    */
-  const ngModulePath = joinPathFragments(
-    project.sourceRoot,
-    'app/app.module.ts'
-  );
+  let ngModulePath = joinPathFragments(project.sourceRoot, 'app/app.module.ts');
+  if (!tree.exists(ngModulePath)) {
+    ngModulePath = joinPathFragments(project.sourceRoot, 'app/app-module.ts');
+  }
   const parent =
     !isStandalone && tree.exists(ngModulePath)
       ? ngModulePath

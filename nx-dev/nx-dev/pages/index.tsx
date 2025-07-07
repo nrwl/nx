@@ -18,19 +18,19 @@ export default function Index(): JSX.Element {
   return (
     <>
       <NextSeo
-        title="Nx: Smart Monorepos · Fast CI"
+        title="Nx: Smart Repos · Fast Builds"
         description="Build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution."
         openGraph={{
           url: 'https://nx.dev',
-          title: 'Nx: Smart Monorepos · Fast CI',
+          title: 'Nx: Smart Repos · Fast Builds',
           description:
-            'Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.',
+            'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.',
           images: [
             {
               url: 'https://nx.dev/socials/nx-media.png',
               width: 1200,
               height: 600,
-              alt: 'Nx: Smart Monorepos · Fast CI',
+              alt: 'Nx: Smart Repos · Fast Builds',
               type: 'image/png',
             },
           ],

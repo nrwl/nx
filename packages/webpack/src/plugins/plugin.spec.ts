@@ -38,6 +38,9 @@ describe('@nx/webpack/plugin', () => {
       output: {
         path: 'dist/foo',
       },
+      devServer: {
+        port: 9000,
+      },
     });
     const nodes = await createNodesFunction(
       ['my-app/webpack.config.js'],
@@ -50,7 +53,143 @@ describe('@nx/webpack/plugin', () => {
       context
     );
 
-    expect(nodes).toMatchSnapshot();
+    expect(nodes).toMatchInlineSnapshot(`
+      [
+        [
+          "my-app/webpack.config.js",
+          {
+            "projects": {
+              "my-app": {
+                "metadata": {},
+                "projectType": "application",
+                "targets": {
+                  "build-deps": {
+                    "dependsOn": [
+                      "^build",
+                    ],
+                  },
+                  "build-something": {
+                    "cache": true,
+                    "command": "webpack-cli build",
+                    "dependsOn": [
+                      "^build-something",
+                    ],
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "webpack-cli",
+                        ],
+                      },
+                    ],
+                    "metadata": {
+                      "description": "Runs Webpack build",
+                      "help": {
+                        "command": "npx webpack-cli build --help",
+                        "example": {
+                          "args": [
+                            "--profile",
+                          ],
+                          "options": {
+                            "json": "stats.json",
+                          },
+                        },
+                      },
+                      "technologies": [
+                        "webpack",
+                      ],
+                    },
+                    "options": {
+                      "args": [
+                        "--node-env=production",
+                      ],
+                      "cwd": "my-app",
+                    },
+                    "outputs": [
+                      "{projectRoot}/dist/foo",
+                    ],
+                  },
+                  "my-serve": {
+                    "command": "webpack-cli serve",
+                    "continuous": true,
+                    "metadata": {
+                      "description": "Starts Webpack dev server",
+                      "help": {
+                        "command": "npx webpack-cli serve --help",
+                        "example": {
+                          "options": {
+                            "args": [
+                              "--client-progress",
+                              "--history-api-fallback ",
+                            ],
+                          },
+                        },
+                      },
+                      "technologies": [
+                        "webpack",
+                      ],
+                    },
+                    "options": {
+                      "args": [
+                        "--node-env=development",
+                      ],
+                      "cwd": "my-app",
+                    },
+                  },
+                  "preview-site": {
+                    "command": "webpack-cli serve",
+                    "continuous": true,
+                    "metadata": {
+                      "description": "Starts Webpack dev server in production mode",
+                      "help": {
+                        "command": "npx webpack-cli serve --help",
+                        "example": {
+                          "options": {
+                            "args": [
+                              "--client-progress",
+                              "--history-api-fallback ",
+                            ],
+                          },
+                        },
+                      },
+                      "technologies": [
+                        "webpack",
+                      ],
+                    },
+                    "options": {
+                      "args": [
+                        "--node-env=production",
+                      ],
+                      "cwd": "my-app",
+                    },
+                  },
+                  "serve-static": {
+                    "continuous": true,
+                    "dependsOn": [
+                      "build-something",
+                    ],
+                    "executor": "@nx/web:file-server",
+                    "options": {
+                      "buildTarget": "build-something",
+                      "port": 9000,
+                      "spa": true,
+                    },
+                  },
+                  "watch-deps": {
+                    "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+                    "continuous": true,
+                    "dependsOn": [
+                      "build-deps",
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        ],
+      ]
+    `);
   });
 
   function mockWebpackConfig(config: any) {

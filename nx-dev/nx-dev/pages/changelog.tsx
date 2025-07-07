@@ -210,7 +210,7 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
               url: 'https://nx.dev/images/nx-media.jpg',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart Monorepos · Fast CI',
+              alt: 'Nx: Smart Repos · Fast Builds',
               type: 'image/jpeg',
             },
           ],

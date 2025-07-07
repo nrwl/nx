@@ -7,7 +7,6 @@ export type AutomaticMigrationState = {
   migrations?: MigrationDetailsWithId[];
   nxConsoleMetadata?: MigrationsJsonMetadata;
   currentMigration?: MigrationDetailsWithId;
-  currentMigrationRunning?: boolean;
   reviewedMigrations: string[];
 };
 
@@ -23,7 +22,7 @@ export type AutomaticMigrationEvents =
       metadata: MigrationsJsonMetadata;
     }
   | {
-      type: 'pause';
+      type: 'stop';
     }
   | {
       type: 'startRunning';

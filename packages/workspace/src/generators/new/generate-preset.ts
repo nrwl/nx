@@ -99,7 +99,6 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
         ? `--e2eTestRunner=${opts.e2eTestRunner}`
         : null,
       opts.ssr ? `--ssr` : null,
-      opts.serverRouting ? `--server-routing` : null,
       opts.prefix !== undefined ? `--prefix=${opts.prefix}` : null,
       opts.nxCloudToken ? `--nxCloudToken=${opts.nxCloudToken}` : null,
       opts.formatter ? `--formatter=${opts.formatter}` : null,

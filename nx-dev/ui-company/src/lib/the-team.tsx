@@ -8,6 +8,11 @@ const teamMembers = [
     imageUrl: 'altan-stalker.avif',
   },
   {
+    name: 'Andrew Glidden',
+    title: 'Account Executive',
+    imageUrl: 'andrew-glidden.avif',
+  },
+  {
     name: 'Austin Fahsl',
     title: 'Developer Productivity Engineer',
     imageUrl: 'austin-fahsl.avif',
@@ -51,6 +56,11 @@ const teamMembers = [
     name: 'Emily Xiong',
     title: 'Senior Engineer',
     imageUrl: 'emily-xiong.avif',
+  },
+  {
+    name: 'Dillon Chanis',
+    title: 'Senior Engineer',
+    imageUrl: 'dillon-chanis.avif',
   },
   {
     name: 'Drew Romney',
@@ -198,9 +208,9 @@ const teamMembers = [
     imageUrl: 'steven-nance.avif',
   },
   {
-    name: 'Whitney Loy',
-    title: 'Operations Manager',
-    imageUrl: 'whitney-loy.avif',
+    name: 'Szymon Wojciechowski',
+    title: 'Senior Engineer',
+    imageUrl: 'szymon-wojciechowski.avif',
   },
   {
     name: 'Zack DeRose',

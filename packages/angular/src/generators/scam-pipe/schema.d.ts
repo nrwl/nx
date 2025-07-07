@@ -4,6 +4,7 @@ export interface Schema {
   skipTests?: boolean;
   inlineScam?: boolean;
   export?: boolean;
+  typeSeparator?: string;
   skipFormat?: boolean;
 }
 
@@ -16,4 +17,5 @@ export interface NormalizedSchema extends Schema {
   inlineScam: boolean;
   projectName: string;
   symbolName: string;
+  modulePath: string;
 }

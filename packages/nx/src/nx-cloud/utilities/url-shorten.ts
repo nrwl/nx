@@ -21,10 +21,7 @@ export async function createNxCloudOnboardingURL(
 
   try {
     const version = await getNxCloudVersion(apiUrl);
-    if (
-      (version && compareCleanCloudVersions(version, '2406.11.5') < 0) ||
-      !version
-    ) {
+    if (!version || isOldNxCloudVersion(version)) {
       return apiUrl;
     }
   } catch (e) {
@@ -134,7 +131,7 @@ async function getInstallationSupportsGitHub(apiUrl: string): Promise<boolean> {
     return !!response.data.isGithubIntegrationEnabled;
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      logger.warn(`Failed to access system features. GitHub integration assumed to be disabled. 
+      logger.warn(`Failed to access system features. GitHub integration assumed to be disabled.
     ${e}`);
     }
     return false;
@@ -176,32 +173,32 @@ export function versionIsValid(version: string): boolean {
   return pattern.test(version);
 }
 
-export function compareCleanCloudVersions(
-  version1: string,
-  version2: string
-): number {
-  const parseVersion = (version: string) => {
-    // The format we're using is YYMM.DD.BuildNumber
-    const parts = version.split('.').map((part) => parseInt(part, 10));
-    return {
-      yearMonth: parts[0],
-      day: parts[1],
-      buildNumber: parts[2],
-    };
-  };
+export function isOldNxCloudVersion(version: string): boolean {
+  const [major, minor, buildNumber] = version
+    .split('.')
+    .map((part) => parseInt(part, 10));
 
-  const v1 = parseVersion(version1);
-  const v2 = parseVersion(version2);
-
-  if (v1.yearMonth !== v2.yearMonth) {
-    return v1.yearMonth > v2.yearMonth ? 1 : -1;
-  }
-  if (v1.day !== v2.day) {
-    return v1.day > v2.day ? 1 : -1;
-  }
-  if (v1.buildNumber !== v2.buildNumber) {
-    return v1.buildNumber > v2.buildNumber ? 1 : -1;
+  // for on-prem images we are using YYYY.MM.BuildNumber format
+  // the first year is 2025
+  if (major >= 2025 && major < 2300) {
+    return false;
   }
 
-  return 0;
+  // Previously we used YYMM.DD.BuildNumber
+  // All versions before '2406.11.5' had different URL shortening logic
+  const newVersionMajor = 2406;
+  const newVersionMinor = 11;
+  const newVersionBuildNumber = 5;
+
+  if (major !== newVersionMajor) {
+    return major < newVersionMajor;
+  }
+  if (minor !== newVersionMinor) {
+    return minor < newVersionMinor;
+  }
+  if (buildNumber !== newVersionBuildNumber) {
+    return buildNumber < newVersionBuildNumber;
+  }
+
+  return false;
 }

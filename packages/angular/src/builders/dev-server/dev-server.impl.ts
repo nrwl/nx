@@ -12,12 +12,13 @@ import { getRootTsConfigPath } from '@nx/js';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import { WebpackNxBuildCoordinationPlugin } from '@nx/webpack/src/plugins/webpack-nx-build-coordination-plugin';
 import { existsSync } from 'fs';
+import { readNxJson } from 'nx/src/config/configuration';
 import { isNpmProject } from 'nx/src/project-graph/operators';
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 import { relative } from 'path';
 import { combineLatest, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
+import { assertBuilderPackageIsInstalled } from '../../executors/utilities/builder-package';
 import {
   loadIndexHtmlTransformer,
   loadMiddleware,
@@ -31,13 +32,7 @@ import {
   resolveIndexHtmlTransformer,
 } from '../utilities/webpack';
 import { normalizeOptions, validateOptions } from './lib';
-import type {
-  NormalizedSchema,
-  Schema,
-  SchemaWithBrowserTarget,
-} from './schema';
-import { readNxJson } from 'nx/src/config/configuration';
-
+import type { NormalizedSchema, Schema } from './schema';
 type BuildTargetOptions = {
   tsConfig: string;
   buildLibsFromSource?: boolean;
@@ -158,6 +153,7 @@ export function executeDevServerBuilder(
 
   const delegateBuilderOptions = getDelegateBuilderOptions(options);
   const isUsingWebpackBuilder = ![
+    '@angular/build:application',
     '@angular-devkit/build-angular:application',
     '@angular-devkit/build-angular:browser-esbuild',
     '@nx/angular:application',
@@ -171,6 +167,7 @@ export function executeDevServerBuilder(
    * handle `@nx/angular:*` executors.
    */
   patchBuilderContext(context, !isUsingWebpackBuilder, parsedBuildTarget);
+  assertBuilderPackageIsInstalled('@angular-devkit/build-angular');
 
   return combineLatest([
     from(import('@angular-devkit/build-angular')),
@@ -258,14 +255,6 @@ function getDelegateBuilderOptions(
   const delegateBuilderOptions: NormalizedSchema & DevServerBuilderOptions = {
     ...options,
   };
-
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo();
-  if (angularMajorVersion <= 17) {
-    (
-      delegateBuilderOptions as unknown as SchemaWithBrowserTarget
-    ).browserTarget = delegateBuilderOptions.buildTarget;
-    delete delegateBuilderOptions.buildTarget;
-  }
 
   // delete extra option not supported by the delegate builder
   delete delegateBuilderOptions.buildLibsFromSource;

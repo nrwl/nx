@@ -79,7 +79,7 @@ export function PackageSchemaSubList({
               url: vm.seo.imageUrl,
               width: 1600,
               height: 800,
-              alt: 'Nx: Smart Monorepos · Fast CI',
+              alt: 'Nx: Smart Repos · Fast Builds',
               type: 'image/jpeg',
             },
           ],
@@ -99,7 +99,7 @@ export function PackageSchemaSubList({
 
             <Heading2 title={vm.heading} />
 
-            <p className="mb-16">
+            <p className="mb-8">
               Here is a list of all {vm.type}s available for this package.
             </p>
 

@@ -25,7 +25,7 @@ export function DocViewer({
 }): JSX.Element {
   const router = useRouter();
   const hideTableOfContent =
-    router.asPath.includes('/getting-started/intro') ||
+    router.asPath.endsWith('/getting-started') ||
     router.asPath.includes('/ci/intro/ci-with-nx') ||
     router.asPath.includes('/extending-nx/intro/getting-started') ||
     router.asPath.includes('/nx-api/devkit') ||
@@ -72,14 +72,14 @@ export function DocViewer({
         title={vm.title + ' | Nx'}
         description={
           vm.description ??
-          'Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.'
+          'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.'
         }
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: vm.title,
           description:
             vm.description ??
-            'Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.',
+            'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.',
           images: [
             {
               url: `https://nx.dev/images/open-graph/${router.asPath
@@ -89,7 +89,7 @@ export function DocViewer({
               }`,
               width: 1600,
               height: 800,
-              alt: 'Nx: Smart Monorepos · Fast CI',
+              alt: 'Nx: Smart Repos · Fast Builds',
               type: 'image/jpeg',
             },
           ],

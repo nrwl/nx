@@ -8,13 +8,13 @@ pr:
 variables:
   CI: 'true'
   ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)<% if(!useRunMany){ %>
     TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
-    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)<% } %>
   ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
-    NX_BRANCH: $(Build.SourceBranchName)
+    NX_BRANCH: $(Build.SourceBranchName)<% if(!useRunMany){ %>
     BASE_SHA: $(git rev-parse HEAD~1)
-  HEAD_SHA: $(git rev-parse HEAD)
+  HEAD_SHA: $(git rev-parse HEAD)<% } %>
 
 jobs:
   - job: main
@@ -23,7 +23,7 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
-        fetchFilter: tree:0
+        fetchFilter: tree:0<% if(!useRunMany){ %>
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -40,7 +40,7 @@ jobs:
         displayName: 'Get last successful commit SHA'
         condition: ne(variables['Build.Reason'], 'PullRequest')
         env:
-          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)<% } %>
 
       <% if(packageManager == 'pnpm'){ %>
       - script: npm install --prefix=$HOME/.local -g pnpm@8
@@ -61,12 +61,10 @@ jobs:
 
       - script: <%= packageManagerInstall %><% if(hasCypress){ %>
       - script: <%= packageManagerPrefix %> cypress install<% } %><% if(hasPlaywright){ %>
-      - script: <%= packageManagerPrefix %> playwright install --with-deps<% } %>
+      - script: <%= packageManagerPrefix %> playwright install --with-deps<% } %><% if(!useRunMany){ %>
       - script: git branch --track <%= mainBranch %> origin/<%= mainBranch %>
-        condition: eq(variables['Build.Reason'], 'PullRequest')
+        condition: eq(variables['Build.Reason'], 'PullRequest')<% } %>
 
-      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - script: <%= packageManagerPrefix %> nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected<% if(hasE2E){ %>
-      # When you enable task distribution, run the e2e-ci task instead of e2e<% } %>
-      - script: <%= packageManagerPrefix %> nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build<% if(hasTypecheck){ %> typecheck<% } %><% if(hasE2E){ %> e2e<% } %>
+<% for (const command of commands) { %><% if (command.comments) { %><% for (const comment of command.comments) { %>
+      # <%- comment %><% } %><% } %><% if (command.command) { %>
+      - script: <%= command.command %><% } %><% } %>

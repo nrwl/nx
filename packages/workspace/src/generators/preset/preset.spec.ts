@@ -20,36 +20,35 @@ describe('preset', () => {
       style: 'css',
       linter: 'eslint',
     });
-    expect(tree.children(`apps/${name}`)).toMatchInlineSnapshot(`
+    expect(tree.children(`apps/${name}`).sort()).toMatchInlineSnapshot(`
       [
-        "project.json",
-        "src",
-        "tsconfig.app.json",
-        "tsconfig.editor.json",
-        "tsconfig.json",
-        "public",
         ".eslintrc.json",
         "jest.config.ts",
+        "project.json",
+        "public",
+        "src",
+        "tsconfig.app.json",
+        "tsconfig.json",
         "tsconfig.spec.json",
       ]
     `);
-    expect(tree.children(`apps/${name}/src/`)).toMatchInlineSnapshot(`
+    expect(tree.children(`apps/${name}/src/`).sort()).toMatchInlineSnapshot(`
       [
-        "index.html",
-        "styles.css",
         "app",
+        "index.html",
         "main.ts",
+        "styles.css",
         "test-setup.ts",
       ]
     `);
-    expect(tree.children(`apps/${name}/src/app`)).toMatchInlineSnapshot(`
+    expect(tree.children(`apps/${name}/src/app`).sort()).toMatchInlineSnapshot(`
       [
-        "app.component.css",
-        "app.component.html",
-        "app.component.spec.ts",
-        "app.component.ts",
-        "app.module.ts",
-        "nx-welcome.component.ts",
+        "app-module.ts",
+        "app.css",
+        "app.html",
+        "app.spec.ts",
+        "app.ts",
+        "nx-welcome.ts",
       ]
     `);
   }, 60_000);

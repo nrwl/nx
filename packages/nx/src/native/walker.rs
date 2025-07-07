@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 
 use crate::native::glob::build_glob_set;
 
+#[cfg(not(target_arch = "wasm32"))]
 use crate::native::logger::enable_logger;
 use crate::native::utils::{Normalize, get_mod_time};
 use walkdir::WalkDir;

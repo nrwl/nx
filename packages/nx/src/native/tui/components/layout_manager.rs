@@ -1,5 +1,7 @@
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 
+use crate::native::tui::lifecycle::RunMode;
+
 /// Represents the available layout modes for the TUI application.
 ///
 /// - `Auto`: Layout is determined based on available terminal space
@@ -117,6 +119,18 @@ impl LayoutManager {
             horizontal_padding: 2, // Default horizontal padding of 2 characters
             vertical_padding: 1,   // Default vertical padding of 1 character
         }
+    }
+
+    pub fn new_with_run_mode(task_count: usize, run_mode: RunMode) -> Self {
+        let mut layout_manager = Self::new(task_count);
+        layout_manager.set_task_list_visibility(match run_mode {
+            // nx run task with no dependent tasks
+            RunMode::RunOne if task_count == 1 => TaskListVisibility::Hidden,
+            // nx run task with dependent tasks
+            RunMode::RunOne => TaskListVisibility::Visible,
+            RunMode::RunMany => TaskListVisibility::Visible,
+        });
+        layout_manager
     }
 
     /// Sets the layout mode.

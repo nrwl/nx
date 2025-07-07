@@ -6,7 +6,6 @@ tags: ['nx']
 cover_image: /blog/images/2025-05-09/terminal-ui.avif
 description: 'Nx 21 introduces the new Terminal UI, an elegant way of viewing log output from multiple running tasks.'
 youtubeUrl: https://youtu.be/ykaMAh83fPM
-pinned: true
 ---
 
 {% callout type="deepdive" title="Nx 21 Launch Week" expanded=true %}

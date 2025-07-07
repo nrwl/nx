@@ -1,6 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`@nx/rollup/plugin non-root project should create nodes 1`] = `
+exports[`@nx/rollup/plugin non-root project should create nodes 1`
+] = `
 [
   [
     "mylib/rollup.config.cjs",
@@ -67,7 +68,8 @@ exports[`@nx/rollup/plugin non-root project should create nodes 1`] = `
 ]
 `;
 
-exports[`@nx/rollup/plugin non-root project should create nodes 2`] = `
+exports[`@nx/rollup/plugin non-root project should create nodes 2`
+] = `
 [
   [
     "mylib/rollup.config.cts",
@@ -78,7 +80,7 @@ exports[`@nx/rollup/plugin non-root project should create nodes 2`] = `
           "targets": {
             "build": {
               "cache": true,
-              "command": "rollup -c rollup.config.cts --configPlugin @rollup/plugin-typescript",
+              "command": "rollup -c rollup.config.cts --configPlugin typescript={tsconfig:\\'tsconfig.lib.json\\'}",
               "dependsOn": [
                 "^build",
               ],
@@ -134,7 +136,8 @@ exports[`@nx/rollup/plugin non-root project should create nodes 2`] = `
 ]
 `;
 
-exports[`@nx/rollup/plugin root project should create nodes 1`] = `
+exports[`@nx/rollup/plugin root project should create nodes 1`
+] = `
 [
   [
     "rollup.config.cjs",
@@ -200,7 +203,8 @@ exports[`@nx/rollup/plugin root project should create nodes 1`] = `
 ]
 `;
 
-exports[`@nx/rollup/plugin root project should create nodes 2`] = `
+exports[`@nx/rollup/plugin root project should create nodes 2`
+] = `
 [
   [
     "rollup.config.cts",
@@ -211,7 +215,7 @@ exports[`@nx/rollup/plugin root project should create nodes 2`] = `
           "targets": {
             "build": {
               "cache": true,
-              "command": "rollup -c rollup.config.cts --configPlugin @rollup/plugin-typescript",
+              "command": "rollup -c rollup.config.cts --configPlugin typescript={tsconfig:\\'tsconfig.lib.json\\'}",
               "dependsOn": [
                 "^build",
               ],

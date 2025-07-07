@@ -207,10 +207,20 @@ function addLazyLoadedRouteToHostAppModule(
     }`
   );
 
-  const pathToAppComponentTemplate = joinPathFragments(
+  let pathToAppComponentTemplate = joinPathFragments(
     hostAppConfig.sourceRoot,
     'app/app.component.html'
   );
+  const candidatePaths = [
+    pathToAppComponentTemplate,
+    joinPathFragments(hostAppConfig.sourceRoot, 'app/app.html'),
+  ];
+  for (const path of candidatePaths) {
+    if (tree.exists(path)) {
+      pathToAppComponentTemplate = path;
+      break;
+    }
+  }
   const appComponent = tree.read(pathToAppComponentTemplate, 'utf-8');
   if (
     appComponent.includes(`<ul class="remote-menu">`) &&

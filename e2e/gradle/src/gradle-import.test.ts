@@ -9,6 +9,7 @@ import {
   e2eCwd,
   readJson,
   runCommand,
+  createFile,
 } from '@nx/e2e/utils';
 import { mkdirSync, rmdirSync, writeFileSync } from 'fs';
 import { execSync } from 'node:child_process';
@@ -36,6 +37,8 @@ describe('Nx Import Gradle', () => {
         return json;
       });
     }
+
+    createFile('.gitignore', '.kotlin/');
 
     try {
       rmdirSync(tempImportE2ERoot);
@@ -92,6 +95,7 @@ describe('Nx Import Gradle', () => {
       );
       expect(gradlePlugin).toBeDefined();
       expect(() => {
+        runCLI('reset', { env: { CI: 'false' } });
         runCLI(`show projects`);
         runCLI('build kotlin-app');
       }).not.toThrow();
@@ -148,6 +152,7 @@ describe('Nx Import Gradle', () => {
       gradlePlugin.exclude = [];
       updateJson('nx.json', () => nxJson);
       expect(() => {
+        runCLI('reset', { env: { CI: 'false' } });
         runCLI(`show projects`);
         runCLI('build groovy-app');
       }).not.toThrow();
@@ -169,13 +174,6 @@ function setupGradleProjectGit(
     join(tempGraldeProjectPath, 'project.json'),
     `{"name": "${tempGradleProjectName}"}`
   );
-
-  execSync(`./gradlew --stop`, {
-    cwd: tempGraldeProjectPath,
-  });
-  execSync(`./gradlew clean`, {
-    cwd: tempGraldeProjectPath,
-  });
 
   execSync(`git init`, {
     cwd: tempGraldeProjectPath,

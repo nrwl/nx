@@ -31,8 +31,6 @@ Features we'll use in this monorepo:
 - [Scaffold new code with generators](/features/generate-code)
 - [Updates dependencies with automated migrations](/features/automate-updating-dependencies)
 
-Visit our ["Why Nx" page](/getting-started/why-nx) for more details.
-
 ## Final Code
 
 Here's the source code of the final result for this tutorial.
@@ -321,6 +319,24 @@ As you can see, it generates a new application in the `apps/inventory/` folder. 
 npx nx g @nx/react:app apps/inventory
 ```
 
+### Handling Port Conflicts with Multiple Apps
+
+When you have multiple applications in your monorepo, running e2e tests in parallel can cause port conflicts if the generated apps use the same port. To ensure faster CI times with parallel execution, configure different ports for each app.
+
+Update the serve configuration for your second app to use a different port:
+
+```json {% fileName="apps/inventory/project.json" %}
+{
+  "targets": {
+    "serve": {
+      "options": {
+        "port": 4201
+      }
+    }
+  }
+}
+```
+
 ## Share Code with Local Libraries
 
 When you develop your React application, usually all your logic sits in the `app` folder. Ideally separated by various folder names which represent your "domains". As your app grows, however, the app becomes more and more monolithic and the code is unable to be shared with other applications.
@@ -364,7 +380,7 @@ npx nx g @nx/react:library libs/orders --unitTestRunner=vitest --bundler=none
 npx nx g @nx/react:library libs/shared/ui --unitTestRunner=vitest --bundler=none
 ```
 
-Note how we type out the full path in the `directory` flag to place the libraries into a subfolder. You can choose whatever folder structure you like to organize your projects. If you change your mind later, you can run the [move generator](/nx-api/workspace/generators/move) to move a project to a different folder.
+Note how we type out the full path in the `directory` flag to place the libraries into a subfolder. You can choose whatever folder structure you like to organize your projects. If you change your mind later, you can run the [move generator](/reference/core-api/workspace/generators/move) to move a project to a different folder.
 
 Running the above commands should lead to the following directory structure:
 
@@ -704,138 +720,6 @@ Nx read the output from the cache instead of running the command for 10 out of 1
 
 Not all tasks might be cacheable though. You can configure the `cache` settings in the `targetDefaults` property of the `nx.json` file. You can also [learn more about how caching works](/features/cache-task-results).
 
-### Test Affected Projects
-
-Commit your changes to git.
-
-```shell
-git commit -a -m "some commit message"
-```
-
-And then make a small change to the `products` library.
-
-```tsx {% fileName="libs/products/src/lib/products.tsx" %}
-import styles from './products.module.css';
-
-export function Products() {
-  return (
-    <div className={styles['container']}>
-      <h1>Welcome to Products!</h1>
-      <p>This is a change. 👋</p>
-    </div>
-  );
-}
-
-export default Products;
-```
-
-One of the key features of Nx in a monorepo setting is that you're able to run tasks only for projects that are actually affected by the code changes that you've made. To run the tests for only the projects affected by this change, run:
-
-```shell
-npx nx affected -t test
-```
-
-Note that the unit tests were run for `products`, `react-store` and `inventory`, but not for `orders` because a change to `products` can not possibly break the tests for `orders`. In a small repo like this, there isn't a lot of time saved, but as there are more tests and more projects, this quickly becomes an essential command.
-
-You can also see what projects are affected in the graph visualizer with;
-
-```shell
-npx nx graph --affected
-```
-
-{% graph height="450px" %}
-
-```json
-{
-  "projects": [
-    {
-      "name": "react-store",
-      "type": "app",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "react-store-e2e",
-      "type": "e2e",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "inventory",
-      "type": "app",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "inventory-e2e",
-      "type": "e2e",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "shared-ui",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "orders",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-
-    {
-      "name": "products",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    }
-  ],
-  "dependencies": {
-    "react-store": [
-      { "source": "react-store", "target": "orders", "type": "static" },
-      { "source": "react-store", "target": "products", "type": "static" }
-    ],
-    "react-store-e2e": [
-      {
-        "source": "react-store-e2e",
-        "target": "react-store",
-        "type": "implicit"
-      }
-    ],
-    "inventory": [
-      { "source": "inventory", "target": "products", "type": "static" }
-    ],
-    "inventory-e2e": [
-      { "source": "inventory-e2e", "target": "inventory", "type": "implicit" }
-    ],
-    "shared-ui": [],
-    "orders": [],
-    "products": []
-  },
-  "workspaceLayout": { "appsDir": "", "libsDir": "" },
-  "affectedProjectIds": [
-    "products",
-    "inventory",
-    "inventory-e2e",
-    "react-store",
-    "react-store-e2e"
-  ],
-  "focus": null,
-  "groupByFolder": false
-}
-```
-
-{% /graph %}
-
 ## Build the Apps for Deployment
 
 If you're ready and want to ship your applications, you can build them using
@@ -897,179 +781,11 @@ Replace the `deploy` script with whatever terminal command you use to deploy you
 
 The `"dependsOn": ["build"]` setting tells Nx to make sure that the project's `build` task has been run successfully before the `deploy` task.
 
-With the `deploy` tasks defined, you can deploy a single application with `npx nx deploy react-store` or deploy any applications affected by the current changes with:
+With the `deploy` tasks defined, you can deploy a single application with `npx nx deploy react-store` or deploy all applications with:
 
 ```shell
-npx nx affected -t deploy
+npx nx run-many -t deploy
 ```
-
-## Imposing Constraints with Module Boundary Rules
-
-Once you modularize your codebase you want to make sure that the libs are not coupled to each other in an uncontrolled way. Here are some examples of how we might want to guard our small demo workspace:
-
-- we might want to allow `orders` to import from `shared-ui` but not the other way around
-- we might want to allow `orders` to import from `products` but not the other way around
-- we might want to allow all libraries to import the `shared-ui` components, but not the other way around
-
-When building these kinds of constraints you usually have two dimensions:
-
-- **type of project:** what is the type of your library. Example: "feature" library, "utility" library, "data-access" library, "ui" library
-- **scope (domain) of the project:** what domain area is covered by the project. Example: "orders", "products", "shared" ... this really depends on the type of product you're developing
-
-Nx comes with a generic mechanism that allows you to assign "tags" to projects. "tags" are arbitrary strings you can assign to a project that can be used later when defining boundaries between projects. For example, go to the `package.json` of your `orders` library and assign the tags `type:feature` and `scope:orders` to it.
-
-```json {% fileName="libs/orders/package.json" %}
-{
-  ...
-  "nx": {
-    "tags": ["type:feature", "scope:orders"]
-  }
-}
-```
-
-Then go to the `package.json` of your `products` library and assign the tags `type:feature` and `scope:products` to it.
-
-```json {% fileName="libs/products/package.json" %}
-{
-  ...
-  "nx": {
-    "tags": ["type:feature", "scope:products"]
-  }
-}
-```
-
-Finally, go to the `package.json` of the `shared-ui` library and assign the tags `type:ui` and `scope:shared` to it.
-
-```json {% fileName="libs/shared/ui/package.json" %}
-{
-  ...
-  "nx": {
-    "tags": ["type:ui", "scope:shared"]
-  }
-}
-```
-
-Notice how we assign `scope:shared` to our UI library because it is intended to be used throughout the workspace.
-
-Next, let's come up with a set of rules based on these tags:
-
-- `type:feature` should be able to import from `type:feature` and `type:ui`
-- `type:ui` should only be able to import from `type:ui`
-- `scope:orders` should be able to import from `scope:orders`, `scope:shared` and `scope:products`
-- `scope:products` should be able to import from `scope:products` and `scope:shared`
-
-To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.base.json` at the root of the workspace and add the following `depConstraints` in the `@nx/enforce-module-boundaries` rule configuration:
-
-```js {% fileName="eslint.config.mjs" %}
-import nx from '@nx/eslint-plugin';
-
-export default [
-  // ...
-  {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-    rules: {
-      '@nx/enforce-module-boundaries': [
-        'error',
-        {
-          enforceBuildableLibDependency: true,
-          allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?js$'],
-          depConstraints: [
-            {
-              sourceTag: 'type:feature',
-              onlyDependOnLibsWithTags: ['type:feature', 'type:ui'],
-            },
-            {
-              sourceTag: 'type:ui',
-              onlyDependOnLibsWithTags: ['type:ui'],
-            },
-            {
-              sourceTag: 'scope:orders',
-              onlyDependOnLibsWithTags: [
-                'scope:orders',
-                'scope:products',
-                'scope:shared',
-              ],
-            },
-            {
-              sourceTag: 'scope:products',
-              onlyDependOnLibsWithTags: ['scope:products', 'scope:shared'],
-            },
-            {
-              sourceTag: 'scope:shared',
-              onlyDependOnLibsWithTags: ['scope:shared'],
-            },
-            {
-              sourceTag: '*',
-              onlyDependOnLibsWithTags: ['*'],
-            },
-          ],
-        },
-      ],
-    },
-  },
-  // ...
-];
-```
-
-To test it, go to your `libs/products/src/lib/products.tsx` file and import the `Orders` component from the `orders` project:
-
-```tsx {% fileName="libs/products/src/lib/products.tsx" %}
-import styles from './products.module.css';
-
-// This import is not allowed 👇
-import { Orders } from '@react-monorepo/orders';
-
-export function Products() {
-  return (
-    <div className={styles['container']}>
-      <h1>Welcome to Products!</h1>
-      <p>This is a change. 👋</p>
-    </div>
-  );
-}
-
-export default Products;
-```
-
-If you lint your workspace you'll get an error now:
-
-```{% command="npx nx run-many -t lint" %}
-
-   ✔  nx run @react-monorepo/orders:lint  [existing outputs match the cache, left as is]
-   ✔  nx run @react-monorepo/react-store:lint  [existing outputs match the cache, left as is]
-   ✔  nx run @react-monorepo/inventory:lint  [existing outputs match the cache, left as is]
-   ✔  nx run @react-monorepo/ui:lint  [existing outputs match the cache, left as is]
-   ✔  nx run inventory-e2e:lint  [existing outputs match the cache, left as is]
-   ✔  nx run react-store-e2e:lint (877ms)
-
-————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-   ✖  nx run @react-monorepo/products:lint
-      > eslint .
-
-
-      /Users/isaac/Documents/code/nx-recipes/react-monorepo/libs/products/src/lib/products.tsx
-        3:1   error    A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
-        3:10  warning  'Orders' is defined but never used                                                                           @typescript-eslint/no-unused-vars
-
-      ✖ 2 problems (1 error, 1 warning)
-
-
-
-
-————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
- NX   Ran target lint for 7 projects (1s)
-
-   ✔  6/7 succeeded [5 read from cache]
-
-   ✖  1/7 targets failed, including the following:
-
-      - nx run @react-monorepo/products:lint
-```
-
-If you have the ESLint plugin installed in your IDE you should also immediately see an error.
-
-Learn more about how to [enforce module boundaries](/features/enforce-module-boundaries).
 
 ## Fast CI ⚡ {% highlightColor="green" %}
 
@@ -1104,17 +820,17 @@ Once you click the link, follow the steps provided and make sure Nx Cloud is ena
 
 ### Configure Your CI Workflow {% highlightColor="green" %}
 
-When you chose GitHub Actions as your CI provider at the beginning of the tutorial, `create-nx-workspace` created a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR. If you would like to also distribute tasks across multiple machines to ensure fast and reliable CI runs, uncomment the `nx-cloud start-ci-run` line and have the `nx affected` line run the `e2e-ci` task instead of `e2e`.
+When you chose GitHub Actions as your CI provider at the beginning of the tutorial, `create-nx-workspace` created a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects. If you would like to also distribute tasks across multiple machines to ensure fast and reliable CI runs, uncomment the `nx-cloud start-ci-run` line and have the `nx run-many` line run the `e2e-ci` task instead of `e2e`.
 
 If you need to generate a new workflow file for GitHub Actions or other providers, you can do so with this command:
 
 ```shell
-npx nx generate ci-workflow
+npx nx generate ci-workflow --useRunMany
 ```
 
 The key lines in the CI pipeline are:
 
-```yml {% fileName=".github/workflows/ci.yml" highlightLines=["11-15", "27-31"] %}
+```yml {% fileName=".github/workflows/ci.yml" highlightLines=["12-16", "27-31"] %}
 name: CI
 # ...
 jobs:
@@ -1140,13 +856,12 @@ jobs:
 
       - run: npm ci --legacy-peer-deps
       - run: npx playwright install --with-deps
-      - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      # As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       # When you enable task distribution, run the e2e-ci task instead of e2e
-      - run: npx nx affected -t lint test build e2e
+      - run: npx nx run-many -t lint test build e2e
 ```
 
 ### Open a Pull Request {% highlightColor="green" %}
@@ -1178,8 +893,9 @@ Here's some things you can dive into next:
 
 - Learn more about the [underlying mental model of Nx](/concepts/mental-model)
 - Learn how to [migrate your React app to Nx](/recipes/adopting-nx/adding-to-existing-project)
-- [Learn how to setup Tailwind](/recipes/react/using-tailwind-css-in-react)
-- [Setup Storybook for our shared UI library](/recipes/storybook/overview-react)
+- Learn about [enforcing boundaries between projects](/features/enforce-module-boundaries)
+- [Learn how to setup Tailwind](/technologies/react/recipes/using-tailwind-css-in-react)
+- [Setup Storybook for our shared UI library](/technologies/test-tools/storybook/recipes/overview-react)
 
 Also, make sure you
 

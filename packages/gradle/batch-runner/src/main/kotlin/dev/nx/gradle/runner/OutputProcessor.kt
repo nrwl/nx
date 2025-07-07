@@ -1,5 +1,7 @@
 package dev.nx.gradle.runner
 
+import dev.nx.gradle.data.GradleTask
+import dev.nx.gradle.data.TaskResult
 import java.io.ByteArrayOutputStream
 
 object OutputProcessor {
@@ -12,7 +14,42 @@ object OutputProcessor {
     }
   }
 
-  fun splitOutputPerTask(globalOutput: String): Map<String, String> {
+  fun finalizeTaskResults(
+      tasks: Map<String, GradleTask>,
+      taskResults: MutableMap<String, TaskResult>,
+      globalOutput: String,
+      errorStream: ByteArrayOutputStream,
+      globalStart: Long,
+      globalEnd: Long
+  ): Map<String, TaskResult> {
+    val perTaskOutput = splitOutputPerTask(globalOutput)
+
+    tasks.forEach { (taskId, taskConfig) ->
+      val baseOutput = perTaskOutput[taskConfig.taskName] ?: ""
+      val existingResult = taskResults[taskId]
+
+      val outputWithErrors =
+          if (existingResult?.success == false) {
+            baseOutput + "\n" + errorStream.toString()
+          } else {
+            baseOutput
+          }
+
+      val finalOutput = outputWithErrors.ifBlank { globalOutput }
+
+      taskResults[taskId] =
+          existingResult?.copy(terminalOutput = finalOutput)
+              ?: TaskResult(
+                  success = false,
+                  startTime = globalStart,
+                  endTime = globalEnd,
+                  terminalOutput = finalOutput)
+    }
+
+    return taskResults
+  }
+
+  private fun splitOutputPerTask(globalOutput: String): Map<String, String> {
     val unescapedOutput = globalOutput.replace("\\u003e", ">").replace("\\n", "\n")
     val taskHeaderRegex = Regex("(?=> Task (:[^\\s]+))")
     val sections = unescapedOutput.split(taskHeaderRegex)

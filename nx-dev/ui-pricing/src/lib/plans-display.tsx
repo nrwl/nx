@@ -86,6 +86,27 @@ export function PlansDisplay(): ReactElement {
                       aria-hidden="true"
                       className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                     />
+                    <Link
+                      href="/nx-cloud#ai-for-your-ci"
+                      target="_blank"
+                      title="Check our AI integrations and how to use them"
+                      onClick={() =>
+                        sendCustomEvent(
+                          'learn-ai-integrations-click',
+                          'plans-table',
+                          'pricing-plans'
+                        )
+                      }
+                      className="font-medium underline decoration-dotted"
+                    >
+                      AI integrations
+                    </Link>
+                  </li>
+                  <li className="flex items-center justify-start gap-x-2 py-2.5">
+                    <CheckCircleIcon
+                      aria-hidden="true"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                    />
                     <span>
                       Remote caching with{' '}
                       <Link

@@ -1,7 +1,7 @@
 import { getGithubSlugOrNull } from '../../utils/git-utils';
 import {
   removeVersionModifier,
-  compareCleanCloudVersions,
+  isOldNxCloudVersion,
   getNxCloudVersion,
   versionIsValid,
   getURLifShortenFailed,
@@ -22,27 +22,22 @@ jest.mock('./get-cloud-options', () => ({
 }));
 
 describe('URL shorten various functions', () => {
-  describe('compareCleanCloudVersions', () => {
-    it('should return 1 if the first version is newer', () => {
-      expect(compareCleanCloudVersions('2407.01.100', '2312.25.50')).toBe(1);
-      expect(compareCleanCloudVersions('2402.01.20', '2401.31.300')).toBe(1);
-      expect(compareCleanCloudVersions('2401.01.20', '2312.31.300')).toBe(1);
-      expect(compareCleanCloudVersions('2312.26.05', '2312.25.100')).toBe(1);
-      expect(compareCleanCloudVersions('2312.25.100', '2311.25.90')).toBe(1);
-      expect(compareCleanCloudVersions('2312.25.120', '2312.24.110')).toBe(1);
+  describe('isOldNxCloudVersion', () => {
+    it('should compare versions of the same format', () => {
+      expect(isOldNxCloudVersion('2407.11.5')).toBe(false);
+      expect(isOldNxCloudVersion('2406.12.5')).toBe(false);
+      expect(isOldNxCloudVersion('2406.11.6')).toBe(false);
+      expect(isOldNxCloudVersion('2406.11.5')).toBe(false);
+      expect(isOldNxCloudVersion('2406.11.4')).toBe(true);
+
+      expect(isOldNxCloudVersion('2307.13.12')).toBe(true);
+      expect(isOldNxCloudVersion('2406.10.55')).toBe(true);
+      expect(isOldNxCloudVersion('2406.11.1')).toBe(true);
     });
 
-    it('should return -1 if the first version is older', () => {
-      expect(compareCleanCloudVersions('2312.25.50', '2407.01.100')).toBe(-1);
-      expect(compareCleanCloudVersions('2312.31.100', '2401.01.100')).toBe(-1);
-      expect(compareCleanCloudVersions('2312.25.100', '2312.26.50')).toBe(-1);
-      expect(compareCleanCloudVersions('2311.25.90', '2312.25.80')).toBe(-1);
-      expect(compareCleanCloudVersions('2312.24.110', '2312.25.100')).toBe(-1);
-    });
-
-    it('should return 0 if both versions are the same', () => {
-      expect(compareCleanCloudVersions('2312.25.50', '2312.25.50')).toBe(0);
-      expect(compareCleanCloudVersions('2407.01.100', '2407.01.100')).toBe(0);
+    it('should compare versions of different format', () => {
+      expect(isOldNxCloudVersion('2025.11.5')).toBe(false);
+      expect(isOldNxCloudVersion('2026.12.5')).toBe(false);
     });
   });
 

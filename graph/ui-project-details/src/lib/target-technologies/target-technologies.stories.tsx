@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import { TargetTechnologies } from './target-technologies';
 
 const meta: Meta<typeof TargetTechnologies> = {
