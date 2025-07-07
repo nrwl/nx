@@ -41,7 +41,8 @@ export function writeTargetsToCache(cachePath: string, results: GradleTargets) {
 export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
   gradleConfigAndTestGlob,
   async (files, options, context) => {
-    const { buildFiles, gradlewFiles } = splitConfigFiles(files);
+    const { buildFiles: buildFilesFromSplitConfigFiles, gradlewFiles } =
+      splitConfigFiles(files);
     const optionsHash = hashObject(options);
     const cachePath = join(
       workspaceDataDirectory,
@@ -54,12 +55,18 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
       gradlewFiles.map((f) => join(context.workspaceRoot, f)),
       options
     );
-    const { nodes, externalNodes } = getCurrentProjectGraphReport();
+    const report = getCurrentProjectGraphReport();
+    const { nodes, externalNodes, buildFiles = [] } = report;
+
+    // Combine buildFilesFromSplitConfigFiles and buildFiles, making each value distinct
+    const allBuildFiles = Array.from(
+      new Set([...buildFilesFromSplitConfigFiles, ...buildFiles])
+    );
 
     try {
       return createNodesFromFiles(
         makeCreateNodesForGradleConfigFile(nodes, projectsCache, externalNodes),
-        buildFiles,
+        allBuildFiles,
         options,
         context
       );

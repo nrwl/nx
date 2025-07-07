@@ -164,7 +164,7 @@ Read all about it [in the doc about Customizing Generator Options](/extending-nx
 
 ## Modular Node Applications
 
-Nx has had Node backend support since the beginning, where you could add an [ExpressJS](/technologies/node/express/api) or [Nest.js](/technologies/node/nest/api) based application to your monorepo. This is a powerful approach as it allows you to colocate your frontend and backend code, which helps share code and, in particular, TypeScript types for your APIs!!
+Nx has had Node backend support since the beginning, where you could add an [ExpressJS](/technologies/node/express/introduction) or [Nest.js](/technologies/node/nest/introduction) based application to your monorepo. This is a powerful approach as it allows you to colocate your frontend and backend code, which helps share code and, in particular, TypeScript types for your APIs!!
 
 In [Nx 15.7](/blog/nx-15-7-node-support-angular-lts-lockfile-pruning), we then announced [Nx Standalone Projects](https://youtu.be/qEaVzh-oBBc) support for Node. This allows to develop a Node backend in isolation but still leverages all the features from Nx in terms of code generators, automated migrations, and speed features such as [affected commands](/ci/features/affected), [caching](/concepts/how-caching-works), and [optimized CI setups](/ci/features/distribute-task-execution).
 

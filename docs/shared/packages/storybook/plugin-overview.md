@@ -3,6 +3,8 @@ title: Nx Storybook Plugin Overview
 description: This is an overview page for the Storybook plugin in Nx. It explains what Storybook is and how to set it up in your Nx workspace.
 ---
 
+# @nx/storybook
+
 [Storybook](https://storybook.js.org) is a development environment for UI components. It allows you to browse a component library, view the different states of each component, and interactively develop and test components.
 
 This guide will briefly walk you through using Storybook within an Nx workspace.

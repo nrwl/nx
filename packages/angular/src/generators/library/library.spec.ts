@@ -2023,4 +2023,49 @@ describe('lib', () => {
       `);
     });
   });
+
+  describe('--skipTsConfig', () => {
+    it('should not update root tsconfig.base.json when skipTsConfig=true', async () => {
+      // ARRANGE
+      const originalTsConfig = readJson(tree, 'tsconfig.base.json');
+
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        skipTsConfig: true,
+      });
+
+      // ASSERT
+      const updatedTsConfig = readJson(tree, 'tsconfig.base.json');
+      expect(updatedTsConfig.compilerOptions.paths).toEqual(
+        originalTsConfig.compilerOptions.paths
+      );
+      expect(
+        updatedTsConfig.compilerOptions.paths['@proj/my-lib']
+      ).toBeUndefined();
+    });
+
+    it('should update root tsconfig.base.json when skipTsConfig=false (default)', async () => {
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        skipTsConfig: false,
+      });
+
+      // ASSERT
+      const tsconfigJson = readJson(tree, 'tsconfig.base.json');
+      expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
+        'my-lib/src/index.ts',
+      ]);
+    });
+
+    it('should update root tsconfig.base.json when skipTsConfig is not specified (default behavior)', async () => {
+      // ACT
+      await runLibraryGeneratorWithOpts();
+
+      // ASSERT
+      const tsconfigJson = readJson(tree, 'tsconfig.base.json');
+      expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
+        'my-lib/src/index.ts',
+      ]);
+    });
+  });
 });

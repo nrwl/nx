@@ -75,7 +75,7 @@ module.exports = {
 exports[`remote generator bundler=webpack should create the remote with the correct config files when --typescriptConfiguration=true 1`] = `
 "import { composePlugins, withNx } from '@nx/webpack';
 import { withReact } from '@nx/react';
-import { withModuleFederation } from '@nx/module-federation/webpack';
+import { withModuleFederation } from '@nx/module-federation/webpack.js';
 
 import baseConfig from './module-federation.config';
 
@@ -156,7 +156,7 @@ module.exports = {
 exports[`remote generator bundler=webpack should generate correct remote with config files when using --ssr and --typescriptConfiguration=true 1`] = `
 "import { composePlugins, withNx } from '@nx/webpack';
 import { withReact } from '@nx/react';
-import { withModuleFederationForSSR } from '@nx/module-federation/webpack';
+import { withModuleFederationForSSR } from '@nx/module-federation/webpack.js';
 
 import baseConfig from './module-federation.server.config';
 

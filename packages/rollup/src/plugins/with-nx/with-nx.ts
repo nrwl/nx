@@ -1,11 +1,9 @@
 import { existsSync } from 'node:fs';
 import { dirname, join, parse } from 'node:path';
-import * as ts from 'typescript';
 import * as rollup from 'rollup';
 import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import * as autoprefixer from 'autoprefixer';
 import {
-  joinPathFragments,
   logger,
   type ProjectGraph,
   readCachedProjectGraph,
@@ -40,6 +38,21 @@ const copy = require('rollup-plugin-copy');
 const postcss = require('rollup-plugin-postcss');
 
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
+
+let ts: typeof import('typescript');
+
+function ensureTypeScript() {
+  if (!ts) {
+    try {
+      ts = require('typescript');
+    } catch (e) {
+      throw new Error(
+        'TypeScript is required for the @nx/rollup plugin. Please install it in your workspace.'
+      );
+    }
+  }
+  return ts;
+}
 
 export function withNx(
   rawOptions: RollupWithNxPluginOptions,
@@ -83,13 +96,15 @@ export function withNx(
 
   const tsConfigPath =
     options.buildLibsFromSource || global.NX_GRAPH_CREATION
-      ? joinPathFragments(workspaceRoot, options.tsConfig)
+      ? join(workspaceRoot, options.tsConfig)
       : createTmpTsConfig(
           options.tsConfig,
           workspaceRoot,
           projectRoot,
           dependencies
         );
+
+  ensureTypeScript();
   const tsConfigFile = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
   const tsConfig = ts.parseJsonConfigFileContent(
     tsConfigFile.config,
@@ -192,6 +207,9 @@ export function withNx(
   }
 
   if (!global.NX_GRAPH_CREATION) {
+    // Ensure TypeScript is available before any plugin initialization
+    ensureTypeScript();
+
     const isTsSolutionSetup = isUsingTsSolutionSetup();
     if (isTsSolutionSetup) {
       if (options.generatePackageJson) {
@@ -208,6 +226,16 @@ export function withNx(
       options.generatePackageJson ??= true;
     }
 
+    const compilerOptions: Record<string, unknown> = createTsCompilerOptions(
+      projectRoot,
+      tsConfig,
+      options,
+      dependencies
+    );
+    compilerOptions.outDir = Array.isArray(finalConfig.output)
+      ? finalConfig.output[0].dir
+      : finalConfig.output.dir;
+
     finalConfig.plugins = [
       copy({
         targets: convertCopyAssetsToRollupOptions(
@@ -217,19 +245,44 @@ export function withNx(
       }),
       image(),
       json(),
-      // Needed to generate type definitions, even if we're using babel or swc.
-      require('rollup-plugin-typescript2')({
-        check: !options.skipTypeCheck,
-        tsconfig: tsConfigPath,
-        tsconfigOverride: {
-          compilerOptions: createTsCompilerOptions(
-            projectRoot,
-            tsConfig,
-            options,
-            dependencies
-          ),
-        },
-      }),
+      // TypeScript compilation and declaration generation
+      // TODO(v22): Change default value of useLegacyTypescriptPlugin to false for Nx 22
+      options.useLegacyTypescriptPlugin !== false
+        ? (() => {
+            // TODO(v23): Remove in Nx 23
+            // Show deprecation warning
+            logger.warn(
+              `rollup-plugin-typescript2 usage is deprecated and will be removed in Nx 23. ` +
+                `Set 'useLegacyTypescriptPlugin: false' to use the official @rollup/plugin-typescript.`
+            );
+
+            return require('rollup-plugin-typescript2')({
+              check: !options.skipTypeCheck,
+              tsconfig: tsConfigPath,
+              tsconfigOverride: {
+                compilerOptions,
+              },
+            });
+          })()
+        : (() => {
+            // @rollup/plugin-typescript needs outDir and declarationDir to match Rollup's output directory
+            const { outDir, declarationDir, ...tsCompilerOptions } =
+              compilerOptions;
+            const rollupOutputDir = Array.isArray(finalConfig.output)
+              ? finalConfig.output[0].dir
+              : finalConfig.output.dir;
+            return require('@rollup/plugin-typescript')({
+              tsconfig: tsConfigPath,
+              compilerOptions: {
+                ...tsCompilerOptions,
+                outDir: rollupOutputDir,
+                declarationDir: rollupOutputDir,
+              },
+              declaration: true,
+              declarationMap: !!options.sourceMap,
+              noEmitOnError: !options.skipTypeCheck,
+            });
+          })(),
       typeDefinitions({
         projectRoot,
       }),
@@ -309,7 +362,7 @@ function createInput(
 
 function createTsCompilerOptions(
   projectRoot: string,
-  config: ts.ParsedCommandLine,
+  config: ReturnType<typeof ts.parseJsonConfigFileContent>,
   options: RollupWithNxPluginOptions,
   dependencies?: DependentBuildableProjectNode[]
 ) {
@@ -323,6 +376,7 @@ function createTsCompilerOptions(
     declaration: true,
     paths: compilerOptionPaths,
   };
+  ensureTypeScript();
   if (config.options.module === ts.ModuleKind.CommonJS) {
     compilerOptions['module'] = 'ESNext';
   }
@@ -350,8 +404,9 @@ function convertCopyAssetsToRollupOptions(
 }
 
 function readCompatibleFormats(
-  config: ts.ParsedCommandLine
+  config: ReturnType<typeof ts.parseJsonConfigFileContent>
 ): ('cjs' | 'esm')[] {
+  ensureTypeScript();
   switch (config.options.module) {
     case ts.ModuleKind.CommonJS:
     case ts.ModuleKind.UMD:

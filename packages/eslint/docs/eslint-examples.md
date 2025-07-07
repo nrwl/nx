@@ -1,4 +1,4 @@
-Linter can be configured in multiple ways. The basic way is to provide only `lintFilePatterns`, which is a mandatory property. This tells us where to look for files to lint.
+Linter can be configured in multiple ways. The basic way is to provide only `lintFilePatterns`, which tells us where to look for files to lint. If not specified, it defaults to `['{projectRoot}']`.
 
 `project.json`:
 

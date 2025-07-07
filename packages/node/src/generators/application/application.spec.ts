@@ -951,4 +951,25 @@ describe('app', () => {
       expect(readJson(tree, 'myapp-e2e/package.json').nx).toBeUndefined();
     });
   });
+
+  describe('Nest.js with webpack bundler', () => {
+    it('should generate correct build target configuration with webpack-cli args', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-nest-app',
+        bundler: 'webpack',
+        framework: 'nest',
+        addPlugin: true,
+      });
+
+      const project = readProjectConfiguration(tree, 'my-nest-app');
+      const buildTarget = project.targets.build;
+
+      expect(buildTarget.executor).toBe('nx:run-commands');
+      expect(buildTarget.options.command).toBe('webpack-cli build');
+      expect(buildTarget.options.args).toEqual(['--node-env=production']);
+      expect(buildTarget.configurations.development.args).toEqual([
+        '--node-env=development',
+      ]);
+    });
+  });
 });

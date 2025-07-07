@@ -331,25 +331,36 @@ async function buildViteTargets(
       ['tsconfig.app.json', 'tsconfig.lib.json', 'tsconfig.json'].find((t) =>
         tsConfigFiles.includes(t)
       ) ?? tsConfigFiles[0];
+
+    // Check if the project uses Vue plugin
+    const hasVuePlugin = viteBuildConfig.plugins?.some(
+      (p) => p.name === 'vite:vue'
+    );
+    const typeCheckCommand = hasVuePlugin ? 'vue-tsc' : 'tsc';
+
     targets[options.typecheckTargetName] = {
       cache: true,
       inputs: [
         ...('production' in namedInputs
           ? ['production', '^production']
           : ['default', '^default']),
-        { externalDependencies: ['typescript'] },
+        {
+          externalDependencies: hasVuePlugin
+            ? ['vue-tsc', 'typescript']
+            : ['typescript'],
+        },
       ],
       command: isUsingTsSolutionSetup
-        ? `tsc --build --emitDeclarationOnly`
-        : `tsc --noEmit -p ${tsConfigToUse}`,
+        ? `${typeCheckCommand} --build --emitDeclarationOnly`
+        : `${typeCheckCommand} --noEmit -p ${tsConfigToUse}`,
       options: { cwd: joinPathFragments(projectRoot) },
       metadata: {
         description: `Runs type-checking for the project.`,
-        technologies: ['typescript'],
+        technologies: hasVuePlugin ? ['typescript', 'vue'] : ['typescript'],
         help: {
           command: isUsingTsSolutionSetup
-            ? `${pmc.exec} tsc --build --help`
-            : `${pmc.exec} tsc -p ${tsConfigToUse} --help`,
+            ? `${pmc.exec} ${typeCheckCommand} --build --help`
+            : `${pmc.exec} ${typeCheckCommand} -p ${tsConfigToUse} --help`,
           example: isUsingTsSolutionSetup
             ? { args: ['--force'] }
             : { options: { noEmit: true } },

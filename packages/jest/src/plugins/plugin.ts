@@ -249,7 +249,16 @@ async function buildJestTargets(
   const absConfigFilePath = resolve(context.workspaceRoot, configFilePath);
 
   if (require.cache[absConfigFilePath]) clearRequireCache();
-  const rawConfig = await loadConfigFile(absConfigFilePath);
+  const rawConfig = await loadConfigFile(
+    absConfigFilePath,
+    // lookup for the same files we look for in the resolver and fall back to tsconfig.json
+    [
+      'tsconfig.spec.json',
+      'tsconfig.test.json',
+      'tsconfig.jest.json',
+      'tsconfig.json',
+    ]
+  );
 
   const targets: Record<string, TargetConfiguration> = {};
   const namedInputs = getNamedInputs(projectRoot, context);

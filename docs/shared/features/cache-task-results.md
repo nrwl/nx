@@ -73,8 +73,6 @@ npx nx connect
 
 Learn more about [remote caching with Nx Cloud](/ci/features/remote-cache).
 
-You can also **self-host your remote cache** with one of the official Nx packages or build your own remote caching server implementation. [Learn more here.](/recipes/running-tasks/self-hosted-caching)
-
 ## Fine-tune Caching with Inputs and Outputs
 
 Nx's caching feature starts with sensible defaults, but you can also **fine-tune the defaults** to control exactly what gets cached and when. There are two main options that control caching:

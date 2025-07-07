@@ -176,7 +176,7 @@ export function getLockFileName(packageManager: PackageManager): string {
   throw new Error(`Unknown package manager: ${packageManager}`);
 }
 
-function getLockFilePath(packageManager: PackageManager): string {
+export function getLockFilePath(packageManager: PackageManager): string {
   if (packageManager === 'yarn') {
     return YARN_LOCK_PATH;
   }
@@ -235,6 +235,7 @@ export function createLockFile(
         title:
           "Unable to create bun lock files. Run bun install it's just as quick",
       });
+      return '';
     }
   } catch (e) {
     if (!isPostInstallProcess()) {

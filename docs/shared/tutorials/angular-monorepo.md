@@ -17,7 +17,7 @@ What will you learn?
 
 ## Nx CLI vs. Angular CLI
 
-Nx evolved from being an extension of the Angular CLI to a [fully standalone CLI working with multiple frameworks](/getting-started/why-nx#how-does-nx-work). As a result, adopting Nx as an Angular user is relatively straightforward. Your existing code, including builders and schematics, will still work as before, but you'll also have access to all the benefits Nx offers.
+Nx evolved from being an extension of the Angular CLI to a [fully standalone CLI working with multiple frameworks](/getting-started/intro#start-small-extend-as-you-grow). As a result, adopting Nx as an Angular user is relatively straightforward. Your existing code, including builders and schematics, will still work as before, but you'll also have access to all the benefits Nx offers.
 
 Advantages of Nx over the Angular CLI:
 
@@ -226,9 +226,9 @@ More info can be found in [the integrate with editors article](/getting-started/
 
 {% /callout %}
 
-Run the following command to generate a new `inventory` application. Note how we append `--dry-run` to first check the output.
+Run the following command to generate a new `inventory` application. Note how we append `--dry-run` to first check the output. We'll also use `--port=4201` to ensure the app runs on a different port than the default 4200.
 
-```{% command="npx nx g @nx/angular:app apps/inventory --dry-run" path="angular-monorepo" %}
+```{% command="npx nx g @nx/angular:app apps/inventory --port=4201 --dry-run" path="angular-monorepo" %}
 NX  Generating @nx/angular:application
 
 ✔ Would you like to configure routing for this application? (y/N) · false
@@ -267,7 +267,7 @@ NOTE: The "dryRun" flag means no changes were made.
 As you can see, it generates a new application in the `apps/inventory/` folder. Let's actually run the generator by removing the `--dry-run` flag.
 
 ```shell
-npx nx g @nx/angular:app apps/inventory
+npx nx g @nx/angular:app apps/inventory --port=4201
 ```
 
 ## Sharing Code with Local Libraries
@@ -900,130 +900,6 @@ Nx read the output from the cache instead of running the command for 10 out of 1
 
 Not all tasks might be cacheable though. You can [configure which tasks are cacheable](/features/cache-task-results) in [the project configuration](/reference/project-configuration#cache) or in [the global Nx configuration](/reference/nx-json#cache). You can also [learn more about how caching works](/concepts/how-caching-works).
 
-### Testing Affected Projects
-
-{% video-link link="https://youtu.be/ZzTP4bVJEnI?t=551" /%}
-
-Commit your changes to git.
-
-```shell
-git commit -a -m "some commit message"
-```
-
-And then make a small change to the `products` library.
-
-```html {% fileName="libs/products/src/lib/product-list/product-list.html" %}
-<p>product-list works!</p>
-<p>This is a change. 👋</p>
-```
-
-One of the key features of Nx in a monorepo setting is that you're able to run tasks only for projects that are actually affected by the code changes that you've made. To run the tests for only the projects affected by this change, run:
-
-```shell
-npx nx affected -t test
-```
-
-Note that the unit tests were run for `products`, `angular-store` and `inventory`, but not for `orders` because a change to `products` can not possibly break the tests for `orders`. In a small repo like this, there isn't a lot of time saved, but as there are more tests and more projects, this quickly becomes an essential command.
-
-You can also see what projects are affected in the graph visualizer with;
-
-```shell
-npx nx graph --affected
-```
-
-{% graph height="450px" %}
-
-```json
-{
-  "projects": [
-    {
-      "name": "angular-store",
-      "type": "app",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "angular-store-e2e",
-      "type": "e2e",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "inventory",
-      "type": "app",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "inventory-e2e",
-      "type": "e2e",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "shared-ui",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "orders",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-
-    {
-      "name": "products",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    }
-  ],
-  "dependencies": {
-    "angular-store": [
-      { "source": "angular-store", "target": "orders", "type": "static" },
-      { "source": "angular-store", "target": "products", "type": "static" }
-    ],
-    "angular-store-e2e": [
-      {
-        "source": "angular-store-e2e",
-        "target": "angular-store",
-        "type": "implicit"
-      }
-    ],
-    "inventory": [
-      { "source": "inventory", "target": "products", "type": "static" }
-    ],
-    "inventory-e2e": [
-      { "source": "inventory-e2e", "target": "inventory", "type": "implicit" }
-    ],
-    "shared-ui": [],
-    "orders": [],
-    "products": []
-  },
-  "workspaceLayout": { "appsDir": "", "libsDir": "" },
-  "affectedProjectIds": [
-    "products",
-    "inventory",
-    "inventory-e2e",
-    "angular-store",
-    "angular-store-e2e"
-  ],
-  "focus": null,
-  "groupByFolder": false
-}
-```
-
-{% /graph %}
-
 ## Building the Apps for Deployment
 
 {% video-link link="https://youtu.be/ZzTP4bVJEnI?t=608" /%}
@@ -1067,175 +943,11 @@ Replace the `command` with whatever terminal command you use to deploy your site
 
 The `"dependsOn": "build"` setting tells Nx to make sure that the project's `build` task has been run successfully before the `deploy` task.
 
-With the `deploy` tasks defined, you can deploy a single application with `npx nx deploy angular-store` or deploy any applications affected by the current changes with:
+With the `deploy` tasks defined, you can deploy a single application with `npx nx deploy angular-store` or deploy all applications with:
 
 ```shell
-npx nx affected -t deploy
+npx nx run-many -t deploy
 ```
-
-## Imposing Constraints with Module Boundary Rules
-
-{% video-link link="https://youtu.be/ZzTP4bVJEnI?t=663" /%}
-
-Once you modularize your codebase you want to make sure that the libs are not coupled to each other in an uncontrolled way. Here are some examples of how we might want to guard our small demo workspace:
-
-- we might want to allow `orders` to import from `shared-ui` but not the other way around
-- we might want to allow `orders` to import from `products` but not the other way around
-- we might want to allow all libraries to import the `shared-ui` components, but not the other way around
-
-When building these kinds of constraints you usually have two dimensions:
-
-- **type of project:** what is the type of your library. Example: "feature" library, "utility" library, "data-access" library, "ui" library
-- **scope (domain) of the project:** what domain area is covered by the project. Example: "orders", "products", "shared" ... this really depends on the type of product you're developing
-
-Nx comes with a generic mechanism that allows you to assign "tags" to projects. "tags" are arbitrary strings you can assign to a project that can be used later when defining boundaries between projects. For example, go to the `project.json` of your `orders` library and assign the tags `type:feature` and `scope:orders` to it.
-
-```json {% fileName="libs/orders/project.json" %}
-{
-  ...
-  "tags": ["type:feature", "scope:orders"],
-}
-```
-
-Then go to the `project.json` of your `products` library and assign the tags `type:feature` and `scope:products` to it.
-
-```json {% fileName="libs/products/project.json" %}
-{
-  ...
-  "tags": ["type:feature", "scope:products"],
-}
-```
-
-Finally, go to the `project.json` of the `shared-ui` library and assign the tags `type:ui` and `scope:shared` to it.
-
-```json {% fileName="libs/shared/ui/project.json" %}
-{
-  ...
-  "tags": ["type:ui", "scope:shared"],
-}
-```
-
-Notice how we assign `scope:shared` to our UI library because it is intended to be used throughout the workspace.
-
-Next, let's come up with a set of rules based on these tags:
-
-- `type:feature` should be able to import from `type:feature` and `type:ui`
-- `type:ui` should only be able to import from `type:ui`
-- `scope:orders` should be able to import from `scope:orders`, `scope:shared` and `scope:products`
-- `scope:products` should be able to import from `scope:products` and `scope:shared`
-
-To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.base.json` at the root of the workspace and add the following `depConstraints` in the `@nx/enforce-module-boundaries` rule configuration:
-
-```json {% fileName=".eslintrc.base.json" %}
-{
-  ...
-  "overrides": [
-    {
-      ...
-      "rules": {
-        "@nx/enforce-module-boundaries": [
-          "error",
-          {
-            "enforceBuildableLibDependency": true,
-            "allow": [],
-            "depConstraints": [
-              {
-                "sourceTag": "*",
-                "onlyDependOnLibsWithTags": ["*"]
-              },
-              {
-                "sourceTag": "type:feature",
-                "onlyDependOnLibsWithTags": ["type:feature", "type:ui"]
-              },
-              {
-                "sourceTag": "type:ui",
-                "onlyDependOnLibsWithTags": ["type:ui"]
-              },
-              {
-                "sourceTag": "scope:orders",
-                "onlyDependOnLibsWithTags": [
-                  "scope:orders",
-                  "scope:products",
-                  "scope:shared"
-                ]
-              },
-              {
-                "sourceTag": "scope:products",
-                "onlyDependOnLibsWithTags": ["scope:products", "scope:shared"]
-              },
-              {
-                "sourceTag": "scope:shared",
-                "onlyDependOnLibsWithTags": ["scope:shared"]
-              }
-            ]
-          }
-        ]
-      }
-    },
-    ...
-  ]
-}
-```
-
-To test it, go to your `libs/products/src/lib/product-list/product-list.ts` file and import the `Orders` component from the `orders` project:
-
-```ts {% fileName="libs/products/src/lib/product-list/product-list.ts" highlightLines=[4,5] %}
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-
-// This import is not allowed 👇
-import { Orders } from '@angular-monorepo/orders';
-
-@Component({
-  selector: 'angular-monorepo-product-list',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './product-list.html',
-  styleUrls: ['./product-list.css'],
-})
-export class Products {}
-```
-
-If you lint your workspace you'll get an error now:
-
-```{% command="npx nx run-many -t lint" %}
-NX   Running target lint for 7 projects
-✖  nx run products:lint
-   Linting "products"...
-
-   /Users/isaac/Documents/code/nx-recipes/angular-monorepo/libs/products/src/lib/product-list/product-list.ts
-     5:1   error    A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
-     5:10  warning  'Orders' is defined but never used                                                                           @typescript-eslint/no-unused-vars
-
-   ✖ 2 problems (1 error, 1 warning)
-
-   Lint warnings found in the listed files.
-
-   Lint errors found in the listed files.
-
-
-✔  nx run orders:lint (1s)
-✔  nx run angular-store:lint (1s)
-✔  nx run angular-store-e2e:lint (689ms)
-✔  nx run inventory-e2e:lint (690ms)
-✔  nx run inventory:lint (858ms)
-✔  nx run shared-ui:lint (769ms)
-
-———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-NX   Ran target lint for 7 projects (3s)
-
-✔  6/7 succeeded [0 read from cache]
-
-✖  1/7 targets failed, including the following:
-   - nx run products:lint
-```
-
-If you have the ESLint plugin installed in your IDE you should immediately see an error:
-
-![ESLint module boundary error](/shared/tutorials/module-boundary-lint-rule.png)
-
-Learn more about how to [enforce module boundaries](/features/enforce-module-boundaries).
 
 ## Fast CI ⚡ {% highlightColor="green" %}
 
@@ -1272,17 +984,17 @@ Once you click the link, follow the steps provided and make sure Nx Cloud is ena
 
 ### Configure Your CI Workflow {% highlightColor="green" %}
 
-When you chose GitHub Actions as your CI provider at the beginning of the tutorial, `create-nx-workspace` created a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR. If you would like to also distribute tasks across multiple machines to ensure fast and reliable CI runs, uncomment the `nx-cloud start-ci-run` line and have the `nx affected` line run the `e2e-ci` task instead of `e2e`.
+When you chose GitHub Actions as your CI provider at the beginning of the tutorial, `create-nx-workspace` created a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks. If you would like to also distribute tasks across multiple machines to ensure fast and reliable CI runs, uncomment the `nx-cloud start-ci-run` line and have the `nx run-many` line run the `e2e-ci` task instead of `e2e`.
 
 If you need to generate a new workflow file for GitHub Actions or other providers, you can do so with this command:
 
 ```shell
-npx nx generate ci-workflow
+npx nx generate ci-workflow --useRunMany
 ```
 
 The key lines in the CI pipeline are:
 
-```yml {% fileName=".github/workflows/ci.yml" highlightLines=["10-14", "21-23"] %}
+```yml {% fileName=".github/workflows/ci.yml" highlightLines=["12-16", "22-24"] %}
 name: CI
 # ...
 jobs:
@@ -1304,10 +1016,9 @@ jobs:
           node-version: 20
           cache: 'npm'
       - run: npm ci --legacy-peer-deps
-      - uses: nrwl/nx-set-shas@v4
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      # As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       # When you enable task distribution, run the e2e-ci task instead of e2e
-      - run: npx nx affected -t lint test build e2e
+      - run: npx nx run-many -t lint test build e2e
 ```
 
 ### Open a Pull Request {% highlightColor="green" %}
@@ -1341,6 +1052,7 @@ Here's some things you can dive into next:
 - Learn more about the [underlying mental model of Nx](/concepts/mental-model)
 - Learn about popular generators such as [how to setup Tailwind](/technologies/angular/recipes/using-tailwind-css-with-angular-projects)
 - Learn how to [migrate your existing Angular CLI repo to Nx](technologies/angular/migration/angular)
+- Learn about [enforcing boundaries between projects](/features/enforce-module-boundaries)
 - [Setup Storybook for our shared UI library](/technologies/test-tools/storybook/recipes/overview-angular)
 
 Also, make sure you

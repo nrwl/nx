@@ -1,19 +1,9 @@
-import type {
-  ProjectConfiguration,
-  ProjectGraphProjectNode,
-  Tree,
-} from '@nx/devkit';
-import { createProjectGraphAsync, readProjectConfiguration } from '@nx/devkit';
+import type { ProjectGraphProjectNode } from '@nx/devkit';
+import { createProjectGraphAsync } from '@nx/devkit';
 
 export async function getProjectsFilteredByDependencies(
-  tree: Tree,
   dependencies: string[]
-): Promise<
-  Array<{
-    project: ProjectConfiguration;
-    graphNode: ProjectGraphProjectNode;
-  }>
-> {
+): Promise<ProjectGraphProjectNode[]> {
   const projectGraph = await createProjectGraphAsync();
 
   return Object.entries(projectGraph.dependencies)
@@ -22,8 +12,5 @@ export async function getProjectsFilteredByDependencies(
         !projectGraph.externalNodes?.[node] &&
         deps.some(({ target }) => dependencies.includes(target))
     )
-    .map(([projectName]) => ({
-      project: readProjectConfiguration(tree, projectName),
-      graphNode: projectGraph.nodes[projectName],
-    }));
+    .map(([projectName]) => projectGraph.nodes[projectName]);
 }

@@ -11,7 +11,7 @@ export const HeroDevsIcon: FC<SVGProps<SVGSVGElement>> = (props) => {
       {...props}
     >
       <title>HeroDevs</title>
-      <g clip-path="url(#clip0_6_102)">
+      <g clipPath="url(#clip0_6_102)">
         <path
           fillRule="evenodd"
           clipRule="evenodd"

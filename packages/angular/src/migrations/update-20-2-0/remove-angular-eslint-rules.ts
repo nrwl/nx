@@ -14,14 +14,13 @@ export const rulesToRemove = [
 ];
 
 export default async function (tree: Tree) {
-  const projects = await getProjectsFilteredByDependencies(tree, [
+  const projects = await getProjectsFilteredByDependencies([
     'npm:@angular/core',
   ]);
 
   let hasRootProject = false;
-  for (const {
-    project: { root },
-  } of projects) {
+  for (const graphNode of projects) {
+    const root = graphNode.data.root;
     if (!isEslintConfigSupported(tree, root)) {
       // ESLint config is not supported, skip
       continue;

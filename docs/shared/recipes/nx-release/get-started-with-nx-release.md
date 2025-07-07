@@ -17,7 +17,7 @@ Ensure that Nx is installed in your monorepo. Check out the [Installation docs](
 
 ### Add the JavaScript Plugin
 
-The [`@nx/js` package](/technologies/typescript/api) is required for Nx Release to manage and release JavaScript packages. Add it if it is not already installed:
+The [`@nx/js` package](/technologies/typescript/introduction) is required for Nx Release to manage and release JavaScript packages. Add it if it is not already installed:
 
 ```shell {% skipRescope=true %}
 nx add @nx/js

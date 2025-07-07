@@ -1,6 +1,6 @@
-import { NxAppRspackPlugin } from '@nx/rspack/app-plugin';
-import { NxReactRspackPlugin } from '@nx/rspack/react-plugin';
-import { NxModuleFederationPlugin, NxModuleFederationSSRDevServerPlugin } from '@nx/module-federation/rspack';
+import { NxAppRspackPlugin } from '@nx/rspack/app-plugin.js';
+import { NxReactRspackPlugin } from '@nx/rspack/react-plugin.js';
+import { NxModuleFederationPlugin, NxModuleFederationSSRDevServerPlugin } from '@nx/module-federation/rspack.js';
 import { join } from 'path';
 
 import browserMfConfig from './module-federation.config';

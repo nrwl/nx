@@ -56,6 +56,7 @@ export async function normalizeOptions(
     importPath,
     isUsingTsSolutionConfig,
     useProjectJson,
+    unitTestRunner: options.unitTestRunner ?? 'none',
   };
 
   return normalized;

@@ -456,7 +456,7 @@
       "additionalProperties": false
     },
     "indexHtmlTransformer": {
-      "description": "Path to transformer function to transform the index.html",
+      "description": "Path to a file containing a function to transform the index.html. The function should have the signature: `(target: Target, indexHtml: string) => string`, where `target` is the build target configuration and `indexHtml` is the original HTML content.",
       "type": "string",
       "alias": "indexFileTransformer"
     },

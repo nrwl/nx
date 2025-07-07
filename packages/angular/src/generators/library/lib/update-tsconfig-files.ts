@@ -18,9 +18,13 @@ export function updateTsConfigFiles(
   extractTsConfigBase(tree);
   updateProjectConfig(tree, options);
   updateProjectIvyConfig(tree, options);
-  addTsConfigPath(tree, options.importPath, [
-    joinPathFragments(options.projectRoot, './src', 'index.ts'),
-  ]);
+
+  // Only add tsconfig path mapping if skipTsConfig is not true
+  if (!options.skipTsConfig) {
+    addTsConfigPath(tree, options.importPath, [
+      joinPathFragments(options.projectRoot, './src', 'index.ts'),
+    ]);
+  }
 
   const compilerOptions: Record<string, any> = {
     skipLibCheck: true,

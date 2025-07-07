@@ -105,33 +105,37 @@ if you are interested.
 
    ![Okta 4](/nx-cloud/enterprise/single-tenant/images/saml/okta_4.png)
 
-4. Scroll down to attribute statements and configure them as per below:
+4. Under **Advanced Settings**, make sure both **Response** and **Assertion** are set to **Signed**
+
+   ![Okta Advanced Configuration](/nx-cloud/enterprise/single-tenant/images/saml/okta_11.png)
+
+5. Scroll down to attribute statements and configure them as per below:
 
    ![Okta 5](/nx-cloud/enterprise/single-tenant/images/saml/okta_5.png)
 
-5. Click “Next”, and select the first option on the next screen.
-6. Go to the assignments tab and assign the users that can login to the Nx Cloud WebApp:
+6. Click “Next”, and select the first option on the next screen.
+7. Go to the assignments tab and assign the users that can login to the Nx Cloud WebApp:
 
    1. **Note:** This just gives them permission to use the Nx Cloud web app with their own workspace. Users will still need to be invited manually through the web app to your main workspace.
 
    ![Okta 6](/nx-cloud/enterprise/single-tenant/images/saml/okta_6.png)
 
-7. Then in the Sign-On tab scroll down:
+8. Then in the Sign-On tab scroll down:
 
    ![Okta 7](/nx-cloud/enterprise/single-tenant/images/saml/okta_7.png)
 
-8. Scroll down and from the list of certificates, download the one with the “Active” status:
+9. Scroll down and from the list of certificates, download the one with the “Active” status:
 
    ![Okta 8](/nx-cloud/enterprise/single-tenant/images/saml/okta_8.png)
 
-9. Extract the downloaded certificate value as a one-line string:
-   1. `awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' okta.cert`
-   2. We'll use this later
-10. Then view the ldP metadata:
+10. Extract the downloaded certificate value as a one-line string:
+    1. `awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' okta.cert`
+    2. We'll use this later
+11. Then view the ldP metadata:
 
     ![Okta 9](/nx-cloud/enterprise/single-tenant/images/saml/okta_9.png)
 
-11. Then find the row similar to the below, and copy the highlighted URL (see screenshot as well):
+12. Then find the row similar to the below, and copy the highlighted URL (see screenshot as well):
 
     1. ```html
        <md:SingleSignOnService

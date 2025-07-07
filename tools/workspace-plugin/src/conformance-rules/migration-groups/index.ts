@@ -1,8 +1,8 @@
-import { readJsonFile, workspaceRoot } from '@nx/devkit';
 import {
   createConformanceRule,
-  type ProjectFilesViolation,
+  type ConformanceViolation,
 } from '@nx/conformance';
+import { readJsonFile, workspaceRoot } from '@nx/devkit';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { satisfies } from 'semver';
@@ -17,9 +17,8 @@ export default createConformanceRule<Options>({
   category: 'consistency',
   description:
     'Ensures that packageJsonUpdates in migrations.json have all packages included from groups. e.g. @typescript-eslint/* packages must be in sync',
-  reporter: 'project-files-reporter',
   implementation: async ({ projectGraph, ruleOptions }) => {
-    const violations: ProjectFilesViolation[] = [];
+    const violations: ConformanceViolation[] = [];
 
     for (const project of Object.values(projectGraph.nodes)) {
       if (
@@ -60,10 +59,10 @@ export function validateMigrations(
   sourceProject: string,
   migrationsPath: string,
   options: Options
-): ProjectFilesViolation[] {
+): ConformanceViolation[] {
   if (!migrations.packageJsonUpdates) return [];
 
-  const violations: ProjectFilesViolation[] = [];
+  const violations: ConformanceViolation[] = [];
 
   // Check that if package updates include one package in the group, then:
   // 1. They all have the same version

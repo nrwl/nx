@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "title": "Prune Lockfile",
+  "description": "Creates a pruned lockfile based on the project dependencies and places it into the output directory.",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "buildTarget": {
+      "type": "string",
+      "description": "The build target that produces the output directory to place the pruned lockfile.",
+      "default": "build"
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "The output path to place the pruned lockfile. Usually inferred from the outputs of the buildTarget."
+    }
+  },
+  "required": ["buildTarget"]
+}

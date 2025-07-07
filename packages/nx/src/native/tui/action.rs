@@ -37,4 +37,5 @@ pub enum Action {
     ToggleDebugMode,
     SendConsoleMessage(String),
     ConsoleMessengerAvailable(bool),
+    EndCommand,
 }

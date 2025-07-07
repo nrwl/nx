@@ -4,6 +4,8 @@ description: The Nx Plugin for Angular contains executors, generators, and utili
 keywords: [angular]
 ---
 
+# @nx/angular
+
 The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries
 within an Nx workspace. It also enables using Angular Devkit builders and schematics in Nx workspaces.
 

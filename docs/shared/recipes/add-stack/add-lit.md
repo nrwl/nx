@@ -224,6 +224,6 @@ Now when you serve your application, you'll see the content from the library bei
 
 ## More Documentation
 
-- [@nx/esbuild](/technologies/build-tools/esbuild/api)
-- [@nx/js](/technologies/typescript/api)
+- [@nx/esbuild](/technologies/build-tools/esbuild/introduction)
+- [@nx/js](/technologies/typescript/introduction)
 - [Lit](https://lit.dev/)

@@ -96,10 +96,15 @@ export class NxModuleFederationDevServerPlugin implements RspackPluginInstance {
       this._options.devServerConfig.pathToManifestFile =
         getDynamicMfManifestFile(project, workspaceRoot);
     } else {
-      const userPathToManifestFile = join(
-        workspaceRoot,
-        this._options.devServerConfig.pathToManifestFile
-      );
+      const userPathToManifestFile =
+        this._options.devServerConfig.pathToManifestFile.startsWith(
+          workspaceRoot
+        )
+          ? this._options.devServerConfig.pathToManifestFile
+          : join(
+              workspaceRoot,
+              this._options.devServerConfig.pathToManifestFile
+            );
       if (!existsSync(userPathToManifestFile)) {
         throw new Error(
           `The provided Module Federation manifest file path does not exist. Please check the file exists at "${userPathToManifestFile}".`

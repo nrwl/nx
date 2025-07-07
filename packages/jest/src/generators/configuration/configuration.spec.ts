@@ -464,6 +464,69 @@ describe('jestProject', () => {
     });
   });
 
+  describe('vscode recommended extensions', () => {
+    it('should add the "firsttris.vscode-jest-runner" extension to the vscode recommended extensions', async () => {
+      tree.write('.vscode/extensions.json', '{}');
+
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'lib1',
+      });
+
+      expect(tree.read('.vscode/extensions.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "recommendations": ["esbenp.prettier-vscode", "firsttris.vscode-jest-runner"]
+        }
+        "
+      `);
+    });
+
+    it('should not duplicate the "firsttris.vscode-jest-runner" extension in the vscode recommended extensions', async () => {
+      writeJson(tree, '.vscode/extensions.json', {
+        recommendations: ['firsttris.vscode-jest-runner'],
+      });
+
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'lib1',
+      });
+
+      expect(
+        readJson(tree, '.vscode/extensions.json').recommendations.filter(
+          (ext: string) => ext === 'firsttris.vscode-jest-runner'
+        ).length
+      ).toBe(1);
+    });
+
+    it('should not add the "firsttris.vscode-jest-runner" if the jest preset already exists', async () => {
+      tree.write('.vscode/extensions.json', '{}');
+      tree.write('jest.preset.js', 'export default {}');
+
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'lib1',
+      });
+
+      expect(tree.read('.vscode/extensions.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "recommendations": ["esbenp.prettier-vscode"]
+        }
+        "
+      `);
+    });
+
+    it('should not create the .vscode/extensions.json file if it does not exist', async () => {
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'lib1',
+      });
+
+      expect(tree.exists('.vscode/extensions.json')).toBeFalsy();
+    });
+  });
+
   describe('TS solution setup', () => {
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace();

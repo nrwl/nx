@@ -43,11 +43,11 @@ export default async function (tree: Tree) {
     return;
   }
 
-  const projects = await getProjectsFilteredByDependencies(tree, [
+  const projects = await getProjectsFilteredByDependencies([
     'npm:@nguniversal/common',
     'npm:@nguniversal/express-engine',
   ]);
-  for (const { project } of projects) {
+  for (const { data: project } of projects) {
     if (project.projectType !== 'application') {
       continue;
     }

@@ -241,6 +241,15 @@ When using package manager project linking, every project needs to have a `packa
 ```
 
 {% /tab %}
+{% tab label="Application" %}
+
+```json {% fileName="apps/my-app/package.json" %}
+{
+  "name": "@myorg/my-app"
+}
+```
+
+{% /tab %}
 {% /tabs %}
 
 {% callout type="warning" title="Package Names with Multiple Slashes" %}
@@ -249,9 +258,13 @@ The `package.json` name can only have one `/` character in it. This is more rest
 
 ## Update Individual Project TypeScript Configuration
 
-Each project's `tsconfig.json` file should extend the `tsconfig.base.json` file and list `references` to the project's dependencies. Remove any `compilerOptions` listed and combine them with the options listed in the `tsconfig.lib.json` and `tsconfig.spec.json` files.
+{% callout type="note" title="Applications and Libraries" %}
+The TypeScript configuration requirements described in this section apply to both application and library projects. While the examples below show library projects, the same principles apply to applications, except applications typically use `tsconfig.app.json` instead of `tsconfig.lib.json`.
+{% /callout %}
 
-The `tsconfig.json` file's purpose is to provide your IDE with `references` to the `tsconfig.*.json` files that define the compilation settings for all the files in the project. In this case, `tsconfig.spec.json` handles the compilation of the test files and `tsconfig.lib.json` handles the compilation of the production code.
+Each project's `tsconfig.json` file should extend the `tsconfig.base.json` file and list `references` to the project's dependencies. Remove any `compilerOptions` listed and combine them with the options listed in the `tsconfig.lib.json` (for libraries) or `tsconfig.app.json` (for applications) and `tsconfig.spec.json` files.
+
+The `tsconfig.json` file's purpose is to provide your IDE with `references` to the `tsconfig.*.json` files that define the compilation settings for all the files in the project. In this case, `tsconfig.spec.json` handles the compilation of the test files and `tsconfig.lib.json` or `tsconfig.app.json` handles the compilation of the production code.
 
 ```jsonc {% fileName="libs/ui/tsconfig.json" %}
 {
@@ -271,7 +284,7 @@ The `tsconfig.json` file's purpose is to provide your IDE with `references` to t
 }
 ```
 
-Each project's `tsconfig.lib.json` file extends the root `tsconfig.base.json` file and adds `references` to the `tsconfig.lib.json` files of project dependencies. This file should not extend the project's `tsconfig.json` file because the `tsconfig.json` file includes a reference to the `tsconfig.spec.json` file. Keeping the `tsconfig.spec.json` file unreferenced from the `tsconfig.lib.json` file makes the `typecheck` and `build` tasks faster because the test files do not need to be analyzed. Note that the `outDir` location needs to be unique across all `tsconfig.*.json` files so that one task's cached output does not interfere with another task's cached output.
+Each project's `tsconfig.lib.json` (for libraries) or `tsconfig.app.json` (for applications) file extends the root `tsconfig.base.json` file and adds `references` to the `tsconfig.lib.json` files of project dependencies. This file should not extend the project's `tsconfig.json` file because the `tsconfig.json` file includes a reference to the `tsconfig.spec.json` file. Keeping the `tsconfig.spec.json` file unreferenced from the `tsconfig.lib.json` or `tsconfig.app.json` file makes the `typecheck` and `build` tasks faster because the test files do not need to be analyzed. Note that the `outDir` location needs to be unique across all `tsconfig.*.json` files so that one task's cached output does not interfere with another task's cached output.
 
 {% callout type="note" title="Shared Compiler Options" %}
 If there are a lot of shared `compilerOptions` between `tsconfig.lib.json` and `tsconfig.spec.json`, you could create a `tsconfig.project.json` that contains those shared settings. `tsconfig.project.json` would extend `tsconfig.base.json` while `tsconfig.lib.json` and `tsconfig.spec.json` would each extend `tsconfig.project.json`.

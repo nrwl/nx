@@ -26,7 +26,12 @@ jobs:
 
       - nx/set-shas
 
-      - run: npx nx-cloud record -- nx format:check
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # This requires connecting your workspace to Nx Cloud. Run "nx connect" to get started w/ Nx Cloud
+      # - run: npx nx-cloud record -- nx format:check
+
+      # Without Nx Cloud, run format:check directly
+      - run: npx nx format:check
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build e2e-ci
 workflows:
   build:

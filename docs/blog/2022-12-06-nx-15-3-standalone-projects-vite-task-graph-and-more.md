@@ -200,7 +200,7 @@ npx nx g @nrwl/vite:configuration
 
 This will adjust the NxExt Vite plugin configuration to match the one provided by our core team. Check out our docs for more info: [/technologies/build-tools/vite/generators/configuration](/technologies/build-tools/vite/api/generators/configuration)
 
-You can also find all the details about the new Vite package in our docs: [/technologies/build-tools/vite](/technologies/build-tools/vite/api)
+You can also find all the details about the new Vite package in our docs: [/technologies/build-tools/vite/introduction](/technologies/build-tools/vite/introduction)
 
 ## Adopting Nx has never been easier
 

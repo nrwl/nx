@@ -56,7 +56,7 @@ Answer with the following:
 
 When your workspace is created, run `cd myorg`.
 
-Next, we will need to install the [Official Nx Angular Plugin](/technologies/angular/api):
+Next, we will need to install the [Official Nx Angular Plugin](/technologies/angular/introduction):
 
 ```
 npm install @nrwl/angular

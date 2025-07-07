@@ -36,7 +36,7 @@ Nx can be used in a wide range of scenarios, from small open source projects, st
 - `@nrwl/*` plugins which are those actively maintained by the Nx core team
 - [Community plugins](/community)
 
-This illustration should give you a rough idea. obviously some of the plugins may be built on top of others, leveraging common functionality. An example is the [@nrwl/js](/technologies/typescript/api) plugin which not only can be used as a standalone plugin but also builds the basis for of many others by providing core JavaScript/TypeScript features.
+This illustration should give you a rough idea. obviously some of the plugins may be built on top of others, leveraging common functionality. An example is the [@nrwl/js](/technologies/typescript/introduction) plugin which not only can be used as a standalone plugin but also builds the basis for of many others by providing core JavaScript/TypeScript features.
 
 ![](/blog/images/2022-04-08/iMPg692nMj5ty709M7tTQQ.avif)
 
@@ -242,7 +242,7 @@ Learn more in this short video walkthrough:
 
 ## Our docs keep getting more and more awesome
 
-Besides delivering awesome features, we keep improving our docs. They are essential to help discover new features and better understand existing ones. In the last weeks we've improved the navigation support, allowing you to navigate to a specific package with `/packages/<package-name>` such as [/nx-api/react](/technologies/react/api) listing executors and generators that come with that Nx package, also improving the API docs of the individual executor options including a live embedded editor playground to experiment with different configuration setup.
+Besides delivering awesome features, we keep improving our docs. They are essential to help discover new features and better understand existing ones. In the last weeks we've improved the navigation support, allowing you to navigate to a specific package with `/packages/<package-name>` such as [/technologies/react/api](/technologies/react/api) listing executors and generators that come with that Nx package, also improving the API docs of the individual executor options including a live embedded editor playground to experiment with different configuration setup.
 
 Check out Benjamin Cabanes' tweet with some short videos:
 

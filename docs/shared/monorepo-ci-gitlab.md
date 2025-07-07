@@ -33,6 +33,11 @@ main:
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
-    - npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
+    # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+    # This requires connecting your workspace to Nx Cloud. Run "nx connect" to get started w/ Nx Cloud
+    # - npx nx-cloud record -- nx format:check
+
+    # Without Nx Cloud, run format:check directly
+    - npx nx format:check --base=$NX_BASE --head=$NX_HEAD
     - npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build e2e-ci
 ```

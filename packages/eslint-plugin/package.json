@@ -36,6 +36,7 @@
   "dependencies": {
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
+    "@phenomnomnominal/tsquery": "~5.0.1",
     "@typescript-eslint/type-utils": "^8.0.0",
     "@typescript-eslint/utils": "^8.0.0",
     "chalk": "^4.1.0",

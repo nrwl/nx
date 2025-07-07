@@ -137,7 +137,7 @@ describe('addLinting generator', () => {
                       "error",
                       {
                           ignoredFiles: [
-                              "{projectRoot}/eslint.config.{js,cjs,mjs}"
+                              "{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}"
                           ]
                       }
                   ]
@@ -206,7 +206,7 @@ describe('addLinting generator', () => {
                       {
                           enforceBuildableLibDependency: true,
                           allow: [
-                              "^.*/eslint(\\\\.base)?\\\\.config\\\\.[cm]?js$"
+                              "^.*/eslint(\\\\.base)?\\\\.config\\\\.[cm]?[jt]s$"
                           ],
                           depConstraints: [
                               {

@@ -18,7 +18,7 @@ jobs:
 
       - uses: pnpm/action-setup@v4
         with:
-          version: 9.8.0 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
+          version: 10.11.1 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
 
       - name: Run a security audit
         run: pnpm dlx audit-ci --critical --report-type summary

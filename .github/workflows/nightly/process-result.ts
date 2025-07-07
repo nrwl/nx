@@ -30,51 +30,68 @@ function humanizeDuration(num: number): string {
 }
 
 function processResults(combined: MatrixResult[]): ProcessedResults {
-  const failedProjects = combined.filter(c => c.status === 'failure').sort((a, b) => a.project.localeCompare(b.project));
+  const failedProjects = combined.filter(c => c.status === 'failure' || c.status === 'cancelled').sort((a, b) => a.project.localeCompare(b.project));
   const failedGoldenProjects = failedProjects.filter(c => c.is_golden);
   const hasGoldenFailures = failedGoldenProjects.length > 0;
   const codeowners = new Set<string>();
   failedGoldenProjects.forEach(c => codeowners.add(c.codeowners));
 
   let result = '';
-  let lastProject: string | undefined;
+
+  const allGoldenProjects = combined.filter(c => c.is_golden);
+  const uniqueGoldenProjects = new Set(allGoldenProjects.map(c => c.project));
+  const uniqueFailedGoldenProjects = new Set(failedGoldenProjects.map(c => c.project));
+  const goldenPassingCount = uniqueGoldenProjects.size - uniqueFailedGoldenProjects.size;
+  const goldenFailingCount = uniqueFailedGoldenProjects.size;
+
+  const allOtherProjects = combined.filter(c => !c.is_golden);
+  const uniqueOtherProjects = new Set(allOtherProjects.map(c => c.project));
+  const failedRegularProjects = failedProjects.filter(c => !c.is_golden);
+  const uniqueFailedOtherProjects = new Set(failedRegularProjects.map(c => c.project));
+  const otherPassingCount = uniqueOtherProjects.size - uniqueFailedOtherProjects.size;
+  const otherFailingCount = uniqueFailedOtherProjects.size;
+
+  result += `\n🌟 *Golden Projects*`;
+  result += `\n✅ Passing: ${goldenPassingCount}`;
+  result += `\n❌ Failing: ${goldenFailingCount}`;
 
   if (failedGoldenProjects.length > 0) {
-    result += `
-🔥 **Golden Test Failures (${failedGoldenProjects.length})**
-\`\`\`
-| Failed project                 | PM   | OS    | Node     |
-|--------------------------------|------|-------|----------|`;
-    lastProject = undefined;
+    result += `\n\n🚨 *Failed Golden Projects*\n\`\`\``;
+    result += `\n| Failed project                 |`;
+    result += `\n|--------------------------------|`;
+    let lastProject: string | undefined;
     failedGoldenProjects.forEach(matrix => {
-      const project = matrix.project !== lastProject ? matrix.project : '...';
-      result += `\n| ${project.padEnd(30)} | ${matrix.package_manager.padEnd(4)} | ${matrix.os_name.padEnd(5)} | v${matrix.node_version.toString().padEnd(7)} |`;
-      lastProject = matrix.project;
+      const project = matrix.project !== lastProject ? matrix.project : '';
+      if (project) {
+        result += `\n| ${project.padEnd(30)} |`;
+        lastProject = matrix.project;
+      }
     });
-    result += `\`\`\``;
-  } else {
-    result += '\n✅ **Golden Tests: All Passed!**';
+    result += `\n\`\`\``;
   }
 
-  const failedRegularProjects = failedProjects.filter(c => !c.is_golden);
+  result += `\n\n🔧 *Other Projects*`;
+  result += `\n✅ Passing: ${otherPassingCount}`;
+  result += `\n❌ Failing: ${otherFailingCount}`;
+
+  // Failed Other Projects Table (if any)
   if (failedRegularProjects.length > 0) {
-    if (failedGoldenProjects.length > 0 || result.length > 0) result += '\n\n';
-    result += `
-📋 **Other Project Failures (${failedRegularProjects.length})**
-\`\`\`
-| Failed project                 | PM   | OS    | Node     |
-|--------------------------------|------|-------|----------|`;
-    lastProject = undefined;
+    result += `\n\n⚠️ *Failed Other Projects*\n\`\`\``;
+    result += `\n| Failed project                 |`;
+    result += `\n|--------------------------------|`;
+    let lastProject: string | undefined;
     failedRegularProjects.forEach(matrix => {
-      const project = matrix.project !== lastProject ? matrix.project : '...';
-      result += `\n| ${project.padEnd(30)} | ${matrix.package_manager.padEnd(4)} | ${matrix.os_name.padEnd(5)} | v${matrix.node_version.toString().padEnd(7)} |`;
-      lastProject = matrix.project;
+      const project = matrix.project !== lastProject ? matrix.project : '';
+      if (project) {
+        result += `\n| ${project.padEnd(30)} |`;
+        lastProject = matrix.project;
+      }
     });
-    result += `\`\`\``;
+    result += `\n\`\`\``;
   }
 
   if (failedProjects.length === 0) {
-    result = '✅ **No test failures detected!**';
+    result = '🎉 *No test failures detected!* All systems green! 🟢';
   }
 
   const timeReport: Record<string, { min: number; max: number; minEnv: string; maxEnv: string }> = {};

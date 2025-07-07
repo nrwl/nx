@@ -11,7 +11,7 @@ In the ever-evolving web development landscape, efficiency and modularity have b
 
 Qwik is a modern web framework that focuses on application performance by reducing the amount of JavaScript that needs to be shipped to the browser. You can learn more about how Qwik achieves this with [Resumability in their docs](https://qwik.dev/docs/concepts/resumable/).
 
-Nx is a powerful tool that helps you build extensible and maintainable codebases that scale as your application and team grows. Nx utilises computation cache and workspace analysis to ensure maximum efficiency and developer experience. You can [learn more about Nx here](/getting-started/why-nx).
+Nx is a powerful tool that helps you build extensible and maintainable codebases that scale as your application and team grows. Nx utilises computation cache and workspace analysis to ensure maximum efficiency and developer experience. You can [learn more about Nx here](/getting-started/intro).
 
 In this blog post, we'll explore how to combine the strengths of Nx and Qwik to create a todo app. To do this, we'll take advantage of an Nx Plugin that was created by the Qwikifiers team to maximise the integration between Qwik and Nx, called [`qwik-nx`](https://github.com/qwikifiers/qwik-nx).
 

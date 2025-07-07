@@ -29,7 +29,7 @@ export function WhyCiSecurityMatters(): ReactElement {
               Why CI Security Matters
             </SectionHeading>
             <SectionHeading as="p" variant="subtitle" className="mt-6">
-              CI pipelines are often an overlooked threat – and your cache is a
+              CI pipelines are often an overlooked threat — and your cache is a
               critical entry point.
             </SectionHeading>
 
@@ -60,7 +60,7 @@ export function WhyCiSecurityMatters(): ReactElement {
                   />
                   Build artifacts can be compromised and deployed{' '}
                 </span>
-                – if left unprotected
+                — if left unprotected
               </li>
               <li className="relative pl-9">
                 <span className="inline font-semibold text-slate-950 dark:text-white">

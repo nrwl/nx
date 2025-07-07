@@ -7,6 +7,9 @@ import {
   BriebugIcon,
   LiveLoveAppIcon,
   NStudioIcon,
+  ZephyrCloudIcon,
+  AngularArchitectsIcon,
+  ThisDotLabs,
 } from '@nx/nx-dev/ui-icons';
 import { useEffect, useMemo, useState } from 'react';
 import { Partner } from './partner';
@@ -78,6 +81,38 @@ export function PartnersList(): JSX.Element {
         location: 'US',
         tagline: "Craftsmanship perfected 'n' ways for your goals.",
         capabilities: ['Typescript', 'Swift', 'Kotlin', 'NativeScript'],
+      },
+      {
+        name: 'Zephyr Cloud',
+        logo: <ZephyrCloudIcon aria-hidden="true" className="mb-4 h-14" />,
+        href: 'https://zephyr-cloud.io/',
+        location: 'US',
+        tagline: 'The only sane way to do micro-frontends and mini-apps.',
+        capabilities: [
+          'Micro-frontends',
+          'Mini-apps',
+          'Deployment',
+          'Module Federation',
+        ],
+      },
+      {
+        name: 'Angular Architects',
+        logo: (
+          <AngularArchitectsIcon aria-hidden="true" className="mb-4 h-12" />
+        ),
+        href: 'https://angulararchitects.io/',
+        location: 'EU',
+        tagline: 'Angular for the Enterprise',
+        capabilities: ['Architecture', 'Monorepos', 'Micro Frontends', 'State'],
+      },
+      {
+        name: 'This Dot Labs',
+        logo: <ThisDotLabs aria-hidden="true" className="mb-4 h-12" />,
+        href: 'https://www.thisdot.co/',
+        location: 'US',
+        tagline:
+          'AI-first engineers helping orgs scale application dev, boost velocity & build better.',
+        capabilities: ['Migrations', 'AI', 'React Native', 'Next.js'],
       },
     ],
     []

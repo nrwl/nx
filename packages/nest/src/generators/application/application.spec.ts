@@ -41,14 +41,14 @@ describe('application generator', () => {
             "configurations": {
               "development": {
                 "args": [
-                  "node-env=development",
+                  "--node-env=development",
                 ],
               },
             },
             "executor": "nx:run-commands",
             "options": {
               "args": [
-                "node-env=production",
+                "--node-env=production",
               ],
               "command": "webpack-cli build",
             },
@@ -232,14 +232,14 @@ describe('application generator', () => {
                 "configurations": {
                   "development": {
                     "args": [
-                      "node-env=development",
+                      "--node-env=development",
                     ],
                   },
                 },
                 "executor": "nx:run-commands",
                 "options": {
                   "args": [
-                    "node-env=production",
+                    "--node-env=production",
                   ],
                   "command": "webpack-cli build",
                 },
@@ -398,14 +398,14 @@ describe('application generator', () => {
               "configurations": {
                 "development": {
                   "args": [
-                    "node-env=development",
+                    "--node-env=development",
                   ],
                 },
               },
               "executor": "nx:run-commands",
               "options": {
                 "args": [
-                  "node-env=production",
+                  "--node-env=production",
                 ],
                 "command": "webpack-cli build",
               },

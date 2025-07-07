@@ -2076,6 +2076,16 @@
       }
     },
     "migrations": {
+      "/technologies/java/api/migrations/change-plugin-version-0-1-2": {
+        "description": "Change dev.nx.gradle.project-graph to version 0.1.2 in build file",
+        "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-2.json",
+        "hidden": false,
+        "name": "change-plugin-version-0-1-2",
+        "version": "21.3.0-beta.0",
+        "originalFilePath": "/packages/gradle",
+        "path": "/technologies/java/api/migrations/change-plugin-version-0-1-2",
+        "type": "migration"
+      },
       "/technologies/java/api/migrations/change-plugin-version-0-1-0": {
         "description": "Change dev.nx.gradle.project-graph to version 0.1.0 in build file",
         "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-0.json",
@@ -2250,6 +2260,15 @@
     "root": "/packages/js",
     "source": "/packages/js/src",
     "executors": {
+      "/technologies/typescript/api/executors/copy-workspace-modules": {
+        "description": "Copies Workspace Modules into the output directory after a build to prepare it for use with Docker or alternatives.",
+        "file": "generated/packages/js/executors/copy-workspace-modules.json",
+        "hidden": false,
+        "name": "copy-workspace-modules",
+        "originalFilePath": "/packages/js/src/executors/copy-workspace-modules/schema.json",
+        "path": "/technologies/typescript/api/executors/copy-workspace-modules",
+        "type": "executor"
+      },
       "/technologies/typescript/api/executors/tsc": {
         "description": "Build a project using TypeScript.",
         "file": "generated/packages/js/executors/tsc.json",
@@ -2275,6 +2294,15 @@
         "name": "node",
         "originalFilePath": "/packages/js/src/executors/node/schema.json",
         "path": "/technologies/typescript/api/executors/node",
+        "type": "executor"
+      },
+      "/technologies/typescript/api/executors/prune-lockfile": {
+        "description": "Creates a pruned lockfile based on the project dependencies and places it into the output directory.",
+        "file": "generated/packages/js/executors/prune-lockfile.json",
+        "hidden": false,
+        "name": "prune-lockfile",
+        "originalFilePath": "/packages/js/src/executors/prune-lockfile/schema.json",
+        "path": "/technologies/typescript/api/executors/prune-lockfile",
         "type": "executor"
       },
       "/technologies/typescript/api/executors/release-publish": {
@@ -2465,14 +2493,24 @@
     "executors": {},
     "generators": {},
     "migrations": {
-      "/technologies/module-federation/api/migrations/20.5.0": {
+      "/technologies/module-federation/api/migrations/21.2.0-package-updates": {
         "description": "",
-        "file": "generated/packages/module-federation/migrations/20.5.0.json",
+        "file": "generated/packages/module-federation/migrations/21.2.0-package-updates.json",
         "hidden": false,
-        "name": "20.5.0",
+        "name": "21.2.0-package-updates",
+        "version": "21.2.0-beta.6",
+        "originalFilePath": "/packages/module-federation",
+        "path": "/technologies/module-federation/api/migrations/21.2.0-package-updates",
+        "type": "migration"
+      },
+      "/technologies/module-federation/api/migrations/20.5.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/module-federation/migrations/20.5.0-package-updates.json",
+        "hidden": false,
+        "name": "20.5.0-package-updates",
         "version": "20.5.0-beta.5",
         "originalFilePath": "/packages/module-federation",
-        "path": "/technologies/module-federation/api/migrations/20.5.0",
+        "path": "/technologies/module-federation/api/migrations/20.5.0-package-updates",
         "type": "migration"
       },
       "/technologies/module-federation/api/migrations/20.4.0-package-updates": {
@@ -5557,6 +5595,15 @@
         "name": "create-rule",
         "originalFilePath": "/libs/nx-packages/conformance/src/generators/create-rule/schema.json",
         "path": "/reference/core-api/conformance/generators/create-rule",
+        "type": "generator"
+      },
+      "/reference/core-api/conformance/generators/preset": {
+        "description": "Nx workspace preset which includes a working conformance rule",
+        "file": "external-generated/packages/conformance/generators/preset.json",
+        "hidden": false,
+        "name": "preset",
+        "originalFilePath": "/libs/nx-packages/conformance/src/generators/preset/schema.json",
+        "path": "/reference/core-api/conformance/generators/preset",
         "type": "generator"
       }
     },

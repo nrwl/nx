@@ -308,7 +308,7 @@ describe('@nx/eslint:lint-project', () => {
                       {
                           enforceBuildableLibDependency: true,
                           allow: [
-                              "^.*/eslint(\\\\.base)?\\\\.config\\\\.[cm]?js$"
+                              "^.*/eslint(\\\\.base)?\\\\.config\\\\.[cm]?[jt]s$"
                           ],
                           depConstraints: [
                               {
@@ -379,7 +379,7 @@ describe('@nx/eslint:lint-project', () => {
                       {
                           enforceBuildableLibDependency: true,
                           allow: [
-                              "^.*/eslint(\\\\.base)?\\\\.config\\\\.[cm]?js$"
+                              "^.*/eslint(\\\\.base)?\\\\.config\\\\.[cm]?[jt]s$"
                           ],
                           depConstraints: [
                               {
@@ -495,7 +495,9 @@ describe('@nx/eslint:lint-project', () => {
               "@nx/dependency-checks": [
                 "error",
                 {
-                  "ignoredFiles": ["{projectRoot}/eslint.config.{js,cjs,mjs}"]
+                  "ignoredFiles": [
+                    "{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}"
+                  ]
                 }
               ]
             }

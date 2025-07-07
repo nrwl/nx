@@ -224,65 +224,6 @@ Again, because Nx cached the tasks when the application was built, most of the t
 ones which needed to be done is the root project's build. Running the command one more time, will be near instant as
 then all the tasks will be restored from the cache.
 
-## Run Tasks for Affected Projects
-
-Nx doesn't just cache your task results, it can also [eliminate the need to run unnecessary tasks](/ci/features/affected).
-
-First, commit any outstanding changes to the `main` branch locally:
-
-```shell
-git commit -am "changes"
-```
-
-Next make a small change to the `application` code:
-
-```java {% fileName="application/src/main/java/com/example/multimodule/application/DemoApplication.java" highlightLines=[21] %}
-package com.example.multimodule.application;
-
-import com.example.multimodule.service.MyService;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-@SpringBootApplication(scanBasePackages = "com.example.multimodule")
-@RestController
-public class DemoApplication {
-
-    private final MyService myService;
-
-    public DemoApplication(MyService myService) {
-        this.myService = myService;
-    }
-
-    @GetMapping("/")
-    public String home() {
-        return myService.message() + " changed!";
-    }
-
-    public static void main(String[] args) {
-        SpringApplication.run(DemoApplication.class, args);
-    }
-}
-```
-
-As a developer, we know that this change only affects the `application` project, not the `library` project. We would
-run `./nx run application:test` to verify our changes. In CI, teams often run all test tasks rerunning
-the `library:test` task unnecessarily.
-
-For a repository with only a few projects, you can manually calculate which projects are affected. As the repository grows, it becomes critical to have a tool like Nx that understands the project dependency graph and eliminates wasted time in CI.
-
-The `./nx affected` command solves this problem. Nx uses its project graph in conjunction with git history to only run
-tasks for projects that may have been affected by the changes that you made.
-
-To run the `test` tasks for projects affected by this change, run:
-
-```shell
-./nx affected -t test
-```
-
-Notice that this command does not run the `test` task for the `library` project, since it could not have been affected by the code change.
-
 ## Fast CI ⚡ {% highlightColor="green" %}
 
 {% callout type="check" title="Repository with Nx" %}
@@ -346,7 +287,7 @@ This generator creates a `.github/workflows/ci.yml` file that contains a CI pipe
 
 The key lines in the CI pipeline are:
 
-```yml {% fileName=".github/workflows/ci.yml" highlightLines=["21-24", "38-39"] %}
+```yml {% fileName=".github/workflows/ci.yml" highlightLines=["22-26", "38-39"] %}
 name: CI
 
 on:
@@ -384,10 +325,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
 
-      - uses: nrwl/nx-set-shas@v4
-
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: ./nx affected -t test build
+      # As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - run: './nx run-many -t test build'
 ```
 
 ### Open a Pull Request {% highlightColor="green" %}
@@ -421,8 +360,8 @@ organization:
 - Nx reflects the Gradle graph into the Nx graph
 - Nx's dependency graph visualisation helps you understand your codebase
 - Nx caches task results and reuses them when the same task is rerun later
-- Nx intelligently determines which tasks are `affected` by code changes to reduce waste in CI
 - Nx Cloud provides remote caching and distributed task execution to speed up CI
+- Nx [intelligently determines which tasks are `affected`](/ci/features/affected) by code changes to reduce waste in CI
 
 ## Next Steps
 

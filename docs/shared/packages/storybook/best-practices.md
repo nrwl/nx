@@ -7,7 +7,7 @@ description: The purpose of this guide is to help you set up Storybook in your N
 
 ## Purpose of this guide
 
-The purpose of this guide is to help you [set up Storybook in your Nx workspace](/technologies/test-tools/storybook/api) so that you can get the most out of Nx and its powerful capabilities.
+The purpose of this guide is to help you [set up Storybook in your Nx workspace](/technologies/test-tools/storybook/introduction) so that you can get the most out of Nx and its powerful capabilities.
 
 ## When to use Storybook
 
@@ -31,7 +31,7 @@ First, let’s see what Nx offers, when you are in the process of developing a p
 
 #### Configuration generation
 
-You can generate the Storybook configuration files and settings using the Nx [`@nx/storybook:configuration` generator](/technologies/test-tools/storybook/api/generators/configuration). You can read more about configuring Storybook with Nx in our [`@nx/storybook` package overview page](/technologies/test-tools/storybook/api#generating-storybook-configuration). With Nx, you configure Storybook for each individual project.
+You can generate the Storybook configuration files and settings using the Nx [`@nx/storybook:configuration` generator](/technologies/test-tools/storybook/api/generators/configuration). You can read more about configuring Storybook with Nx in our [`@nx/storybook` introduction page](/technologies/test-tools/storybook/introduction#generating-storybook-configuration). With Nx, you configure Storybook for each individual project.
 
 #### Stories generation
 
@@ -45,7 +45,7 @@ If your project is not configured yet, check out one of these guides:
 
 - [Set up Storybook for Vue Projects](/technologies/test-tools/storybook/recipes/overview-vue)
 
-If your project is [already configured](/technologies/test-tools/storybook/api), you can use the `stories` generator:
+If your project is [already configured](/technologies/test-tools/storybook/introduction), you can use the `stories` generator:
 
 - [React (and Next.js) stories generator](/technologies/react/api/generators/stories)
 
@@ -71,7 +71,7 @@ You can set up your interaction tests to run as part of your CI. You can read mo
 
 #### Serve
 
-When you are configuring Storybook, Nx [adds a serve and a build target for Storybook](/technologies/test-tools/storybook/api#generating-storybook-configuration) in your `project.json`, as we explained above. You can use these targets to [serve](/technologies/test-tools/storybook/api/executors/storybook) and [build](/technologies/test-tools/storybook/api/executors/build) storybook locally, and also in production. Cypress will also use these targets when firing up the e2e tests. While developing, you can serve your Storybooks locally to see if your components work and look as expected. This can help you and speed up the development and debugging process (no need to fire up a complex dev stack).
+When you are configuring Storybook, Nx [adds a serve and a build target for Storybook](/technologies/test-tools/storybook/introduction#generating-storybook-configuration) in your `project.json`, as we explained above. You can use these targets to [serve](/technologies/test-tools/storybook/api/executors/storybook) and [build](/technologies/test-tools/storybook/api/executors/build) storybook locally, and also in production. Cypress will also use these targets when firing up the e2e tests. While developing, you can serve your Storybooks locally to see if your components work and look as expected. This can help you and speed up the development and debugging process (no need to fire up a complex dev stack).
 
 #### Build and deploy
 
@@ -146,4 +146,4 @@ If you have any questions or suggestions, please feel free to reach out to us on
 
 ### Nx & Storybook documentation
 
-You can find all Storybook-related Nx documentation in the [packages page](/technologies/test-tools/storybook/api).
+You can find all Storybook-related Nx documentation in the [packages page](/technologies/test-tools/storybook/introduction).

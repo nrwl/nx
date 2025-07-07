@@ -1,6 +1,6 @@
 use hashbrown::HashMap;
 use std::path::{Path, PathBuf};
-use tracing::trace;
+use tracing::{debug, trace};
 
 use crate::native::glob::{build_glob_set, contains_glob_pattern, glob_transform::partition_glob};
 use crate::native::logger::enable_logger;
@@ -19,18 +19,36 @@ where
     P: AsRef<Path>,
 {
     let directory: PathBuf = directory.as_ref().into();
+    trace!(
+        "Expanding {} output entries in directory: {:?}",
+        entries.len(),
+        &directory
+    );
 
     let has_glob_pattern = entries.iter().any(|entry| contains_glob_pattern(entry));
 
     if !has_glob_pattern {
         trace!("No glob patterns found, checking if entries exist");
+        let mut existing_count = 0;
         let existing_directories = entries
             .into_iter()
             .filter(|entry| {
                 let path = directory.join(entry);
-                path.exists()
+                let exists = path.exists();
+                if exists {
+                    existing_count += 1;
+                    trace!("Found existing entry: {}", entry);
+                } else {
+                    trace!("Entry does not exist: {}", entry);
+                }
+                exists
             })
-            .collect();
+            .collect::<Vec<_>>();
+        debug!(
+            "Expanded outputs: found {} existing entries out of {} total",
+            existing_count,
+            existing_directories.len()
+        );
         return Ok(existing_directories);
     }
 
@@ -57,18 +75,33 @@ where
         .collect::<Vec<_>>();
 
     trace!(?negated_globs, ?regular_globs, "Expanding globs");
+    trace!(
+        "Building glob set for {} regular globs",
+        regular_globs.len()
+    );
 
     let glob_set = build_glob_set(&regular_globs)?;
-    let found_paths = nx_walker_sync(directory, Some(&negated_globs))
+    trace!("Successfully built glob set");
+
+    trace!(
+        "Walking directory with {} negated globs",
+        negated_globs.len()
+    );
+    let found_paths = nx_walker_sync(&directory, Some(&negated_globs))
         .filter_map(|path| {
             if glob_set.is_match(&path) {
+                trace!("Glob match found: {}", path.to_normalized_string());
                 Some(path.to_normalized_string())
             } else {
                 None
             }
         })
-        .collect();
+        .collect::<Vec<_>>();
 
+    debug!(
+        "Expanded outputs: found {} paths matching glob patterns",
+        found_paths.len()
+    );
     Ok(found_paths)
 }
 

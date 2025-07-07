@@ -4,12 +4,12 @@ import { FileChangeRecorder } from '../../utils/file-change-recorder';
 import { getProjectsFilteredByDependencies } from '../utils/projects';
 
 export default async function (tree: Tree) {
-  const projects = await getProjectsFilteredByDependencies(tree, [
+  const projects = await getProjectsFilteredByDependencies([
     'npm:@angular/ssr',
   ]);
 
-  for (const { project } of projects) {
-    visitNotIgnoredFiles(tree, project.root, (path) => {
+  for (const graphNode of projects) {
+    visitNotIgnoredFiles(tree, graphNode.data.root, (path) => {
       if (!path.endsWith('.ts') || path.endsWith('.d.ts')) {
         return;
       }

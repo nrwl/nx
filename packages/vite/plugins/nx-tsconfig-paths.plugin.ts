@@ -104,16 +104,18 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
           exitOnError: false,
           resetDaemonClient: true,
         });
+        // When using incremental building and the serve target is called
+        // we need to get the deps for the 'build' target instead.
+        const depsBuildTarget =
+          process.env.NX_TASK_TARGET_TARGET === 'serve'
+            ? 'build'
+            : process.env.NX_TASK_TARGET_TARGET;
         const { dependencies } = calculateProjectBuildableDependencies(
           undefined,
           projectGraph,
           workspaceRoot,
           process.env.NX_TASK_TARGET_PROJECT,
-          // When using incremental building and the serve target is called
-          // we need to get the deps for the 'build' target instead.
-          process.env.NX_TASK_TARGET_TARGET === 'serve'
-            ? 'build'
-            : process.env.NX_TASK_TARGET_TARGET,
+          depsBuildTarget,
           process.env.NX_TASK_TARGET_CONFIGURATION
         );
         // This tsconfig is used via the Vite ts paths plugin.
@@ -131,7 +133,7 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
             .filter((dep) => dep.node.type === 'lib')
             .map((dep) => dep.node.name)
             .join(',');
-          const buildCommand = `npx nx run-many --target=${process.env.NX_TASK_TARGET_TARGET} --projects=${buildableLibraryDependencies}`;
+          const buildCommand = `npx nx run-many --target=${depsBuildTarget} --projects=${buildableLibraryDependencies}`;
           config.plugins.push(nxViteBuildCoordinationPlugin({ buildCommand }));
         }
       }

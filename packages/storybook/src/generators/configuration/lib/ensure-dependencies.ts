@@ -71,9 +71,16 @@ export function ensureDependencies(
     if (isPnpm) {
       // If it's pnpm, it needs the framework without the builder
       // as a dependency too (eg. @storybook/react)
-      const matchResult = options.uiFramework?.match(/^@storybook\/(\w+)/);
-      const uiFrameworkWithoutBuilder = matchResult ? matchResult[0] : null;
-      if (uiFrameworkWithoutBuilder) {
+      const matchResult = options.uiFramework?.match(
+        /^@storybook\/([\w-]+?)(?:-(?:vite|webpack5|webpack))?$/
+      );
+      const uiFrameworkWithoutBuilder = matchResult
+        ? `@storybook/${matchResult[1]}`
+        : null;
+      if (
+        uiFrameworkWithoutBuilder &&
+        uiFrameworkWithoutBuilder !== options.uiFramework
+      ) {
         devDependencies[uiFrameworkWithoutBuilder] = storybookVersionToInstall;
       }
     }

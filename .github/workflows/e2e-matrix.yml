@@ -53,7 +53,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 9.8.0
+          version: 10.11.1
           run_install: false
 
       - name: Set node
@@ -136,7 +136,7 @@ jobs:
     permissions:
       contents: read
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 150     # <- cap each job to 150 minutes
+    timeout-minutes: 200     # <- cap each job to 200 minutes
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix)}} # Load matrix from previous job
       fail-fast: false
@@ -155,7 +155,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 9.8.0
+          version: 10.11.1
           run_install: false
 
       - name: Use Node.js ${{ matrix.node_version }}
@@ -256,8 +256,6 @@ jobs:
           # Verify Xcode installation
           xcodebuild -version
           
-          # List available simulators
-          xcrun simctl list devices available
         timeout-minutes: 10
         continue-on-error: false
 
@@ -302,9 +300,6 @@ jobs:
         run: |
           # Verify CoreSimulator service restarted
           pgrep -fl "CoreSimulator" || (echo "CoreSimulator service not running" && exit 1)
-          
-          # Check simulator list is clean
-          xcrun simctl list devices
           
           # Verify simulator runtime paths exist and are writable
           test -d ~/Library/Developer/CoreSimulator/Devices || (echo "Simulator devices directory missing" && exit 1)

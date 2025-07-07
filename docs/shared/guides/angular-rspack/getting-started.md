@@ -100,7 +100,7 @@ After generating the application, you will notice the following:
 - A `rspack.config.ts` file in the root of the project
 - The `project.json` file does not have a `targets.build` or `targets.serve` target
 
-The `rspack.config.ts` file is a configuration file for Rspack. It contains the configuration options for Rspack and for Angular Rspack a helper [createConfig](/technologies/angular/angular-rspack/api)
+The `rspack.config.ts` file is a configuration file for Rspack. It contains the configuration options for Rspack and for Angular Rspack a helper [createConfig](/technologies/angular/angular-rspack/api/create-config)
 function is used to map the options you would expect to set in the `project.json` or `angular.json` files to the Rspack configuration.
 
 The `project.json` file does not contain the `targets.build` or `targets.serve` targets because Angular Rspack uses Nx's [Inferred Tasks](concepts/inferred-tasks) to build and serve your application with Rspack.

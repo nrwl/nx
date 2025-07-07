@@ -14,6 +14,12 @@ export async function initLocal(workspace: WorkspaceTypeAndRoot) {
   process.env.NX_CLI_SET = 'true';
 
   try {
+    // In case Nx Cloud forcibly exits while the TUI is running, ensure the terminal is restored etc.
+    process.on('exit', (...args) => {
+      if (typeof globalThis.tuiOnProcessExit === 'function') {
+        globalThis.tuiOnProcessExit(...args);
+      }
+    });
     performance.mark('init-local');
 
     if (workspace.type !== 'nx' && shouldDelegateToAngularCLI()) {

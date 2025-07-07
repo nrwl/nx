@@ -8,7 +8,7 @@ module.exports = {
     path: join(__dirname, '<%= webpackPluginOptions.outputPath %>'),
   },
   devServer: {
-    port: 4200,
+    port: <%= port %>,
     historyApiFallback: {
       index: '/index.html',
       disableDotRule: true,

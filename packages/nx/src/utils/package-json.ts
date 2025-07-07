@@ -239,7 +239,7 @@ export function readTargetsFromPackageJson(
 function hasNxJsPlugin(projectRoot: string, workspaceRoot: string) {
   try {
     // nx-ignore-next-line
-    require.resolve('@nx/js', {
+    require.resolve('@nx/js/package.json', {
       paths: [projectRoot, ...getNxRequirePaths(workspaceRoot), __dirname],
     });
     return true;

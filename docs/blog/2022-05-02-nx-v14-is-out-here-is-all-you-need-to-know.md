@@ -74,7 +74,7 @@ Also see this example repository with some more information: [https://github.com
 
 ## Simplifying Nx
 
-Nx follows a modular plugin architecture. There is the core part of Nx which has the main logic around managing the project graph, computation caching, hashing and more. On top of that we have a series of Nx provided plugins for some of the most common frameworks and libraries out there, like [TypeScript/Javascript](/technologies/typescript/api), [Angular](/technologies/angular/api), [React](/technologies/react/api) & [React Native](/technologies/react/react-native/api), [Next.js](/technologies/react/next/api), [Nest.js](/technologies/node/nest/api), [Node](/technologies/node/api) and many more, not to forget about [all the community plugins](/community). We also have a [labs project section](https://github.com/nrwl/nx-labs) which is our incubator for potentially new, natively supported Nx plugins.
+Nx follows a modular plugin architecture. There is the core part of Nx which has the main logic around managing the project graph, computation caching, hashing and more. On top of that we have a series of Nx provided plugins for some of the most common frameworks and libraries out there, like [TypeScript/Javascript](/technologies/typescript/introduction), [Angular](/technologies/angular/introduction), [React](/technologies/react/introduction) & [React Native](/technologies/react/react-native/introduction), [Next.js](/technologies/react/next/introduction), [Nest.js](/technologies/node/nest/introduction), [Node](/technologies/node/introduction) and many more, not to forget about [all the community plugins](/community). We also have a [labs project section](https://github.com/nrwl/nx-labs) which is our incubator for potentially new, natively supported Nx plugins.
 
 This modular structure allows you to just use [Nx core without plugins](/getting-started/intro). An ideal approach if you want to add Nx to an [existing Lerna/Yarn/NPM/PNPM workspace](/recipes/adopting-nx/adding-to-monorepo). With v14 we made it even simpler s.t. now you only have a single `nx` package in your dependencies with the core setup.
 
@@ -250,7 +250,7 @@ Nx v14 ships with React 18 support for React DOM and React Native. The latter ha
 
 In addition to that, Expo and Expo Application Service support has been added which has lead already to some drastic speed improvements with some of our clients.
 
-Finally, it is the first version which ships the built-in module federation support for React as we've mentioned a couple of sections above. Check out the React package docs page and search for the `host` and `remote` generator: [/nx-api/react](/technologies/react/api)
+Finally, it is the first version which ships the built-in module federation support for React as we've mentioned a couple of sections above. Check out the React package docs page and search for the `host` and `remote` generator: [/technologies/react/api](/technologies/react/api)
 
 ## Angular
 

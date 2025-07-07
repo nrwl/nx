@@ -9,7 +9,7 @@ description: 'Learn how to use Nx code generators to automate repetitive tasks, 
 
 Code generators are like automation scripts designed to streamline your workflow. Essentially, they are TypeScript functions that accept parameters and help boost your productivity by:
 
-- Allowing you to **scaffold new projects** or **augment existing projects** with new features, like [adding Storybook support](/technologies/test-tools/storybook/api#generating-storybook-configuration)
+- Allowing you to **scaffold new projects** or **augment existing projects** with new features, like [adding Storybook support](/technologies/test-tools/storybook/introduction#generating-storybook-configuration)
 - **Automating repetitive tasks** in your development workflow
 - Ensuring your **code is consistent and follows best practices**
 

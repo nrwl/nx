@@ -89,16 +89,21 @@ export class CopyAssetsHandler {
       let input: string;
       let output: string;
       let ignore: string[] | null = null;
+
+      const resolvedOutputDir = path.isAbsolute(opts.outputDir)
+        ? opts.outputDir
+        : path.resolve(opts.rootDir, opts.outputDir);
+
       if (typeof f === 'string') {
         pattern = f;
         input = path.relative(opts.rootDir, opts.projectDir);
-        output = path.relative(opts.rootDir, opts.outputDir);
+        output = path.relative(opts.rootDir, resolvedOutputDir);
       } else {
         isGlob = true;
         pattern = pathPosix.join(f.input, f.glob);
         input = f.input;
         output = pathPosix.join(
-          path.relative(opts.rootDir, opts.outputDir),
+          path.relative(opts.rootDir, resolvedOutputDir),
           f.output
         );
         if (f.ignore)

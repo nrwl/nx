@@ -364,6 +364,7 @@ if (!nativeBinding) {
 module.exports.AppLifeCycle = nativeBinding.AppLifeCycle
 module.exports.ChildProcess = nativeBinding.ChildProcess
 module.exports.FileLock = nativeBinding.FileLock
+module.exports.HashPlanInspector = nativeBinding.HashPlanInspector
 module.exports.HashPlanner = nativeBinding.HashPlanner
 module.exports.HttpRemoteCache = nativeBinding.HttpRemoteCache
 module.exports.ImportResult = nativeBinding.ImportResult
@@ -392,7 +393,6 @@ module.exports.hashFile = nativeBinding.hashFile
 module.exports.installNxConsole = nativeBinding.installNxConsole
 module.exports.IS_WASM = nativeBinding.IS_WASM
 module.exports.logDebug = nativeBinding.logDebug
-module.exports.logError = nativeBinding.logError
 module.exports.parseTaskStatus = nativeBinding.parseTaskStatus
 module.exports.remove = nativeBinding.remove
 module.exports.restoreTerminal = nativeBinding.restoreTerminal

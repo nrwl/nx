@@ -3,6 +3,8 @@ title: Overview of the Nx Vue Plugin
 description: The Nx Plugin for Vue contains generators for managing Vue applications and libraries within an Nx workspace. This page also explains how to configure Vue on your Nx workspace.
 ---
 
+# @nx/vue
+
 The Nx plugin for [Vue](https://vuejs.org/).
 
 ## Setting Up @nx/vue
