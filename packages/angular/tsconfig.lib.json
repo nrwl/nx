@@ -16,9 +16,8 @@
     "**/*_test.ts",
     "jest.config.ts",
     "test-setup.ts",
-    "src/runtime/**/*",
-    "mf/**/*",
-    "testing/**/*"
+    "index.ts",
+    "mf/**/*"
   ],
   "include": ["**/*.ts", "**/*.json"],
   "references": [
