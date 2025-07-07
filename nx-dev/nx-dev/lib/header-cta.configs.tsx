@@ -13,8 +13,8 @@ export const tryNxCloudForFree: ButtonLinkProps = {
   href: '/pricing',
   variant: 'primary',
   size: 'small',
-  title: 'Try Nx Cloud for free',
-  children: 'Try Nx Cloud for free',
+  title: 'Get started now',
+  children: 'Get started now',
 };
 
 export const gotoAppButton: ButtonLinkProps = {
