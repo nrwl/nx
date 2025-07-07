@@ -10,7 +10,7 @@ import {
   TeamAndCommunity,
   WorkBetterAchieveMoreShipQuicker,
 } from '@nx/nx-dev/ui-home';
-import { contactButton } from '../lib/components/headerCtaConfigs';
+import { contactButton } from '../lib/header-cta.configs';
 
 export default function Index(): JSX.Element {
   const headerCTAConfig = [contactButton];

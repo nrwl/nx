@@ -20,14 +20,14 @@ export function Hero(): ReactElement {
           <div className="mt-16 flex items-center justify-center gap-x-6">
             <ButtonLink
               href="https://cloud.nx.app/get-started/"
-              title="Try Nx Cloud for free"
+              title="Get started now"
               variant="primary"
               size="default"
               onClick={() =>
                 sendCustomEvent('try-nx-cloud', 'customers-hero', 'customers')
               }
             >
-              Try Nx Cloud for free
+              Get started now
             </ButtonLink>
 
             <a
