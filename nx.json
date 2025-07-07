@@ -190,7 +190,8 @@
       "cache": true
     },
     "build-base-ts": {
-      "cache": true
+      "cache": true,
+      "inputs": ["production", "^production"]
     },
     "copy-docs": {
       "cache": true

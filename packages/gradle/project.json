@@ -4,10 +4,23 @@
   "sourceRoot": "packages/gradle/src",
   "projectType": "library",
   "targets": {
+    "nx-release-publish": {
+      "dependsOn": ["^nx-release-publish"],
+      "executor": "@nx/js:release-publish",
+      "options": {
+        "packageRoot": "dist/packages/gradle"
+      }
+    },
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/gradle/README.md"],
       "command": "node ./scripts/copy-readme.js gradle",
-      "dependsOn": ["^build", "build-base-ts", "legacy-post-build"]
+      "dependsOn": [
+        "^build",
+        "build-native",
+        "build-base-ts",
+        "gradle-batch-runner:assemble",
+        "legacy-post-build"
+      ]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
