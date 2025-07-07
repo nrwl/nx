@@ -4,10 +4,37 @@
   "include": [],
   "references": [
     {
-      "path": "./tsconfig.lib.json"
+      "path": "../webpack"
     },
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../web"
+    },
+    {
+      "path": "../rollup"
+    },
+    {
+      "path": "../react"
+    },
+    {
+      "path": "../js"
+    },
+    {
+      "path": "../jest"
+    },
+    {
+      "path": "../eslint"
+    },
+    {
+      "path": "../nx"
+    },
+    {
+      "path": "../devkit"
+    },
+    {
+      "path": "../detox"
+    },
+    {
+      "path": "./tsconfig.lib.json"
     }
   ]
 }

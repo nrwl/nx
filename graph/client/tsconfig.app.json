@@ -1,13 +1,16 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/graph/client",
+    "tsBuildInfoFile": "../../dist/graph/client/tsconfig.app.tsbuildinfo",
+    "declaration": true,
+    "composite": true,
     "types": ["node"],
     "lib": ["DOM", "es2022"]
   },
   "files": [
-    "../../node_modules/@nx/react/typings/cssmodule.d.ts",
-    "../../node_modules/@nx/react/typings/image.d.ts"
+    "../../packages/react/typings/cssmodule.d.ts",
+    "../../packages/react/typings/image.d.ts"
   ],
   "exclude": [
     "**/*.spec.ts",
@@ -24,5 +27,25 @@
     "**/*.stories.jsx",
     "**/*.stories.tsx"
   ],
-  "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"]
+  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
+  "references": [
+    {
+      "path": "../ui-code-block/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-common/tsconfig.lib.json"
+    },
+    {
+      "path": "../migrate/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-project-details/tsconfig.lib.json"
+    },
+    {
+      "path": "../project-details/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-theme/tsconfig.lib.json"
+    }
+  ]
 }

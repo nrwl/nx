@@ -8,17 +8,48 @@
       "dependsOn": ["^nx-release-publish"],
       "executor": "@nx/js:release-publish",
       "options": {
-        "packageRoot": "build/packages/gradle"
+        "packageRoot": "dist/packages/gradle"
       }
+    },
+    "build": {
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "projects": "self"
+        }
+      ]
+    },
+    "copy-readme": {
+      "outputs": ["{workspaceRoot}/dist/packages/gradle/README.md"],
+      "command": "node ./scripts/copy-readme.js gradle",
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
     },
     "build-base": {
       "dependsOn": [
-        "^build-base",
-        "build-native",
-        "gradle-batch-runner:assemble"
-      ],
-      "executor": "@nx/js:tsc",
+        "^build",
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        },
+        {
+          "target": "legacy-post-build",
+          "projects": "self"
+        },
+        {
+          "target": "copy-readme",
+          "projects": "self"
+        }
+      ]
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/gradle",
@@ -58,11 +89,13 @@
             "output": "/"
           }
         ]
-      }
-    },
-    "build": {
-      "outputs": ["{workspaceRoot}/build/packages/gradle/README.md"],
-      "command": "node ./scripts/copy-readme.js gradle"
+      },
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
     }
   },
   "tags": []

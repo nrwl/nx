@@ -4,11 +4,22 @@
   "sourceRoot": "packages/js/src",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
+      "inputs": ["default"],
       "options": {
-        "main": "packages/js/src/index.ts",
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
+          {
+            "input": "packages/js",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/js",
+            "glob": "**/creator-files/**",
+            "output": "/"
+          },
           {
             "input": "packages/js",
             "glob": "**/files/**",
@@ -28,7 +39,7 @@
           {
             "input": "packages/js",
             "glob": "**/*.js",
-            "ignore": ["**/jest.config.js"],
+            "ignore": ["**/jest.config.js", "src/index.js"],
             "output": "/"
           },
           {
@@ -42,11 +53,48 @@
             "output": "/"
           }
         ]
-      }
+      },
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
+    },
+    "copy-readme": {
+      "outputs": ["{workspaceRoot}/dist/packages/js/README.md"],
+      "command": "node ./scripts/copy-readme.js js",
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
     },
     "build": {
-      "outputs": ["{workspaceRoot}/build/packages/js/README.md"],
-      "command": "node ./scripts/copy-readme.js js"
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "projects": "self"
+        }
+      ]
+    },
+    "build-base": {
+      "dependsOn": [
+        "^build",
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        },
+        {
+          "target": "legacy-post-build",
+          "projects": "self"
+        },
+        {
+          "target": "copy-readme",
+          "projects": "self"
+        }
+      ]
     }
   },
   "tags": []

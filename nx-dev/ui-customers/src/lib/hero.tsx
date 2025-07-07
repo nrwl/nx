@@ -1,5 +1,5 @@
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
-import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 import { type ReactElement } from 'react';
 
 export function Hero(): ReactElement {

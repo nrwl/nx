@@ -1,4 +1,4 @@
-import * as ora from 'ora';
+import ora = require('ora');
 
 import { execAndWait } from '../child-process-utils';
 import { mapErrorToBodyLines } from '../error-utils';

@@ -7,7 +7,7 @@ import {
   ShopifyIcon,
   StorybookIcon,
   VmwareIcon,
-} from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-icons';
 import { ReactElement } from 'react';
 
 export function TrustedBy(): ReactElement {

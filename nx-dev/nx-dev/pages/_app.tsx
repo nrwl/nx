@@ -1,13 +1,12 @@
-import { sendPageViewEvent } from '@nx/nx-dev/feature-analytics';
+import { sendPageViewEvent } from '@nx/nx-dev-feature-analytics';
 import { DefaultSeo } from 'next-seo';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import Script from 'next/script';
 import { useEffect } from 'react';
 import '../styles/main.css';
 import Link from 'next/link';
-import { WebinarNotifier } from '@nx/nx-dev/ui-common';
+import { WebinarNotifier } from '@nx/nx-dev-ui-common';
 import { FrontendObservability } from '../lib/components/frontend-observability';
 import GlobalScripts from '../app/global-scripts';
 
@@ -22,7 +21,7 @@ export default function CustomApp({
   useEffect(() => {
     const handleRouteChange = (url: URL) =>
       sendPageViewEvent({ gaId: gaMeasurementId, path: url.toString() });
-    router.events.on('routeChangeStart', (url) => handleRouteChange(url));
+    router.events.on('routeChangeStart', handleRouteChange);
     return () => router.events.off('routeChangeStart', handleRouteChange);
   }, [router.events, gaMeasurementId]);
   return (

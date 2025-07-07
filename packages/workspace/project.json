@@ -4,9 +4,18 @@
   "sourceRoot": "packages/workspace/src",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "projects": "self"
+        }
+      ]
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/workspace",
@@ -71,14 +80,43 @@
             "output": "/"
           }
         ]
-      }
+      },
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
     },
-    "build": {
-      "outputs": ["{workspaceRoot}/build/packages/workspace/README.md"],
-      "command": "node ./scripts/copy-readme.js workspace"
+    "copy-readme": {
+      "outputs": ["{workspaceRoot}/dist/packages/workspace/README.md"],
+      "command": "node ./scripts/copy-readme.js workspace",
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
     },
     "add-extra-dependencies": {
       "command": "node ./scripts/add-dependency-to-build.js workspace nx"
+    },
+    "build-base": {
+      "dependsOn": [
+        "^build",
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        },
+        {
+          "target": "legacy-post-build",
+          "projects": "self"
+        },
+        {
+          "target": "copy-readme",
+          "projects": "self"
+        }
+      ]
     }
   }
 }

@@ -3,7 +3,19 @@
   "compilerOptions": {
     "outDir": "../scripts/tools-out",
     "module": "commonjs",
-    "types": ["node"]
+    "types": ["node"],
+    "baseUrl": "..",
+    "paths": {
+      "@nx/nx-dev-data-access-packages": [
+        "nx-dev/data-access-packages/src/index.ts"
+      ],
+      "@nx/nx-dev-data-access-packages/node-only": [
+        "nx-dev/data-access-packages/src/node.index.ts"
+      ],
+      "@nx/nx-dev-models-package": ["nx-dev/models-package/src/index.ts"],
+      "@nx/nx-dev-models-document": ["nx-dev/models-document/src/index.ts"],
+      "@nx/nx-dev-models-menu": ["nx-dev/models-menu/src/index.ts"]
+    }
   },
   "include": ["**/*.ts"],
   "ts-node": {

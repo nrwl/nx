@@ -15,7 +15,7 @@
     "CLI",
     "Front-end"
   ],
-  "main": "./index",
+  "main": "./index.js",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -30,11 +30,12 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit",
+    "@nx/devkit": "workspace:*",
+    "nx": "workspace:*",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "@swc/helpers": "~0.5.0",
     "enquirer": "~2.3.6",
-    "@nx/js": "file:../js",
+    "@nx/js": "workspace:*",
     "picomatch": "4.0.2",
     "tsconfig-paths": "^4.1.2",
     "semver": "^7.6.3",

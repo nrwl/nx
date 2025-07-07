@@ -1,4 +1,4 @@
-import * as ora from 'ora';
+import ora = require('ora');
 import { join } from 'path';
 import { CreateWorkspaceOptions } from './create-workspace-options';
 import { execAndWait } from './utils/child-process-utils';

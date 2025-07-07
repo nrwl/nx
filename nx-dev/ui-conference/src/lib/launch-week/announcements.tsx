@@ -1,4 +1,4 @@
-import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
+import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 
 export function LaunchWeekAnnouncements(): JSX.Element {
   return (

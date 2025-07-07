@@ -243,9 +243,14 @@ describe('app', () => {
                 },
               },
               "test": {
+                "executor": "@nx/jest:jest",
                 "options": {
+                  "jestConfig": "myapp/jest.config.ts",
                   "passWithNoTests": true,
                 },
+                "outputs": [
+                  "{projectRoot}/test-output/jest/coverage",
+                ],
               },
             },
           },
@@ -414,9 +419,14 @@ describe('app', () => {
               },
             },
             "test": {
+              "executor": "@nx/jest:jest",
               "options": {
+                "jestConfig": "myapp/jest.config.ts",
                 "passWithNoTests": true,
               },
+              "outputs": [
+                "{projectRoot}/test-output/jest/coverage",
+              ],
             },
           },
         }

@@ -55,6 +55,7 @@ export function installPackagesTask(
     ) {
       delete process.env.npm_config_registry;
     }
+    console.log('Installing packages with (' + pmc.install + ')');
     execSync(pmc.install, execSyncOptions);
   }
 }

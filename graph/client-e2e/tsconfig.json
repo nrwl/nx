@@ -2,10 +2,15 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "sourceMap": false,
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/graph/client-e2e",
     "allowJs": true,
     "types": ["cypress", "node"],
-    "lib": ["DOM"]
+    "typeRoots": [
+      "../../node_modules/@types",
+      "../../node_modules/.pnpm/cypress@14.3.0/node_modules/cypress/types"
+    ],
+    "lib": ["DOM"],
+    "composite": true
   },
   "files": [],
   "include": [
@@ -14,8 +19,13 @@
     "cypress-release.config.ts",
     "cypress-release-static.config.ts",
     "src/**/*.ts",
-    "src/**/*.js"
+    "src/**/*.js",
+    "src/**/*.json"
   ],
-  "references": [],
+  "references": [
+    {
+      "path": "../client"
+    }
+  ],
   "exclude": []
 }

@@ -1,7 +1,7 @@
 {
-  "extends": "../../.eslintrc",
+  "extends": "../../.eslintrc.json",
   "rules": {},
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": ["!**/*", "node_modules"],
   "overrides": [
     {
       "files": [
@@ -24,12 +24,14 @@
           {
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
+              "tslib",
               "nx",
               "eslint",
               "prettier",
               "typescript",
               "react",
               "react-native",
+
               // These are in ensurePackage
               "@nx/rollup",
               "@nx/storybook",

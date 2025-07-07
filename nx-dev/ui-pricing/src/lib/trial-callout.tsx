@@ -1,9 +1,9 @@
 'use client';
 import { ReactElement } from 'react';
 import Image from 'next/image';
-import { ButtonLink } from '@nx/nx-dev/ui-common';
+import { ButtonLink } from '@nx/nx-dev-ui-common';
 import Link from 'next/link';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 export function TrialCallout({
   pageId,

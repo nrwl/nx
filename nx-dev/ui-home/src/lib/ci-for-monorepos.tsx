@@ -5,13 +5,13 @@ import {
   TransitionChild,
 } from '@headlessui/react';
 import { PlayIcon } from '@heroicons/react/24/outline';
-import { AnimateValue, Marquee } from '@nx/nx-dev/ui-animations';
+import { AnimateValue, Marquee } from '@nx/nx-dev-ui-animations';
 import {
   ButtonLink,
   SectionHeading,
   Strong,
   TextLink,
-} from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev-ui-common';
 import {
   AzureDevOpsIcon,
   BitbucketIcon,
@@ -19,8 +19,8 @@ import {
   GitlabIcon,
   JenkinsIcon,
   TravisCiIcon,
-} from '@nx/nx-dev/ui-icons';
-import { cx } from '@nx/nx-dev/ui-primitives';
+} from '@nx/nx-dev-ui-icons';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';

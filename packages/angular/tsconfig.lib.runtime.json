@@ -2,10 +2,18 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "module": "esnext",
-    "declaration": true
+    "declaration": true,
+    "composite": true,
+    "outDir": "../../dist/packages/angular",
+    "tsBuildInfoFile": "../../dist/packages/angular/tsconfig.lib.runtime.tsbuildinfo"
   },
   "include": ["index.ts", "src/runtime/**/*", "mf/**/*", "testing/**/*"],
   "angularCompilerOptions": {
     "compilationMode": "partial"
-  }
+  },
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ]
 }

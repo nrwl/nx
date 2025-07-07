@@ -1,4 +1,4 @@
-import * as CopyWebpackPlugin from 'copy-webpack-plugin';
+import CopyWebpackPlugin = require('copy-webpack-plugin');
 import { AssetGlobPattern } from '../executors/webpack/schema';
 
 export function createCopyPlugin(assets: AssetGlobPattern[]) {

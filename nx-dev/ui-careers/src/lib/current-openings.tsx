@@ -1,5 +1,5 @@
-import { SectionHeading } from '@nx/nx-dev/ui-common';
-import { Job } from '@nx/nx-dev/data-access-careers/node-only';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
+import { Job } from '@nx/nx-dev-data-access-careers/node-only';
 
 interface CurrentOpeningsProps {
   jobs: Job[];

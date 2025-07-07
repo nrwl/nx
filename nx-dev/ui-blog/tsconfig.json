@@ -14,6 +14,21 @@
   "include": [],
   "references": [
     {
+      "path": "../ui-markdoc"
+    },
+    {
+      "path": "../ui-common"
+    },
+    {
+      "path": "../ui-primitives"
+    },
+    {
+      "path": "../ui-icons"
+    },
+    {
+      "path": "../data-access-documents"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ]

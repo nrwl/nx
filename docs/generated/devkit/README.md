@@ -44,6 +44,7 @@ It only uses language primitives and immutable objects
 - [MigrationsJson](/reference/core-api/devkit/documents/MigrationsJson)
 - [NxAffectedConfig](/reference/core-api/devkit/documents/NxAffectedConfig)
 - [NxJsonConfiguration](/reference/core-api/devkit/documents/NxJsonConfiguration)
+- [PackageManagerCommands](/reference/core-api/devkit/documents/PackageManagerCommands)
 - [ProjectConfiguration](/reference/core-api/devkit/documents/ProjectConfiguration)
 - [ProjectFileMap](/reference/core-api/devkit/documents/ProjectFileMap)
 - [ProjectGraph](/reference/core-api/devkit/documents/ProjectGraph)

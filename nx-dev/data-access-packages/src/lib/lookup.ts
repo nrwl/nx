@@ -1,4 +1,4 @@
-import { JsonSchema, JsonSchema1 } from '@nx/nx-dev/models-package';
+import { JsonSchema, JsonSchema1 } from '@nx/nx-dev-models-package';
 import { get as pointerGet } from 'jsonpointer';
 
 /**

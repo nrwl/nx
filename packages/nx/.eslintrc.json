@@ -1,7 +1,7 @@
 {
-  "extends": "../../.eslintrc",
+  "extends": "../../.eslintrc.json",
   "rules": {},
-  "ignorePatterns": ["!**/*", "**/__fixtures__/**/*"],
+  "ignorePatterns": ["!**/*", "**/__fixtures__/**/*", "node_modules"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
@@ -102,6 +102,8 @@
           {
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
+              "tslib",
+              "nx",
               "typescript",
               "@nrwl/angular",
               "@angular-devkit/build-angular",

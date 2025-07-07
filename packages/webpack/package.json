@@ -15,7 +15,7 @@
     "CLI",
     "Front-end"
   ],
-  "main": "./index",
+  "main": "./index.js",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -66,8 +66,9 @@
     "webpack-dev-server": "^5.2.1",
     "webpack-node-externals": "^3.0.0",
     "webpack-subresource-integrity": "^5.1.0",
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js"
+    "@nx/devkit": "workspace:*",
+    "nx": "workspace:*",
+    "@nx/js": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

@@ -6,7 +6,7 @@ import {
   runCLI,
   runCreatePlugin,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('create-nx-plugin', () => {
   const packageManager = getSelectedPackageManager() || 'pnpm';

@@ -5,7 +5,7 @@ import {
   runCLI,
   runCommandUntil,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Web Components Applications with bundler set as webpack', () => {
   beforeEach(() => newProject());

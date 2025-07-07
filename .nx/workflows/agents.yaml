@@ -17,6 +17,12 @@ launch-templates:
       - name: Check Node Version
         script: node --version
 
+      - name: Check COREPACK_ENABLE_AUTO_PIN
+        script: echo $COREPACK_ENABLE_AUTO_PIN
+
+      - name: Check COREPACK_ENABLE_STRICT
+        script: echo $COREPACK_ENABLE_STRICT
+
       - name: Cache restore
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
         inputs:

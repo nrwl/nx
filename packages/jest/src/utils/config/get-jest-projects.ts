@@ -1,6 +1,6 @@
 import { createProjectGraphAsync, type TargetConfiguration } from '@nx/devkit';
 import { join, parse } from 'path';
-import * as yargs from 'yargs-parser';
+import yargs = require('yargs-parser');
 
 function getJestConfigProjectPath(projectJestConfigPath: string): string {
   return join('<rootDir>', projectJestConfigPath);

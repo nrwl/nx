@@ -5,22 +5,51 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "projects": "self"
+        }
+      ]
+    },
+    "copy-readme": {
+      "outputs": ["{workspaceRoot}/dist/packages/remix/README.md"],
       "command": "node ./scripts/copy-readme.js remix",
-      "outputs": ["{workspaceRoot}/build/packages/remix/README.md"]
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
     },
     "build-base": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "dependsOn": [
+        "^build",
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        },
+        {
+          "target": "legacy-post-build",
+          "projects": "self"
+        },
+        {
+          "target": "copy-readme",
+          "projects": "self"
+        }
+      ]
+    },
+    "nx-release-publish": {
+      "executor": "@nx/js:release-publish",
       "options": {
-        "outputPath": "build/packages/remix",
-        "tsConfig": "packages/remix/tsconfig.lib.json",
-        "packageJson": "packages/remix/package.json",
-        "main": "packages/remix/index.ts",
-        "generateExportsField": true,
-        "additionalEntryPoints": [
-          "{projectRoot}/{executors,generators,migrations}.json",
-          "{projectRoot}/generators.ts"
-        ],
+        "packageRoot": "dist/packages/remix"
+      },
+      "dependsOn": ["^nx-release-publish"]
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
+      "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           "packages/remix/*.md",
           {
@@ -41,7 +70,13 @@
           },
           "LICENSE"
         ]
-      }
+      },
+      "dependsOn": [
+        {
+          "target": "build-base-ts",
+          "projects": "self"
+        }
+      ]
     }
   },
   "tags": []

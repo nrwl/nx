@@ -1,4 +1,4 @@
-import { AnimateValue } from '@nx/nx-dev/ui-animations';
+import { AnimateValue } from '@nx/nx-dev-ui-animations';
 
 const statistics = [
   {

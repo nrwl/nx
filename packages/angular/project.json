@@ -5,17 +5,26 @@
   "projectType": "library",
   "targets": {
     "build-ng": {
-      "dependsOn": ["build-base"],
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "projects": "self"
+        }
+      ],
       "executor": "@nx/angular:package",
       "options": {
-        "project": "packages/angular/ng-package.json",
-        "tsConfig": "packages/angular/tsconfig.lib.runtime.json"
+        "project": "packages/angular/ng-package.json"
       },
-      "outputs": ["{workspaceRoot}/build/packages/angular"]
+      "outputs": ["{workspaceRoot}/dist/packages/angular"]
     },
     "build-base": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/js:tsc"
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
+        "tsConfig": "./tsconfig.lib.json",
+        "addPackageJsonFields": false,
         "assets": [
           {
             "input": "packages/angular",
@@ -55,13 +64,40 @@
             "output": "/"
           }
         ]
-      }
+      },
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "projects": "self"
+        }
+      ]
     },
     "build": {
-      "dependsOn": ["build-ng", "build-base", "^build"],
-      "outputs": ["{workspaceRoot}/build/packages/angular/README.md"],
+      "dependsOn": [
+        "^build",
+        {
+          "target": "build-base",
+          "projects": "self"
+        },
+        {
+          "target": "build-ng",
+          "projects": "self"
+        },
+        {
+          "target": "legacy-post-build",
+          "projects": "self"
+        }
+      ],
+      "outputs": ["{workspaceRoot}/dist/packages/angular/README.md"],
       "command": "node ./scripts/copy-readme.js angular"
+    },
+    "nx-release-publish": {
+      "executor": "@nx/js:release-publish",
+      "options": {
+        "packageRoot": "dist/packages/angular"
+      },
+      "dependsOn": ["^nx-release-publish"]
     }
   },
-  "implicitDependencies": []
+  "implicitDependencies": ["!@nx/cypress"]
 }
