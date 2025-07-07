@@ -6,7 +6,6 @@
   "targets": {
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
-      "inputs": ["default"],
       "options": {
         "tsConfig": "./tsconfig.lib.json",
         "assets": [
@@ -54,14 +53,8 @@
           }
         ]
       },
-      "dependsOn": [
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        }
-      ]
+      "dependsOn": ["build-base-ts"]
     },
-
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/js/README.md"],
       "command": "node ./scripts/copy-readme.js js",
