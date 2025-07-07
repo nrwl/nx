@@ -286,6 +286,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -302,6 +303,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -487,6 +489,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -503,6 +506,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -691,6 +695,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -707,6 +712,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -926,6 +932,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -942,6 +949,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -1145,6 +1153,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -1161,6 +1170,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -1372,6 +1382,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -1388,6 +1399,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -1600,6 +1612,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -1616,6 +1629,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -1808,6 +1822,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -1824,6 +1839,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -2015,6 +2031,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -2031,6 +2048,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -2222,6 +2240,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@custom/generator",
@@ -2246,6 +2265,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@custom/generator-alternative",
@@ -2263,6 +2283,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -2465,6 +2486,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -2481,6 +2503,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -2677,6 +2700,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -2708,6 +2732,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -2724,6 +2749,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -2918,6 +2944,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "independent",
                 "releaseTagPattern": "{projectName}@{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -2934,6 +2961,231 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
+            "version": {
+              "conventionalCommits": false,
+              "currentVersionResolver": undefined,
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "logUnchangedProjects": true,
+              "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should respect override for releaseTagPatternRequireSemver at group level', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          'group-1': {
+            projects: ['lib-a'],
+            releaseTagPatternRequireSemver: true,
+          },
+          'group-2': {
+            projects: ['lib-b'],
+            releaseTagPatternRequireSemver: false,
+          },
+        },
+      });
+
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": false,
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "group-1": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+              "group-2": {
+                "changelog": false,
+                "projects": [
+                  "lib-b",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": false,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -3129,6 +3381,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "generatorOptions": {
@@ -3148,6 +3401,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -3342,6 +3596,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -3358,6 +3613,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -3552,6 +3808,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -3568,6 +3825,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -3758,6 +4016,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -3774,6 +4033,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -3967,6 +4227,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "nx run-many -t build -p lib-a",
@@ -3983,6 +4244,231 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
+            "version": {
+              "conventionalCommits": false,
+              "currentVersionResolver": undefined,
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "logUnchangedProjects": true,
+              "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should allow configuration of releaseTagPatternRequireSemver via the top level', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        releaseTagPatternRequireSemver: false,
+        groups: {
+          'group-1': {
+            projects: ['lib-a'],
+          },
+          'group-2': {
+            projects: ['lib-b'],
+            releaseTagPatternRequireSemver: true,
+          },
+        },
+      });
+
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": false,
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "group-1": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": false,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+              "group-2": {
+                "changelog": false,
+                "projects": [
+                  "lib-b",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -4191,6 +4677,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -4207,6 +4694,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -4397,6 +4885,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{projectName}__{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -4413,6 +4902,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "{projectName}__{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -4622,6 +5112,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "generatorOptions": {
@@ -4642,6 +5133,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -4824,6 +5316,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -4840,6 +5333,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -5063,6 +5557,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -5079,6 +5574,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -5292,6 +5788,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -5308,6 +5805,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -5499,6 +5997,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -5515,6 +6014,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -5711,6 +6211,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -5727,6 +6228,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -5926,6 +6428,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -5942,6 +6445,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -6141,6 +6645,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -6157,6 +6662,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -6357,6 +6863,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -6373,6 +6880,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -6651,6 +7159,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -6667,6 +7176,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -6883,6 +7393,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -6899,6 +7410,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -7281,6 +7793,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -7297,6 +7810,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -7486,6 +8000,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -7502,6 +8017,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -7727,6 +8243,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -7743,6 +8260,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -7944,6 +8462,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -7960,6 +8479,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -8164,6 +8684,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -8180,6 +8701,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -8385,6 +8907,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -8401,6 +8924,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -8609,6 +9133,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -8625,6 +9150,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -8858,6 +9384,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -8878,6 +9405,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -8909,6 +9437,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -8925,6 +9454,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -9160,6 +9690,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{projectName}-{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -9176,6 +9707,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -9408,6 +9940,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -9424,6 +9957,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -9637,6 +10171,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -9653,6 +10188,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -10087,6 +10623,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -10103,6 +10640,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -10473,6 +11011,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "independent",
                 "releaseTagPattern": "{projectName}@{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -10494,6 +11033,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -10510,6 +11050,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "independent",
             "releaseTagPattern": "{projectName}@{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -10688,6 +11229,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "independent",
                 "releaseTagPattern": "{projectName}@{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -10704,6 +11246,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "independent",
             "releaseTagPattern": "{projectName}@{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -10899,6 +11442,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "generatorOptions": {
@@ -10919,6 +11463,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -11114,6 +11659,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "generatorOptions": {
@@ -11134,6 +11680,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -11328,6 +11875,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": true,
                   "currentVersionResolver": "git-tag",
@@ -11346,6 +11894,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": true,
               "currentVersionResolver": "git-tag",
@@ -11543,6 +12092,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "fallbackCurrentVersionResolver": "disk",
@@ -11560,6 +12110,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": true,
               "currentVersionResolver": "git-tag",
@@ -11754,6 +12305,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": true,
                   "currentVersionResolver": "git-tag",
@@ -11775,6 +12327,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": true,
               "currentVersionResolver": "git-tag",
@@ -12011,6 +12564,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -12028,6 +12582,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -12221,6 +12776,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -12242,6 +12798,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -12435,6 +12992,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -12456,6 +13014,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -12472,6 +13031,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -12661,6 +13221,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -12686,6 +13247,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -12702,6 +13264,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -12891,6 +13454,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -12911,6 +13475,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -12928,6 +13493,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -13119,6 +13685,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -13139,6 +13706,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "groupPreVersionCommand": "",
@@ -13160,6 +13728,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
@@ -13386,6 +13955,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternRequireSemver": true,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "/path/to/custom-generator",
@@ -13404,6 +13974,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternRequireSemver": true,
             "version": {
               "conventionalCommits": false,
               "generator": "/path/to/custom-generator",
