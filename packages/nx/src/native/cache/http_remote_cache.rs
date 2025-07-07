@@ -39,7 +39,9 @@ impl HttpRemoteCache {
             header::HeaderValue::from_static("application/octet-stream"),
         );
 
-        let mut client_builder = ClientBuilder::new().default_headers(headers);
+        let mut client_builder = ClientBuilder::new()
+            .use_rustls_tls()
+            .default_headers(headers);
 
         let env_accept_unauthorized = env::var("NODE_TLS_REJECT_UNAUTHORIZED");
         if let Ok(env_accept_unauthorized) = env_accept_unauthorized {
