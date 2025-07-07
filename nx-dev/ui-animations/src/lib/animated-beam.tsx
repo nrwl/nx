@@ -1,5 +1,5 @@
 'use client';
-import { FC, RefObject, useEffect, useId, useState } from 'react';
+import { FC, RefObject, useEffect, useId, useMemo, useState } from 'react';
 import { motion, TargetAndTransition } from 'framer-motion';
 import { cx } from '@nx/nx-dev-ui-primitives';
 
@@ -22,6 +22,9 @@ export interface AnimatedCurvedBeamProps {
   endXOffset?: number;
   endYOffset?: number;
   bidirectional?: boolean;
+  beamFrequency?: number; // Controls how often beams are emitted (default: 1 second)
+  maxConcurrentBeams?: number; // Limits simultaneous beams for performance
+  beamIntensity?: number; // Controls visual intensity of individual beams
 }
 
 type BeamAnimation = {
@@ -50,10 +53,45 @@ export const AnimatedCurvedBeam: FC<AnimatedCurvedBeamProps> = ({
   endXOffset = 0,
   endYOffset = 0,
   bidirectional = false,
+  beamFrequency = 1, // Default to 1 second between beams
+  maxConcurrentBeams, // Will be calculated if not provided
+  beamIntensity = 1, // Default to full intensity
 }) => {
-  const id = useId();
+  const baseId = useId();
   const [pathD, setPathD] = useState('');
   const [svgDimensions, setSvgDimensions] = useState({ width: 0, height: 0 });
+
+  // Calculate optimal beam configuration
+  const effectiveDuration = bidirectional ? duration * 2 : duration;
+  const calculatedMaxBeams =
+    maxConcurrentBeams ??
+    Math.min(
+      Math.ceil(effectiveDuration / beamFrequency) + 1,
+      5 // Hard limit for performance
+    );
+
+  // Generate beam count based on duration and frequency
+  const totalBeamCount = Math.min(
+    Math.ceil(effectiveDuration / beamFrequency),
+    calculatedMaxBeams
+  );
+
+  // Create staggered delay array
+  const beamDelays = useMemo(
+    () =>
+      Array.from(
+        { length: totalBeamCount },
+        (_, i) => delay + i * beamFrequency
+      ),
+    [totalBeamCount, beamFrequency, delay]
+  );
+
+  // Generate unique IDs for each beam
+  const beamIds = useMemo(
+    () =>
+      Array.from({ length: totalBeamCount }, (_, i) => `${baseId}-beam-${i}`),
+    [totalBeamCount, baseId]
+  );
 
   // Calculate the gradient coordinates based on the reverse prop
   const forwardAnimation: BeamAnimation = {
@@ -160,6 +198,7 @@ export const AnimatedCurvedBeam: FC<AnimatedCurvedBeamProps> = ({
       )}
       viewBox={`0 0 ${svgDimensions.width} ${svgDimensions.height}`}
     >
+      {/* Static background path */}
       <path
         d={pathD}
         stroke={pathColor}
@@ -167,38 +206,48 @@ export const AnimatedCurvedBeam: FC<AnimatedCurvedBeamProps> = ({
         strokeOpacity={pathOpacity}
         strokeLinecap="round"
       />
-      <path
-        d={pathD}
-        strokeWidth={pathWidth}
-        stroke={`url(#${id})`}
-        strokeOpacity="1"
-        strokeLinecap="round"
-      />
+
+      {/* Multiple animated beam paths */}
+      {beamIds.map((beamId, index) => (
+        <path
+          key={beamId}
+          d={pathD}
+          strokeWidth={pathWidth}
+          stroke={`url(#${beamId})`}
+          strokeOpacity={beamIntensity}
+          strokeLinecap="round"
+        />
+      ))}
+
       <defs>
-        <motion.linearGradient
-          className="transform-gpu"
-          id={id}
-          gradientUnits={'userSpaceOnUse'}
-          initial={{
-            x1: '0%',
-            x2: '0%',
-            y1: '0%',
-            y2: '0%',
-          }}
-          animate={animateValue}
-          transition={{
-            delay,
-            duration: bidirectional ? duration * 2 : duration,
-            ease: [0.16, 1, 0.3, 1], // https://easings.net/#easeOutExpo
-            repeat: Infinity,
-            repeatDelay: 0,
-          }}
-        >
-          <stop stopColor={gradientStartColor} stopOpacity="0" />
-          <stop stopColor={gradientStartColor} />
-          <stop offset="32.5%" stopColor={gradientStopColor} />
-          <stop offset="100%" stopColor={gradientStopColor} stopOpacity="0" />
-        </motion.linearGradient>
+        {/* Multiple gradients with staggered delays */}
+        {beamIds.map((beamId, index) => (
+          <motion.linearGradient
+            key={beamId}
+            className="transform-gpu"
+            id={beamId}
+            gradientUnits={'userSpaceOnUse'}
+            initial={{
+              x1: '0%',
+              x2: '0%',
+              y1: '0%',
+              y2: '0%',
+            }}
+            animate={animateValue}
+            transition={{
+              delay: beamDelays[index],
+              duration: bidirectional ? duration * 2 : duration,
+              ease: [0.16, 1, 0.3, 1], // https://easings.net/#easeOutExpo
+              repeat: Infinity,
+              repeatDelay: 0,
+            }}
+          >
+            <stop stopColor={gradientStartColor} stopOpacity="0" />
+            <stop stopColor={gradientStartColor} />
+            <stop offset="32.5%" stopColor={gradientStopColor} />
+            <stop offset="100%" stopColor={gradientStopColor} stopOpacity="0" />
+          </motion.linearGradient>
+        ))}
       </defs>
     </svg>
   );
@@ -222,6 +271,9 @@ export interface AnimatedAngledBeamProps {
   endXOffset?: number;
   endYOffset?: number;
   bidirectional?: boolean;
+  beamFrequency?: number; // Controls how often beams are emitted (default: 1 second)
+  maxConcurrentBeams?: number; // Limits simultaneous beams for performance
+  beamIntensity?: number; // Controls visual intensity of individual beams
 }
 
 export const AnimatedAngledBeam: FC<AnimatedAngledBeamProps> = ({
@@ -242,11 +294,46 @@ export const AnimatedAngledBeam: FC<AnimatedAngledBeamProps> = ({
   endXOffset = 0,
   endYOffset = 0,
   bidirectional = false,
+  beamFrequency = 1, // Default to 1 second between beams
+  maxConcurrentBeams, // Will be calculated if not provided
+  beamIntensity = 1, // Default to full intensity
 }) => {
-  const id = useId();
+  const baseId = useId();
   const [pathD, setPathD] = useState('');
   const [svgDimensions, setSvgDimensions] = useState({ width: 0, height: 0 });
   const [totalLength, setTotalLength] = useState(0);
+
+  // Calculate optimal beam configuration
+  const effectiveDuration = bidirectional ? duration * 2 : duration;
+  const calculatedMaxBeams =
+    maxConcurrentBeams ??
+    Math.min(
+      Math.ceil(effectiveDuration / beamFrequency) + 1,
+      5 // Hard limit for performance
+    );
+
+  // Generate beam count based on duration and frequency
+  const totalBeamCount = Math.min(
+    Math.ceil(effectiveDuration / beamFrequency),
+    calculatedMaxBeams
+  );
+
+  // Create staggered begin times array (for SVG animate)
+  const beamBeginTimes = useMemo(
+    () =>
+      Array.from(
+        { length: totalBeamCount },
+        (_, i) => `${delay + i * beamFrequency}s`
+      ),
+    [totalBeamCount, beamFrequency, delay]
+  );
+
+  // Generate unique IDs for each beam
+  const beamIds = useMemo(
+    () =>
+      Array.from({ length: totalBeamCount }, (_, i) => `${baseId}-beam-${i}`),
+    [totalBeamCount, baseId]
+  );
 
   useEffect(() => {
     const updatePath = () => {
@@ -323,6 +410,7 @@ export const AnimatedAngledBeam: FC<AnimatedAngledBeamProps> = ({
       )}
       viewBox={`0 0 ${svgDimensions.width} ${svgDimensions.height}`}
     >
+      {/* Static background path */}
       <path
         d={pathD}
         stroke={pathColor}
@@ -330,37 +418,51 @@ export const AnimatedAngledBeam: FC<AnimatedAngledBeamProps> = ({
         strokeOpacity={pathOpacity}
         strokeLinecap="round"
       />
-      <path
-        d={pathD}
-        strokeWidth={pathWidth}
-        stroke={`url(#${id})`}
-        strokeOpacity="1"
-        strokeLinecap="round"
-        strokeDasharray={totalLength}
-        strokeDashoffset="0"
-      >
-        <animate
-          attributeName="stroke-dashoffset"
-          values={
-            bidirectional
-              ? `${reverse ? -totalLength : totalLength};${
-                  reverse ? totalLength : -totalLength
-                };${reverse ? -totalLength : totalLength}`
-              : `${reverse ? -totalLength : totalLength};${
-                  reverse ? totalLength : -totalLength
-                }`
-          }
-          dur={`${bidirectional ? duration * 2 : duration}s`}
-          repeatCount="indefinite"
-        />
-      </path>
+
+      {/* Multiple animated beam paths */}
+      {beamIds.map((beamId, index) => (
+        <path
+          key={beamId}
+          d={pathD}
+          strokeWidth={pathWidth}
+          stroke={`url(#${beamId})`}
+          strokeOpacity={beamIntensity}
+          strokeLinecap="round"
+          strokeDasharray={totalLength}
+          strokeDashoffset="0"
+        >
+          <animate
+            attributeName="stroke-dashoffset"
+            values={
+              bidirectional
+                ? `${reverse ? -totalLength : totalLength};${
+                    reverse ? totalLength : -totalLength
+                  };${reverse ? -totalLength : totalLength}`
+                : `${reverse ? -totalLength : totalLength};${
+                    reverse ? totalLength : -totalLength
+                  }`
+            }
+            dur={`${bidirectional ? duration * 2 : duration}s`}
+            begin={beamBeginTimes[index]}
+            repeatCount="indefinite"
+          />
+        </path>
+      ))}
+
       <defs>
-        <linearGradient id={id} gradientUnits="userSpaceOnUse">
-          <stop stopColor={gradientStartColor} stopOpacity="0" offset="0%" />
-          <stop stopColor={gradientStartColor} offset="10%" />
-          <stop stopColor={gradientStopColor} offset="90%" />
-          <stop stopColor={gradientStopColor} stopOpacity="0" offset="100%" />
-        </linearGradient>
+        {/* Multiple gradients */}
+        {beamIds.map((beamId, index) => (
+          <linearGradient
+            key={beamId}
+            id={beamId}
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stopColor={gradientStartColor} stopOpacity="0" offset="0%" />
+            <stop stopColor={gradientStartColor} offset="10%" />
+            <stop stopColor={gradientStopColor} offset="90%" />
+            <stop stopColor={gradientStopColor} stopOpacity="0" offset="100%" />
+          </linearGradient>
+        ))}
       </defs>
     </svg>
   );

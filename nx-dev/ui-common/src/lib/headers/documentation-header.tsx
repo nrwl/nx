@@ -366,12 +366,11 @@ export function DocumentationHeader({
           >
             <ButtonLink
               href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=documentation-header&utm_campaign=try-nx-cloud"
-              title="Try Nx Cloud for free"
+              title="Get started"
               variant="primary"
               size="small"
             >
-              <NxCloudAnimatedIcon className="size-4" aria-hidden="true" />
-              <span>Try Nx Cloud for free</span>
+              Get started
             </ButtonLink>
           </nav>
         </div>

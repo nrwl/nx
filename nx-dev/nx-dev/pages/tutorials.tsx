@@ -2,7 +2,7 @@
 import { DefaultLayout, SectionHeading } from '@nx/nx-dev-ui-common';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-import { contactButton } from '../lib/components/headerCtaConfigs';
+import { contactButton } from '../lib/header-cta.configs';
 
 import { cx } from '@nx/nx-dev-ui-primitives';
 import { Framework, frameworkIcons } from '@nx/graph/legacy/icons';

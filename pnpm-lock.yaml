@@ -1752,6 +1752,9 @@ importers:
 
   nx-dev/ui-cloud:
     dependencies:
+      '@nx/nx-dev-feature-analytics':
+        specifier: workspace:*
+        version: link:../feature-analytics
       '@nx/nx-dev-ui-animations':
         specifier: workspace:*
         version: link:../ui-animations

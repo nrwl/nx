@@ -23,8 +23,9 @@ const variants: Record<AllowedVariants, string> = {
   title:
     'text-3xl font-bold tracking-tight text-slate-950 dark:text-white sm:text-5xl',
   display:
-    'text-5xl font-medium tracking-tight text-slate-950 md:text-6xl dark:text-white xl:text-8xl',
-  subtitle: 'text-lg leading-8 text-slate-700 dark:text-slate-300 sm:text-2xl',
+    'text-5xl font-semibold tracking-tight text-balance text-slate-950 dark:text-white sm:text-7xl',
+  subtitle:
+    'text-lg font-medium text-pretty sm:text-xl/8 text-slate-700 dark:text-slate-300',
 };
 
 export function SectionHeading({

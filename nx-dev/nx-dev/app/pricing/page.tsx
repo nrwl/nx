@@ -12,7 +12,7 @@ import {
   Testimonials,
   TrustedBy,
 } from '@nx/nx-dev-ui-common';
-import { gotoAppButton } from '../../lib/components/headerCtaConfigs';
+import { gotoAppButton } from '../../lib/header-cta.configs';
 
 // Needed without it Next.js will fail to serve the page with startexport const revalidate = 3600;
 

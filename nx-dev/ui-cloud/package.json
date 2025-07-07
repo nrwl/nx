@@ -9,6 +9,7 @@
     "@nx/nx-dev-ui-primitives": "workspace:*",
     "@nx/nx-dev-ui-common": "workspace:*",
     "@nx/nx-dev-ui-animations": "workspace:*",
-    "@nx/nx-dev-ui-icons": "workspace:*"
+    "@nx/nx-dev-ui-icons": "workspace:*",
+    "@nx/nx-dev-feature-analytics": "workspace:*"
   }
 }
