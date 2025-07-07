@@ -95,7 +95,7 @@
       }
     },
     "build": {
-      "dependsOn": ["build-base", "build-native"],
+      "dependsOn": ["build-base", "build-base-ts", "build-native"],
       "inputs": ["production", "^production"],
       "cache": true
     },
@@ -107,7 +107,7 @@
       "dependsOn": ["^build-base", "build-native"],
       "inputs": ["production", "^production"],
       "options": {
-        "outputPath": "dist/{projectRoot}",
+        "outputPath": "dist/packages/{projectRoot}",
         "tsConfig": "{projectRoot}/tsconfig.lib.json",
         "main": "{projectRoot}/index.ts"
       },
@@ -189,18 +189,15 @@
     "sitemap": {
       "cache": true
     },
+    "build-base-ts": {
+      "cache": true
+    },
     "copy-docs": {
       "cache": true
     },
-    "copy-readme": {
-      "cache": true,
-      "inputs": ["production", "^production"],
-      "outputs": ["{workspaceRoot}/dist/packages/{projectName}/README.md"]
-    },
     "legacy-post-build": {
       "cache": true,
-      "inputs": ["production", "^production"],
-      "outputs": ["{workspaceRoot}/dist/packages/{projectName}"]
+      "inputs": ["production", "^production"]
     }
   },
   "plugins": [
@@ -263,15 +260,6 @@
       "options": {
         "targetName": "e2e-macos-local",
         "ciTargetName": "e2e-macos-ci"
-      }
-    },
-    {
-      "plugin": "@nx/next/plugin",
-      "options": {
-        "startTargetName": "next:start",
-        "buildTargetName": "next:build",
-        "devTargetName": "next:dev",
-        "serveStaticTargetName": "next:serve-static"
       }
     },
     "@nx/enterprise-cloud",

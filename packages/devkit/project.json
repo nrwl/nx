@@ -5,40 +5,11 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "dependsOn": [
-        {
-          "target": "build-base",
-          "projects": "self"
-        }
-      ]
-    },
-    "copy-readme": {
       "outputs": ["{workspaceRoot}/dist/packages/devkit/README.md"],
       "command": "node ./scripts/copy-readme.js devkit",
-      "dependsOn": [
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        }
-      ]
+      "dependsOn": ["^build", "build-base-ts", "legacy-post-build"]
     },
-    "build-base": {
-      "dependsOn": [
-        "^build",
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        },
-        {
-          "target": "legacy-post-build",
-          "projects": "self"
-        },
-        {
-          "target": "copy-readme",
-          "projects": "self"
-        }
-      ]
-    },
+
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
@@ -78,12 +49,7 @@
           }
         ]
       },
-      "dependsOn": [
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        }
-      ]
+      "dependsOn": ["build-base-ts"]
     }
   }
 }

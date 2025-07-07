@@ -4,47 +4,10 @@
   "sourceRoot": "packages/gradle/src",
   "projectType": "library",
   "targets": {
-    "nx-release-publish": {
-      "dependsOn": ["^nx-release-publish"],
-      "executor": "@nx/js:release-publish",
-      "options": {
-        "packageRoot": "dist/packages/gradle"
-      }
-    },
     "build": {
-      "dependsOn": [
-        {
-          "target": "build-base",
-          "projects": "self"
-        }
-      ]
-    },
-    "copy-readme": {
       "outputs": ["{workspaceRoot}/dist/packages/gradle/README.md"],
       "command": "node ./scripts/copy-readme.js gradle",
-      "dependsOn": [
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        }
-      ]
-    },
-    "build-base": {
-      "dependsOn": [
-        "^build",
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        },
-        {
-          "target": "legacy-post-build",
-          "projects": "self"
-        },
-        {
-          "target": "copy-readme",
-          "projects": "self"
-        }
-      ]
+      "dependsOn": ["^build", "build-base-ts", "legacy-post-build"]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
@@ -90,12 +53,7 @@
           }
         ]
       },
-      "dependsOn": [
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        }
-      ]
+      "dependsOn": ["build-base-ts"]
     }
   },
   "tags": []

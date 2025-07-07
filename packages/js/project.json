@@ -61,40 +61,11 @@
         }
       ]
     },
-    "copy-readme": {
+
+    "build": {
       "outputs": ["{workspaceRoot}/dist/packages/js/README.md"],
       "command": "node ./scripts/copy-readme.js js",
-      "dependsOn": [
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        }
-      ]
-    },
-    "build": {
-      "dependsOn": [
-        {
-          "target": "build-base",
-          "projects": "self"
-        }
-      ]
-    },
-    "build-base": {
-      "dependsOn": [
-        "^build",
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        },
-        {
-          "target": "legacy-post-build",
-          "projects": "self"
-        },
-        {
-          "target": "copy-readme",
-          "projects": "self"
-        }
-      ]
+      "dependsOn": ["^build", "build-base-ts", "legacy-post-build"]
     }
   },
   "tags": []

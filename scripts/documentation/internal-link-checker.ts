@@ -113,7 +113,7 @@ function readSiteMapLinks(filePath: string): string[] {
 // Main
 const documentLinks = extractAllLinks(join(workspaceRoot, 'docs'));
 const sitemapUrls = readSiteMapIndex(
-  join(workspaceRoot, 'nx-dev/nx-dev/public/'),
+  join(workspaceRoot, 'dist/nx-dev/nx-dev/public/'),
   'sitemap.xml'
 ).flatMap((path) => readSiteMapLinks(path));
 

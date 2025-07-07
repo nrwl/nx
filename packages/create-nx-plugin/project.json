@@ -24,26 +24,9 @@
         ],
         "parallel": false
       },
-      "dependsOn": [
-        {
-          "target": "build-base",
-          "projects": "self"
-        }
-      ]
+      "dependsOn": ["^build", "build-base-ts", "legacy-post-build"]
     },
-    "build-base": {
-      "dependsOn": [
-        "^build",
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        },
-        {
-          "target": "legacy-post-build",
-          "projects": "self"
-        }
-      ]
-    },
+
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
@@ -85,12 +68,7 @@
           }
         ]
       },
-      "dependsOn": [
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        }
-      ]
+      "dependsOn": ["build-base-ts"]
     }
   },
   "implicitDependencies": ["plugin"]

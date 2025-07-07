@@ -5,12 +5,9 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "dependsOn": [
-        {
-          "target": "build-base",
-          "projects": "self"
-        }
-      ]
+      "dependsOn": ["^build", "build-base-ts", "legacy-post-build"],
+      "command": "node ./scripts/copy-readme.js react",
+      "outputs": ["{workspaceRoot}/dist/packages/react/README.md"]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
@@ -61,46 +58,7 @@
           }
         ]
       },
-      "dependsOn": [
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        }
-      ]
-    },
-    "copy-readme": {
-      "outputs": ["{workspaceRoot}/dist/packages/react/README.md"],
-      "command": "node ./scripts/copy-readme.js react",
-      "dependsOn": [
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        }
-      ]
-    },
-    "build-base": {
-      "dependsOn": [
-        "^build",
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        },
-        {
-          "target": "legacy-post-build",
-          "projects": "self"
-        },
-        {
-          "target": "copy-readme",
-          "projects": "self"
-        }
-      ]
-    },
-    "nx-release-publish": {
-      "executor": "@nx/js:release-publish",
-      "options": {
-        "packageRoot": "dist/packages/react"
-      },
-      "dependsOn": ["^nx-release-publish"]
+      "dependsOn": ["build-base-ts"]
     }
   }
 }

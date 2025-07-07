@@ -5,41 +5,10 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "dependsOn": [
-        {
-          "target": "build-base",
-          "projects": "self"
-        }
-      ]
-    },
-    "copy-readme": {
       "outputs": ["{workspaceRoot}/dist/packages/rspack/README.md"],
       "command": "node ./scripts/copy-readme.js rspack",
-      "dependsOn": [
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        }
-      ]
+      "dependsOn": ["^build", "build-base-ts", "legacy-post-build"]
     },
-    "build-base": {
-      "dependsOn": [
-        "^build",
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        },
-        {
-          "target": "legacy-post-build",
-          "projects": "self"
-        },
-        {
-          "target": "copy-readme",
-          "projects": "self"
-        }
-      ]
-    },
-    "nx-release-publish": {},
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
@@ -65,12 +34,7 @@
           "LICENSE"
         ]
       },
-      "dependsOn": [
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        }
-      ]
+      "dependsOn": ["build-base-ts"]
     }
   },
   "tags": []
