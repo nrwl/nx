@@ -23,8 +23,6 @@
   "bin": {
     "create-nx-workspace": "./bin/index.js"
   },
-  "main": "./index.js",
-  "types": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
