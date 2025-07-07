@@ -22,6 +22,7 @@ import {
 import {
   getFirstGitCommit,
   getLatestGitTagForPattern,
+  GitTagAndVersion,
 } from 'nx/src/command-line/release/utils/git';
 import {
   resolveSemverSpecifierFromConventionalCommits,
@@ -127,7 +128,7 @@ Valid values are: ${validReleaseVersionPrefixes
     // only used for options.currentVersionResolver === 'git-tag', but
     // must be declared here in order to reuse it for additional projects
     let latestMatchingGitTag:
-      | { tag: string; extractedVersion: string }
+      | GitTagAndVersion
       | null
       | undefined = undefined;
 
@@ -310,8 +311,11 @@ To fix this you will either need to add a package.json file at that location, or
               {
                 projectName: project.name,
               },
-              options.releaseGroup.releaseTagPatternCheckAllBranchesWhen,
-              releaseTagPatternRequireSemver ?? true
+              {
+                checkAllBranchesWhen: options.releaseGroup.releaseTagPatternCheckAllBranchesWhen,
+                preId: options.preid,
+                releaseTagPatternRequireSemver: releaseTagPatternRequireSemver ?? true
+              }
             );
             if (!latestMatchingGitTag) {
               if (options.fallbackCurrentVersionResolver === 'disk') {

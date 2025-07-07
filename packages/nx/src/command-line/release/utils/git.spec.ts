@@ -1,4 +1,4 @@
-import { extractReferencesFromCommit, getLatestGitTagForPattern } from './git';
+import { extractReferencesFromCommit, getLatestGitTagForPattern, isStableSemver } from './git';
 
 jest.mock('./exec-command', () => ({
   execCommand: jest.fn(() =>
@@ -18,6 +18,11 @@ my-lib-34.0.0-beta.1
 1.0.0
 hotfix/api/2506.30.abcdef
 release/api/2506.30.abcdef
+my-lib-4@1.2.4-beta.1
+my-lib-4@1.2.4-alpha.1
+my-lib-4@1.2.3
+alpha-lib@1.2.4
+alpha-lib@1.2.4-beta.1
 `)
   ),
 }));
@@ -165,6 +170,7 @@ See merge request nx-release-test/nx-release-test!2`,
       expectedTag: '4.0.0-rc.1+build.1',
       expectedVersion: '4.0.0-rc.1+build.1',
       releaseTagPatternRequireSemver: true,
+      preId: 'rc',
     },
     {
       pattern: '{projectName}@v{version}',
@@ -172,6 +178,7 @@ See merge request nx-release-test/nx-release-test!2`,
       expectedTag: 'my-lib-1@v4.0.0-beta.1',
       expectedVersion: '4.0.0-beta.1',
       releaseTagPatternRequireSemver: true,
+      preId: 'beta',
     },
     {
       pattern: '{projectName}v{version}',
@@ -179,6 +186,7 @@ See merge request nx-release-test/nx-release-test!2`,
       expectedTag: 'my-lib-2v4.0.0-beta.1',
       expectedVersion: '4.0.0-beta.1',
       releaseTagPatternRequireSemver: true,
+      preId: 'beta',
     },
     {
       pattern: '{projectName}{version}',
@@ -186,6 +194,7 @@ See merge request nx-release-test/nx-release-test!2`,
       expectedTag: 'my-lib-34.0.0-beta.1',
       expectedVersion: '4.0.0-beta.1',
       releaseTagPatternRequireSemver: true,
+      preId: 'beta',
     },
     {
       pattern: '{version}-{projectName}',
@@ -193,6 +202,7 @@ See merge request nx-release-test/nx-release-test!2`,
       expectedTag: '4.0.0-beta.0-my-lib-1',
       expectedVersion: '4.0.0-beta.0',
       releaseTagPatternRequireSemver: true,
+      preId: 'beta',
     },
     {
       pattern: '{version}-{projectName}',
@@ -200,6 +210,7 @@ See merge request nx-release-test/nx-release-test!2`,
       expectedTag: '3.0.0-beta.0-alpha',
       expectedVersion: '3.0.0-beta.0',
       releaseTagPatternRequireSemver: true,
+      preId: 'beta',
     },
     {
       pattern: 'hotfix/{projectName}/{version}',
@@ -214,6 +225,40 @@ See merge request nx-release-test/nx-release-test!2`,
       expectedTag: 'release/api/2506.30.abcdef',
       expectedVersion: '2506.30.abcdef',
       releaseTagPatternRequireSemver: false,
+    },
+    {
+      pattern: '{projectName}@{version}',
+      projectName: 'my-lib-4',
+      expectedTag: 'my-lib-4@1.2.4-beta.1',
+      expectedVersion: '1.2.4-beta.1',
+      preId: 'beta',
+    },
+    {
+      pattern: '{projectName}@{version}',
+      projectName: 'my-lib-4',
+      expectedTag: 'my-lib-4@1.2.4-alpha.1',
+      expectedVersion: '1.2.4-alpha.1',
+      preId: 'alpha',
+    },
+    {
+      pattern: '{projectName}@{version}',
+      projectName: 'alpha-lib',
+      expectedTag: 'alpha-lib@1.2.4',
+      expectedVersion: '1.2.4',
+      preId: 'alpha',
+    },
+    {
+      pattern: '{projectName}@{version}',
+      projectName: 'alpha-lib',
+      expectedTag: 'alpha-lib@1.2.4-beta.1',
+      expectedVersion: '1.2.4-beta.1',
+      preId: 'beta',
+    },
+    {
+      pattern: '{projectName}@{version}',
+      projectName: 'my-lib-4',
+      expectedTag: 'my-lib-4@1.2.3',
+      expectedVersion: '1.2.3',
     },
   ];
 
@@ -230,14 +275,17 @@ See merge request nx-release-test/nx-release-test!2`,
         expectedTag,
         expectedVersion,
         releaseTagPatternRequireSemver,
+        preId,
       }) => {
         const result = await getLatestGitTagForPattern(
           pattern,
           {
             projectName,
           },
-          undefined,
-          releaseTagPatternRequireSemver
+          {
+            releaseTagPatternRequireSemver,
+            preId,
+          }
         );
 
         expect(result.tag).toEqual(expectedTag);
@@ -264,6 +312,35 @@ See merge request nx-release-test/nx-release-test!2`,
       });
 
       expect(result).toEqual(null);
+    });
+  });
+
+  describe('isStableSemver', () => {
+    const versionTestCases = [
+      {
+        version: '0.0.0',
+        expected: true,
+      },
+      {
+        version: '1.0.0',
+        expected: true,
+      },
+      {
+        version: '1.0.0-beta.1',
+        expected: false,
+      },
+      {
+        version: '1.0.0+build.1',
+        expected: false,
+      },
+      {
+        version: '1.0.0-beta.1+build.1',
+        expected: false,
+      },
+    ];
+
+    it.each(versionTestCases)('should return $expected for version $version', ({ version, expected }) => {
+      expect(isStableSemver(version)).toEqual(expected);
     });
   });
 });

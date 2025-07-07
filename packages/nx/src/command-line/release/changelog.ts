@@ -343,8 +343,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           await getLatestGitTagForPattern(
             nxReleaseConfig.releaseTagPattern,
             {},
-            nxReleaseConfig.releaseTagPatternCheckAllBranchesWhen,
-            nxReleaseConfig.releaseTagPatternRequireSemver
+            {
+              checkAllBranchesWhen: nxReleaseConfig.releaseTagPatternCheckAllBranchesWhen,
+              preId: args.preid,
+              releaseTagPatternRequireSemver: nxReleaseConfig.releaseTagPatternRequireSemver
+            }
           )
         )?.tag;
       if (!workspaceChangelogFromRef) {
@@ -528,8 +531,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                     projectName: project.name,
                     releaseGroupName: releaseGroup.name,
                   },
-                  releaseGroup.releaseTagPatternCheckAllBranchesWhen,
-                  releaseGroup.releaseTagPatternRequireSemver
+                  {
+                    checkAllBranchesWhen: releaseGroup.releaseTagPatternCheckAllBranchesWhen,
+                    preId: args.preid,
+                    releaseTagPatternRequireSemver: releaseGroup.releaseTagPatternRequireSemver ?? true
+                  }
                 )
               )?.tag;
 
@@ -671,8 +677,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
               await getLatestGitTagForPattern(
                 releaseGroup.releaseTagPattern,
                 {},
-                releaseGroup.releaseTagPatternCheckAllBranchesWhen,
-                releaseGroup.releaseTagPatternRequireSemver
+                {
+                  checkAllBranchesWhen: releaseGroup.releaseTagPatternCheckAllBranchesWhen,
+                  preId: args.preid,
+                  releaseTagPatternRequireSemver: releaseGroup.releaseTagPatternRequireSemver
+                }
               )
             )?.tag;
           if (!fromRef) {
