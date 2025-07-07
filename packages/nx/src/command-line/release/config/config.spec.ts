@@ -4468,7 +4468,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
-            "releaseTagPatternRequireSemver": true,
+            "releaseTagPatternRequireSemver": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,

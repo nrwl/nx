@@ -352,6 +352,9 @@ export async function createNxReleaseConfig(
 
   const groupProjectsRelationship =
     userConfig.projectsRelationship || WORKSPACE_DEFAULTS.projectsRelationship;
+  const groupReleaseTagPatternRequireSemver =
+    userConfig.releaseTagPatternRequireSemver ??
+    WORKSPACE_DEFAULTS.releaseTagPatternRequireSemver;
 
   const GROUP_DEFAULTS: Omit<NxReleaseConfig['groups'][string], 'projects'> = {
     projectsRelationship: groupProjectsRelationship,
@@ -392,10 +395,7 @@ export async function createNxReleaseConfig(
         : WORKSPACE_DEFAULTS.releaseTagPattern,
     releaseTagPatternCheckAllBranchesWhen:
       userConfig.releaseTagPatternCheckAllBranchesWhen ?? undefined,
-    releaseTagPatternRequireSemver:
-      WORKSPACE_DEFAULTS.releaseTagPatternRequireSemver ??
-      userConfig.releaseTagPatternRequireSemver ??
-      defaultReleaseTagPatternRequireSemver,
+    releaseTagPatternRequireSemver: groupReleaseTagPatternRequireSemver,
     versionPlans: false,
   };
 
