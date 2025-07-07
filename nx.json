@@ -198,7 +198,8 @@
     },
     "legacy-post-build": {
       "cache": true,
-      "inputs": ["production", "^production"]
+      "inputs": ["production", "^production"],
+      "outputs": ["{workspaceRoot}/dist/packages/{projectRoot}/**/*"]
     }
   },
   "plugins": [
