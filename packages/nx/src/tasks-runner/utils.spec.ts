@@ -437,7 +437,7 @@ describe('utils', () => {
       });
       expect(result).toEqual({
         target: 'build',
-        skipOnFailure: true,
+        requiredToSucceed: true,
       });
     });
 
@@ -456,7 +456,7 @@ describe('utils', () => {
       });
       expect(result).toEqual({
         target: 'build',
-        skipOnFailure: true,
+        requiredToSucceed: true,
       });
     });
 
@@ -468,7 +468,7 @@ describe('utils', () => {
       expect(result).toEqual({
         target: 'build',
         dependencies: true,
-        skipOnFailure: true,
+        requiredToSucceed: true,
       });
     });
 
@@ -488,7 +488,7 @@ describe('utils', () => {
       expect(result).toEqual({
         target: 'build',
         projects: ['project'],
-        skipOnFailure: true,
+        requiredToSucceed: true,
       });
     });
 
@@ -499,7 +499,7 @@ describe('utils', () => {
       });
       expect(result).toEqual({
         target: 'target:with:colons',
-        skipOnFailure: true,
+        requiredToSucceed: true,
       });
     });
 
@@ -533,12 +533,12 @@ describe('utils', () => {
         {
           target: 'build-css',
           projects: ['project'],
-          skipOnFailure: true,
+          requiredToSucceed: true,
         },
         {
           target: 'build-js',
           projects: ['project'],
-          skipOnFailure: true,
+          requiredToSucceed: true,
         },
       ]);
     });
@@ -598,17 +598,17 @@ describe('utils', () => {
         {
           target: 'build-css',
           dependencies: true,
-          skipOnFailure: true,
+          requiredToSucceed: true,
         },
         {
           target: 'build-js',
           dependencies: true,
-          skipOnFailure: true,
+          requiredToSucceed: true,
         },
         {
           target: 'build-python',
           dependencies: true,
-          skipOnFailure: true,
+          requiredToSucceed: true,
         },
       ]);
     });
@@ -656,7 +656,7 @@ describe('utils', () => {
         {
           target: 'build:one',
           projects: ['foo'],
-          skipOnFailure: true,
+          requiredToSucceed: true,
         },
       ]);
 
@@ -664,7 +664,7 @@ describe('utils', () => {
         {
           target: 'build:two',
           projects: ['foo'],
-          skipOnFailure: true,
+          requiredToSucceed: true,
         },
       ]);
 
@@ -674,7 +674,7 @@ describe('utils', () => {
         {
           target: 'build:one',
           projects: ['bar'],
-          skipOnFailure: true,
+          requiredToSucceed: true,
         },
       ]);
 
@@ -682,7 +682,7 @@ describe('utils', () => {
         {
           target: 'build:two',
           projects: ['bar'],
-          skipOnFailure: true,
+          requiredToSucceed: true,
         },
       ]);
 

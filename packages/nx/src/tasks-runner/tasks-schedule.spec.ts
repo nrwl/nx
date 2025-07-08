@@ -71,7 +71,7 @@ describe('TasksSchedule', () => {
           'app2:build': [],
           'lib1:build': [],
         },
-        continueOnFailureDependencies: {
+        dependenciesAllowedToFail: {
           'app1:build': [],
           'app2:build': [],
           'lib1:build': [],
@@ -292,7 +292,7 @@ describe('TasksSchedule', () => {
           'app4:test': [],
           'lib1:test': [],
         },
-        continueOnFailureDependencies: {
+        dependenciesAllowedToFail: {
           'app1:test': [],
           'app2:test': [],
           'app3:test': [],
@@ -582,7 +582,7 @@ describe('TasksSchedule', () => {
             'app2:build': [],
             'lib1:build': [],
           },
-          continueOnFailureDependencies: {
+          dependenciesAllowedToFail: {
             'app1:build': [],
             'app2:build': [],
             'lib1:build': [],
@@ -759,7 +759,7 @@ describe('TasksSchedule', () => {
             'app2:test': [],
             'lib1:test': [],
           },
-          continueOnFailureDependencies: {
+          dependenciesAllowedToFail: {
             'app1:test': [],
             'app2:test': [],
             'lib1:test': [],
