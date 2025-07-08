@@ -28,19 +28,19 @@
   "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"],
   "references": [
     {
-      "path": "../ui-common/tsconfig.lib.json"
-    },
-    {
       "path": "../ui-animations/tsconfig.lib.json"
-    },
-    {
-      "path": "../ui-icons/tsconfig.lib.json"
     },
     {
       "path": "../ui-primitives/tsconfig.lib.json"
     },
     {
+      "path": "../ui-icons/tsconfig.lib.json"
+    },
+    {
       "path": "../feature-analytics/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-common/tsconfig.lib.json"
     }
   ]
 }

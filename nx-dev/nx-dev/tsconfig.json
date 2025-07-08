@@ -40,6 +40,12 @@
   ],
   "references": [
     {
+      "path": "../ui-cloud"
+    },
+    {
+      "path": "../ui-ai-landing-page"
+    },
+    {
       "path": "../ui-blog"
     },
     {
@@ -130,10 +136,10 @@
       "path": "../data-access-menu"
     },
     {
-      "path": "../util-ai"
+      "path": "../ui-icons"
     },
     {
-      "path": "../ui-icons"
+      "path": "../util-ai"
     },
     {
       "path": "../ui-webinar"
@@ -157,9 +163,6 @@
       "path": "../ui-podcast"
     },
     {
-      "path": "../ui-cloud"
-    },
-    {
       "path": "../ui-gradle"
     },
     {
@@ -179,9 +182,6 @@
     },
     {
       "path": "../feature-analytics"
-    },
-    {
-      "path": "../ui-ai-landing-page"
     }
   ],
   "exclude": [

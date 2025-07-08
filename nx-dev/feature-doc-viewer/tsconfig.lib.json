@@ -20,11 +20,23 @@
   ],
   "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"],
   "references": [
-    { "path": "../feature-analytics/tsconfig.lib.json" },
-    { "path": "../feature-feedback/tsconfig.lib.json" },
-    { "path": "../models-document/tsconfig.lib.json" },
-    { "path": "../ui-common/tsconfig.lib.json" },
-    { "path": "../ui-markdoc/tsconfig.lib.json" },
-    { "path": "../ui-primitives/tsconfig.lib.json" }
+    {
+      "path": "../feature-feedback/tsconfig.lib.json"
+    },
+    {
+      "path": "../feature-analytics/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-primitives/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-markdoc/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-common/tsconfig.lib.json"
+    },
+    {
+      "path": "../models-document/tsconfig.lib.json"
+    }
   ]
 }

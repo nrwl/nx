@@ -27,5 +27,9 @@
     "**/*.test.jsx"
   ],
   "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"],
-  "references": [{ "path": "../ui-primitives/tsconfig.lib.json" }]
+  "references": [
+    {
+      "path": "../ui-primitives/tsconfig.lib.json"
+    }
+  ]
 }

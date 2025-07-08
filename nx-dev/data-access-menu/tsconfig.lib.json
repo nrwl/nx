@@ -8,5 +8,9 @@
   },
   "include": ["**/*.ts"],
   "exclude": ["jest.config.ts", "**/*.spec.ts"],
-  "references": [{ "path": "../models-menu/tsconfig.lib.json" }]
+  "references": [
+    {
+      "path": "../models-menu/tsconfig.lib.json"
+    }
+  ]
 }
