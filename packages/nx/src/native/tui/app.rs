@@ -1100,6 +1100,16 @@ impl App {
                                 })
                                 .collect();
                             
+                            let dependency_continuous_flags: HashMap<String, bool> = all_dependencies.iter()
+                                .map(|dep_id| {
+                                    let is_continuous = self.tasks.iter()
+                                        .find(|t| t.id == *dep_id)
+                                        .map(|task| task.continuous.unwrap_or(false))
+                                        .unwrap_or(false);
+                                    (dep_id.clone(), is_continuous)
+                                })
+                                .collect();
+                            
                             if let Some(task) = tasks_list
                                 .tasks
                                 .iter_mut()
@@ -1159,6 +1169,7 @@ impl App {
                                             all_dependencies,
                                             dependency_statuses,
                                             dependency_levels,
+                                            dependency_continuous_flags,
                                             is_focused,
                                         );
                                         
@@ -1178,13 +1189,19 @@ impl App {
                                         dep_state.is_focused = is_focused;
                                         dep_state.throbber_counter = tasks_list.throbber_counter;
                                         
-                                        // Update dependency statuses with current task states
+                                        // Update dependency statuses and continuous flags with current task states
                                         for dep_id in &dep_state.dependencies {
                                             let current_status = tasks_list.tasks.iter()
                                                 .find(|t| t.name == *dep_id)
                                                 .map(|task| task.status)
                                                 .unwrap_or(TaskStatus::NotStarted);
                                             dep_state.dependency_statuses.insert(dep_id.clone(), current_status);
+                                            
+                                            let is_continuous = self.tasks.iter()
+                                                .find(|t| t.id == *dep_id)
+                                                .map(|task| task.continuous.unwrap_or(false))
+                                                .unwrap_or(false);
+                                            dep_state.dependency_continuous_flags.insert(dep_id.clone(), is_continuous);
                                         }
                                         
                                         let dependency_view = DependencyView::new();

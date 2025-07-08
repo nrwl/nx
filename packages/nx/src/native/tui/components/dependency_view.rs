@@ -17,6 +17,7 @@ pub struct DependencyViewState {
     pub dependencies: Vec<String>,
     pub dependency_statuses: HashMap<String, TaskStatus>,
     pub dependency_levels: HashMap<String, usize>,
+    pub dependency_continuous_flags: HashMap<String, bool>,
     pub is_focused: bool,
     pub throbber_counter: usize,
     pub scroll_offset: usize,
@@ -30,6 +31,7 @@ impl DependencyViewState {
         dependencies: Vec<String>,
         dependency_statuses: HashMap<String, TaskStatus>,
         dependency_levels: HashMap<String, usize>,
+        dependency_continuous_flags: HashMap<String, bool>,
         is_focused: bool,
     ) -> Self {
         Self {
@@ -38,6 +40,7 @@ impl DependencyViewState {
             dependencies,
             dependency_statuses,
             dependency_levels,
+            dependency_continuous_flags,
             is_focused,
             throbber_counter: 0,
             scroll_offset: 0,
@@ -169,13 +172,17 @@ impl<'a> DependencyView<'a> {
         let incomplete_count = state.dependencies.iter()
             .filter(|dep| {
                 let status = state.dependency_statuses.get(*dep).unwrap_or(&TaskStatus::NotStarted);
+                let is_continuous = state.dependency_continuous_flags.get(*dep).unwrap_or(&false);
+                
+                // For continuous tasks, InProgress and Stopped are considered complete
+                // For regular tasks, only traditional completion statuses count
                 !matches!(status, 
                     TaskStatus::Success 
                     | TaskStatus::LocalCacheKeptExisting 
                     | TaskStatus::LocalCache 
                     | TaskStatus::RemoteCache
                     | TaskStatus::Skipped
-                )
+                ) && !(*is_continuous && matches!(status, TaskStatus::InProgress | TaskStatus::Stopped))
             })
             .count();
         
