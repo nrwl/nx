@@ -59,6 +59,7 @@ pub struct App {
     // Cached result of layout manager's calculate_layout, only updated when necessary (e.g. terminal resize, task list visibility change etc)
     layout_areas: Option<LayoutAreas>,
     terminal_pane_data: [TerminalPaneData; 2],
+    dependency_view_states: [Option<DependencyViewState>; 2],
     spacebar_mode: bool,
     pane_tasks: [Option<String>; 2], // Tasks assigned to panes 1 and 2 (0-indexed)
     action_tx: Option<UnboundedSender<Action>>,
@@ -131,6 +132,7 @@ impl App {
             frame_area: None,
             layout_areas: None,
             terminal_pane_data: [main_terminal_pane_data, TerminalPaneData::new()],
+            dependency_view_states: [None, None],
             spacebar_mode: false,
             pane_tasks: [None, None],
             action_tx: None,
@@ -1013,9 +1015,82 @@ impl App {
 
                             let relevant_pane_task = relevant_pane_task.unwrap();
                             
-                            // Get dependency information before mutable borrow
-                            let task_dependencies = self.task_graph.dependencies.get(&relevant_pane_task).cloned().unwrap_or_default();
-                            let dependency_statuses: HashMap<String, TaskStatus> = task_dependencies.iter()
+                            // Get ALL dependency information (including transitive) before mutable borrow
+                            let mut all_dependencies = Vec::new();
+                            let mut visited = std::collections::HashSet::new();
+                            let mut dependency_levels: HashMap<String, usize> = HashMap::new();
+                            
+                            // Recursive function to collect all dependencies with levels
+                            fn collect_all_dependencies_with_levels(
+                                task_id: &str,
+                                task_graph: &TaskGraph,
+                                all_dependencies: &mut Vec<String>,
+                                dependency_levels: &mut HashMap<String, usize>,
+                                visited: &mut std::collections::HashSet<String>,
+                                current_level: usize,
+                            ) {
+                                if visited.contains(task_id) {
+                                    return; // Avoid infinite loops
+                                }
+                                visited.insert(task_id.to_string());
+                                
+                                if let Some(direct_deps) = task_graph.dependencies.get(task_id) {
+                                    for dep_id in direct_deps {
+                                        if !all_dependencies.contains(dep_id) {
+                                            all_dependencies.push(dep_id.clone());
+                                            dependency_levels.insert(dep_id.clone(), current_level);
+                                        }
+                                        // Recursively collect dependencies of this dependency
+                                        collect_all_dependencies_with_levels(
+                                            dep_id, 
+                                            task_graph, 
+                                            all_dependencies, 
+                                            dependency_levels,
+                                            visited, 
+                                            current_level + 1
+                                        );
+                                    }
+                                }
+                            }
+                            
+                            collect_all_dependencies_with_levels(
+                                &relevant_pane_task, 
+                                &self.task_graph, 
+                                &mut all_dependencies, 
+                                &mut dependency_levels,
+                                &mut visited, 
+                                1
+                            );
+                            
+                            // Sort dependencies by total dependency count (highest to lowest), then alphabetically
+                            all_dependencies.sort_by(|a, b| {
+                                // Count total dependencies for each task (recursive count)
+                                fn count_all_dependencies(task_id: &str, task_graph: &TaskGraph, visited: &mut std::collections::HashSet<String>) -> usize {
+                                    if visited.contains(task_id) {
+                                        return 0;
+                                    }
+                                    visited.insert(task_id.to_string());
+                                    
+                                    let direct_deps = task_graph.dependencies.get(task_id).map(|deps| deps.len()).unwrap_or(0);
+                                    let transitive_deps = task_graph.dependencies.get(task_id)
+                                        .map(|deps| deps.iter()
+                                            .map(|dep| count_all_dependencies(dep, task_graph, visited))
+                                            .sum::<usize>())
+                                        .unwrap_or(0);
+                                    
+                                    direct_deps + transitive_deps
+                                }
+                                
+                                let mut visited_a = std::collections::HashSet::new();
+                                let mut visited_b = std::collections::HashSet::new();
+                                let count_a = count_all_dependencies(a, &self.task_graph, &mut visited_a);
+                                let count_b = count_all_dependencies(b, &self.task_graph, &mut visited_b);
+                                
+                                // Sort by total dependency count (descending), then alphabetically
+                                count_b.cmp(&count_a).then_with(|| a.cmp(b))
+                            });
+                            
+                            let dependency_statuses: HashMap<String, TaskStatus> = all_dependencies.iter()
                                 .map(|dep_id| {
                                     let status = tasks_list.tasks.iter()
                                         .find(|t| t.name == *dep_id)
@@ -1068,16 +1143,53 @@ impl App {
 
                                 // If task is pending, show dependency view instead of terminal pane
                                 if task.status == TaskStatus::NotStarted {
-                                    let mut dependency_state = DependencyViewState::new(
-                                        task.name.clone(),
-                                        task.status,
-                                        task_dependencies,
-                                        dependency_statuses,
-                                        is_focused,
-                                    );
+                                    // Get or create dependency view state for this pane
+                                    let state_needs_update = if let Some(ref dep_state) = self.dependency_view_states[pane_idx] {
+                                        // Check if the state is for the same task and has the same dependencies
+                                        dep_state.current_task != task.name || dep_state.dependencies != all_dependencies
+                                    } else {
+                                        true
+                                    };
 
-                                    let dependency_view = DependencyView::new();
-                                    f.render_stateful_widget(dependency_view, *pane_area, &mut dependency_state);
+                                    if state_needs_update {
+                                        // Create new state or update existing one
+                                        let mut new_state = DependencyViewState::new(
+                                            task.name.clone(),
+                                            task.status,
+                                            all_dependencies,
+                                            dependency_statuses,
+                                            dependency_levels,
+                                            is_focused,
+                                        );
+                                        
+                                        // Preserve scroll position if updating the same task
+                                        if let Some(ref old_state) = self.dependency_view_states[pane_idx] {
+                                            if old_state.current_task == task.name {
+                                                new_state.scroll_offset = old_state.scroll_offset;
+                                                new_state.scrollbar_state = old_state.scrollbar_state.clone();
+                                            }
+                                        }
+                                        
+                                        self.dependency_view_states[pane_idx] = Some(new_state);
+                                    }
+
+                                    // Update dynamic fields and refresh dependency statuses
+                                    if let Some(dep_state) = &mut self.dependency_view_states[pane_idx] {
+                                        dep_state.is_focused = is_focused;
+                                        dep_state.throbber_counter = tasks_list.throbber_counter;
+                                        
+                                        // Update dependency statuses with current task states
+                                        for dep_id in &dep_state.dependencies {
+                                            let current_status = tasks_list.tasks.iter()
+                                                .find(|t| t.name == *dep_id)
+                                                .map(|task| task.status)
+                                                .unwrap_or(TaskStatus::NotStarted);
+                                            dep_state.dependency_statuses.insert(dep_id.clone(), current_status);
+                                        }
+                                        
+                                        let dependency_view = DependencyView::new();
+                                        f.render_stateful_widget(dependency_view, *pane_area, dep_state);
+                                    }
                                 } else {
                                     let mut state = TerminalPaneState::new(
                                         task.name.clone(),
@@ -1490,6 +1602,36 @@ impl App {
     /// Forward key events to the currently focused pane, if any.
     fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<()> {
         if let Focus::MultipleOutput(pane_idx) = self.focus {
+            // Check if the focused pane is showing a dependency view (pending task)
+            if let Some(task_name) = &self.pane_tasks[pane_idx] {
+                if let Some(tasks_list) = self
+                    .components
+                    .iter()
+                    .find_map(|c| c.as_any().downcast_ref::<TasksList>())
+                {
+                    if let Some(task) = tasks_list.tasks.iter().find(|t| &t.name == task_name) {
+                        if task.status == TaskStatus::NotStarted {
+                            // This pane is showing a dependency view, handle scrolling
+                            if let Some(dep_state) = &mut self.dependency_view_states[pane_idx] {
+                                // Get the viewport height from layout areas
+                                let viewport_height = if let Some(ref layout_areas) = self.layout_areas {
+                                    let pane_area = layout_areas.terminal_panes[pane_idx];
+                                    // Account for borders and padding
+                                    (pane_area.height as usize).saturating_sub(4) // 2 for borders, 2 for padding
+                                } else {
+                                    10 // fallback
+                                };
+                                
+                                if dep_state.handle_key_event(key, viewport_height) {
+                                    return Ok(()); // Key was handled
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Handle terminal pane key events
             let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
             if let Some(action) = terminal_pane_data.handle_key_event(key)? {
                 self.dispatch_action(action);
