@@ -196,6 +196,11 @@ export function getStrippedEnvironmentVariables() {
         return false;
       }
 
+      // Filter out NODE_PATH to prevent module resolution conflicts with original workspace
+      if (key === 'NODE_PATH') {
+        return false;
+      }
+
       return true;
     })
   );
