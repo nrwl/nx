@@ -175,15 +175,15 @@
     "file": "",
     "itemList": [
       {
-        "id": "affected",
-        "name": "Run Only Tasks Affected by a PR",
-        "description": "This allows to only run tasks on projects that got changed in a given PR.",
+        "id": "self-healing-ci",
+        "name": "AI-Powered Self-Healing CI",
+        "description": "Learn how Nx Cloud Self-Healing CI uses AI to automatically detect, analyze, and fix CI failures, eliminating the need to babysit PRs.",
         "mediaImage": "",
-        "file": "shared/using-nx/affected",
+        "file": "shared/features/self-healing-ci",
         "itemList": [],
         "isExternal": false,
-        "path": "/ci/features/affected",
-        "tags": ["run-tasks"]
+        "path": "/ci/features/self-healing-ci",
+        "tags": []
       },
       {
         "id": "remote-cache",
@@ -208,6 +208,28 @@
         "tags": []
       },
       {
+        "id": "affected",
+        "name": "Run Only Tasks Affected by a PR",
+        "description": "This allows to only run tasks on projects that got changed in a given PR.",
+        "mediaImage": "",
+        "file": "shared/using-nx/affected",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/affected",
+        "tags": ["run-tasks"]
+      },
+      {
+        "id": "dynamic-agents",
+        "name": "Dynamically Allocate Agents",
+        "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
+        "mediaImage": "",
+        "file": "nx-cloud/features/dynamic-agents",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/dynamic-agents",
+        "tags": []
+      },
+      {
         "id": "split-e2e-tasks",
         "name": "Automatically Split E2E Tasks (Atomizer)",
         "description": "Learn how Nx can automatically split e2e tests into fine-grained chunks for a much better distribution on Nx Agents.",
@@ -227,17 +249,6 @@
         "itemList": [],
         "isExternal": false,
         "path": "/ci/features/flaky-tasks",
-        "tags": []
-      },
-      {
-        "id": "dynamic-agents",
-        "name": "Dynamically Allocate Agents",
-        "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
-        "mediaImage": "",
-        "file": "nx-cloud/features/dynamic-agents",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/features/dynamic-agents",
         "tags": []
       },
       {
@@ -267,16 +278,16 @@
     "path": "/ci/features",
     "tags": []
   },
-  "/ci/features/affected": {
-    "id": "affected",
-    "name": "Run Only Tasks Affected by a PR",
-    "description": "This allows to only run tasks on projects that got changed in a given PR.",
+  "/ci/features/self-healing-ci": {
+    "id": "self-healing-ci",
+    "name": "AI-Powered Self-Healing CI",
+    "description": "Learn how Nx Cloud Self-Healing CI uses AI to automatically detect, analyze, and fix CI failures, eliminating the need to babysit PRs.",
     "mediaImage": "",
-    "file": "shared/using-nx/affected",
+    "file": "shared/features/self-healing-ci",
     "itemList": [],
     "isExternal": false,
-    "path": "/ci/features/affected",
-    "tags": ["run-tasks"]
+    "path": "/ci/features/self-healing-ci",
+    "tags": []
   },
   "/ci/features/remote-cache": {
     "id": "remote-cache",
@@ -300,6 +311,28 @@
     "path": "/ci/features/distribute-task-execution",
     "tags": []
   },
+  "/ci/features/affected": {
+    "id": "affected",
+    "name": "Run Only Tasks Affected by a PR",
+    "description": "This allows to only run tasks on projects that got changed in a given PR.",
+    "mediaImage": "",
+    "file": "shared/using-nx/affected",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/affected",
+    "tags": ["run-tasks"]
+  },
+  "/ci/features/dynamic-agents": {
+    "id": "dynamic-agents",
+    "name": "Dynamically Allocate Agents",
+    "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
+    "mediaImage": "",
+    "file": "nx-cloud/features/dynamic-agents",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/dynamic-agents",
+    "tags": []
+  },
   "/ci/features/split-e2e-tasks": {
     "id": "split-e2e-tasks",
     "name": "Automatically Split E2E Tasks (Atomizer)",
@@ -320,17 +353,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/features/flaky-tasks",
-    "tags": []
-  },
-  "/ci/features/dynamic-agents": {
-    "id": "dynamic-agents",
-    "name": "Dynamically Allocate Agents",
-    "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
-    "mediaImage": "",
-    "file": "nx-cloud/features/dynamic-agents",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/features/dynamic-agents",
     "tags": []
   },
   "/ci/features/explain-with-ai": {
