@@ -126,7 +126,8 @@ export async function legacyPostBuildExecutor(
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
   const projectName = context.projectName;
-  const projectRoot = context.projectGraph.nodes[projectName].data.root;
+  const projectRoot =
+    context.projectsConfigurations?.projects[projectName]?.root || projectName;
 
   // Step 1: Copy assets if specified
   if (options.assets && options.assets.length > 0) {

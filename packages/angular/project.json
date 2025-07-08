@@ -5,7 +5,7 @@
   "projectType": "library",
   "targets": {
     "build-ng": {
-      "dependsOn": ["build-base"],
+      "dependsOn": ["build-base", "legacy-post-build"],
       "executor": "@nx/angular:package",
       "options": {
         "project": "packages/angular/ng-package.json",

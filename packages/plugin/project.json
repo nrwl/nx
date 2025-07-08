@@ -9,38 +9,6 @@
       "command": "node ./scripts/copy-readme.js plugin",
       "outputs": ["{workspaceRoot}/dist/packages/plugin/README.md"]
     },
-    "copy-readme": {
-      "dependsOn": [
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        }
-      ]
-    },
-    "build-base": {
-      "dependsOn": [
-        "^build",
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        },
-        {
-          "target": "legacy-post-build",
-          "projects": "self"
-        },
-        {
-          "target": "copy-readme",
-          "projects": "self"
-        }
-      ]
-    },
-    "nx-release-publish": {
-      "executor": "@nx/js:release-publish",
-      "options": {
-        "packageRoot": "dist/packages/plugin"
-      },
-      "dependsOn": ["^nx-release-publish"]
-    },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
@@ -80,12 +48,7 @@
           }
         ]
       },
-      "dependsOn": [
-        {
-          "target": "build-base-ts",
-          "projects": "self"
-        }
-      ]
+      "dependsOn": ["build-base-ts"]
     }
   }
 }

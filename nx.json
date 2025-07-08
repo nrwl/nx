@@ -95,7 +95,12 @@
       }
     },
     "build": {
-      "dependsOn": ["build-base", "build-base-ts", "build-native"],
+      "dependsOn": [
+        "build-base",
+        "build-base-ts",
+        "legacy-post-build",
+        "build-native"
+      ],
       "inputs": ["production", "^production"],
       "cache": true
     },
@@ -104,7 +109,12 @@
       "cache": true
     },
     "build-base": {
-      "dependsOn": ["^build-base", "build-native"],
+      "dependsOn": [
+        "^build-base",
+        "^build-base-ts",
+        "^legacy-post-build",
+        "build-native"
+      ],
       "inputs": ["production", "^production"],
       "options": {
         "outputPath": "dist/{projectRoot}",
@@ -190,8 +200,10 @@
       "cache": true
     },
     "build-base-ts": {
+      "dependsOn": ["^build-base-ts", "^build-base", "build-native"],
       "cache": true,
-      "inputs": ["production", "^production"]
+      "inputs": ["production", "^production"],
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"]
     },
     "copy-docs": {
       "cache": true
