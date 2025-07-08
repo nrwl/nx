@@ -148,10 +148,11 @@
               "description": "Features of Nx and Nx Cloud that improve CI",
               "itemList": [
                 {
-                  "name": "Run Only Tasks Affected by a PR",
-                  "id": "affected",
+                  "name": "AI-Powered Self-Healing CI",
+                  "description": "Learn how Nx Cloud Self-Healing CI uses AI to automatically detect, analyze, and fix CI failures, eliminating the need to babysit PRs.",
+                  "id": "self-healing-ci",
                   "file": "",
-                  "path": "/ci/features/affected",
+                  "path": "/ci/features/self-healing-ci",
                   "isExternal": true
                 },
                 {
@@ -168,6 +169,13 @@
                   "id": "distribute-task-execution",
                   "file": "",
                   "path": "/ci/features/distribute-task-execution",
+                  "isExternal": true
+                },
+                {
+                  "name": "Run Only Tasks Affected by a PR",
+                  "id": "affected",
+                  "file": "",
+                  "path": "/ci/features/affected",
                   "isExternal": true
                 },
                 {
@@ -2543,11 +2551,10 @@
           "description": "Features of Nx and Nx Cloud that improve CI",
           "itemList": [
             {
-              "name": "Run Only Tasks Affected by a PR",
-              "description": "This allows to only run tasks on projects that got changed in a given PR.",
-              "tags": ["run-tasks"],
-              "id": "affected",
-              "file": "shared/using-nx/affected"
+              "name": "AI-Powered Self-Healing CI",
+              "description": "Learn how Nx Cloud Self-Healing CI uses AI to automatically detect, analyze, and fix CI failures, eliminating the need to babysit PRs.",
+              "id": "self-healing-ci",
+              "file": "shared/features/self-healing-ci"
             },
             {
               "name": "Use Remote Caching (Nx Replay)",
@@ -2563,6 +2570,19 @@
               "file": "shared/features/distribute-task-execution"
             },
             {
+              "name": "Run Only Tasks Affected by a PR",
+              "description": "This allows to only run tasks on projects that got changed in a given PR.",
+              "tags": ["run-tasks"],
+              "id": "affected",
+              "file": "shared/using-nx/affected"
+            },
+            {
+              "name": "Dynamically Allocate Agents",
+              "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
+              "id": "dynamic-agents",
+              "file": "nx-cloud/features/dynamic-agents"
+            },
+            {
               "name": "Automatically Split E2E Tasks (Atomizer)",
               "id": "split-e2e-tasks",
               "description": "Learn how Nx can automatically split e2e tests into fine-grained chunks for a much better distribution on Nx Agents.",
@@ -2573,12 +2593,6 @@
               "id": "flaky-tasks",
               "description": "Learn how Nx Cloud is able to automatically identify flaky tasks and re-run them for you.",
               "file": "nx-cloud/features/flaky-tasks"
-            },
-            {
-              "name": "Dynamically Allocate Agents",
-              "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
-              "id": "dynamic-agents",
-              "file": "nx-cloud/features/dynamic-agents"
             },
             {
               "name": "Explain With AI",
