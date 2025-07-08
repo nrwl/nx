@@ -67,7 +67,7 @@ export async function initTasksRunner(nxArgs: NxArgs) {
           acc[task.id] = [];
           return acc;
         }, {} as any),
-        continueOnFailureDependencies: opts.tasks.reduce((acc, task) => {
+        dependenciesAllowedToFail: opts.tasks.reduce((acc, task) => {
           acc[task.id] = [];
           return acc;
         }, {} as any),
@@ -136,7 +136,7 @@ async function createOrchestrator(
       acc[task.id] = [];
       return acc;
     }, {} as any),
-    continueOnFailureDependencies: tasks.reduce((acc, task) => {
+    dependenciesAllowedToFail: tasks.reduce((acc, task) => {
       acc[task.id] = [];
       return acc;
     }, {} as any),

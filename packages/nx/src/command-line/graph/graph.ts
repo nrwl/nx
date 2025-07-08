@@ -1033,7 +1033,7 @@ function getAllTaskGraphsForWorkspace(projectGraph: ProjectGraph): {
           tasks: {},
           dependencies: {},
           continuousDependencies: {},
-          continueOnFailureDependencies: {},
+          dependenciesAllowedToFail: {},
           roots: [],
         };
 
@@ -1061,7 +1061,7 @@ function getAllTaskGraphsForWorkspace(projectGraph: ProjectGraph): {
               tasks: {},
               dependencies: {},
               continuousDependencies: {},
-              continueOnFailureDependencies: {},
+              dependenciesAllowedToFail: {},
               roots: [],
             };
 

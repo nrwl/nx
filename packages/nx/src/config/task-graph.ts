@@ -109,5 +109,5 @@ export interface TaskGraph {
   /**
    * Map of Task IDs to IDs of dependency tasks that, when failed, will not prevent the task from executing
    */
-  continueOnFailureDependencies: Record<string, string[]>;
+  dependenciesAllowedToFail: Record<string, string[]>;
 }
