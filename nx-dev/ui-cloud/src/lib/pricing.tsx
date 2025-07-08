@@ -1,17 +1,20 @@
 'use client';
 import { ReactElement } from 'react';
-import { PlusIcon } from '@heroicons/react/24/outline';
-import { CheckCircleIcon } from '@heroicons/react/24/solid';
-import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
-import Link from 'next/link';
+import { ButtonLink, SectionHeading, TrustedBy } from '@nx/nx-dev/ui-common';
 import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { CheckCircleIcon } from '@heroicons/react/24/solid';
+import Link from 'next/link';
+import { PlusIcon } from '@heroicons/react/24/outline';
 
-export function PlansDisplay(): ReactElement {
+export function Pricing(): ReactElement {
   return (
-    <section id="plans" className="scroll-mt-24">
+    <section
+      id="pricing"
+      className="scroll-mt-24 border-b border-t border-slate-200 bg-slate-50 py-24 sm:py-32 dark:border-slate-800 dark:bg-slate-900"
+    >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <header className="mx-auto max-w-4xl text-center">
-          <SectionHeading as="h2" variant="display">
+          <SectionHeading as="h2" variant="title" id="pricing-title">
             Start with everything,
             <br /> scale when you need
           </SectionHeading>
@@ -89,7 +92,7 @@ export function PlansDisplay(): ReactElement {
                     <Link
                       href="/ai"
                       target="_blank"
-                      title="Check our AI integrations and how to use them"
+                      title="AI powered Nx"
                       onClick={() =>
                         sendCustomEvent(
                           'learn-ai-integrations-click',
@@ -228,7 +231,7 @@ export function PlansDisplay(): ReactElement {
                   <Link
                     href="/ai"
                     target="_blank"
-                    title="Check our AI integrations and how to use them"
+                    title="AI powered Nx"
                     onClick={() =>
                       sendCustomEvent(
                         'learn-ai-integrations-click',
@@ -406,6 +409,9 @@ export function PlansDisplay(): ReactElement {
             </p>
           </div>
         </div>
+      </div>
+      <div className="mt-16 lg:mt-32">
+        <TrustedBy utmSource="pricingpage" utmCampaign="pricing" />
       </div>
     </section>
   );

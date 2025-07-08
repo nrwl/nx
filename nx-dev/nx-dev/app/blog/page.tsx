@@ -6,7 +6,7 @@ import { Suspense } from 'react';
 import {
   requestFreeTrial,
   tryNxCloudForFree,
-} from '../../lib/components/headerCtaConfigs';
+} from '../../lib/header-cta.configs';
 
 export const metadata: Metadata = {
   title: 'Nx Blog - Updates from the Nx & Nx Cloud team',
