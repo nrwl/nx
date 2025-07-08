@@ -301,40 +301,25 @@ mod test {
     #[test]
     fn should_handle_test_optional_s_pattern() {
         let globs = convert_glob("**/__test?(s)__/**/*").unwrap();
-        assert_eq!(
-            globs,
-            vec!["**/__test__/**/*", "**/__tests__/**/*"]
-        );
+        assert_eq!(globs, vec!["**/__test__/**/*", "**/__tests__/**/*"]);
     }
 
     #[test]
     fn should_handle_zero_or_one_patterns_correctly() {
         // Test simple ZeroOrOne pattern - this was the specific issue mentioned in #26880
         let globs = convert_glob("__test?(s)__").unwrap();
-        assert_eq!(
-            globs,
-            vec!["__test__", "__tests__"]
-        );
-        
+        assert_eq!(globs, vec!["__test__", "__tests__"]);
+
         // Test ZeroOrOne pattern with prefix
         let globs = convert_glob("prefix?(suffix)").unwrap();
-        assert_eq!(
-            globs,
-            vec!["prefix", "prefixsuffix"]
-        );
-        
+        assert_eq!(globs, vec!["prefix", "prefixsuffix"]);
+
         // Test ZeroOrOne pattern in middle of string
         let globs = convert_glob("start?(middle)end").unwrap();
-        assert_eq!(
-            globs,
-            vec!["startend", "startmiddleend"]
-        );
-        
+        assert_eq!(globs, vec!["startend", "startmiddleend"]);
+
         // Test multiple ZeroOrOne patterns
         let globs = convert_glob("?(a)test?(b)").unwrap();
-        assert_eq!(
-            globs,
-            vec!["test", "testb", "atest", "atestb"]
-        );
+        assert_eq!(globs, vec!["test", "testb", "atest", "atestb"]);
     }
 }
