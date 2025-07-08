@@ -6,5 +6,11 @@ export function getNxInstallationPath(root: string = workspaceRoot) {
 }
 
 export function getNxRequirePaths(root: string = workspaceRoot) {
-  return [root, getNxInstallationPath(root)];
+  const paths = [root, getNxInstallationPath(root)];
+  console.log(`[getNxRequirePaths] Workspace root: ${root}`);
+  console.log(
+    `[getNxRequirePaths] Installation path: ${getNxInstallationPath(root)}`
+  );
+  console.log(`[getNxRequirePaths] Final paths: ${paths.join(', ')}`);
+  return paths;
 }

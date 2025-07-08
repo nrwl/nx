@@ -147,6 +147,14 @@ export function newProject({
           'ATTENTION: All packages are installed into the new workspace. To make this test faster, please pass the subset of packages that this test needs by passing a packages array in the options'
         );
       }
+
+      console.log(
+        `[newProject] About to install packages: ${(
+          packages ?? nxPackages
+        ).join(' ')}`
+      );
+      console.log(`[newProject] Published version: ${getPublishedVersion()}`);
+
       const packageInstallStart = performance.mark('packageInstall:start');
       packageInstall((packages ?? nxPackages).join(` `), projScope);
       const packageInstallEnd = performance.mark('packageInstall:end');
@@ -168,10 +176,16 @@ export function newProject({
     const projectDirectory = tmpProjPath();
     copySync(backupPath, projectDirectory);
 
-    const dependencies = readJsonFile(
-      `${projectDirectory}/package.json`
-    ).devDependencies;
+    const packageJson = readJsonFile(`${projectDirectory}/package.json`);
+    const dependencies = packageJson.devDependencies;
+    console.log(
+      `[newProject] Existing dependencies in workspace:`,
+      dependencies
+    );
+
     const missingPackages = (packages || []).filter((p) => !dependencies[p]);
+    console.log(`[newProject] Requested packages:`, packages || []);
+    console.log(`[newProject] Missing packages:`, missingPackages);
 
     if (missingPackages.length > 0) {
       packageInstall(missingPackages.join(` `), projName);
@@ -469,6 +483,10 @@ export function packageInstall(
     mode === 'dev' ? pm.addDev : pm.addProd
   } ${pkgsWithVersions}`;
 
+  console.log(`[packageInstall] Installing packages: ${pkgsWithVersions}`);
+  console.log(`[packageInstall] CWD: ${cwd}`);
+  console.log(`[packageInstall] Command: ${command}`);
+
   try {
     const install = execSync(command, {
       cwd,
@@ -476,6 +494,8 @@ export function packageInstall(
       env: process.env,
       encoding: 'utf-8',
     });
+
+    console.log(`[packageInstall] Installation completed successfully`);
 
     if (isVerbose()) {
       output.log({
@@ -487,6 +507,7 @@ export function packageInstall(
 
     return install;
   } catch (e) {
+    console.log(`[packageInstall] Installation failed: ${e.message}`);
     logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
     throw e;
   }

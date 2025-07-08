@@ -47,7 +47,7 @@ describe('Workspace Package Exclusion in Report', () => {
     // Optionally print captured logs for debugging
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       console.log('=== Captured console output ===');
-      consoleOutput.forEach(log => console.log(log));
+      consoleOutput.forEach((log) => console.log(log));
       console.log('=== End of captured output ===');
     }
   });

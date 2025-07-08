@@ -269,12 +269,25 @@ export function readModulePackageJsonWithoutFallbacks(
   packageJson: PackageJson;
   path: string;
 } {
+  console.log(
+    `[readModulePackageJsonWithoutFallbacks] Resolving ${moduleSpecifier}/package.json`
+  );
+  console.log(
+    `[readModulePackageJsonWithoutFallbacks] Require paths: ${requirePaths.join(
+      ', '
+    )}`
+  );
+
   const packageJsonPath: string = require.resolve(
     `${moduleSpecifier}/package.json`,
     {
       paths: requirePaths,
     }
   );
+  console.log(
+    `[readModulePackageJsonWithoutFallbacks] Resolved to: ${packageJsonPath}`
+  );
+
   const packageJson: PackageJson = readJsonFile(packageJsonPath);
 
   return {
@@ -307,13 +320,32 @@ export function readModulePackageJson(
   let packageJsonPath: string;
   let packageJson: PackageJson;
 
+  console.log(`[readModulePackageJson] Resolving ${moduleSpecifier}`);
+  console.log(
+    `[readModulePackageJson] Require paths: ${requirePaths.join(', ')}`
+  );
+
   try {
     ({ path: packageJsonPath, packageJson } =
       readModulePackageJsonWithoutFallbacks(moduleSpecifier, requirePaths));
-  } catch {
+    console.log(
+      `[readModulePackageJson] Resolved via primary method: ${packageJsonPath}`
+    );
+  } catch (e) {
+    console.log(
+      `[readModulePackageJson] Primary method failed: ${e.message}, using fallback`
+    );
+    console.log(
+      `[readModulePackageJson] Fallback require.resolve with paths: ${requirePaths.join(
+        ', '
+      )}`
+    );
     const entryPoint = require.resolve(moduleSpecifier, {
       paths: requirePaths,
     });
+    console.log(
+      `[readModulePackageJson] Entry point resolved to: ${entryPoint}`
+    );
 
     let moduleRootPath = dirname(entryPoint);
     packageJsonPath = join(moduleRootPath, 'package.json');
@@ -323,6 +355,9 @@ export function readModulePackageJson(
       packageJsonPath = join(moduleRootPath, 'package.json');
     }
 
+    console.log(
+      `[readModulePackageJson] Final package.json path: ${packageJsonPath}`
+    );
     packageJson = readJsonFile(packageJsonPath);
     if (packageJson.name && packageJson.name !== moduleSpecifier) {
       throw new Error(
@@ -330,6 +365,10 @@ export function readModulePackageJson(
       );
     }
   }
+
+  console.log(
+    `[readModulePackageJson] ${moduleSpecifier} version: ${packageJson.version}, resolved to: ${packageJsonPath}`
+  );
 
   return {
     packageJson,
