@@ -272,15 +272,9 @@ export async function getReportData(): Promise<ReportData> {
 
   const { graph, error: projectGraphError } = await tryGetProjectGraph();
 
-  console.log('[getReportData] Project graph error:', projectGraphError);
-  console.log('[getReportData] Project graph available:', !!graph);
-  console.log('[getReportData] Project graph nodes count:', graph ? Object.keys(graph.nodes).length : 0);
-
   const nxJson = readNxJson();
   const localPlugins = await findLocalPlugins(graph, nxJson);
   const workspacePackages = getWorkspacePackageNames(graph);
-  
-  console.log('[getReportData] Workspace packages from graph:', Array.from(workspacePackages));
   const powerpackPlugins = findInstalledPowerpackPlugins();
   const communityPlugins = findInstalledCommunityPlugins();
   const registeredPlugins = findRegisteredPluginsBeingUsed(nxJson);
@@ -372,23 +366,15 @@ async function findLocalPlugins(
 
 function getWorkspacePackageNames(projectGraph: ProjectGraph): Set<string> {
   const workspacePackages = new Set<string>();
-
-  console.log('[getWorkspacePackageNames] ProjectGraph provided:', !!projectGraph);
   
   if (projectGraph) {
     const workspacePackageMap = getWorkspacePackagesFromGraph(projectGraph);
-    console.log('[getWorkspacePackageNames] Workspace package map size:', workspacePackageMap?.size || 0);
-    console.log('[getWorkspacePackageNames] Workspace package map entries:', workspacePackageMap ? Array.from(workspacePackageMap.entries()) : []);
     
     for (const [packageName] of workspacePackageMap) {
-      console.log('[getWorkspacePackageNames] Adding workspace package:', packageName);
       workspacePackages.add(packageName);
     }
-  } else {
-    console.log('[getWorkspacePackageNames] No project graph provided');
   }
 
-  console.log('[getWorkspacePackageNames] Final workspace packages:', Array.from(workspacePackages));
   return workspacePackages;
 }
 
@@ -493,29 +479,9 @@ export function isWorkspaceSourcePackage(
   packageName: string,
   workspacePackages: Set<string>
 ): boolean {
-  console.log(`[isWorkspaceSourcePackage] Checking package: ${packageName}`);
-  
-  // First check if it's in the official workspace packages set
-  const isInWorkspaceSet = workspacePackages.has(packageName);
-  console.log(`[isWorkspaceSourcePackage] ${packageName} in workspace set: ${isInWorkspaceSet}`);
-  
-  // If workspace detection failed, fall back to checking version pattern
-  // Packages with 0.0.x versions are likely workspace packages with TypeScript solution
-  const packageVersion = readPackageVersion(packageName);
-  const hasWorkspaceVersion = packageVersion === '0.0.1' || (packageVersion && packageVersion.startsWith('0.0.'));
-  console.log(`[isWorkspaceSourcePackage] ${packageName} version: ${packageVersion}, has workspace version: ${hasWorkspaceVersion}`);
-  
-  if (!isInWorkspaceSet && !hasWorkspaceVersion) {
-    console.log(`[isWorkspaceSourcePackage] ${packageName} is NOT a workspace package`);
-    return false; // Not a workspace package
-  }
-
-  console.log(`[isWorkspaceSourcePackage] ${packageName} IS a workspace package`);
-
   const packageJson = readPackageJson(packageName);
   if (!packageJson) {
-    console.log(`[isWorkspaceSourcePackage] ${packageName} has no package.json, assuming workspace source`);
-    return true; // No package.json found, assume workspace source
+    return false; // No package.json found, not a valid package
   }
 
   // Priority: exports['.'] > main > module
@@ -526,55 +492,67 @@ export function isWorkspaceSourcePackage(
     const exportEntry = packageJson.exports['.'];
     if (typeof exportEntry === 'string') {
       entryPoint = exportEntry;
-      console.log(`[isWorkspaceSourcePackage] ${packageName} exports['.'] (string): ${entryPoint}`);
     } else if (typeof exportEntry === 'object') {
       // Could be { "require": "./index.js", "import": "./index.mjs" } etc.
       entryPoint =
         exportEntry.require || exportEntry.import || exportEntry.default;
-      console.log(`[isWorkspaceSourcePackage] ${packageName} exports['.'] (object): ${entryPoint}`);
     }
   }
 
   // Fallback to main or module
   if (!entryPoint) {
     entryPoint = packageJson.main || packageJson.module;
-    console.log(`[isWorkspaceSourcePackage] ${packageName} fallback to main/module: ${entryPoint}`);
   }
 
   if (!entryPoint) {
-    console.log(`[isWorkspaceSourcePackage] ${packageName} has no entry point, assuming workspace source`);
-    return true; // No entry point found, assume workspace source
+    // No entry point found, check if it's in workspace set or has workspace version as fallback
+    const isInWorkspaceSet = workspacePackages.has(packageName);
+    const packageVersion = readPackageVersion(packageName);
+    const hasWorkspaceVersion = packageVersion === '0.0.1' || (packageVersion && packageVersion.startsWith('0.0.'));
+    
+    return isInWorkspaceSet || hasWorkspaceVersion;
   }
 
   // If entry point already ends with .ts, it's definitely source code
   if (entryPoint.endsWith('.ts')) {
-    console.log(`[isWorkspaceSourcePackage] ${packageName} entry point ends with .ts: ${entryPoint} -> SKIP`);
     return true;
   }
 
   // For other cases (e.g., "index", "index.js", "main"), check if .ts version exists
-  const packagePath = readModulePackageJson(
-    packageName,
-    getNxRequirePaths()
-  ).path;
-  const packageDir = dirname(packagePath);
-  const entryFilePath = join(packageDir, entryPoint);
+  try {
+    const packagePath = readModulePackageJson(
+      packageName,
+      getNxRequirePaths()
+    ).path;
+    const packageDir = dirname(packagePath);
+    const entryFilePath = join(packageDir, entryPoint);
 
-  // Try with .ts extension (e.g., "index" -> "index.ts", "main" -> "main.ts")
-  const tsFilePath = entryFilePath.endsWith('.js')
-    ? entryFilePath.replace(/\.js$/, '.ts')
-    : entryFilePath + '.ts';
+    // Try with .ts extension (e.g., "index" -> "index.ts", "main" -> "main.ts")
+    const tsFilePath = entryFilePath.endsWith('.js')
+      ? entryFilePath.replace(/\.js$/, '.ts')
+      : entryFilePath + '.ts';
 
-  const tsExists = fileExists(tsFilePath);
-  console.log(`[isWorkspaceSourcePackage] ${packageName} checking TS file: ${tsFilePath} -> exists: ${tsExists}`);
-  
-  if (tsExists) {
-    console.log(`[isWorkspaceSourcePackage] ${packageName} has TypeScript source -> SKIP`);
-  } else {
-    console.log(`[isWorkspaceSourcePackage] ${packageName} no TypeScript source -> INCLUDE`);
+    const tsExists = fileExists(tsFilePath);
+
+    // If TypeScript file exists, it's a workspace source package
+    if (tsExists) {
+      return true;
+    }
+    
+    // If no TypeScript file found, check workspace set and version as fallback
+    const isInWorkspaceSet = workspacePackages.has(packageName);
+    const packageVersion = readPackageVersion(packageName);
+    const hasWorkspaceVersion = packageVersion === '0.0.1' || (packageVersion && packageVersion.startsWith('0.0.'));
+    
+    return isInWorkspaceSet || hasWorkspaceVersion;
+  } catch {
+    // If we can't resolve the package path, fall back to workspace set and version check
+    const isInWorkspaceSet = workspacePackages.has(packageName);
+    const packageVersion = readPackageVersion(packageName);
+    const hasWorkspaceVersion = packageVersion === '0.0.1' || (packageVersion && packageVersion.startsWith('0.0.'));
+    
+    return isInWorkspaceSet || hasWorkspaceVersion;
   }
-
-  return tsExists;
 }
 
 // Using ts solution we need to filter out the packages that are already in the workspace
@@ -584,13 +562,9 @@ export function findInstalledPackagesWeCareAbout(
 ) {
   const packagesWeMayCareAbout: Record<string, string> = {};
   // TODO (v20): Remove workaround for hiding @nrwl packages when matching @nx package is found.
-
-  console.log(`[findInstalledPackagesWeCareAbout] Processing ${packagesWeCareAbout.length} packages`);
-  console.log(`[findInstalledPackagesWeCareAbout] Workspace packages:`, Array.from(workspacePackages || []));
   
   for (const pkg of packagesWeCareAbout) {
     const v = readPackageVersion(pkg);
-    console.log(`[findInstalledPackagesWeCareAbout] Package: ${pkg}, Version: ${v}`);
     
     if (v) {
       // Skip workspace source packages (TypeScript), include compiled packages (JavaScript)
@@ -598,17 +572,11 @@ export function findInstalledPackagesWeCareAbout(
         workspacePackages &&
         isWorkspaceSourcePackage(pkg, workspacePackages)
       ) {
-        console.log(`[findInstalledPackagesWeCareAbout] ${pkg} -> SKIPPED (workspace source)`);
         continue;
       }
-      console.log(`[findInstalledPackagesWeCareAbout] ${pkg} -> INCLUDED (version: ${v})`);
       packagesWeMayCareAbout[pkg] = v;
-    } else {
-      console.log(`[findInstalledPackagesWeCareAbout] ${pkg} -> SKIPPED (no version)`);
     }
   }
-
-  console.log(`[findInstalledPackagesWeCareAbout] Final result:`, Object.keys(packagesWeMayCareAbout));
 
   return Object.entries(packagesWeMayCareAbout).map(([pkg, version]) => ({
     package: pkg,
