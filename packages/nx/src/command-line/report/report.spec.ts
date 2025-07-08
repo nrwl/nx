@@ -28,28 +28,8 @@ const mockReadModulePackageJson = readModulePackageJson as jest.MockedFunction<
 >;
 
 describe('Workspace Package Exclusion in Report', () => {
-  let originalConsoleLog: typeof console.log;
-  let consoleOutput: string[] = [];
-
   beforeEach(() => {
     jest.clearAllMocks();
-    // Capture console.log output
-    consoleOutput = [];
-    originalConsoleLog = console.log;
-    console.log = jest.fn((...args) => {
-      consoleOutput.push(args.join(' '));
-    });
-  });
-
-  afterEach(() => {
-    // Restore original console.log
-    console.log = originalConsoleLog;
-    // Optionally print captured logs for debugging
-    if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      console.log('=== Captured console output ===');
-      consoleOutput.forEach((log) => console.log(log));
-      console.log('=== End of captured output ===');
-    }
   });
 
   describe('findInstalledPackagesWeCareAbout', () => {

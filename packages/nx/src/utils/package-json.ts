@@ -269,96 +269,11 @@ export function readModulePackageJsonWithoutFallbacks(
   packageJson: PackageJson;
   path: string;
 } {
-  // Get stack trace to see who called this function
-  const stack = new Error().stack;
-  const caller = stack?.split('\n')[2]?.trim() || 'unknown';
-
-  console.log(
-    `[readModulePackageJsonWithoutFallbacks] Resolving ${moduleSpecifier}/package.json`
-  );
-  console.log(`[readModulePackageJsonWithoutFallbacks] Called from: ${caller}`);
-  console.log(
-    `[readModulePackageJsonWithoutFallbacks] Current working directory: ${process.cwd()}`
-  );
-  console.log(
-    `[readModulePackageJsonWithoutFallbacks] NODE_PATH: ${
-      process.env.NODE_PATH || 'undefined'
-    }`
-  );
-  console.log(
-    `[readModulePackageJsonWithoutFallbacks] Require paths provided: ${requirePaths.join(
-      ', '
-    )}`
-  );
-  console.log(
-    `[readModulePackageJsonWithoutFallbacks] Default getNxRequirePaths(): ${getNxRequirePaths().join(
-      ', '
-    )}`
-  );
-
-  // Check what's actually in the provided paths
-  requirePaths.forEach((path) => {
-    const packagePath = join(
-      path,
-      'node_modules',
-      moduleSpecifier,
-      'package.json'
-    );
-    const packageDirPath = join(path, 'node_modules', moduleSpecifier);
-    console.log(
-      `[readModulePackageJsonWithoutFallbacks] Checking: ${packagePath} -> exists: ${existsSync(
-        packagePath
-      )}`
-    );
-    console.log(
-      `[readModulePackageJsonWithoutFallbacks] Checking dir: ${packageDirPath} -> exists: ${existsSync(
-        packageDirPath
-      )}`
-    );
-    if (existsSync(packageDirPath)) {
-      console.log(
-        `[readModulePackageJsonWithoutFallbacks] ${packageDirPath} is symlink: ${
-          existsSync(packageDirPath) &&
-          require('fs').lstatSync(packageDirPath).isSymbolicLink()
-        }`
-      );
-    }
-  });
-
-  // Try without paths first
-  try {
-    const withoutPaths = require.resolve(`${moduleSpecifier}/package.json`);
-    console.log(
-      `[readModulePackageJsonWithoutFallbacks] Without paths: ${withoutPaths}`
-    );
-  } catch (e) {
-    console.log(
-      `[readModulePackageJsonWithoutFallbacks] Without paths: FAILED - ${e.message}`
-    );
-  }
-
-  // Try with empty paths array
-  try {
-    const emptyPaths = require.resolve(`${moduleSpecifier}/package.json`, {
-      paths: [],
-    });
-    console.log(
-      `[readModulePackageJsonWithoutFallbacks] With empty paths: ${emptyPaths}`
-    );
-  } catch (e) {
-    console.log(
-      `[readModulePackageJsonWithoutFallbacks] With empty paths: FAILED - ${e.message}`
-    );
-  }
-
   const packageJsonPath: string = require.resolve(
     `${moduleSpecifier}/package.json`,
     {
       paths: requirePaths,
     }
-  );
-  console.log(
-    `[readModulePackageJsonWithoutFallbacks] With paths resolved to: ${packageJsonPath}`
   );
 
   const packageJson: PackageJson = readJsonFile(packageJsonPath);
@@ -393,32 +308,13 @@ export function readModulePackageJson(
   let packageJsonPath: string;
   let packageJson: PackageJson;
 
-  console.log(`[readModulePackageJson] Resolving ${moduleSpecifier}`);
-  console.log(
-    `[readModulePackageJson] Require paths: ${requirePaths.join(', ')}`
-  );
-
   try {
     ({ path: packageJsonPath, packageJson } =
       readModulePackageJsonWithoutFallbacks(moduleSpecifier, requirePaths));
-    console.log(
-      `[readModulePackageJson] Resolved via primary method: ${packageJsonPath}`
-    );
   } catch (e) {
-    console.log(
-      `[readModulePackageJson] Primary method failed: ${e.message}, using fallback`
-    );
-    console.log(
-      `[readModulePackageJson] Fallback require.resolve with paths: ${requirePaths.join(
-        ', '
-      )}`
-    );
     const entryPoint = require.resolve(moduleSpecifier, {
       paths: requirePaths,
     });
-    console.log(
-      `[readModulePackageJson] Entry point resolved to: ${entryPoint}`
-    );
 
     let moduleRootPath = dirname(entryPoint);
     packageJsonPath = join(moduleRootPath, 'package.json');
@@ -428,9 +324,6 @@ export function readModulePackageJson(
       packageJsonPath = join(moduleRootPath, 'package.json');
     }
 
-    console.log(
-      `[readModulePackageJson] Final package.json path: ${packageJsonPath}`
-    );
     packageJson = readJsonFile(packageJsonPath);
     if (packageJson.name && packageJson.name !== moduleSpecifier) {
       throw new Error(
@@ -438,10 +331,6 @@ export function readModulePackageJson(
       );
     }
   }
-
-  console.log(
-    `[readModulePackageJson] ${moduleSpecifier} version: ${packageJson.version}, resolved to: ${packageJsonPath}`
-  );
 
   return {
     packageJson,
