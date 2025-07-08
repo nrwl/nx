@@ -322,6 +322,7 @@ export interface TaskGraph {
   roots: Array<string>
   tasks: Record<string, Task>
   dependencies: Record<string, Array<string>>
+  continuousDependencies: Record<string, Array<string>>
 }
 
 export interface TaskResult {

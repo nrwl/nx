@@ -5,10 +5,14 @@ use ratatui::{
     layout::{Alignment, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, BorderType, Borders, Padding, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState, StatefulWidget, Widget},
+    widgets::{
+        Block, BorderType, Borders, Padding, Paragraph, Scrollbar, ScrollbarOrientation,
+        ScrollbarState, StatefulWidget, Widget,
+    },
 };
 
 use crate::native::tui::components::tasks_list::{TaskStatus, TasksList};
+use crate::native::tui::status_icons;
 use crate::native::tui::theme::THEME;
 
 pub struct DependencyViewState {
@@ -60,9 +64,13 @@ impl DependencyViewState {
         }
     }
 
-    pub fn handle_key_event(&mut self, key: crossterm::event::KeyEvent, viewport_height: usize) -> bool {
+    pub fn handle_key_event(
+        &mut self,
+        key: crossterm::event::KeyEvent,
+        viewport_height: usize,
+    ) -> bool {
         use crossterm::event::{KeyCode, KeyModifiers};
-        
+
         match key.code {
             KeyCode::Up | KeyCode::Char('k') => {
                 self.scroll_up();
@@ -103,59 +111,23 @@ impl<'a> DependencyView<'a> {
         self
     }
 
-    fn get_status_icon(&self, status: TaskStatus, throbber_counter: usize) -> Span {
-        match status {
-            TaskStatus::Success
-            | TaskStatus::LocalCacheKeptExisting
-            | TaskStatus::LocalCache
-            | TaskStatus::RemoteCache => Span::styled(
-                "  ✔  ",
-                Style::default()
-                    .fg(THEME.success)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            TaskStatus::Failure => Span::styled(
-                "  ✖  ",
-                Style::default()
-                    .fg(THEME.error)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            TaskStatus::Skipped => Span::styled(
-                "  ⏭  ",
-                Style::default()
-                    .fg(THEME.warning)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            TaskStatus::InProgress | TaskStatus::Shared => {
-                let throbber_chars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-                let throbber_char = throbber_chars[throbber_counter % throbber_chars.len()];
-                Span::styled(
-                    format!("  {}  ", throbber_char),
-                    Style::default().fg(THEME.info).add_modifier(Modifier::BOLD),
-                )
-            },
-            TaskStatus::Stopped => Span::styled(
-                "  ◼  ",
-                Style::default()
-                    .fg(THEME.secondary_fg)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            TaskStatus::NotStarted => Span::styled(
-                "  ·  ",
-                Style::default()
-                    .fg(THEME.secondary_fg)
-                    .add_modifier(Modifier::BOLD),
-            ),
-        }
-    }
-
-
-    fn render_dependency_list(&self, state: &mut DependencyViewState, area: Rect, buf: &mut Buffer) {
+    fn render_dependency_list(
+        &self,
+        state: &mut DependencyViewState,
+        area: Rect,
+        buf: &mut Buffer,
+    ) {
         if state.dependencies.is_empty() {
-            let no_deps_message = vec![Line::from(vec![Span::styled(
-                "No dependencies - task can start immediately",
-                Style::default().fg(THEME.success),
-            )])];
+            let no_deps_message = vec![
+                Line::from(vec![Span::styled(
+                    "No dependencies found in task graph",
+                    Style::default().fg(THEME.success),
+                )]),
+                Line::from(vec![Span::styled(
+                    "Task can start immediately",
+                    Style::default().fg(THEME.success),
+                )]),
+            ];
 
             let paragraph = Paragraph::new(no_deps_message)
                 .alignment(Alignment::Center)
@@ -166,51 +138,70 @@ impl<'a> DependencyView<'a> {
         }
 
         let mut lines = Vec::new();
-        
+
         // Count incomplete dependencies
         let total_count = state.dependencies.len();
-        let incomplete_count = state.dependencies.iter()
+        let incomplete_count = state
+            .dependencies
+            .iter()
             .filter(|dep| {
-                let status = state.dependency_statuses.get(*dep).unwrap_or(&TaskStatus::NotStarted);
-                let is_continuous = state.dependency_continuous_flags.get(*dep).unwrap_or(&false);
-                
+                let status = state
+                    .dependency_statuses
+                    .get(*dep)
+                    .unwrap_or(&TaskStatus::NotStarted);
+                let is_continuous = state
+                    .dependency_continuous_flags
+                    .get(*dep)
+                    .unwrap_or(&false);
+
                 // For continuous tasks, InProgress and Stopped are considered complete
                 // For regular tasks, only traditional completion statuses count
-                !matches!(status, 
-                    TaskStatus::Success 
-                    | TaskStatus::LocalCacheKeptExisting 
-                    | TaskStatus::LocalCache 
-                    | TaskStatus::RemoteCache
-                    | TaskStatus::Skipped
-                ) && !(*is_continuous && matches!(status, TaskStatus::InProgress | TaskStatus::Stopped))
+                !matches!(
+                    status,
+                    TaskStatus::Success
+                        | TaskStatus::LocalCacheKeptExisting
+                        | TaskStatus::LocalCache
+                        | TaskStatus::RemoteCache
+                        | TaskStatus::Skipped
+                ) && !(*is_continuous
+                    && matches!(status, TaskStatus::InProgress | TaskStatus::Stopped))
             })
             .count();
-        
+
         // Add header with progress
         let header_text = if incomplete_count == 0 && total_count > 0 {
-            "All dependencies complete!".to_string()
+            "All dependencies satisfied - task ready to start!".to_string()
         } else {
-            format!("Not started yet, waiting for {} / {} tasks to complete...", incomplete_count, total_count)
+            format!(
+                "Not started yet, waiting for {} / {} tasks to complete...",
+                incomplete_count, total_count
+            )
         };
-        
+
         let header = Line::from(vec![Span::styled(
             header_text,
-            Style::default().fg(THEME.primary_fg).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(if incomplete_count == 0 && total_count > 0 {
+                    THEME.success
+                } else {
+                    THEME.primary_fg
+                })
+                .add_modifier(Modifier::BOLD),
         )]);
         lines.push(header);
         lines.push(Line::from("")); // Empty line for spacing
 
         // Add all dependencies (no more truncation, we'll scroll instead)
         for dep in &state.dependencies {
-            let status = state.dependency_statuses.get(dep).unwrap_or(&TaskStatus::NotStarted);
-            let status_icon = self.get_status_icon(*status, state.throbber_counter);
-            
+            let status = state
+                .dependency_statuses
+                .get(dep)
+                .unwrap_or(&TaskStatus::NotStarted);
+            let status_icon = status_icons::get_status_icon(*status, state.throbber_counter);
+
             let line = Line::from(vec![
                 status_icon,
-                Span::styled(
-                    dep.clone(),
-                    Style::default().fg(THEME.primary_fg),
-                ),
+                Span::styled(dep.clone(), Style::default().fg(THEME.primary_fg)),
             ]);
             lines.push(line);
         }
@@ -219,11 +210,12 @@ impl<'a> DependencyView<'a> {
         let content_height = lines.len();
         let viewport_height = area.height as usize;
         let max_scroll = content_height.saturating_sub(viewport_height);
-        
+
         // Update scrollbar state
         let needs_scrollbar = max_scroll > 0;
         state.scrollbar_state = if needs_scrollbar {
-            state.scrollbar_state
+            state
+                .scrollbar_state
                 .content_length(content_height)
                 .viewport_content_length(viewport_height)
                 .position(state.scroll_offset)
@@ -232,13 +224,16 @@ impl<'a> DependencyView<'a> {
         };
 
         // Apply scroll offset to lines
-        let visible_lines: Vec<Line> = if state.scroll_offset > 0 && content_height > viewport_height {
-            let start = state.scroll_offset.min(content_height.saturating_sub(viewport_height));
-            let end = (start + viewport_height).min(content_height);
-            lines[start..end].to_vec()
-        } else {
-            lines
-        };
+        let visible_lines: Vec<Line> =
+            if state.scroll_offset > 0 && content_height > viewport_height {
+                let start = state
+                    .scroll_offset
+                    .min(content_height.saturating_sub(viewport_height));
+                let end = (start + viewport_height).min(content_height);
+                lines[start..end].to_vec()
+            } else {
+                lines
+            };
 
         let paragraph = Paragraph::new(visible_lines)
             .alignment(Alignment::Left)
@@ -263,7 +258,9 @@ impl<'a> DependencyView<'a> {
             let border_style = if state.is_focused {
                 Style::default().fg(THEME.info)
             } else {
-                Style::default().fg(THEME.secondary_fg).add_modifier(Modifier::DIM)
+                Style::default()
+                    .fg(THEME.secondary_fg)
+                    .add_modifier(Modifier::DIM)
             };
 
             let scrollbar = Scrollbar::default()
@@ -289,10 +286,12 @@ impl<'a> StatefulWidget for DependencyView<'a> {
         let border_style = if state.is_focused {
             Style::default().fg(THEME.info)
         } else {
-            Style::default().fg(THEME.secondary_fg).add_modifier(Modifier::DIM)
+            Style::default()
+                .fg(THEME.secondary_fg)
+                .add_modifier(Modifier::DIM)
         };
 
-        let status_icon = self.get_status_icon(state.task_status, state.throbber_counter);
+        let status_icon = status_icons::get_status_icon(state.task_status, state.throbber_counter);
         let title = vec![
             status_icon,
             Span::styled(

@@ -406,7 +406,6 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
             .border_style(border_style)
             .padding(Padding::new(2, 2, 1, 1));
 
-
         // If the task is in progress, we need to check if a pty instance is available, and if not
         // it implies that the task is being run outside the pseudo-terminal and all we can do is
         // wait for the task results to arrive

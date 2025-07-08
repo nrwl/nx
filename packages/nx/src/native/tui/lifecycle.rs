@@ -6,7 +6,7 @@ use std::sync::Arc;
 use tracing::debug;
 
 use crate::native::logger::enable_logger;
-use crate::native::tasks::types::{Task, TaskResult, TaskGraph};
+use crate::native::tasks::types::{Task, TaskGraph, TaskResult};
 use crate::native::{
     ide::nx_console::messaging::NxConsoleMessageConnection,
     pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
