@@ -77,9 +77,10 @@ export const createNodesV2: CreateNodesV2<JestPluginOptions> = [
     // Cache jest preset(s) to avoid penalties of module load times. Most of jest configs will use the same preset.
     const presetCache: Record<string, unknown> = {};
 
-    const packageManagerWorkspacesGlob = combineGlobPatterns(
-      getGlobPatternsFromPackageManagerWorkspaces(context.workspaceRoot)
+    const isInPackageManagerWorkspaces = buildPackageJsonWorkspacesMatcher(
+      context.workspaceRoot
     );
+
     options = normalizeOptions(options);
 
     const { roots: projectRoots, configFiles: validConfigFiles } =
@@ -90,7 +91,7 @@ export const createNodesV2: CreateNodesV2<JestPluginOptions> = [
             checkIfConfigFileShouldBeProject(
               configFile,
               potentialRoot,
-              packageManagerWorkspacesGlob,
+              isInPackageManagerWorkspaces,
               context
             )
           ) {
@@ -163,15 +164,15 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
 
     const projectRoot = dirname(configFilePath);
 
-    const packageManagerWorkspacesGlob = combineGlobPatterns(
-      getGlobPatternsFromPackageManagerWorkspaces(context.workspaceRoot)
+    const isInPackageManagerWorkspaces = buildPackageJsonWorkspacesMatcher(
+      context.workspaceRoot
     );
 
     if (
       !checkIfConfigFileShouldBeProject(
         configFilePath,
         projectRoot,
-        packageManagerWorkspacesGlob,
+        isInPackageManagerWorkspaces,
         context
       )
     ) {
@@ -200,10 +201,24 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
   },
 ];
 
+function buildPackageJsonWorkspacesMatcher(
+  workspaceRoot: string
+): (path: string) => boolean {
+  if (process.env.NX_INFER_ALL_PACKAGE_JSONS === 'true') {
+    return () => true;
+  }
+
+  const packageManagerWorkspacesGlob = combineGlobPatterns(
+    getGlobPatternsFromPackageManagerWorkspaces(workspaceRoot)
+  );
+
+  return (path: string) => minimatch(path, packageManagerWorkspacesGlob);
+}
+
 function checkIfConfigFileShouldBeProject(
   configFilePath: string,
   projectRoot: string,
-  packageManagerWorkspacesGlob: string,
+  isInPackageManagerWorkspaces: (path: string) => boolean,
   context: CreateNodesContext | CreateNodesContextV2
 ): boolean {
   // Do not create a project if package.json and project.json isn't there.
@@ -219,7 +234,7 @@ function checkIfConfigFileShouldBeProject(
   ) {
     const path = joinPathFragments(projectRoot, 'package.json');
 
-    const isPackageJsonProject = minimatch(path, packageManagerWorkspacesGlob);
+    const isPackageJsonProject = isInPackageManagerWorkspaces(path);
 
     if (!isPackageJsonProject) {
       return false;

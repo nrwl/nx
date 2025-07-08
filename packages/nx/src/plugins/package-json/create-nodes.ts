@@ -38,10 +38,11 @@ export const createNodesV2: CreateNodesV2 = [
     const { packageJsons, projectJsonRoots } = splitConfigFiles(configFiles);
 
     const readJson = (f) => readJsonFile(join(context.workspaceRoot, f));
-    const isInPackageJsonWorkspaces = buildPackageJsonWorkspacesMatcher(
-      context.workspaceRoot,
-      readJson
-    );
+    const isInPackageJsonWorkspaces =
+      process.env.NX_INFER_ALL_PACKAGE_JSONS === 'true' &&
+      !configFiles.includes('package.json')
+        ? () => true
+        : buildPackageJsonWorkspacesMatcher(context.workspaceRoot, readJson);
     const isNextToProjectJson = (packageJsonPath: string) => {
       return projectJsonRoots.has(dirname(packageJsonPath));
     };
