@@ -272,9 +272,15 @@ export async function getReportData(): Promise<ReportData> {
 
   const { graph, error: projectGraphError } = await tryGetProjectGraph();
 
+  console.log('[getReportData] Project graph error:', projectGraphError);
+  console.log('[getReportData] Project graph available:', !!graph);
+  console.log('[getReportData] Project graph nodes count:', graph ? Object.keys(graph.nodes).length : 0);
+
   const nxJson = readNxJson();
   const localPlugins = await findLocalPlugins(graph, nxJson);
   const workspacePackages = getWorkspacePackageNames(graph);
+  
+  console.log('[getReportData] Workspace packages from graph:', Array.from(workspacePackages));
   const powerpackPlugins = findInstalledPowerpackPlugins();
   const communityPlugins = findInstalledCommunityPlugins();
   const registeredPlugins = findRegisteredPluginsBeingUsed(nxJson);
@@ -367,13 +373,22 @@ async function findLocalPlugins(
 function getWorkspacePackageNames(projectGraph: ProjectGraph): Set<string> {
   const workspacePackages = new Set<string>();
 
+  console.log('[getWorkspacePackageNames] ProjectGraph provided:', !!projectGraph);
+  
   if (projectGraph) {
     const workspacePackageMap = getWorkspacePackagesFromGraph(projectGraph);
+    console.log('[getWorkspacePackageNames] Workspace package map size:', workspacePackageMap?.size || 0);
+    console.log('[getWorkspacePackageNames] Workspace package map entries:', workspacePackageMap ? Array.from(workspacePackageMap.entries()) : []);
+    
     for (const [packageName] of workspacePackageMap) {
+      console.log('[getWorkspacePackageNames] Adding workspace package:', packageName);
       workspacePackages.add(packageName);
     }
+  } else {
+    console.log('[getWorkspacePackageNames] No project graph provided');
   }
 
+  console.log('[getWorkspacePackageNames] Final workspace packages:', Array.from(workspacePackages));
   return workspacePackages;
 }
 
