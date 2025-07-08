@@ -92,7 +92,7 @@ describe('createTaskGraph', () => {
       tasks: {},
       dependencies: {},
       continuousDependencies: {},
-      continueOnFailureDependencies: {},
+      dependenciesAllowedToFail: {},
     });
   });
 
@@ -129,7 +129,7 @@ describe('createTaskGraph', () => {
       continuousDependencies: {
         'app1:test': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'app1:test': [],
       },
     });
@@ -181,7 +181,7 @@ describe('createTaskGraph', () => {
         'app1:test': [],
         'lib1:test': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'app1:test': [],
         'lib1:test': [],
       },
@@ -344,7 +344,7 @@ describe('createTaskGraph', () => {
         'lib1:compile:libDefault': [],
         'lib2:compile': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'lib1:compile:libDefault': [],
         'lib2:compile': [],
       },
@@ -416,7 +416,7 @@ describe('createTaskGraph', () => {
         'lib1:compile:libDefault': [],
         'lib2:compile:ci': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'app1:compile:ci': [],
         'lib1:compile:libDefault': [],
         'lib2:compile:ci': [],
@@ -507,7 +507,7 @@ describe('createTaskGraph', () => {
         'app1:compile': [],
         'lib3:compile': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'app1:compile': [],
         'lib3:compile': [],
       },
@@ -576,7 +576,7 @@ describe('createTaskGraph', () => {
       continuousDependencies: {
         'app1:test': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'app1:test': [],
       },
     });
@@ -615,7 +615,7 @@ describe('createTaskGraph', () => {
       continuousDependencies: {
         'app1:test': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'app1:test': [],
       },
     });
@@ -779,7 +779,7 @@ describe('createTaskGraph', () => {
         'lib1:compile': [],
         'lib2:compile': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'app1:compile': [],
         'app1:precompile': [],
         'lib1:compile': [],
@@ -872,7 +872,7 @@ describe('createTaskGraph', () => {
         'app1:precompile2': [],
         'lib1:compile': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'app1:compile': [],
         'app1:precompile': [],
         'app1:precompile2': [],
@@ -993,7 +993,7 @@ describe('createTaskGraph', () => {
         'lib1:serve': [],
         'lib1:compile': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'app1:serve': [],
         'app1:compile': [],
         'lib1:serve': [],
@@ -1086,7 +1086,7 @@ describe('createTaskGraph', () => {
         'app1:precompile2': [],
         'lib1:compile': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'app1:compile': [],
         'app1:precompile': [],
         'app1:precompile2': [],
@@ -1248,7 +1248,7 @@ describe('createTaskGraph', () => {
         'lib2:compile': [],
         'lib3:compile': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'app1:compile': [],
         'lib1:compile': [],
         'lib2:compile': [],
@@ -1428,7 +1428,7 @@ describe('createTaskGraph', () => {
         'app1:compile': [],
         'infra2:apply': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'infra1:apply': [],
         'app2:compile': [],
         'coreInfra:apply': [],
@@ -1513,7 +1513,7 @@ describe('createTaskGraph', () => {
         'app1:compile': [],
         'app1:test': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'app1:compile': [],
         'app1:test': [],
       },
@@ -1664,7 +1664,7 @@ describe('createTaskGraph', () => {
         'lib3:build': [],
         'lib4:build': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'lib1:build': [],
         'lib2:build': [],
         'lib3:build': [],
@@ -1796,7 +1796,7 @@ describe('createTaskGraph', () => {
         'lib2:build': [],
         'lib4:build': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'lib1:build': [],
         'lib2:build': [],
         'lib4:build': [],
@@ -1870,7 +1870,7 @@ describe('createTaskGraph', () => {
       continuousDependencies: {
         'lib1:build': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'lib1:build': [],
       },
     });
@@ -2000,7 +2000,7 @@ describe('createTaskGraph', () => {
         'lib2:build': [],
         'lib4:build': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'lib1:build': [],
         'lib2:build': [],
         'lib4:build': [],
@@ -2112,7 +2112,7 @@ describe('createTaskGraph', () => {
         'lib1:build': [],
         'lib2:build': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'lib1:build': [],
         'lib2:build': [],
       },
@@ -2217,7 +2217,7 @@ describe('createTaskGraph', () => {
         'app1:compile': [],
         'app3:compile': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'app1:compile': [],
         'app3:compile': [],
       },
@@ -2319,7 +2319,7 @@ describe('createTaskGraph', () => {
         'app1:compile': [],
         'app3:compile': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'app1:compile': [],
         'app3:compile': [],
       },
@@ -2459,7 +2459,7 @@ describe('createTaskGraph', () => {
         'lib2:dep': [],
         'lib2:dep2': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'app1:lint': [],
         'app1:test': [],
         'lib2:dep': [],
@@ -2545,7 +2545,7 @@ describe('createTaskGraph', () => {
       continuousDependencies: {
         'app1:compile': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'app1:compile': [],
       },
     });
@@ -2602,7 +2602,7 @@ describe('createTaskGraph', () => {
         'app1:compile': [],
         'app2:compile': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'app1:compile': [],
         'app2:compile': [],
       },
@@ -3124,7 +3124,7 @@ describe('createTaskGraph', () => {
         'app1:compile': [],
         'app4:precompile': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'app1:compile': [],
         'app4:precompile': [],
       },
@@ -3196,7 +3196,7 @@ describe('createTaskGraph', () => {
         'app3:compile': [],
         'app4:precompile': [],
       },
-      continueOnFailureDependencies: {
+      dependenciesAllowedToFail: {
         'app2:compile': [],
         'app3:compile': [],
         'app4:precompile': [],
@@ -3348,8 +3348,8 @@ describe('createTaskGraph', () => {
     });
   });
 
-  describe('skipOnFailure dependencies', () => {
-    it('should maintain backwards compatibility (default skipOnFailure: true)', () => {
+  describe('requiredToSucceed dependencies', () => {
+    it('should maintain backwards compatibility (default requiredToSucceed: true)', () => {
       const projectGraph: ProjectGraph = {
         nodes: {
           app1: {
@@ -3360,7 +3360,7 @@ describe('createTaskGraph', () => {
               targets: {
                 build: {
                   executor: 'nx:run-commands',
-                  dependsOn: ['test'], // default behavior - no skipOnFailure specified
+                  dependsOn: ['test'], // default behavior - no requiredToSucceed specified
                 },
                 test: {
                   executor: 'nx:run-commands',
@@ -3381,7 +3381,7 @@ describe('createTaskGraph', () => {
         {}
       );
 
-      expect(taskGraph.continueOnFailureDependencies).toEqual({
+      expect(taskGraph.dependenciesAllowedToFail).toEqual({
         'app1:build': [],
         'app1:test': [],
       });
@@ -3391,7 +3391,7 @@ describe('createTaskGraph', () => {
       });
     });
 
-    it('should track continue-on-failure dependencies when skipOnFailure is false', () => {
+    it('should track continue-on-failure dependencies when requiredToSucceed is false', () => {
       const projectGraph: ProjectGraph = {
         nodes: {
           app1: {
@@ -3405,7 +3405,7 @@ describe('createTaskGraph', () => {
                   dependsOn: [
                     {
                       target: 'test',
-                      skipOnFailure: false, // continue even if test fails
+                      requiredToSucceed: false, // continue even if test fails
                     },
                   ],
                 },
@@ -3428,7 +3428,7 @@ describe('createTaskGraph', () => {
         {}
       );
 
-      expect(taskGraph.continueOnFailureDependencies).toEqual({
+      expect(taskGraph.dependenciesAllowedToFail).toEqual({
         'app1:build': ['app1:test'],
         'app1:test': [],
       });
@@ -3450,14 +3450,14 @@ describe('createTaskGraph', () => {
                 build: {
                   executor: 'nx:run-commands',
                   dependsOn: [
-                    'lint', // default: skipOnFailure: true
+                    'lint', // default: requiredToSucceed: true
                     {
                       target: 'test',
-                      skipOnFailure: false, // continue even if test fails
+                      requiredToSucceed: false, // continue even if test fails
                     },
                     {
                       target: 'docs-build',
-                      skipOnFailure: true, // explicit skipOnFailure: true
+                      requiredToSucceed: true, // explicit requiredToSucceed: true
                     },
                   ],
                 },
@@ -3486,7 +3486,7 @@ describe('createTaskGraph', () => {
         {}
       );
 
-      expect(taskGraph.continueOnFailureDependencies).toEqual({
+      expect(taskGraph.dependenciesAllowedToFail).toEqual({
         'app1:build': ['app1:test'], // only test should continue on failure
         'app1:lint': [],
         'app1:test': [],
