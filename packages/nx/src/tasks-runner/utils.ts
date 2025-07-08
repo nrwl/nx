@@ -94,7 +94,7 @@ export function expandDependencyConfigSyntaxSugar(
   if (typeof dependencyConfigString !== 'string') {
     return {
       ...dependencyConfigString,
-      skipOnFailure: dependencyConfigString.skipOnFailure ?? true,
+      requiredToSucceed: dependencyConfigString.requiredToSucceed ?? true,
     };
   }
 
@@ -108,7 +108,7 @@ export function expandDependencyConfigSyntaxSugar(
     return {
       target: targetString,
       dependencies: true,
-      skipOnFailure: true,
+      requiredToSucceed: true,
     };
   }
 
@@ -118,7 +118,7 @@ export function expandDependencyConfigSyntaxSugar(
   );
 
   const config = projects ? { projects, target } : { target };
-  return { ...config, skipOnFailure: true };
+  return { ...config, requiredToSucceed: true };
 }
 
 // Weakmap let's the cache get cleared by garbage collector if allTargetNames is no longer used
@@ -165,7 +165,7 @@ export function expandWildcardTargetConfiguration(
     projects: dependencyConfig.projects,
     dependencies: dependencyConfig.dependencies,
     params: dependencyConfig.params,
-    skipOnFailure: dependencyConfig.skipOnFailure,
+    requiredToSucceed: dependencyConfig.requiredToSucceed,
   }));
 }
 
@@ -465,7 +465,7 @@ export function removeTasksFromTaskGraph(
   return {
     dependencies: newGraph.dependencies,
     continuousDependencies: newGraph.continuousDependencies,
-    continueOnFailureDependencies: newGraph.continueOnFailureDependencies,
+    dependenciesAllowedToFail: newGraph.dependenciesAllowedToFail,
     roots: newGraph.roots,
     tasks: newGraph.mapWithIds,
   };
@@ -476,7 +476,7 @@ function removeIdsFromTaskGraph<T>(
     roots: string[];
     dependencies: Record<string, string[]>;
     continuousDependencies: Record<string, string[]>;
-    continueOnFailureDependencies: Record<string, string[]>;
+    dependenciesAllowedToFail: Record<string, string[]>;
   },
   ids: string[],
   mapWithIds: Record<string, T>
@@ -485,12 +485,12 @@ function removeIdsFromTaskGraph<T>(
   roots: string[];
   dependencies: Record<string, string[]>;
   continuousDependencies: Record<string, string[]>;
-  continueOnFailureDependencies: Record<string, string[]>;
+  dependenciesAllowedToFail: Record<string, string[]>;
 } {
   const filteredMapWithIds = {};
   const dependencies = {};
   const continuousDependencies = {};
-  const continueOnFailureDependencies = {};
+  const dependenciesAllowedToFail = {};
   const removedSet = new Set(ids);
   for (let id of Object.keys(mapWithIds)) {
     if (!removedSet.has(id)) {
@@ -501,7 +501,7 @@ function removeIdsFromTaskGraph<T>(
       continuousDependencies[id] = graph.continuousDependencies[id].filter(
         (depId) => !removedSet.has(depId)
       );
-      continueOnFailureDependencies[id] = graph.continueOnFailureDependencies[
+      dependenciesAllowedToFail[id] = graph.dependenciesAllowedToFail[
         id
       ].filter((depId) => !removedSet.has(depId));
     }
@@ -510,7 +510,7 @@ function removeIdsFromTaskGraph<T>(
     mapWithIds: filteredMapWithIds,
     dependencies: dependencies,
     continuousDependencies,
-    continueOnFailureDependencies,
+    dependenciesAllowedToFail,
     roots: Object.keys(filteredMapWithIds).filter(
       (k) =>
         dependencies[k].length === 0 && continuousDependencies[k].length === 0
