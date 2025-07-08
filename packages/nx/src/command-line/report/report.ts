@@ -495,7 +495,17 @@ export function isWorkspaceSourcePackage(
 ): boolean {
   console.log(`[isWorkspaceSourcePackage] Checking package: ${packageName}`);
   
-  if (!workspacePackages.has(packageName)) {
+  // First check if it's in the official workspace packages set
+  const isInWorkspaceSet = workspacePackages.has(packageName);
+  console.log(`[isWorkspaceSourcePackage] ${packageName} in workspace set: ${isInWorkspaceSet}`);
+  
+  // If workspace detection failed, fall back to checking version pattern
+  // Packages with 0.0.x versions are likely workspace packages with TypeScript solution
+  const packageVersion = readPackageVersion(packageName);
+  const hasWorkspaceVersion = packageVersion === '0.0.1' || (packageVersion && packageVersion.startsWith('0.0.'));
+  console.log(`[isWorkspaceSourcePackage] ${packageName} version: ${packageVersion}, has workspace version: ${hasWorkspaceVersion}`);
+  
+  if (!isInWorkspaceSet && !hasWorkspaceVersion) {
     console.log(`[isWorkspaceSourcePackage] ${packageName} is NOT a workspace package`);
     return false; // Not a workspace package
   }
