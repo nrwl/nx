@@ -19,12 +19,13 @@ use tui_logger::{LevelFilter, TuiLoggerSmartWidget, TuiWidgetEvent, TuiWidgetSta
 use crate::native::tui::tui::Tui;
 use crate::native::{
     pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
-    tasks::types::{Task, TaskResult},
+    tasks::types::{Task, TaskResult, TaskGraph},
 };
 
 use super::action::Action;
 use super::components::Component;
 use super::components::countdown_popup::CountdownPopup;
+use super::components::dependency_view::{DependencyView, DependencyViewState};
 use super::components::help_popup::HelpPopup;
 use super::components::layout_manager::{
     LayoutAreas, LayoutManager, PaneArrangement, TaskListVisibility,
@@ -67,6 +68,7 @@ pub struct App {
     selection_manager: Arc<Mutex<TaskSelectionManager>>,
     pinned_tasks: Vec<String>,
     tasks: Vec<Task>,
+    task_graph: TaskGraph,
     debug_mode: bool,
     debug_state: TuiWidgetState,
     console_messenger: Option<NxConsoleMessageConnection>,
@@ -88,6 +90,7 @@ impl App {
         pinned_tasks: Vec<String>,
         tui_config: TuiConfig,
         title_text: String,
+        task_graph: TaskGraph,
     ) -> Result<Self> {
         let task_count = tasks.len();
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(5)));
@@ -135,6 +138,7 @@ impl App {
             pty_instances: HashMap::new(),
             selection_manager,
             tasks,
+            task_graph,
             debug_mode: false,
             debug_state: TuiWidgetState::default().set_default_display_level(LevelFilter::Debug),
             console_messenger: None,
@@ -1008,6 +1012,19 @@ impl App {
                             }
 
                             let relevant_pane_task = relevant_pane_task.unwrap();
+                            
+                            // Get dependency information before mutable borrow
+                            let task_dependencies = self.task_graph.dependencies.get(&relevant_pane_task).cloned().unwrap_or_default();
+                            let dependency_statuses: HashMap<String, TaskStatus> = task_dependencies.iter()
+                                .map(|dep_id| {
+                                    let status = tasks_list.tasks.iter()
+                                        .find(|t| t.name == *dep_id)
+                                        .map(|task| task.status)
+                                        .unwrap_or(TaskStatus::NotStarted);
+                                    (dep_id.clone(), status)
+                                })
+                                .collect();
+                            
                             if let Some(task) = tasks_list
                                 .tasks
                                 .iter_mut()
@@ -1049,22 +1066,36 @@ impl App {
                                         _ => false,
                                     };
 
-                                let mut state = TerminalPaneState::new(
-                                    task.name.clone(),
-                                    task.status,
-                                    task.continuous,
-                                    is_focused,
-                                    has_pty,
-                                    is_next_tab_target,
-                                    self.console_messenger.is_some(),
-                                );
+                                // If task is pending, show dependency view instead of terminal pane
+                                if task.status == TaskStatus::NotStarted {
+                                    let mut dependency_state = DependencyViewState::new(
+                                        task.name.clone(),
+                                        task.status,
+                                        task_dependencies,
+                                        dependency_statuses,
+                                        is_focused,
+                                    );
 
-                                let terminal_pane = TerminalPane::new()
-                                    .minimal(tasks_list_hidden && self.tasks.len() == 1)
-                                    .pty_data(terminal_pane_data)
-                                    .continuous(task.continuous);
+                                    let dependency_view = DependencyView::new();
+                                    f.render_stateful_widget(dependency_view, *pane_area, &mut dependency_state);
+                                } else {
+                                    let mut state = TerminalPaneState::new(
+                                        task.name.clone(),
+                                        task.status,
+                                        task.continuous,
+                                        is_focused,
+                                        has_pty,
+                                        is_next_tab_target,
+                                        self.console_messenger.is_some(),
+                                    );
 
-                                f.render_stateful_widget(terminal_pane, *pane_area, &mut state);
+                                    let terminal_pane = TerminalPane::new()
+                                        .minimal(tasks_list_hidden && self.tasks.len() == 1)
+                                        .pty_data(terminal_pane_data)
+                                        .continuous(task.continuous);
+
+                                    f.render_stateful_widget(terminal_pane, *pane_area, &mut state);
+                                }
                             }
                         }
                     }
