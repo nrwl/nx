@@ -76,8 +76,14 @@ fn build_segment(
     if let Some(glob_part) = group.iter().next() {
         let built_glob = format!("{}{}", existing, glob_part);
         match glob_part {
-            GlobGroup::ZeroOrMore(_) | GlobGroup::ZeroOrOne(_) => {
+            GlobGroup::ZeroOrMore(_) => {
                 let existing = if !is_last_segment { "*" } else { existing };
+                let off_group = build_segment(existing, &group[1..], is_last_segment, is_negative);
+                let on_group =
+                    build_segment(&built_glob, &group[1..], is_last_segment, is_negative);
+                off_group.into_iter().chain(on_group).collect::<Vec<_>>()
+            }
+            GlobGroup::ZeroOrOne(_) => {
                 let off_group = build_segment(existing, &group[1..], is_last_segment, is_negative);
                 let on_group =
                     build_segment(&built_glob, &group[1..], is_last_segment, is_negative);
@@ -290,5 +296,30 @@ mod test {
         let (leading_dirs, globs) = super::partition_glob("dist/app/").unwrap();
         assert_eq!(leading_dirs, "dist/app");
         assert_eq!(globs, [] as [String; 0]);
+    }
+
+    #[test]
+    fn should_handle_test_optional_s_pattern() {
+        let globs = convert_glob("**/__test?(s)__/**/*").unwrap();
+        assert_eq!(globs, vec!["**/__test__/**/*", "**/__tests__/**/*"]);
+    }
+
+    #[test]
+    fn should_handle_zero_or_one_patterns_correctly() {
+        // Test simple ZeroOrOne pattern - this was the specific issue mentioned in #26880
+        let globs = convert_glob("__test?(s)__").unwrap();
+        assert_eq!(globs, vec!["__test__", "__tests__"]);
+
+        // Test ZeroOrOne pattern with prefix
+        let globs = convert_glob("prefix?(suffix)").unwrap();
+        assert_eq!(globs, vec!["prefix", "prefixsuffix"]);
+
+        // Test ZeroOrOne pattern in middle of string
+        let globs = convert_glob("start?(middle)end").unwrap();
+        assert_eq!(globs, vec!["startend", "startmiddleend"]);
+
+        // Test multiple ZeroOrOne patterns
+        let globs = convert_glob("?(a)test?(b)").unwrap();
+        assert_eq!(globs, vec!["test", "testb", "atest", "atestb"]);
     }
 }
