@@ -185,9 +185,9 @@
             "isExternal": false,
             "children": [
               {
-                "name": "Run Only Tasks Affected by a PR",
-                "path": "/ci/features/affected",
-                "id": "affected",
+                "name": "AI-Powered Self-Healing CI",
+                "path": "/ci/features/self-healing-ci",
+                "id": "self-healing-ci",
                 "isExternal": true,
                 "children": [],
                 "disableCollapsible": false
@@ -204,6 +204,14 @@
                 "name": "Distribute Task Execution (Nx Agents)",
                 "path": "/ci/features/distribute-task-execution",
                 "id": "distribute-task-execution",
+                "isExternal": true,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Run Only Tasks Affected by a PR",
+                "path": "/ci/features/affected",
+                "id": "affected",
                 "isExternal": true,
                 "children": [],
                 "disableCollapsible": false
@@ -6798,9 +6806,9 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Run Only Tasks Affected by a PR",
-            "path": "/ci/features/affected",
-            "id": "affected",
+            "name": "AI-Powered Self-Healing CI",
+            "path": "/ci/features/self-healing-ci",
+            "id": "self-healing-ci",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -6822,6 +6830,22 @@
             "disableCollapsible": false
           },
           {
+            "name": "Run Only Tasks Affected by a PR",
+            "path": "/ci/features/affected",
+            "id": "affected",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Dynamically Allocate Agents",
+            "path": "/ci/features/dynamic-agents",
+            "id": "dynamic-agents",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Automatically Split E2E Tasks (Atomizer)",
             "path": "/ci/features/split-e2e-tasks",
             "id": "split-e2e-tasks",
@@ -6833,14 +6857,6 @@
             "name": "Identify and Re-run Flaky Tasks",
             "path": "/ci/features/flaky-tasks",
             "id": "flaky-tasks",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Dynamically Allocate Agents",
-            "path": "/ci/features/dynamic-agents",
-            "id": "dynamic-agents",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
