@@ -182,10 +182,8 @@ impl<'a> DependencyView<'a> {
         // Add header with progress
         let header_text = if incomplete_count == 0 && total_count > 0 {
             "All dependencies complete!".to_string()
-        } else if total_count == 1 {
-            format!("Waiting for {} dependency:", incomplete_count)
         } else {
-            format!("Waiting for {} out of {} dependencies:", incomplete_count, total_count)
+            format!("Not started yet, waiting for {} / {} tasks to complete...", incomplete_count, total_count)
         };
         
         let header = Line::from(vec![Span::styled(
