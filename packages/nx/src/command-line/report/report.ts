@@ -1,12 +1,12 @@
 import * as chalk from 'chalk';
 import { output } from '../../utils/output';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import {
   detectPackageManager,
   getPackageManagerVersion,
   PackageManager,
 } from '../../utils/package-manager';
-import { readJsonFile } from '../../utils/fileutils';
+import { readJsonFile, fileExists } from '../../utils/fileutils';
 import {
   PackageJson,
   readModulePackageJson,
@@ -466,6 +466,72 @@ export function findRegisteredPluginsBeingUsed(nxJson: NxJsonConfiguration) {
   );
 }
 
+/**
+ * Determines if a workspace package is source code (TypeScript) that should be skipped
+ * vs compiled code (JavaScript) that should be included in reports.
+ *
+ * @param packageName - The name of the package to check
+ * @param workspacePackages - Set of workspace package names
+ * @returns true if the package should be skipped (is workspace source), false otherwise
+ */
+export function isWorkspaceSourcePackage(
+  packageName: string,
+  workspacePackages: Set<string>
+): boolean {
+  if (!workspacePackages.has(packageName)) {
+    return false; // Not a workspace package
+  }
+
+  const packageJson = readPackageJson(packageName);
+  if (!packageJson) {
+    return true; // No package.json found, assume workspace source
+  }
+
+  // Priority: exports['.'] > main > module
+  let entryPoint: string | null = null;
+
+  // Check exports['.'] first
+  if (packageJson.exports && packageJson.exports['.']) {
+    const exportEntry = packageJson.exports['.'];
+    if (typeof exportEntry === 'string') {
+      entryPoint = exportEntry;
+    } else if (typeof exportEntry === 'object') {
+      // Could be { "require": "./index.js", "import": "./index.mjs" } etc.
+      entryPoint =
+        exportEntry.require || exportEntry.import || exportEntry.default;
+    }
+  }
+
+  // Fallback to main or module
+  if (!entryPoint) {
+    entryPoint = packageJson.main || packageJson.module;
+  }
+
+  if (!entryPoint) {
+    return true; // No entry point found, assume workspace source
+  }
+
+  // If entry point already ends with .ts, it's definitely source code
+  if (entryPoint.endsWith('.ts')) {
+    return true;
+  }
+
+  // For other cases (e.g., "index", "index.js", "main"), check if .ts version exists
+  const packagePath = readModulePackageJson(
+    packageName,
+    getNxRequirePaths()
+  ).path;
+  const packageDir = dirname(packagePath);
+  const entryFilePath = join(packageDir, entryPoint);
+
+  // Try with .ts extension (e.g., "index" -> "index.ts", "main" -> "main.ts")
+  const tsFilePath = entryFilePath.endsWith('.js')
+    ? entryFilePath.replace(/\.js$/, '.ts')
+    : entryFilePath + '.ts';
+
+  return fileExists(tsFilePath);
+}
+
 // Using ts solution we need to filter out the packages that are already in the workspace
 // This is to avoid reporting packages that are already part of the workspace
 export function findInstalledPackagesWeCareAbout(
@@ -477,10 +543,14 @@ export function findInstalledPackagesWeCareAbout(
   for (const pkg of packagesWeCareAbout) {
     const v = readPackageVersion(pkg);
     if (v) {
+      // Skip workspace source packages (TypeScript), include compiled packages (JavaScript)
+      if (
+        workspacePackages &&
+        isWorkspaceSourcePackage(pkg, workspacePackages)
+      ) {
+        continue;
+      }
       packagesWeMayCareAbout[pkg] = v;
-    } else if (workspacePackages && workspacePackages.has(pkg)) {
-      // Skip workspace packages that are not installed
-      continue;
     }
   }
 
