@@ -314,4 +314,63 @@ describe('NxPlugin Generator Generator', () => {
       ).toEqual(true);
     });
   });
+
+  describe('directory path handling', () => {
+    it('should create subdirectory when path looks like a directory', async () => {
+      await generatorGenerator(tree, {
+        name: 'component-generator',
+        path: 'my-plugin/src/generators/component-generator',
+        unitTestRunner: 'jest',
+      });
+
+      // Should create files in a subdirectory named after the artifact
+      expect(
+        tree.exists('my-plugin/src/generators/component-generator/component-generator.ts')
+      ).toBeTruthy();
+      expect(
+        tree.exists('my-plugin/src/generators/component-generator/component-generator.spec.ts')
+      ).toBeTruthy();
+      expect(
+        tree.exists('my-plugin/src/generators/component-generator/schema.d.ts')
+      ).toBeTruthy();
+      expect(
+        tree.exists('my-plugin/src/generators/component-generator/schema.json')
+      ).toBeTruthy();
+
+      const generatorsJson = readJson(tree, 'my-plugin/generators.json');
+      expect(generatorsJson.generators['component-generator'].factory).toEqual(
+        './src/generators/component-generator/component-generator'
+      );
+      expect(generatorsJson.generators['component-generator'].schema).toEqual(
+        './src/generators/component-generator/schema.json'
+      );
+    });
+
+    it('should handle explicit file path correctly', async () => {
+      await generatorGenerator(tree, {
+        name: 'component-generator',
+        path: 'my-plugin/src/generators/component-generator/my-generator',
+        unitTestRunner: 'jest',
+      });
+
+      // Should create files with the explicit filename
+      expect(
+        tree.exists('my-plugin/src/generators/component-generator/my-generator.ts')
+      ).toBeTruthy();
+      expect(
+        tree.exists('my-plugin/src/generators/component-generator/my-generator.spec.ts')
+      ).toBeTruthy();
+      expect(
+        tree.exists('my-plugin/src/generators/component-generator/schema.d.ts')
+      ).toBeTruthy();
+      expect(
+        tree.exists('my-plugin/src/generators/component-generator/schema.json')
+      ).toBeTruthy();
+
+      const generatorsJson = readJson(tree, 'my-plugin/generators.json');
+      expect(generatorsJson.generators['component-generator'].factory).toEqual(
+        './src/generators/component-generator/my-generator'
+      );
+    });
+  });
 });

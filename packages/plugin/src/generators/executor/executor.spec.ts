@@ -256,4 +256,65 @@ describe('NxPlugin Executor Generator', () => {
       );
     });
   });
+
+  describe('directory path handling', () => {
+    it('should create subdirectory when path looks like a directory', async () => {
+      await executorGenerator(tree, {
+        name: 'artifact-upload',
+        path: 'my-plugin/src/executors/artifact-upload',
+        unitTestRunner: 'jest',
+        includeHasher: false,
+      });
+
+      // Should create files in a subdirectory named after the artifact
+      expect(
+        tree.exists('my-plugin/src/executors/artifact-upload/artifact-upload.ts')
+      ).toBeTruthy();
+      expect(
+        tree.exists('my-plugin/src/executors/artifact-upload/artifact-upload.spec.ts')
+      ).toBeTruthy();
+      expect(
+        tree.exists('my-plugin/src/executors/artifact-upload/schema.d.ts')
+      ).toBeTruthy();
+      expect(
+        tree.exists('my-plugin/src/executors/artifact-upload/schema.json')
+      ).toBeTruthy();
+
+      const executorsJson = readJson(tree, 'my-plugin/executors.json');
+      expect(executorsJson.executors['artifact-upload'].implementation).toEqual(
+        './src/executors/artifact-upload/artifact-upload'
+      );
+      expect(executorsJson.executors['artifact-upload'].schema).toEqual(
+        './src/executors/artifact-upload/schema.json'
+      );
+    });
+
+    it('should handle explicit file path correctly', async () => {
+      await executorGenerator(tree, {
+        name: 'artifact-upload',
+        path: 'my-plugin/src/executors/artifact-upload/my-executor',
+        unitTestRunner: 'jest',
+        includeHasher: false,
+      });
+
+      // Should create files with the explicit filename
+      expect(
+        tree.exists('my-plugin/src/executors/artifact-upload/my-executor.ts')
+      ).toBeTruthy();
+      expect(
+        tree.exists('my-plugin/src/executors/artifact-upload/my-executor.spec.ts')
+      ).toBeTruthy();
+      expect(
+        tree.exists('my-plugin/src/executors/artifact-upload/schema.d.ts')
+      ).toBeTruthy();
+      expect(
+        tree.exists('my-plugin/src/executors/artifact-upload/schema.json')
+      ).toBeTruthy();
+
+      const executorsJson = readJson(tree, 'my-plugin/executors.json');
+      expect(executorsJson.executors['artifact-upload'].implementation).toEqual(
+        './src/executors/artifact-upload/my-executor'
+      );
+    });
+  });
 });
