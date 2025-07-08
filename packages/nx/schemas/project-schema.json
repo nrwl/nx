@@ -103,9 +103,9 @@
                       "enum": ["ignore", "forward"],
                       "default": "ignore"
                     },
-                    "skipOnFailure": {
+                    "requiredToSucceed": {
                       "type": "boolean",
-                      "description": "Whether to skip the parent task when this dependency fails. Set to `false` to continue execution despite dependency failure.",
+                      "description": "Indicates whether the dependency task must succeed for the parent task to run. If set to `true`, the parent task will only run if the dependency task completes successfully. If set to `false`, the parent task will run even if the dependency task fails.",
                       "default": true
                     }
                   },

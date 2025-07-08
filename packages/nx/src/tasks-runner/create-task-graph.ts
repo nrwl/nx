@@ -17,7 +17,7 @@ export class ProcessTasks {
   readonly tasks: { [id: string]: Task } = {};
   readonly dependencies: { [k: string]: string[] } = {};
   readonly continuousDependencies: { [k: string]: string[] } = {};
-  readonly continueOnFailureDependencies: { [k: string]: string[] } = {};
+  readonly dependenciesAllowedToFail: { [k: string]: string[] } = {};
   private readonly allTargetNames: string[];
 
   constructor(
@@ -61,7 +61,7 @@ export class ProcessTasks {
           this.tasks[task.id] = task;
           this.dependencies[task.id] = [];
           this.continuousDependencies[task.id] = [];
-          this.continueOnFailureDependencies[task.id] = [];
+          this.dependenciesAllowedToFail[task.id] = [];
         }
       }
     }
@@ -80,7 +80,7 @@ export class ProcessTasks {
           delete this.tasks[t];
           delete this.dependencies[t];
           delete this.continuousDependencies[t];
-          delete this.continueOnFailureDependencies[t];
+          delete this.dependenciesAllowedToFail[t];
         }
       }
       for (let d of Object.keys(this.dependencies)) {
@@ -93,11 +93,10 @@ export class ProcessTasks {
           (dd) => !!initialTasks[dd]
         );
       }
-      for (let d of Object.keys(this.continueOnFailureDependencies)) {
-        this.continueOnFailureDependencies[d] =
-          this.continueOnFailureDependencies[d].filter(
-            (dd) => !!initialTasks[dd]
-          );
+      for (let d of Object.keys(this.dependenciesAllowedToFail)) {
+        this.dependenciesAllowedToFail[d] = this.dependenciesAllowedToFail[
+          d
+        ].filter((dd) => !!initialTasks[dd]);
       }
     }
 
@@ -125,15 +124,13 @@ export class ProcessTasks {
       }
     }
 
-    filterDummyTasks(this.continueOnFailureDependencies);
+    filterDummyTasks(this.dependenciesAllowedToFail);
 
-    for (const taskId of Object.keys(this.continueOnFailureDependencies)) {
-      if (this.continueOnFailureDependencies[taskId].length > 0) {
-        this.continueOnFailureDependencies[taskId] = [
+    for (const taskId of Object.keys(this.dependenciesAllowedToFail)) {
+      if (this.dependenciesAllowedToFail[taskId].length > 0) {
+        this.dependenciesAllowedToFail[taskId] = [
           ...new Set(
-            this.continueOnFailureDependencies[taskId].filter(
-              (d) => d !== taskId
-            )
+            this.dependenciesAllowedToFail[taskId].filter((d) => d !== taskId)
           ).values(),
         ];
       }
@@ -260,7 +257,7 @@ export class ProcessTasks {
         this.tasks[selfTaskId] = newTask;
         this.dependencies[selfTaskId] = [];
         this.continuousDependencies[selfTaskId] = [];
-        this.continueOnFailureDependencies[selfTaskId] = [];
+        this.dependenciesAllowedToFail[selfTaskId] = [];
         this.processTask(
           newTask,
           newTask.target.project,
@@ -269,8 +266,8 @@ export class ProcessTasks {
         );
       }
       if (task.id !== selfTaskId) {
-        if (dependencyConfig.skipOnFailure === false) {
-          this.continueOnFailureDependencies[task.id].push(selfTaskId);
+        if (dependencyConfig.requiredToSucceed === false) {
+          this.dependenciesAllowedToFail[task.id].push(selfTaskId);
         }
         if (this.tasks[selfTaskId].continuous) {
           this.continuousDependencies[task.id].push(selfTaskId);
@@ -325,8 +322,8 @@ export class ProcessTasks {
           ];
 
         if (task.id !== depTargetId) {
-          if (dependencyConfig.skipOnFailure === false) {
-            this.continueOnFailureDependencies[task.id].push(depTargetId);
+          if (dependencyConfig.requiredToSucceed === false) {
+            this.dependenciesAllowedToFail[task.id].push(depTargetId);
           }
           if (depTargetConfiguration.continuous) {
             this.continuousDependencies[task.id].push(depTargetId);
@@ -345,7 +342,7 @@ export class ProcessTasks {
           this.tasks[depTargetId] = newTask;
           this.dependencies[depTargetId] = [];
           this.continuousDependencies[depTargetId] = [];
-          this.continueOnFailureDependencies[depTargetId] = [];
+          this.dependenciesAllowedToFail[depTargetId] = [];
 
           this.processTask(
             newTask,
@@ -368,7 +365,7 @@ export class ProcessTasks {
         this.dependencies[task.id].push(dummyId);
         this.dependencies[dummyId] ??= [];
         this.continuousDependencies[dummyId] ??= [];
-        this.continueOnFailureDependencies[dummyId] ??= [];
+        this.dependenciesAllowedToFail[dummyId] ??= [];
         const noopTask = this.createDummyTask(dummyId, task);
         this.processTask(noopTask, depProject.name, configuration, overrides);
       }
@@ -466,7 +463,7 @@ export function createTaskGraph(
     tasks: p.tasks,
     dependencies: p.dependencies,
     continuousDependencies: p.continuousDependencies,
-    continueOnFailureDependencies: p.continueOnFailureDependencies,
+    dependenciesAllowedToFail: p.dependenciesAllowedToFail,
   };
 }
 

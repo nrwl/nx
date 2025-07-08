@@ -71,8 +71,8 @@ export class TaskOrchestrator {
     this.options.captureStderr
   );
   private reverseTaskDeps = calculateReverseDeps(this.taskGraph);
-  private continueOnFailureDependencies =
-    this.taskGraph.continueOnFailureDependencies || {};
+  private dependenciesAllowedToFail =
+    this.taskGraph.dependenciesAllowedToFail || {};
 
   private initializingTaskIds = new Set(this.initiatingTasks.map((t) => t.id));
 
@@ -958,12 +958,13 @@ export class TaskOrchestrator {
             const allDependents = this.reverseTaskDeps[taskId] || [];
 
             for (const dependentTaskId of allDependents) {
-              const continueOnFailureDeps =
-                this.continueOnFailureDependencies[dependentTaskId] || [];
-
-              // If this failed task is marked as continue-on-failure for the dependent,
-              // don't skip the dependent task
-              if (!continueOnFailureDeps.includes(taskId)) {
+              // If this failed task is not marked as allowed to fail for the dependent,
+              // skip the dependent task
+              if (
+                !this.dependenciesAllowedToFail[dependentTaskId]?.includes(
+                  taskId
+                )
+              ) {
                 dependentsToSkip.push(dependentTaskId);
               }
             }

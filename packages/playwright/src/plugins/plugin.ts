@@ -373,7 +373,7 @@ async function buildPlaywrightTargets(
       targets[options.ciTargetName].dependsOn = dependsOn.map(
         (d: TargetDependencyConfig) => ({
           ...d,
-          skipOnFailure: false,
+          requiredToSucceed: false,
         })
       );
       targets[options.ciTargetName].executor = '@nx/playwright:merge-reports';

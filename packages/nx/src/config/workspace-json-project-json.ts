@@ -207,7 +207,7 @@ export interface TargetDependencyConfig {
    * Set to `false` to continue execution despite dependency failure.
    * @default true
    */
-  skipOnFailure?: boolean;
+  requiredToSucceed?: boolean;
 }
 
 export type InputDefinition =

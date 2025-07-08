@@ -7,7 +7,7 @@
 - [dependencies](/reference/core-api/devkit/documents/TargetDependencyConfig#dependencies): boolean
 - [params](/reference/core-api/devkit/documents/TargetDependencyConfig#params): "ignore" | "forward"
 - [projects](/reference/core-api/devkit/documents/TargetDependencyConfig#projects): string | string[]
-- [skipOnFailure](/reference/core-api/devkit/documents/TargetDependencyConfig#skiponfailure): boolean
+- [requiredToSucceed](/reference/core-api/devkit/documents/TargetDependencyConfig#requiredtosucceed): boolean
 - [target](/reference/core-api/devkit/documents/TargetDependencyConfig#target): string
 
 ## Properties
@@ -38,9 +38,9 @@ Should not be specified together with `dependencies`.
 
 ---
 
-### skipOnFailure
+### requiredToSucceed
 
-• `Optional` **skipOnFailure**: `boolean`
+• `Optional` **requiredToSucceed**: `boolean`
 
 Whether to skip the parent task when this dependency fails.
 Set to `false` to continue execution despite dependency failure.
