@@ -268,10 +268,14 @@ describe('NxPlugin Executor Generator', () => {
 
       // Should create files in a subdirectory named after the artifact
       expect(
-        tree.exists('my-plugin/src/executors/artifact-upload/artifact-upload.ts')
+        tree.exists(
+          'my-plugin/src/executors/artifact-upload/artifact-upload.ts'
+        )
       ).toBeTruthy();
       expect(
-        tree.exists('my-plugin/src/executors/artifact-upload/artifact-upload.spec.ts')
+        tree.exists(
+          'my-plugin/src/executors/artifact-upload/artifact-upload.spec.ts'
+        )
       ).toBeTruthy();
       expect(
         tree.exists('my-plugin/src/executors/artifact-upload/schema.d.ts')
@@ -302,7 +306,9 @@ describe('NxPlugin Executor Generator', () => {
         tree.exists('my-plugin/src/executors/artifact-upload/my-executor.ts')
       ).toBeTruthy();
       expect(
-        tree.exists('my-plugin/src/executors/artifact-upload/my-executor.spec.ts')
+        tree.exists(
+          'my-plugin/src/executors/artifact-upload/my-executor.spec.ts'
+        )
       ).toBeTruthy();
       expect(
         tree.exists('my-plugin/src/executors/artifact-upload/schema.d.ts')

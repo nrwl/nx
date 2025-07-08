@@ -325,10 +325,14 @@ describe('NxPlugin Generator Generator', () => {
 
       // Should create files in a subdirectory named after the artifact
       expect(
-        tree.exists('my-plugin/src/generators/component-generator/component-generator.ts')
+        tree.exists(
+          'my-plugin/src/generators/component-generator/component-generator.ts'
+        )
       ).toBeTruthy();
       expect(
-        tree.exists('my-plugin/src/generators/component-generator/component-generator.spec.ts')
+        tree.exists(
+          'my-plugin/src/generators/component-generator/component-generator.spec.ts'
+        )
       ).toBeTruthy();
       expect(
         tree.exists('my-plugin/src/generators/component-generator/schema.d.ts')
@@ -355,10 +359,14 @@ describe('NxPlugin Generator Generator', () => {
 
       // Should create files with the explicit filename
       expect(
-        tree.exists('my-plugin/src/generators/component-generator/my-generator.ts')
+        tree.exists(
+          'my-plugin/src/generators/component-generator/my-generator.ts'
+        )
       ).toBeTruthy();
       expect(
-        tree.exists('my-plugin/src/generators/component-generator/my-generator.spec.ts')
+        tree.exists(
+          'my-plugin/src/generators/component-generator/my-generator.spec.ts'
+        )
       ).toBeTruthy();
       expect(
         tree.exists('my-plugin/src/generators/component-generator/schema.d.ts')
