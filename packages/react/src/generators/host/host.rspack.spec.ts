@@ -355,7 +355,7 @@ describe('hostGenerator', () => {
           typescriptConfiguration: false,
           bundler: 'rspack',
         })
-      ).rejects.toThrowError(`Invalid remote name provided: ${remote}.`);
+      ).rejects.toThrow(`Invalid remote name provided: ${remote}.`);
     });
 
     it('should generate create files with dynamic host', async () => {

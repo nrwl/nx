@@ -68,7 +68,7 @@ describe('ngrx', () => {
           ...defaultOptions,
           module: modulePath,
         })
-      ).rejects.toThrowError(`Module does not exist: ${modulePath}.`);
+      ).rejects.toThrow(`Module does not exist: ${modulePath}.`);
     });
 
     it('should error when the module could not be found using --module', async () => {
@@ -79,7 +79,7 @@ describe('ngrx', () => {
           ...defaultOptions,
           module: modulePath,
         })
-      ).rejects.toThrowError(`Module does not exist: ${modulePath}.`);
+      ).rejects.toThrow(`Module does not exist: ${modulePath}.`);
     });
 
     it('should add an empty root module when minimal and root are set to true', async () => {
@@ -540,7 +540,7 @@ export const appRoutes: Routes = [{ path: '', component: NxWelcome }];
           ...defaultStandaloneOptions,
           parent: parentPath,
         })
-      ).rejects.toThrowError(`Parent does not exist: ${parentPath}.`);
+      ).rejects.toThrow(`Parent does not exist: ${parentPath}.`);
     });
 
     it('should add an empty provideStore when minimal and root are set to true', async () => {
