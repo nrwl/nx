@@ -13,6 +13,7 @@ import {
   getLatestLernaVersion,
   getPublishedVersion,
   getSelectedPackageManager,
+  getStrippedEnvironmentVariables,
   isVerbose,
   isVerboseE2ERun,
 } from './get-env-info';
@@ -125,14 +126,6 @@ export function newProject({
         createNxWorkspaceStart.name,
         createNxWorkspaceEnd.name
       );
-
-      // Ensure the package manager is correctly set in the created workspace
-      if (packageManager) {
-        updateJson(`package.json`, (json) => {
-          json.packageManager = getPackageManagerVersion(packageManager);
-          return json;
-        });
-      }
 
       // Temporary hack to prevent installing with `--frozen-lockfile`
       if (isCI && packageManager === 'pnpm') {
@@ -381,7 +374,7 @@ export function runCreateWorkspace(
       env: {
         CI: 'true',
         NX_VERBOSE_LOGGING: isCI ? 'true' : 'false',
-        ...process.env,
+        ...getStrippedEnvironmentVariables(),
       },
       encoding: 'utf-8',
     });

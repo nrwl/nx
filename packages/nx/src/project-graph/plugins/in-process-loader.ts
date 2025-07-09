@@ -1,6 +1,5 @@
 // This file contains methods and utilities that should **only** be used by the plugin worker.
 
-import { existsSync } from 'fs';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
 import { getNxRequirePaths } from '../../utils/installation-directory';
@@ -9,7 +8,6 @@ import {
   readModulePackageJsonWithoutFallbacks,
 } from '../../utils/package-json';
 import { readJsonFile } from '../../utils/fileutils';
-import { scanPnpmForPlugin } from './pnpm-utils';
 
 import type { PluginConfiguration } from '../../config/nx-json';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
@@ -30,35 +28,7 @@ export function readPluginPackageJson(
   path: string;
   json: PackageJson;
 } {
-  // First try direct path and pnpm scanning before require.resolve
-  // because require.resolve might find the workspace source version when __dirname is passed from original workspace
-  for (const searchPath of paths) {
-    const directPackageJsonPath = path.join(
-      searchPath,
-      'node_modules',
-      pluginName,
-      'package.json'
-    );
-
-    if (existsSync(directPackageJsonPath)) {
-      return {
-        json: readJsonFile(directPackageJsonPath),
-        path: directPackageJsonPath,
-      };
-    }
-
-    const nodeModulesPath = path.join(searchPath, 'node_modules');
-    if (existsSync(nodeModulesPath)) {
-      const pnpmDir = path.join(nodeModulesPath, '.pnpm');
-      const result = scanPnpmForPlugin(pluginName, pnpmDir);
-      if (result) {
-        return result;
-      }
-    }
-  }
-
   try {
-    // Fall back to require.resolve only if direct paths and pnpm scanning failed
     const result = readModulePackageJsonWithoutFallbacks(pluginName, paths);
     return {
       json: result.packageJson,
@@ -66,14 +36,12 @@ export function readPluginPackageJson(
     };
   } catch (e) {
     if (e.code === 'MODULE_NOT_FOUND') {
-      // Try local plugin as final fallback
       const localPluginPath = resolveLocalNxPlugin(pluginName, projects);
       if (localPluginPath) {
         const localPluginPackageJson = path.join(
           localPluginPath.path,
           'package.json'
         );
-
         if (!pluginTranspilerIsRegistered()) {
           registerPluginTSTranspiler();
         }
@@ -83,11 +51,7 @@ export function readPluginPackageJson(
         };
       }
     }
-
-    console.error(e);
-    throw new Error(
-      `Plugin ${pluginName} not found in workspace. Ensure it is properly installed as a dependency.`
-    );
+    throw e;
   }
 }
 
