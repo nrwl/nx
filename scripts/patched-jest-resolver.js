@@ -250,12 +250,8 @@ module.exports = function (modulePath, options) {
       );
     }
 
-    // Try enhanced resolver
     return enhancedResolver(path.resolve(options.basedir), modulePath);
   } catch (e) {
-    // Skip all warnings since fallback to default resolver is working correctly
-    // The enhanced resolver is expected to fail for many legitimate cases
-
     // Final fallback: use default resolver for packages we can't handle
     // This preserves the old behavior where packages that couldn't be resolved
     // by the custom resolver would fall back to default resolution

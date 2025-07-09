@@ -97,7 +97,7 @@
     "build": {
       "dependsOn": [
         "build-base",
-        "build-base-ts",
+        "typecheck",
         "legacy-post-build",
         "build-native"
       ],
@@ -111,7 +111,7 @@
     "build-base": {
       "dependsOn": [
         "^build-base",
-        "^build-base-ts",
+        "^typecheck",
         "^legacy-post-build",
         "build-native"
       ],
@@ -292,6 +292,9 @@
   "parallel": 1,
   "bust": 3,
   "defaultBase": "master",
+  "sync": {
+    "applyChanges": true
+  },
   "conformance": {
     "rules": [
       {

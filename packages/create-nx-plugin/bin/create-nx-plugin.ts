@@ -2,24 +2,26 @@
 import * as pc from 'picocolors';
 import enquirer = require('enquirer');
 import yargs = require('yargs');
-
 import {
   determineDefaultBase,
   determineNxCloud,
   determinePackageManager,
+} from 'create-nx-workspace/src/internal-utils/prompts';
+import {
   withAllPrompts,
   withGitOptions,
   withNxCloud,
   withOptions,
   withPackageManager,
-  createWorkspace,
-  CreateWorkspaceOptions,
-  output,
-  NxCloud,
-  PackageManager,
+} from 'create-nx-workspace/src/internal-utils/yargs-options';
+import { createWorkspace, CreateWorkspaceOptions } from 'create-nx-workspace';
+import { output } from 'create-nx-workspace/src/utils/output';
+import { NxCloud } from 'create-nx-workspace/src/utils/nx/nx-cloud';
+import type { PackageManager } from 'create-nx-workspace/src/utils/package-manager';
+import {
   messages,
   recordStat,
-} from 'create-nx-workspace';
+} from 'create-nx-workspace/src/utils/nx/ab-testing';
 
 export const yargsDecorator = {
   'Options:': `${pc.green(`Options`)}:`,

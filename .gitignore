@@ -34,10 +34,6 @@ CHANGELOG.md
 # Next.js
 .next
 out
-nx-dev/nx-dev/public/documentation
-nx-dev/nx-dev/public/sitemap.xml
-nx-dev/nx-dev/public/sitemap-0.xml
-nx-dev/nx-dev/public/robots.txt
 
 
 # Angular Cache

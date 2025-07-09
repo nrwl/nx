@@ -5,7 +5,7 @@ import {
   joinPathFragments,
   output,
 } from '@nx/devkit';
-import type { TypeScriptCompilationOptions } from '@nx/workspace';
+import type { TypeScriptCompilationOptions } from '@nx/workspace/src/utilities/typescript/compilation';
 import { CopyAssetsHandler } from '../../utils/assets/copy-assets-handler';
 import { checkDependencies } from '../../utils/check-dependencies';
 import {

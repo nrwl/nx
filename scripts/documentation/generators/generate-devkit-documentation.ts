@@ -31,11 +31,7 @@ export async function generateDevkitDocumentation() {
       .toString()
       .replace(
         '"extends": "../../tsconfig.base.json"',
-        '"extends": "../../../tsconfig.base.json"'
-      )
-      .replace(
-        '"include": ["**/*.ts", "*.json", "migrations.json"]',
-        '"include": ["**/*.ts", "**/*.d.ts", "*.json", "migrations.json"]'
+        '"extends": "../../../packages/devkit/tsconfig.json"'
       )
   );
 

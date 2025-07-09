@@ -14,14 +14,6 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "allowJs": true,
-    "noImplicitAny": false,
-    "strictNullChecks": false,
-    "strictFunctionTypes": false,
-    "strictBindCallApply": false,
-    "strictPropertyInitialization": false,
-    "noImplicitReturns": false,
-    "noImplicitThis": false,
-    "useUnknownInCatchVariables": false,
     "composite": true,
     "declarationMap": true
   }
