@@ -25,25 +25,6 @@ To get started, let's create a new React monorepo with Nx Cloud and GitHub Actio
 
 {% call-to-action title="Create a new React monorepo" url="https://cloud.nx.app/create-nx-workspace" description="With Nx and GitHub Actions fully set up" /%}
 
-When you are prompted to run `create-nx-workspace` locally, use `acme` as the workspace name, select the `react` preset, and select `none` as the framework. For the remaining options, you can use the following values:
-
-```{% command="npx create-nx-workspace@latest --ci=github" path="~" %}
-
- NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
-
-✔ Where would you like to create your workspace? · acme
-✔ Which stack do you want to use? · react
-✔ What framework would you like to use? · none
-✔ Application name · demo
-✔ Would you like to use React Router for server-side rendering [https://reactrouter.com/]? · No
-✔ Which bundler would you like to use? · vite
-✔ Which unit test runner would you like to use? · vitest
-✔ Test runner to use for end to end (E2E) tests · none
-✔ Default stylesheet format · css
-✔ Would you like to use ESLint? · Yes
-✔ Would you like to use Prettier for code formatting? · Yes
-```
-
 You should now have a new workspace called `acme` with Vite, Vitest, ESLint, and Prettier preconfigured.
 
 ```
@@ -71,7 +52,7 @@ The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx 
 
 Before continuing, it is **important** to make sure that your GitHub repository is [connected to your Nx Cloud organization](https://cloud.nx.app/setup) to enable remote caching and self-healing in CI.
 
-### Checkpoint: Your Workspace is Created and Configured in CI
+### Checkpoint: Workspace Created and Connected
 
 At this point you should have:
 
