@@ -101,7 +101,7 @@ jobs:
         run: |
           pids=()
 
-          pnpm nx e2e-ci e2e-nx &
+          pnpm nx e2e-ci e2e-remix &
           pids+=($!)
 
           for pid in "${pids[@]}"; do
