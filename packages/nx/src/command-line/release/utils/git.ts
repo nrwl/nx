@@ -58,20 +58,24 @@ const SEMVER_REGEX =
 
 /**
  * Extract the tag and version from a tag string
- * 
+ *
  * @param tag - The tag string to extract the tag and version from
  * @param tagRegexp - The regex to use to extract the tag and version from the tag string
- * 
+ *
  * @returns The tag and version
  */
-export function extractTagAndVersion(tag: string, tagRegexp: string, options: GetLatestGitTagForPatternOptions): GitTagAndVersion {
+export function extractTagAndVersion(
+  tag: string,
+  tagRegexp: string,
+  options: GetLatestGitTagForPatternOptions
+): GitTagAndVersion {
   const { releaseTagPatternRequireSemver = true } = options;
 
   const [latestMatchingTag, ...rest] = tag.match(tagRegexp);
   let version = releaseTagPatternRequireSemver
     ? rest.filter((r) => {
         return r.match(SEMVER_REGEX);
-      })[0] 
+      })[0]
     : rest[0];
 
   return {
@@ -82,17 +86,17 @@ export function extractTagAndVersion(tag: string, tagRegexp: string, options: Ge
 
 /**
  * Get the latest git tag for the configured release tag pattern.
- * 
+ *
  * This function will:
  * - Get all tags from the git repo, sorted by version
  * - Filter the tags into a list with SEMVER-compliant tags, matching the release tag pattern
  * - If a preid is provided, prioritise tags for that preid, then semver tags without a preid
  * - If no preid is provided, search only for stable semver tags (i.e. no pre-release or build metadata)
- * 
+ *
  * @param releaseTagPattern - The pattern to filter the tags list by
  * @param additionalInterpolationData - Additional data used when interpolating the release tag pattern
  * @param options - The options to use when getting the latest git tag for the pattern
- * 
+ *
  * @returns The tag and version
  */
 export async function getLatestGitTagForPattern(
@@ -100,7 +104,11 @@ export async function getLatestGitTagForPattern(
   additionalInterpolationData = {},
   options: GetLatestGitTagForPatternOptions = {}
 ): Promise<GitTagAndVersion | null> {
-  const { checkAllBranchesWhen = false, releaseTagPatternRequireSemver = true, preId = '' } = options;
+  const {
+    checkAllBranchesWhen = false,
+    releaseTagPatternRequireSemver = true,
+    preId = '',
+  } = options;
 
   /**
    * By default, we will try and resolve the latest match for the releaseTagPattern from the current branch,
@@ -212,16 +220,16 @@ export async function getLatestGitTagForPattern(
       const preIdReleaseTags = matchingTags.filter((tag) => {
         const match = tag.match(tagRegexp);
         if (!match) return false;
-        
-        const version = match.find(part => part.match(SEMVER_REGEX));
+
+        const version = match.find((part) => part.match(SEMVER_REGEX));
         return version && version.includes(`-${preId}.`);
       });
 
       if (preIdReleaseTags.length > 0) {
         return extractTagAndVersion(preIdReleaseTags[0], tagRegexp, options);
       }
-    } 
-    
+    }
+
     // Then try to find the latest stable release tag
     const stableReleaseTags = matchingTags.filter((tag) => {
       const matches = tag.match(tagRegexp);

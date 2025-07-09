@@ -339,9 +339,11 @@ export class ReleaseGroupProcessor {
               projectName: projectGraphNode.name,
             },
             {
-              checkAllBranchesWhen: releaseGroupNode.group.releaseTagPatternCheckAllBranchesWhen,
+              checkAllBranchesWhen:
+                releaseGroupNode.group.releaseTagPatternCheckAllBranchesWhen,
               preId: this.options.preid,
-              releaseTagPatternRequireSemver: releaseGroupNode.group.releaseTagPatternRequireSemver
+              releaseTagPatternRequireSemver:
+                releaseGroupNode.group.releaseTagPatternRequireSemver,
             }
           );
           this.cachedLatestMatchingGitTag.set(

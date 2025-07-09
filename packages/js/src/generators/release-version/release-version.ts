@@ -127,10 +127,7 @@ Valid values are: ${validReleaseVersionPrefixes
 
     // only used for options.currentVersionResolver === 'git-tag', but
     // must be declared here in order to reuse it for additional projects
-    let latestMatchingGitTag:
-      | GitTagAndVersion
-      | null
-      | undefined = undefined;
+    let latestMatchingGitTag: GitTagAndVersion | null | undefined = undefined;
 
     // if specifier is undefined, then we haven't resolved it yet
     // if specifier is null, then it has been resolved and no changes are necessary
@@ -312,9 +309,11 @@ To fix this you will either need to add a package.json file at that location, or
                 projectName: project.name,
               },
               {
-                checkAllBranchesWhen: options.releaseGroup.releaseTagPatternCheckAllBranchesWhen,
+                checkAllBranchesWhen:
+                  options.releaseGroup.releaseTagPatternCheckAllBranchesWhen,
                 preId: options.preid,
-                releaseTagPatternRequireSemver: releaseTagPatternRequireSemver ?? true
+                releaseTagPatternRequireSemver:
+                  releaseTagPatternRequireSemver ?? true,
               }
             );
             if (!latestMatchingGitTag) {

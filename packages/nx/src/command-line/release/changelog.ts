@@ -344,9 +344,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             nxReleaseConfig.releaseTagPattern,
             {},
             {
-              checkAllBranchesWhen: nxReleaseConfig.releaseTagPatternCheckAllBranchesWhen,
+              checkAllBranchesWhen:
+                nxReleaseConfig.releaseTagPatternCheckAllBranchesWhen,
               preId: args.preid,
-              releaseTagPatternRequireSemver: nxReleaseConfig.releaseTagPatternRequireSemver
+              releaseTagPatternRequireSemver:
+                nxReleaseConfig.releaseTagPatternRequireSemver,
             }
           )
         )?.tag;
@@ -532,9 +534,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                     releaseGroupName: releaseGroup.name,
                   },
                   {
-                    checkAllBranchesWhen: releaseGroup.releaseTagPatternCheckAllBranchesWhen,
+                    checkAllBranchesWhen:
+                      releaseGroup.releaseTagPatternCheckAllBranchesWhen,
                     preId: args.preid,
-                    releaseTagPatternRequireSemver: releaseGroup.releaseTagPatternRequireSemver ?? true
+                    releaseTagPatternRequireSemver:
+                      releaseGroup.releaseTagPatternRequireSemver ?? true,
                   }
                 )
               )?.tag;
@@ -678,9 +682,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                 releaseGroup.releaseTagPattern,
                 {},
                 {
-                  checkAllBranchesWhen: releaseGroup.releaseTagPatternCheckAllBranchesWhen,
+                  checkAllBranchesWhen:
+                    releaseGroup.releaseTagPatternCheckAllBranchesWhen,
                   preId: args.preid,
-                  releaseTagPatternRequireSemver: releaseGroup.releaseTagPatternRequireSemver
+                  releaseTagPatternRequireSemver:
+                    releaseGroup.releaseTagPatternRequireSemver,
                 }
               )
             )?.tag;
