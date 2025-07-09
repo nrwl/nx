@@ -203,10 +203,11 @@ describe('Nx Commands', () => {
         console.log(`[DEBUG] Found next entry:`, nextEntry);
         if (nextEntry) {
           renamedPnpmEntry = nextEntry;
-          console.log(`[DEBUG] Renaming ${nextEntry} to ${nextEntry}_tmp`);
+          const tmpName = nextEntry.replace('@nx+next@', 'tmp_nx_next_');
+          console.log(`[DEBUG] Renaming ${nextEntry} to ${tmpName}`);
           renameSync(
             tmpProjPath(`node_modules/.pnpm/${nextEntry}`),
-            tmpProjPath(`node_modules/.pnpm/${nextEntry}_tmp`)
+            tmpProjPath(`node_modules/.pnpm/${tmpName}`)
           );
         }
       }
@@ -246,7 +247,9 @@ describe('Nx Commands', () => {
       expect(listOutput).toContain('package');
 
       // // look for uninstalled core plugin
+      console.log(`[DEBUG] About to test nx list @nx/next`);
       listOutput = runCLI('list @nx/next');
+      console.log(`[DEBUG] nx list @nx/next output:`, listOutput);
 
       expect(listOutput).toContain('NX   @nx/next is not currently installed');
 
@@ -259,8 +262,9 @@ describe('Nx Commands', () => {
 
       // put back the @nx/next module (or all the other e2e tests after this will fail)
       if (renamedPnpmEntry) {
+        const tmpName = renamedPnpmEntry.replace('@nx+next@', 'tmp_nx_next_');
         renameSync(
-          tmpProjPath(`node_modules/.pnpm/${renamedPnpmEntry}_tmp`),
+          tmpProjPath(`node_modules/.pnpm/${tmpName}`),
           tmpProjPath(`node_modules/.pnpm/${renamedPnpmEntry}`)
         );
       }
