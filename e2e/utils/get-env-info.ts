@@ -1,9 +1,10 @@
 import { readJsonFile, workspaceRoot } from '@nx/devkit';
-import { existsSync } from 'fs-extra';
+import { existsSync, readFileSync } from 'fs-extra';
 import { execSync } from 'node:child_process';
 import { join } from 'path';
 import { gte } from 'semver';
 import { dirSync } from 'tmp';
+import { load as parseYaml } from 'js-yaml';
 
 import * as isCI from 'is-ci';
 import { PackageManager } from 'nx/src/utils/package-manager';
@@ -66,6 +67,49 @@ export function isVerboseE2ERun() {
 }
 
 export const e2eCwd = `${e2eRoot}/nx`;
+
+function getWorkspacePackagePatterns(): string[] {
+  try {
+    let currentDir = process.cwd();
+    let pnpmWorkspaceFile: string | null = null;
+
+    while (currentDir !== '/' && currentDir.length > 1) {
+      const possiblePath = join(currentDir, 'pnpm-workspace.yaml');
+      if (existsSync(possiblePath)) {
+        pnpmWorkspaceFile = possiblePath;
+        break;
+      }
+      currentDir = join(currentDir, '..');
+    }
+
+    if (!pnpmWorkspaceFile) {
+      return [];
+    }
+
+    const yamlContent = readFileSync(pnpmWorkspaceFile, 'utf-8');
+    const workspaceConfig = parseYaml(yamlContent) as { packages?: string[] };
+
+    return workspaceConfig.packages || [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function pathMatchesWorkspacePattern(
+  path: string,
+  patterns: string[]
+): boolean {
+  for (const pattern of patterns) {
+    const regexPattern = pattern.replace(/\*/g, '[^/]+').replace(/\//g, '\\/');
+
+    const regex = new RegExp(regexPattern);
+
+    if (regex.test(path) || path.includes(`/${pattern.replace('/*', '/')}`)) {
+      return true;
+    }
+  }
+  return false;
+}
 
 export function getSelectedPackageManager(): 'npm' | 'yarn' | 'pnpm' | 'bun' {
   return (process.env.SELECTED_PM as 'npm' | 'yarn' | 'pnpm' | 'bun') || 'npm';
@@ -175,6 +219,8 @@ export function ensurePlaywrightBrowsersInstallation() {
 }
 
 export function getStrippedEnvironmentVariables() {
+  const workspacePatterns = getWorkspacePackagePatterns();
+
   return Object.fromEntries(
     Object.entries(process.env).filter(([key, value]) => {
       if (key.startsWith('NX_E2E_')) {
@@ -196,9 +242,18 @@ export function getStrippedEnvironmentVariables() {
         return false;
       }
 
-      // Filter out NODE_PATH to prevent module resolution conflicts with original workspace
-      if (key === 'NODE_PATH') {
-        return false;
+      if (key === 'NODE_PATH' && value) {
+        const paths = value.split(':');
+        const filteredPaths = paths.filter((path) => {
+          return !pathMatchesWorkspacePattern(path, workspacePatterns);
+        });
+
+        if (filteredPaths.length === 0) {
+          return false;
+        }
+
+        process.env.NODE_PATH = filteredPaths.join(':');
+        return true;
       }
 
       return true;
