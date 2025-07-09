@@ -1070,31 +1070,9 @@ impl App {
                             None
                         };
 
-                        if let Some((task_name, task_status, task_continuous, throbber_counter)) =
+                        if let Some((task_name, task_status, _task_continuous, _throbber_counter)) =
                             task_data
                         {
-                            let mut has_pty = false;
-                            if let Some(_pty) = self.pty_instances.get(&task_name) {
-                                has_pty = true;
-                            }
-
-                            let is_focused = match self.focus {
-                                Focus::MultipleOutput(focused_pane_idx) => {
-                                    pane_idx == focused_pane_idx
-                                }
-                                _ => false,
-                            };
-
-                            // Figure out if this pane is the next tab target
-                            let is_next_tab_target = !is_focused
-                                && match self.focus {
-                                    // If the task list is focused, the next tab target is the first pane
-                                    Focus::TaskList => pane_idx == 0,
-                                    // If the first pane is focused, the next tab target is the second pane
-                                    Focus::MultipleOutput(0) => pane_idx == 1,
-                                    _ => false,
-                                };
-
                             // If task is pending, show dependency view instead of terminal pane
                             if task_status == TaskStatus::NotStarted {
                                 self.render_dependency_view_internal(
@@ -1102,9 +1080,6 @@ impl App {
                                     pane_idx,
                                     pane_area,
                                     task_name,
-                                    task_status,
-                                    throbber_counter,
-                                    is_focused,
                                 );
                             } else {
                                 self.render_terminal_pane_internal(
@@ -1705,10 +1680,20 @@ impl App {
         pane_idx: usize,
         pane_area: Rect,
         task_name: String,
-        task_status: TaskStatus,
-        throbber_counter: usize,
-        is_focused: bool,
     ) {
+        // Calculate values that were previously passed in
+        let task_status = self.get_task_status(&task_name).unwrap_or(TaskStatus::NotStarted);
+        let throbber_counter = self.components
+            .iter()
+            .find_map(|c| c.as_any().downcast_ref::<TasksList>())
+            .map(|tasks_list| tasks_list.throbber_counter)
+            .unwrap_or(0);
+        
+        let is_focused = match self.focus {
+            Focus::MultipleOutput(focused_pane_idx) => pane_idx == focused_pane_idx,
+            _ => false,
+        };
+
         // Create or update dependency view state for this pane
         let should_update = self.dependency_view_states[pane_idx]
             .as_ref()
@@ -1754,12 +1739,12 @@ impl App {
         let task_continuous = self.is_task_continuous(&task_name);
         let tasks_list_hidden = self.is_task_list_hidden();
         let has_pty = self.pty_instances.contains_key(&task_name);
-        
+
         let is_focused = match self.focus {
             Focus::MultipleOutput(focused_pane_idx) => pane_idx == focused_pane_idx,
             _ => false,
         };
-        
+
         let is_next_tab_target = !is_focused
             && match self.focus {
                 Focus::TaskList => pane_idx == 0,
