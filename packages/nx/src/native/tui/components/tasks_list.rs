@@ -173,7 +173,6 @@ pub fn parse_task_status(string_status: String) -> napi::Result<TaskStatus> {
 pub struct TasksList {
     selection_manager: Arc<Mutex<TaskSelectionManager>>,
     pub tasks: Vec<TaskItem>, // Source of truth - all tasks
-    task_status_map: HashMap<String, TaskStatus>, // Fast O(1) status lookup by task name
     filtered_names: Vec<String>, // Names of tasks that match the filter
     pub throbber_counter: usize,
     pub filter_mode: bool,
@@ -209,17 +208,10 @@ impl TasksList {
 
         let filtered_names = Vec::new();
 
-        // Initialize status map with all tasks as NotStarted
-        let mut task_status_map = HashMap::new();
-        for task_item in &task_items {
-            task_status_map.insert(task_item.name.clone(), TaskStatus::NotStarted);
-        }
-
         let mut s = Self {
             selection_manager,
             filtered_names,
             tasks: task_items,
-            task_status_map,
             throbber_counter: 0,
             filter_mode: false,
             filter_text: String::new(),
@@ -243,11 +235,6 @@ impl TasksList {
 
     pub fn set_max_parallel(&mut self, max_parallel: Option<u32>) {
         self.max_parallel = max_parallel.unwrap_or(DEFAULT_MAX_PARALLEL as u32) as usize;
-    }
-
-    /// Get task status efficiently using O(1) HashMap lookup
-    pub fn get_task_status(&self, task_name: &str) -> Option<TaskStatus> {
-        self.task_status_map.get(task_name).copied()
     }
 
     /// Returns true if the task list is currently focused
@@ -645,9 +632,6 @@ impl TasksList {
         for task in tasks {
             if let Some(task_item) = self.tasks.iter_mut().find(|t| t.name == task.id) {
                 task_item.update_status(TaskStatus::InProgress);
-                // Update the status map for O(1) lookups
-                self.task_status_map
-                    .insert(task_item.name.clone(), TaskStatus::InProgress);
             }
         }
         self.sort_tasks();
@@ -657,8 +641,6 @@ impl TasksList {
     pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
         if let Some(task_item) = self.tasks.iter_mut().find(|t| t.name == task_id) {
             task_item.update_status(status);
-            // Update the status map for O(1) lookups
-            self.task_status_map.insert(task_id, status);
             self.sort_tasks();
         }
     }

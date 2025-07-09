@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::native::tasks::types::{Task, TaskGraph};
+use crate::native::tasks::types::TaskGraph;
 
 /// Recursively counts all dependencies for a given task.
 /// Returns the total count of direct dependencies, continuous dependencies,
@@ -126,12 +126,6 @@ pub fn collect_all_dependencies_with_levels(
     (all_dependencies, dependency_levels)
 }
 
-/// Helper function to get task information from TaskGraph efficiently.
-/// Returns None if the task is not found.
-pub fn get_task_by_id<'a>(task_graph: &'a TaskGraph, task_id: &str) -> Option<&'a Task> {
-    task_graph.tasks.get(task_id)
-}
-
 /// Helper function to check if a task is continuous.
 /// Returns false if the task is not found or continuous is None.
 pub fn is_task_continuous(task_graph: &TaskGraph, task_id: &str) -> bool {
@@ -142,31 +136,7 @@ pub fn is_task_continuous(task_graph: &TaskGraph, task_id: &str) -> bool {
         .unwrap_or(false)
 }
 
-/// Helper function to get all task IDs from the TaskGraph.
-pub fn get_all_task_ids(task_graph: &TaskGraph) -> Vec<String> {
-    task_graph.tasks.keys().cloned().collect()
-}
-
 /// Helper function to get task count from TaskGraph.
 pub fn get_task_count(task_graph: &TaskGraph) -> usize {
     task_graph.tasks.len()
-}
-
-/// Helper function to get task status efficiently using a lookup function.
-/// This avoids the O(n) search through TasksList.
-pub fn get_dependency_statuses<F>(
-    dependencies: &[String],
-    status_lookup: F,
-) -> HashMap<String, crate::native::tui::components::tasks_list::TaskStatus>
-where
-    F: Fn(&str) -> Option<crate::native::tui::components::tasks_list::TaskStatus>,
-{
-    dependencies
-        .iter()
-        .map(|dep_id| {
-            let status = status_lookup(dep_id)
-                .unwrap_or(crate::native::tui::components::tasks_list::TaskStatus::NotStarted);
-            (dep_id.clone(), status)
-        })
-        .collect()
 }
