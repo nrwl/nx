@@ -12,7 +12,34 @@ different projects in the repository. Enforcing strict boundaries helps to preve
 
 You can use the `enforce-module-boundaries` rule by adding it to your ESLint rules configuration:
 
-```jsonc
+{% tabs %}
+{% tab label="Flat Config" %}
+
+```javascript {% fileName="eslint.config.mjs" %}
+import nxPlugin from '@nx/eslint-plugin';
+
+export default [
+  ...nxPlugin.configs['flat/base'],
+  ...nxPlugin.configs['flat/typescript'],
+  ...nxPlugin.configs['flat/javascript'],
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          // ...rule specific configuration
+        },
+      ],
+    },
+  },
+];
+```
+
+{% /tab %}
+{% tab label="Legacy (.eslintrc.json)" %}
+
+```jsonc {% fileName=".eslintrc.json" %}
 {
   // ... more ESLint config here
   "overrides": [
@@ -31,6 +58,9 @@ You can use the `enforce-module-boundaries` rule by adding it to your ESLint rul
   ]
 }
 ```
+
+{% /tab %}
+{% /tabs %}
 
 ## Options
 

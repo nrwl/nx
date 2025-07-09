@@ -111,7 +111,55 @@ export { formatCurrency } from './src/format-currency';
 
 ## Enforce Project Dependency Rules
 
-In order to enforce the dependency constraints that were listed for each type, you can add the following rule in the root `.eslintrc.json` file:
+In order to enforce the dependency constraints that were listed for each type, you can add the following rule in your ESLint configuration:
+
+{% tabs %}
+{% tab label="Flat Config" %}
+
+```javascript {% fileName="/eslint.config.mjs" %}
+import nx from '@nx/eslint-plugin';
+
+export default [
+  ...nx.configs['flat/base'],
+  ...nx.configs['flat/typescript'],
+  ...nx.configs['flat/javascript'],
+  {
+    ignores: ['**/dist'],
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          allow: [],
+          depConstraints: [
+            {
+              sourceTag: 'type:feature',
+              onlyDependOnLibsWithTags: [
+                'type:feature',
+                'type:ui',
+                'type:util',
+              ],
+            },
+            {
+              sourceTag: 'type:ui',
+              onlyDependOnLibsWithTags: ['type:ui', 'type:util'],
+            },
+            {
+              sourceTag: 'type:util',
+              onlyDependOnLibsWithTags: ['type:util'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+];
+```
+
+{% /tab %}
+{% tab label="Legacy (.eslintrc.json)" %}
 
 ```json {% fileName="/.eslintrc.json" %}
 {
@@ -151,6 +199,9 @@ In order to enforce the dependency constraints that were listed for each type, y
   ]
 }
 ```
+
+{% /tab %}
+{% /tabs %}
 
 ## Other Types
 

@@ -11,6 +11,42 @@ By default, Nx sets up your ESLint configs with performance in mind - we want yo
 
 Let's take an example of an ESLint config that Nx might generate for you out of the box for a Next.js project called `tuskdesk`:
 
+{% tabs %}
+{% tab label="Flat Config" %}
+
+```javascript {% fileName="apps/tuskdesk/eslint.config.mjs" %}
+import { FlatCompat } from '@eslint/eslintrc';
+import js from '@eslint/js';
+import nxPlugin from '@nx/eslint-plugin';
+import reactPlugin from '@nx/react/eslint-plugin';
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
+
+export default [
+  ...reactPlugin,
+  ...compat.config({ extends: ['../../eslint.config.mjs'] }),
+  { ignores: ['!**/*'] },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {},
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    rules: {},
+  },
+  {
+    files: ['**/*.js', '**/*.jsx'],
+    rules: {},
+  },
+];
+```
+
+{% /tab %}
+{% tab label="Legacy (.eslintrc.json)" %}
+
 ```jsonc {% fileName="apps/tuskdesk/.eslintrc.json" %}
 {
   "extends": ["plugin:@nx/react", "../../.eslintrc.json"],
@@ -32,9 +68,51 @@ Let's take an example of an ESLint config that Nx might generate for you out of 
 }
 ```
 
+{% /tab %}
+{% /tabs %}
+
 Here we do _not_ have `parserOptions.project`, which is appropriate because we are not leveraging any rules which require type information.
 
 If we now come in and add a rule which does require type information, for example `@typescript-eslint/await-thenable`, our config will look as follows:
+
+{% tabs %}
+{% tab label="Flat Config" %}
+
+```javascript {% fileName="apps/tuskdesk/eslint.config.mjs" %}
+import { FlatCompat } from '@eslint/eslintrc';
+import js from '@eslint/js';
+import nxPlugin from '@nx/eslint-plugin';
+import reactPlugin from '@nx/react/eslint-plugin';
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
+
+export default [
+  ...reactPlugin,
+  ...compat.config({ extends: ['../../eslint.config.mjs'] }),
+  { ignores: ['!**/*'] },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      // This rule requires the TypeScript type checker to be present when it runs
+      '@typescript-eslint/await-thenable': 'error',
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    rules: {},
+  },
+  {
+    files: ['**/*.js', '**/*.jsx'],
+    rules: {},
+  },
+];
+```
+
+{% /tab %}
+{% tab label="Legacy (.eslintrc.json)" %}
 
 ```jsonc {% fileName="apps/tuskdesk/.eslintrc.json" %}
 {
@@ -60,6 +138,9 @@ If we now come in and add a rule which does require type information, for exampl
 }
 ```
 
+{% /tab %}
+{% /tabs %}
+
 Now if we try and run `nx lint tuskdesk` we will get an error
 
 ```{% command="nx lint tuskdesk" %}
@@ -76,6 +157,51 @@ Linting "tuskdesk"...
 ```
 
 The solution is to update our config once more, this time to set `parserOptions.project` to appropriately point at our various tsconfig.json files which belong to our project:
+
+{% tabs %}
+{% tab label="Flat Config" %}
+
+```javascript {% fileName="apps/tuskdesk/eslint.config.mjs" %}
+import { FlatCompat } from '@eslint/eslintrc';
+import js from '@eslint/js';
+import nxPlugin from '@nx/eslint-plugin';
+import reactPlugin from '@nx/react/eslint-plugin';
+import tseslint from 'typescript-eslint';
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
+
+export default [
+  ...reactPlugin,
+  ...compat.config({ extends: ['../../eslint.config.mjs'] }),
+  { ignores: ['!**/*'] },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    languageOptions: {
+      // We set parserOptions.project for the project to allow TypeScript to create the type-checker behind the scenes when we run linting
+      parserOptions: {
+        project: ['apps/tuskdesk/tsconfig.*?.json'],
+      },
+    },
+    rules: {
+      '@typescript-eslint/await-thenable': 'error',
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    rules: {},
+  },
+  {
+    files: ['**/*.js', '**/*.jsx'],
+    rules: {},
+  },
+];
+```
+
+{% /tab %}
+{% tab label="Legacy (.eslintrc.json)" %}
 
 ```jsonc {% fileName="apps/tuskdesk/.eslintrc.json" %}
 {
@@ -103,6 +229,9 @@ The solution is to update our config once more, this time to set `parserOptions.
   ]
 }
 ```
+
+{% /tab %}
+{% /tabs %}
 
 And that's it! Now any rules requiring type information will run correctly when we run `nx lint tuskdesk`.
 

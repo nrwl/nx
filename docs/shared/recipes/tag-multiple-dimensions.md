@@ -80,7 +80,69 @@ We can now restrict projects within the same group to depend on each other based
 - `ui` can only depend on other `ui`
 - everyone can depend on `util` including `util` itself
 
-```jsonc
+{% tabs %}
+{% tab label="Flat Config" %}
+
+```javascript {% fileName="eslint.config.mjs" %}
+import nx from '@nx/eslint-plugin';
+
+export default [
+  ...nx.configs['flat/base'],
+  ...nx.configs['flat/typescript'],
+  ...nx.configs['flat/javascript'],
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          allow: [],
+          // update depConstraints based on your tags
+          depConstraints: [
+            {
+              sourceTag: 'scope:shared',
+              onlyDependOnLibsWithTags: ['scope:shared'],
+            },
+            {
+              sourceTag: 'scope:admin',
+              onlyDependOnLibsWithTags: ['scope:shared', 'scope:admin'],
+            },
+            {
+              sourceTag: 'scope:client',
+              onlyDependOnLibsWithTags: ['scope:shared', 'scope:client'],
+            },
+            {
+              sourceTag: 'type:app',
+              onlyDependOnLibsWithTags: [
+                'type:feature',
+                'type:ui',
+                'type:util',
+              ],
+            },
+            {
+              sourceTag: 'type:feature',
+              onlyDependOnLibsWithTags: ['type:ui', 'type:util'],
+            },
+            {
+              sourceTag: 'type:ui',
+              onlyDependOnLibsWithTags: ['type:ui', 'type:util'],
+            },
+            {
+              sourceTag: 'type:util',
+              onlyDependOnLibsWithTags: ['type:util'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+];
+```
+
+{% /tab %}
+{% tab label="Legacy (.eslintrc.json)" %}
+
+```jsonc {% fileName=".eslintrc.json" %}
 {
   // ... more ESLint config here
 
@@ -127,13 +189,62 @@ We can now restrict projects within the same group to depend on each other based
 }
 ```
 
+{% /tab %}
+{% /tabs %}
+
 There are no limits to the number of tags, but as you add more tags the complexity of your dependency constraints rises exponentially. It's always good to draw a diagram and carefully plan the boundaries.
 
 ## Matching multiple source tags
 
 Matching just a single source tag is sometimes not enough for solving complex restrictions. To avoid creating ad-hoc tags that are only meant for specific constraints, you can also combine multiple tags with `allSourceTags`. Each tag in the array must be matched for a constraint to be applied:
 
-```jsonc
+{% tabs %}
+{% tab label="Flat Config" %}
+
+```javascript {% fileName="eslint.config.mjs" %}
+import nx from '@nx/eslint-plugin';
+
+export default [
+  ...nx.configs['flat/base'],
+  ...nx.configs['flat/typescript'],
+  ...nx.configs['flat/javascript'],
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          allow: [],
+          // update depConstraints based on your tags
+          depConstraints: [
+            {
+              // this constraint applies to all "admin" projects
+              sourceTag: 'scope:admin',
+              onlyDependOnLibsWithTags: ['scope:shared', 'scope:admin'],
+            },
+            {
+              sourceTag: 'type:ui',
+              onlyDependOnLibsWithTags: ['type:ui', 'type:util'],
+            },
+            {
+              // we don't want our admin ui components to depend on anything except utilities,
+              // and we also want to ban router imports
+              allSourceTags: ['scope:admin', 'type:ui'],
+              onlyDependOnLibsWithTags: ['type:util'],
+              bannedExternalImports: ['*router*'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+];
+```
+
+{% /tab %}
+{% tab label="Legacy (.eslintrc.json)" %}
+
+```jsonc {% fileName=".eslintrc.json" %}
 {
   // ... more ESLint config here
 
@@ -167,6 +278,9 @@ Matching just a single source tag is sometimes not enough for solving complex re
   // ... more ESLint config here
 }
 ```
+
+{% /tab %}
+{% /tabs %}
 
 ## Further reading
 
