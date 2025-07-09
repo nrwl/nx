@@ -197,9 +197,48 @@ export function getStrippedEnvironmentVariables() {
       }
 
       // Filter out NODE_PATH to prevent module resolution conflicts with original workspace
-      // Since pnpm uses NODE_PATH to resolve modules, and jest inherits it from the environment,
-      if (key === 'NODE_PATH') {
-        return false;
+      // Since pnpm uses NODE_PATH to resolve modules, and jest inherits it from the environment
+      if (key === 'NODE_PATH' && value) {
+        console.log(`[DEBUG] Original NODE_PATH: ${value}`);
+
+        const paths = value.split(':');
+        console.log(`[DEBUG] Split paths (${paths.length}):`);
+        paths.forEach((path, index) => {
+          console.log(`  ${index}: ${path}`);
+        });
+
+        const filteredPaths = paths.filter((path) => {
+          // Filter out paths containing workspace packages (nx packages)
+          const hasNxAt = path.includes('/nx@');
+          const hasAtNx = path.includes('/@nx');
+          const hasNxSlash = path.includes('/nx/');
+          const shouldFilter = hasNxAt || hasAtNx || hasNxSlash;
+
+          console.log(`[DEBUG] Path: ${path}`);
+          console.log(`  - has /nx@: ${hasNxAt}`);
+          console.log(`  - has /@nx: ${hasAtNx}`);
+          console.log(`  - has /nx/: ${hasNxSlash}`);
+          console.log(`  - filtered: ${shouldFilter}`);
+
+          return !shouldFilter;
+        });
+
+        console.log(`[DEBUG] Filtered paths (${filteredPaths.length}):`);
+        filteredPaths.forEach((path, index) => {
+          console.log(`  ${index}: ${path}`);
+        });
+
+        if (filteredPaths.length === 0) {
+          console.log(
+            `[DEBUG] No paths left after filtering, removing NODE_PATH`
+          );
+          return false;
+        }
+
+        const finalNodePath = filteredPaths.join(':');
+        console.log(`[DEBUG] Final NODE_PATH: ${finalNodePath}`);
+        process.env.NODE_PATH = finalNodePath;
+        return true;
       }
 
       return true;
