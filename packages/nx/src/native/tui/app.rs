@@ -1514,19 +1514,11 @@ impl App {
     fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<()> {
         if let Focus::MultipleOutput(pane_idx) = self.focus {
             // Get the task assigned to this pane to determine how to handle keys
-            let relevant_pane_task = if self.spacebar_mode {
-                self.selection_manager
-                    .lock()
-                    .unwrap()
-                    .get_selected_task_name()
-                    .cloned()
-            } else {
-                self.pane_tasks[pane_idx].clone()
-            };
+            if let Some(task_name) = self.pane_tasks[pane_idx] {
+                let task_status = self
+                    .get_task_status(&task_name)
+                    .unwrap_or(TaskStatus::NotStarted);
 
-            if let Some(task_name) = relevant_pane_task {
-                let task_status = self.get_task_status(&task_name).unwrap_or(TaskStatus::NotStarted);
-                
                 if task_status == TaskStatus::NotStarted {
                     // Task is pending - handle keys in dependency view
                     if let Some(dep_state) = &mut self.dependency_view_states[pane_idx] {
