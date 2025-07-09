@@ -1513,19 +1513,34 @@ impl App {
     /// Forward key events to the currently focused pane, if any.
     fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<()> {
         if let Focus::MultipleOutput(pane_idx) = self.focus {
-            // Try dependency view first if it should handle key events
-            if let Some(dep_state) = &mut self.dependency_view_states[pane_idx] {
-                if dep_state.should_handle_key_events() {
-                    if dep_state.handle_key_event(key) {
-                        return Ok(()); // Key was handled by dependency view
+            // Get the task assigned to this pane to determine how to handle keys
+            let relevant_pane_task = if self.spacebar_mode {
+                self.selection_manager
+                    .lock()
+                    .unwrap()
+                    .get_selected_task_name()
+                    .cloned()
+            } else {
+                self.pane_tasks[pane_idx].clone()
+            };
+
+            if let Some(task_name) = relevant_pane_task {
+                let task_status = self.get_task_status(&task_name).unwrap_or(TaskStatus::NotStarted);
+                
+                if task_status == TaskStatus::NotStarted {
+                    // Task is pending - handle keys in dependency view
+                    if let Some(dep_state) = &mut self.dependency_view_states[pane_idx] {
+                        if dep_state.handle_key_event(key) {
+                            return Ok(()); // Key was handled by dependency view
+                        }
+                    }
+                } else {
+                    // Task is running/completed - handle keys in terminal pane
+                    let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
+                    if let Some(action) = terminal_pane_data.handle_key_event(key)? {
+                        self.dispatch_action(action);
                     }
                 }
-            }
-
-            // Otherwise, handle terminal pane key events
-            let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
-            if let Some(action) = terminal_pane_data.handle_key_event(key)? {
-                self.dispatch_action(action);
             }
             Ok(())
         } else {
