@@ -561,7 +561,13 @@ describe('migrate', () => {
     );
   });
 
-  it('xxx should run migrations', () => {
+  it('should run migrations', () => {
+    // Ensure package.json has a trailing newline so migration can preserve it
+    const packageJsonContent = readFile('package.json');
+    if (!packageJsonContent.endsWith('\n')) {
+      updateFile('package.json', packageJsonContent + '\n');
+    }
+
     updateJson('nx.json', (j: NxJsonConfiguration) => {
       j.installation = {
         version: getPublishedVersion(),
