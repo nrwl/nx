@@ -912,7 +912,7 @@ impl App {
                     }
 
                     let frame_area = self.frame_area.unwrap();
-                    let tasks_list_hidden = self.is_task_list_hidden();
+                    let _tasks_list_hidden = self.is_task_list_hidden();
                     let layout_areas = self.layout_areas.as_mut().unwrap();
 
                     if self.debug_mode {
@@ -1027,46 +1027,23 @@ impl App {
                         .collect();
 
                     for (pane_idx, pane_area, relevant_pane_task) in terminal_panes_data {
-                        if relevant_pane_task.is_none() {
-                            // The user has chosen to display a pane but there is currently not task assigned to it, render a placeholder
-                            let placeholder = Paragraph::new(format!(
-                                "Press {} on a task to show it here",
-                                pane_idx + 1
-                            ))
-                            .block(
-                                Block::default()
-                                    .title(format!("  Output {}  ", pane_idx + 1))
-                                    .borders(Borders::ALL)
-                                    .border_style(Style::default().fg(THEME.secondary_fg)),
-                            )
-                            .style(Style::default().fg(THEME.secondary_fg))
-                            .alignment(Alignment::Center);
+                        if let Some(task_name) = relevant_pane_task {
+                            let task_status = self
+                                .get_task_status(&task_name)
+                                .unwrap_or(TaskStatus::NotStarted);
 
-                            f.render_widget(placeholder, pane_area);
-                            continue;
-                        }
-
-                        let relevant_pane_task = relevant_pane_task.unwrap();
-
-                        let task_name = relevant_pane_task;
-                        let task_status = self.get_task_status(&task_name).unwrap_or(TaskStatus::NotStarted);
-
-                        // If task is pending, show dependency view instead of terminal pane
-                        if task_status == TaskStatus::NotStarted {
-                            self.render_dependency_view_internal(
-                                f,
-                                pane_idx,
-                                pane_area,
-                                task_name,
-                            );
+                            // If task is pending, show dependency view instead of terminal pane
+                            if task_status == TaskStatus::NotStarted {
+                                self.render_dependency_view_internal(
+                                    f, pane_idx, pane_area, task_name,
+                                );
+                            } else {
+                                self.render_terminal_pane_internal(
+                                    f, pane_idx, pane_area, task_name,
+                                );
+                            }
                         } else {
-                            self.render_terminal_pane_internal(
-                                f,
-                                pane_idx,
-                                pane_area,
-                                task_name,
-                            );
-                        }
+                            self.render_pane_placeholder(f, pane_idx, pane_area);
                         }
                     }
 
@@ -1660,13 +1637,16 @@ impl App {
         task_name: String,
     ) {
         // Calculate values that were previously passed in
-        let task_status = self.get_task_status(&task_name).unwrap_or(TaskStatus::NotStarted);
-        let throbber_counter = self.components
+        let task_status = self
+            .get_task_status(&task_name)
+            .unwrap_or(TaskStatus::NotStarted);
+        let throbber_counter = self
+            .components
             .iter()
             .find_map(|c| c.as_any().downcast_ref::<TasksList>())
             .map(|tasks_list| tasks_list.throbber_counter)
             .unwrap_or(0);
-        
+
         let is_focused = match self.focus {
             Focus::MultipleOutput(focused_pane_idx) => pane_idx == focused_pane_idx,
             _ => false,
@@ -1713,7 +1693,9 @@ impl App {
         task_name: String,
     ) {
         // Calculate values that were previously passed in
-        let task_status = self.get_task_status(&task_name).unwrap_or(TaskStatus::NotStarted);
+        let task_status = self
+            .get_task_status(&task_name)
+            .unwrap_or(TaskStatus::NotStarted);
         let task_continuous = self.is_task_continuous(&task_name);
         let tasks_list_hidden = self.is_task_list_hidden();
         let has_pty = self.pty_instances.contains_key(&task_name);
@@ -1763,5 +1745,21 @@ impl App {
             .continuous(task_continuous);
 
         f.render_stateful_widget(terminal_pane, pane_area, &mut state);
+    }
+
+    /// Renders a placeholder for an empty pane
+    fn render_pane_placeholder(&self, f: &mut ratatui::Frame, pane_idx: usize, pane_area: Rect) {
+        let placeholder =
+            Paragraph::new(format!("Press {} on a task to show it here", pane_idx + 1))
+                .block(
+                    Block::default()
+                        .title(format!("  Output {}  ", pane_idx + 1))
+                        .borders(Borders::ALL)
+                        .border_style(Style::default().fg(THEME.secondary_fg)),
+                )
+                .style(Style::default().fg(THEME.secondary_fg))
+                .alignment(Alignment::Center);
+
+        f.render_widget(placeholder, pane_area);
     }
 }
