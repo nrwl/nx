@@ -69,9 +69,21 @@ The `demo` app is created under the `apps` directory as a convention. Later in t
 
 The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx itself and global default settings that individual projects inherit.
 
-Before continuing, it is **important** to make sure that your GitHub repository is [connected to your Nx Cloud organizatino](https://cloud.nx.app/setup) to enable remote caching and self-healing in CI.
+Before continuing, it is **important** to make sure that your GitHub repository is [connected to your Nx Cloud organization](https://cloud.nx.app/setup) to enable remote caching and self-healing in CI.
+
+### Checkpoint: Your Workspace is Created and Configured in CI
+
+At this point you should have:
+
+1. A new Nx workspace on your local machine with a React app in `apps/demo`
+2. A new GitHub repository for the workspace with `.github/worksflows/ci.yml` pipeline preconfigured
+3. A workspace in Nx Cloud that is connected to the GitHub repository
+
+You should see your workspace in your [Nx Cloud organization](https://cloud.nx.app/orgs).
 
 ![](/shared/images/tutorials/connected-workspace.png)
+
+If you do not see your workspace in Nx Cloud then please follow the steps outlined in the [Nx Cloud setup](https://cloud.nx.app/create-nx-workspace).
 
 Now, let's build some features and see how Nx helps get us to production faster.
 
@@ -263,32 +275,6 @@ export * from './lib/ui';
 Let's add a simple `Hero` component that we can use in our demo app.
 
 ```tsx {% fileName="packages/ui/src/lib/hero.tsx" %}
-const styles = {
-  hero: {
-    backgroundColor: '#1a1a2e',
-    color: 'white',
-    padding: '100px 20px',
-    textAlign: 'center' as const,
-  },
-  title: {
-    fontSize: '48px',
-    marginBottom: '16px',
-  },
-  subtitle: {
-    fontSize: '20px',
-    marginBottom: '32px',
-  },
-  button: {
-    backgroundColor: '#0066ff',
-    color: 'white',
-    border: 'none',
-    padding: '12px 24px',
-    fontSize: '18px',
-    borderRadius: '4px',
-    cursor: 'pointer',
-  },
-};
-
 export function Hero(props: {
   title: string;
   subtitle: string;
@@ -296,10 +282,42 @@ export function Hero(props: {
   onCtaClick?: () => void;
 }) {
   return (
-    <div style={styles.hero}>
-      <h1 style={styles.title}>{props.title}</h1>
-      <p style={styles.subtitle}>{props.subtitle}</p>
-      <button onClick={props.onCtaClick} style={styles.button}>
+    <div
+      style={{
+        backgroundColor: '#1a1a2e',
+        color: 'white',
+        padding: '100px 20px',
+        textAlign: 'center',
+      }}
+    >
+      <h1
+        style={{
+          fontSize: '48px',
+          marginBottom: '16px',
+        }}
+      >
+        {props.title}
+      </h1>
+      <p
+        style={{
+          fontSize: '20px',
+          marginBottom: '32px',
+        }}
+      >
+        {props.subtitle}
+      </p>
+      <button
+        onClick={props.onCtaClick}
+        style={{
+          backgroundColor: '#0066ff',
+          color: 'white',
+          border: 'none',
+          padding: '12px 24px',
+          fontSize: '18px',
+          borderRadius: '4px',
+          cursor: 'pointer',
+        }}
+      >
         {props.cta}
       </button>
     </div>
@@ -326,7 +344,7 @@ export function App() {
     <>
       <h1>Home</h1>
       <Hero
-        title="Welcome to our Demo"
+        title="Welcmoe to our Demo"
         subtitle="Build something amazing today"
         cta="Get Started"
       />
@@ -340,6 +358,8 @@ export default App;
 Serve your app again (`npx nx serve demo`) and you should see the new Hero component from the `ui` library rendered on the home page.
 
 ![](/shared/images/tutorials/react-demo-with-hero.png)
+
+If you have keen eyes, you may have noticed that there is a typo in the `App` component. This mistake is intentional, and we'll see later how Nx can fix this issue automatically in CI.
 
 ## Visualize your Project Structure
 
@@ -412,9 +432,9 @@ npx nx run-many -t test lint
 
 This is exactly what is configured in `.github/workflows/ci.yml` for the CI pipeline. The `run-many` command allows you to run multiple tasks across multiple projects in parallel, which is particularly useful in a monorepo setup.
 
-You may notice that the test failed for the `demo` app because we've updated the content. Don't worry about it for now, we'll fix it in a moment with the help of Nx Cloud's self-healing feature.
+There is a test failure for the `demo` app due to the updated content. Don't worry about it for now, we'll fix it in a moment with the help of Nx Cloud's self-healing feature.
 
-### Cache Tasks
+### Local Task Cache
 
 One thing to highlight is that Nx is able to [cache the tasks you run](/features/cache-task-results).
 
@@ -445,7 +465,7 @@ Not all tasks might be cacheable though. You can configure the `cache` settings 
 
 In this section, we'll explore how Nx Cloud can help your pull request get to green faster with self-healing CI. Recall that our demo app has a test failure, so let's see how this can be automatically resolved.
 
-Before we continue, make sure you have `npx nx-cloud fix-ci` in your GitHub Actions workflow. This command is responsible for enabling self-healing CI.
+The `npx nx-cloud fix-ci` command that is already included in your GitHub Actions workflow (e.g. `github/workflows/ci.yml`)is responsible for enabling self-healing CI and will automatically suggest fixes to your failing tasks.
 
 ```yaml {% fileName=".github/workflows/ci.yml" highlightLines=[31,32] %}
 name: CI
@@ -468,15 +488,15 @@ jobs:
         with:
           filter: tree:0
           fetch-depth: 0
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
 
       - run: npm ci --legacy-peer-deps
-      - uses: nrwl/nx-set-shas@v4
 
-      - run: npx nx affected -t lint test build
+      - run: npx nx run-many -t lint test build
 
       - run: npx nx-cloud fix-ci
         if: always()
@@ -484,43 +504,58 @@ jobs:
 
 You will also need to install the [Nx Console](/getting-started/editor-setup) editor extension for VS Code, Cursor, or IntelliJ. For the complete AI setup guide, see our [AI integration documentation](/getting-started/ai-integration).
 
+{% install-nx-console /%}
+
 Now, let's push the `add-hero-component` branch to GitHub and open a new pull request.
 
 ```shell
 git push origin add-hero-component
+# Don't forget to open a pull request on GitHub
 ```
 
-// TODO(jack): Show a screenshot of the PR on GitHub with the failed CI check.
+As expected, the CI check fails because of the test failure in the `demo` app. But rather than looking at the pull request, Nx Console notifies you that the run has completed, and that it has a suggested fix for the failing test. This means that you don't have to waste time **babysitting your PRs**, and the fix can be applied directly from your editor.
 
-As expected, the CI check fails because of the test failure in the `demo` app. Nx Console notifies you whenever a CI run completes, whether successfully or not. This means that you don't have waste time **babysitting your PRs**.
-
-![Nx Console with failure notification](/shared/images/tutorials/react-ci-failure-console.png)
+![Nx Console with failure notification](/shared/images/tutorials/react-ci-notification.png)
 
 ### Fix CI from Your Editor
 
-From the Nx Console notification, you can click `Help me fix this error` button. Review the suggested unit test fix, and approve it. That's it!
+From the Nx Console notification, you can click `Show Suggested Fix` button. Review the suggested fix, which in this case is to change the typo `Welcmoe `to the correct `Welcome` spelling. Approve this fix by clicking `ApplyFix` and that's it!
 
-// TODO(jack): The screenshot below should match the actual error and suggestion (I just pulled this from blog post since I woudln't get it to work)
+![Suggestion to fix the typo in the editor](/shared/images/tutorials/react-ci-suggestion.png)
 
-![Suggested fix to update the test to match new text](/shared/images/tutorials/react-ci-fix-suggestion.avif)
+You didn't have to leave your editor or do any manual work to fix it. This is the power of self-healing CI with Nx Cloud.
 
-Now, your pull request should be green, and you didn't have to leave your editor or do any manual work to fix it. This is the power of self-healing CI with Nx Cloud.
+### Remote Cache for Faster Time To Green
 
-The remainder of this tutorial will focus on how to scale your monorepo to work with larger teams and large codebases. If this is not applicable to you now, feel free to skip ahead to [the end of the tutorial](#next-steps).
+After the fix has been applied and committed, CI will re-run automatically, and you will be notified of the results in your editor.
 
-## Scaling Your Monorepo
+![Tasks with remote cache hit](/shared/images/tutorials/react-remote-cache-notification.png)
 
-// TODO(jack): We should put affected and distribution in this section, or create a separate guide and link to it.
+When you click `View Results` to show the run in Nx Cloud, you'll notice something interesting. The lint and test tasks fo the `ui` library were read from remote cache and did not have to run again, thus each taking less than a second to complete.
+
+![Nx Cloud run showing remote cache hits](/shared/images/tutorials/react-remote-cache-cloud.png)
+
+This happens because Nx Cloud caches the results of tasks and reuses them across different CI runs. As long as the inputs for each task have not changed (e.g. source code), then their results can be replayed from Nx Cloud's [Remote Cache](/ci/features/remote-cache). In this case, since the last fix was applied only to the `demo` app's source code, none of the tasks for `ui` library had to be run again.
+
+This significantly speeds up the time to green for your pull requests, because subsequent changes to them have a good chance to replay tasks from cache.
+
+{% callout type="note" title="Remote Cache Outputs" %}
+Outputs from cached tasks, such as the `dist` folder for builds or `coverage` folder for tests, are also read from cache. Even though a task was not run again, its outputs are available. The [Cache Task Results](/features/cache-task-results) page provides more details on caching.
+{% /callout %}
+
+This pull request is now ready to be merged with the help of Nx Cloud's self-healing CI and remote caching.
+
+![Pull request is green](/shared/images/tutorials/react-ci-green.png)
 
 ## Next Steps
 
-Here's some things you can dive into next:
+Here are some things you can dive into next:
 
 - Learn more about the [underlying mental model of Nx](/concepts/mental-model)
-- Learn how to [migrate your React app to Nx](/recipes/adopting-nx/adding-to-existing-project)
-- Learn about [enforcing boundaries between projects](/features/enforce-module-boundaries)
-- [Learn how to setup Tailwind](/technologies/react/recipes/using-tailwind-css-in-react)
+- Learn how to [migrate your existing project to Nx](/recipes/adopting-nx/adding-to-existing-project)
 - [Setup Storybook for our shared UI library](/technologies/test-tools/storybook/recipes/overview-react)
+- [Learn how to setup Tailwind](/technologies/react/recipes/using-tailwind-css-in-react)
+- Learn about [enforcing boundaries between projects](/features/enforce-module-boundaries)
 
 Also, make sure you
 
