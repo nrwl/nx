@@ -1058,20 +1058,12 @@ impl App {
                                 .tasks
                                 .iter()
                                 .find(|t| t.name == relevant_pane_task)
-                                .map(|task| {
-                                    (
-                                        task.name.clone(),
-                                        task.status,
-                                        task.continuous,
-                                        tasks_list.throbber_counter,
-                                    )
-                                })
+                                .map(|task| (task.name.clone(), task.status))
                         } else {
                             None
                         };
 
-                        if let Some((task_name, task_status, _task_continuous, _throbber_counter)) =
-                            task_data
+                        if let Some((task_name, task_status)) = task_data
                         {
                             // If task is pending, show dependency view instead of terminal pane
                             if task_status == TaskStatus::NotStarted {
