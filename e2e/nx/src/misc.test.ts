@@ -199,17 +199,21 @@ describe('Nx Commands', () => {
       if (require('fs').existsSync(pnpmDir)) {
         const entries = readdirSync(pnpmDir);
         console.log(`[DEBUG] pnpm entries:`, entries);
-        const nextEntry = entries.find((entry) => entry.includes('nx+next@'));
-        console.log(`[DEBUG] Found next entry:`, nextEntry);
-        if (nextEntry) {
-          renamedPnpmEntry = nextEntry;
-          const tmpName = nextEntry.replace('@nx+next@', 'tmp_nx_next_');
-          console.log(`[DEBUG] Renaming ${nextEntry} to ${tmpName}`);
+        const nextEntries = entries.filter((entry) => entry.includes('nx+next@'));
+        console.log(`[DEBUG] Found next entries:`, nextEntries);
+        
+        // Rename all nx+next entries
+        const renamedEntries = [];
+        for (const entry of nextEntries) {
+          const tmpName = entry.replace('@nx+next@', 'tmp_nx_next_');
+          console.log(`[DEBUG] Renaming ${entry} to ${tmpName}`);
           renameSync(
-            tmpProjPath(`node_modules/.pnpm/${nextEntry}`),
+            tmpProjPath(`node_modules/.pnpm/${entry}`),
             tmpProjPath(`node_modules/.pnpm/${tmpName}`)
           );
+          renamedEntries.push(entry);
         }
+        renamedPnpmEntry = renamedEntries;
       }
 
       // Also rename the symlink
@@ -261,12 +265,14 @@ describe('Nx Commands', () => {
       );
 
       // put back the @nx/next module (or all the other e2e tests after this will fail)
-      if (renamedPnpmEntry) {
-        const tmpName = renamedPnpmEntry.replace('@nx+next@', 'tmp_nx_next_');
-        renameSync(
-          tmpProjPath(`node_modules/.pnpm/${tmpName}`),
-          tmpProjPath(`node_modules/.pnpm/${renamedPnpmEntry}`)
-        );
+      if (renamedPnpmEntry && Array.isArray(renamedPnpmEntry)) {
+        for (const entry of renamedPnpmEntry) {
+          const tmpName = entry.replace('@nx+next@', 'tmp_nx_next_');
+          renameSync(
+            tmpProjPath(`node_modules/.pnpm/${tmpName}`),
+            tmpProjPath(`node_modules/.pnpm/${entry}`)
+          );
+        }
       }
 
       if (require('fs').existsSync(tmpProjPath('node_modules/@nx/next_tmp'))) {
