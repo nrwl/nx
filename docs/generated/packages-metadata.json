@@ -3527,6 +3527,39 @@
         "path": "nx/documents/logout",
         "tags": ["login"],
         "originalFilePath": "generated/cli/logout"
+      },
+      {
+        "id": "fix-ci",
+        "name": "fix-ci",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/fix-ci",
+        "itemList": [],
+        "isExternal": false,
+        "path": "nx/documents/fix-ci",
+        "tags": ["nx-cloud", "ci"],
+        "originalFilePath": "generated/cli/fix-ci"
+      },
+      {
+        "id": "record",
+        "name": "record",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/record",
+        "itemList": [],
+        "isExternal": false,
+        "path": "nx/documents/record",
+        "tags": ["nx-cloud", "ci"],
+        "originalFilePath": "generated/cli/record"
+      },
+      {
+        "id": "start-ci-run",
+        "name": "start-ci-run",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/start-ci-run",
+        "itemList": [],
+        "isExternal": false,
+        "path": "nx/documents/start-ci-run",
+        "tags": ["nx-cloud", "ci"],
+        "originalFilePath": "generated/cli/start-ci-run"
       }
     ],
     "executors": [

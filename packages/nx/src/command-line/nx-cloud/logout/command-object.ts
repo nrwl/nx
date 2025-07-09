@@ -1,5 +1,5 @@
 import { CommandModule } from 'yargs';
-import { withVerbose } from '../../command-line/yargs-utils/shared-options';
+import { withVerbose } from '../../yargs-utils/shared-options';
 
 export const yargsLogoutCommand: CommandModule = {
   command: 'logout',
