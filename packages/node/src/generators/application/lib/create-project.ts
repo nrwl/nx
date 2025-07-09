@@ -35,7 +35,7 @@ export function addProject(tree: Tree, options: NormalizedSchema) {
     } else if (options.isNest) {
       // If we are using Nest that has the webpack plugin we need to override the
       // build target so that node-env can be set to production or development so the serve target can be run in development mode
-      project.targets.build = getNestWebpackBuildConfig();
+      project.targets.build = getNestWebpackBuildConfig(project);
     }
   }
   project.targets.serve = getServeConfig(options);
