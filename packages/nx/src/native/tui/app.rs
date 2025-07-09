@@ -1112,12 +1112,6 @@ impl App {
                                     pane_idx,
                                     pane_area,
                                     task_name,
-                                    task_status,
-                                    task_continuous,
-                                    tasks_list_hidden,
-                                    is_focused,
-                                    is_next_tab_target,
-                                    has_pty,
                                 );
                             }
                         }
@@ -1754,13 +1748,24 @@ impl App {
         pane_idx: usize,
         pane_area: Rect,
         task_name: String,
-        task_status: TaskStatus,
-        task_continuous: bool,
-        tasks_list_hidden: bool,
-        is_focused: bool,
-        is_next_tab_target: bool,
-        has_pty: bool,
     ) {
+        // Calculate values that were previously passed in
+        let task_status = self.get_task_status(&task_name).unwrap_or(TaskStatus::NotStarted);
+        let task_continuous = self.is_task_continuous(&task_name);
+        let tasks_list_hidden = self.is_task_list_hidden();
+        let has_pty = self.pty_instances.contains_key(&task_name);
+        
+        let is_focused = match self.focus {
+            Focus::MultipleOutput(focused_pane_idx) => pane_idx == focused_pane_idx,
+            _ => false,
+        };
+        
+        let is_next_tab_target = !is_focused
+            && match self.focus {
+                Focus::TaskList => pane_idx == 0,
+                Focus::MultipleOutput(0) => pane_idx == 1,
+                _ => false,
+            };
         let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
         terminal_pane_data.is_continuous = task_continuous;
         let in_progress = task_status == TaskStatus::InProgress;
