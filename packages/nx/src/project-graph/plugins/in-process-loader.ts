@@ -9,6 +9,7 @@ import {
   readModulePackageJsonWithoutFallbacks,
 } from '../../utils/package-json';
 import { readJsonFile } from '../../utils/fileutils';
+import { scanPnpmForPlugin } from './pnpm-utils';
 
 import type { PluginConfiguration } from '../../config/nx-json';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
@@ -29,78 +30,29 @@ export function readPluginPackageJson(
   path: string;
   json: PackageJson;
 } {
-  // First try to find the plugin directly in node_modules
-  // This handles pnpm's symlink structure correctly
-  for (const searchPath of paths) {
-    const directPackageJsonPath = path.join(
-      searchPath,
-      'node_modules',
-      pluginName,
-      'package.json'
-    );
-
-    if (existsSync(directPackageJsonPath)) {
-      return {
-        json: readJsonFile(directPackageJsonPath),
-        path: directPackageJsonPath,
-      };
-    }
-
-    // If we are in the Nx repo that uses ts solutions `require.resolve` will find the source plugins,
-    // for e.g. @nx/workspace -> packages/workspace instead of the installed version at node_modules/@nx/workspace.
-    // We need to customize the resolution logic to ensure we read the package.json from the installed version.
-    const nodeModulesPath = path.join(searchPath, 'node_modules');
-    if (existsSync(nodeModulesPath)) {
-      try {
-        const pnpmDir = path.join(nodeModulesPath, '.pnpm');
-        // pnpm can have a .pnpm directory if it is being used for example /tmp/tmp-6029-6bm08pq05OfH/node_modules/.pnpm/@nx+workspace@22.0.0/node_modules/@nx/workspace/src/generators/new/new.js\n'
-        if (existsSync(pnpmDir)) {
-          const pnpmEntries = require('fs').readdirSync(pnpmDir);
-          for (const entry of pnpmEntries) {
-            // Convert @nx/workspace to @nx+workspace pattern like above
-            const expectedPattern = pluginName
-              .replace('/', '+')
-              .replace('@', '');
-            if (entry.includes(expectedPattern)) {
-              const possiblePath = path.join(
-                pnpmDir,
-                entry,
-                'node_modules',
-                pluginName,
-                'package.json'
-              );
-              // We skip the local package.json of the plugin itself since we are using ts solutions
-              if (
-                existsSync(possiblePath) &&
-                !possiblePath.endsWith(`packages/${pluginName}/package.json`)
-              ) {
-                return {
-                  json: readJsonFile(possiblePath),
-                  path: possiblePath,
-                };
-              }
-            }
-          }
-        }
-      } catch (e) {
-        console.error(`Error scanning pnpm, ${e.message}`);
-      }
-    }
-  }
-
   try {
-    // Try to resolve the plugin using require.resolve
-    const resolvedPath = readModulePackageJsonWithoutFallbacks(
-      pluginName,
-      paths
-    );
+    const result = readModulePackageJsonWithoutFallbacks(pluginName, paths);
     return {
-      json: resolvedPath.packageJson,
-      path: resolvedPath.path,
+      json: result.packageJson,
+      path: result.path,
     };
   } catch (e) {
     if (e.code === 'MODULE_NOT_FOUND') {
-      // Try local plugin as fallback
+      // If require.resolve fails, try pnpm scanning as fallback
+      // This is needed when we are in the Nx repo that uses ts solutions and `require.resolve` finds the source plugins
+      // Because the original __dirname is passed
+      for (const searchPath of paths) {
+        const nodeModulesPath = path.join(searchPath, 'node_modules');
+        if (existsSync(nodeModulesPath)) {
+          const pnpmDir = path.join(nodeModulesPath, '.pnpm');
+          const result = scanPnpmForPlugin(pluginName, pnpmDir);
+          if (result) {
+            return result;
+          }
+        }
+      }
+
+      // Try local plugin as final fallback
       const localPluginPath = resolveLocalNxPlugin(pluginName, projects);
       if (localPluginPath) {
         const localPluginPackageJson = path.join(

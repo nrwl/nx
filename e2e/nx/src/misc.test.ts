@@ -193,28 +193,27 @@ describe('Nx Commands', () => {
       const pnpmDir = tmpProjPath('node_modules/.pnpm');
       let renamedPnpmEntry = null;
 
-      console.log(`[DEBUG] Checking pnpm dir: ${pnpmDir}`);
-      console.log(`[DEBUG] pnpm dir exists: ${require('fs').existsSync(pnpmDir)}`);
-      
       if (require('fs').existsSync(pnpmDir)) {
         const entries = readdirSync(pnpmDir);
-        console.log(`[DEBUG] pnpm entries:`, entries);
-        const nextEntry = entries.find((entry) => entry.includes('nx+next@'));
-        console.log(`[DEBUG] Found next entry:`, nextEntry);
-        if (nextEntry) {
-          renamedPnpmEntry = nextEntry;
-          const tmpName = nextEntry.replace('@nx+next@', 'tmp_nx_next_');
-          console.log(`[DEBUG] Renaming ${nextEntry} to ${tmpName}`);
+        const nextEntries = entries.filter((entry) =>
+          entry.includes('nx+next@')
+        );
+
+        // Rename all nx+next entries
+        const renamedEntries = [];
+        for (const entry of nextEntries) {
+          const tmpName = entry.replace('@nx+next@', 'tmp_nx_next_');
           renameSync(
-            tmpProjPath(`node_modules/.pnpm/${nextEntry}`),
+            tmpProjPath(`node_modules/.pnpm/${entry}`),
             tmpProjPath(`node_modules/.pnpm/${tmpName}`)
           );
+          renamedEntries.push(entry);
         }
+        renamedPnpmEntry = renamedEntries;
       }
 
       // Also rename the symlink
       if (require('fs').existsSync(tmpProjPath('node_modules/@nx/next'))) {
-        console.log(`[DEBUG] Renaming symlink node_modules/@nx/next`);
         renameSync(
           tmpProjPath('node_modules/@nx/next'),
           tmpProjPath('node_modules/@nx/next_tmp')
@@ -246,10 +245,8 @@ describe('Nx Commands', () => {
       // check for builders
       expect(listOutput).toContain('package');
 
-      // // look for uninstalled core plugin
-      console.log(`[DEBUG] About to test nx list @nx/next`);
+      // look for uninstalled core plugin
       listOutput = runCLI('list @nx/next');
-      console.log(`[DEBUG] nx list @nx/next output:`, listOutput);
 
       expect(listOutput).toContain('NX   @nx/next is not currently installed');
 
@@ -261,12 +258,14 @@ describe('Nx Commands', () => {
       );
 
       // put back the @nx/next module (or all the other e2e tests after this will fail)
-      if (renamedPnpmEntry) {
-        const tmpName = renamedPnpmEntry.replace('@nx+next@', 'tmp_nx_next_');
-        renameSync(
-          tmpProjPath(`node_modules/.pnpm/${tmpName}`),
-          tmpProjPath(`node_modules/.pnpm/${renamedPnpmEntry}`)
-        );
+      if (renamedPnpmEntry && Array.isArray(renamedPnpmEntry)) {
+        for (const entry of renamedPnpmEntry) {
+          const tmpName = entry.replace('@nx+next@', 'tmp_nx_next_');
+          renameSync(
+            tmpProjPath(`node_modules/.pnpm/${tmpName}`),
+            tmpProjPath(`node_modules/.pnpm/${entry}`)
+          );
+        }
       }
 
       if (require('fs').existsSync(tmpProjPath('node_modules/@nx/next_tmp'))) {
@@ -562,7 +561,7 @@ describe('migrate', () => {
     );
   });
 
-  it('should run migrations', () => {
+  it('xxx should run migrations', () => {
     updateJson('nx.json', (j: NxJsonConfiguration) => {
       j.installation = {
         version: getPublishedVersion(),
@@ -603,6 +602,7 @@ describe('migrate', () => {
     );
     // should keep new line on package
     const packageContent = readFile('package.json');
+    console.log(packageContent);
     expect(packageContent.charCodeAt(packageContent.length - 1)).toEqual(10);
 
     // creates migrations.json
