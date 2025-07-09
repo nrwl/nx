@@ -1514,7 +1514,7 @@ impl App {
     fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<()> {
         if let Focus::MultipleOutput(pane_idx) = self.focus {
             // Get the task assigned to this pane to determine how to handle keys
-            if let Some(task_name) = self.pane_tasks[pane_idx] {
+            if let Some(task_name) = &self.pane_tasks[pane_idx] {
                 let task_status = self
                     .get_task_status(&task_name)
                     .unwrap_or(TaskStatus::NotStarted);
