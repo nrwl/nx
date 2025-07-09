@@ -1,5 +1,10 @@
 use std::collections::HashMap;
 
+use crate::native::tasks::types::TaskGraph;
+use crate::native::tui::components::tasks_list::TaskStatus;
+use crate::native::tui::graph_utils::is_task_continuous;
+use crate::native::tui::status_icons;
+use crate::native::tui::theme::THEME;
 use ratatui::{
     buffer::Buffer,
     layout::{Alignment, Rect},
@@ -10,11 +15,6 @@ use ratatui::{
         ScrollbarState, StatefulWidget, Widget,
     },
 };
-use tracing;
-
-use crate::native::tui::components::tasks_list::{TaskStatus, TasksList};
-use crate::native::tui::status_icons;
-use crate::native::tui::theme::THEME;
 
 pub struct DependencyViewState {
     pub current_task: String,
@@ -32,7 +32,7 @@ impl DependencyViewState {
     pub fn new(
         task_name: String,
         task_status: TaskStatus,
-        task_graph: &crate::native::tasks::types::TaskGraph,
+        task_graph: &TaskGraph,
         is_focused: bool,
         throbber_counter: usize,
         pane_area: ratatui::layout::Rect,
@@ -166,33 +166,33 @@ impl DependencyViewState {
 }
 
 pub struct DependencyView<'a> {
-    tasks_list: Option<&'a mut TasksList>,
-    continuous_map: Option<&'a HashMap<String, bool>>,
-    status_map: Option<&'a HashMap<String, TaskStatus>>,
+    status_map: &'a HashMap<String, TaskStatus>,
+    task_graph: &'a TaskGraph,
 }
 
 impl<'a> DependencyView<'a> {
-    pub fn new() -> Self {
+    pub fn new(status_map: &'a HashMap<String, TaskStatus>, task_graph: &'a TaskGraph) -> Self {
         Self {
-            tasks_list: None,
-            continuous_map: None,
-            status_map: None,
+            status_map,
+            task_graph,
         }
     }
 
-    pub fn with_continuous_map(mut self, continuous_map: &'a HashMap<String, bool>) -> Self {
-        self.continuous_map = Some(continuous_map);
-        self
-    }
+    /// Helper function to check if a task is considered incomplete
+    fn is_task_incomplete(&self, dep: &str) -> bool {
+        let status = self.status_map.get(dep).unwrap_or(&TaskStatus::NotStarted);
+        let is_continuous = is_task_continuous(self.task_graph, dep);
 
-    pub fn with_status_map(mut self, status_map: &'a HashMap<String, TaskStatus>) -> Self {
-        self.status_map = Some(status_map);
-        self
-    }
-
-    pub fn with_tasks_list(mut self, tasks_list: &'a mut TasksList) -> Self {
-        self.tasks_list = Some(tasks_list);
-        self
+        // For continuous tasks, InProgress and Stopped are considered complete
+        // For regular tasks, only traditional completion statuses count
+        !matches!(
+            status,
+            TaskStatus::Success
+                | TaskStatus::LocalCacheKeptExisting
+                | TaskStatus::LocalCache
+                | TaskStatus::RemoteCache
+                | TaskStatus::Skipped
+        ) && !(is_continuous && matches!(status, TaskStatus::InProgress | TaskStatus::Stopped))
     }
 
     /// Apply focus styling to a base style - dims the style when not focused
@@ -239,33 +239,12 @@ impl<'a> DependencyView<'a> {
         let incomplete_count = state
             .dependencies
             .iter()
-            .filter(|dep| {
-                let status = self
-                    .status_map
-                    .and_then(|map| map.get(*dep))
-                    .unwrap_or(&TaskStatus::NotStarted);
-                let is_continuous = self
-                    .continuous_map
-                    .and_then(|map| map.get(*dep))
-                    .unwrap_or(&false);
-
-                // For continuous tasks, InProgress and Stopped are considered complete
-                // For regular tasks, only traditional completion statuses count
-                !matches!(
-                    status,
-                    TaskStatus::Success
-                        | TaskStatus::LocalCacheKeptExisting
-                        | TaskStatus::LocalCache
-                        | TaskStatus::RemoteCache
-                        | TaskStatus::Skipped
-                ) && !(*is_continuous
-                    && matches!(status, TaskStatus::InProgress | TaskStatus::Stopped))
-            })
+            .filter(|dep| self.is_task_incomplete(dep))
             .count();
 
         // Add header with progress
         let header_text = if incomplete_count == 0 && total_count > 0 {
-            "All dependencies satisfied - task ready to start!".to_string()
+            "All dependencies satisfied, waiting for an available thread...".to_string()
         } else {
             format!(
                 "Not started yet, waiting for {} / {} tasks to complete...",
@@ -288,10 +267,7 @@ impl<'a> DependencyView<'a> {
 
         // Add all dependencies (no more truncation, we'll scroll instead)
         for dep in &state.dependencies {
-            let status = self
-                .status_map
-                .and_then(|map| map.get(dep))
-                .unwrap_or(&TaskStatus::NotStarted);
+            let status = self.status_map.get(dep).unwrap_or(&TaskStatus::NotStarted);
             let status_icon = status_icons::get_status_icon(*status, state.throbber_counter);
 
             let dep_base_style = Style::default().fg(THEME.primary_fg);

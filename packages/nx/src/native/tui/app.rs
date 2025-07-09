@@ -34,7 +34,7 @@ use super::components::task_selection_manager::{SelectionMode, TaskSelectionMana
 use super::components::tasks_list::{TaskStatus, TasksList};
 use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
 use super::config::TuiConfig;
-use super::graph_utils::get_task_count;
+use super::graph_utils::{get_task_count, is_task_continuous};
 use super::lifecycle::RunMode;
 use super::pty::PtyInstance;
 use super::theme::THEME;
@@ -71,7 +71,6 @@ pub struct App {
     pinned_tasks: Vec<String>,
     task_graph: TaskGraph,
     task_status_map: HashMap<String, TaskStatus>, // App owns task status
-    task_continuous_map: HashMap<String, bool>,   // Static continuous flags - created once
     debug_mode: bool,
     debug_state: TuiWidgetState,
     console_messenger: Option<NxConsoleMessageConnection>,
@@ -104,12 +103,6 @@ impl App {
         let mut task_status_map = HashMap::new();
         for task in &tasks {
             task_status_map.insert(task.id.clone(), TaskStatus::NotStarted);
-        }
-
-        // Initialize continuous flags map - created once since it's static data
-        let mut task_continuous_map = HashMap::new();
-        for (task_id, task) in &task_graph.tasks {
-            task_continuous_map.insert(task_id.clone(), task.continuous.unwrap_or(false));
         }
 
         let tasks_list = TasksList::new(
@@ -156,7 +149,6 @@ impl App {
             selection_manager,
             task_graph,
             task_status_map,
-            task_continuous_map,
             debug_mode: false,
             debug_state: TuiWidgetState::default().set_default_display_level(LevelFilter::Debug),
             console_messenger: None,
@@ -229,12 +221,9 @@ impl App {
         self.task_status_map.get(task_id).copied()
     }
 
-    /// Get task continuous flag efficiently from App's own HashMap
+    /// Get task continuous flag efficiently from task graph
     pub fn is_task_continuous(&self, task_id: &str) -> bool {
-        self.task_continuous_map
-            .get(task_id)
-            .copied()
-            .unwrap_or(false)
+        is_task_continuous(&self.task_graph, task_id)
     }
 
     fn should_set_interactive_by_default(&self, task_id: &str) -> bool {
@@ -1746,9 +1735,7 @@ impl App {
 
         // No need to update status in DependencyViewState - we pass the full map to the widget
         if let Some(dep_state) = &mut self.dependency_view_states[pane_idx] {
-            let dependency_view = DependencyView::new()
-                .with_continuous_map(&self.task_continuous_map)
-                .with_status_map(&self.task_status_map);
+            let dependency_view = DependencyView::new(&self.task_status_map, &self.task_graph);
             f.render_stateful_widget(dependency_view, pane_area, dep_state);
         }
     }
