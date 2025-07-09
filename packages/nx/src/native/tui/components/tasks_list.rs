@@ -10,7 +10,6 @@ use ratatui::{
 use serde::{Deserialize, Serialize};
 use std::{
     any::Any,
-    collections::HashMap,
     sync::{Arc, Mutex},
 };
 use tokio::sync::mpsc::UnboundedSender;
@@ -172,7 +171,7 @@ pub fn parse_task_status(string_status: String) -> napi::Result<TaskStatus> {
 /// Provides filtering, sorting, and output display capabilities.
 pub struct TasksList {
     selection_manager: Arc<Mutex<TaskSelectionManager>>,
-    pub tasks: Vec<TaskItem>, // Source of truth - all tasks
+    pub tasks: Vec<TaskItem>,    // Source of truth - all tasks
     filtered_names: Vec<String>, // Names of tasks that match the filter
     pub throbber_counter: usize,
     pub filter_mode: bool,
