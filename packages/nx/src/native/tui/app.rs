@@ -1048,39 +1048,25 @@ impl App {
 
                         let relevant_pane_task = relevant_pane_task.unwrap();
 
-                        // Extract task data first to avoid borrowing conflicts
-                        let task_data = if let Some(tasks_list) = self
-                            .components
-                            .iter()
-                            .find_map(|c| c.as_any().downcast_ref::<TasksList>())
-                        {
-                            tasks_list
-                                .tasks
-                                .iter()
-                                .find(|t| t.name == relevant_pane_task)
-                                .map(|task| (task.name.clone(), task.status))
-                        } else {
-                            None
-                        };
+                        let task_name = relevant_pane_task;
+                        let task_status = self.get_task_status(&task_name).unwrap_or(TaskStatus::NotStarted);
 
-                        if let Some((task_name, task_status)) = task_data
-                        {
-                            // If task is pending, show dependency view instead of terminal pane
-                            if task_status == TaskStatus::NotStarted {
-                                self.render_dependency_view_internal(
-                                    f,
-                                    pane_idx,
-                                    pane_area,
-                                    task_name,
-                                );
-                            } else {
-                                self.render_terminal_pane_internal(
-                                    f,
-                                    pane_idx,
-                                    pane_area,
-                                    task_name,
-                                );
-                            }
+                        // If task is pending, show dependency view instead of terminal pane
+                        if task_status == TaskStatus::NotStarted {
+                            self.render_dependency_view_internal(
+                                f,
+                                pane_idx,
+                                pane_area,
+                                task_name,
+                            );
+                        } else {
+                            self.render_terminal_pane_internal(
+                                f,
+                                pane_idx,
+                                pane_area,
+                                task_name,
+                            );
+                        }
                         }
                     }
 
