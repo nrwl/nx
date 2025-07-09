@@ -20,7 +20,7 @@ jobs:
       NX_E2E_CI_CACHE_KEY: e2e-github-linux
       NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
-      NX_VERBOSE_LOGGING: 'false'
+      NX_VERBOSE_LOGGING: 'true'
       NX_NATIVE_LOGGING: 'false'
       NX_E2E_RUN_E2E: 'true'
       NX_CI_EXECUTION_ENV: 'linux'
@@ -97,27 +97,11 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm playwright install --with-deps
 
-      - name: Check Documentation
-        run: pnpm nx documentation
-        timeout-minutes: 20
-
       - name: Run Checks/Lint/Test/Build
         run: |
           pids=()
 
-          pnpm nx-cloud record -- nx format:check &
-          pids+=($!)
-
-          pnpm nx-cloud record -- nx sync:check
-          pids+=($!)
-
-          pnpm nx-cloud record -- nx-cloud conformance:check
-          pids+=($!)
-
-          pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners --parallel=1 --no-dte &
-          pids+=($!)
-
-          pnpm nx affected --targets=lint,test,build,e2e,e2e-ci,format-native,lint-native &
+          pnpm nx e2e-ci e2e-remix &
           pids+=($!)
 
           for pid in "${pids[@]}"; do

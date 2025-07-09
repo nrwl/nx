@@ -13,6 +13,7 @@ import {
   getLatestLernaVersion,
   getPublishedVersion,
   getSelectedPackageManager,
+  getStrippedEnvironmentVariables,
   isVerbose,
   isVerboseE2ERun,
 } from './get-env-info';
@@ -90,7 +91,7 @@ function getPackageManagerVersion(packageManager: string): string {
  * Sets up a new project in the temporary project path
  * for the currently selected CLI.
  */
-export function newProject({
+export function  newProject({
   name = uniq('proj'),
   packageManager = getSelectedPackageManager(),
   packages,
@@ -381,7 +382,8 @@ export function runCreateWorkspace(
       env: {
         CI: 'true',
         NX_VERBOSE_LOGGING: isCI ? 'true' : 'false',
-        ...process.env,
+        ...getStrippedEnvironmentVariables()
+        
       },
       encoding: 'utf-8',
     });
