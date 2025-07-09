@@ -10,6 +10,7 @@ use ratatui::{
         ScrollbarState, StatefulWidget, Widget,
     },
 };
+use tracing;
 
 use crate::native::tui::components::tasks_list::{TaskStatus, TasksList};
 use crate::native::tui::status_icons;
@@ -19,36 +20,50 @@ pub struct DependencyViewState {
     pub current_task: String,
     pub task_status: TaskStatus,
     pub dependencies: Vec<String>,
-    pub dependency_statuses: HashMap<String, TaskStatus>,
     pub dependency_levels: HashMap<String, usize>,
-    pub dependency_continuous_flags: HashMap<String, bool>,
     pub is_focused: bool,
     pub throbber_counter: usize,
     pub scroll_offset: usize,
     pub scrollbar_state: ScrollbarState,
+    pub pane_area: ratatui::layout::Rect,
 }
 
 impl DependencyViewState {
     pub fn new(
-        current_task: String,
+        task_name: String,
         task_status: TaskStatus,
-        dependencies: Vec<String>,
-        dependency_statuses: HashMap<String, TaskStatus>,
-        dependency_levels: HashMap<String, usize>,
-        dependency_continuous_flags: HashMap<String, bool>,
+        task_graph: &crate::native::tasks::types::TaskGraph,
         is_focused: bool,
+        throbber_counter: usize,
+        pane_area: ratatui::layout::Rect,
     ) -> Self {
+        use crate::native::tui::graph_utils::{
+            collect_all_dependencies_with_levels, count_all_dependencies,
+        };
+
+        // Get ALL dependency information (including transitive)
+        let (mut all_dependencies, dependency_levels) =
+            collect_all_dependencies_with_levels(&task_name, task_graph);
+
+        // Sort dependencies by total dependency count (highest to lowest), then alphabetically
+        all_dependencies.sort_by(|a, b| {
+            let count_a = count_all_dependencies(a, task_graph);
+            let count_b = count_all_dependencies(b, task_graph);
+
+            // Sort by total dependency count (descending), then alphabetically
+            count_b.cmp(&count_a).then_with(|| a.cmp(b))
+        });
+
         Self {
-            current_task,
+            current_task: task_name,
             task_status,
-            dependencies,
-            dependency_statuses,
+            dependencies: all_dependencies,
             dependency_levels,
-            dependency_continuous_flags,
             is_focused,
-            throbber_counter: 0,
+            throbber_counter,
             scroll_offset: 0,
             scrollbar_state: ScrollbarState::default(),
+            pane_area,
         }
     }
 
@@ -64,33 +79,86 @@ impl DependencyViewState {
         }
     }
 
-    pub fn handle_key_event(
+    /// Updates the dependency view state with new data, preserving scroll position if the task is the same.
+    /// Returns true if the state was updated, false if no update was needed.
+    pub fn update(
+        &mut self,
+        task_status: TaskStatus,
+        is_focused: bool,
+        throbber_counter: usize,
+        pane_area: ratatui::layout::Rect,
+    ) {
+        self.task_status = task_status;
+        self.is_focused = is_focused;
+        self.throbber_counter = throbber_counter;
+        self.pane_area = pane_area;
+    }
+
+    /// Returns true if this dependency view should handle key events (i.e., task is pending)
+    pub fn should_handle_key_events(&self) -> bool {
+        matches!(self.task_status, TaskStatus::NotStarted)
+    }
+
+    /// Calculate viewport height from pane area, accounting for borders and padding
+    fn calculate_viewport_height(pane_area: ratatui::layout::Rect) -> usize {
+        // Account for borders and padding
+        (pane_area.height as usize).saturating_sub(4) // 2 for borders, 2 for padding
+    }
+
+    /// Handle key event with automatic viewport height calculation from stored pane area
+    pub fn handle_key_event(&mut self, key: crossterm::event::KeyEvent) -> bool {
+        let viewport_height = Self::calculate_viewport_height(self.pane_area);
+        self.handle_key_event_with_viewport(key, viewport_height)
+    }
+
+    pub fn handle_key_event_with_viewport(
         &mut self,
         key: crossterm::event::KeyEvent,
         viewport_height: usize,
     ) -> bool {
         use crossterm::event::{KeyCode, KeyModifiers};
 
+        // Only handle keys if there's actually content to scroll
+        let content_height = self.dependencies.len() + 2; // +2 for header and spacing
+        let max_scroll = content_height.saturating_sub(viewport_height);
+        let has_scrollable_content = max_scroll > 0;
+
         match key.code {
             KeyCode::Up | KeyCode::Char('k') => {
-                self.scroll_up();
-                true
+                if has_scrollable_content && self.scroll_offset > 0 {
+                    self.scroll_up();
+                    true
+                } else {
+                    false
+                }
             }
             KeyCode::Down | KeyCode::Char('j') => {
-                self.scroll_down(viewport_height);
-                true
+                if has_scrollable_content && self.scroll_offset < max_scroll {
+                    self.scroll_down(viewport_height);
+                    true
+                } else {
+                    false
+                }
             }
             KeyCode::Char('u') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                for _ in 0..12 {
-                    self.scroll_up();
+                if has_scrollable_content && self.scroll_offset > 0 {
+                    for _ in 0..12 {
+                        self.scroll_up();
+                    }
+                    true
+                } else {
+                    false
                 }
-                true
             }
             KeyCode::Char('d') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                for _ in 0..12 {
-                    self.scroll_down(viewport_height);
+                if has_scrollable_content && self.scroll_offset < max_scroll {
+                    for _ in 0..12 {
+                        self.scroll_down(viewport_height);
+                    }
+                    true
+                } else {
+                    false
                 }
-                true
             }
             _ => false,
         }
@@ -99,16 +167,58 @@ impl DependencyViewState {
 
 pub struct DependencyView<'a> {
     tasks_list: Option<&'a mut TasksList>,
+    continuous_map: Option<&'a HashMap<String, bool>>,
+    status_map: Option<&'a HashMap<String, TaskStatus>>,
 }
 
 impl<'a> DependencyView<'a> {
     pub fn new() -> Self {
-        Self { tasks_list: None }
+        Self {
+            tasks_list: None,
+            continuous_map: None,
+            status_map: None,
+        }
+    }
+
+    pub fn with_continuous_map(mut self, continuous_map: &'a HashMap<String, bool>) -> Self {
+        self.continuous_map = Some(continuous_map);
+        self
+    }
+
+    pub fn with_status_map(mut self, status_map: &'a HashMap<String, TaskStatus>) -> Self {
+        self.status_map = Some(status_map);
+        self
     }
 
     pub fn with_tasks_list(mut self, tasks_list: &'a mut TasksList) -> Self {
         self.tasks_list = Some(tasks_list);
         self
+    }
+
+    /// Apply focus styling to a base style - dims the style when not focused
+    fn apply_focus_styling(base_style: Style, is_focused: bool) -> Style {
+        if is_focused {
+            base_style
+        } else {
+            base_style.add_modifier(Modifier::DIM)
+        }
+    }
+
+    /// Render the no dependencies message
+    fn render_no_dependencies(&self, state: &DependencyViewState, area: Rect, buf: &mut Buffer) {
+        let base_style = Style::default().fg(THEME.success);
+        let no_deps_style = Self::apply_focus_styling(base_style, state.is_focused);
+
+        let no_deps_message = vec![Line::from(vec![Span::styled(
+            "Waiting for available thread...",
+            no_deps_style,
+        )])];
+
+        let paragraph = Paragraph::new(no_deps_message)
+            .alignment(Alignment::Center)
+            .style(Style::default());
+
+        Widget::render(paragraph, area, buf);
     }
 
     fn render_dependency_list(
@@ -118,22 +228,7 @@ impl<'a> DependencyView<'a> {
         buf: &mut Buffer,
     ) {
         if state.dependencies.is_empty() {
-            let no_deps_message = vec![
-                Line::from(vec![Span::styled(
-                    "No dependencies found in task graph",
-                    Style::default().fg(THEME.success),
-                )]),
-                Line::from(vec![Span::styled(
-                    "Task can start immediately",
-                    Style::default().fg(THEME.success),
-                )]),
-            ];
-
-            let paragraph = Paragraph::new(no_deps_message)
-                .alignment(Alignment::Center)
-                .style(Style::default());
-
-            Widget::render(paragraph, area, buf);
+            self.render_no_dependencies(state, area, buf);
             return;
         }
 
@@ -145,13 +240,13 @@ impl<'a> DependencyView<'a> {
             .dependencies
             .iter()
             .filter(|dep| {
-                let status = state
-                    .dependency_statuses
-                    .get(*dep)
+                let status = self
+                    .status_map
+                    .and_then(|map| map.get(*dep))
                     .unwrap_or(&TaskStatus::NotStarted);
-                let is_continuous = state
-                    .dependency_continuous_flags
-                    .get(*dep)
+                let is_continuous = self
+                    .continuous_map
+                    .and_then(|map| map.get(*dep))
                     .unwrap_or(&false);
 
                 // For continuous tasks, InProgress and Stopped are considered complete
@@ -178,31 +273,31 @@ impl<'a> DependencyView<'a> {
             )
         };
 
-        let header = Line::from(vec![Span::styled(
-            header_text,
-            Style::default()
-                .fg(if incomplete_count == 0 && total_count > 0 {
-                    THEME.success
-                } else {
-                    THEME.primary_fg
-                })
-                .add_modifier(Modifier::BOLD),
-        )]);
+        let header_base_style = Style::default()
+            .fg(if incomplete_count == 0 && total_count > 0 {
+                THEME.success
+            } else {
+                THEME.primary_fg
+            })
+            .add_modifier(Modifier::BOLD);
+
+        let header_style = Self::apply_focus_styling(header_base_style, state.is_focused);
+        let header = Line::from(vec![Span::styled(header_text, header_style)]);
         lines.push(header);
         lines.push(Line::from("")); // Empty line for spacing
 
         // Add all dependencies (no more truncation, we'll scroll instead)
         for dep in &state.dependencies {
-            let status = state
-                .dependency_statuses
-                .get(dep)
+            let status = self
+                .status_map
+                .and_then(|map| map.get(dep))
                 .unwrap_or(&TaskStatus::NotStarted);
             let status_icon = status_icons::get_status_icon(*status, state.throbber_counter);
 
-            let line = Line::from(vec![
-                status_icon,
-                Span::styled(dep.clone(), Style::default().fg(THEME.primary_fg)),
-            ]);
+            let dep_base_style = Style::default().fg(THEME.primary_fg);
+            let dep_style = Self::apply_focus_styling(dep_base_style, state.is_focused);
+
+            let line = Line::from(vec![status_icon, Span::styled(dep.clone(), dep_style)]);
             lines.push(line);
         }
 
@@ -216,7 +311,7 @@ impl<'a> DependencyView<'a> {
         state.scrollbar_state = if needs_scrollbar {
             state
                 .scrollbar_state
-                .content_length(content_height)
+                .content_length(max_scroll)
                 .viewport_content_length(viewport_height)
                 .position(state.scroll_offset)
         } else {

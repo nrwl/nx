@@ -34,6 +34,7 @@ use super::components::task_selection_manager::{SelectionMode, TaskSelectionMana
 use super::components::tasks_list::{TaskStatus, TasksList};
 use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
 use super::config::TuiConfig;
+use super::graph_utils::get_task_count;
 use super::lifecycle::RunMode;
 use super::pty::PtyInstance;
 use super::theme::THEME;
@@ -68,8 +69,9 @@ pub struct App {
     pty_instances: HashMap<String, Arc<PtyInstance>>,
     selection_manager: Arc<Mutex<TaskSelectionManager>>,
     pinned_tasks: Vec<String>,
-    tasks: Vec<Task>,
     task_graph: TaskGraph,
+    task_status_map: HashMap<String, TaskStatus>, // App owns task status
+    task_continuous_map: HashMap<String, bool>,   // Static continuous flags - created once
     debug_mode: bool,
     debug_state: TuiWidgetState,
     console_messenger: Option<NxConsoleMessageConnection>,
@@ -93,10 +95,23 @@ impl App {
         title_text: String,
         task_graph: TaskGraph,
     ) -> Result<Self> {
-        let task_count = tasks.len();
+        let task_count = get_task_count(&task_graph);
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(5)));
 
         let initial_focus = Focus::TaskList;
+
+        // Initialize task status map - App owns this now
+        let mut task_status_map = HashMap::new();
+        for task in &tasks {
+            task_status_map.insert(task.id.clone(), TaskStatus::NotStarted);
+        }
+
+        // Initialize continuous flags map - created once since it's static data
+        let mut task_continuous_map = HashMap::new();
+        for (task_id, task) in &task_graph.tasks {
+            task_continuous_map.insert(task_id.clone(), task.continuous.unwrap_or(false));
+        }
+
         let tasks_list = TasksList::new(
             tasks.clone(),
             initiating_tasks,
@@ -139,8 +154,9 @@ impl App {
             resize_debounce_timer: None,
             pty_instances: HashMap::new(),
             selection_manager,
-            tasks,
             task_graph,
+            task_status_map,
+            task_continuous_map,
             debug_mode: false,
             debug_state: TuiWidgetState::default().set_default_display_level(LevelFilter::Debug),
             console_messenger: None,
@@ -165,7 +181,7 @@ impl App {
                 if pinned_tasks.len() == 1 && idx == 0 {
                     self.display_and_focus_current_task_in_terminal_pane(match self.run_mode {
                         RunMode::RunMany => true,
-                        RunMode::RunOne if self.tasks.len() == 1 => false,
+                        RunMode::RunOne if get_task_count(&self.task_graph) == 1 => false,
                         RunMode::RunOne => true,
                     });
                 } else {
@@ -181,14 +197,44 @@ impl App {
     }
 
     pub fn start_tasks(&mut self, tasks: Vec<Task>) {
+        // Update App's task status map when tasks start
+        for task in &tasks {
+            self.task_status_map
+                .insert(task.id.clone(), TaskStatus::InProgress);
+        }
+
         self.dispatch_action(Action::StartTasks(tasks));
     }
 
     pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
+        // Update the App's task status map first
+        self.task_status_map.insert(task_id.clone(), status);
+
         self.dispatch_action(Action::UpdateTaskStatus(task_id.clone(), status));
         if status == TaskStatus::InProgress && self.should_set_interactive_by_default(&task_id) {
-            self.terminal_pane_data[0].set_interactive(true);
+            // Find which pane this task is assigned to
+            for (pane_idx, pane_task) in self.pane_tasks.iter().enumerate() {
+                if let Some(pane_task_id) = pane_task {
+                    if pane_task_id == &task_id {
+                        self.terminal_pane_data[pane_idx].set_interactive(true);
+                        break;
+                    }
+                }
+            }
         }
+    }
+
+    /// Get task status efficiently from App's own HashMap
+    pub fn get_task_status(&self, task_id: &str) -> Option<TaskStatus> {
+        self.task_status_map.get(task_id).copied()
+    }
+
+    /// Get task continuous flag efficiently from App's own HashMap
+    pub fn is_task_continuous(&self, task_id: &str) -> bool {
+        self.task_continuous_map
+            .get(task_id)
+            .copied()
+            .unwrap_or(false)
     }
 
     fn should_set_interactive_by_default(&self, task_id: &str) -> bool {
@@ -216,10 +262,8 @@ impl App {
         }
 
         // If the task is continuous, ensure the pty instances get resized appropriately
-        if let Some(task) = self.tasks.iter_mut().find(|t| t.id == task_id) {
-            if task.continuous.unwrap_or(false) {
-                let _ = self.debounce_pty_resize();
-            }
+        if self.is_task_continuous(&task_id) {
+            let _ = self.debounce_pty_resize();
         }
     }
 
@@ -261,7 +305,7 @@ impl App {
             return;
         }
 
-        if self.tasks.len() > 1 {
+        if get_task_count(&self.task_graph) > 1 {
             self.begin_exit_countdown()
         } else {
             self.quit();
@@ -974,341 +1018,118 @@ impl App {
                         }
                     }
 
-                    // Render terminal panes
-                    for (pane_idx, pane_area) in layout_areas.terminal_panes.iter().enumerate() {
-                        if let Some(tasks_list) = self
-                            .components
-                            .iter_mut()
-                            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
-                        {
+                    // Render terminal panes - first collect necessary data
+                    let terminal_panes_data: Vec<(usize, Rect, Option<String>)> = layout_areas
+                        .terminal_panes
+                        .iter()
+                        .enumerate()
+                        .map(|(pane_idx, pane_area)| {
                             let relevant_pane_task: Option<String> = if self.spacebar_mode {
-                                // Don't unwrap - handle the None case gracefully
                                 self.selection_manager
                                     .lock()
                                     .unwrap()
                                     .get_selected_task_name()
                                     .cloned()
                             } else {
-                                // Clone if it exists, but don't unwrap
                                 self.pane_tasks[pane_idx].clone()
                             };
+                            (pane_idx, *pane_area, relevant_pane_task)
+                        })
+                        .collect();
 
-                            if relevant_pane_task.is_none() {
-                                // The user has chosen to display a pane but there is currently not task assigned to it, render a placeholder
-                                // Render placeholder for pane 1
-                                let placeholder = Paragraph::new(format!(
-                                    "Press {} on a task to show it here",
-                                    pane_idx + 1
-                                ))
-                                .block(
-                                    Block::default()
-                                        .title(format!("  Output {}  ", pane_idx + 1))
-                                        .borders(Borders::ALL)
-                                        .border_style(Style::default().fg(THEME.secondary_fg)),
-                                )
-                                .style(Style::default().fg(THEME.secondary_fg))
-                                .alignment(Alignment::Center);
+                    for (pane_idx, pane_area, relevant_pane_task) in terminal_panes_data {
+                        if relevant_pane_task.is_none() {
+                            // The user has chosen to display a pane but there is currently not task assigned to it, render a placeholder
+                            let placeholder = Paragraph::new(format!(
+                                "Press {} on a task to show it here",
+                                pane_idx + 1
+                            ))
+                            .block(
+                                Block::default()
+                                    .title(format!("  Output {}  ", pane_idx + 1))
+                                    .borders(Borders::ALL)
+                                    .border_style(Style::default().fg(THEME.secondary_fg)),
+                            )
+                            .style(Style::default().fg(THEME.secondary_fg))
+                            .alignment(Alignment::Center);
 
-                                f.render_widget(placeholder, *pane_area);
-                                continue;
-                            }
+                            f.render_widget(placeholder, pane_area);
+                            continue;
+                        }
 
-                            let relevant_pane_task = relevant_pane_task.unwrap();
+                        let relevant_pane_task = relevant_pane_task.unwrap();
 
-                            // Get ALL dependency information (including transitive) before mutable borrow
-                            let mut all_dependencies = Vec::new();
-                            let mut visited = std::collections::HashSet::new();
-                            let mut dependency_levels: HashMap<String, usize> = HashMap::new();
-
-                            // Recursive function to collect all dependencies with levels
-                            fn collect_all_dependencies_with_levels(
-                                task_id: &str,
-                                task_graph: &TaskGraph,
-                                all_dependencies: &mut Vec<String>,
-                                dependency_levels: &mut HashMap<String, usize>,
-                                visited: &mut std::collections::HashSet<String>,
-                                current_level: usize,
-                            ) {
-                                if visited.contains(task_id) {
-                                    return; // Avoid infinite loops
-                                }
-                                visited.insert(task_id.to_string());
-
-                                // Collect regular dependencies
-                                if let Some(direct_deps) = task_graph.dependencies.get(task_id) {
-                                    for dep_id in direct_deps {
-                                        if !all_dependencies.contains(dep_id) {
-                                            all_dependencies.push(dep_id.clone());
-                                            dependency_levels.insert(dep_id.clone(), current_level);
-                                        }
-                                        // Recursively collect dependencies of this dependency
-                                        collect_all_dependencies_with_levels(
-                                            dep_id,
-                                            task_graph,
-                                            all_dependencies,
-                                            dependency_levels,
-                                            visited,
-                                            current_level + 1,
-                                        );
-                                    }
-                                }
-
-                                // Collect continuous dependencies
-                                if let Some(continuous_deps) =
-                                    task_graph.continuous_dependencies.get(task_id)
-                                {
-                                    for dep_id in continuous_deps {
-                                        if !all_dependencies.contains(dep_id) {
-                                            all_dependencies.push(dep_id.clone());
-                                            dependency_levels.insert(dep_id.clone(), current_level);
-                                        }
-                                        // Recursively collect dependencies of this dependency
-                                        collect_all_dependencies_with_levels(
-                                            dep_id,
-                                            task_graph,
-                                            all_dependencies,
-                                            dependency_levels,
-                                            visited,
-                                            current_level + 1,
-                                        );
-                                    }
-                                }
-                            }
-
-                            collect_all_dependencies_with_levels(
-                                &relevant_pane_task,
-                                &self.task_graph,
-                                &mut all_dependencies,
-                                &mut dependency_levels,
-                                &mut visited,
-                                1,
-                            );
-
-                            // Sort dependencies by total dependency count (highest to lowest), then alphabetically
-                            all_dependencies.sort_by(|a, b| {
-                                // Count total dependencies for each task (recursive count)
-                                fn count_all_dependencies(
-                                    task_id: &str,
-                                    task_graph: &TaskGraph,
-                                    visited: &mut std::collections::HashSet<String>,
-                                ) -> usize {
-                                    if visited.contains(task_id) {
-                                        return 0;
-                                    }
-                                    visited.insert(task_id.to_string());
-
-                                    let direct_deps = task_graph
-                                        .dependencies
-                                        .get(task_id)
-                                        .map(|deps| deps.len())
-                                        .unwrap_or(0);
-                                    let continuous_deps = task_graph
-                                        .continuous_dependencies
-                                        .get(task_id)
-                                        .map(|deps| deps.len())
-                                        .unwrap_or(0);
-                                    let transitive_deps = task_graph
-                                        .dependencies
-                                        .get(task_id)
-                                        .map(|deps| {
-                                            deps.iter()
-                                                .map(|dep| {
-                                                    count_all_dependencies(dep, task_graph, visited)
-                                                })
-                                                .sum::<usize>()
-                                        })
-                                        .unwrap_or(0);
-                                    let transitive_continuous_deps = task_graph
-                                        .continuous_dependencies
-                                        .get(task_id)
-                                        .map(|deps| {
-                                            deps.iter()
-                                                .map(|dep| {
-                                                    count_all_dependencies(dep, task_graph, visited)
-                                                })
-                                                .sum::<usize>()
-                                        })
-                                        .unwrap_or(0);
-
-                                    direct_deps
-                                        + continuous_deps
-                                        + transitive_deps
-                                        + transitive_continuous_deps
-                                }
-
-                                let mut visited_a = std::collections::HashSet::new();
-                                let mut visited_b = std::collections::HashSet::new();
-                                let count_a =
-                                    count_all_dependencies(a, &self.task_graph, &mut visited_a);
-                                let count_b =
-                                    count_all_dependencies(b, &self.task_graph, &mut visited_b);
-
-                                // Sort by total dependency count (descending), then alphabetically
-                                count_b.cmp(&count_a).then_with(|| a.cmp(b))
-                            });
-
-                            let dependency_statuses: HashMap<String, TaskStatus> = all_dependencies
-                                .iter()
-                                .map(|dep_id| {
-                                    let status = tasks_list
-                                        .tasks
-                                        .iter()
-                                        .find(|t| t.name == *dep_id)
-                                        .map(|task| task.status)
-                                        .unwrap_or(TaskStatus::NotStarted);
-                                    (dep_id.clone(), status)
-                                })
-                                .collect();
-
-                            let dependency_continuous_flags: HashMap<String, bool> =
-                                all_dependencies
-                                    .iter()
-                                    .map(|dep_id| {
-                                        let is_continuous = self
-                                            .tasks
-                                            .iter()
-                                            .find(|t| t.id == *dep_id)
-                                            .map(|task| task.continuous.unwrap_or(false))
-                                            .unwrap_or(false);
-                                        (dep_id.clone(), is_continuous)
-                                    })
-                                    .collect();
-
-                            if let Some(task) = tasks_list
+                        // Extract task data first to avoid borrowing conflicts
+                        let task_data = if let Some(tasks_list) = self
+                            .components
+                            .iter()
+                            .find_map(|c| c.as_any().downcast_ref::<TasksList>())
+                        {
+                            tasks_list
                                 .tasks
-                                .iter_mut()
+                                .iter()
                                 .find(|t| t.name == relevant_pane_task)
-                            {
-                                let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
-                                terminal_pane_data.is_continuous = task.continuous;
-                                let in_progress = task.status == TaskStatus::InProgress;
-                                if !in_progress {
-                                    terminal_pane_data.set_interactive(false);
-                                }
-
-                                let mut has_pty = false;
-                                if let Some(pty) = self.pty_instances.get(&relevant_pane_task) {
-                                    terminal_pane_data.can_be_interactive =
-                                        in_progress && pty.can_be_interactive();
-                                    terminal_pane_data.pty = Some(pty.clone());
-                                    has_pty = true;
-                                } else {
-                                    // Clear PTY data when switching to a task that doesn't have a PTY instance
-                                    terminal_pane_data.pty = None;
-                                    terminal_pane_data.can_be_interactive = false;
-                                }
-
-                                let is_focused = match self.focus {
-                                    Focus::MultipleOutput(focused_pane_idx) => {
-                                        pane_idx == focused_pane_idx
-                                    }
-                                    _ => false,
-                                };
-
-                                // Figure out if this pane is the next tab target
-                                let is_next_tab_target = !is_focused
-                                    && match self.focus {
-                                        // If the task list is focused, the next tab target is the first pane
-                                        Focus::TaskList => pane_idx == 0,
-                                        // If the first pane is focused, the next tab target is the second pane
-                                        Focus::MultipleOutput(0) => pane_idx == 1,
-                                        _ => false,
-                                    };
-
-                                // If task is pending, show dependency view instead of terminal pane
-                                if task.status == TaskStatus::NotStarted {
-                                    // Get or create dependency view state for this pane
-                                    let state_needs_update = if let Some(ref dep_state) =
-                                        self.dependency_view_states[pane_idx]
-                                    {
-                                        // Check if the state is for the same task and has the same dependencies
-                                        dep_state.current_task != task.name
-                                            || dep_state.dependencies != all_dependencies
-                                    } else {
-                                        true
-                                    };
-
-                                    if state_needs_update {
-                                        // Create new state or update existing one
-                                        let mut new_state = DependencyViewState::new(
-                                            task.name.clone(),
-                                            task.status,
-                                            all_dependencies,
-                                            dependency_statuses,
-                                            dependency_levels,
-                                            dependency_continuous_flags,
-                                            is_focused,
-                                        );
-
-                                        // Preserve scroll position if updating the same task
-                                        if let Some(ref old_state) =
-                                            self.dependency_view_states[pane_idx]
-                                        {
-                                            if old_state.current_task == task.name {
-                                                new_state.scroll_offset = old_state.scroll_offset;
-                                                new_state.scrollbar_state =
-                                                    old_state.scrollbar_state.clone();
-                                            }
-                                        }
-
-                                        self.dependency_view_states[pane_idx] = Some(new_state);
-                                    }
-
-                                    // Update dynamic fields and refresh dependency statuses
-                                    if let Some(dep_state) =
-                                        &mut self.dependency_view_states[pane_idx]
-                                    {
-                                        dep_state.is_focused = is_focused;
-                                        dep_state.throbber_counter = tasks_list.throbber_counter;
-
-                                        // Update dependency statuses and continuous flags with current task states
-                                        for dep_id in &dep_state.dependencies {
-                                            let current_status = tasks_list
-                                                .tasks
-                                                .iter()
-                                                .find(|t| t.name == *dep_id)
-                                                .map(|task| task.status)
-                                                .unwrap_or(TaskStatus::NotStarted);
-                                            dep_state
-                                                .dependency_statuses
-                                                .insert(dep_id.clone(), current_status);
-
-                                            let is_continuous = self
-                                                .tasks
-                                                .iter()
-                                                .find(|t| t.id == *dep_id)
-                                                .map(|task| task.continuous.unwrap_or(false))
-                                                .unwrap_or(false);
-                                            dep_state
-                                                .dependency_continuous_flags
-                                                .insert(dep_id.clone(), is_continuous);
-                                        }
-
-                                        let dependency_view = DependencyView::new();
-                                        f.render_stateful_widget(
-                                            dependency_view,
-                                            *pane_area,
-                                            dep_state,
-                                        );
-                                    }
-                                } else {
-                                    let mut state = TerminalPaneState::new(
+                                .map(|task| {
+                                    (
                                         task.name.clone(),
                                         task.status,
                                         task.continuous,
-                                        is_focused,
-                                        has_pty,
-                                        is_next_tab_target,
-                                        self.console_messenger.is_some(),
-                                    );
+                                        tasks_list.throbber_counter,
+                                    )
+                                })
+                        } else {
+                            None
+                        };
 
-                                    let terminal_pane = TerminalPane::new()
-                                        .minimal(tasks_list_hidden && self.tasks.len() == 1)
-                                        .pty_data(terminal_pane_data)
-                                        .continuous(task.continuous);
+                        if let Some((task_name, task_status, task_continuous, throbber_counter)) =
+                            task_data
+                        {
+                            let mut has_pty = false;
+                            if let Some(_pty) = self.pty_instances.get(&task_name) {
+                                has_pty = true;
+                            }
 
-                                    f.render_stateful_widget(terminal_pane, *pane_area, &mut state);
+                            let is_focused = match self.focus {
+                                Focus::MultipleOutput(focused_pane_idx) => {
+                                    pane_idx == focused_pane_idx
                                 }
+                                _ => false,
+                            };
+
+                            // Figure out if this pane is the next tab target
+                            let is_next_tab_target = !is_focused
+                                && match self.focus {
+                                    // If the task list is focused, the next tab target is the first pane
+                                    Focus::TaskList => pane_idx == 0,
+                                    // If the first pane is focused, the next tab target is the second pane
+                                    Focus::MultipleOutput(0) => pane_idx == 1,
+                                    _ => false,
+                                };
+
+                            // If task is pending, show dependency view instead of terminal pane
+                            if task_status == TaskStatus::NotStarted {
+                                self.render_dependency_view_internal(
+                                    f,
+                                    pane_idx,
+                                    pane_area,
+                                    task_name,
+                                    task_status,
+                                    throbber_counter,
+                                    is_focused,
+                                );
+                            } else {
+                                self.render_terminal_pane_internal(
+                                    f,
+                                    pane_idx,
+                                    pane_area,
+                                    task_name,
+                                    task_status,
+                                    task_continuous,
+                                    tasks_list_hidden,
+                                    is_focused,
+                                    is_next_tab_target,
+                                    has_pty,
+                                );
                             }
                         }
                     }
@@ -1703,37 +1524,16 @@ impl App {
     /// Forward key events to the currently focused pane, if any.
     fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<()> {
         if let Focus::MultipleOutput(pane_idx) = self.focus {
-            // Check if the focused pane is showing a dependency view (pending task)
-            if let Some(task_name) = &self.pane_tasks[pane_idx] {
-                if let Some(tasks_list) = self
-                    .components
-                    .iter()
-                    .find_map(|c| c.as_any().downcast_ref::<TasksList>())
-                {
-                    if let Some(task) = tasks_list.tasks.iter().find(|t| &t.name == task_name) {
-                        if task.status == TaskStatus::NotStarted {
-                            // This pane is showing a dependency view, handle scrolling
-                            if let Some(dep_state) = &mut self.dependency_view_states[pane_idx] {
-                                // Get the viewport height from layout areas
-                                let viewport_height =
-                                    if let Some(ref layout_areas) = self.layout_areas {
-                                        let pane_area = layout_areas.terminal_panes[pane_idx];
-                                        // Account for borders and padding
-                                        (pane_area.height as usize).saturating_sub(4) // 2 for borders, 2 for padding
-                                    } else {
-                                        10 // fallback
-                                    };
-
-                                if dep_state.handle_key_event(key, viewport_height) {
-                                    return Ok(()); // Key was handled
-                                }
-                            }
-                        }
+            // Try dependency view first if it should handle key events
+            if let Some(dep_state) = &mut self.dependency_view_states[pane_idx] {
+                if dep_state.should_handle_key_events() {
+                    if dep_state.handle_key_event(key) {
+                        return Ok(()); // Key was handled by dependency view
                     }
                 }
             }
 
-            // Handle terminal pane key events
+            // Otherwise, handle terminal pane key events
             let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
             if let Some(action) = terminal_pane_data.handle_key_event(key)? {
                 self.dispatch_action(action);
@@ -1906,5 +1706,100 @@ impl App {
         {
             self.dispatch_action(Action::ConsoleMessengerAvailable(true));
         }
+    }
+
+    /// Renders the dependency view for a pending task in the specified pane
+    fn render_dependency_view_internal(
+        &mut self,
+        f: &mut ratatui::Frame,
+        pane_idx: usize,
+        pane_area: Rect,
+        task_name: String,
+        task_status: TaskStatus,
+        throbber_counter: usize,
+        is_focused: bool,
+    ) {
+        // Create or update dependency view state for this pane
+        let should_update = self.dependency_view_states[pane_idx]
+            .as_ref()
+            .map_or(false, |existing_state| {
+                existing_state.current_task == task_name
+            });
+
+        if should_update {
+            // Same task, update the existing state
+            if let Some(existing_state) = self.dependency_view_states[pane_idx].as_mut() {
+                existing_state.update(task_status, is_focused, throbber_counter, pane_area);
+            }
+        } else {
+            // Different task or no existing state, create a new one
+            let new_state = DependencyViewState::new(
+                task_name.clone(),
+                task_status,
+                &self.task_graph,
+                is_focused,
+                throbber_counter,
+                pane_area,
+            );
+            self.dependency_view_states[pane_idx] = Some(new_state);
+        }
+
+        // No need to update status in DependencyViewState - we pass the full map to the widget
+        if let Some(dep_state) = &mut self.dependency_view_states[pane_idx] {
+            let dependency_view = DependencyView::new()
+                .with_continuous_map(&self.task_continuous_map)
+                .with_status_map(&self.task_status_map);
+            f.render_stateful_widget(dependency_view, pane_area, dep_state);
+        }
+    }
+
+    /// Renders the terminal pane for a running/completed task in the specified pane
+    fn render_terminal_pane_internal(
+        &mut self,
+        f: &mut ratatui::Frame,
+        pane_idx: usize,
+        pane_area: Rect,
+        task_name: String,
+        task_status: TaskStatus,
+        task_continuous: bool,
+        tasks_list_hidden: bool,
+        is_focused: bool,
+        is_next_tab_target: bool,
+        has_pty: bool,
+    ) {
+        let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
+        terminal_pane_data.is_continuous = task_continuous;
+        let in_progress = task_status == TaskStatus::InProgress;
+        if !in_progress {
+            terminal_pane_data.set_interactive(false);
+        }
+
+        if has_pty {
+            if let Some(pty) = self.pty_instances.get(&task_name) {
+                terminal_pane_data.can_be_interactive = in_progress && pty.can_be_interactive();
+                terminal_pane_data.pty = Some(pty.clone());
+            }
+        } else {
+            // Clear PTY data when switching to a task that doesn't have a PTY instance
+            terminal_pane_data.pty = None;
+            terminal_pane_data.can_be_interactive = false;
+        }
+
+        let mut state = TerminalPaneState::new(
+            task_name,
+            task_status,
+            task_continuous,
+            is_focused,
+            has_pty,
+            is_next_tab_target,
+            self.console_messenger.is_some(),
+        );
+
+        let terminal_pane = TerminalPane::new()
+            .minimal(tasks_list_hidden && get_task_count(&self.task_graph) == 1)
+            .pty_data(terminal_pane_data)
+            .continuous(task_continuous);
+
+        f.render_stateful_widget(terminal_pane, pane_area, &mut state);
     }
 }
