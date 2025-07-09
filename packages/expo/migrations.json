@@ -19,10 +19,16 @@
       "factory": "./src/migrations/update-19-7-0/remove-eas-pre-install"
     },
     "update-21-3-0-remove-deprecated-deps": {
-      "version": "21.3.0-beta.0",
+      "version": "21.3.0-beta.4",
       "cli": "nx",
       "description": "Remove deprecated dependencies from package.json",
       "factory": "./src/migrations/update-21-3-0/remove-deprecated-deps"
+    },
+    "update-21-3-0-update-splash-screen-config": {
+      "version": "21.3.0-beta.4",
+      "cli": "nx",
+      "description": "Update Expo splash screen configuration to use the new format",
+      "factory": "./src/migrations/update-21-3-0/update-splash-screen-config"
     }
   },
   "packageJsonUpdates": {
