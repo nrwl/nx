@@ -30,7 +30,35 @@ export function readPluginPackageJson(
   path: string;
   json: PackageJson;
 } {
+  // First try direct path and pnpm scanning before require.resolve
+  // because require.resolve might find the workspace source version when __dirname is passed from original workspace
+  for (const searchPath of paths) {
+    const directPackageJsonPath = path.join(
+      searchPath,
+      'node_modules',
+      pluginName,
+      'package.json'
+    );
+
+    if (existsSync(directPackageJsonPath)) {
+      return {
+        json: readJsonFile(directPackageJsonPath),
+        path: directPackageJsonPath,
+      };
+    }
+
+    const nodeModulesPath = path.join(searchPath, 'node_modules');
+    if (existsSync(nodeModulesPath)) {
+      const pnpmDir = path.join(nodeModulesPath, '.pnpm');
+      const result = scanPnpmForPlugin(pluginName, pnpmDir);
+      if (result) {
+        return result;
+      }
+    }
+  }
+
   try {
+    // Fall back to require.resolve only if direct paths and pnpm scanning failed
     const result = readModulePackageJsonWithoutFallbacks(pluginName, paths);
     return {
       json: result.packageJson,
@@ -38,20 +66,6 @@ export function readPluginPackageJson(
     };
   } catch (e) {
     if (e.code === 'MODULE_NOT_FOUND') {
-      // If require.resolve fails, try pnpm scanning as fallback
-      // This is needed when we are in the Nx repo that uses ts solutions and `require.resolve` finds the source plugins
-      // Because the original __dirname is passed
-      for (const searchPath of paths) {
-        const nodeModulesPath = path.join(searchPath, 'node_modules');
-        if (existsSync(nodeModulesPath)) {
-          const pnpmDir = path.join(nodeModulesPath, '.pnpm');
-          const result = scanPnpmForPlugin(pluginName, pnpmDir);
-          if (result) {
-            return result;
-          }
-        }
-      }
-
       // Try local plugin as final fallback
       const localPluginPath = resolveLocalNxPlugin(pluginName, projects);
       if (localPluginPath) {
