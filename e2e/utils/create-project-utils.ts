@@ -127,14 +127,6 @@ export function  newProject({
         createNxWorkspaceEnd.name
       );
 
-      // Ensure the package manager is correctly set in the created workspace
-      if (packageManager) {
-        updateJson(`package.json`, (json) => {
-          json.packageManager = getPackageManagerVersion(packageManager);
-          return json;
-        });
-      }
-
       // Temporary hack to prevent installing with `--frozen-lockfile`
       if (isCI && packageManager === 'pnpm') {
         updateFile(
