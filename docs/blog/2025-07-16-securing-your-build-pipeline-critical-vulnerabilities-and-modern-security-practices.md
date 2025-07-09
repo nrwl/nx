@@ -1,7 +1,7 @@
 ---
 title: 'Critical Exploit Discovered: Protecting Your Build Infrastructure from Emerging Threats'
 description: "Join Nx CEO, Jeff Cross, and CTO, Victor Savkin, for an essential security briefing on protecting your build infrastructure from emerging threats. With the recent publication of CVE-2025-36852 – CREEP (Cache Race-condition Exploit Enables Poisoning, severity 9.4), it's more critical than ever to understand the security implications of your build and CI/CD choices."
-date: 2025-07-09
+date: 2025-07-16
 slug: 'securing-your-build-pipeline-critical-vulnerabilities-and-modern-security-practices'
 authors: ['Jeff Cross', 'Victor Savkin']
 tags: [webinar]
@@ -10,10 +10,6 @@ time: 1pm ET/5pm UTC
 status: Upcoming
 registrationUrl: https://go.nx.dev/july2025-webinar
 ---
-
-**Jul 09, 2025 - 1pm ET/5pm UTC**
-
-and
 
 **Jul 16, 2025 - 12pm ET/4pm UTC**
 
