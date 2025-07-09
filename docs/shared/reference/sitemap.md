@@ -884,6 +884,7 @@
     - [Assignment Rules](/ci/reference/assignment-rules)
     - [Custom Steps](/ci/reference/custom-steps)
     - [Environment Variables](/ci/reference/env-vars)
+    - [Credit Pricing](/ci/reference/credits-pricing)
     - [Release Notes](/ci/reference/release-notes)
   - [Troubleshooting](/ci/troubleshooting)
     - [CI Execution Failed](/ci/troubleshooting/ci-execution-failed)

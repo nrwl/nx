@@ -2912,6 +2912,11 @@
               "file": "nx-cloud/reference/env-vars"
             },
             {
+              "name": "Credit Pricing",
+              "id": "credits-pricing",
+              "file": "nx-cloud/reference/nx-cloud-credits-pricing"
+            },
+            {
               "name": "Release Notes",
               "id": "release-notes",
               "file": "nx-cloud/reference/release-notes"

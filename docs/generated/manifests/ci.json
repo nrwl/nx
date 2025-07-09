@@ -2033,6 +2033,17 @@
         "tags": []
       },
       {
+        "id": "credits-pricing",
+        "name": "Credit Pricing",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/reference/nx-cloud-credits-pricing",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/reference/credits-pricing",
+        "tags": []
+      },
+      {
         "id": "release-notes",
         "name": "Release Notes",
         "description": "",
@@ -2112,6 +2123,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/reference/env-vars",
+    "tags": []
+  },
+  "/ci/reference/credits-pricing": {
+    "id": "credits-pricing",
+    "name": "Credit Pricing",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/reference/nx-cloud-credits-pricing",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/reference/credits-pricing",
     "tags": []
   },
   "/ci/reference/release-notes": {
