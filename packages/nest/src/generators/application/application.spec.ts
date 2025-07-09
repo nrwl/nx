@@ -43,6 +43,7 @@ describe('application generator', () => {
                 "args": [
                   "--node-env=development",
                 ],
+                "cwd": "my-node-app"
               },
             },
             "executor": "nx:run-commands",

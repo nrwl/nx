@@ -1132,6 +1132,7 @@ describe('app', () => {
       expect(buildTarget.executor).toBe('nx:run-commands');
       expect(buildTarget.options.command).toBe('webpack-cli build');
       expect(buildTarget.options.args).toEqual(['--node-env=production']);
+      expect(buildTarget.options.cwd).toEqual(project.sourceRoot)
       expect(buildTarget.configurations.development.args).toEqual([
         '--node-env=development',
       ]);
