@@ -5628,6 +5628,30 @@
                         "children": [],
                         "isExternal": false,
                         "disableCollapsible": false
+                      },
+                      {
+                        "id": "fix-ci",
+                        "path": "/reference/core-api/nx/documents/fix-ci",
+                        "name": "fix-ci",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "record",
+                        "path": "/reference/core-api/nx/documents/record",
+                        "name": "record",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "start-ci-run",
+                        "path": "/reference/core-api/nx/documents/start-ci-run",
+                        "name": "start-ci-run",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
                       }
                     ],
                     "isExternal": false,
