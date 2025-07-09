@@ -554,7 +554,7 @@ describe('migrate', () => {
     );
     // should keep new line on package
     const packageContent = readFile('package.json');
-    console.log('[DEBUG]: Package.json contents ',packageContent);
+    console.log('[DEBUG]: package.json contents ',packageContent);
     expect(packageContent.charCodeAt(packageContent.length - 1)).toEqual(10);
 
     // creates migrations.json
