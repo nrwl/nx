@@ -242,18 +242,8 @@ export function getStrippedEnvironmentVariables() {
         return false;
       }
 
-      if (key === 'NODE_PATH' && value) {
-        const paths = value.split(':');
-        const filteredPaths = paths.filter((path) => {
-          return !pathMatchesWorkspacePattern(path, workspacePatterns);
-        });
-
-        if (filteredPaths.length === 0) {
-          return false;
-        }
-
-        process.env.NODE_PATH = filteredPaths.join(':');
-        return true;
+      if (key === 'NODE_PATH') {
+        return false;
       }
 
       return true;

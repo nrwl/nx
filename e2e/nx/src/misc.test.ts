@@ -188,10 +188,37 @@ describe('Nx Commands', () => {
       expect(listOutput).toContain('@nx/workspace');
 
       // temporarily make it look like this isn't installed
-      renameSync(
-        tmpProjPath('node_modules/@nx/next'),
-        tmpProjPath('node_modules/@nx/next_tmp')
-      );
+      // For pnpm, we need to rename the actual package in .pnpm directory, not just the symlink
+      const { readdirSync, statSync } = require('fs');
+      const pnpmDir = tmpProjPath('node_modules/.pnpm');
+      let renamedPnpmEntry = null;
+
+      console.log(`[DEBUG] Checking pnpm dir: ${pnpmDir}`);
+      console.log(`[DEBUG] pnpm dir exists: ${require('fs').existsSync(pnpmDir)}`);
+      
+      if (require('fs').existsSync(pnpmDir)) {
+        const entries = readdirSync(pnpmDir);
+        console.log(`[DEBUG] pnpm entries:`, entries);
+        const nextEntry = entries.find((entry) => entry.includes('nx+next@'));
+        console.log(`[DEBUG] Found next entry:`, nextEntry);
+        if (nextEntry) {
+          renamedPnpmEntry = nextEntry;
+          console.log(`[DEBUG] Renaming ${nextEntry} to ${nextEntry}_tmp`);
+          renameSync(
+            tmpProjPath(`node_modules/.pnpm/${nextEntry}`),
+            tmpProjPath(`node_modules/.pnpm/${nextEntry}_tmp`)
+          );
+        }
+      }
+
+      // Also rename the symlink
+      if (require('fs').existsSync(tmpProjPath('node_modules/@nx/next'))) {
+        console.log(`[DEBUG] Renaming symlink node_modules/@nx/next`);
+        renameSync(
+          tmpProjPath('node_modules/@nx/next'),
+          tmpProjPath('node_modules/@nx/next_tmp')
+        );
+      }
 
       listOutput = runCLI('list');
       expect(listOutput).toContain('NX   Also available');
@@ -230,11 +257,20 @@ describe('Nx Commands', () => {
         'NX   @wibble/fish is not currently installed'
       );
 
-      // put back the @nx/angular module (or all the other e2e tests after this will fail)
-      renameSync(
-        tmpProjPath('node_modules/@nx/next_tmp'),
-        tmpProjPath('node_modules/@nx/next')
-      );
+      // put back the @nx/next module (or all the other e2e tests after this will fail)
+      if (renamedPnpmEntry) {
+        renameSync(
+          tmpProjPath(`node_modules/.pnpm/${renamedPnpmEntry}_tmp`),
+          tmpProjPath(`node_modules/.pnpm/${renamedPnpmEntry}`)
+        );
+      }
+
+      if (require('fs').existsSync(tmpProjPath('node_modules/@nx/next_tmp'))) {
+        renameSync(
+          tmpProjPath('node_modules/@nx/next_tmp'),
+          tmpProjPath('node_modules/@nx/next')
+        );
+      }
     }, 120000);
   });
 
