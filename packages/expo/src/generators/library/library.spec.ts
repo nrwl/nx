@@ -339,12 +339,8 @@ describe('lib', () => {
         "
       `);
       const packageJson = readJson(appTree, 'package.json');
-      expect(packageJson.devDependencies['react-test-renderer']).toBeDefined();
       expect(
         packageJson.devDependencies['@testing-library/react-native']
-      ).toBeDefined();
-      expect(
-        packageJson.devDependencies['@testing-library/jest-native']
       ).toBeDefined();
       expect(packageJson.devDependencies['jest-expo']).toBeDefined();
     });
