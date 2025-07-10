@@ -1,9 +1,5 @@
 # Dynamically Allocate Agents
 
-{% callout type="info" title="Coming soon!" %}
-We're cooking something up that will make it even easier to dynamically allocate agents, powered by AI. [Read more &raquo;](/ci/concepts/nx-cloud-ai)
-{% /callout %}
-
 By default, when you set up [Nx Agents](/ci/features/distribute-task-execution) you specify the number and type of agents to use.
 
 ```yaml {% fileName=".github/workflows/main.yaml" highlightLines=[8] %}
