@@ -176,7 +176,7 @@ const VALID_AUTHORS_FOR_LATEST = [
 
   // Clean up tsconfig files before publishing
   console.log('Cleaning up tsconfig files...');
-  execSync('pnpm nx run-many -t cleanup-tsconfig --parallel=8', {
+  execSync('node ./scripts/cleanup-tsconfig-files.js', {
     stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
     maxBuffer: LARGE_BUFFER,
     windowsHide: false,

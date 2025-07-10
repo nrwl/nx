@@ -54,7 +54,7 @@ module.exports = {
   content: [
     path.join(__dirname, '{pages,app}/**/*.{js,ts,jsx,tsx}'),
     // ...createGlobPatternsForDependencies(__dirname), TODO: look into why this fails
-    // Most essential nx-dev UI packages only - minimal set for performance
+    // Essential nx-dev UI packages
     '../ui-*/src/**/*.{js,ts,jsx,tsx}',
     '../feature-doc-viewer/src/**/*.{js,ts,jsx,tsx}',
     '../feature-feedback/src/**/*.{js,ts,jsx,tsx}',

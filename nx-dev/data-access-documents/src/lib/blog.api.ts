@@ -106,25 +106,23 @@ export class BlogApi {
   }
 
   private dateFromFileName(filename: string): string {
-    const timeString = '00:00:00.000Z';
+    const timeString = new Date().toISOString().split('T')[1];
     const regexp = /^(\d\d\d\d-\d\d-\d\d).+$/;
     const match = filename.match(regexp);
     if (match) {
-      return new Date(match[1] + 'T' + timeString).toISOString();
+      return new Date(match[1] + ' ' + timeString).toISOString();
     } else {
       throw new Error(`Could not parse date from filename: ${filename}`);
     }
   }
 
   private calculateDate(filename: string, frontmatter: any): string {
-    const timeString = '00:00:00.000Z';
+    const date: Date = new Date();
+    const timeString = date.toISOString().split('T')[1];
     if (frontmatter.date) {
-      // Handle both Date objects and string dates from frontmatter
-      const dateStr =
-        frontmatter.date instanceof Date
-          ? frontmatter.date.toISOString().split('T')[0]
-          : new Date(frontmatter.date).toISOString().split('T')[0];
-      return new Date(dateStr + 'T' + timeString).toISOString();
+      return new Date(
+        frontmatter.date.toISOString().split('T')[0] + 'T' + timeString
+      ).toISOString();
     } else {
       return this.dateFromFileName(filename);
     }

@@ -4,6 +4,8 @@ import { BlogDetails } from '@nx/nx-dev-ui-blog';
 import { DefaultLayout } from '@nx/nx-dev-ui-common';
 import { tryNxCloudForFree } from '../../../lib/header-cta.configs';
 
+// Needed without it Next.js will fail to serve the page with start
+export const revalidate = 3600;
 interface BlogPostDetailProps {
   params: { slug: string };
 }
