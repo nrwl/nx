@@ -1,4 +1,5 @@
 import { ProjectGraph } from '../config/project-graph';
+import { TempFs } from '../internal-testing-utils/temp-fs';
 import { getSourceDirOfDependentProjects } from './project-graph-utils';
 
 describe('project graph utils', () => {
@@ -35,7 +36,9 @@ describe('project graph utils', () => {
         'implicit-lib': {
           name: 'implicit-lib',
           type: 'lib',
-          data: {},
+          data: {
+            root: 'libs/implicit-lib',
+          },
         },
       },
       externalNodes: {
@@ -87,20 +90,34 @@ describe('project graph utils', () => {
       ).toThrowError();
     });
 
-    describe('Given there is implicit library with no sourceRoot', () => {
-      it('should return a warnings array with the library with no sourceRoot', () => {
-        projGraph.dependencies['demo-app'].push({
-          type: 'implicit',
-          source: 'demo-app',
-          target: 'implicit-lib',
-        });
-
-        const [_, warnings] = getSourceDirOfDependentProjects(
-          'demo-app',
-          projGraph
-        );
-        expect(warnings).toContain('implicit-lib');
+    it('should fall back to project root when the source root is not set', () => {
+      projGraph.dependencies['demo-app'].push({
+        type: 'implicit',
+        source: 'demo-app',
+        target: 'implicit-lib',
       });
+
+      const [paths] = getSourceDirOfDependentProjects('demo-app', projGraph);
+      expect(paths).toContain(projGraph.nodes['implicit-lib'].data.root);
+    });
+
+    it('should return `<project root>/src` when it exists and the source root is not set', () => {
+      const tempFs = new TempFs('project-graph-utils');
+      tempFs.createFileSync('libs/implicit-lib/src/index.ts', '');
+      const originalCwd = process.cwd();
+      process.chdir(tempFs.tempDir);
+
+      projGraph.dependencies['demo-app'].push({
+        type: 'implicit',
+        source: 'demo-app',
+        target: 'implicit-lib',
+      });
+
+      const [paths] = getSourceDirOfDependentProjects('demo-app', projGraph);
+      expect(paths).toContain(
+        `${projGraph.nodes['implicit-lib'].data.root}/src`
+      );
+      process.chdir(originalCwd);
     });
   });
 });
