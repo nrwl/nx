@@ -399,14 +399,14 @@
       }
     },
     "migrations": {
-      "/technologies/angular/api/migrations/update-angular-cli-version-20-1-0-rc-0": {
-        "description": "Update the @angular/cli package version to 20.1.0-rc.0.",
-        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-1-0-rc-0.json",
+      "/technologies/angular/api/migrations/update-angular-cli-version-20-1-0": {
+        "description": "Update the @angular/cli package version to ~20.1.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-1-0.json",
         "hidden": false,
-        "name": "update-angular-cli-version-20-1-0-rc-0",
-        "version": "21.3.0-beta.3",
+        "name": "update-angular-cli-version-20-1-0",
+        "version": "21.3.0-beta.4",
         "originalFilePath": "/packages/angular",
-        "path": "/technologies/angular/api/migrations/update-angular-cli-version-20-1-0-rc-0",
+        "path": "/technologies/angular/api/migrations/update-angular-cli-version-20-1-0",
         "type": "migration"
       },
       "/technologies/angular/api/migrations/21.3.0-package-updates": {
@@ -414,7 +414,7 @@
         "file": "generated/packages/angular/migrations/21.3.0-package-updates.json",
         "hidden": false,
         "name": "21.3.0-package-updates",
-        "version": "21.3.0-beta.3",
+        "version": "21.3.0-beta.4",
         "originalFilePath": "/packages/angular",
         "path": "/technologies/angular/api/migrations/21.3.0-package-updates",
         "type": "migration"
