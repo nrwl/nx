@@ -395,7 +395,10 @@ function ignoreTestOutput(
 ): void {
   // Make sure playwright outputs are not linted.
   if (options.linter === 'eslint') {
-    addIgnoresToLintConfig(tree, '', ['**/test-output']);
+    addIgnoresToLintConfig(tree, '', [
+      '**/test-output',
+      '**/.nx-atomized-blob-reports',
+    ]);
   }
 
   // Handle gitignore
@@ -403,13 +406,19 @@ function ignoreTestOutput(
     logger.warn(`Couldn't find a root .gitignore file to update.`);
   }
 
-  let content = tree.read('.gitignore', 'utf-8');
-  if (/^test-output$/gm.test(content)) {
-    return;
+  const content = tree.read('.gitignore', 'utf-8');
+  let newContent = content;
+
+  if (!/^test-output$/gm.test(content)) {
+    newContent = `${content}\ntest-output\n`;
+  }
+  if (!/^\.nx-atomized-blob-reports$/gm.test(content)) {
+    newContent = `${content}\n.nx-atomized-blob-reports\n`;
   }
 
-  content = `${content}\ntest-output\n`;
-  tree.write('.gitignore', content);
+  if (newContent !== content) {
+    tree.write('.gitignore', newContent);
+  }
 }
 
 export default configurationGenerator;
