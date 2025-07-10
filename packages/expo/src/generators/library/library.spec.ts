@@ -339,12 +339,8 @@ describe('lib', () => {
         "
       `);
       const packageJson = readJson(appTree, 'package.json');
-      expect(packageJson.devDependencies['react-test-renderer']).toBeDefined();
       expect(
         packageJson.devDependencies['@testing-library/react-native']
-      ).toBeDefined();
-      expect(
-        packageJson.devDependencies['@testing-library/jest-native']
       ).toBeDefined();
       expect(packageJson.devDependencies['jest-expo']).toBeDefined();
     });
@@ -524,8 +520,8 @@ describe('lib', () => {
           "main": "./src/index.ts",
           "name": "@proj/my-lib",
           "peerDependencies": {
-            "react": "~18.3.1",
-            "react-native": "0.76.3",
+            "react": "19.0.0",
+            "react-native": "0.79.3",
           },
           "types": "./src/index.ts",
           "version": "0.0.1",
@@ -660,8 +656,8 @@ describe('lib', () => {
           "module": "./dist/index.esm.js",
           "name": "@proj/my-lib",
           "peerDependencies": {
-            "react": "~18.3.1",
-            "react-native": "0.76.3",
+            "react": "19.0.0",
+            "react-native": "0.79.3",
           },
           "types": "./dist/index.esm.d.ts",
           "version": "0.0.1",
