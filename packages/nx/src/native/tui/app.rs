@@ -912,7 +912,6 @@ impl App {
                     }
 
                     let frame_area = self.frame_area.unwrap();
-                    let _tasks_list_hidden = self.is_task_list_hidden();
                     let layout_areas = self.layout_areas.as_mut().unwrap();
 
                     if self.debug_mode {
