@@ -1,7 +1,7 @@
 import { Argv, CommandModule } from 'yargs';
-import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
-import { nxVersion } from '../../utils/versions';
-import { withVerbose } from '../yargs-utils/shared-options';
+import { linkToNxDevAndExamples } from '../../yargs-utils/documentation';
+import { nxVersion } from '../../../utils/versions';
+import { withVerbose } from '../../yargs-utils/shared-options';
 
 export const yargsConnectCommand: CommandModule = {
   command: 'connect',
@@ -12,7 +12,7 @@ export const yargsConnectCommand: CommandModule = {
   handler: async (args: any) => {
     await (await import('./connect-to-nx-cloud')).connectToNxCloudCommand(args);
     await (
-      await import('../../utils/ab-testing')
+      await import('../../../utils/ab-testing')
     ).recordStat({
       command: 'connect',
       nxVersion,

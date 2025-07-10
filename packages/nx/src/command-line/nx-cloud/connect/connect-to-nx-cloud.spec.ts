@@ -1,4 +1,4 @@
-import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
+import { withEnvironmentVariables } from '../../../internal-testing-utils/with-environment';
 import { onlyDefaultRunnerIsUsed } from './connect-to-nx-cloud';
 
 describe('connect-to-nx-cloud', () => {

@@ -11,7 +11,7 @@ import {
 export function WebinarNotifier(): ReactElement | null {
   const [isMounted, setIsMounted] = useState(false);
   const [isVisible, setIsVisible] = useState<boolean>(true);
-  const localStorageKey = 'webinar-july-9-2025--notifier-closed';
+  const localStorageKey = 'webinar-july-16-2025--notifier-closed';
 
   useEffect(() => {
     setIsMounted(true);
@@ -61,7 +61,7 @@ export function WebinarNotifier(): ReactElement | null {
               aria-hidden="true"
               className="size-8 flex-shrink-0"
             />
-            <span>Join our webinar + live Q&A on July 9th</span>
+            <span>Join our webinar + live Q&A on July 16th</span>
           </motion.h3>
           <motion.div key="live-event" className="mt-4 space-y-4">
             <p className="mb-2 text-sm">
