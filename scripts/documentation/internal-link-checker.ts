@@ -132,7 +132,7 @@ function readApiJson(manifestFileName: string): string[] {
     readFileContents(
       join(
         workspaceRoot,
-        'dist/nx-dev/nx-dev/public/documentation/generated/manifests',
+        'nx-dev/nx-dev/public/documentation/generated/manifests',
         manifestFileName
       )
     )
