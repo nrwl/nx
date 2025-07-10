@@ -18,10 +18,7 @@
  */
 
 import { connect, Server, Socket } from 'net';
-import {
-  consumeMessagesFromSocket,
-  MESSAGE_END_SEQ,
-} from '../utils/consume-messages-from-socket';
+import { consumeMessagesFromSocket } from '../utils/consume-messages-from-socket';
 import { Serializable } from 'child_process';
 
 export interface PseudoIPCMessage {
@@ -101,7 +98,7 @@ export class PseudoIPCServer {
         JSON.stringify({ type: 'TO_CHILDREN_FROM_PARENT', message })
       );
       // send EOT to indicate that the message has been fully written
-      socket.write(MESSAGE_END_SEQ);
+      socket.write(String.fromCodePoint(4));
     });
   }
 
@@ -110,7 +107,7 @@ export class PseudoIPCServer {
       socket.write(
         JSON.stringify({ type: 'TO_CHILDREN_FROM_PARENT', id, message })
       );
-      socket.write(MESSAGE_END_SEQ);
+      socket.write(String.fromCodePoint(4));
     });
   }
 
@@ -142,7 +139,7 @@ export class PseudoIPCClient {
       JSON.stringify({ type: 'TO_PARENT_FROM_CHILDREN', message })
     );
     // send EOT to indicate that the message has been fully written
-    this.socket.write(MESSAGE_END_SEQ);
+    this.socket.write(String.fromCodePoint(4));
   }
 
   notifyChildIsReady(id: string) {
@@ -153,7 +150,7 @@ export class PseudoIPCClient {
       } as PseudoIPCMessage)
     );
     // send EOT to indicate that the message has been fully written
-    this.socket.write(MESSAGE_END_SEQ);
+    this.socket.write(String.fromCodePoint(4));
   }
 
   onMessageFromParent(
