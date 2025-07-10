@@ -96,8 +96,6 @@ import {
   POST_TASKS_EXECUTION,
   PRE_TASKS_EXECUTION,
 } from '../message-types/run-tasks-execution-hooks';
-import { deserialize } from 'node:v8';
-import { isJsonMessage } from '../../utils/consume-messages-from-socket';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -255,10 +253,7 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
       runnerOptions,
-      env:
-        process.env.NX_USE_V8_SERIALIZER !== 'false'
-          ? structuredClone(process.env)
-          : env,
+      env,
       tasks,
       taskGraph,
     });
@@ -296,9 +291,7 @@ export class DaemonClient {
       ).listen(
         (message) => {
           try {
-            const parsedMessage = isJsonMessage(message)
-              ? JSON.parse(message)
-              : deserialize(Buffer.from(message, 'binary'));
+            const parsedMessage = JSON.parse(message);
             callback(null, parsedMessage);
           } catch (e) {
             callback(e, null);
@@ -613,15 +606,13 @@ export class DaemonClient {
 
   private handleMessage(serializedResult: string) {
     try {
-      performance.mark('result-parse-start');
-      const parsedResult = isJsonMessage(serializedResult)
-        ? JSON.parse(serializedResult)
-        : deserialize(Buffer.from(serializedResult, 'binary'));
-      performance.mark('result-parse-end');
+      performance.mark('json-parse-start');
+      const parsedResult = JSON.parse(serializedResult);
+      performance.mark('json-parse-end');
       performance.measure(
         'deserialize daemon response',
-        'result-parse-start',
-        'result-parse-end'
+        'json-parse-start',
+        'json-parse-end'
       );
       if (parsedResult.error) {
         this.currentReject(parsedResult.error);
@@ -629,7 +620,7 @@ export class DaemonClient {
         performance.measure(
           'total for sendMessageToDaemon()',
           'sendMessageToDaemon-start',
-          'result-parse-end'
+          'json-parse-end'
         );
         return this.currentResolve(parsedResult);
       }

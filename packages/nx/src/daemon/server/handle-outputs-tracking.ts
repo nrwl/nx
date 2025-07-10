@@ -31,7 +31,7 @@ export async function handleOutputsHashesMatch(payload: {
       payload.data.hash
     );
     return {
-      response: res,
+      response: JSON.stringify(res),
       description: 'outputsHashesMatch',
     };
   } catch (e) {

@@ -126,8 +126,6 @@ export class LoadedNxPlugin {
           });
         }
         await plugin.preTasksExecution(this.options, context);
-        // This doesn't revert env changes, as the proxy still updates
-        // originalEnv, rather it removes the proxy.
         process.env = originalEnv;
 
         return updates;

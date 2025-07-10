@@ -5,7 +5,7 @@ export async function handleGetRegisteredSyncGenerators(): Promise<HandlerResult
   const syncGenerators = await getCachedRegisteredSyncGenerators();
 
   return {
-    response: syncGenerators,
+    response: JSON.stringify(syncGenerators),
     description: 'handleGetSyncGeneratorChanges',
   };
 }

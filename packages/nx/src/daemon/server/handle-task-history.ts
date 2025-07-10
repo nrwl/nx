@@ -14,7 +14,7 @@ export async function handleGetFlakyTasks(hashes: string[]) {
   const taskHistory = getTaskHistory();
   const history = await taskHistory.getFlakyTasks(hashes);
   return {
-    response: history,
+    response: JSON.stringify(history),
     description: 'handleGetFlakyTasks',
   };
 }
@@ -23,7 +23,7 @@ export async function handleGetEstimatedTaskTimings(targets: TaskTarget[]) {
   const taskHistory = getTaskHistory();
   const history = await taskHistory.getEstimatedTaskTimings(targets);
   return {
-    response: history,
+    response: JSON.stringify(history),
     description: 'handleGetEstimatedTaskTimings',
   };
 }
