@@ -1,23 +1,23 @@
-import { output } from '../../utils/output';
-import { readNxJson } from '../../config/configuration';
-import { FsTree, flushChanges } from '../../generators/tree';
+import { output } from '../../../utils/output';
+import { readNxJson } from '../../../config/configuration';
+import { FsTree, flushChanges } from '../../../generators/tree';
 import {
   connectToNxCloud,
   ConnectToNxCloudOptions,
-} from '../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
-import { createNxCloudOnboardingURL } from '../../nx-cloud/utilities/url-shorten';
-import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
-import { runNxSync } from '../../utils/child-process';
-import { NxJsonConfiguration } from '../../config/nx-json';
-import { NxArgs } from '../../utils/command-line-utils';
+} from '../../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
+import { createNxCloudOnboardingURL } from '../../../nx-cloud/utilities/url-shorten';
+import { isNxCloudUsed } from '../../../utils/nx-cloud-utils';
+import { runNxSync } from '../../../utils/child-process';
+import { NxJsonConfiguration } from '../../../config/nx-json';
+import { NxArgs } from '../../../utils/command-line-utils';
 import {
   MessageKey,
   MessageOptionKey,
   recordStat,
   messages,
-} from '../../utils/ab-testing';
-import { nxVersion } from '../../utils/versions';
-import { workspaceRoot } from '../../utils/workspace-root';
+} from '../../../utils/ab-testing';
+import { nxVersion } from '../../../utils/versions';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import chalk = require('chalk');
 const ora = require('ora');
 const open = require('open');

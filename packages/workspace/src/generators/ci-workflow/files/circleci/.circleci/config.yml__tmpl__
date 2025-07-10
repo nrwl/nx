@@ -25,7 +25,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       <% if (connectedToCloud) { %># Uncomment this line to enable task distribution<% } else { %># Connect your workspace by running "nx connect" and uncomment this line to enable task distribution<% } %>
-      # - run: <%= packageManagerPreInstallPrefix %> nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
+      # - run: <%= packageManagerPreInstallPrefix %> nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
 
       - run: <%= packageManagerInstall %><% if(hasCypress){ %>
       - run: <%= packageManagerPrefix %> cypress install<% } %><% if(hasPlaywright){ %>
@@ -35,7 +35,9 @@ jobs:
 
 <% for (const command of commands) { %><% if (command.comments) { %><% for (const comment of command.comments) { %>
       # <%- comment %><% } %><% } %><% if (command.command) { %>
-      - run: <%= command.command %><% } %><% } %>
+      - run:
+          command: <%= command.command %><% if (command.alwaysRun) { %>
+          when: always<% } %><% } %><% } %>
 
 workflows:
   version: 2
