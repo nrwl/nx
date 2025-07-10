@@ -4,17 +4,25 @@ import {
   type ProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { FsTree } from 'nx/src/generators/tree';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 export function getProjectSourceRoot(
   project: ProjectConfiguration,
   tree?: Tree
 ): string {
-  tree ??= new FsTree(workspaceRoot, false);
+  if (tree) {
+    return (
+      project.sourceRoot ??
+      (tree.exists(joinPathFragments(project.root, 'src'))
+        ? joinPathFragments(project.root, 'src')
+        : project.root)
+    );
+  }
 
   return (
     project.sourceRoot ??
-    (tree.exists(joinPathFragments(project.root, 'src'))
+    (existsSync(join(workspaceRoot, project.root, 'src'))
       ? joinPathFragments(project.root, 'src')
       : project.root)
   );
