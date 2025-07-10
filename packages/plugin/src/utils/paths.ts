@@ -1,4 +1,5 @@
 import { readProjectConfiguration, type Tree } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { dirname, join, relative } from 'node:path/posix';
 
 export function getArtifactMetadataDirectory(
@@ -39,11 +40,7 @@ export function getArtifactMetadataDirectory(
   // unless the user manually changed the build process. In that case, we can't
   // reliably determine the output directory because it depends on the build
   // tool, so we'll just assume some defaults.
-  const baseDir =
-    project.sourceRoot ??
-    (tree.exists(join(project.root, 'src'))
-      ? join(project.root, 'src')
-      : project.root);
+  const baseDir = getProjectSourceRoot(project, tree);
 
   return `./${join('dist', relative(baseDir, sourceDirectory))}`;
 }

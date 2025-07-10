@@ -87,7 +87,7 @@ export function PlansDisplay(): ReactElement {
                       className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                     />
                     <Link
-                      href="/nx-cloud#ai-for-your-ci"
+                      href="/ai"
                       target="_blank"
                       title="Check our AI integrations and how to use them"
                       onClick={() =>
@@ -226,7 +226,7 @@ export function PlansDisplay(): ReactElement {
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                   />
                   <Link
-                    href="/nx-cloud#ai-for-your-ci"
+                    href="/ai"
                     target="_blank"
                     title="Check our AI integrations and how to use them"
                     onClick={() =>

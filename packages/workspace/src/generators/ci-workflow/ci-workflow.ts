@@ -14,31 +14,34 @@ import { join } from 'path';
 import { getNxCloudUrl, isNxCloudUsed } from 'nx/src/utils/nx-cloud-utils';
 import { isUsingTsSolutionSetup } from '../../utilities/typescript/ts-solution-setup';
 
-function getCiCommands(
+function getNxCloudRecordCommand(
+  ci: Schema['ci'],
+  packageManagerPrefix: string
+): Command {
+  const baseCommand = `${packageManagerPrefix} nx-cloud record -- echo Hello World`;
+  const prefix = getCiPrefix(ci);
+  const exampleComment = `${prefix}${baseCommand}`;
+
+  return {
+    comments: [
+      `Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud`,
+      exampleComment,
+    ],
+  };
+}
+
+function getNxTasksCommand(
   ci: Schema['ci'],
   packageManagerPrefix: string,
   mainBranch: string,
   hasTypecheck: boolean,
   hasE2E: boolean,
   useRunMany: boolean = false
-): Command[] {
-  // Build task list
+): Command {
   const tasks = `lint test build${hasTypecheck ? ' typecheck' : ''}${
     hasE2E ? ' e2e' : ''
   }`;
 
-  // Create nx-cloud record example comment with CI-specific prefix
-  const baseCommand = `${packageManagerPrefix} nx-cloud record -- echo Hello World`;
-  const prefix = getCiPrefix(ci);
-  const exampleComment = `${prefix}${baseCommand}`;
-
-  // Build nx-cloud record comments
-  const nxCloudComments = [
-    `Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud`,
-    exampleComment,
-  ];
-
-  // Build nx command comments and command
   const commandType = useRunMany ? 'run-many' : 'affected';
   const nxCommandComments = useRunMany
     ? [
@@ -54,18 +57,44 @@ function getCiCommands(
     );
   }
 
-  // Build nx command with CI-specific args
   const args = getCiArgs(ci, mainBranch, useRunMany);
   const nxCommand = `${packageManagerPrefix} nx ${commandType} ${args}-t ${tasks}`;
 
+  return {
+    comments: nxCommandComments,
+    command: nxCommand,
+  };
+}
+
+function getNxCloudFixCiCommand(packageManagerPrefix: string): Command {
+  return {
+    comments: [
+      `Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci`,
+    ],
+    command: `${packageManagerPrefix} nx fix-ci`,
+    alwaysRun: true,
+  };
+}
+
+function getCiCommands(
+  ci: Schema['ci'],
+  packageManagerPrefix: string,
+  mainBranch: string,
+  hasTypecheck: boolean,
+  hasE2E: boolean,
+  useRunMany: boolean = false
+): Command[] {
   return [
-    {
-      comments: nxCloudComments,
-    },
-    {
-      comments: nxCommandComments,
-      command: nxCommand,
-    },
+    getNxCloudRecordCommand(ci, packageManagerPrefix),
+    getNxTasksCommand(
+      ci,
+      packageManagerPrefix,
+      mainBranch,
+      hasTypecheck,
+      hasE2E,
+      useRunMany
+    ),
+    getNxCloudFixCiCommand(packageManagerPrefix),
   ];
 }
 
@@ -139,7 +168,11 @@ function getBitbucketBranchCommands(
   ];
 }
 
-export type Command = { command?: string; comments?: string[] };
+export type Command = {
+  command?: string;
+  comments?: string[];
+  alwaysRun?: boolean;
+};
 
 export interface Schema {
   name: string;

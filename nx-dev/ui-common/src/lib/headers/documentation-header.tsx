@@ -322,14 +322,6 @@ export function DocumentationHeader({
             >
               Nx Cloud
             </Link>
-            <Link
-              href="/pricing"
-              title="Pricing"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
-              prefetch={false}
-            >
-              Pricing
-            </Link>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
             <Link
               href="/enterprise"
@@ -349,12 +341,11 @@ export function DocumentationHeader({
           >
             <ButtonLink
               href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=documentation-header&utm_campaign=try-nx-cloud"
-              title="Try Nx Cloud for free"
+              title="Get started"
               variant="primary"
               size="small"
             >
-              <NxCloudAnimatedIcon className="size-4" aria-hidden="true" />
-              <span>Try Nx Cloud for free</span>
+              Get started
             </ButtonLink>
           </nav>
         </div>

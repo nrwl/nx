@@ -104,6 +104,6 @@ node_modules/
 tasks.json
 tasks/
 
-# Raw docs local configuration (machine-specific)
-.rawdocs.local.json
+# Upstream docs local configuration (machine-specific)
+.upstreamdocs.local.json
 

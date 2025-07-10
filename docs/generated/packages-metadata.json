@@ -440,6 +440,26 @@
     ],
     "migrations": [
       {
+        "description": "Update the @angular/cli package version to ~20.1.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-1-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-20-1-0",
+        "version": "21.3.0-beta.4",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/update-angular-cli-version-20-1-0",
+        "type": "migration"
+      },
+      {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.3.0-package-updates.json",
+        "hidden": false,
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.4",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/21.3.0-package-updates",
+        "type": "migration"
+      },
+      {
         "description": "Update the @angular/cli package version to ~20.0.0.",
         "file": "generated/packages/angular/migrations/update-angular-cli-version-20-0-0.json",
         "hidden": false,
@@ -3536,6 +3556,39 @@
         "path": "nx/documents/logout",
         "tags": ["login"],
         "originalFilePath": "generated/cli/logout"
+      },
+      {
+        "id": "fix-ci",
+        "name": "fix-ci",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/fix-ci",
+        "itemList": [],
+        "isExternal": false,
+        "path": "nx/documents/fix-ci",
+        "tags": ["nx-cloud", "ci"],
+        "originalFilePath": "generated/cli/fix-ci"
+      },
+      {
+        "id": "record",
+        "name": "record",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/record",
+        "itemList": [],
+        "isExternal": false,
+        "path": "nx/documents/record",
+        "tags": ["nx-cloud", "ci"],
+        "originalFilePath": "generated/cli/record"
+      },
+      {
+        "id": "start-ci-run",
+        "name": "start-ci-run",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/start-ci-run",
+        "itemList": [],
+        "isExternal": false,
+        "path": "nx/documents/start-ci-run",
+        "tags": ["nx-cloud", "ci"],
+        "originalFilePath": "generated/cli/start-ci-run"
       }
     ],
     "executors": [
@@ -5321,6 +5374,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "",
+        "file": "generated/packages/vite/migrations/21.3.0-package-updates.json",
+        "hidden": false,
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.3",
+        "originalFilePath": "/packages/vite",
+        "path": "vite/migrations/21.3.0-package-updates",
+        "type": "migration"
+      },
       {
         "description": "",
         "file": "generated/packages/vite/migrations/21.2.0-package-updates.json",

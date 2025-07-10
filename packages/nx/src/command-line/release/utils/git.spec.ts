@@ -16,6 +16,8 @@ my-lib-34.0.0-beta.1
 4.0.0-beta.0-my-lib-1
 3.0.0-beta.0-alpha
 1.0.0
+hotfix/api/2506.30.abcdef
+release/api/2506.30.abcdef
 `)
   ),
 }));
@@ -134,60 +136,84 @@ See merge request nx-release-test/nx-release-test!2`,
       projectName: 'my-lib-1',
       expectedTag: 'v4.0.1',
       expectedVersion: '4.0.1',
+      releaseTagPatternRequireSemver: true,
     },
     {
       pattern: 'x{version}',
       projectName: 'my-lib-1',
       expectedTag: 'x5.0.0',
       expectedVersion: '5.0.0',
+      releaseTagPatternRequireSemver: true,
     },
     {
       pattern: 'release/{version}',
       projectName: 'my-lib-1',
       expectedTag: 'release/4.2.1',
       expectedVersion: '4.2.1',
+      releaseTagPatternRequireSemver: true,
     },
     {
       pattern: 'release/{projectName}@v{version}',
       projectName: 'my-lib-1',
       expectedTag: 'release/my-lib-1@v4.2.1',
       expectedVersion: '4.2.1',
+      releaseTagPatternRequireSemver: true,
     },
     {
       pattern: '{version}',
       projectName: 'my-lib-1',
       expectedTag: '4.0.0-rc.1+build.1',
       expectedVersion: '4.0.0-rc.1+build.1',
+      releaseTagPatternRequireSemver: true,
     },
     {
       pattern: '{projectName}@v{version}',
       projectName: 'my-lib-1',
       expectedTag: 'my-lib-1@v4.0.0-beta.1',
       expectedVersion: '4.0.0-beta.1',
+      releaseTagPatternRequireSemver: true,
     },
     {
       pattern: '{projectName}v{version}',
       projectName: 'my-lib-2',
       expectedTag: 'my-lib-2v4.0.0-beta.1',
       expectedVersion: '4.0.0-beta.1',
+      releaseTagPatternRequireSemver: true,
     },
     {
       pattern: '{projectName}{version}',
       projectName: 'my-lib-3',
       expectedTag: 'my-lib-34.0.0-beta.1',
       expectedVersion: '4.0.0-beta.1',
+      releaseTagPatternRequireSemver: true,
     },
     {
       pattern: '{version}-{projectName}',
       projectName: 'my-lib-1',
       expectedTag: '4.0.0-beta.0-my-lib-1',
       expectedVersion: '4.0.0-beta.0',
+      releaseTagPatternRequireSemver: true,
     },
     {
       pattern: '{version}-{projectName}',
       projectName: 'alpha',
       expectedTag: '3.0.0-beta.0-alpha',
       expectedVersion: '3.0.0-beta.0',
+      releaseTagPatternRequireSemver: true,
+    },
+    {
+      pattern: 'hotfix/{projectName}/{version}',
+      projectName: 'api',
+      expectedTag: 'hotfix/api/2506.30.abcdef',
+      expectedVersion: '2506.30.abcdef',
+      releaseTagPatternRequireSemver: false,
+    },
+    {
+      pattern: 'release/{projectName}/{version}',
+      projectName: 'api',
+      expectedTag: 'release/api/2506.30.abcdef',
+      expectedVersion: '2506.30.abcdef',
+      releaseTagPatternRequireSemver: false,
     },
   ];
 
@@ -198,10 +224,21 @@ See merge request nx-release-test/nx-release-test!2`,
 
     it.each(releaseTagPatternTestCases)(
       'should return tag $expectedTag for pattern $pattern',
-      async ({ pattern, projectName, expectedTag, expectedVersion }) => {
-        const result = await getLatestGitTagForPattern(pattern, {
-          projectName,
-        });
+      async ({
+        pattern,
+        projectName,
+        expectedTag,
+        expectedVersion,
+        releaseTagPatternRequireSemver,
+      }) => {
+        const result = await getLatestGitTagForPattern(
+          pattern,
+          {
+            projectName,
+          },
+          undefined,
+          releaseTagPatternRequireSemver
+        );
 
         expect(result.tag).toEqual(expectedTag);
         expect(result.extractedVersion).toEqual(expectedVersion);

@@ -185,9 +185,9 @@
             "isExternal": false,
             "children": [
               {
-                "name": "Run Only Tasks Affected by a PR",
-                "path": "/ci/features/affected",
-                "id": "affected",
+                "name": "AI-Powered Self-Healing CI",
+                "path": "/ci/features/self-healing-ci",
+                "id": "self-healing-ci",
                 "isExternal": true,
                 "children": [],
                 "disableCollapsible": false
@@ -204,6 +204,14 @@
                 "name": "Distribute Task Execution (Nx Agents)",
                 "path": "/ci/features/distribute-task-execution",
                 "id": "distribute-task-execution",
+                "isExternal": true,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Run Only Tasks Affected by a PR",
+                "path": "/ci/features/affected",
+                "id": "affected",
                 "isExternal": true,
                 "children": [],
                 "disableCollapsible": false
@@ -5620,6 +5628,30 @@
                         "children": [],
                         "isExternal": false,
                         "disableCollapsible": false
+                      },
+                      {
+                        "id": "fix-ci",
+                        "path": "/reference/core-api/nx/documents/fix-ci",
+                        "name": "fix-ci",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "record",
+                        "path": "/reference/core-api/nx/documents/record",
+                        "name": "record",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
+                        "id": "start-ci-run",
+                        "path": "/reference/core-api/nx/documents/start-ci-run",
+                        "name": "start-ci-run",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
                       }
                     ],
                     "isExternal": false,
@@ -6806,9 +6838,9 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Run Only Tasks Affected by a PR",
-            "path": "/ci/features/affected",
-            "id": "affected",
+            "name": "AI-Powered Self-Healing CI",
+            "path": "/ci/features/self-healing-ci",
+            "id": "self-healing-ci",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -6830,6 +6862,22 @@
             "disableCollapsible": false
           },
           {
+            "name": "Run Only Tasks Affected by a PR",
+            "path": "/ci/features/affected",
+            "id": "affected",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Dynamically Allocate Agents",
+            "path": "/ci/features/dynamic-agents",
+            "id": "dynamic-agents",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Automatically Split E2E Tasks (Atomizer)",
             "path": "/ci/features/split-e2e-tasks",
             "id": "split-e2e-tasks",
@@ -6841,14 +6889,6 @@
             "name": "Identify and Re-run Flaky Tasks",
             "path": "/ci/features/flaky-tasks",
             "id": "flaky-tasks",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Dynamically Allocate Agents",
-            "path": "/ci/features/dynamic-agents",
-            "id": "dynamic-agents",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -7332,6 +7372,14 @@
             "name": "Environment Variables",
             "path": "/ci/reference/env-vars",
             "id": "env-vars",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Credit Pricing",
+            "path": "/ci/reference/credits-pricing",
+            "id": "credits-pricing",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false

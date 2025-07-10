@@ -72,8 +72,8 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
       variant: 'primary',
       size: 'small',
       target: '_blank',
-      title: 'Try Nx Cloud for free',
-      children: <span>Try Nx Cloud for free</span>,
+      title: 'Get started',
+      children: 'Get started',
     },
   ];
 
@@ -228,14 +228,6 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
             >
               Nx Cloud
             </Link>
-            <Link
-              href="/pricing"
-              title="Pricing"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
-              prefetch={false}
-            >
-              Pricing
-            </Link>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
             {/*ENTERPRISE*/}
             <Link
@@ -371,14 +363,14 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                       </div>
                       <div className="relative mt-6 flex-1 px-4 sm:px-6">
                         <ButtonLink
-                          href="/nx-cloud"
+                          href="https://cloud.nx.app/get-started"
                           variant="primary"
                           size="small"
                           target="_blank"
                           title="Try Nx Cloud for free"
                           className="w-full"
                         >
-                          Try Nx Cloud for free
+                          Get started
                         </ButtonLink>
 
                         <div className="mt-4 divide-y divide-slate-200 border-b border-slate-200 dark:divide-slate-800 dark:border-slate-800">
@@ -495,14 +487,6 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                             prefetch={false}
                           >
                             Nx Cloud
-                          </Link>
-                          <Link
-                            href="/pricing"
-                            title="Pricing"
-                            className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
-                            prefetch={false}
-                          >
-                            Pricing
                           </Link>
                           <Disclosure as="div">
                             {({ open }) => (

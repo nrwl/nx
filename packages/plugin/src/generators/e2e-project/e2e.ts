@@ -168,18 +168,20 @@ async function addJest(host: Tree, options: NormalizedSchema) {
 
   const project = readProjectConfiguration(host, options.projectName);
   project.targets ??= {};
-  const e2eTarget = project.targets.e2e;
+  if (project.targets.e2e) {
+    const e2eTarget = project.targets.e2e;
 
-  project.targets.e2e = {
-    ...e2eTarget,
-    dependsOn: [`^build`],
-    options: {
-      ...e2eTarget.options,
-      runInBand: true,
-    },
-  };
+    project.targets.e2e = {
+      ...e2eTarget,
+      dependsOn: [`^build`],
+      options: {
+        ...e2eTarget.options,
+        runInBand: true,
+      },
+    };
 
-  updateProjectConfiguration(host, options.projectName, project);
+    updateProjectConfiguration(host, options.projectName, project);
+  }
 
   return jestTask;
 }

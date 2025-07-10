@@ -81,11 +81,7 @@ function addBuildTarget(
   };
 
   if (isTsSolutionSetup) {
-    buildOptions.declarationRootDir = getProjectSourceRoot(
-      tree,
-      project.sourceRoot,
-      project.root
-    );
+    buildOptions.declarationRootDir = getProjectSourceRoot(project, tree);
   } else {
     buildOptions.assets = [];
 
