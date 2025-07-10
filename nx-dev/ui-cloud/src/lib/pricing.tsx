@@ -9,7 +9,7 @@ import { PlusIcon } from '@heroicons/react/24/outline';
 export function Pricing(): ReactElement {
   return (
     <section
-      id="pricing"
+      id="plans"
       className="scroll-mt-24 border-b border-t border-slate-200 bg-slate-50 py-24 sm:py-32 dark:border-slate-800 dark:bg-slate-900"
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -404,8 +404,14 @@ export function Pricing(): ReactElement {
           </div>
           <div className="mt-4 text-center">
             <p className="text-sm font-medium opacity-80">
-              Looking for the Pro plan?{' '}
-              <Link href="#faq">Checkout our FAQ ↓</Link>
+              See{' '}
+              <Link
+                href="/ci/reference/credits-pricing"
+                className="font-semibold underline"
+              >
+                Credit Pricing
+              </Link>{' '}
+              for credit consumption and resource class.{' '}
             </p>
           </div>
         </div>

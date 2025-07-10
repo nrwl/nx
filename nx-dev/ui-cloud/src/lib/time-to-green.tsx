@@ -25,23 +25,23 @@ export function TimeToGreen(): ReactElement {
         <h3 className="text-xl font-semibold">Average Time To Green</h3>
 
         <div className="mt-2">
-          <div className="relative grid grid-cols-1 rounded-lg text-xs font-medium shadow ring-1 ring-black/5 sm:h-12 sm:grid-cols-12 dark:bg-slate-950 dark:ring-white/10">
-            <div className="flex h-12 items-center justify-center rounded-t-lg bg-blue-600 text-white sm:col-span-2 sm:h-auto sm:rounded-l-lg sm:rounded-r-none">
+          <div className="relative grid grid-cols-1 rounded-lg bg-slate-50 text-xs font-medium text-slate-900 ring-1 ring-slate-200 sm:h-12 sm:grid-cols-12 dark:bg-slate-900 dark:text-slate-100 dark:ring-white/10">
+            <div className="flex h-12 items-center justify-center rounded-t-lg bg-blue-400/40 sm:col-span-2 sm:h-auto sm:rounded-l-lg sm:rounded-r-none dark:bg-blue-600/40">
               <span className="px-2">Write Code</span>
             </div>
-            <div className="relative flex h-12 items-center justify-center bg-red-600 text-white  sm:col-span-2 sm:h-auto">
+            <div className="relative flex h-12 items-center justify-center bg-red-500/40 sm:col-span-2  sm:h-auto dark:bg-red-500/40">
               <span className="px-2">Run CI (Flaky Test Failure)</span>
             </div>
-            <div className="flex h-12 items-center justify-center bg-red-800 text-white sm:col-span-3 sm:h-auto">
+            <div className="flex h-12 items-center justify-center bg-red-200/40 sm:col-span-3 sm:h-auto dark:bg-red-950/40">
               <span className="px-2">Switch Focus</span>
             </div>
-            <div className="relative flex h-12 items-center justify-center bg-red-600 text-white sm:col-span-2 sm:h-auto">
+            <div className="relative flex h-12 items-center justify-center bg-red-500/40  sm:col-span-2 sm:h-auto dark:bg-red-500/40">
               <span className="px-2">Re-Run CI (Code Error)</span>
             </div>
-            <div className="flex h-12 items-center justify-center bg-red-700 text-white sm:col-span-1 sm:h-auto">
+            <div className="flex h-12 items-center justify-center bg-red-400/40 sm:col-span-1 sm:h-auto dark:bg-red-800/40">
               <span className="px-2">Fix Code</span>
             </div>
-            <div className="flex h-12 items-center justify-center rounded-b-lg bg-green-600 text-white sm:col-span-2 sm:h-auto sm:rounded-b-none sm:rounded-r-lg">
+            <div className="flex h-12 items-center justify-center rounded-b-lg bg-green-400/40 sm:col-span-2 sm:h-auto sm:rounded-b-none sm:rounded-r-lg dark:bg-green-600/40">
               <span className="px-2">Re-Run CI</span>
             </div>
           </div>
@@ -50,12 +50,12 @@ export function TimeToGreen(): ReactElement {
           <h3 className="text-xl font-semibold">Time To Green with Nx Cloud</h3>
           <div className="mt-2 grid grid-cols-1 sm:h-12 sm:grid-cols-12">
             <div className="col-span-4 grid grid-cols-1 sm:grid-cols-6">
-              <div className="grid grid-cols-1 rounded-lg text-xs font-medium shadow ring-1 ring-black/5 sm:col-span-5 sm:grid-cols-10 dark:bg-slate-950 dark:ring-white/10">
-                <div className="flex h-12 items-center justify-center rounded-t-lg bg-blue-600 text-white sm:col-span-6 sm:h-auto sm:rounded-l-lg sm:rounded-r-none">
+              <div className="grid grid-cols-1 rounded-lg bg-slate-50 text-xs font-medium text-slate-900 ring-1 ring-slate-200 sm:col-span-5 sm:grid-cols-10 dark:bg-slate-900 dark:text-slate-100 dark:ring-white/10">
+                <div className="flex h-12 items-center justify-center rounded-t-lg bg-blue-400/40 sm:col-span-6 sm:h-auto sm:rounded-l-lg sm:rounded-r-none dark:bg-blue-600/40">
                   <span className="px-2">Write Code</span>
                 </div>
 
-                <div className="flex h-12 items-center justify-center rounded-b-lg bg-green-600 text-white sm:col-span-4 sm:h-auto sm:rounded-b-none sm:rounded-r-lg">
+                <div className="flex h-12 items-center justify-center rounded-b-lg bg-green-400/40 sm:col-span-4 sm:h-auto sm:rounded-b-none sm:rounded-r-lg dark:bg-green-600/40">
                   <span className="px-2">CI + Self-Healing</span>
                 </div>
               </div>
