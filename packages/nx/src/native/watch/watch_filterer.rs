@@ -13,6 +13,7 @@ use crate::native::watch::utils::{get_ignore_files, get_nx_ignore, transform_eve
 #[derive(Debug)]
 pub struct WatchFilterer {
     pub nx_ignore: Option<IgnoreFilter>,
+    pub always_ignore: IgnoreFilter,
     pub git_ignore: IgnoreFilterer,
 }
 
@@ -145,6 +146,12 @@ pub(super) async fn create_filter(
         )
         .map_err(anyhow::Error::from)?;
 
+    let mut always_ignore = IgnoreFilter::empty(origin);
+
+    always_ignore
+        .add_globs(&[".nx/workspace-data/d/daemon.log"], Some(&origin.into()))
+        .map_err(anyhow::Error::from)?;
+
     let nx_ignore = if let Some(nx_ignore_file) = nx_ignore_file {
         Some(
             IgnoreFilter::new(origin, &[nx_ignore_file])
@@ -158,5 +165,6 @@ pub(super) async fn create_filter(
     Ok(WatchFilterer {
         git_ignore: IgnoreFilterer(git_ignore),
         nx_ignore,
+        always_ignore,
     })
 }
