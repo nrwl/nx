@@ -7,7 +7,7 @@ export function Steps({ children }: { children: ReactNode }) {
   const stepsCount = steps.length;
 
   return (
-    <div className="not-prose relative">
+    <div className="relative">
       {steps.map((step, index) => (
         <div key={index} className="relative flex pb-8 last:pb-0">
           {/* Vertical line connecting steps */}
