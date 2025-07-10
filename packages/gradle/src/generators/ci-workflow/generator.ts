@@ -41,7 +41,7 @@ function getCiCommands(ci: Schema['ci']): Command[] {
 function getNxCloudFixCiCommand(): Command {
   return {
     comments: [
-      `Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai`,
+      `Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci`,
     ],
     command: `./nx fix-ci`,
     alwaysRun: true,
