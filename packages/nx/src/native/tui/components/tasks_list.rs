@@ -29,6 +29,7 @@ use crate::native::{
     },
 };
 
+const TASK_NAME_WAITING_FOR_TASKS: &str = "Waiting for task...";
 const CACHE_STATUS_LOCAL_KEPT_EXISTING: &str = "Kept Existing";
 const CACHE_STATUS_LOCAL: &str = "Local";
 const CACHE_STATUS_REMOTE: &str = "Remote";
@@ -44,6 +45,21 @@ const COLLAPSED_HELP_WIDTH: u16 = 19; // "quit: q help: ?"
 const FULL_HELP_WIDTH: u16 = 86; // Full help text width
 const MIN_CLOUD_URL_WIDTH: u16 = 15; // Minimum space to show at least part of the URL
 const MIN_BOTTOM_SPACING: u16 = 4; // Minimum space between Pag, Cloud, Help
+
+// Constants for column layout calculation
+const STATUS_ICON_WIDTH: u16 = 6; // Width for status icon with NX logo
+const TASK_NAME_RESERVED_MIN_WIDTH: u16 = TASK_NAME_WAITING_FOR_TASKS.len() as u16; // Minimum reserved space for the task name column
+const TASK_NAME_LAYOUT_THRESHOLD: u16 = 30; // Minimum width at which we truncate task names for large task names to allow displaying other columns
+const DURATION_COLUMN_WIDTH: u16 = 15; // Width for duration column
+const CACHE_STATUS_COLUMN_WIDTH: u16 = CACHE_STATUS_LOCAL_KEPT_EXISTING.len() as u16; // Width for cache status column
+const COLUMN_SEPARATOR_WIDTH: u16 = 1; // Column separator width
+
+/// Represents which columns should be displayed in the task list
+#[derive(Clone, Debug)]
+struct ColumnVisibility {
+    show_duration: bool,
+    show_cache_status: bool,
+}
 
 /// Represents an individual task with its current state and execution details.
 pub struct TaskItem {
@@ -554,9 +570,72 @@ impl TasksList {
             .update_entries(entries);
     }
 
+    /// Calculates which columns should be displayed based on available space and task name lengths
+    fn calculate_column_visibility(&self, available_width: u16) -> ColumnVisibility {
+        // Calculate base space requirements
+        let base_space = STATUS_ICON_WIDTH + COLUMN_SEPARATOR_WIDTH;
+
+        if available_width <= base_space {
+            // Too small to show any columns
+            return ColumnVisibility {
+                show_duration: false,
+                show_cache_status: false,
+            };
+        }
+
+        // Find the maximum task name length across all tasks
+        let max_task_name_len = self
+            .tasks
+            .iter()
+            .map(|task| task.name.len())
+            .max()
+            .unwrap_or(0) as u16;
+
+        // Calculate the minimum required space for the task name column
+        let min_required_space_for_task_name =
+            TASK_NAME_RESERVED_MIN_WIDTH.max(max_task_name_len.min(TASK_NAME_LAYOUT_THRESHOLD));
+
+        if available_width <= base_space + min_required_space_for_task_name {
+            // Too small to show any columns
+            return ColumnVisibility {
+                show_duration: false,
+                show_cache_status: false,
+            };
+        }
+
+        // Calculate the remaining space after accounting for the minimum required space for the task name column
+        let remaining_space = available_width - base_space - min_required_space_for_task_name;
+
+        // Check if we can fit the duration column
+        let duration_space_needed = DURATION_COLUMN_WIDTH + COLUMN_SEPARATOR_WIDTH;
+        if remaining_space >= duration_space_needed {
+            // Check if we can fit the cache status column as well
+            let cache_space_needed = CACHE_STATUS_COLUMN_WIDTH + COLUMN_SEPARATOR_WIDTH;
+            if remaining_space >= duration_space_needed + cache_space_needed {
+                // We can fit both columns
+                return ColumnVisibility {
+                    show_duration: true,
+                    show_cache_status: true,
+                };
+            }
+
+            // We can't fit the cache status column, so show only duration column
+            return ColumnVisibility {
+                show_duration: true,
+                show_cache_status: false,
+            };
+        }
+
+        // We can't fit the duration column, so show only task name column
+        ColumnVisibility {
+            show_duration: false,
+            show_cache_status: false,
+        }
+    }
+
     /// Creates header cells for the task list table.
     /// Shows either filter input or task status based on current state.
-    fn get_header_cells(&self, has_narrow_area_width: bool) -> Vec<Cell> {
+    fn get_header_cells(&self, column_visibility: &ColumnVisibility) -> Vec<Cell> {
         let status_style = if !self.is_task_list_focused() {
             Style::default().fg(THEME.secondary_fg).dim()
         } else {
@@ -598,32 +677,31 @@ impl TasksList {
         // Just provide an empty second cell
         let status_text = String::new();
 
-        if has_narrow_area_width {
-            vec![
-                status_cell,
-                Cell::from(status_text),
-                Cell::from(Line::from("Duration").right_aligned()).style(
-                    Style::default()
-                        .fg(header_color)
-                        .add_modifier(Modifier::BOLD),
-                ),
-            ]
-        } else {
-            vec![
-                status_cell,
-                Cell::from(status_text),
+        let mut header_cells = vec![status_cell, Cell::from(status_text)];
+
+        // Add cache status column header if visible
+        if column_visibility.show_cache_status {
+            header_cells.push(
                 Cell::from(Line::from("Cache").right_aligned()).style(
                     Style::default()
                         .fg(header_color)
                         .add_modifier(Modifier::BOLD),
                 ),
+            );
+        }
+
+        // Add duration column header if visible
+        if column_visibility.show_duration {
+            header_cells.push(
                 Cell::from(Line::from("Duration").right_aligned()).style(
                     Style::default()
                         .fg(header_color)
                         .add_modifier(Modifier::BOLD),
                 ),
-            ]
+            );
         }
+
+        header_cells
     }
 
     /// Updates their status to InProgress and triggers a sort.
@@ -664,21 +742,22 @@ impl TasksList {
         self.sort_tasks();
     }
 
-    fn generate_empty_row(&self, has_narrow_area_width: bool) -> Row {
-        let empty_cells = if has_narrow_area_width {
-            vec![
-                Cell::from("   "), // Just spaces for indentation, no vertical line
-                Cell::from(""),
-                Cell::from(""),
-            ]
-        } else {
-            vec![
-                Cell::from("   "), // Just spaces for indentation, no vertical line
-                Cell::from(""),
-                Cell::from(""),
-                Cell::from(""),
-            ]
-        };
+    fn generate_empty_row(&self, column_visibility: &ColumnVisibility) -> Row {
+        let mut empty_cells = vec![
+            Cell::from("   "), // Just spaces for indentation, no vertical line
+            Cell::from(""),
+        ];
+
+        // Add cache status column cell if visible
+        if column_visibility.show_cache_status {
+            empty_cells.push(Cell::from(""));
+        }
+
+        // Add duration column cell if visible
+        if column_visibility.show_duration {
+            empty_cells.push(Cell::from(""));
+        }
+
         Row::new(empty_cells)
     }
 
@@ -722,7 +801,12 @@ impl TasksList {
     }
 
     /// Renders the main task table.
-    fn render_task_table(&self, f: &mut Frame<'_>, table_area: Rect, has_narrow_area_width: bool) {
+    fn render_task_table(
+        &self,
+        f: &mut Frame<'_>,
+        table_area: Rect,
+        column_visibility: &ColumnVisibility,
+    ) {
         let visible_entries = self
             .selection_manager
             .lock()
@@ -769,7 +853,7 @@ impl TasksList {
         };
 
         // Get header cells using the existing method but add NX logo to first cell
-        let mut header_cells = self.get_header_cells(has_narrow_area_width);
+        let mut header_cells = self.get_header_cells(column_visibility);
 
         // Get the style based on whether all tasks are completed
         let title_color = if all_tasks_completed {
@@ -869,45 +953,35 @@ impl TasksList {
         if self.should_show_parallel_section() {
             let is_first_page = self.selection_manager.lock().unwrap().get_current_page() == 0;
 
-            let empty_cells = if has_narrow_area_width {
-                vec![
-                    Cell::from(Line::from(vec![
-                        // Space for selection indicator
-                        Span::raw(" "),
-                        // Add vertical line for visual continuity, only on first page
-                        if is_first_page && self.max_parallel > 0 {
-                            Span::styled("│", Style::default().fg(THEME.info))
-                        } else {
-                            Span::raw(" ")
-                        },
-                        Span::raw("   "),
-                    ])),
-                    Cell::from(""),
-                    Cell::from(""),
-                ]
-            } else {
-                vec![
-                    Cell::from(Line::from(vec![
-                        // Space for selection indicator
-                        Span::raw(" "),
-                        // Add vertical line for visual continuity, only on first page
-                        if is_first_page && self.max_parallel > 0 {
-                            Span::styled("│", Style::default().fg(THEME.info))
-                        } else {
-                            Span::raw(" ")
-                        },
-                        Span::raw("   "),
-                    ])),
-                    Cell::from(""),
-                    Cell::from(""),
-                    Cell::from(""),
-                ]
-            };
+            let mut empty_cells = vec![
+                Cell::from(Line::from(vec![
+                    // Space for selection indicator
+                    Span::raw(" "),
+                    // Add vertical line for visual continuity, only on first page
+                    if is_first_page && self.max_parallel > 0 {
+                        Span::styled("│", Style::default().fg(THEME.info))
+                    } else {
+                        Span::raw(" ")
+                    },
+                    Span::raw("   "),
+                ])),
+                Cell::from(""),
+            ];
+
+            // Add cache status column cell if visible
+            if column_visibility.show_cache_status {
+                empty_cells.push(Cell::from(""));
+            }
+
+            // Add duration column cell if visible
+            if column_visibility.show_duration {
+                empty_cells.push(Cell::from(""));
+            }
             all_rows.push(Row::new(empty_cells).height(1).style(normal_style));
         } else {
             // Even when there's no parallel section, add an empty row for consistent spacing
             all_rows.push(
-                self.generate_empty_row(has_narrow_area_width)
+                self.generate_empty_row(column_visibility)
                     .height(1)
                     .style(normal_style),
             );
@@ -1002,7 +1076,7 @@ impl TasksList {
                                 .enumerate()
                                 .filter_map(|(idx, task)| {
                                     if task.as_deref() == Some(task_name.as_str()) {
-                                        Some(if has_narrow_area_width {
+                                        Some(if !column_visibility.show_cache_status {
                                             format!("[{}]", idx + 1)
                                         } else {
                                             format!("[Pinned output {}]", idx + 1)
@@ -1031,36 +1105,8 @@ impl TasksList {
 
                     let mut row_cells = vec![status_cell, name];
 
-                    if has_narrow_area_width {
-                        // In narrow viewport mode (not collapsed), show only duration column
-                        let duration_cell = Cell::from(
-                            Line::from(match task.duration.as_str() {
-                                "" | "Continuous" | DURATION_NOT_YET_KNOWN => {
-                                    vec![Span::styled(
-                                        task.duration.clone(),
-                                        if is_selected {
-                                            Style::default().add_modifier(Modifier::BOLD)
-                                        } else {
-                                            Style::default().dim()
-                                        },
-                                    )]
-                                }
-                                _ => vec![Span::styled(
-                                    task.duration.clone(),
-                                    if is_selected {
-                                        Style::default().add_modifier(Modifier::BOLD)
-                                    } else {
-                                        Style::default()
-                                    },
-                                )],
-                            })
-                            .right_aligned(),
-                        );
-
-                        row_cells.push(duration_cell);
-                    } else {
-                        // In full width mode, show both cache and duration columns
-                        // Cache status cell
+                    // Add cache status cell if visible
+                    if column_visibility.show_cache_status {
                         let cache_cell = Cell::from(
                             Line::from(match task.cache_status.as_str() {
                                 CACHE_STATUS_NOT_YET_KNOWN | CACHE_STATUS_NOT_APPLICABLE => {
@@ -1084,8 +1130,11 @@ impl TasksList {
                             })
                             .right_aligned(),
                         );
+                        row_cells.push(cache_cell);
+                    }
 
-                        // Duration cell
+                    // Add duration cell if visible
+                    if column_visibility.show_duration {
                         let duration_cell = Cell::from(
                             Line::from(match task.duration.as_str() {
                                 "" | "Continuous" | DURATION_NOT_YET_KNOWN => {
@@ -1109,8 +1158,6 @@ impl TasksList {
                             })
                             .right_aligned(),
                         );
-
-                        row_cells.push(cache_cell);
                         row_cells.push(duration_cell);
                     }
 
@@ -1137,113 +1184,96 @@ impl TasksList {
                     let is_first_page =
                         self.selection_manager.lock().unwrap().get_current_page() == 0;
 
-                    let empty_cells = if has_narrow_area_width {
-                        vec![
-                            Cell::from(Line::from(vec![
-                                // Space for selection indicator (fixed width of 2)
-                                Span::raw(" "),
-                                // Add space and vertical line for parallel section (fixed position)
-                                if is_first_page && self.max_parallel > 0 {
-                                    Span::styled("│", Style::default().fg(THEME.info))
-                                } else {
-                                    Span::raw("  ")
-                                },
-                                Span::styled("·  ", Style::default().dim()),
-                            ])),
-                            Cell::from(Span::styled("Waiting for task...", Style::default().dim())),
-                            Cell::from(""),
-                        ]
-                    } else {
-                        vec![
-                            Cell::from(Line::from(vec![
-                                // Space for selection indicator (fixed width of 2)
-                                Span::raw(" "),
-                                // Add space and vertical line for parallel section (fixed position)
-                                if is_first_page && self.max_parallel > 0 {
-                                    Span::styled("│", Style::default().fg(THEME.info))
-                                } else {
-                                    Span::raw("  ")
-                                },
-                                Span::styled("·  ", Style::default().dim()),
-                            ])),
-                            Cell::from(Span::styled("Waiting for task...", Style::default().dim())),
-                            Cell::from(""),
-                            Cell::from(""),
-                        ]
-                    };
+                    let mut empty_cells = vec![
+                        Cell::from(Line::from(vec![
+                            // Space for selection indicator (fixed width of 2)
+                            Span::raw(" "),
+                            // Add space and vertical line for parallel section (fixed position)
+                            if is_first_page && self.max_parallel > 0 {
+                                Span::styled("│", Style::default().fg(THEME.info))
+                            } else {
+                                Span::raw("  ")
+                            },
+                            Span::styled("·  ", Style::default().dim()),
+                        ])),
+                        Cell::from(Span::styled(
+                            TASK_NAME_WAITING_FOR_TASKS,
+                            Style::default().dim(),
+                        )),
+                    ];
+
+                    // Add cache status column cell if visible
+                    if column_visibility.show_cache_status {
+                        empty_cells.push(Cell::from(""));
+                    }
+
+                    // Add duration column cell if visible
+                    if column_visibility.show_duration {
+                        empty_cells.push(Cell::from(""));
+                    }
                     Row::new(empty_cells).height(1).style(normal_style)
                 } else if is_bottom_cap {
                     // Add the bottom corner cap at the end of the parallel section, only on first page
                     let is_first_page =
                         self.selection_manager.lock().unwrap().get_current_page() == 0;
 
-                    let empty_cells = if has_narrow_area_width {
-                        vec![
-                            Cell::from(Line::from(vec![
-                                // Space for selection indicator (fixed width of 2)
-                                Span::raw(" "),
-                                // Add bottom corner for the box, or just spaces if not on first page
-                                if is_first_page {
-                                    Span::styled("└", Style::default().fg(THEME.info))
-                                } else {
-                                    Span::raw(" ")
-                                },
-                                Span::raw("   "),
-                            ])),
-                            Cell::from(""),
-                            Cell::from(""),
-                        ]
-                    } else {
-                        vec![
-                            Cell::from(Line::from(vec![
-                                // Space for selection indicator (fixed width of 2)
-                                Span::raw(" "),
-                                // Add bottom corner for the box, or just spaces if not on first page
-                                if is_first_page {
-                                    Span::styled("└", Style::default().fg(THEME.info))
-                                } else {
-                                    Span::raw(" ")
-                                },
-                                Span::raw("   "),
-                            ])),
-                            Cell::from(""),
-                            Cell::from(""),
-                            Cell::from(""),
-                        ]
-                    };
+                    let mut empty_cells = vec![
+                        Cell::from(Line::from(vec![
+                            // Space for selection indicator (fixed width of 2)
+                            Span::raw(" "),
+                            // Add bottom corner for the box, or just spaces if not on first page
+                            if is_first_page {
+                                Span::styled("└", Style::default().fg(THEME.info))
+                            } else {
+                                Span::raw(" ")
+                            },
+                            Span::raw("   "),
+                        ])),
+                        Cell::from(""),
+                    ];
+
+                    // Add cache status column cell if visible
+                    if column_visibility.show_cache_status {
+                        empty_cells.push(Cell::from(""));
+                    }
+
+                    // Add duration column cell if visible
+                    if column_visibility.show_duration {
+                        empty_cells.push(Cell::from(""));
+                    }
                     Row::new(empty_cells).height(1).style(normal_style)
                 } else {
                     // Regular separator row outside the parallel section
-                    let empty_cells = if has_narrow_area_width {
-                        vec![Cell::from(""), Cell::from(""), Cell::from("")]
-                    } else {
-                        vec![
-                            Cell::from(""),
-                            Cell::from(""),
-                            Cell::from(""),
-                            Cell::from(""),
-                        ]
-                    };
+                    let mut empty_cells = vec![Cell::from(""), Cell::from("")];
+
+                    // Add cache status column cell if visible
+                    if column_visibility.show_cache_status {
+                        empty_cells.push(Cell::from(""));
+                    }
+
+                    // Add duration column cell if visible
+                    if column_visibility.show_duration {
+                        empty_cells.push(Cell::from(""));
+                    }
                     Row::new(empty_cells).height(1).style(normal_style)
                 }
             }
         }));
 
-        let constraints = if has_narrow_area_width {
-            vec![
-                Constraint::Length(6), // Status icon with NX logo
-                Constraint::Fill(1),   // Task name with title
-                // No cache status for narrow viewports
-                Constraint::Length(15), // Duration (increased width)
-            ]
-        } else {
-            vec![
-                Constraint::Length(6),  // Status icon with NX logo
-                Constraint::Fill(1),    // Task name with title
-                Constraint::Length(30), // Cache status (increased width)
-                Constraint::Length(15), // Duration (increased width)
-            ]
-        };
+        let mut constraints = vec![
+            Constraint::Length(STATUS_ICON_WIDTH), // Status icon with NX logo
+            Constraint::Fill(1),                   // Task name with title
+        ];
+
+        // Add cache status column constraint if visible
+        if column_visibility.show_cache_status {
+            constraints.push(Constraint::Length(CACHE_STATUS_COLUMN_WIDTH));
+        }
+
+        // Add duration column constraint if visible
+        if column_visibility.show_duration {
+            constraints.push(Constraint::Length(DURATION_COLUMN_WIDTH));
+        }
 
         let t = Table::new(all_rows, &constraints)
             .header(header)
@@ -1382,7 +1412,8 @@ impl Component for TasksList {
 
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) -> Result<()> {
         // --- 1. Calculate Context ---
-        let has_narrow_area_width = area.width < 90;
+        let column_visibility = self.calculate_column_visibility(area.width);
+        let _has_narrow_area_width = area.width < 90; // Keep for backward compatibility with bottom layout
         let filter_is_active = self.filter_mode || !self.filter_text.is_empty();
         let is_dimmed = !self.is_task_list_focused();
         let has_cloud_message = self.cloud_message.is_some();
@@ -1519,7 +1550,7 @@ impl Component for TasksList {
 
         // --- 5. Render Table (Recalculate Pages First) ---
         self.recalculate_pages(table_area.height.saturating_sub(4));
-        self.render_task_table(f, table_area, has_narrow_area_width);
+        self.render_task_table(f, table_area, &column_visibility);
 
         // --- 6. Render Filter ---
         if let Some(area) = filter_area {
@@ -2460,6 +2491,65 @@ mod tests {
     }
 
     #[test]
+    fn test_medium_width_with_long_task_names() {
+        let long_task_name =
+            "very-long-task-name-that-exceeds-thirty-characters-to-test-threshold-logic";
+        let test_tasks = vec![
+            Task {
+                id: long_task_name.to_string(),
+                target: TaskTarget {
+                    project: "app1".to_string(),
+                    target: "test".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+            Task {
+                id: "another-very-long-task-name-for-testing-purposes".to_string(),
+                target: TaskTarget {
+                    project: "app1".to_string(),
+                    target: "build".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+        ];
+
+        let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
+
+        let mut tasks_list = TasksList::new(
+            test_tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            "Running Test Tasks...".to_string(),
+            selection_manager,
+        );
+
+        let mut terminal = create_test_terminal(70, 15);
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_narrow_width_duration_only() {
+        let (mut tasks_list, _) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(55, 15); // Just enough for duration but not cache
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
     fn test_wide_and_short_rendering() {
         let (mut tasks_list, test_tasks) = create_test_tasks_list();
         let mut terminal = create_test_terminal(160, 10);
@@ -2793,6 +2883,527 @@ mod tests {
         let mut terminal = create_test_terminal(40, 15);
 
         tasks_list.pin_task(test_tasks[0].id.clone(), 0);
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_column_visibility_at_different_widths() {
+        let (tasks_list, _) = create_test_tasks_list();
+
+        // Very narrow - no extra columns
+        let result = tasks_list.calculate_column_visibility(20);
+        assert!(!result.show_duration);
+        assert!(!result.show_cache_status);
+
+        // Narrow - duration only
+        let result = tasks_list.calculate_column_visibility(55);
+        assert!(result.show_duration);
+        assert!(!result.show_cache_status);
+
+        // Medium - both columns with short task names
+        let result = tasks_list.calculate_column_visibility(80);
+        assert!(result.show_duration);
+        assert!(result.show_cache_status);
+
+        // Wide - both columns
+        let result = tasks_list.calculate_column_visibility(120);
+        assert!(result.show_duration);
+        assert!(result.show_cache_status);
+    }
+
+    #[test]
+    fn test_column_visibility_task_name_length_variations() {
+        // Test various task name lengths: short, 29, 30, 31, and very long
+
+        // Short task names (like default test tasks)
+        let (tasks_list_short, _) = create_test_tasks_list();
+        let result = tasks_list_short.calculate_column_visibility(80);
+        assert!(result.show_duration);
+        assert!(result.show_cache_status);
+
+        // 29-character task name
+        let task_name_29 = "this-is-exactly-29-chars-here"; // 29 characters
+        let tasks_list_29 = create_tasks_list_with_name(task_name_29);
+        let result = tasks_list_29.calculate_column_visibility(54);
+        assert!(result.show_duration);
+        assert!(!result.show_cache_status);
+
+        // 30-character task name (threshold)
+        let task_name_30 = "this-is-exactly-thirty-chars-1"; // 30 characters
+        let tasks_list_30 = create_tasks_list_with_name(task_name_30);
+        let result = tasks_list_30.calculate_column_visibility(55);
+        assert!(result.show_duration);
+        assert!(!result.show_cache_status);
+        let result = tasks_list_30.calculate_column_visibility(87);
+        assert!(result.show_duration);
+        assert!(result.show_cache_status);
+
+        // 31-character task name
+        let task_name_31 = "this-is-exactly-thirty-one-char"; // 31 characters
+        let tasks_list_31 = create_tasks_list_with_name(task_name_31);
+        let result = tasks_list_31.calculate_column_visibility(66);
+        assert!(result.show_duration);
+        assert!(!result.show_cache_status);
+
+        // Very long task name
+        let long_task_name =
+            "very-long-task-name-that-exceeds-thirty-characters-to-test-threshold-logic";
+        let tasks_list_long = create_tasks_list_with_name(long_task_name);
+        let result = tasks_list_long.calculate_column_visibility(52);
+        assert!(!result.show_duration);
+        assert!(!result.show_cache_status);
+        let result = tasks_list_long.calculate_column_visibility(150);
+        assert!(result.show_duration);
+        assert!(result.show_cache_status);
+    }
+
+    // Helper function to create tasks list with specific task name
+    fn create_tasks_list_with_name(task_name: &str) -> TasksList {
+        let test_tasks = vec![Task {
+            id: task_name.to_string(),
+            target: TaskTarget {
+                project: "app1".to_string(),
+                target: "test".to_string(),
+                configuration: None,
+            },
+            outputs: vec![],
+            project_root: Some("".to_string()),
+            continuous: Some(false),
+            start_time: None,
+            end_time: None,
+        }];
+
+        let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
+        TasksList::new(
+            test_tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            "Test Tasks".to_string(),
+            selection_manager,
+        )
+    }
+
+    #[test]
+    fn test_calculate_column_visibility_mixed_task_name_lengths() {
+        let test_tasks = vec![
+            Task {
+                id: "short".to_string(),
+                target: TaskTarget {
+                    project: "app1".to_string(),
+                    target: "test".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+            Task {
+                id: "this-is-a-very-long-task-name-that-exceeds-thirty-characters".to_string(),
+                target: TaskTarget {
+                    project: "app2".to_string(),
+                    target: "build".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+        ];
+
+        let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
+        let tasks_list = TasksList::new(
+            test_tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            "Test Tasks".to_string(),
+            selection_manager,
+        );
+
+        // At narrow width, should hide duration due to insufficient space for 30-char threshold
+        // Base: 7, Duration: 16, Min threshold: 30, Total needed: 53
+        let result = tasks_list.calculate_column_visibility(52);
+        assert!(!result.show_duration);
+        assert!(!result.show_cache_status);
+
+        let result = tasks_list.calculate_column_visibility(53);
+        assert!(result.show_duration);
+        assert!(!result.show_cache_status);
+
+        // Should base decision on longest task name, but still show duration at 66 width
+        // Base: 7, Duration: 16, space_for_task_name: 43, which is >= 30 threshold
+        let result = tasks_list.calculate_column_visibility(66);
+        assert!(result.show_duration);
+        assert!(!result.show_cache_status);
+
+        // At wider width, should show both columns
+        let result = tasks_list.calculate_column_visibility(150);
+        assert!(result.show_duration);
+        assert!(result.show_cache_status);
+    }
+
+    #[test]
+    fn test_pagination_column_visibility_consistency() {
+        // Create tasks with mixed name lengths distributed across pages
+        let test_tasks = vec![
+            // Page 1: Short task names
+            Task {
+                id: "short1".to_string(),
+                target: TaskTarget {
+                    project: "app1".to_string(),
+                    target: "test".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+            Task {
+                id: "short2".to_string(),
+                target: TaskTarget {
+                    project: "app1".to_string(),
+                    target: "build".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+            Task {
+                id: "short3".to_string(),
+                target: TaskTarget {
+                    project: "app1".to_string(),
+                    target: "lint".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+            // Page 2: Long task names
+            Task {
+                id: "this-is-a-very-long-task-name-that-exceeds-thirty-characters-page2-task1".to_string(),
+                target: TaskTarget {
+                    project: "app2".to_string(),
+                    target: "e2e".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+            Task {
+                id: "another-extremely-long-task-name-for-testing-pagination-consistency-page2-task2".to_string(),
+                target: TaskTarget {
+                    project: "app2".to_string(),
+                    target: "deploy".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+        ];
+
+        let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(3))); // 3 tasks per page
+        let mut tasks_list = TasksList::new(
+            test_tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            "Pagination Test".to_string(),
+            selection_manager,
+        );
+
+        // Force apply filter to update the filtered_names
+        tasks_list.apply_filter();
+
+        // Test at medium width - should hide columns due to long task names
+        let visibility_page1 = tasks_list.calculate_column_visibility(66);
+
+        // Navigate to page 2 (with long task names)
+        tasks_list.next_page();
+        let visibility_page2 = tasks_list.calculate_column_visibility(66);
+
+        // Navigate back to page 1 (with short task names)
+        tasks_list.previous_page();
+        let visibility_page1_again = tasks_list.calculate_column_visibility(66);
+
+        // Column visibility should be consistent across pages
+        assert_eq!(
+            visibility_page1.show_duration,
+            visibility_page2.show_duration
+        );
+        assert_eq!(
+            visibility_page1.show_cache_status,
+            visibility_page2.show_cache_status
+        );
+        assert_eq!(
+            visibility_page1.show_duration,
+            visibility_page1_again.show_duration
+        );
+        assert_eq!(
+            visibility_page1.show_cache_status,
+            visibility_page1_again.show_cache_status
+        );
+
+        // At this width, should show duration but not cache status due to long task names
+        assert!(visibility_page1.show_duration);
+        assert!(!visibility_page1.show_cache_status);
+    }
+
+    #[test]
+    fn test_pagination_column_visibility_consistency_wide_terminal() {
+        // Create tasks with mixed name lengths
+        let test_tasks = vec![
+            // Page 1: Short task names
+            Task {
+                id: "short1".to_string(),
+                target: TaskTarget {
+                    project: "app1".to_string(),
+                    target: "test".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+            Task {
+                id: "short2".to_string(),
+                target: TaskTarget {
+                    project: "app1".to_string(),
+                    target: "build".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+            // Page 2: Long task names
+            Task {
+                id: "this-is-a-very-long-task-name-that-exceeds-thirty-characters-for-testing"
+                    .to_string(),
+                target: TaskTarget {
+                    project: "app2".to_string(),
+                    target: "e2e".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+            Task {
+                id: "another-extremely-long-task-name-for-testing-pagination-consistency-behavior"
+                    .to_string(),
+                target: TaskTarget {
+                    project: "app2".to_string(),
+                    target: "deploy".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+        ];
+
+        let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(2))); // 2 tasks per page
+        let mut tasks_list = TasksList::new(
+            test_tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            "Pagination Test".to_string(),
+            selection_manager,
+        );
+
+        // Force apply filter to update the filtered_names
+        tasks_list.apply_filter();
+
+        // Test at wide width - should show duration but not cache status due to long task names
+        let visibility_page1 = tasks_list.calculate_column_visibility(120);
+
+        // Navigate to page 2 (with long task names)
+        tasks_list.next_page();
+        let visibility_page2 = tasks_list.calculate_column_visibility(120);
+
+        // Navigate back to page 1 (with short task names)
+        tasks_list.previous_page();
+        let visibility_page1_again = tasks_list.calculate_column_visibility(120);
+
+        // Column visibility should be consistent across pages
+        assert_eq!(
+            visibility_page1.show_duration,
+            visibility_page2.show_duration
+        );
+        assert_eq!(
+            visibility_page1.show_cache_status,
+            visibility_page2.show_cache_status
+        );
+        assert_eq!(
+            visibility_page1.show_duration,
+            visibility_page1_again.show_duration
+        );
+        assert_eq!(
+            visibility_page1.show_cache_status,
+            visibility_page1_again.show_cache_status
+        );
+
+        // At this width with long task names, should show both columns
+        assert!(visibility_page1.show_duration);
+        assert!(visibility_page1.show_cache_status);
+    }
+
+    #[test]
+    fn test_pagination_column_visibility_rendering_consistency() {
+        // Create tasks with mixed name lengths
+        let test_tasks = vec![
+            // Page 1: Short task names
+            Task {
+                id: "short1".to_string(),
+                target: TaskTarget {
+                    project: "app1".to_string(),
+                    target: "test".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+            Task {
+                id: "short2".to_string(),
+                target: TaskTarget {
+                    project: "app1".to_string(),
+                    target: "build".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+            // Page 2: Long task names that would affect column visibility
+            Task {
+                id: "this-is-a-very-long-task-name-that-exceeds-thirty-characters-and-affects-column-visibility".to_string(),
+                target: TaskTarget {
+                    project: "app2".to_string(),
+                    target: "e2e".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+        ];
+
+        let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(2))); // 2 tasks per page
+        let mut tasks_list = TasksList::new(
+            test_tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            "Pagination Test".to_string(),
+            selection_manager,
+        );
+
+        // Force apply filter to update the filtered_names
+        tasks_list.apply_filter();
+
+        let mut terminal = create_test_terminal(80, 15);
+
+        // Render page 1 (short task names)
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(
+            "pagination_consistency_page1_short_names",
+            terminal.backend()
+        );
+
+        // Navigate to page 2 (long task names)
+        tasks_list.next_page();
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(
+            "pagination_consistency_page2_long_names",
+            terminal.backend()
+        );
+
+        // Navigate back to page 1 to verify consistency
+        tasks_list.previous_page();
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(
+            "pagination_consistency_page1_after_navigation",
+            terminal.backend()
+        );
+    }
+
+    #[test]
+    fn test_cache_column_spacing_with_long_truncated_task_name() {
+        let long_task_name =
+            "this-is-a-very-long-task-name-that-will-definitely-be-truncated-when-displayed";
+        let test_tasks = vec![Task {
+            id: long_task_name.to_string(),
+            target: TaskTarget {
+                project: "app1".to_string(),
+                target: "test".to_string(),
+                configuration: None,
+            },
+            outputs: vec![],
+            project_root: Some("".to_string()),
+            continuous: Some(false),
+            start_time: None,
+            end_time: None,
+        }];
+
+        let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
+        let mut tasks_list = TasksList::new(
+            test_tasks.clone(),
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            "Test Tasks".to_string(),
+            selection_manager,
+        );
+
+        // Use a narrower terminal width to force task name truncation
+        let mut terminal = create_test_terminal(90, 15);
+
+        tasks_list.update(Action::StartCommand(Some(3))).unwrap();
+
+        // Set the long task name to LocalCacheKeptExisting to show "Keep Existing"
+        tasks_list
+            .update(Action::UpdateTaskStatus(
+                test_tasks[0].id.clone(),
+                TaskStatus::LocalCacheKeptExisting,
+            ))
+            .ok();
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!(terminal.backend());
