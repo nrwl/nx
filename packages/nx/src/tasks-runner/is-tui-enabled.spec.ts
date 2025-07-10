@@ -1,5 +1,6 @@
 import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
 import { shouldUseTui } from './is-tui-enabled';
+import { logger } from '../utils/logger';
 
 describe('shouldUseTui', () => {
   it('should return true by default', () =>
@@ -137,5 +138,35 @@ describe('shouldUseTui', () => {
           );
         }
       ));
+  });
+
+  it('should respect the tui flag', () =>
+    withEnvironmentVariables(
+      {
+        NX_TUI: 'false',
+        CI: 'false',
+      },
+      () => {
+        expect(shouldUseTui({}, { tui: true }, true)).toBe(true);
+        expect(shouldUseTui({}, { tui: false }, true)).toBe(false);
+      }
+    ));
+
+  it('should warn if the env is not capable when tui flag is true', () => {
+    const original = process.stderr.isTTY;
+    process.stderr.isTTY = false;
+    const warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    withEnvironmentVariables(
+      {
+        NX_TUI: null,
+        CI: 'false',
+        TERM: 'linux',
+      },
+      () => {
+        expect(shouldUseTui({}, { tui: true }, false)).toBe(false);
+        expect(warnSpy).toHaveBeenCalled();
+      }
+    );
+    process.stderr.isTTY = original;
   });
 });
