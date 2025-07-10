@@ -191,7 +191,7 @@
     "eslint-plugin-testing-library": "^6.4.0",
     "eslint-plugin-typescript-sort-keys": "^3.3.0",
     "git-notify": "^0.2.3",
-    "glob": "^8.0.3",
+    "glob": "^10.4.5",
     "glob-promise": "^6.0.5",
     "html-entities": "^2.4.0",
     "html-loader": "^4.2.0",
