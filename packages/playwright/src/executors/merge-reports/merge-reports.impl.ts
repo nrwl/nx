@@ -3,11 +3,10 @@ import {
   output,
   type ExecutorContext,
 } from '@nx/devkit';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
-import type { PlaywrightTestConfig, TestStatus } from '@playwright/test';
+import type { TestStatus } from '@playwright/test';
 import { execSync } from 'node:child_process';
 import { readdirSync, readFileSync } from 'node:fs';
-import { join, posix } from 'node:path';
+import { join } from 'node:path';
 import type { Schema } from './schema';
 
 export async function mergeReportsExecutor(
@@ -20,11 +19,6 @@ export async function mergeReportsExecutor(
     context.projectsConfigurations.projects[context.projectName].root
   );
 
-  const playwrightConfig = await loadConfigFile<PlaywrightTestConfig>(
-    join(projectRoot, config)
-  );
-  const hasListReporter = hasListReporterConfigured(playwrightConfig);
-
   // We need to use the absolute path to the blob reports directory and the config file
   // because some package managers (e.g. pnpm) can mess with the process cwd
   const blobReportsDirPath = join(projectRoot, blobReportsDir);
@@ -36,37 +30,17 @@ export async function mergeReportsExecutor(
       `${pmc.exec} playwright merge-reports "${blobReportsDirPath}" --config="${configPath}"`,
       {
         cwd: projectRoot,
-        stdio: hasListReporter || context.isVerbose ? 'inherit' : 'ignore',
+        stdio: 'inherit',
         windowsHide: false,
       }
     );
   } catch (error) {
     output.error({
       title: 'Merging the blob reports failed',
-      bodyLines: [
-        error.message ?? error,
-        ...(hasListReporter || context.isVerbose
-          ? ['See above for more details.']
-          : error.stack
-          ? [error.stack]
-          : []),
-      ],
+      bodyLines: [error.message ?? error, 'See above for more details.'],
     });
 
     return { success: false };
-  }
-
-  if (!hasListReporter) {
-    // If the list reporter is not configured, we produce it so that the user
-    // can see the test results
-    execSync(
-      `${pmc.exec} playwright merge-reports "${blobReportsDirPath}" --reporter=list`,
-      {
-        cwd: projectRoot,
-        stdio: 'inherit',
-        windowsHide: false,
-      }
-    );
   }
 
   const blobReportFiles = collectBlobReports(join(projectRoot, blobReportsDir));
@@ -99,25 +73,6 @@ function collectBlobReports(blobReportsDir: string): string[] {
   }
 
   return blobReportFiles;
-}
-
-function hasListReporterConfigured(
-  playwrightConfig: PlaywrightTestConfig
-): boolean {
-  if (!playwrightConfig.reporter) {
-    // In CI, if no reporter is configured, Playwright uses the dot reporter
-    return process.env.CI !== 'true';
-  }
-
-  if (typeof playwrightConfig.reporter === 'string') {
-    return playwrightConfig.reporter === 'list';
-  }
-
-  if (Array.isArray(playwrightConfig.reporter)) {
-    return playwrightConfig.reporter.some((reporter) => reporter[0] === 'list');
-  }
-
-  return false;
 }
 
 function parseBlobReportsStatus(
