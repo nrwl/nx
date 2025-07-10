@@ -514,10 +514,10 @@ impl App {
                 {
                     // Handle Q to trigger countdown or immediate exit, depending on the tasks
                     if !tasks_list.filter_mode && key.code == KeyCode::Char('q') {
-                        // Check if all tasks are in a completed state
-                        let all_tasks_completed = tasks_list.tasks.iter().all(|t| {
+                        // Check if all tasks are in a completed state using the task status map
+                        let all_tasks_completed = self.task_status_map.values().all(|status| {
                             matches!(
-                                t.status,
+                                status,
                                 TaskStatus::Success
                                     | TaskStatus::Failure
                                     | TaskStatus::Skipped
@@ -1142,18 +1142,16 @@ impl App {
 
     /// Returns the names of tasks that have failed.
     fn get_failed_task_names(&self) -> Vec<String> {
-        self.components
+        self.task_status_map
             .iter()
-            .find_map(|c| c.as_any().downcast_ref::<TasksList>())
-            .map(|tasks_list| {
-                tasks_list
-                    .tasks
-                    .iter()
-                    .filter(|task| task.status == TaskStatus::Failure)
-                    .map(|task| task.name.clone())
-                    .collect()
+            .filter_map(|(task_name, status)| {
+                if *status == TaskStatus::Failure {
+                    Some(task_name.clone())
+                } else {
+                    None
+                }
             })
-            .unwrap_or_else(Vec::new)
+            .collect()
     }
 
     /// Clears all output panes and resets their associated state.
