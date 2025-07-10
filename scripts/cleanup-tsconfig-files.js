@@ -17,10 +17,10 @@ function cleanupTsConfigFiles() {
   }
 
   const tsConfigPattern = path
-    .join(outputPath, '**/tsconfig*.json')
+    .join(outputPath, '*/tsconfig*.json')
     .replace(/\\/g, '/');
   const tsBuildInfoPattern = path
-    .join(outputPath, '**/*.tsbuildinfo')
+    .join(outputPath, '*/*.tsbuildinfo')
     .replace(/\\/g, '/');
 
   const tsConfigFiles = glob.sync(tsConfigPattern);
