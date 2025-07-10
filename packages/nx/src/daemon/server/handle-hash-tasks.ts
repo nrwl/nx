@@ -45,10 +45,8 @@ export async function handleHashTasks(payload: {
       payload.runnerOptions
     );
   }
-  const response = await storedHasher.hashTasks(
-    payload.tasks,
-    payload.taskGraph,
-    payload.env
+  const response = JSON.stringify(
+    await storedHasher.hashTasks(payload.tasks, payload.taskGraph, payload.env)
   );
   return {
     response,
