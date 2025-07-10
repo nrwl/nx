@@ -128,7 +128,9 @@ describe('Playwright e2e configuration', () => {
       });
 
       expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchInlineSnapshot(`
-        "export default [{ ignores: ['**/test-output'] }];
+        "export default [
+          { ignores: ['**/test-output', '**/.nx-atomized-blob-reports'] },
+        ];
         "
       `);
     });
