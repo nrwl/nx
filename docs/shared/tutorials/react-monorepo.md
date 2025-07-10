@@ -8,7 +8,7 @@ description: In this tutorial you'll create a frontend-focused workspace with Nx
 In this tutorial, you'll learn how to create a new React monorepo using the Nx platform.
 
 {% callout type="note" title="Prerequisites" %}
-This tutorial requires a [GitHub account](https://github.com) to demonstrate the full value of **Nx**-including task running, caching, and CI integration.
+This tutorial requires a [GitHub account](https://github.com) to demonstrate the full value of **Nx** - including task running, caching, and CI integration.
 {% /callout %}
 
 What will you learn?
@@ -23,7 +23,7 @@ What will you learn?
 
 To get started, let's create a new React monorepo with Nx Cloud and GitHub Actions preconfigured.
 
-{% call-to-action title="Create a new React monorepo" url="https://cloud.nx.app/create-nx-workspace" description="With Nx and GitHub Actions fully set up" /%}
+{% call-to-action title="Create a new React monorepo" url="https://cloud.nx.app/create-nx-workspace?preset=react" description="With Nx and GitHub Actions fully set up" /%}
 
 You should now have a new workspace called `acme` with Vite, Vitest, ESLint, and Prettier preconfigured.
 
@@ -57,7 +57,7 @@ Before continuing, it is **important** to make sure that your GitHub repository 
 At this point you should have:
 
 1. A new Nx workspace on your local machine with a React app in `apps/demo`
-2. A new GitHub repository for the workspace with `.github/worksflows/ci.yml` pipeline preconfigured
+2. A new GitHub repository for the workspace with `.github/workflows/ci.yml` pipeline preconfigured
 3. A workspace in Nx Cloud that is connected to the GitHub repository
 
 You should see your workspace in your [Nx Cloud organization](https://cloud.nx.app/orgs).
@@ -344,7 +344,7 @@ If you have keen eyes, you may have noticed that there is a typo in the `App` co
 
 ## Visualize your Project Structure
 
-Nx automatically detects the dependencies between the various parts of your workspace and builds a [project graph](/features/explore-graph). This graph is used by Nx to perform various optimizations such as determining the correct order of execution when running tasks like `npx nx build`, enabling intelligent caching, and more. Interestingly you can also visualize it.
+Nx automatically detects the dependencies between the various parts of your workspace and builds a [project graph](/features/explore-graph). This graph is used by Nx to perform various optimizations such as determining the correct order of execution when running tasks like `npx nx build`, enabling intelligent caching, and more. Interestingly, you can also visualize it.
 
 Just run:
 
@@ -446,7 +446,7 @@ Not all tasks might be cacheable though. You can configure the `cache` settings 
 
 In this section, we'll explore how Nx Cloud can help your pull request get to green faster with self-healing CI. Recall that our demo app has a test failure, so let's see how this can be automatically resolved.
 
-The `npx nx-cloud fix-ci` command that is already included in your GitHub Actions workflow (e.g. `github/workflows/ci.yml`)is responsible for enabling self-healing CI and will automatically suggest fixes to your failing tasks.
+The `npx nx-cloud fix-ci` command that is already included in your GitHub Actions workflow (`github/workflows/ci.yml`)is responsible for enabling self-healing CI and will automatically suggest fixes to your failing tasks.
 
 ```yaml {% fileName=".github/workflows/ci.yml" highlightLines=[31,32] %}
 name: CI
@@ -512,7 +512,7 @@ After the fix has been applied and committed, CI will re-run automatically, and 
 
 ![Tasks with remote cache hit](/shared/images/tutorials/react-remote-cache-notification.avif)
 
-When you click `View Results` to show the run in Nx Cloud, you'll notice something interesting. The lint and test tasks fo the `ui` library were read from remote cache and did not have to run again, thus each taking less than a second to complete.
+When you click `View Results` to show the run in Nx Cloud, you'll notice something interesting. The lint and test tasks for the `ui` library were read from remote cache and did not have to run again, thus each taking less than a second to complete.
 
 ![Nx Cloud run showing remote cache hits](/shared/images/tutorials/react-remote-cache-cloud.avif)
 
