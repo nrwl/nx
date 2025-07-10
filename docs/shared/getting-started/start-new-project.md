@@ -5,11 +5,11 @@ description: Create a new Nx workspace manually with your favorite CLI or use th
 
 # Start a new project with Nx
 
-When you start a new project with Nx, you have two options.
+When you start a new project with Nx, you have the following options.
 
-## Option 1: Manual setup
+## Option 1: Add Nx to your existing setup
 
-In a nutshell, this means using your favorite CLI to create your initial project setup and then adding Nx to it.
+You can add Nx to any existing setup - whether you're creating a new project from scratch (for example using npm/pnpm/yarn workspaces), bootstrapping with a framework or metaframework CLI, or working with an existing project you've been developing for a while.
 
 Let's take the example of an NPM workspace. Create a new root-level `package.json` like:
 
@@ -36,7 +36,7 @@ Nx will detect the underlying workspace configuration, ask you a couple of quest
 - [adding Nx plugins to help refine your workflows](/plugin-registry)
 - [optimizing your CI](/ci/intro/ci-with-nx)
 
-## Option 2: Guided setup (JavaScript only)
+## Option 2: Create a new workspace with presets
 
 Alternatively, you can choose a more guided approach by leveraging some of the presets Nx comes with.
 
@@ -56,6 +56,18 @@ This interactive command will guide you through the setup process, allowing you 
 Choose a preset that matches your technology stack. This gives you a fully configured workspace.
 
 You can also choose **an empty workspace preset** which sets up the bare minimum configuration including Nx itself. This allows you to add technologies and features incrementally over time as you need them.
+
+## Option 3: Get the complete Nx platform experience
+
+[![Nx Cloud onboarding](/shared/images/getting-started/nx-cloud-starting-screen.avif)](https://cloud.nx.app/get-started)
+
+For the complete experience, you can also get [started directly from the Nx Cloud application](https://cloud.nx.app/get-started).
+
+This approach gives you a fully end-to-end development workflow right from the start, making it easy to get up and running when your project is in its initial phase. You'll get a fully working CI configuration that includes Nx Cloud's AI-powered features like **AI-powered self-healing CI** that automatically fixes common CI failures. This means you benefit from intelligent automation right from day one, without having to configure complex CI pipelines manually.
+
+As your project grows and scales, you'll have access to additional features like **remote caching** to speed up builds across your team, **distributed task execution with Nx Agents** to parallelize work across multiple machines, and **automatic test splitting** to optimize your CI pipeline performance.
+
+[Get started with the complete Nx platform experience →](https://cloud.nx.app/get-started)
 
 <!-- ## Pick Your Stack!
 

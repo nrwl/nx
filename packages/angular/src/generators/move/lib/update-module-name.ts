@@ -8,6 +8,7 @@ import {
   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import type { MoveImplOptions } from './types';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 /**
  * Updates the Angular module name (including the spec file and index.ts)
@@ -57,15 +58,16 @@ export function updateModuleName(
     },
   ];
 
+  const sourceRoot = getProjectSourceRoot(project, tree);
   const filesToRename = moduleFiles.flatMap((moduleFile) =>
     [
       {
-        from: `${project.sourceRoot}/lib/${moduleFile.from}.ts`,
-        to: `${project.sourceRoot}/lib/${moduleFile.to}.ts`,
+        from: `${sourceRoot}/lib/${moduleFile.from}.ts`,
+        to: `${sourceRoot}/lib/${moduleFile.to}.ts`,
       },
       {
-        from: `${project.sourceRoot}/lib/${moduleFile.from}.spec.ts`,
-        to: `${project.sourceRoot}/lib/${moduleFile.to}.spec.ts`,
+        from: `${sourceRoot}/lib/${moduleFile.from}.spec.ts`,
+        to: `${sourceRoot}/lib/${moduleFile.to}.spec.ts`,
       },
     ].filter((rename) => rename.from !== rename.to)
   );
@@ -95,7 +97,7 @@ export function updateModuleName(
   });
 
   // update index file
-  const indexFile = joinPathFragments(project.sourceRoot, 'index.ts');
+  const indexFile = joinPathFragments(sourceRoot, 'index.ts');
   if (tree.exists(indexFile)) {
     updateFileContent(tree, replacements, indexFile);
   }

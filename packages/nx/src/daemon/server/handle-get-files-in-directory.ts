@@ -7,7 +7,7 @@ export async function handleGetFilesInDirectory(
 ): Promise<HandlerResult> {
   const files = await getFilesInDirectoryUsingContext(workspaceRoot, dir);
   return {
-    response: files,
+    response: JSON.stringify(files),
     description: 'handleNxWorkspaceFiles',
   };
 }
