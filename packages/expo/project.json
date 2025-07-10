@@ -6,8 +6,7 @@
   "targets": {
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/expo/README.md"],
-      "command": "node ./scripts/copy-readme.js expo",
-      "dependsOn": ["^build", "build-base-ts", "legacy-post-build"]
+      "command": "node ./scripts/copy-readme.js expo"
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
@@ -48,8 +47,7 @@
           },
           "LICENSE"
         ]
-      },
-      "dependsOn": ["build-base-ts"]
+      }
     }
   },
   "tags": []

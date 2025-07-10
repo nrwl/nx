@@ -3,9 +3,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "outDir": "../../dist/packages/angular",
-    "declaration": true,
     "types": ["node"],
-    "composite": true,
     "noEmit": false,
     "esModuleInterop": true
   },

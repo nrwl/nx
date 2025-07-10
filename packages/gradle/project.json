@@ -14,16 +14,11 @@
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/gradle/README.md"],
       "command": "node ./scripts/copy-readme.js gradle",
-      "dependsOn": [
-        "^build",
-        "build-native",
-        "build-base-ts",
-        "legacy-post-build"
-      ]
+      "dependsOn": ["^build", "build-native", "build-base", "legacy-post-build"]
     },
-    "build-base-ts": {
+    "build-base": {
       "dependsOn": [
-        "^build-base-ts",
+        "^build-base",
         "build-native",
         "gradle-batch-runner:assemble"
       ]
@@ -71,10 +66,8 @@
             "output": "/"
           }
         ]
-      },
-      "dependsOn": ["build-base-ts"]
+      }
     }
   },
-  "tags": [],
-  "implicitDependencies": ["gradle-batch-runner"]
+  "tags": []
 }

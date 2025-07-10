@@ -5,7 +5,6 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "dependsOn": ["^build", "build-base-ts", "legacy-post-build"],
       "command": "node ./scripts/copy-readme.js plugin",
       "outputs": ["{workspaceRoot}/dist/packages/plugin/README.md"]
     },
@@ -47,8 +46,7 @@
             "output": "/"
           }
         ]
-      },
-      "dependsOn": ["build-base-ts"]
+      }
     }
   }
 }

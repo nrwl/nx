@@ -6,8 +6,7 @@
   "targets": {
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/rspack/README.md"],
-      "command": "node ./scripts/copy-readme.js rspack",
-      "dependsOn": ["^build", "build-base-ts", "legacy-post-build"]
+      "command": "node ./scripts/copy-readme.js rspack"
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
@@ -33,8 +32,7 @@
           },
           "LICENSE"
         ]
-      },
-      "dependsOn": ["build-base-ts"]
+      }
     }
   },
   "tags": []

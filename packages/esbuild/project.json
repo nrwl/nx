@@ -6,8 +6,7 @@
   "targets": {
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/esbuild/README.md"],
-      "commands": ["node ./scripts/copy-readme.js esbuild"],
-      "dependsOn": ["^build", "build-base-ts", "legacy-post-build"]
+      "commands": ["node ./scripts/copy-readme.js esbuild"]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
@@ -47,8 +46,7 @@
             "output": "/"
           }
         ]
-      },
-      "dependsOn": ["build-base-ts"]
+      }
     }
   }
 }

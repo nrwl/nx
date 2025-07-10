@@ -6,10 +6,8 @@
   "targets": {
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/rollup/README.md"],
-      "command": "node ./scripts/copy-readme.js rollup",
-      "dependsOn": ["^build", "build-base-ts", "legacy-post-build"]
+      "command": "node ./scripts/copy-readme.js rollup"
     },
-
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
@@ -48,8 +46,7 @@
             "output": "/"
           }
         ]
-      },
-      "dependsOn": ["build-base-ts"]
+      }
     }
   }
 }

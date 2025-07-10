@@ -6,8 +6,7 @@
   "targets": {
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/eslint/README.md"],
-      "command": "node ./scripts/copy-readme.js eslint",
-      "dependsOn": ["^build", "build-base-ts", "legacy-post-build"]
+      "command": "node ./scripts/copy-readme.js eslint"
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
@@ -47,8 +46,7 @@
             "output": "/"
           }
         ]
-      },
-      "dependsOn": ["build-base-ts"]
+      }
     }
   },
   "implicitDependencies": ["eslint-plugin"]

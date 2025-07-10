@@ -14,7 +14,8 @@
       ],
       "@nx/nx-dev-models-package": ["nx-dev/models-package/src/index.ts"],
       "@nx/nx-dev-models-document": ["nx-dev/models-document/src/index.ts"],
-      "@nx/nx-dev-models-menu": ["nx-dev/models-menu/src/index.ts"]
+      "@nx/nx-dev-models-menu": ["nx-dev/models-menu/src/index.ts"],
+      "@nx/typedoc-theme": ["typedoc-theme/src/index.ts"]
     }
   },
   "include": ["**/*.ts"],

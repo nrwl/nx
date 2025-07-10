@@ -7,7 +7,7 @@
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/detox/README.md"],
       "command": "node ./scripts/copy-readme.js detox",
-      "dependsOn": ["^build", "build-base-ts", "legacy-post-build"]
+      "dependsOn": ["^build", "build-base", "legacy-post-build"]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
@@ -46,8 +46,7 @@
             "output": "/"
           }
         ]
-      },
-      "dependsOn": ["build-base-ts"]
+      }
     }
   }
 }

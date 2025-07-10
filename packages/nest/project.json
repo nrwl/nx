@@ -6,8 +6,7 @@
   "targets": {
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/nest/README.md"],
-      "command": "node ./scripts/copy-readme.js nest",
-      "dependsOn": ["^build", "build-base-ts", "legacy-post-build"]
+      "command": "node ./scripts/copy-readme.js nest"
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
@@ -47,8 +46,7 @@
             "output": "/"
           }
         ]
-      },
-      "dependsOn": ["build-base-ts"]
+      }
     }
   },
   "implicitDependencies": ["node", "eslint"]

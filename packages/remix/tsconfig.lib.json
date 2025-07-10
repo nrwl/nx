@@ -3,10 +3,8 @@
   "compilerOptions": {
     "module": "commonjs",
     "outDir": "../../dist/packages/remix",
-    "declaration": true,
     "types": ["node"],
     "resolveJsonModule": true,
-    "composite": true,
     "noEmit": false
   },
   "exclude": ["**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],

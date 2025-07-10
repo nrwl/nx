@@ -96,9 +96,10 @@
     },
     "build": {
       "dependsOn": [
-        "build-base",
+        "^build",
         "typecheck",
         "legacy-post-build",
+        "build-base",
         "build-native"
       ],
       "inputs": ["production", "^production"],
@@ -109,19 +110,9 @@
       "cache": true
     },
     "build-base": {
-      "dependsOn": [
-        "^build-base",
-        "^typecheck",
-        "^legacy-post-build",
-        "build-native"
-      ],
+      "dependsOn": ["^build-base", "build-native"],
       "inputs": ["production", "^production"],
-      "options": {
-        "outputPath": "dist/{projectRoot}",
-        "tsConfig": "{projectRoot}/tsconfig.lib.json",
-        "main": "{projectRoot}/index.ts"
-      },
-      "outputs": ["{options.outputPath}"],
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
       "cache": true
     },
     "test-native": {
@@ -199,16 +190,11 @@
     "sitemap": {
       "cache": true
     },
-    "build-base-ts": {
-      "dependsOn": ["^build-base-ts", "^build-base", "build-native"],
-      "cache": true,
-      "inputs": ["production", "^production"],
-      "outputs": ["{workspaceRoot}/dist/{projectRoot}"]
-    },
     "copy-docs": {
       "cache": true
     },
     "legacy-post-build": {
+      "dependsOn": ["build-base"],
       "cache": true,
       "inputs": ["production", "^production"],
       "outputs": ["{workspaceRoot}/dist/packages/{projectName}"]
@@ -218,12 +204,10 @@
     "@monodon/rust",
     {
       "plugin": "@nx/js/typescript",
-      "include": ["packages/**/*", "graph/**/*"],
-      "exclude": ["packages/angular/**"],
       "options": {
         "typecheck": true,
         "build": {
-          "targetName": "build-base-ts"
+          "targetName": "build-base"
         }
       }
     },

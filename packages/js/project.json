@@ -52,13 +52,11 @@
             "output": "/"
           }
         ]
-      },
-      "dependsOn": ["build-base-ts"]
+      }
     },
     "build": {
       "outputs": ["{workspaceRoot}/dist/packages/js/README.md"],
-      "command": "node ./scripts/copy-readme.js js",
-      "dependsOn": ["^build", "build-base-ts", "legacy-post-build"]
+      "command": "node ./scripts/copy-readme.js js"
     }
   },
   "tags": []

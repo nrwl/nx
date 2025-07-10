@@ -3,9 +3,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "outDir": "../../dist/packages/nest",
-    "declaration": true,
     "types": ["node"],
-    "composite": true,
     "noEmit": false
   },
   "exclude": [

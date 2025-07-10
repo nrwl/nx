@@ -3,10 +3,8 @@
   "compilerOptions": {
     "resolveJsonModule": true,
     "outDir": "../../dist/packages/rspack",
-    "declaration": true,
     "esModuleInterop": true,
     "types": ["node"],
-    "composite": true,
     "noEmit": false
   },
   "include": ["**/*.ts", "**/*.json"],

@@ -4,9 +4,7 @@
   "sourceRoot": "packages/vue",
   "projectType": "library",
   "targets": {
-    "build": {
-      "dependsOn": ["^build", "build-base-ts", "legacy-post-build"]
-    },
+    "build": {},
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
@@ -45,8 +43,7 @@
             "output": "/"
           }
         ]
-      },
-      "dependsOn": ["build-base-ts"]
+      }
     }
   }
 }

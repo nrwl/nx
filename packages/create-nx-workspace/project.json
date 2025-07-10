@@ -24,7 +24,7 @@
         ],
         "parallel": false
       },
-      "dependsOn": ["^build", "build-base-ts", "legacy-post-build"]
+      "dependsOn": ["^build", "build-base", "legacy-post-build"]
     },
     "legacy-post-build": {
       "executor": "@nx/workspace-plugin:legacy-post-build",
@@ -64,8 +64,7 @@
             "output": "/"
           }
         ]
-      },
-      "dependsOn": ["build-base-ts"]
+      }
     }
   },
   "implicitDependencies": [

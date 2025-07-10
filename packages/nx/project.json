@@ -59,7 +59,7 @@
     "build": {
       "dependsOn": [
         "^build-client",
-        "build-base-ts",
+        "build-base",
         "build-native",
         "legacy-post-build"
       ],
@@ -173,8 +173,7 @@
             "output": "/"
           }
         ]
-      },
-      "dependsOn": ["build-base-ts"]
+      }
     }
   }
 }

@@ -23,8 +23,7 @@
           }
         ],
         "parallel": false
-      },
-      "dependsOn": ["^build", "build-base-ts", "legacy-post-build"]
+      }
     },
 
     "legacy-post-build": {
@@ -67,8 +66,7 @@
             "output": "/"
           }
         ]
-      },
-      "dependsOn": ["build-base-ts"]
+      }
     }
   },
   "implicitDependencies": ["plugin"]

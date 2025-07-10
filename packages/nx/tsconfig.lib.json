@@ -4,10 +4,9 @@
     "module": "commonjs",
     "outDir": "../../dist/packages/nx",
     "tsBuildInfoFile": "../../dist/packages/nx/tsconfig.tsbuildinfo",
-    "declaration": true,
     "types": ["node"],
-    "composite": true,
-    "noEmit": false
+    "noEmit": false,
+    "composite": true
   },
   "exclude": [
     "**/*.spec.ts",

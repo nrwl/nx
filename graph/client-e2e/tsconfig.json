@@ -9,8 +9,7 @@
       "../../node_modules/@types",
       "../../node_modules/.pnpm/cypress@14.3.0/node_modules/cypress/types"
     ],
-    "lib": ["DOM"],
-    "composite": true
+    "lib": ["DOM"]
   },
   "files": [],
   "include": [

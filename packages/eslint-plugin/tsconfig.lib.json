@@ -2,9 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "../../dist/packages/eslint-plugin",
-    "declaration": true,
     "types": ["node"],
-    "composite": true,
     "noEmit": false,
     "moduleResolution": "node16",
     "module": "node16",
