@@ -36,7 +36,7 @@ export function shouldUseTui(
   if (typeof nxArgs.tui === 'boolean') {
     if (nxArgs.tui && !isCapable) {
       logger.warn(
-        'The Nx Terminal UI cannot be used in this environment; falling back to static output.'
+        'Nx Terminal UI was not enabled as it is not supported in this environment.'
       );
       return false;
     }
