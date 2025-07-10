@@ -4,6 +4,7 @@ import {
   joinPathFragments,
   readProjectConfiguration,
 } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'path';
 import { clean, coerce, gte } from 'semver';
 import { getAppComponentInfo } from '../../utils/app-components-info';
@@ -61,8 +62,7 @@ export function generateSSRFiles(
     );
   }
 
-  const sourceRoot =
-    project.sourceRoot ?? joinPathFragments(project.root, 'src');
+  const sourceRoot = getProjectSourceRoot(project, tree);
 
   const ssrVersion = getInstalledPackageVersion(tree, '@angular/ssr');
   const cleanedSsrVersion = ssrVersion

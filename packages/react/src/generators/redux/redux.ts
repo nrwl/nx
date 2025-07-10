@@ -1,11 +1,3 @@
-import * as path from 'path';
-import {
-  addImport,
-  addReduxStoreToMain,
-  updateReduxStore,
-} from '../../utils/ast-utils';
-import { reactReduxVersion, reduxjsToolkitVersion } from '../../utils/versions';
-import { NormalizedSchema, Schema } from './schema';
 import {
   addDependenciesToPackageJson,
   applyChangesToString,
@@ -17,10 +9,21 @@ import {
   readJson,
   Tree,
 } from '@nx/devkit';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { getRootTsConfigPathInTree } from '@nx/js';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
-import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  getProjectSourceRoot,
+  getProjectType,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import * as path from 'path';
+import {
+  addImport,
+  addReduxStoreToMain,
+  updateReduxStore,
+} from '../../utils/ast-utils';
+import { reactReduxVersion, reduxjsToolkitVersion } from '../../utils/versions';
+import { NormalizedSchema, Schema } from './schema';
 
 let tsModule: typeof import('typescript');
 
@@ -193,7 +196,7 @@ async function normalizeOptions(
         `Expected ${options.appProject} to be an application but got ${appConfig.projectType}`
       );
     }
-    appProjectSourcePath = appConfig.sourceRoot;
+    appProjectSourcePath = getProjectSourceRoot(appConfig, host);
     appMainFilePath = path.join(
       appProjectSourcePath,
       options.js ? 'main.js' : 'main.tsx'

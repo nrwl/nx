@@ -13,6 +13,7 @@ import {
   replaceChange,
 } from '@nx/js';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { dirname, join } from 'path';
 import type * as ts from 'typescript';
 import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
@@ -714,8 +715,7 @@ export function isNgStandaloneApp(tree: Tree, projectName: string) {
   if (mainFile) {
     hasMainFile = true;
   } else {
-    const sourceRoot =
-      project.sourceRoot ?? joinPathFragments(project.root, 'src');
+    const sourceRoot = getProjectSourceRoot(project, tree);
     mainFile = joinPathFragments(sourceRoot, 'main.ts');
     hasMainFile = tree.exists(mainFile);
   }
@@ -940,8 +940,7 @@ export function readBootstrapInfo(
       config.targets.build.options?.main ??
       config.targets.build.options?.browser;
     if (!mainPath) {
-      const sourceRoot =
-        config.sourceRoot ?? joinPathFragments(config.root, 'src');
+      const sourceRoot = getProjectSourceRoot(config, host);
       mainPath = joinPathFragments(sourceRoot, 'main.ts');
     }
   } catch (e) {

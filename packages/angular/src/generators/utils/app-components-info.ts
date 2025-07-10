@@ -4,6 +4,7 @@ import {
   type ProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { basename } from 'node:path';
 import { getInstalledAngularVersionInfo } from './version-utils';
 
@@ -37,22 +38,20 @@ function getComponentInfo(
   componentFileSuffix: string,
   project: ProjectConfiguration
 ): ComponentMetadata {
+  const sourceRoot = getProjectSourceRoot(project, tree);
   let componentPath = joinPathFragments(
-    project.sourceRoot,
+    sourceRoot,
     `app/${component}.component.ts`
   );
 
   if (!tree.exists(componentPath)) {
-    componentPath = joinPathFragments(
-      project.sourceRoot,
-      `app/${component}.ts`
-    );
+    componentPath = joinPathFragments(sourceRoot, `app/${component}.ts`);
   }
 
   if (!tree.exists(componentPath)) {
     if (componentFileSuffix) {
       componentPath = joinPathFragments(
-        project.sourceRoot,
+        sourceRoot,
         `app/${component}${componentFileSuffix}.ts`
       );
     }
@@ -61,7 +60,7 @@ function getComponentInfo(
   if (!tree.exists(componentPath)) {
     const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
     componentPath = joinPathFragments(
-      project.sourceRoot,
+      sourceRoot,
       angularMajorVersion >= 20
         ? `app/${component}.ts`
         : `app/${component}.component.ts`

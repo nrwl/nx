@@ -1,14 +1,18 @@
 import {
   joinPathFragments,
   ProjectConfiguration,
+  Tree,
   TargetConfiguration,
 } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { NormalizedSchema } from './normalized-schema';
 
 export function getWebpackBuildConfig(
+  tree: Tree,
   project: ProjectConfiguration,
   options: NormalizedSchema
 ): TargetConfiguration {
+  const sourceRoot = getProjectSourceRoot(project, tree);
   return {
     executor: `@nx/webpack:webpack`,
     outputs: ['{options.outputPath}'],
@@ -18,11 +22,11 @@ export function getWebpackBuildConfig(
       compiler: 'tsc',
       outputPath: options.outputPath,
       main: joinPathFragments(
-        project.sourceRoot,
+        sourceRoot,
         'main' + (options.js ? '.js' : '.ts')
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-      assets: [joinPathFragments(project.sourceRoot, 'assets')],
+      assets: [joinPathFragments(sourceRoot, 'assets')],
       webpackConfig: joinPathFragments(
         options.appProjectRoot,
         'webpack.config.js'
@@ -41,9 +45,11 @@ export function getWebpackBuildConfig(
 }
 
 export function getEsBuildConfig(
+  tree: Tree,
   project: ProjectConfiguration,
   options: NormalizedSchema
 ): TargetConfiguration {
+  const sourceRoot = getProjectSourceRoot(project, tree);
   return {
     executor: '@nx/esbuild:esbuild',
     outputs: ['{options.outputPath}'],
@@ -55,11 +61,11 @@ export function getEsBuildConfig(
       format: ['cjs'],
       bundle: false,
       main: joinPathFragments(
-        project.sourceRoot,
+        sourceRoot,
         'main' + (options.js ? '.js' : '.ts')
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-      assets: [joinPathFragments(project.sourceRoot, 'assets')],
+      assets: [joinPathFragments(sourceRoot, 'assets')],
       generatePackageJson: options.isUsingTsSolutionConfig ? undefined : true,
       esbuildOptions: {
         sourcemap: true,

@@ -1,11 +1,12 @@
-import { basename, dirname, join, parse, relative, resolve } from 'path';
-import { existsSync, statSync } from 'fs';
 import {
   normalizePath,
   parseTargetString,
   readCachedProjectGraph,
   workspaceRoot,
 } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { statSync } from 'fs';
+import { basename, dirname, join, parse, relative, resolve } from 'path';
 import {
   AssetGlobPattern,
   FileReplacement,
@@ -74,11 +75,7 @@ export function normalizeOptions(
     );
   }
 
-  const sourceRoot =
-    projectNode.data.sourceRoot ??
-    (existsSync(join(workspaceRoot, projectNode.data.root, 'src'))
-      ? join(projectNode.data.root, 'src')
-      : projectNode.data.root);
+  const sourceRoot = getProjectSourceRoot(projectNode.data);
 
   if (!combinedPluginAndMaybeExecutorOptions.main) {
     throw new Error(

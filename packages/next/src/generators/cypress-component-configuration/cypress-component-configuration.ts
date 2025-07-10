@@ -10,11 +10,12 @@ import {
   updateProjectConfiguration,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
-import { isComponent } from '@nx/react/src/utils/ct-utils';
-import { CypressComponentConfigurationGeneratorSchema } from './schema';
-import { nxVersion } from '../../utils/versions';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { componentTestGenerator } from '@nx/react';
+import { isComponent } from '@nx/react/src/utils/ct-utils';
 import { relative } from 'path';
+import { nxVersion } from '../../utils/versions';
+import { CypressComponentConfigurationGeneratorSchema } from './schema';
 
 export function cypressComponentConfiguration(
   tree: Tree,
@@ -144,7 +145,8 @@ ${
 
   if (opts.generateTests) {
     const filePaths = [];
-    visitNotIgnoredFiles(tree, projectConfig.sourceRoot, (filePath) => {
+    const sourceRoot = getProjectSourceRoot(projectConfig, tree);
+    visitNotIgnoredFiles(tree, sourceRoot, (filePath) => {
       const fromProjectRootPath = relative(projectConfig.root, filePath);
       // we don't generate tests for pages/server-side/appDir components
       if (
