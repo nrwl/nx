@@ -31,7 +31,6 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
-    "nx": "workspace:*",
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-image": "^3.0.3",
@@ -47,6 +46,9 @@
     "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-typescript2": "^0.36.0",
     "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

@@ -3,8 +3,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "outDir": "../../dist/packages/jest",
-    "types": ["node"],
-    "noEmit": false
+    "types": ["node"]
   },
   "exclude": ["**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
   "include": ["**/*.ts", "**/*.json"],

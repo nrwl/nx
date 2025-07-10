@@ -3,8 +3,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "outDir": "../../dist/packages/create-nx-plugin",
-    "types": ["node"],
-    "noEmit": false
+    "types": ["node"]
   },
   "exclude": [
     "**/*.spec.ts",

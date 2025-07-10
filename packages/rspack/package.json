@@ -26,7 +26,6 @@
   "dependencies": {
     "@nx/js": "workspace:*",
     "@nx/devkit": "workspace:*",
-    "nx": "workspace:*",
     "@nx/web": "workspace:*",
     "@nx/module-federation": "workspace:*",
     "@phenomnomnominal/tsquery": "~5.0.1",
@@ -56,6 +55,9 @@
     "tslib": "^2.3.0",
     "webpack": "^5.80.0",
     "webpack-node-externals": "^3.0.0"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "peerDependencies": {
     "@module-federation/enhanced": "^0.15.0",

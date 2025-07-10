@@ -7,6 +7,9 @@
   "files": [],
   "references": [
     {
+      "path": "../rollup"
+    },
+    {
       "path": "../module-federation"
     },
     {
@@ -22,10 +25,10 @@
       "path": "../js"
     },
     {
-      "path": "../nx"
+      "path": "../devkit"
     },
     {
-      "path": "../devkit"
+      "path": "../nx"
     },
     {
       "path": "./tsconfig.lib.json"

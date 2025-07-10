@@ -72,5 +72,5 @@
       "command": "node ./scripts/copy-readme.js angular"
     }
   },
-  "implicitDependencies": ["!@nx/cypress"]
+  "implicitDependencies": []
 }

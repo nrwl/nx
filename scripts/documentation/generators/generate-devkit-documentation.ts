@@ -13,11 +13,7 @@ export async function generateDevkitDocumentation() {
     windowsHide: false,
   };
 
-  rmSync('node_modules/@nx/typedoc-theme', { recursive: true, force: true });
-
-  cpSync('dist/typedoc-theme', 'node_modules/@nx/typedoc-theme', {
-    recursive: true,
-  });
+  // TypeDoc theme is now available as a workspace dependency
 
   cpSync(
     'packages/devkit/tsconfig.lib.json',
@@ -40,7 +36,19 @@ export async function generateDevkitDocumentation() {
   const commonTypedocOptions: Partial<typedoc.TypeDocOptions> & {
     [key: string]: unknown;
   } = {
-    plugin: ['typedoc-plugin-markdown', '@nx/typedoc-theme'],
+    plugin: [
+      'typedoc-plugin-markdown',
+      join(
+        __dirname,
+        '..',
+        '..',
+        '..',
+        'dist',
+        'typedoc-theme',
+        'src',
+        'index.js'
+      ),
+    ],
     disableSources: true,
     theme: 'nx-markdown-theme',
     readme: 'none',

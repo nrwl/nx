@@ -35,12 +35,14 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@phenomnomnominal/tsquery": "~5.0.1",
-    "nx": "workspace:*",
     "semver": "^7.5.3",
     "tslib": "^2.3.0",
     "@nx/cypress": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "peerDependencies": {
     "storybook": ">=7.0.0 <10.0.0"

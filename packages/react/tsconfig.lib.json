@@ -15,6 +15,9 @@
   "include": ["**/*.ts", "**/*.json"],
   "references": [
     {
+      "path": "../rollup/tsconfig.lib.json"
+    },
+    {
       "path": "../module-federation/tsconfig.lib.json"
     },
     {
@@ -30,10 +33,10 @@
       "path": "../js/tsconfig.lib.json"
     },
     {
-      "path": "../nx/tsconfig.lib.json"
+      "path": "../devkit/tsconfig.lib.json"
     },
     {
-      "path": "../devkit/tsconfig.lib.json"
+      "path": "../nx/tsconfig.lib.json"
     }
   ]
 }

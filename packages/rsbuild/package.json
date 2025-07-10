@@ -31,11 +31,13 @@
   "dependencies": {
     "tslib": "^2.3.0",
     "@nx/devkit": "workspace:*",
-    "nx": "workspace:*",
     "@nx/js": "workspace:*",
     "@rsbuild/core": "1.1.8",
     "minimatch": "9.0.3",
     "@phenomnomnominal/tsquery": "~5.0.1"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "peerDependencies": {},
   "nx-migrations": {

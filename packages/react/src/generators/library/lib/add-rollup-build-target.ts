@@ -26,7 +26,10 @@ export async function addRollupBuildTarget(
 ) {
   const tasks: GeneratorCallback[] = [];
 
-  const { configurationGenerator } = ensurePackage('@nx/rollup', nxVersion);
+  const { configurationGenerator } = ensurePackage<typeof import('@nx/rollup')>(
+    '@nx/rollup',
+    nxVersion
+  );
   tasks.push(
     await configurationGenerator(host, {
       ...options,

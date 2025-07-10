@@ -3,8 +3,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "outDir": "../../dist/packages/express",
-    "types": ["node"],
-    "noEmit": false
+    "types": ["node"]
   },
   "exclude": [
     "**/*.spec.ts",

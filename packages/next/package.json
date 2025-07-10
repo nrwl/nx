@@ -41,7 +41,6 @@
     "copy-webpack-plugin": "^10.2.4",
     "file-loader": "^6.2.0",
     "ignore": "^5.0.4",
-    "nx": "workspace:*",
     "semver": "^7.5.3",
     "tslib": "^2.3.0",
     "webpack-merge": "^5.8.0",
@@ -51,6 +50,9 @@
     "@nx/web": "workspace:*",
     "@nx/webpack": "workspace:*",
     "@phenomnomnominal/tsquery": "~5.0.1"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

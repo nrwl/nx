@@ -4,8 +4,7 @@
     "resolveJsonModule": true,
     "outDir": "../../dist/packages/rspack",
     "esModuleInterop": true,
-    "types": ["node"],
-    "noEmit": false
+    "types": ["node"]
   },
   "include": ["**/*.ts", "**/*.json"],
   "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],

@@ -3,8 +3,7 @@
   "compilerOptions": {
     "emitDecoratorMetadata": true,
     "outDir": "../../dist/graph/ui-project-details/storybook",
-    "composite": false,
-    "noEmit": false
+    "composite": false
   },
   "files": [
     "../../node_modules/@nx/react/typings/styled-jsx.d.ts",

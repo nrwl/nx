@@ -3,7 +3,6 @@
   "compilerOptions": {
     "outDir": "../../dist/packages/eslint-plugin",
     "types": ["node"],
-    "noEmit": false,
     "moduleResolution": "node16",
     "module": "node16",
     "esModuleInterop": true

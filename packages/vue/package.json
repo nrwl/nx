@@ -15,22 +15,8 @@
     "CLI",
     "Front-end"
   ],
-  "main": "./index.js",
+  "main": "./index",
   "typings": "./index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./index.d.ts",
-      "default": "./index.js"
-    },
-    "./package.json": "./package.json",
-    "./tailwind": {
-      "types": "./src/tailwind.d.ts",
-      "default": "./src/tailwind.js"
-    },
-    "./executors": "./executors.json",
-    "./generators": "./generators.json",
-    "./migrations": "./migrations.json"
-  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -46,11 +32,13 @@
     "picomatch": "^4.0.2",
     "tslib": "^2.3.0",
     "@nx/devkit": "workspace:*",
-    "nx": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/vite": "workspace:*",
     "@nx/web": "workspace:*"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

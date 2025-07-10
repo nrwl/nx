@@ -4,8 +4,7 @@
     "module": "commonjs",
     "outDir": "../../dist/packages/remix",
     "types": ["node"],
-    "resolveJsonModule": true,
-    "noEmit": false
+    "resolveJsonModule": true
   },
   "exclude": ["**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
   "include": ["**/*.ts", "**/*.json"],

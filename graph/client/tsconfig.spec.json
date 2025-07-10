@@ -19,7 +19,7 @@
     "jest.config.ts"
   ],
   "files": [
-    "../../packages/react/typings/cssmodule.d.ts",
-    "../../packages/react/typings/image.d.ts"
+    "../../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../../node_modules/@nx/react/typings/image.d.ts"
   ]
 }

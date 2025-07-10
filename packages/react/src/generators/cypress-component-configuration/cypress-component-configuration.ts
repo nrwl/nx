@@ -5,6 +5,7 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
+import type { GeneratorCallback } from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 import { addFiles } from './lib/add-files';
 import { configureCypressCT } from '../../utils/ct-utils';
@@ -28,7 +29,7 @@ export function cypressComponentConfigGenerator(
 export async function cypressComponentConfigGeneratorInternal(
   tree: Tree,
   options: CypressComponentConfigurationSchema
-) {
+): Promise<GeneratorCallback> {
   const { componentConfigurationGenerator: baseCyCtConfig } = ensurePackage<
     typeof import('@nx/cypress')
   >('@nx/cypress', nxVersion);

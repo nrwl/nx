@@ -2,8 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "../../dist/packages/module-federation",
-    "types": ["node"],
-    "noEmit": false
+    "types": ["node"]
   },
   "include": ["**/*.ts", "**/*.json"],
   "references": [

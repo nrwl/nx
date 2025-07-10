@@ -2,7 +2,7 @@ import {
   compileTypeScript,
   compileTypeScriptWatcher,
   TypeScriptCompilationOptions,
-} from '@nx/workspace';
+} from '@nx/workspace/src/utilities/typescript/compilation';
 import type { Diagnostic } from 'typescript';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { NormalizedExecutorOptions } from '../schema';

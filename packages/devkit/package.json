@@ -39,7 +39,11 @@
     "nx": "workspace:*"
   },
   "devDependencies": {
-    "jest": "^29.4.1"
+    "jest": "^29.4.1",
+    "nx": "workspace:*"
+  },
+  "peerDependencies": {
+    "nx": ">= 20 <= 22"
   },
   "publishConfig": {
     "access": "public"

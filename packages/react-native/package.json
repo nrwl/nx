@@ -40,10 +40,12 @@
     "ignore": "^5.0.4",
     "metro-config": "~0.80.4",
     "metro-resolver": "~0.80.4",
-    "nx": "workspace:*",
     "picocolors": "^1.1.0",
     "tsconfig-paths": "^4.1.2",
     "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "executors": "./executors.json",
   "ng-update": {

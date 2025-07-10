@@ -37,10 +37,12 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
-    "nx": "workspace:*",
     "semver": "^7.5.3",
     "tslib": "^2.3.0",
     "typescript": "~5.8.2"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "peerDependenciesMeta": {
     "@zkochan/js-yaml": {

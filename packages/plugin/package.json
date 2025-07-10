@@ -29,10 +29,12 @@
   "dependencies": {
     "tslib": "^2.3.0",
     "@nx/devkit": "workspace:*",
-    "nx": "workspace:*",
     "@nx/jest": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

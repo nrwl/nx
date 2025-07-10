@@ -30,12 +30,14 @@
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
-    "nx": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/react": "workspace:*",
     "@nx/workspace": "workspace:*",
     "tslib": "^2.3.1",
     "@phenomnomnominal/tsquery": "~5.0.1"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "peerDependencies": {
     "@remix-run/dev": "^2.14.0"

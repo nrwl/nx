@@ -67,7 +67,7 @@ export async function addE2e(
         `rspack.config.${options.js ? 'js' : 'ts'}`
       ),
       options.addPlugin,
-      options.port ?? options.devServerPort ?? 4200
+      options.devServerPort ?? 4200
     );
   } else if (options.bundler === 'vite') {
     const { getViteE2EWebServerInfo, getReactRouterE2EWebServerInfo } =

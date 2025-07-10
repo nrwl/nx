@@ -54,7 +54,6 @@
     "jsonc-parser": "3.2.0",
     "npm-package-arg": "11.0.1",
     "npm-run-path": "^4.0.1",
-    "nx": "workspace:*",
     "ora": "5.3.0",
     "picocolors": "^1.1.0",
     "picomatch": "4.0.2",
@@ -62,6 +61,9 @@
     "source-map-support": "0.5.19",
     "tinyglobby": "^0.2.12",
     "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "peerDependencies": {
     "verdaccio": "^6.0.5"

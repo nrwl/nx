@@ -43,7 +43,7 @@
       "defaultConfiguration": "release"
     },
     "typecheck": {
-      "dependsOn": ["^typecheck", "build-client"]
+      "dependsOn": ["^typecheck", "build-native"]
     },
     "serve-base": {
       "configurations": {

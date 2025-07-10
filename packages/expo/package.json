@@ -30,7 +30,6 @@
   "dependencies": {
     "@nx/detox": "workspace:*",
     "@nx/devkit": "workspace:*",
-    "nx": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/jest": "workspace:*",
     "@nx/js": "workspace:*",
@@ -44,6 +43,9 @@
     "picocolors": "^1.1.0",
     "tsconfig-paths": "^4.1.2",
     "tslib": "^2.3.0"
+  },
+  "devDepndencies": {
+    "nx": "workspace:*"
   },
   "executors": "./executors.json",
   "ng-update": {

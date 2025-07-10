@@ -36,8 +36,10 @@
     "picocolors": "^1.1.0",
     "tslib": "^2.3.0",
     "@nx/devkit": "workspace:*",
-    "nx": "workspace:*",
     "@nx/js": "workspace:*"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

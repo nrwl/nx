@@ -17,9 +17,7 @@ export async function* rollupExecutor(
   rawOptions: RollupExecutorOptions,
   context: ExecutorContext
 ) {
-  if (!process.env.NODE_ENV) {
-    (process.env as any).NODE_ENV = 'production';
-  }
+  (process.env as any).NODE_ENV ??= 'production';
   const options = normalizeRollupExecutorOptions(rawOptions, context);
   const rollupOptions = await createRollupOptions(options, context);
   const outfile = resolveOutfile(context, options);

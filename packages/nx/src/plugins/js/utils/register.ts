@@ -263,14 +263,7 @@ export function getTranspiler(
 
   let registrationKey = JSON.stringify(compilerOptions);
   let tsNodeOptions: TsConfigOptions | undefined;
-  // In unit test environment within Nx repo, prefer ts-node to avoid SWC transpiler issues in TS solution setup
-  // Only apply this for unit tests, not e2e tests which test real-world scenarios
-  const isNxRepoUnitTest =
-    process.env.NODE_ENV === 'test' &&
-    process.cwd().includes('nx') &&
-    !process.cwd().includes('/tmp/nx-e2e');
-  const forcePreferTsNode = preferTsNode || isNxRepoUnitTest;
-  if (swcNodeInstalled && !forcePreferTsNode) {
+  if (swcNodeInstalled && !preferTsNode) {
     _getTranspiler = getSwcTranspiler;
   } else if (tsNodeInstalled) {
     // We can fall back on ts-node if it's available
@@ -337,43 +330,13 @@ export function registerTranspiler(
  * @param tsConfigPath Adds the paths from a tsconfig file into node resolutions
  * @returns cleanup function
  */
-export function registerTsConfigPaths(tsConfigPath: string): () => void {
+export function registerTsConfigPaths(tsConfigPath): () => void {
   try {
     /**
      * Load the ts config from the source project
      */
     const tsconfigPaths = loadTsConfigPaths();
     const tsConfigResult = tsconfigPaths.loadConfig(tsConfigPath);
-
-    // In unit test environment within Nx repo with TS solution setup, provide minimal path mappings for tests
-    const isNxRepoUnitTest =
-      process.env.NODE_ENV === 'test' &&
-      process.cwd().includes('nx') &&
-      !process.cwd().includes('/tmp/nx-e2e');
-    if (
-      isNxRepoUnitTest &&
-      tsConfigResult.resultType === 'success' &&
-      (!tsConfigResult.paths || Object.keys(tsConfigResult.paths).length === 0)
-    ) {
-      const workspaceRoot =
-        require('nx/src/utils/workspace-root').workspaceRoot;
-      return tsconfigPaths.register({
-        baseUrl: tsConfigResult.absoluteBaseUrl,
-        paths: {
-          '@nx/js/src/release/version-actions': [
-            `${workspaceRoot}/packages/js/src/release/version-actions.ts`,
-          ],
-          '@nx/js/*': [`${workspaceRoot}/packages/js/*`],
-          'nx/src/command-line/release/version/version-actions': [
-            `${workspaceRoot}/packages/nx/src/command-line/release/version/version-actions.ts`,
-          ],
-          'nx/release': [
-            `${workspaceRoot}/packages/nx/src/command-line/release/index.ts`,
-          ],
-        },
-      });
-    }
-
     /**
      * Register the custom workspace path mappings with node so that workspace libraries
      * can be imported and used within project

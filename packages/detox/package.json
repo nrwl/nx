@@ -32,8 +32,10 @@
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/react": "workspace:*",
-    "nx": "workspace:*",
     "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "peerDependencies": {
     "detox": "^20.9.0"

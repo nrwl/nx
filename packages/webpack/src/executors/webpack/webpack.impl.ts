@@ -87,9 +87,7 @@ export async function* webpackExecutor(
   context: ExecutorContext
 ): AsyncGenerator<WebpackExecutorEvent, WebpackExecutorEvent, undefined> {
   // Default to production build.
-  if (!process.env['NODE_ENV']) {
-    process.env['NODE_ENV'] = 'production';
-  }
+  process.env['NODE_ENV'] ||= 'production';
 
   const metadata = context.projectsConfigurations.projects[context.projectName];
   const sourceRoot = getProjectSourceRoot(metadata);

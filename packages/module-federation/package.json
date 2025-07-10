@@ -26,7 +26,6 @@
   "dependencies": {
     "tslib": "^2.3.0",
     "@nx/devkit": "workspace:*",
-    "nx": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/web": "workspace:*",
     "picocolors": "^1.1.0",
@@ -37,6 +36,9 @@
     "@module-federation/sdk": "^0.15.0",
     "express": "^4.21.2",
     "http-proxy-middleware": "^3.0.3"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "nx-migrations": {
     "migrations": "./migrations.json"

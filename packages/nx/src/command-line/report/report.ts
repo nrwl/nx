@@ -17,7 +17,6 @@ import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
-import { getWorkspacePackagesFromGraph } from '../../plugins/js/utils/get-workspace-packages-from-graph';
 import { gt, valid } from 'semver';
 import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
 import { getNxRequirePaths } from '../../utils/installation-directory';
@@ -274,13 +273,11 @@ export async function getReportData(): Promise<ReportData> {
 
   const nxJson = readNxJson();
   const localPlugins = await findLocalPlugins(graph, nxJson);
-  const workspacePackages = getWorkspacePackageNames(graph);
   const powerpackPlugins = findInstalledPowerpackPlugins();
   const communityPlugins = findInstalledCommunityPlugins();
   const registeredPlugins = findRegisteredPluginsBeingUsed(nxJson);
 
-  const packageVersionsWeCareAbout =
-    findInstalledPackagesWeCareAbout(workspacePackages);
+  const packageVersionsWeCareAbout = findInstalledPackagesWeCareAbout();
   packageVersionsWeCareAbout.unshift({
     package: 'nx',
     version: nxPackageJson.version,
@@ -362,19 +359,6 @@ async function findLocalPlugins(
   } catch {
     return [];
   }
-}
-
-function getWorkspacePackageNames(projectGraph: ProjectGraph): Set<string> {
-  const workspacePackages = new Set<string>();
-
-  if (projectGraph) {
-    const workspacePackageMap = getWorkspacePackagesFromGraph(projectGraph);
-    for (const [packageName] of workspacePackageMap) {
-      workspacePackages.add(packageName);
-    }
-  }
-
-  return workspacePackages;
 }
 
 function readPackageJson(p: string): PackageJson | null {
@@ -466,11 +450,7 @@ export function findRegisteredPluginsBeingUsed(nxJson: NxJsonConfiguration) {
   );
 }
 
-// Using ts solution we need to filter out the packages that are already in the workspace
-// This is to avoid reporting packages that are already part of the workspace
-export function findInstalledPackagesWeCareAbout(
-  workspacePackages?: Set<string>
-) {
+export function findInstalledPackagesWeCareAbout() {
   const packagesWeMayCareAbout: Record<string, string> = {};
   // TODO (v20): Remove workaround for hiding @nrwl packages when matching @nx package is found.
 
@@ -478,9 +458,6 @@ export function findInstalledPackagesWeCareAbout(
     const v = readPackageVersion(pkg);
     if (v) {
       packagesWeMayCareAbout[pkg] = v;
-    } else if (workspacePackages && workspacePackages.has(pkg)) {
-      // Skip workspace packages that are not installed
-      continue;
     }
   }
 

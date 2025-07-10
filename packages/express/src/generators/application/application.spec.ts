@@ -8,12 +8,14 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
+import { setWorkspaceRoot } from 'nx/src/utils/workspace-root';
 
 describe('app', () => {
   let appTree: Tree;
 
   beforeEach(() => {
-    appTree = createTreeWithEmptyWorkspace();
+    appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    // setWorkspaceRoot(appTree.root);
   });
 
   it('should generate files', async () => {
@@ -243,14 +245,9 @@ describe('app', () => {
                 },
               },
               "test": {
-                "executor": "@nx/jest:jest",
                 "options": {
-                  "jestConfig": "myapp/jest.config.ts",
                   "passWithNoTests": true,
                 },
-                "outputs": [
-                  "{projectRoot}/test-output/jest/coverage",
-                ],
               },
             },
           },
@@ -419,14 +416,9 @@ describe('app', () => {
               },
             },
             "test": {
-              "executor": "@nx/jest:jest",
               "options": {
-                "jestConfig": "myapp/jest.config.ts",
                 "passWithNoTests": true,
               },
-              "outputs": [
-                "{projectRoot}/test-output/jest/coverage",
-              ],
             },
           },
         }

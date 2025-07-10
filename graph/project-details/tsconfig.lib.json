@@ -4,8 +4,7 @@
     "jsx": "react-jsx",
     "outDir": "dist",
     "types": ["node"],
-    "lib": ["ES2022", "DOM"],
-    "noEmit": false
+    "lib": ["ES2022", "DOM"]
   },
   "exclude": [
     "jest.config.ts",

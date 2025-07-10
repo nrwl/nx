@@ -5,7 +5,6 @@
     "outDir": "../../dist/packages/nx",
     "tsBuildInfoFile": "../../dist/packages/nx/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "noEmit": false,
     "composite": true
   },
   "exclude": [

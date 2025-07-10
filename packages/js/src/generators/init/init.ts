@@ -149,7 +149,6 @@ export async function initGeneratorInternal(
     '@swc-node/register': swcNodeVersion,
     '@swc/core': swcCoreVersion,
     '@swc/helpers': swcHelpersVersion,
-    '@nx/rollup': nxVersion,
   };
 
   if (!schema.js && !schema.keepExistingVersions) {

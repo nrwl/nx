@@ -43,12 +43,14 @@
     "tslib": "^2.3.0",
     "@nuxt/kit": "^3.10.0",
     "@nx/devkit": "workspace:*",
-    "nx": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/vue": "workspace:*",
     "@nx/vite": "workspace:*",
     "@phenomnomnominal/tsquery": "~5.0.1"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "peerDependencies": {
     "@nuxt/schema": "^3.10.0"

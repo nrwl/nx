@@ -68,25 +68,6 @@ const nxPackages = [
 
 type NxPackage = (typeof nxPackages)[number];
 
-function getPackageManagerVersion(packageManager: string): string {
-  try {
-    const version = execSync(`${packageManager} --version`, {
-      encoding: 'utf-8',
-      stdio: 'pipe',
-    }).trim();
-    return `${packageManager}@${version}`;
-  } catch {
-    // Fallback to known working versions on CI agent
-    const fallbackVersions = {
-      pnpm: 'pnpm@9.15.9',
-      yarn: 'yarn@1.22.22',
-      npm: 'npm@10.8.2',
-      bun: 'bun@1.0.0',
-    };
-    return fallbackVersions[packageManager] || `${packageManager}@latest`;
-  }
-}
-
 /**
  * Sets up a new project in the temporary project path
  * for the currently selected CLI.

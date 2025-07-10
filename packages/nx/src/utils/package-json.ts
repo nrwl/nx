@@ -238,13 +238,6 @@ export function readTargetsFromPackageJson(
 
 function hasNxJsPlugin(projectRoot: string, workspaceRoot: string) {
   try {
-    // TODO: Talk to @jason about this.
-    /**
-     * The problem with this is that for ts solution workspaces where a project may have the `@nx/js` package as a dependency.
-     * This will resolve the package to the project's source directory instead of the module at the workspace root.
-     * When we require.resolve('@nx/js') who's main file is `index.js`, it will resolve to the project's source directory which does not contain the `index.js` file.
-     * Which triggers and error returns false and does not apply the `nx-release-publish` target.
-     */
     // nx-ignore-next-line
     require.resolve('@nx/js/package.json', {
       paths: [projectRoot, ...getNxRequirePaths(workspaceRoot), __dirname],
