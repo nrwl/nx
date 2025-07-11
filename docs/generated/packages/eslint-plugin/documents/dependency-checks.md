@@ -23,6 +23,33 @@ Library generators from `@nx` packages will configure this rule automatically wh
 
 To set it up manually for existing libraries, you need to add the `dependency-checks` rule to your project's ESLint configuration:
 
+{% tabs %}
+{% tab label="Flat Config" %}
+
+```javascript {% fileName="<your-project-root>/eslint.config.mjs" %}
+import nxPlugin from '@nx/eslint-plugin';
+import jsoncParser from 'jsonc-eslint-parser';
+
+export default [
+  ...nxPlugin.configs['flat/base'],
+  ...nxPlugin.configs['flat/typescript'],
+  ...nxPlugin.configs['flat/javascript'],
+  {
+    files: ['**/*.json'],
+    languageOptions: {
+      parser: jsoncParser,
+    },
+    rules: {
+      '@nx/dependency-checks': 'error',
+    },
+  },
+  // ... more ESLint config here
+];
+```
+
+{% /tab %}
+{% tab label="Legacy (.eslintrc.json)" %}
+
 ```jsonc {% fileName="<your-project-root>/.eslintrc.json" %}
 {
   // ... more ESLint config here
@@ -38,6 +65,9 @@ To set it up manually for existing libraries, you need to add the `dependency-ch
   ]
 }
 ```
+
+{% /tab %}
+{% /tabs %}
 
 Additionally, you need to adjust your `lintFilePatterns` to include the project's `package.json` file::
 
@@ -64,6 +94,36 @@ Additionally, you need to adjust your `lintFilePatterns` to include the project'
 
 Sometimes we intentionally want to add or remove a dependency from our `package.json` despite what the rule suggests. We can use the rule's options to override default behavior:
 
+{% tabs %}
+{% tab label="Flat Config" %}
+
+```javascript {% fileName="eslint.config.mjs" %}
+export default [
+  // ... other config
+  {
+    files: ['**/*.json'],
+    rules: {
+      '@nx/dependency-checks': [
+        'error',
+        {
+          buildTargets: ['build', 'custom-build'], // add non standard build target names
+          checkMissingDependencies: true, // toggle to disable
+          checkObsoleteDependencies: true, // toggle to disable
+          checkVersionMismatches: true, // toggle to disable
+          ignoredDependencies: ['lodash'], // these libs will be omitted from checks
+          ignoredFiles: ['webpack.config.js', 'eslint.config.mjs'], // list of files that should be skipped for check
+          includeTransitiveDependencies: true, // collect dependencies transitively from children
+          useLocalPathsForWorkspaceDependencies: true, // toggle to disable
+        },
+      ],
+    },
+  },
+];
+```
+
+{% /tab %}
+{% tab label="Legacy (.eslintrc.json)" %}
+
 ```jsonc {% fileName=".eslintrc.json" %}
 {
   "@nx/dependency-checks": [
@@ -81,6 +141,9 @@ Sometimes we intentionally want to add or remove a dependency from our `package.
   ]
 }
 ```
+
+{% /tab %}
+{% /tabs %}
 
 ## Options
 
