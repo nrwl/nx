@@ -1,5 +1,3 @@
-import { ModuleFederationConfig } from '../../utils/models';
-
 export interface NxModuleFederationDevServerConfig {
   host?: string;
   staticRemotesPort?: number;
