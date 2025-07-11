@@ -21,16 +21,8 @@ export default function update(tree: Tree) {
 
     removeDependenciesFromPackageJson(
       tree,
-      [
-        '@testing-library/jest-native',
-        'jest-react-native',
-        'react-test-renderer',
-      ],
-      [
-        '@testing-library/jest-native',
-        'jest-react-native',
-        'react-test-renderer',
-      ]
+      ['@testing-library/jest-native', 'jest-react-native'],
+      ['@testing-library/jest-native', 'jest-react-native']
     );
     updateJson(tree, appPackageJsonPath, (packageJson) => {
       if (packageJson.dependencies?.['@testing-library/jest-native']) {
@@ -38,9 +30,6 @@ export default function update(tree: Tree) {
       }
       if (packageJson.dependencies?.['jest-react-native']) {
         delete packageJson.dependencies['jest-react-native'];
-      }
-      if (packageJson.dependencies?.['react-test-renderer']) {
-        delete packageJson.dependencies['react-test-renderer'];
       }
       return packageJson;
     });
