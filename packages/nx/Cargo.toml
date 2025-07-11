@@ -83,7 +83,7 @@ ignore-files = "2.1.0"
 fs4 = "0.12.0"
 ratatui = { version = "0.29", features = ["scrolling-regions"] }
 reqwest = { version = "0.12.15", default-features = false, features = [
-    "rustls-tls",
+    "rustls-tls-native-roots",
 ] }
 rusqlite = { version = "0.32.1", features = ["bundled", "array", "vtab"] }
 watchexec = "3.0.1"
