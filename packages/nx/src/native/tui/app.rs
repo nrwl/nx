@@ -19,12 +19,13 @@ use tui_logger::{LevelFilter, TuiLoggerSmartWidget, TuiWidgetEvent, TuiWidgetSta
 use crate::native::tui::tui::Tui;
 use crate::native::{
     pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
-    tasks::types::{Task, TaskResult},
+    tasks::types::{Task, TaskGraph, TaskResult},
 };
 
 use super::action::Action;
 use super::components::Component;
 use super::components::countdown_popup::CountdownPopup;
+use super::components::dependency_view::{DependencyView, DependencyViewState};
 use super::components::help_popup::HelpPopup;
 use super::components::layout_manager::{
     LayoutAreas, LayoutManager, PaneArrangement, TaskListVisibility,
@@ -33,6 +34,7 @@ use super::components::task_selection_manager::{SelectionMode, TaskSelectionMana
 use super::components::tasks_list::{TaskStatus, TasksList};
 use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
 use super::config::TuiConfig;
+use super::graph_utils::{get_task_count, is_task_continuous};
 use super::lifecycle::RunMode;
 use super::pty::PtyInstance;
 use super::theme::THEME;
@@ -58,6 +60,7 @@ pub struct App {
     // Cached result of layout manager's calculate_layout, only updated when necessary (e.g. terminal resize, task list visibility change etc)
     layout_areas: Option<LayoutAreas>,
     terminal_pane_data: [TerminalPaneData; 2],
+    dependency_view_states: [Option<DependencyViewState>; 2],
     spacebar_mode: bool,
     pane_tasks: [Option<String>; 2], // Tasks assigned to panes 1 and 2 (0-indexed)
     action_tx: Option<UnboundedSender<Action>>,
@@ -66,7 +69,8 @@ pub struct App {
     pty_instances: HashMap<String, Arc<PtyInstance>>,
     selection_manager: Arc<Mutex<TaskSelectionManager>>,
     pinned_tasks: Vec<String>,
-    tasks: Vec<Task>,
+    task_graph: TaskGraph,
+    task_status_map: HashMap<String, TaskStatus>, // App owns task status
     debug_mode: bool,
     debug_state: TuiWidgetState,
     console_messenger: Option<NxConsoleMessageConnection>,
@@ -88,11 +92,19 @@ impl App {
         pinned_tasks: Vec<String>,
         tui_config: TuiConfig,
         title_text: String,
+        task_graph: TaskGraph,
     ) -> Result<Self> {
-        let task_count = tasks.len();
+        let task_count = get_task_count(&task_graph);
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(5)));
 
         let initial_focus = Focus::TaskList;
+
+        // Initialize task status map - App owns this now
+        let mut task_status_map = HashMap::new();
+        for task in &tasks {
+            task_status_map.insert(task.id.clone(), TaskStatus::NotStarted);
+        }
+
         let tasks_list = TasksList::new(
             tasks.clone(),
             initiating_tasks,
@@ -128,13 +140,15 @@ impl App {
             frame_area: None,
             layout_areas: None,
             terminal_pane_data: [main_terminal_pane_data, TerminalPaneData::new()],
+            dependency_view_states: [None, None],
             spacebar_mode: false,
             pane_tasks: [None, None],
             action_tx: None,
             resize_debounce_timer: None,
             pty_instances: HashMap::new(),
             selection_manager,
-            tasks,
+            task_graph,
+            task_status_map,
             debug_mode: false,
             debug_state: TuiWidgetState::default().set_default_display_level(LevelFilter::Debug),
             console_messenger: None,
@@ -159,7 +173,7 @@ impl App {
                 if pinned_tasks.len() == 1 && idx == 0 {
                     self.display_and_focus_current_task_in_terminal_pane(match self.run_mode {
                         RunMode::RunMany => true,
-                        RunMode::RunOne if self.tasks.len() == 1 => false,
+                        RunMode::RunOne if get_task_count(&self.task_graph) == 1 => false,
                         RunMode::RunOne => true,
                     });
                 } else {
@@ -175,14 +189,41 @@ impl App {
     }
 
     pub fn start_tasks(&mut self, tasks: Vec<Task>) {
+        // Update App's task status map when tasks start
+        for task in &tasks {
+            self.task_status_map
+                .insert(task.id.clone(), TaskStatus::InProgress);
+        }
+
         self.dispatch_action(Action::StartTasks(tasks));
     }
 
     pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
+        // Update the App's task status map first
+        self.task_status_map.insert(task_id.clone(), status);
+
         self.dispatch_action(Action::UpdateTaskStatus(task_id.clone(), status));
         if status == TaskStatus::InProgress && self.should_set_interactive_by_default(&task_id) {
-            self.terminal_pane_data[0].set_interactive(true);
+            // Find which pane this task is assigned to
+            for (pane_idx, pane_task) in self.pane_tasks.iter().enumerate() {
+                if let Some(pane_task_id) = pane_task {
+                    if pane_task_id == &task_id {
+                        self.terminal_pane_data[pane_idx].set_interactive(true);
+                        break;
+                    }
+                }
+            }
         }
+    }
+
+    /// Get task status efficiently from App's own HashMap
+    pub fn get_task_status(&self, task_id: &str) -> Option<TaskStatus> {
+        self.task_status_map.get(task_id).copied()
+    }
+
+    /// Get task continuous flag efficiently from task graph
+    pub fn is_task_continuous(&self, task_id: &str) -> bool {
+        is_task_continuous(&self.task_graph, task_id)
     }
 
     fn should_set_interactive_by_default(&self, task_id: &str) -> bool {
@@ -210,10 +251,8 @@ impl App {
         }
 
         // If the task is continuous, ensure the pty instances get resized appropriately
-        if let Some(task) = self.tasks.iter_mut().find(|t| t.id == task_id) {
-            if task.continuous.unwrap_or(false) {
-                let _ = self.debounce_pty_resize();
-            }
+        if self.is_task_continuous(&task_id) {
+            let _ = self.debounce_pty_resize();
         }
     }
 
@@ -255,7 +294,7 @@ impl App {
             return;
         }
 
-        if self.tasks.len() > 1 {
+        if get_task_count(&self.task_graph) > 1 {
             self.begin_exit_countdown()
         } else {
             self.quit();
@@ -475,10 +514,10 @@ impl App {
                 {
                     // Handle Q to trigger countdown or immediate exit, depending on the tasks
                     if !tasks_list.filter_mode && key.code == KeyCode::Char('q') {
-                        // Check if all tasks are in a completed state
-                        let all_tasks_completed = tasks_list.tasks.iter().all(|t| {
+                        // Check if all tasks are in a completed state using the task status map
+                        let all_tasks_completed = self.task_status_map.values().all(|status| {
                             matches!(
-                                t.status,
+                                status,
                                 TaskStatus::Success
                                     | TaskStatus::Failure
                                     | TaskStatus::Skipped
@@ -873,7 +912,6 @@ impl App {
                     }
 
                     let frame_area = self.frame_area.unwrap();
-                    let tasks_list_hidden = self.is_task_list_hidden();
                     let layout_areas = self.layout_areas.as_mut().unwrap();
 
                     if self.debug_mode {
@@ -968,104 +1006,43 @@ impl App {
                         }
                     }
 
-                    // Render terminal panes
-                    for (pane_idx, pane_area) in layout_areas.terminal_panes.iter().enumerate() {
-                        if let Some(tasks_list) = self
-                            .components
-                            .iter_mut()
-                            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
-                        {
+                    // Render terminal panes - first collect necessary data
+                    let terminal_panes_data: Vec<(usize, Rect, Option<String>)> = layout_areas
+                        .terminal_panes
+                        .iter()
+                        .enumerate()
+                        .map(|(pane_idx, pane_area)| {
                             let relevant_pane_task: Option<String> = if self.spacebar_mode {
-                                // Don't unwrap - handle the None case gracefully
                                 self.selection_manager
                                     .lock()
                                     .unwrap()
                                     .get_selected_task_name()
                                     .cloned()
                             } else {
-                                // Clone if it exists, but don't unwrap
                                 self.pane_tasks[pane_idx].clone()
                             };
+                            (pane_idx, *pane_area, relevant_pane_task)
+                        })
+                        .collect();
 
-                            if relevant_pane_task.is_none() {
-                                // The user has chosen to display a pane but there is currently not task assigned to it, render a placeholder
-                                // Render placeholder for pane 1
-                                let placeholder = Paragraph::new(format!(
-                                    "Press {} on a task to show it here",
-                                    pane_idx + 1
-                                ))
-                                .block(
-                                    Block::default()
-                                        .title(format!("  Output {}  ", pane_idx + 1))
-                                        .borders(Borders::ALL)
-                                        .border_style(Style::default().fg(THEME.secondary_fg)),
-                                )
-                                .style(Style::default().fg(THEME.secondary_fg))
-                                .alignment(Alignment::Center);
+                    for (pane_idx, pane_area, relevant_pane_task) in terminal_panes_data {
+                        if let Some(task_name) = relevant_pane_task {
+                            let task_status = self
+                                .get_task_status(&task_name)
+                                .unwrap_or(TaskStatus::NotStarted);
 
-                                f.render_widget(placeholder, *pane_area);
-                                continue;
-                            }
-
-                            let relevant_pane_task = relevant_pane_task.unwrap();
-                            if let Some(task) = tasks_list
-                                .tasks
-                                .iter_mut()
-                                .find(|t| t.name == relevant_pane_task)
-                            {
-                                let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
-                                terminal_pane_data.is_continuous = task.continuous;
-                                let in_progress = task.status == TaskStatus::InProgress;
-                                if !in_progress {
-                                    terminal_pane_data.set_interactive(false);
-                                }
-
-                                let mut has_pty = false;
-                                if let Some(pty) = self.pty_instances.get(&relevant_pane_task) {
-                                    terminal_pane_data.can_be_interactive =
-                                        in_progress && pty.can_be_interactive();
-                                    terminal_pane_data.pty = Some(pty.clone());
-                                    has_pty = true;
-                                } else {
-                                    // Clear PTY data when switching to a task that doesn't have a PTY instance
-                                    terminal_pane_data.pty = None;
-                                    terminal_pane_data.can_be_interactive = false;
-                                }
-
-                                let is_focused = match self.focus {
-                                    Focus::MultipleOutput(focused_pane_idx) => {
-                                        pane_idx == focused_pane_idx
-                                    }
-                                    _ => false,
-                                };
-
-                                // Figure out if this pane is the next tab target
-                                let is_next_tab_target = !is_focused
-                                    && match self.focus {
-                                        // If the task list is focused, the next tab target is the first pane
-                                        Focus::TaskList => pane_idx == 0,
-                                        // If the first pane is focused, the next tab target is the second pane
-                                        Focus::MultipleOutput(0) => pane_idx == 1,
-                                        _ => false,
-                                    };
-
-                                let mut state = TerminalPaneState::new(
-                                    task.name.clone(),
-                                    task.status,
-                                    task.continuous,
-                                    is_focused,
-                                    has_pty,
-                                    is_next_tab_target,
-                                    self.console_messenger.is_some(),
+                            // If task is pending, show dependency view instead of terminal pane
+                            if task_status == TaskStatus::NotStarted {
+                                self.render_dependency_view_internal(
+                                    f, pane_idx, pane_area, task_name,
                                 );
-
-                                let terminal_pane = TerminalPane::new()
-                                    .minimal(tasks_list_hidden && self.tasks.len() == 1)
-                                    .pty_data(terminal_pane_data)
-                                    .continuous(task.continuous);
-
-                                f.render_stateful_widget(terminal_pane, *pane_area, &mut state);
+                            } else {
+                                self.render_terminal_pane_internal(
+                                    f, pane_idx, pane_area, task_name,
+                                );
                             }
+                        } else {
+                            self.render_pane_placeholder(f, pane_idx, pane_area);
                         }
                     }
 
@@ -1164,18 +1141,16 @@ impl App {
 
     /// Returns the names of tasks that have failed.
     fn get_failed_task_names(&self) -> Vec<String> {
-        self.components
+        self.task_status_map
             .iter()
-            .find_map(|c| c.as_any().downcast_ref::<TasksList>())
-            .map(|tasks_list| {
-                tasks_list
-                    .tasks
-                    .iter()
-                    .filter(|task| task.status == TaskStatus::Failure)
-                    .map(|task| task.name.clone())
-                    .collect()
+            .filter_map(|(task_name, status)| {
+                if *status == TaskStatus::Failure {
+                    Some(task_name.clone())
+                } else {
+                    None
+                }
             })
-            .unwrap_or_else(Vec::new)
+            .collect()
     }
 
     /// Clears all output panes and resets their associated state.
@@ -1459,9 +1434,26 @@ impl App {
     /// Forward key events to the currently focused pane, if any.
     fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<()> {
         if let Focus::MultipleOutput(pane_idx) = self.focus {
-            let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
-            if let Some(action) = terminal_pane_data.handle_key_event(key)? {
-                self.dispatch_action(action);
+            // Get the task assigned to this pane to determine how to handle keys
+            if let Some(task_name) = &self.pane_tasks[pane_idx] {
+                let task_status = self
+                    .get_task_status(&task_name)
+                    .unwrap_or(TaskStatus::NotStarted);
+
+                if task_status == TaskStatus::NotStarted {
+                    // Task is pending - handle keys in dependency view
+                    if let Some(dep_state) = &mut self.dependency_view_states[pane_idx] {
+                        if dep_state.handle_key_event(key) {
+                            return Ok(()); // Key was handled by dependency view
+                        }
+                    }
+                } else {
+                    // Task is running/completed - handle keys in terminal pane
+                    let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
+                    if let Some(action) = terminal_pane_data.handle_key_event(key)? {
+                        self.dispatch_action(action);
+                    }
+                }
             }
             Ok(())
         } else {
@@ -1631,5 +1623,140 @@ impl App {
         {
             self.dispatch_action(Action::ConsoleMessengerAvailable(true));
         }
+    }
+
+    /// Renders the dependency view for a pending task in the specified pane
+    fn render_dependency_view_internal(
+        &mut self,
+        f: &mut ratatui::Frame,
+        pane_idx: usize,
+        pane_area: Rect,
+        task_name: String,
+    ) {
+        // Calculate values that were previously passed in
+        let task_status = self
+            .get_task_status(&task_name)
+            .unwrap_or(TaskStatus::NotStarted);
+        let throbber_counter = self
+            .components
+            .iter()
+            .find_map(|c| c.as_any().downcast_ref::<TasksList>())
+            .map(|tasks_list| tasks_list.throbber_counter)
+            .unwrap_or(0);
+
+        let is_focused = match self.focus {
+            Focus::MultipleOutput(focused_pane_idx) => pane_idx == focused_pane_idx,
+            _ => false,
+        };
+
+        // Create or update dependency view state for this pane
+        let should_update = self.dependency_view_states[pane_idx]
+            .as_ref()
+            .map_or(false, |existing_state| {
+                existing_state.current_task == task_name
+            });
+
+        if should_update {
+            // Same task, update the existing state
+            if let Some(existing_state) = self.dependency_view_states[pane_idx].as_mut() {
+                existing_state.update(task_status, is_focused, throbber_counter, pane_area);
+            }
+        } else {
+            // Different task or no existing state, create a new one
+            let new_state = DependencyViewState::new(
+                task_name.clone(),
+                task_status,
+                &self.task_graph,
+                is_focused,
+                throbber_counter,
+                pane_area,
+            );
+            self.dependency_view_states[pane_idx] = Some(new_state);
+        }
+
+        // No need to update status in DependencyViewState - we pass the full map to the widget
+        if let Some(dep_state) = &mut self.dependency_view_states[pane_idx] {
+            let dependency_view = DependencyView::new(&self.task_status_map, &self.task_graph);
+            f.render_stateful_widget(dependency_view, pane_area, dep_state);
+        }
+    }
+
+    /// Renders the terminal pane for a running/completed task in the specified pane
+    fn render_terminal_pane_internal(
+        &mut self,
+        f: &mut ratatui::Frame,
+        pane_idx: usize,
+        pane_area: Rect,
+        task_name: String,
+    ) {
+        // Calculate values that were previously passed in
+        let task_status = self
+            .get_task_status(&task_name)
+            .unwrap_or(TaskStatus::NotStarted);
+        let task_continuous = self.is_task_continuous(&task_name);
+        let tasks_list_hidden = self.is_task_list_hidden();
+        let has_pty = self.pty_instances.contains_key(&task_name);
+
+        let is_focused = match self.focus {
+            Focus::MultipleOutput(focused_pane_idx) => pane_idx == focused_pane_idx,
+            _ => false,
+        };
+
+        let is_next_tab_target = !is_focused
+            && match self.focus {
+                Focus::TaskList => pane_idx == 0,
+                Focus::MultipleOutput(0) => pane_idx == 1,
+                _ => false,
+            };
+        let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
+        terminal_pane_data.is_continuous = task_continuous;
+        let in_progress = task_status == TaskStatus::InProgress;
+        if !in_progress {
+            terminal_pane_data.set_interactive(false);
+        }
+
+        if has_pty {
+            if let Some(pty) = self.pty_instances.get(&task_name) {
+                terminal_pane_data.can_be_interactive = in_progress && pty.can_be_interactive();
+                terminal_pane_data.pty = Some(pty.clone());
+            }
+        } else {
+            // Clear PTY data when switching to a task that doesn't have a PTY instance
+            terminal_pane_data.pty = None;
+            terminal_pane_data.can_be_interactive = false;
+        }
+
+        let mut state = TerminalPaneState::new(
+            task_name,
+            task_status,
+            task_continuous,
+            is_focused,
+            has_pty,
+            is_next_tab_target,
+            self.console_messenger.is_some(),
+        );
+
+        let terminal_pane = TerminalPane::new()
+            .minimal(tasks_list_hidden && get_task_count(&self.task_graph) == 1)
+            .pty_data(terminal_pane_data)
+            .continuous(task_continuous);
+
+        f.render_stateful_widget(terminal_pane, pane_area, &mut state);
+    }
+
+    /// Renders a placeholder for an empty pane
+    fn render_pane_placeholder(&self, f: &mut ratatui::Frame, pane_idx: usize, pane_area: Rect) {
+        let placeholder =
+            Paragraph::new(format!("Press {} on a task to show it here", pane_idx + 1))
+                .block(
+                    Block::default()
+                        .title(format!("  Output {}  ", pane_idx + 1))
+                        .borders(Borders::ALL)
+                        .border_style(Style::default().fg(THEME.secondary_fg)),
+                )
+                .style(Style::default().fg(THEME.secondary_fg))
+                .alignment(Alignment::Center);
+
+        f.render_widget(placeholder, pane_area);
     }
 }
