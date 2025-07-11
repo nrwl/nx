@@ -105,7 +105,7 @@ export async function getLatestGitTagForPattern(
   options: GetLatestGitTagForPatternOptions = {}
 ): Promise<GitTagAndVersion | null> {
   const {
-    checkAllBranchesWhen = false,
+    checkAllBranchesWhen,
     releaseTagPatternRequireSemver = true,
     preId = '',
   } = options;
