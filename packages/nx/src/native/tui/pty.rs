@@ -1,3 +1,4 @@
+use super::scroll_momentum::{ScrollDirection, ScrollMomentum};
 use super::utils::normalize_newlines;
 use crossterm::event::{KeyCode, KeyEvent, MouseEvent, MouseEventKind};
 use parking_lot::Mutex;
@@ -34,6 +35,7 @@ pub struct PtyInstance {
     writer: Option<Arc<Mutex<Box<dyn Write + Send>>>>,
     rows: u16,
     cols: u16,
+    scroll_momentum: Arc<Mutex<ScrollMomentum>>,
 }
 
 impl PtyInstance {
@@ -48,6 +50,7 @@ impl PtyInstance {
             writer: Some(writer),
             rows,
             cols,
+            scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
         }
     }
 
@@ -61,6 +64,7 @@ impl PtyInstance {
             writer: None,
             rows,
             cols,
+            scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
         }
     }
 
@@ -103,7 +107,8 @@ impl PtyInstance {
                 // If we lost height and were scrolled up, try to maintain scroll position
                 if old_scrollback > 0 {
                     // Adjust scrollback to account for lost rows
-                    let adjusted_scrollback = old_scrollback.saturating_sub((old_rows - rows) as usize);
+                    let adjusted_scrollback =
+                        old_scrollback.saturating_sub((old_rows - rows) as usize);
                     new_parser.screen_mut().set_scrollback(adjusted_scrollback);
                 } else {
                     // If we weren't scrolled, keep at bottom
@@ -139,10 +144,18 @@ impl PtyInstance {
         if !alternative_screen {
             match event.code {
                 KeyCode::Up => {
-                    self.scroll_up();
+                    let amount = self
+                        .scroll_momentum
+                        .lock()
+                        .calculate_momentum(ScrollDirection::Up);
+                    self.scroll_up(amount);
                 }
                 KeyCode::Down => {
-                    self.scroll_down();
+                    let amount = self
+                        .scroll_momentum
+                        .lock()
+                        .calculate_momentum(ScrollDirection::Down);
+                    self.scroll_down(amount);
                 }
                 _ => {}
             }
@@ -165,10 +178,18 @@ impl PtyInstance {
         if !alternative_screen {
             match event.kind {
                 MouseEventKind::ScrollUp => {
-                    self.scroll_up();
+                    let amount = self
+                        .scroll_momentum
+                        .lock()
+                        .calculate_momentum(ScrollDirection::Up);
+                    self.scroll_up(amount);
                 }
                 MouseEventKind::ScrollDown => {
-                    self.scroll_down();
+                    let amount = self
+                        .scroll_momentum
+                        .lock()
+                        .calculate_momentum(ScrollDirection::Down);
+                    self.scroll_down(amount);
                 }
                 _ => {}
             }
@@ -192,18 +213,22 @@ impl PtyInstance {
             .map(|guard| PtyScreenRef { _guard: guard })
     }
 
-    pub fn scroll_up(&mut self) {
+    pub fn scroll_up(&mut self, amount: u8) {
         if let Ok(mut parser) = self.parser.write() {
             let current = parser.screen().scrollback();
-            parser.screen_mut().set_scrollback(current + 1);
+            parser
+                .screen_mut()
+                .set_scrollback(current + amount as usize);
         }
     }
 
-    pub fn scroll_down(&mut self) {
+    pub fn scroll_down(&mut self, amount: u8) {
         if let Ok(mut parser) = self.parser.write() {
             let current = parser.screen().scrollback();
             if current > 0 {
-                parser.screen_mut().set_scrollback(current - 1);
+                parser
+                    .screen_mut()
+                    .set_scrollback(current - amount as usize);
             }
         }
     }

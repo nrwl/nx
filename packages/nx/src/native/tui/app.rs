@@ -1716,7 +1716,7 @@ impl App {
         let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
         terminal_pane_data.is_continuous = task_continuous;
         let in_progress = task_status == TaskStatus::InProgress;
-        if !in_progress {
+        if !in_progress && terminal_pane_data.is_interactive() {
             terminal_pane_data.set_interactive(false);
         }
 
