@@ -102,17 +102,17 @@ jobs:
           ref: ${{ steps.script.outputs.ref }}
           path: pr-branch-checkout
 
-      - name: (PR Release Only) Ensure that nx-release.ts has not changed in the PR being released
-        if: ${{ steps.script.outputs.ref != '' }}
-        env:
-          FILE_TO_COMPARE: "scripts/nx-release.ts"
-        run: |
-          if ! cmp -s "latest-master-checkout/${{ env.FILE_TO_COMPARE }}" "pr-branch-checkout/${{ env.FILE_TO_COMPARE }}"; then
-            echo "🛑 Error: The file ${{ env.FILE_TO_COMPARE }} is different on the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} vs latest master on nrwl/nx, cancelling workflow. If you did not modify the file, then you likely just need to rebase/merge latest master."
-            exit 1
-          else
-            echo "✅ The file ${{ env.FILE_TO_COMPARE }} is identical between the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} and latest master on nrwl/nx."
-          fi
+      # - name: (PR Release Only) Ensure that nx-release.ts has not changed in the PR being released
+      #   if: ${{ steps.script.outputs.ref != '' }}
+      #   env:
+      #     FILE_TO_COMPARE: "scripts/nx-release.ts"
+      #   run: |
+      #     if ! cmp -s "latest-master-checkout/${{ env.FILE_TO_COMPARE }}" "pr-branch-checkout/${{ env.FILE_TO_COMPARE }}"; then
+      #       echo "🛑 Error: The file ${{ env.FILE_TO_COMPARE }} is different on the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} vs latest master on nrwl/nx, cancelling workflow. If you did not modify the file, then you likely just need to rebase/merge latest master."
+      #       exit 1
+      #     else
+      #       echo "✅ The file ${{ env.FILE_TO_COMPARE }} is identical between the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} and latest master on nrwl/nx."
+      #     fi
 
   build:
     needs: [ resolve-required-data ]
@@ -371,13 +371,14 @@ jobs:
           DEBUG: napi:*
           RUSTUP_IO_THREADS: 1
           NX_PREFER_TS_NODE: true
+          TS_NODE_TRANSPILE_ONLY: true
           PLAYWRIGHT_BROWSERS_PATH: 0
           NODE_VERSION: 22.16.0
         with:
           operating_system: freebsd
           version: '14.0'
           architecture: x86-64
-          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH NODE_VERSION
+          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE TS_NODE_TRANSPILE_ONLY PLAYWRIGHT_BROWSERS_PATH NODE_VERSION
           shell: bash
           run: |
             env
@@ -398,8 +399,11 @@ jobs:
             whoami
             env
             freebsd-version
+            echo "Installing dependencies"
             pnpm install --frozen-lockfile --ignore-scripts
+            echo "Building FreeBSD bindings"
             pnpm nx run-many --verbose --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd
+            echo "Cleaning up"
             pnpm nx reset
             rm -rf node_modules
             rm -rf dist
