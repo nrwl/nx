@@ -647,7 +647,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   /**
    * Specifies how many tasks can be run in parallel.
    */
-  parallel?: number;
+  parallel?: number | string;
 
   /**
    * Changes the directory used by Nx to store its cache.
