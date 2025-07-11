@@ -24,7 +24,7 @@ export function Pricing(): ReactElement {
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <ButtonLink
               href="/contact/sales"
-              title="Talk to the engineering team"
+              title="Talk to the sales team"
               variant="secondary"
               size="default"
             >
