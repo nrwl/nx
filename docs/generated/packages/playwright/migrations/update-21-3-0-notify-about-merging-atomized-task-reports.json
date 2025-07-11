@@ -1,0 +1,12 @@
+{
+  "name": "update-21-3-0-notify-about-merging-atomized-task-reports",
+  "version": "21.3.0-beta.6",
+  "description": "Logs a message to inform users of the new feature that merges atomized tasks reports by default in the 'e2e-ci' target. It provides information on how to opt-out of this behavior. It doesn't perform any changes to the workspace.",
+  "implementation": "/packages/playwright/src/migrations/update-21-3-0/notify-about-merging-atomized-task-reports.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/playwright",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}
