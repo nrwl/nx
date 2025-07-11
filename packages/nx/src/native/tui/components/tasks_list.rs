@@ -202,6 +202,8 @@ pub struct TasksList {
     pinned_tasks: [Option<String>; 2],
     initiating_tasks: HashSet<String>,
     run_mode: RunMode,
+    column_visibility: Option<ColumnVisibility>, // Cached column visibility result
+    terminal_width: Option<u16>, // Cached terminal width for column visibility calculation
 }
 
 impl TasksList {
@@ -240,6 +242,8 @@ impl TasksList {
             pinned_tasks: [None, None],
             initiating_tasks,
             run_mode,
+            column_visibility: None,
+            terminal_width: None,
         };
 
         // Sort tasks to populate task selection list
@@ -571,7 +575,13 @@ impl TasksList {
     }
 
     /// Calculates which columns should be displayed based on available space and task name lengths
-    fn calculate_column_visibility(&self, available_width: u16) -> ColumnVisibility {
+    fn calculate_column_visibility(&mut self, available_width: u16) -> ColumnVisibility {
+        // Only recalculate column visibility if terminal width has changed
+        if self.terminal_width == Some(available_width) && self.column_visibility.is_some() {
+            return self.column_visibility.as_ref().unwrap().clone();
+        }
+        self.terminal_width = Some(available_width);
+
         // Calculate base space requirements
         let base_space = STATUS_ICON_WIDTH + COLUMN_SEPARATOR_WIDTH;
 
@@ -1413,6 +1423,8 @@ impl Component for TasksList {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) -> Result<()> {
         // --- 1. Calculate Context ---
         let column_visibility = self.calculate_column_visibility(area.width);
+        // Cache the column visibility result
+        self.column_visibility = Some(column_visibility.clone());
         let _has_narrow_area_width = area.width < 90; // Keep for backward compatibility with bottom layout
         let filter_is_active = self.filter_mode || !self.filter_text.is_empty();
         let is_dimmed = !self.is_task_list_focused();
@@ -2890,7 +2902,7 @@ mod tests {
 
     #[test]
     fn test_column_visibility_at_different_widths() {
-        let (tasks_list, _) = create_test_tasks_list();
+        let (mut tasks_list, _) = create_test_tasks_list();
 
         // Very narrow - no extra columns
         let result = tasks_list.calculate_column_visibility(20);
@@ -2918,21 +2930,21 @@ mod tests {
         // Test various task name lengths: short, 29, 30, 31, and very long
 
         // Short task names (like default test tasks)
-        let (tasks_list_short, _) = create_test_tasks_list();
+        let (mut tasks_list_short, _) = create_test_tasks_list();
         let result = tasks_list_short.calculate_column_visibility(80);
         assert!(result.show_duration);
         assert!(result.show_cache_status);
 
         // 29-character task name
         let task_name_29 = "this-is-exactly-29-chars-here"; // 29 characters
-        let tasks_list_29 = create_tasks_list_with_name(task_name_29);
+        let mut tasks_list_29 = create_tasks_list_with_name(task_name_29);
         let result = tasks_list_29.calculate_column_visibility(54);
         assert!(result.show_duration);
         assert!(!result.show_cache_status);
 
         // 30-character task name (threshold)
         let task_name_30 = "this-is-exactly-thirty-chars-1"; // 30 characters
-        let tasks_list_30 = create_tasks_list_with_name(task_name_30);
+        let mut tasks_list_30 = create_tasks_list_with_name(task_name_30);
         let result = tasks_list_30.calculate_column_visibility(55);
         assert!(result.show_duration);
         assert!(!result.show_cache_status);
@@ -2942,7 +2954,7 @@ mod tests {
 
         // 31-character task name
         let task_name_31 = "this-is-exactly-thirty-one-char"; // 31 characters
-        let tasks_list_31 = create_tasks_list_with_name(task_name_31);
+        let mut tasks_list_31 = create_tasks_list_with_name(task_name_31);
         let result = tasks_list_31.calculate_column_visibility(66);
         assert!(result.show_duration);
         assert!(!result.show_cache_status);
@@ -2950,7 +2962,7 @@ mod tests {
         // Very long task name
         let long_task_name =
             "very-long-task-name-that-exceeds-thirty-characters-to-test-threshold-logic";
-        let tasks_list_long = create_tasks_list_with_name(long_task_name);
+        let mut tasks_list_long = create_tasks_list_with_name(long_task_name);
         let result = tasks_list_long.calculate_column_visibility(52);
         assert!(!result.show_duration);
         assert!(!result.show_cache_status);
@@ -3018,7 +3030,7 @@ mod tests {
         ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
-        let tasks_list = TasksList::new(
+        let mut tasks_list = TasksList::new(
             test_tasks,
             HashSet::new(),
             RunMode::RunMany,
