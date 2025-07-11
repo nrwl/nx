@@ -337,7 +337,7 @@ async function buildJestTargets(
         presetCache
       );
       const targetGroup = [];
-      const dependsOn: string[] = [];
+      const dependsOn: TargetConfiguration['dependsOn'] = [];
       metadata = {
         targetGroups: {
           [groupName]: targetGroup,
@@ -359,7 +359,12 @@ async function buildJestTargets(
         }
 
         const targetName = `${options.ciTargetName}--${relativePath}`;
-        dependsOn.push(targetName);
+        dependsOn.push({
+          target: targetName,
+          projects: 'self',
+          params: 'forward',
+        });
+
         targets[targetName] = {
           command: `jest ${relativePath}`,
           cache,
@@ -468,36 +473,18 @@ async function buildJestTargets(
             [groupName]: targetGroup,
           },
         };
-        const dependsOn: string[] = [];
-
-        targets[options.ciTargetName] = {
-          executor: 'nx:noop',
-          cache: true,
-          inputs,
-          outputs,
-          dependsOn,
-          metadata: {
-            technologies: ['jest'],
-            description: 'Run Jest Tests in CI',
-            nonAtomizedTarget: options.targetName,
-            help: {
-              command: `${pmc.exec} jest --help`,
-              example: {
-                options: {
-                  coverage: true,
-                },
-              },
-            },
-          },
-        };
-        targetGroup.push(options.ciTargetName);
+        const dependsOn: TargetConfiguration['dependsOn'] = [];
 
         for (const testPath of testPaths) {
           const relativePath = normalizePath(
             relative(join(context.workspaceRoot, projectRoot), testPath)
           );
           const targetName = `${options.ciTargetName}--${relativePath}`;
-          dependsOn.push(targetName);
+          dependsOn.push({
+            target: targetName,
+            projects: 'self',
+            params: 'forward',
+          });
           targets[targetName] = {
             command: `jest ${relativePath}`,
             cache,
@@ -522,6 +509,27 @@ async function buildJestTargets(
           };
           targetGroup.push(targetName);
         }
+        targets[options.ciTargetName] = {
+          executor: 'nx:noop',
+          cache: true,
+          inputs,
+          outputs,
+          dependsOn,
+          metadata: {
+            technologies: ['jest'],
+            description: 'Run Jest Tests in CI',
+            nonAtomizedTarget: options.targetName,
+            help: {
+              command: `${pmc.exec} jest --help`,
+              example: {
+                options: {
+                  coverage: true,
+                },
+              },
+            },
+          },
+        };
+        targetGroup.unshift(options.ciTargetName);
       }
     }
   }
