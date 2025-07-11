@@ -235,9 +235,15 @@ impl App {
     }
 
     pub fn print_task_terminal_output(&mut self, task_id: String, output: String) {
-        // Tasks run within a pseudo-terminal always have a pty instance and do not need a new one
-        // Tasks not run within a pseudo-terminal need a new pty instance to print output
-        if !self.pty_instances.contains_key(&task_id) {
+        // Check if a PTY instance already exists for this task
+        if let Some(pty) = self.pty_instances.get(&task_id) {
+            // Append output to the existing PTY instance to preserve scroll position
+            // Add ANSI escape sequence to hide cursor at the end of output
+            let output_with_hidden_cursor = format!("{}\x1b[?25l", output);
+            Self::write_output_to_parser(pty, output_with_hidden_cursor);
+        } else {
+            // Tasks run within a pseudo-terminal always have a pty instance and do not need a new one
+            // Tasks not run within a pseudo-terminal need a new pty instance to print output
             let pty = PtyInstance::non_interactive();
 
             // Add ANSI escape sequence to hide cursor at the end of output, it would be confusing to have it visible when a task is a cache hit
@@ -247,7 +253,6 @@ impl App {
             self.register_pty_instance(&task_id, pty);
             // Ensure the pty instances get resized appropriately
             let _ = self.debounce_pty_resize();
-            return;
         }
 
         // If the task is continuous, ensure the pty instances get resized appropriately
