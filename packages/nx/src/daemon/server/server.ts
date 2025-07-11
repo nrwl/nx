@@ -4,10 +4,7 @@ import { join } from 'path';
 import { PerformanceObserver } from 'perf_hooks';
 import { hashArray } from '../../hasher/file-hasher';
 import { hashFile } from '../../native';
-import {
-  consumeMessagesFromSocket,
-  isJsonMessage,
-} from '../../utils/consume-messages-from-socket';
+import { consumeMessagesFromSocket } from '../../utils/consume-messages-from-socket';
 import { readJsonFile } from '../../utils/fileutils';
 import { PackageJson } from '../../utils/package-json';
 import { nxVersion } from '../../utils/versions';
@@ -132,7 +129,6 @@ import {
   handleRunPostTasksExecution,
   handleRunPreTasksExecution,
 } from './handle-tasks-execution-hooks';
-import { deserialize, serialize } from 'v8';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -143,7 +139,7 @@ global.NX_DAEMON = true;
 export type HandlerResult = {
   description: string;
   error?: any;
-  response?: string | object | boolean;
+  response?: string;
 };
 
 let numberOfOpenConnections = 0;
@@ -188,7 +184,7 @@ const server = createServer(async (socket) => {
 });
 registerProcessTerminationListeners();
 
-async function handleMessage(socket: Socket, data: string) {
+async function handleMessage(socket, data: string) {
   if (workspaceWatcherError) {
     await respondWithErrorAndExit(
       socket,
@@ -210,16 +206,8 @@ async function handleMessage(socket: Socket, data: string) {
 
   const unparsedPayload = data;
   let payload;
-  let mode: 'json' | 'v8' = 'json';
   try {
-    // JSON Message
-    if (isJsonMessage(unparsedPayload)) {
-      payload = JSON.parse(unparsedPayload);
-    } else {
-      // V8 Serialized Message
-      payload = deserialize(Buffer.from(unparsedPayload, 'binary'));
-      mode = 'v8';
-    }
+    payload = JSON.parse(unparsedPayload);
   } catch (e) {
     await respondWithErrorAndExit(
       socket,
@@ -227,180 +215,106 @@ async function handleMessage(socket: Socket, data: string) {
       new Error(`Unsupported payload sent to daemon server: ${unparsedPayload}`)
     );
   }
+
   if (payload.type === 'PING') {
-    await handleResult(
-      socket,
-      'PING',
-      () => Promise.resolve({ response: true, description: 'ping' }),
-      mode
+    await handleResult(socket, 'PING', () =>
+      Promise.resolve({ response: JSON.stringify(true), description: 'ping' })
     );
   } else if (payload.type === 'REQUEST_PROJECT_GRAPH') {
-    await handleResult(
-      socket,
-      'REQUEST_PROJECT_GRAPH',
-      () => handleRequestProjectGraph(),
-      mode
+    await handleResult(socket, 'REQUEST_PROJECT_GRAPH', () =>
+      handleRequestProjectGraph()
     );
   } else if (payload.type === 'HASH_TASKS') {
-    await handleResult(
-      socket,
-      'HASH_TASKS',
-      () => handleHashTasks(payload),
-      mode
-    );
+    await handleResult(socket, 'HASH_TASKS', () => handleHashTasks(payload));
   } else if (payload.type === 'PROCESS_IN_BACKGROUND') {
-    await handleResult(
-      socket,
-      'PROCESS_IN_BACKGROUND',
-      () => handleProcessInBackground(payload),
-      mode
+    await handleResult(socket, 'PROCESS_IN_BACKGROUND', () =>
+      handleProcessInBackground(payload)
     );
   } else if (payload.type === 'RECORD_OUTPUTS_HASH') {
-    await handleResult(
-      socket,
-      'RECORD_OUTPUTS_HASH',
-      () => handleRecordOutputsHash(payload),
-      mode
+    await handleResult(socket, 'RECORD_OUTPUTS_HASH', () =>
+      handleRecordOutputsHash(payload)
     );
   } else if (payload.type === 'OUTPUTS_HASHES_MATCH') {
-    await handleResult(
-      socket,
-      'OUTPUTS_HASHES_MATCH',
-      () => handleOutputsHashesMatch(payload),
-      mode
+    await handleResult(socket, 'OUTPUTS_HASHES_MATCH', () =>
+      handleOutputsHashesMatch(payload)
     );
   } else if (payload.type === 'REQUEST_SHUTDOWN') {
-    await handleResult(
-      socket,
-      'REQUEST_SHUTDOWN',
-      () => handleRequestShutdown(server, numberOfOpenConnections),
-      mode
+    await handleResult(socket, 'REQUEST_SHUTDOWN', () =>
+      handleRequestShutdown(server, numberOfOpenConnections)
     );
   } else if (payload.type === 'REGISTER_FILE_WATCHER') {
     registeredFileWatcherSockets.push({ socket, config: payload.config });
   } else if (isHandleGlobMessage(payload)) {
-    await handleResult(
-      socket,
-      GLOB,
-      () => handleGlob(payload.globs, payload.exclude),
-      mode
+    await handleResult(socket, GLOB, () =>
+      handleGlob(payload.globs, payload.exclude)
     );
   } else if (isHandleMultiGlobMessage(payload)) {
-    await handleResult(
-      socket,
-      MULTI_GLOB,
-      () => handleMultiGlob(payload.globs, payload.exclude),
-      mode
+    await handleResult(socket, MULTI_GLOB, () =>
+      handleMultiGlob(payload.globs, payload.exclude)
     );
   } else if (isHandleNxWorkspaceFilesMessage(payload)) {
-    await handleResult(
-      socket,
-      GET_NX_WORKSPACE_FILES,
-      () => handleNxWorkspaceFiles(payload.projectRootMap),
-      mode
+    await handleResult(socket, GET_NX_WORKSPACE_FILES, () =>
+      handleNxWorkspaceFiles(payload.projectRootMap)
     );
   } else if (isHandleGetFilesInDirectoryMessage(payload)) {
-    await handleResult(
-      socket,
-      GET_FILES_IN_DIRECTORY,
-      () => handleGetFilesInDirectory(payload.dir),
-      mode
+    await handleResult(socket, GET_FILES_IN_DIRECTORY, () =>
+      handleGetFilesInDirectory(payload.dir)
     );
   } else if (isHandleContextFileDataMessage(payload)) {
-    await handleResult(
-      socket,
-      GET_CONTEXT_FILE_DATA,
-      () => handleContextFileData(),
-      mode
+    await handleResult(socket, GET_CONTEXT_FILE_DATA, () =>
+      handleContextFileData()
     );
   } else if (isHandleHashGlobMessage(payload)) {
-    await handleResult(
-      socket,
-      HASH_GLOB,
-      () => handleHashGlob(payload.globs, payload.exclude),
-      mode
+    await handleResult(socket, HASH_GLOB, () =>
+      handleHashGlob(payload.globs, payload.exclude)
     );
   } else if (isHandleHashMultiGlobMessage(payload)) {
-    await handleResult(
-      socket,
-      HASH_GLOB,
-      () => handleHashMultiGlob(payload.globGroups),
-      mode
+    await handleResult(socket, HASH_GLOB, () =>
+      handleHashMultiGlob(payload.globGroups)
     );
   } else if (isHandleGetFlakyTasksMessage(payload)) {
-    await handleResult(
-      socket,
-      GET_FLAKY_TASKS,
-      () => handleGetFlakyTasks(payload.hashes),
-      mode
+    await handleResult(socket, GET_FLAKY_TASKS, () =>
+      handleGetFlakyTasks(payload.hashes)
     );
   } else if (isHandleGetEstimatedTaskTimings(payload)) {
-    await handleResult(
-      socket,
-      GET_ESTIMATED_TASK_TIMINGS,
-      () => handleGetEstimatedTaskTimings(payload.targets),
-      mode
+    await handleResult(socket, GET_ESTIMATED_TASK_TIMINGS, () =>
+      handleGetEstimatedTaskTimings(payload.targets)
     );
   } else if (isHandleWriteTaskRunsToHistoryMessage(payload)) {
-    await handleResult(
-      socket,
-      RECORD_TASK_RUNS,
-      () => handleRecordTaskRuns(payload.taskRuns),
-      mode
+    await handleResult(socket, RECORD_TASK_RUNS, () =>
+      handleRecordTaskRuns(payload.taskRuns)
     );
   } else if (isHandleForceShutdownMessage(payload)) {
-    await handleResult(
-      socket,
-      'FORCE_SHUTDOWN',
-      () => handleForceShutdown(server),
-      mode
+    await handleResult(socket, 'FORCE_SHUTDOWN', () =>
+      handleForceShutdown(server)
     );
   } else if (isHandleGetSyncGeneratorChangesMessage(payload)) {
-    await handleResult(
-      socket,
-      GET_SYNC_GENERATOR_CHANGES,
-      () => handleGetSyncGeneratorChanges(payload.generators),
-      mode
+    await handleResult(socket, GET_SYNC_GENERATOR_CHANGES, () =>
+      handleGetSyncGeneratorChanges(payload.generators)
     );
   } else if (isHandleFlushSyncGeneratorChangesToDiskMessage(payload)) {
-    await handleResult(
-      socket,
-      FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
-      () => handleFlushSyncGeneratorChangesToDisk(payload.generators),
-      mode
+    await handleResult(socket, FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK, () =>
+      handleFlushSyncGeneratorChangesToDisk(payload.generators)
     );
   } else if (isHandleGetRegisteredSyncGeneratorsMessage(payload)) {
-    await handleResult(
-      socket,
-      GET_REGISTERED_SYNC_GENERATORS,
-      () => handleGetRegisteredSyncGenerators(),
-      mode
+    await handleResult(socket, GET_REGISTERED_SYNC_GENERATORS, () =>
+      handleGetRegisteredSyncGenerators()
     );
   } else if (isHandleUpdateWorkspaceContextMessage(payload)) {
-    await handleResult(
-      socket,
-      UPDATE_WORKSPACE_CONTEXT,
-      () =>
-        handleUpdateWorkspaceContext(
-          payload.createdFiles,
-          payload.updatedFiles,
-          payload.deletedFiles
-        ),
-      mode
+    await handleResult(socket, UPDATE_WORKSPACE_CONTEXT, () =>
+      handleUpdateWorkspaceContext(
+        payload.createdFiles,
+        payload.updatedFiles,
+        payload.deletedFiles
+      )
     );
   } else if (isHandlePreTasksExecutionMessage(payload)) {
-    await handleResult(
-      socket,
-      PRE_TASKS_EXECUTION,
-      () => handleRunPreTasksExecution(payload.context),
-      mode
+    await handleResult(socket, PRE_TASKS_EXECUTION, () =>
+      handleRunPreTasksExecution(payload.context)
     );
   } else if (isHandlePostTasksExecutionMessage(payload)) {
-    await handleResult(
-      socket,
-      POST_TASKS_EXECUTION,
-      () => handleRunPostTasksExecution(payload.context),
-      mode
+    await handleResult(socket, POST_TASKS_EXECUTION, () =>
+      handleRunPostTasksExecution(payload.context)
     );
   } else {
     await respondWithErrorAndExit(
@@ -414,8 +328,7 @@ async function handleMessage(socket: Socket, data: string) {
 export async function handleResult(
   socket: Socket,
   type: string,
-  hrFn: () => Promise<HandlerResult>,
-  mode: 'json' | 'v8'
+  hrFn: () => Promise<HandlerResult>
 ) {
   let hr: HandlerResult;
   const startMark = new Date();
@@ -428,15 +341,11 @@ export async function handleResult(
   if (hr.error) {
     await respondWithErrorAndExit(socket, hr.description, hr.error);
   } else {
-    const response =
-      typeof hr.response === 'string'
-        ? hr.response
-        : serializeUnserializedResult(hr.response, mode);
-    await respondToClient(socket, response, hr.description);
+    await respondToClient(socket, hr.response, hr.description);
   }
   const endMark = new Date();
   serverLogger.log(
-    `Handled ${mode} message ${type}. Handling time: ${
+    `Handled ${type}. Handling time: ${
       doneHandlingMark.getTime() - startMark.getTime()
     }. Response time: ${endMark.getTime() - doneHandlingMark.getTime()}.`
   );
@@ -697,14 +606,4 @@ export async function startServer(): Promise<Server> {
       reject(err);
     }
   });
-}
-function serializeUnserializedResult(
-  response: boolean | object,
-  mode: 'json' | 'v8'
-) {
-  if (mode === 'json') {
-    return JSON.stringify(response);
-  } else {
-    return serialize(response).toString('binary');
-  }
 }

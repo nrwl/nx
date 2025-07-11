@@ -3,12 +3,14 @@ import {
   joinPathFragments,
   offsetFromRoot,
   output,
+  type ProjectConfiguration,
   readJson,
   readNxJson,
   type Tree,
   updateJson,
   workspaceRoot,
 } from '@nx/devkit';
+import { existsSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path/posix';
 import { FsTree } from 'nx/src/generators/tree';
 import {
@@ -290,14 +292,22 @@ export function getProjectType(
 }
 
 export function getProjectSourceRoot(
-  tree: Tree,
-  projectSourceRoot: string | undefined,
-  projectRoot: string
-): string | undefined {
+  project: ProjectConfiguration,
+  tree?: Tree
+): string {
+  if (tree) {
+    return (
+      project.sourceRoot ??
+      (tree.exists(joinPathFragments(project.root, 'src'))
+        ? joinPathFragments(project.root, 'src')
+        : project.root)
+    );
+  }
+
   return (
-    projectSourceRoot ??
-    (tree.exists(joinPathFragments(projectRoot, 'src'))
-      ? joinPathFragments(projectRoot, 'src')
-      : projectRoot)
+    project.sourceRoot ??
+    (existsSync(join(workspaceRoot, project.root, 'src'))
+      ? joinPathFragments(project.root, 'src')
+      : project.root)
   );
 }

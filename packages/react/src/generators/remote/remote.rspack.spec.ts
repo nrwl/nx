@@ -351,7 +351,7 @@ describe('remote generator', () => {
           typescriptConfiguration: true,
           bundler: 'rspack',
         })
-      ).rejects.toThrowError(`Invalid remote name provided: ${name}.`);
+      ).rejects.toThrow(`Invalid remote name provided: ${name}.`);
     });
 
     it('should throw an error when an invalid remote name is used', async () => {

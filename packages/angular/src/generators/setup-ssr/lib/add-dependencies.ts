@@ -20,6 +20,7 @@ export function addDependencies(
   };
   const devDependencies: Record<string, string> = {
     '@types/express': pkgVersions.typesExpressVersion,
+    '@types/node': pkgVersions.typesNodeVersion,
   };
 
   const angularDevkitVersion =
@@ -35,5 +36,11 @@ export function addDependencies(
     }
   }
 
-  addDependenciesToPackageJson(tree, dependencies, devDependencies);
+  addDependenciesToPackageJson(
+    tree,
+    dependencies,
+    devDependencies,
+    undefined,
+    true
+  );
 }

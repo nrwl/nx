@@ -36,9 +36,7 @@ describe('runNestSchematic utility', () => {
   ];
 
   test.each(testTypes)('%p should run successfully', async (type) => {
-    await expect(
-      runNestSchematic(tree, type, options)
-    ).resolves.not.toThrowError();
+    await expect(runNestSchematic(tree, type, options)).resolves.not.toThrow();
   });
 
   describe('--skipFormat', () => {

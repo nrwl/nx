@@ -5,7 +5,7 @@ import { HandlerResult } from './server';
 export async function handleContextFileData(): Promise<HandlerResult> {
   const files = await getAllFileDataInContext(workspaceRoot);
   return {
-    response: files,
+    response: JSON.stringify(files),
     description: 'handleContextFileData',
   };
 }

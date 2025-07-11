@@ -5,6 +5,7 @@ import { NextSeo } from 'next-seo';
 import {
   CallToAction,
   CiBottleneck,
+  CreditPricing,
   CustomerMetrics,
   Faq,
   Features,

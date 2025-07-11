@@ -362,7 +362,7 @@ describe('hostGenerator', () => {
           typescriptConfiguration: false,
           bundler: 'webpack',
         })
-      ).rejects.toThrowError(`Invalid remote name provided: ${remote}.`);
+      ).rejects.toThrow(`Invalid remote name provided: ${remote}.`);
     });
   });
 });

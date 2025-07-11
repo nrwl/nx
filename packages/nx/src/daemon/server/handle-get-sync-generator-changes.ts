@@ -18,7 +18,7 @@ export async function handleGetSyncGeneratorChanges(
   );
 
   return {
-    response: result,
+    response: JSON.stringify(result),
     description: 'handleGetSyncGeneratorChanges',
   };
 }
