@@ -84,10 +84,12 @@ module.exports = function (modulePath, options) {
     modulePath.startsWith('nx/');
 
   if (!isWorkspacePackage) {
-    if (modulePath.includes('@swc')) {
-      return enhancedResolver(path.resolve(options.basedir), modulePath);
+    // Global modules which must be resolved by defaultResolver
+    if (['child_process', 'fs', 'http', 'path'].includes(modulePath)) {
+      return options.defaultResolver(modulePath, options);
     }
-    return options.defaultResolver(modulePath, options);
+
+    return enhancedResolver(path.resolve(options.basedir), modulePath);
   }
 
   const ext = path.extname(modulePath);
@@ -257,7 +259,6 @@ module.exports = function (modulePath, options) {
       );
     }
 
-    console.log('DEBUG: Using enhancedResolver for:', modulePath);
     return enhancedResolver(path.resolve(options.basedir), modulePath);
   } catch (e) {
     // Final fallback: use default resolver for packages we can't handle
