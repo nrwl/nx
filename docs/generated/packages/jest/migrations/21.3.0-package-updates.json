@@ -1,0 +1,25 @@
+{
+  "name": "21.3.0-package-updates",
+  "version": "21.3.0-beta.3",
+  "x-prompt": "Do you want to update the Jest version to v30?",
+  "packages": {
+    "jest": { "version": "~30.0.0", "alwaysAddToPackageJson": false },
+    "@types/jest": { "version": "~30.0.0", "alwaysAddToPackageJson": false },
+    "expect": { "version": "~30.0.0", "alwaysAddToPackageJson": false },
+    "@jest/globals": { "version": "~30.0.0", "alwaysAddToPackageJson": false },
+    "jest-jasmine2": { "version": "~30.0.0", "alwaysAddToPackageJson": false },
+    "jest-environment-jsdom": {
+      "version": "~30.0.0",
+      "alwaysAddToPackageJson": false
+    },
+    "babel-jest": { "version": "~30.0.0", "alwaysAddToPackageJson": false },
+    "@swc/jest": { "version": "~0.2.38", "alwaysAddToPackageJson": false }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/jest",
+  "schema": null,
+  "type": "migration"
+}

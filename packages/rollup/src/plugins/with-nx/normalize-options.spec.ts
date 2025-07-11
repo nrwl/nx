@@ -11,6 +11,7 @@ jest.mock('@nx/devkit', () => ({
 }));
 
 jest.mock('node:fs', () => ({
+  ...jest.requireActual('node:fs'),
   statSync: () => ({ isDirectory: () => true }),
 }));
 

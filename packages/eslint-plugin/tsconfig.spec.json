@@ -3,8 +3,9 @@
   "compilerOptions": {
     "outDir": "../../dist/packages/eslint-plugin/spec",
     "module": "commonjs",
-    "types": ["jest", "node"],
-    "composite": true
+    "composite": true,
+    "isolatedModules": true,
+    "types": ["jest", "node"]
   },
   "include": [
     "**/*.spec.ts",
