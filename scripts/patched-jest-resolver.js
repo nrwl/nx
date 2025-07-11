@@ -16,7 +16,6 @@ const enhancedResolver = require('enhanced-resolve').create.sync({
   extensions: ['.js', '.json', '.node', '.ts', '.tsx'],
 });
 
-// Setup test environment for Jest workers (important for native functionality)
 if (
   process.argv[1].indexOf('jest-worker') > -1 ||
   (process.argv.length >= 4 && process.argv[3].split(':')[1] === 'test')
@@ -85,6 +84,9 @@ module.exports = function (modulePath, options) {
     modulePath.startsWith('nx/');
 
   if (!isWorkspacePackage) {
+    if (modulePath.includes('@swc')) {
+      return enhancedResolver(path.resolve(options.basedir), modulePath);
+    }
     return options.defaultResolver(modulePath, options);
   }
 
@@ -255,6 +257,7 @@ module.exports = function (modulePath, options) {
       );
     }
 
+    console.log('DEBUG: Using enhancedResolver for:', modulePath);
     return enhancedResolver(path.resolve(options.basedir), modulePath);
   } catch (e) {
     // Final fallback: use default resolver for packages we can't handle

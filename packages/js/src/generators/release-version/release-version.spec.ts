@@ -325,7 +325,7 @@ To fix this you will either need to add a package.json file at that location, or
   describe('independent release group', () => {
     describe('specifierSource: prompt', () => {
       it(`should appropriately prompt for each project independently and apply the version updates across all package.json files`, async () => {
-        enquirer.prompt = jest
+        (enquirer.prompt as jest.Mock) = jest
           .fn()
           // First project will be minor
           .mockReturnValueOnce(Promise.resolve({ specifier: 'minor' }))
