@@ -1,314 +1,120 @@
 {
   "project": {
-    "name": "@tuskdesign/zoo",
+    "name": "@acme/animals",
     "type": "lib",
     "data": {
-      "root": "packages/zoo",
-      "projectType": "library",
+      "root": "packages/animals",
       "targets": {
         "typecheck": {
           "dependsOn": ["^typecheck"],
           "options": {
-            "cwd": "packages/zoo",
-            "command": "tsc --build --emitDeclarationOnly --pretty --verbose"
+            "cwd": "packages/animals",
+            "command": "tsc --build --emitDeclarationOnly"
           },
           "cache": true,
           "inputs": [
-            "{workspaceRoot}/tsconfig.base.json",
-            "{projectRoot}/tsconfig.json",
-            "{projectRoot}/tsconfig.lib.json",
-            "{projectRoot}/**/*.ts",
-            "!{projectRoot}/dist",
-            "!{projectRoot}/src/**/*.test.ts",
-            "!{projectRoot}/src/**/*.spec.ts",
-            "!{projectRoot}/src/**/*.test.tsx",
-            "!{projectRoot}/src/**/*.spec.tsx",
-            "!{projectRoot}/src/**/*.test.js",
-            "!{projectRoot}/src/**/*.spec.js",
-            "!{projectRoot}/src/**/*.test.jsx",
-            "!{projectRoot}/src/**/*.spec.jsx",
-            {
-              "dependentTasksOutputFiles": "**/*.d.ts"
-            },
-            {
-              "externalDependencies": ["typescript"]
-            }
-          ],
-          "outputs": ["{workspaceRoot}/packages/zoo/dist"],
-          "syncGenerators": ["@nx/js:typescript-sync"],
-          "metadata": {
-            "technologies": ["typescript"],
-            "description": "Runs type-checking for the project.",
-            "help": {
-              "command": "npx tsc --build --help",
-              "example": {
-                "args": ["--force"]
-              }
-            }
-          },
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "parallelism": true
-        },
-        "build": {
-          "dependsOn": ["^build"],
-          "options": {
-            "cwd": "packages/zoo",
-            "command": "tsc --build tsconfig.lib.json --pretty --verbose"
-          },
-          "cache": true,
-          "inputs": [
-            "{workspaceRoot}/tsconfig.base.json",
-            "{projectRoot}/tsconfig.lib.json",
-            "{projectRoot}/**/*.ts",
-            "!{projectRoot}/dist",
-            "!{projectRoot}/src/**/*.test.ts",
-            "!{projectRoot}/src/**/*.spec.ts",
-            "!{projectRoot}/src/**/*.test.tsx",
-            "!{projectRoot}/src/**/*.spec.tsx",
-            "!{projectRoot}/src/**/*.test.js",
-            "!{projectRoot}/src/**/*.spec.js",
-            "!{projectRoot}/src/**/*.test.jsx",
-            "!{projectRoot}/src/**/*.spec.jsx",
-            {
-              "dependentTasksOutputFiles": "**/*.d.ts"
-            },
+            "production",
+            "^production",
             {
               "externalDependencies": ["typescript"]
             }
           ],
           "outputs": ["{projectRoot}/dist"],
-          "syncGenerators": ["@nx/js:typescript-sync"],
-          "metadata": {
-            "technologies": ["typescript"],
-            "description": "Builds the project with `tsc`.",
-            "help": {
-              "command": "npx tsc --build --help",
-              "example": {
-                "args": ["--force"]
-              }
-            }
-          },
           "executor": "nx:run-commands",
-          "configurations": {},
-          "parallelism": true
+          "configurations": {}
         },
-        "serve": {
-          "executor": "nx:run-script",
+        "build": {
           "options": {
-            "script": "serve"
+            "cwd": "packages/animals",
+            "command": "tsc --build tsconfig.lib.json"
           },
-          "metadata": {
-            "scriptContent": "node dist/index.js",
-            "runCommand": "npm run serve"
-          },
-          "configurations": {},
-          "parallelism": true
-        },
-        "nx-release-publish": {
-          "executor": "@nx/js:release-publish",
-          "dependsOn": ["^nx-release-publish"],
-          "options": {},
-          "configurations": {},
-          "parallelism": true
+          "cache": true,
+          "dependsOn": ["^build"],
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": ["typescript"]
+            }
+          ],
+          "outputs": ["{projectRoot}/dist"],
+          "executor": "nx:run-commands",
+          "configurations": {}
         }
       },
-      "sourceRoot": "packages/zoo",
-      "name": "@tuskdesign/zoo",
-      "tags": ["npm:public"],
-      "metadata": {
-        "targetGroups": {
-          "NPM Scripts": ["serve"]
-        },
-        "description": ""
-      },
+      "name": "animals",
+      "$schema": "../../node_modules/nx/schemas/project-schema.json",
+      "sourceRoot": "packages/animals/src",
+      "projectType": "library",
+      "tags": [],
       "implicitDependencies": []
     }
   },
   "sourceMap": {
-    "root": ["packages/zoo/package.json", "nx/core/package-json"],
-    "projectType": ["packages/zoo/tsconfig.lib.json", "@nx/js/typescript"],
-    "targets": ["packages/zoo/tsconfig.json", "@nx/js/typescript"],
-    "targets.typecheck": ["packages/zoo/tsconfig.json", "@nx/js/typescript"],
-    "targets.typecheck.dependsOn": [
-      "packages/zoo/tsconfig.json",
+    "root": ["packages/animals/project.json", "nx/core/project-json"],
+    "targets": ["packages/animals/project.json", "nx/core/project-json"],
+    "targets.typecheck": ["packages/animals/project.json", "@nx/js/typescript"],
+    "targets.typecheck.command": [
+      "packages/animals/project.json",
       "@nx/js/typescript"
     ],
     "targets.typecheck.options": [
-      "packages/zoo/tsconfig.json",
+      "packages/animals/project.json",
       "@nx/js/typescript"
     ],
-    "targets.typecheck.cache": ["nx.json", "nx/target-defaults"],
+    "targets.typecheck.cache": [
+      "packages/animals/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.typecheck.dependsOn": [
+      "packages/animals/project.json",
+      "@nx/js/typescript"
+    ],
     "targets.typecheck.inputs": [
-      "packages/zoo/tsconfig.json",
+      "packages/animals/project.json",
       "@nx/js/typescript"
     ],
     "targets.typecheck.outputs": [
-      "packages/zoo/tsconfig.json",
-      "@nx/js/typescript"
-    ],
-    "targets.typecheck.syncGenerators": [
-      "packages/zoo/tsconfig.json",
-      "@nx/js/typescript"
-    ],
-    "targets.typecheck.metadata": [
-      "packages/zoo/tsconfig.json",
-      "@nx/js/typescript"
-    ],
-    "targets.typecheck.executor": [
-      "packages/zoo/tsconfig.json",
+      "packages/animals/project.json",
       "@nx/js/typescript"
     ],
     "targets.typecheck.options.cwd": [
-      "packages/zoo/tsconfig.json",
+      "packages/animals/project.json",
       "@nx/js/typescript"
     ],
-    "targets.typecheck.options.command": [
-      "packages/zoo/tsconfig.json",
+    "targets.build": ["packages/animals/project.json", "@nx/js/typescript"],
+    "targets.build.command": [
+      "packages/animals/project.json",
       "@nx/js/typescript"
     ],
-    "targets.typecheck.metadata.technologies": [
-      "packages/zoo/tsconfig.json",
-      "@nx/js/typescript"
-    ],
-    "targets.typecheck.metadata.technologies.0": [
-      "packages/zoo/tsconfig.json",
-      "@nx/js/typescript"
-    ],
-    "targets.typecheck.metadata.description": [
-      "packages/zoo/tsconfig.json",
-      "@nx/js/typescript"
-    ],
-    "targets.typecheck.metadata.help": [
-      "packages/zoo/tsconfig.json",
-      "@nx/js/typescript"
-    ],
-    "targets.typecheck.metadata.help.command": [
-      "packages/zoo/tsconfig.json",
-      "@nx/js/typescript"
-    ],
-    "targets.typecheck.metadata.help.example": [
-      "packages/zoo/tsconfig.json",
-      "@nx/js/typescript"
-    ],
-    "targets.build": ["packages/zoo/tsconfig.lib.json", "@nx/js/typescript"],
-    "targets.build.dependsOn": ["nx.json", "nx/target-defaults"],
     "targets.build.options": [
-      "packages/zoo/tsconfig.lib.json",
+      "packages/animals/project.json",
       "@nx/js/typescript"
     ],
-    "targets.build.cache": ["nx.json", "nx/target-defaults"],
+    "targets.build.cache": [
+      "packages/animals/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.build.dependsOn": [
+      "packages/animals/project.json",
+      "@nx/js/typescript"
+    ],
     "targets.build.inputs": [
-      "packages/zoo/tsconfig.lib.json",
+      "packages/animals/project.json",
       "@nx/js/typescript"
     ],
-    "targets.build.outputs": ["nx.json", "nx/target-defaults"],
-    "targets.build.syncGenerators": [
-      "packages/zoo/tsconfig.lib.json",
-      "@nx/js/typescript"
-    ],
-    "targets.build.metadata": [
-      "packages/zoo/tsconfig.lib.json",
-      "@nx/js/typescript"
-    ],
-    "targets.build.executor": [
-      "packages/zoo/tsconfig.lib.json",
+    "targets.build.outputs": [
+      "packages/animals/project.json",
       "@nx/js/typescript"
     ],
     "targets.build.options.cwd": [
-      "packages/zoo/tsconfig.lib.json",
+      "packages/animals/project.json",
       "@nx/js/typescript"
     ],
-    "targets.build.options.command": [
-      "packages/zoo/tsconfig.lib.json",
-      "@nx/js/typescript"
-    ],
-    "targets.build.metadata.technologies": [
-      "packages/zoo/tsconfig.lib.json",
-      "@nx/js/typescript"
-    ],
-    "targets.build.metadata.technologies.0": [
-      "packages/zoo/tsconfig.lib.json",
-      "@nx/js/typescript"
-    ],
-    "targets.build.metadata.description": [
-      "packages/zoo/tsconfig.lib.json",
-      "@nx/js/typescript"
-    ],
-    "targets.build.metadata.help": [
-      "packages/zoo/tsconfig.lib.json",
-      "@nx/js/typescript"
-    ],
-    "targets.build.metadata.help.command": [
-      "packages/zoo/tsconfig.lib.json",
-      "@nx/js/typescript"
-    ],
-    "targets.build.metadata.help.example": [
-      "packages/zoo/tsconfig.lib.json",
-      "@nx/js/typescript"
-    ],
-    "sourceRoot": ["packages/zoo/package.json", "nx/core/package-json"],
-    "name": ["packages/zoo/package.json", "nx/core/package-json"],
-    "tags": ["packages/zoo/package.json", "nx/core/package-json"],
-    "tags.npm:public": ["packages/zoo/package.json", "nx/core/package-json"],
-    "metadata.targetGroups": [
-      "packages/zoo/package.json",
-      "nx/core/package-json"
-    ],
-    "metadata.targetGroups.NPM Scripts": [
-      "packages/zoo/package.json",
-      "nx/core/package-json"
-    ],
-    "metadata.targetGroups.NPM Scripts.0": [
-      "packages/zoo/package.json",
-      "nx/core/package-json"
-    ],
-    "metadata.description": [
-      "packages/zoo/package.json",
-      "nx/core/package-json"
-    ],
-    "targets.serve": ["packages/zoo/package.json", "nx/core/package-json"],
-    "targets.serve.executor": [
-      "packages/zoo/package.json",
-      "nx/core/package-json"
-    ],
-    "targets.serve.options": [
-      "packages/zoo/package.json",
-      "nx/core/package-json"
-    ],
-    "targets.serve.metadata": [
-      "packages/zoo/package.json",
-      "nx/core/package-json"
-    ],
-    "targets.serve.options.script": [
-      "packages/zoo/package.json",
-      "nx/core/package-json"
-    ],
-    "targets.serve.metadata.scriptContent": [
-      "packages/zoo/package.json",
-      "nx/core/package-json"
-    ],
-    "targets.serve.metadata.runCommand": [
-      "packages/zoo/package.json",
-      "nx/core/package-json"
-    ],
-    "targets.nx-release-publish": [
-      "packages/zoo/package.json",
-      "nx/core/package-json"
-    ],
-    "targets.nx-release-publish.executor": [
-      "packages/zoo/package.json",
-      "nx/core/package-json"
-    ],
-    "targets.nx-release-publish.dependsOn": [
-      "packages/zoo/package.json",
-      "nx/core/package-json"
-    ],
-    "targets.nx-release-publish.options": [
-      "packages/zoo/package.json",
-      "nx/core/package-json"
-    ],
-    "targets.typecheck.parallelism": ["nx.json", "nx/target-defaults"],
-    "targets.build.parallelism": ["nx.json", "nx/target-defaults"]
+    "name": ["packages/animals/project.json", "nx/core/project-json"],
+    "$schema": ["packages/animals/project.json", "nx/core/project-json"],
+    "sourceRoot": ["packages/animals/project.json", "nx/core/project-json"],
+    "projectType": ["packages/animals/project.json", "nx/core/project-json"],
+    "tags": ["packages/animals/project.json", "nx/core/project-json"]
   }
 }
