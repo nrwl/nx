@@ -40,6 +40,7 @@ pub struct TaskGraph {
     pub roots: Vec<String>,
     pub tasks: HashMap<String, Task>,
     pub dependencies: HashMap<String, Vec<String>>,
+    pub continuous_dependencies: HashMap<String, Vec<String>>,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]

@@ -320,7 +320,7 @@ describe('remote generator', () => {
           typescriptConfiguration: true,
           bundler: 'webpack',
         })
-      ).rejects.toThrowError(`Invalid remote name provided: ${name}.`);
+      ).rejects.toThrow(`Invalid remote name provided: ${name}.`);
     });
   });
 });
