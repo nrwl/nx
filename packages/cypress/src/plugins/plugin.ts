@@ -358,6 +358,25 @@ async function buildCypressTargets(
 
       for (const file of specFiles) {
         const relativeSpecFilePath = normalizePath(relative(projectRoot, file));
+
+        if (relativeSpecFilePath.includes('../')) {
+          throw new Error(
+            '@nx/cypress/plugin attempted to run tests outside of the project root. This is not supported and should not happen. Please open an issue at https://github.com/nrwl/nx/issues/new/choose with the following information:\n\n' +
+              `\n\n${JSON.stringify(
+                {
+                  projectRoot,
+                  relativeSpecFilePath,
+                  specFiles,
+                  context,
+                  excludeSpecPatterns,
+                  specPatterns,
+                },
+                null,
+                2
+              )}`
+          );
+        }
+
         const targetName = options.ciTargetName + '--' + relativeSpecFilePath;
         const outputSubfolder = relativeSpecFilePath
           .replace(/[\/\\]/g, '-')
