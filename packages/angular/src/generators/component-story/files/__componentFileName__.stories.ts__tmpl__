@@ -9,6 +9,7 @@ const meta: Meta<<%= componentName %>> = {
   title: '<%= componentName %>',
 };
 export default meta;
+
 type Story = StoryObj<<%=componentName%>>;
 
 export const Primary: Story = {
@@ -16,14 +17,14 @@ export const Primary: Story = {
     <%= prop.name %>: <%- prop.defaultValue %>,<% } %>
   },
 };
-
 <%_ if ( interactionTests ) { _%>
+
 export const Heading: Story = {
   args: {<% for (let prop of props) { %>
     <%= prop.name %>: <%- prop.defaultValue %>,<% } %>
   },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText(/<%=componentNameSimple%> works!/gi)).toBeTruthy();
+    await expect(canvas.getByText(/<%=componentNameSimple%>/gi)).toBeTruthy();
   },
 };
 <%_ } _%>

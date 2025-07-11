@@ -30,16 +30,17 @@ export default config;
 `;
 
 exports[`vue:storybook-configuration should generate stories for components 1`] = `
-"import type { Meta, StoryObj } from '@storybook/vue3';
+"import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import myComponent from './my-component.vue';
 
 import { expect } from 'storybook/test';
 
-const meta: Meta<typeof myComponent> = {
+const meta = {
   component: myComponent,
   title: 'myComponent',
-};
+} satisfies Meta<typeof myComponent>;
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Primary = {
@@ -48,32 +49,33 @@ export const Primary = {
     displayAge: false,
     age: 0,
   },
-};
+} satisfies Story;
 
-export const Heading: Story = {
+export const Heading = {
   args: {
     name: 'name',
     displayAge: false,
     age: 0,
   },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText(/Welcome to myComponent!/gi)).toBeTruthy();
+    await expect(canvas.getByText(/myComponent/gi)).toBeTruthy();
   },
-};
+} satisfies Story;
 "
 `;
 
 exports[`vue:storybook-configuration should generate stories for components for app 1`] = `
-"import type { Meta, StoryObj } from '@storybook/vue3';
+"import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import myComponent from './my-component.vue';
 
 import { expect } from 'storybook/test';
 
-const meta: Meta<typeof myComponent> = {
+const meta = {
   component: myComponent,
   title: 'myComponent',
-};
+} satisfies Meta<typeof myComponent>;
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Primary = {
@@ -82,30 +84,31 @@ export const Primary = {
     displayAge: false,
     age: 0,
   },
-};
+} satisfies Story;
 
-export const Heading: Story = {
+export const Heading = {
   args: {
     name: 'name',
     displayAge: false,
     age: 0,
   },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText(/Welcome to myComponent!/gi)).toBeTruthy();
+    await expect(canvas.getByText(/myComponent/gi)).toBeTruthy();
   },
-};
+} satisfies Story;
 "
 `;
 
 exports[`vue:storybook-configuration should generate stories for components without interaction tests 1`] = `
-"import type { Meta, StoryObj } from '@storybook/vue3';
+"import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import myComponent from './my-component.vue';
 
-const meta: Meta<typeof myComponent> = {
+const meta = {
   component: myComponent,
   title: 'myComponent',
-};
+} satisfies Meta<typeof myComponent>;
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Primary = {
@@ -114,6 +117,6 @@ export const Primary = {
     displayAge: false,
     age: 0,
   },
-};
+} satisfies Story;
 "
 `;
