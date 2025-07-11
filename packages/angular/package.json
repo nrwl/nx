@@ -47,6 +47,7 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
+    "@nx/devkit": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/module-federation": "workspace:*",
@@ -65,7 +66,6 @@
     "webpack-merge": "^5.8.0"
   },
   "devDependencies": {
-    "@nx/devkit": "workspace:*",
     "@nx/cypress": "workspace:*",
     "nx": "workspace:*"
   },

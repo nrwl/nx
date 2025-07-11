@@ -122,9 +122,6 @@ describe('@nx/webpack/plugin', () => {
                     "outputs": [
                       "{projectRoot}/dist/foo",
                     ],
-                    "syncGenerators": [
-                      "@nx/js:typescript-sync",
-                    ],
                   },
                   "my-serve": {
                     "command": "webpack-cli serve",
@@ -152,9 +149,6 @@ describe('@nx/webpack/plugin', () => {
                       ],
                       "cwd": "my-app",
                     },
-                    "syncGenerators": [
-                      "@nx/js:typescript-sync",
-                    ],
                   },
                   "preview-site": {
                     "command": "webpack-cli serve",
@@ -182,9 +176,6 @@ describe('@nx/webpack/plugin', () => {
                       ],
                       "cwd": "my-app",
                     },
-                    "syncGenerators": [
-                      "@nx/js:typescript-sync",
-                    ],
                   },
                   "serve-static": {
                     "continuous": true,
@@ -197,9 +188,6 @@ describe('@nx/webpack/plugin', () => {
                       "port": 9000,
                       "spa": true,
                     },
-                    "syncGenerators": [
-                      "@nx/js:typescript-sync",
-                    ],
                   },
                   "watch-deps": {
                     "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",

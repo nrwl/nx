@@ -260,6 +260,15 @@
         "ciTargetName": "e2e-macos-ci"
       }
     },
+    {
+      "plugin": "@nx/next/plugin",
+      "options": {
+        "startTargetName": "next:start",
+        "buildTargetName": "next:build",
+        "devTargetName": "dev",
+        "serveStaticTargetName": "serve-static"
+      }
+    },
     "@nx/enterprise-cloud",
     {
       "plugin": "@nx/storybook/plugin",

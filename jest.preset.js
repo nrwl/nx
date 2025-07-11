@@ -15,7 +15,8 @@ module.exports = {
   testEnvironment: 'node',
   setupFiles: ['../../scripts/unit-test-setup.js'],
   moduleNameMapper: {
-    // TypeScript source mappings
+    // TypeScript source mappings needed for Jest to resolve imports correctly
+    // Until ts-jest supports ts references, see: https://github.com/kulshekhar/ts-jest/pull/4689 & https://github.com/kulshekhar/ts-jest/issues/1648
     '^@nx/devkit$': '<rootDir>/../devkit/index.ts',
     '^@nx/devkit/testing$': '<rootDir>/../devkit/testing.ts',
     '^@nx/devkit/internal-testing-utils$':

@@ -5,6 +5,11 @@ const fs = require('fs');
 /**
  * Custom resolver which will respect package exports (until Jest supports it natively
  * by resolving https://github.com/facebook/jest/issues/9771)
+ *
+ * Also needed for TypeScript project references support:
+ * - ts-jest doesn't support TypeScript project references (https://github.com/kulshekhar/ts-jest/issues/1648)
+ * - When using TS project references, Jest needs to resolve imports like '@nx/devkit' to TypeScript source files
+ * - Without this resolver, Jest will fail to resolve these imports correctly
  */
 const enhancedResolver = require('enhanced-resolve').create.sync({
   conditionNames: ['require', 'node', 'default'],

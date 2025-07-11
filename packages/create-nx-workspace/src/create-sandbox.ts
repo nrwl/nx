@@ -1,6 +1,6 @@
 import { writeFileSync } from 'fs';
 import { dirSync } from 'tmp';
-import ora = require('ora');
+import * as ora from 'ora';
 import { join } from 'path';
 
 import {
