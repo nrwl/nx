@@ -228,7 +228,7 @@ impl PtyInstance {
             if current > 0 {
                 parser
                     .screen_mut()
-                    .set_scrollback(current - amount as usize);
+                    .set_scrollback(current.saturating_sub(amount as usize));
             }
         }
     }

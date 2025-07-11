@@ -57,13 +57,13 @@ impl TerminalPaneData {
                 KeyCode::Char('u')
                     if key.modifiers.contains(KeyModifiers::CONTROL) && !self.is_interactive =>
                 {
-                    self.scroll(ScrollDirection::Up);
+                    pty_mut.scroll_up(12);
                     return Ok(None);
                 }
                 KeyCode::Char('d')
                     if key.modifiers.contains(KeyModifiers::CONTROL) && !self.is_interactive =>
                 {
-                    self.scroll(ScrollDirection::Down);
+                    pty_mut.scroll_down(12);
                     return Ok(None);
                 }
                 // Handle 'c' for copying when not in interactive mode
