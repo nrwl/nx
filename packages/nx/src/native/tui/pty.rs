@@ -73,8 +73,18 @@ impl PtyInstance {
         let rows = rows.max(3);
         let cols = cols.max(20);
 
-        // Get current dimensions before resize
+        // Skip resize if dimensions haven't changed
+        if rows == self.rows && cols == self.cols {
+            return Ok(());
+        }
+
+        // Get current dimensions and scroll position before resize
         let old_rows = self.rows;
+        let old_scrollback = if let Ok(parser_guard) = self.parser.read() {
+            parser_guard.screen().scrollback()
+        } else {
+            0
+        };
 
         // Update the stored dimensions
         self.rows = rows;
@@ -88,10 +98,20 @@ impl PtyInstance {
             let mut new_parser = Parser::new(rows, cols, 10000);
             new_parser.process(&raw_output);
 
-            // If we lost height, scroll up by that amount to maintain relative view position
+            // Preserve scroll position when possible
             if rows < old_rows {
-                // Set to 0 to ensure that the cursor is consistently at the bottom of the visible output on resize
-                new_parser.screen_mut().set_scrollback(0);
+                // If we lost height and were scrolled up, try to maintain scroll position
+                if old_scrollback > 0 {
+                    // Adjust scrollback to account for lost rows
+                    let adjusted_scrollback = old_scrollback.saturating_sub((old_rows - rows) as usize);
+                    new_parser.screen_mut().set_scrollback(adjusted_scrollback);
+                } else {
+                    // If we weren't scrolled, keep at bottom
+                    new_parser.screen_mut().set_scrollback(0);
+                }
+            } else {
+                // If we gained height or stayed the same, preserve exact scroll position
+                new_parser.screen_mut().set_scrollback(old_scrollback);
             }
 
             *parser_guard = new_parser;
