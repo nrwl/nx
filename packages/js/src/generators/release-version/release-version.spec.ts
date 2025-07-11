@@ -21,7 +21,7 @@ jest.mock('@nx/devkit', () => {
 
 import { ProjectGraph, Tree, output, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import enquirer = require('enquirer');
+import * as enquirer from 'enquirer';
 import { ReleaseGroupWithName } from 'nx/src/command-line/release/config/filter-release-groups';
 import { releaseVersionGenerator } from './release-version';
 import { createWorkspaceWithPackageDependencies } from './test-utils/create-workspace-with-package-dependencies';

@@ -8,14 +8,12 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
-import { setWorkspaceRoot } from 'nx/src/utils/workspace-root';
 
 describe('app', () => {
   let appTree: Tree;
 
   beforeEach(() => {
-    appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    // setWorkspaceRoot(appTree.root);
+    appTree = createTreeWithEmptyWorkspace();
   });
 
   it('should generate files', async () => {

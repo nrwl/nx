@@ -20,7 +20,7 @@ import {
   runPluginInitGenerator,
   getFailedToInstallPluginErrorMessages,
 } from '../init/configure-plugins';
-import ora = require('ora');
+import * as ora from 'ora';
 
 export function addHandler(options: AddOptions): Promise<number> {
   return handleErrors(options.verbose, async () => {

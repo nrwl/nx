@@ -1,6 +1,6 @@
 // Adapted from https://raw.githubusercontent.com/babel/babel/4108524/packages/babel-highlight/src/index.js
-import jsTokens = require('js-tokens');
-import chalk = require('chalk');
+import * as jsTokens from 'js-tokens';
+import * as chalk from 'chalk';
 import { isKeyword, isReservedWord } from './identifiers';
 
 /**

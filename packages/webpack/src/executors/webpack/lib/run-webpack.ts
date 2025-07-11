@@ -1,4 +1,4 @@
-import webpack = require('webpack');
+import * as webpack from 'webpack';
 import { Observable } from 'rxjs';
 
 // TODO(jack): move to dev-server executor

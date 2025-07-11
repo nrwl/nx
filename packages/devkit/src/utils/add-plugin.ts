@@ -1,7 +1,7 @@
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
-const yargs = require('yargs-parser');
+import * as yargs from 'yargs-parser';
 
 import {
   CreateNodes,

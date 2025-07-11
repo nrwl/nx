@@ -1,4 +1,4 @@
-import ora = require('ora');
+import * as ora from 'ora';
 import { readNxJson } from '../../config/nx-json';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { output } from '../../utils/output';

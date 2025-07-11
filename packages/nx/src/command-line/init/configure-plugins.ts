@@ -1,4 +1,4 @@
-import createSpinner = require('ora');
+import * as createSpinner from 'ora';
 import { bold } from 'chalk';
 
 import {

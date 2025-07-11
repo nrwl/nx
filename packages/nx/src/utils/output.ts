@@ -1,6 +1,6 @@
-import chalk = require('chalk');
+import * as chalk from 'chalk';
 import { EOL } from 'os';
-import readline = require('readline');
+import * as readline from 'readline';
 import { isCI } from './is-ci';
 import type { TaskStatus } from '../tasks-runner/tasks-runner';
 

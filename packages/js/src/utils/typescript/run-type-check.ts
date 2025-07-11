@@ -1,4 +1,4 @@
-import chalk = require('chalk');
+import * as chalk from 'chalk';
 import * as path from 'path';
 import type { BuilderProgram, Diagnostic, Program } from 'typescript';
 import { codeFrameColumns } from 'nx/src/utils/code-frames';

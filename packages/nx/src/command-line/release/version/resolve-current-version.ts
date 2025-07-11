@@ -1,5 +1,5 @@
 import chalk = require('chalk');
-import ora = require('ora');
+import * as ora from 'ora';
 import { prompt } from 'enquirer';
 import { NxReleaseVersionConfiguration } from '../../../config/nx-json';
 import type { ProjectGraphProjectNode } from '../../../config/project-graph';

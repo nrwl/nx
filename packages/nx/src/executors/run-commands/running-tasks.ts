@@ -2,7 +2,7 @@ import * as chalk from 'chalk';
 import { ChildProcess, exec, Serializable } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { isAbsolute, join } from 'path';
-import treeKill = require('tree-kill');
+import * as treeKill from 'tree-kill';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import {
   createPseudoTerminal,

@@ -1,4 +1,4 @@
-import webpack = require('webpack');
+import * as webpack from 'webpack';
 import {
   ExecutorContext,
   parseTargetString,
@@ -7,7 +7,7 @@ import {
 
 import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import { map, tap } from 'rxjs/operators';
-import WebpackDevServer = require('webpack-dev-server');
+import * as WebpackDevServer from 'webpack-dev-server';
 
 import { getDevServerOptions } from './lib/get-dev-server-config';
 import {

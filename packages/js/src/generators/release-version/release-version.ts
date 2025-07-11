@@ -9,7 +9,7 @@ import {
   workspaceRoot,
   writeJson,
 } from '@nx/devkit';
-import chalk = require('chalk');
+import * as chalk from 'chalk';
 import { prompt } from 'enquirer';
 import { exec } from 'node:child_process';
 import { rm } from 'node:fs/promises';
@@ -35,7 +35,7 @@ import {
   validReleaseVersionPrefixes,
 } from 'nx/src/command-line/release/version-legacy';
 import { interpolate } from 'nx/src/tasks-runner/utils';
-import ora = require('ora');
+import * as ora from 'ora';
 import { ReleaseType, gt, inc, prerelease } from 'semver';
 import { updateLockFile } from '../../release/utils/update-lock-file';
 import { isLocallyLinkedPackageVersion } from '../../utils/is-locally-linked-package-version';

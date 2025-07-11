@@ -1683,10 +1683,6 @@ importers:
       '@nx/nx-dev-util-ai':
         specifier: workspace:*
         version: link:../util-ai
-    devDependencies:
-      jest:
-        specifier: ^29.4.1
-        version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@20.16.10)(typescript@5.8.3))
 
   nx-dev/tutorial: {}
 
