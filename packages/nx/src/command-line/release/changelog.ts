@@ -1,7 +1,7 @@
 import * as chalk from 'chalk';
 import { prompt } from 'enquirer';
 import { readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { ReleaseType, valid } from 'semver';
+import { prerelease, ReleaseType } from 'semver';
 import { dirSync } from 'tmp';
 import type { DependencyBump } from '../../../release/changelog-renderer';
 import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
@@ -68,6 +68,7 @@ import {
   createCommitMessageValues,
   createGitTagValues,
   handleDuplicateGitTags,
+  isPrerelease,
   noDiffInChangelogMessage,
 } from './utils/shared';
 
@@ -244,6 +245,23 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     const headSHA = to === 'HEAD' ? toSHA : await getCommitHash('HEAD');
 
     /**
+     * Extract the preid from the workspace version and the project versions
+     */
+    const workspacePreId: string | undefined = workspaceChangelogVersion
+      ? extractPreId(workspaceChangelogVersion)
+      : undefined;
+
+    const projectsPreId: { [projectName: string]: string | undefined } =
+      Object.fromEntries(
+        Object.entries(projectsVersionData).map(([projectName, v]) => [
+          projectName,
+          v.newVersion
+            ? extractPreId(v.newVersion)
+            : undefined,
+        ])
+      );
+
+    /**
      * Protect the user against attempting to create a new commit when recreating an old release changelog,
      * this seems like it would always be unintentional.
      */
@@ -346,7 +364,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             {
               checkAllBranchesWhen:
                 nxReleaseConfig.releaseTagPatternCheckAllBranchesWhen,
-              preId: args.preid,
+              preId: workspacePreId ?? projectsPreId?.[Object.keys(projectsPreId)[0]],
               releaseTagPatternRequireSemver:
                 nxReleaseConfig.releaseTagPatternRequireSemver,
             }
@@ -536,7 +554,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                   {
                     checkAllBranchesWhen:
                       releaseGroup.releaseTagPatternCheckAllBranchesWhen,
-                    preId: args.preid,
+                    preId: projectsPreId[project.name],
                     releaseTagPatternRequireSemver:
                       releaseGroup.releaseTagPatternRequireSemver ?? true,
                   }
@@ -684,7 +702,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                 {
                   checkAllBranchesWhen:
                     releaseGroup.releaseTagPatternCheckAllBranchesWhen,
-                  preId: args.preid,
+                  preId: workspacePreId ?? projectsPreId?.[Object.keys(projectsPreId)[0]],
                   releaseTagPatternRequireSemver:
                     releaseGroup.releaseTagPatternRequireSemver,
                 }
@@ -1460,4 +1478,19 @@ function versionPlanSemverReleaseTypeToChangelogType(bump: ReleaseType): {
     default:
       throw new Error(`Invalid semver bump type: ${bump}`);
   }
+}
+
+function extractPreId(version: string): string | undefined {
+  if (!isPrerelease(version)) {
+    return undefined;
+  }
+
+  const preId = prerelease(version)[0];
+  if (typeof preId === 'string') {
+    return preId;
+  }
+  if (typeof preId === 'number') {
+    return preId.toString();
+  }
+  return undefined;
 }
