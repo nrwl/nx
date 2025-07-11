@@ -173,7 +173,7 @@ pub struct TasksList {
     selection_manager: Arc<Mutex<TaskSelectionManager>>,
     pub tasks: Vec<TaskItem>,    // Source of truth - all tasks
     filtered_names: Vec<String>, // Names of tasks that match the filter
-    throbber_counter: usize,
+    pub throbber_counter: usize,
     pub filter_mode: bool,
     filter_text: String,
     filter_persisted: bool, // Whether the filter is in a persisted state

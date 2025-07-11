@@ -6,7 +6,7 @@ use std::sync::Arc;
 use tracing::debug;
 
 use crate::native::logger::enable_logger;
-use crate::native::tasks::types::{Task, TaskResult};
+use crate::native::tasks::types::{Task, TaskGraph, TaskResult};
 use crate::native::{
     ide::nx_console::messaging::NxConsoleMessageConnection,
     pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
@@ -82,6 +82,7 @@ impl AppLifeCycle {
         tui_config: TuiConfig,
         title_text: String,
         workspace_root: String,
+        task_graph: TaskGraph,
     ) -> Self {
         // Get the target names from nx_args.targets
         let rust_tui_cli_args = tui_cli_args.into();
@@ -100,6 +101,7 @@ impl AppLifeCycle {
                     pinned_tasks,
                     rust_tui_config,
                     title_text,
+                    task_graph,
                 )
                 .unwrap(),
             )),
