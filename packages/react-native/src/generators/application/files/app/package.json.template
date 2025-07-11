@@ -3,11 +3,12 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "@react-native/metro-config": "*",
-    "@testing-library/react-native": "*",
+    "@react-native/metro-config": "*",<% if (unitTestRunner === 'jest') { %>
+    "@testing-library/react-native": "*",<% } %>
     "react": "*",
     "react-native": "*",
-    "react-native-svg": "*",
+    "react-native-svg": "*",<% if (unitTestRunner === 'jest') { %>
+    "react-test-renderer": "*",<% } %>
     "metro-config": "*"
   }
 }

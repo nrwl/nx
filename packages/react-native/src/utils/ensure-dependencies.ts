@@ -17,12 +17,16 @@ import {
   reactNativeMetroConfigVersion,
   reactNativeSvgTransformerVersion,
   reactNativeSvgVersion,
+  reactTestRendererVersion,
   testingLibraryReactNativeVersion,
   typesNodeVersion,
   typesReactVersion,
 } from './versions';
 
-export function ensureDependencies(tree: Tree): GeneratorCallback {
+export function ensureDependencies(
+  tree: Tree,
+  unitTestRunner?: 'jest' | 'none'
+): GeneratorCallback {
   const isPnpm = detectPackageManager(tree.root) === 'pnpm';
 
   return addDependenciesToPackageJson(
@@ -33,7 +37,6 @@ export function ensureDependencies(tree: Tree): GeneratorCallback {
       '@types/react': typesReactVersion,
       '@react-native/babel-preset': reactNativeBabelPresetVersion,
       '@react-native/metro-config': reactNativeMetroConfigVersion,
-      '@testing-library/react-native': testingLibraryReactNativeVersion,
       '@react-native-community/cli': reactNativeCommunityCliVersion,
       '@react-native-community/cli-platform-android':
         reactNativeCommunityCliPlatformAndroidVersion,
@@ -43,6 +46,12 @@ export function ensureDependencies(tree: Tree): GeneratorCallback {
       'react-native-svg': reactNativeSvgVersion,
       '@babel/preset-react': babelPresetReactVersion,
       '@babel/core': babelCoreVersion,
+      ...(unitTestRunner === 'jest'
+        ? {
+            '@testing-library/react-native': testingLibraryReactNativeVersion,
+            'react-test-renderer': reactTestRendererVersion,
+          }
+        : {}),
       ...(isPnpm
         ? {
             '@babel/runtime': babelRuntimeVersion, // @babel/runtime is used by react-native-svg

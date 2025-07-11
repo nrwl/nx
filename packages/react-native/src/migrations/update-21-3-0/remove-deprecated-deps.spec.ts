@@ -29,7 +29,6 @@ describe('Remove deprecated dependencies from root and app package.json', () => 
         devDependencies: {
           '@testing-library/jest-native': '~5.4.3',
           'jest-react-native': '18.0.0',
-          'react-test-renderer': '18.3.1',
         },
       })
     );
@@ -39,7 +38,6 @@ describe('Remove deprecated dependencies from root and app package.json', () => 
         dependencies: {
           '@testing-library/jest-native': '*',
           'jest-react-native': '*',
-          'react-test-renderer': '*',
         },
       })
     );
@@ -50,17 +48,11 @@ describe('Remove deprecated dependencies from root and app package.json', () => 
     expect(tree.read('package.json').toString()).not.toContain(
       'jest-react-native'
     );
-    expect(tree.read('package.json').toString()).not.toContain(
-      'react-test-renderer'
-    );
     expect(tree.read('apps/product/package.json').toString()).not.toContain(
       '@testing-library/jest-native'
     );
     expect(tree.read('apps/product/package.json').toString()).not.toContain(
       'jest-react-native'
-    );
-    expect(tree.read('apps/product/package.json').toString()).not.toContain(
-      'react-test-renderer'
     );
   });
 });

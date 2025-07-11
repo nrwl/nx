@@ -141,7 +141,7 @@
           "alwaysAddToPackageJson": false
         },
         "react-test-renderer": {
-          "version": "~18.3.1",
+          "version": "~19.0.0",
           "alwaysAddToPackageJson": false
         },
         "@types/react": {
