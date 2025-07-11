@@ -5,7 +5,7 @@ expression: terminal.backend()
 "                                                                                                                                                                "
 " NX    Running Test Tasks...                                                                                                               Cache        Duration"
 "                                                                                                                                                                "
-"  ⠋    task1                                                                                                                                 ...             ..."
+"  ⠋    task1                                                                                                                                 ...            <1ms"
 "                                                                                                                                                                "
 "> ·    task2                                                                                                                                 ...             ..."
 "  ·    task3                                                                                                                                 ...             ..."

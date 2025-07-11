@@ -1,4 +1,5 @@
 use hashbrown::HashSet;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::native::tui::components::tasks_list::{TaskItem, TaskStatus};
 
@@ -14,6 +15,20 @@ pub fn format_duration(duration_ms: i64) -> String {
 
 pub fn format_duration_since(start_ms: i64, end_ms: i64) -> String {
     format_duration(end_ms.saturating_sub(start_ms))
+}
+
+/// Returns the current time in milliseconds since Unix epoch
+pub fn get_current_time_ms() -> i64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis() as i64
+}
+
+/// Formats the duration from a start time to the current time
+pub fn format_live_duration(start_ms: i64) -> String {
+    let current_ms = get_current_time_ms();
+    format_duration(current_ms.saturating_sub(start_ms))
 }
 
 /// Ensures that all newlines in the output are properly handled by converting
