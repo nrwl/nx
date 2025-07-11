@@ -255,9 +255,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       Object.fromEntries(
         Object.entries(projectsVersionData).map(([projectName, v]) => [
           projectName,
-          v.newVersion
-            ? extractPreId(v.newVersion)
-            : undefined,
+          v.newVersion ? extractPreId(v.newVersion) : undefined,
         ])
       );
 
@@ -364,7 +362,9 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             {
               checkAllBranchesWhen:
                 nxReleaseConfig.releaseTagPatternCheckAllBranchesWhen,
-              preId: workspacePreId ?? projectsPreId?.[Object.keys(projectsPreId)[0]],
+              preId:
+                workspacePreId ??
+                projectsPreId?.[Object.keys(projectsPreId)[0]],
               releaseTagPatternRequireSemver:
                 nxReleaseConfig.releaseTagPatternRequireSemver,
             }
@@ -702,7 +702,9 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                 {
                   checkAllBranchesWhen:
                     releaseGroup.releaseTagPatternCheckAllBranchesWhen,
-                  preId: workspacePreId ?? projectsPreId?.[Object.keys(projectsPreId)[0]],
+                  preId:
+                    workspacePreId ??
+                    projectsPreId?.[Object.keys(projectsPreId)[0]],
                   releaseTagPatternRequireSemver:
                     releaseGroup.releaseTagPatternRequireSemver,
                 }
