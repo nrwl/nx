@@ -92,6 +92,7 @@ export async function* tscExecutor(
     rootDir: context.root,
     outputDir: _options.outputPath,
     assets: _options.assets,
+    includeIgnoredFiles: _options.includeIgnoredAssetFiles,
   });
 
   const tsCompilationOptions = createTypeScriptCompilationOptions(
