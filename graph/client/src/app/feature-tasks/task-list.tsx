@@ -17,6 +17,7 @@ interface SidebarProject {
   projectGraphNode: ProjectGraphProjectNode;
   isSelected: boolean;
   error: string | null;
+  isLoading?: boolean;
 }
 
 function ProjectListItem({
@@ -30,15 +31,43 @@ function ProjectListItem({
     <li className="relative block cursor-default select-none pb-0 pl-2 pr-6 text-xs text-slate-600 dark:text-slate-400">
       <div className="flex items-center">
         <label
-          className="block w-full cursor-pointer truncate rounded-md p-2 font-mono font-normal transition hover:bg-slate-50 hover:dark:bg-slate-700"
+          className={`block w-full truncate rounded-md p-2 font-mono font-normal transition hover:bg-slate-50 hover:dark:bg-slate-700 ${
+            project.error || project.isLoading
+              ? 'cursor-default'
+              : 'cursor-pointer'
+          } ${project.isLoading ? 'opacity-50' : ''}`}
           data-project={project.projectGraphNode.name}
           title={project.projectGraphNode.name}
           data-active={project.isSelected.toString()}
           onClick={() =>
-            !project.error ? toggleTask(project.projectGraphNode.name) : null
+            !project.error && !project.isLoading
+              ? toggleTask(project.projectGraphNode.name)
+              : null
           }
         >
-          {project.projectGraphNode.name}
+          {project.isLoading ? (
+            <span className="flex items-center">
+              <svg className="mr-2 h-3 w-3 animate-spin" viewBox="0 0 24 24">
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  fill="none"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+              {project.projectGraphNode.name}
+            </span>
+          ) : (
+            project.projectGraphNode.name
+          )}
         </label>
       </div>
 
@@ -110,7 +139,8 @@ function mapToSidebarProjectWithTasks(
   project: ProjectGraphProjectNode,
   selectedProjects: string[],
   selectedTarget: string,
-  errors: Record<string, string>
+  errors: Record<string, string>,
+  isTaskLoading?: (projectName: string, targetName: string) => boolean
 ): SidebarProject {
   const taskId = createTaskName(project.name, selectedTarget);
 
@@ -118,6 +148,7 @@ function mapToSidebarProjectWithTasks(
     projectGraphNode: project,
     isSelected: selectedProjects.includes(project.name),
     error: errors?.[taskId] ?? null,
+    isLoading: isTaskLoading?.(project.name, selectedTarget) ?? false,
   };
 }
 
@@ -129,6 +160,7 @@ export interface TaskListProps {
   toggleProject: (projectName: string) => void;
   children: ReactNode | ReactNode[];
   errors: Record<string, string>;
+  isTaskLoading?: (projectName: string, targetName: string) => boolean;
 }
 
 export function TaskList({
@@ -139,6 +171,7 @@ export function TaskList({
   toggleProject,
   children,
   errors,
+  isTaskLoading,
 }: TaskListProps) {
   const filteredProjects = projects
     .filter((project) =>
@@ -183,7 +216,8 @@ export function TaskList({
                 project,
                 selectedProjects,
                 selectedTarget,
-                errors
+                errors,
+                isTaskLoading
               )
             )}
             toggleTask={toggleProject}
@@ -205,7 +239,8 @@ export function TaskList({
                 project,
                 selectedProjects,
                 selectedTarget,
-                errors
+                errors,
+                isTaskLoading
               )
             )}
             toggleTask={toggleProject}
@@ -227,7 +262,8 @@ export function TaskList({
                 project,
                 selectedProjects,
                 selectedTarget,
-                errors
+                errors,
+                isTaskLoading
               )
             )}
             toggleTask={toggleProject}
