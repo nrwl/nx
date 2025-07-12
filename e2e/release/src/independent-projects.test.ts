@@ -1,4 +1,4 @@
-import { joinPathFragments } from '@nx/devkit';
+import { joinPathFragments, NxJsonConfiguration } from '@nx/devkit';
 import {
   cleanupProject,
   exists,
@@ -572,7 +572,7 @@ describe('nx release - independent projects', () => {
       expect(runCommand(`git rev-parse HEAD`).trim()).toEqual(updatedHeadSHA);
 
       // Disable git commit and tag operations for the changelog command via config
-      updateJson('nx.json', (json) => {
+      updateJson<NxJsonConfiguration>('nx.json', (json) => {
         return {
           ...json,
           release: {
@@ -593,6 +593,8 @@ describe('nx release - independent projects', () => {
               fixed: {
                 projects: [pkg3],
                 projectsRelationship: 'fixed',
+                // Use a different release tag pattern for the fixed release group because the previous tag is not following the default pattern
+                releaseTagPattern: '{projectName}@{version}',
               },
             },
           },

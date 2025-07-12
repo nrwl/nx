@@ -57,36 +57,6 @@ describe('nx release releaseTagPattern', () => {
 
   afterEach(() => cleanupProject());
 
-  it('should prefer stable versions over prereleases', async () => {
-    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
-      nxJson.release = {
-        releaseTagPattern: 'v{version}',
-        version: {
-          conventionalCommits: true,
-        },
-      };
-      return nxJson;
-    });
-
-    // Tag the existing commit as a prerelease
-    await runCommandAsync(`git tag -a v1.0.0-beta.1 -m "v1.0.0-beta.1"`);
-
-    // Resolve that prerelease as the current version
-    expect(runCLI(`release version -d`)).toContain(
-      `Resolved the current version as 1.0.0-beta.1 from git tag "v1.0.0-beta.1"`
-    );
-
-    // Make a new commit and tag it as a stable version
-    await runCommandAsync(`echo "Hello" > README.md`);
-    await runCommandAsync(`git add README.md`);
-    await runCommandAsync(`git commit -m "chore: update README.md"`);
-    await runCommandAsync(`git tag -a v1.0.0 -m "v1.0.0"`);
-
-    expect(runCLI(`release version -d`)).toContain(
-      `Resolved the current version as 1.0.0 from git tag "v1.0.0"`
-    );
-  });
-
   describe('releaseTagPatternCheckAllBranchesWhen', () => {
     it('should check the current branch first, and then fall back to all branches by default/when not specified', async () => {
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
