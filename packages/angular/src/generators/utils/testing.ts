@@ -1,6 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import { names, readProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { applicationGenerator } from '../application/application';
 import type { Schema as ApplicationOptions } from '../application/schema';
@@ -298,7 +299,7 @@ function generateModule(
   const project = readProjectConfiguration(tree, options.project);
 
   if (options.path === undefined) {
-    const sourceRoot = project.sourceRoot ?? `${project.root}/src`;
+    const sourceRoot = getProjectSourceRoot(project, tree);
     const projectDirName =
       project.projectType === 'application' ? 'app' : 'lib';
     options.path = `${sourceRoot}/${projectDirName}`;

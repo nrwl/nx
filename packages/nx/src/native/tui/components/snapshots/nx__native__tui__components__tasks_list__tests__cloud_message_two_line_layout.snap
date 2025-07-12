@@ -3,11 +3,11 @@ source: packages/nx/src/native/tui/components/tasks_list.rs
 expression: terminal.backend()
 ---
 "                                                            "
-" NX    Completed Test Tasks                         Duration"
+" NX    Completed Test Tasks            Cache        Duration"
 "                                                            "
-"  ✔    task1                                             ..."
-"> ✔    task2                                             ..."
-"  ✔    task3                                             ..."
+"  ✔    task1                               -             ..."
+"> ✔    task2                               -             ..."
+"  ✔    task3                               -             ..."
 "                                                            "
 "                                                            "
 "                                                            "

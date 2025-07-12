@@ -1,7 +1,3 @@
-import { ModuleFederationStaticServerSchema } from './schema';
-import { ModuleFederationDevServerOptions } from '../module-federation-dev-server/schema';
-import { ExecutorContext } from 'nx/src/config/misc-interfaces';
-import { basename, extname, join } from 'path';
 import {
   logger,
   parseTargetString,
@@ -9,24 +5,29 @@ import {
   Target,
   workspaceRoot,
 } from '@nx/devkit';
-import { cpSync, existsSync, readFileSync, rmSync } from 'fs';
+import {
+  combineAsyncIterables,
+  createAsyncIterable,
+} from '@nx/devkit/src/utils/async-iterable';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { buildStaticRemotes } from '@nx/module-federation/src/executors/utils';
 import {
   getModuleFederationConfig,
   getRemotes,
   parseStaticRemotesConfig,
   StaticRemotesConfig,
 } from '@nx/module-federation/src/utils';
-import { buildStaticRemotes } from '@nx/module-federation/src/executors/utils';
-import { fork } from 'child_process';
-import type { WebpackExecutorOptions } from '@nx/webpack';
-import * as process from 'node:process';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
-import type { Express } from 'express';
-import {
-  combineAsyncIterables,
-  createAsyncIterable,
-} from '@nx/devkit/src/utils/async-iterable';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
+import type { WebpackExecutorOptions } from '@nx/webpack';
+import { fork } from 'child_process';
+import type { Express } from 'express';
+import { cpSync, existsSync, readFileSync, rmSync } from 'fs';
+import * as process from 'node:process';
+import { ExecutorContext } from 'nx/src/config/misc-interfaces';
+import { basename, extname, join } from 'path';
+import { ModuleFederationDevServerOptions } from '../module-federation-dev-server/schema';
+import { ModuleFederationStaticServerSchema } from './schema';
 
 function getBuildAndServeOptionsFromServeTarget(
   serveTarget: string,
@@ -47,7 +48,7 @@ function getBuildAndServeOptionsFromServeTarget(
 
   let pathToManifestFile = join(
     context.root,
-    context.projectGraph.nodes[context.projectName].data.sourceRoot,
+    getProjectSourceRoot(context.projectGraph.nodes[context.projectName].data),
     'assets/module-federation.manifest.json'
   );
   if (serveOptions.pathToManifestFile) {

@@ -17,6 +17,7 @@ import {
   addSwcRegisterDependencies,
 } from '@nx/js/src/utils/swc/add-swc-dependencies';
 import { addTsLibDependencies } from '@nx/js/src/utils/typescript/add-tslib-dependencies';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import * as path from 'path';
 import { e2eProjectGenerator } from '../e2e-project/e2e';
 import pluginLintCheckGenerator from '../lint-checks/generator';
@@ -44,8 +45,10 @@ function updatePluginConfig(host: Tree, options: NormalizedSchema) {
 
   if (project.targets.build) {
     if (options.isTsSolutionSetup && options.bundler === 'tsc') {
-      project.targets.build.options.rootDir =
-        project.sourceRoot ?? joinPathFragments(project.root, 'src');
+      project.targets.build.options.rootDir = getProjectSourceRoot(
+        project,
+        host
+      );
       project.targets.build.options.generatePackageJson = false;
     }
 

@@ -200,7 +200,8 @@ async function getTerminalOutputLifeCycle(
         nxArgs ?? {},
         nxJson.tui ?? {},
         titleText,
-        workspaceRoot
+        workspaceRoot,
+        taskGraph
       );
       lifeCycles.unshift(appLifeCycle);
 

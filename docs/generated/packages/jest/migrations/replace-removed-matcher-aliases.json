@@ -1,0 +1,13 @@
+{
+  "name": "replace-removed-matcher-aliases",
+  "version": "21.3.0-beta.3",
+  "requires": { "jest": ">=30.0.0" },
+  "description": "Replace removed matcher aliases in Jest v30 with their corresponding matcher",
+  "implementation": "/packages/jest/src/migrations/update-21-3-0/replace-removed-matcher-aliases.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/jest",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": "#### Replace Removed Matcher Aliases\n\nReplaces removed Jest matcher aliases in test files with their corresponding matchers to align with Jest v30 changes. Read more at the [Jest v30 migration notes](https://jestjs.io/docs/upgrading-to-jest30#jest-expect--matchers).\n\n#### Examples\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```typescript {% fileName=\"apps/myapp/src/app.spec.ts\" %}\ndescribe('test', () => {\n  it('should pass', async () => {\n    expect(mockFn).toBeCalled();\n    expect(mockFn).toBeCalledTimes(1);\n    expect(mockFn).toBeCalledWith(arg);\n    expect(mockFn).lastCalledWith(arg);\n    expect(mockFn).nthCalledWith(1, arg);\n    expect(mockFn).toReturn();\n    expect(mockFn).toReturnTimes(1);\n    expect(mockFn).toReturnWith(value);\n    expect(mockFn).lastReturnedWith(value);\n    expect(mockFn).nthReturnedWith(1, value);\n    expect(() => someFn()).toThrowError();\n    expect(() => someFn()).not.toThrowError();\n    await expect(someAsyncFn()).rejects.toThrowError();\n    await expect(someAsyncFn()).resolves.not.toThrowError();\n  });\n});\n```\n\n{% /tab %}\n\n{% tab label=\"After\" %}\n\n```typescript {% fileName=\"apps/myapp/src/app.spec.ts\" %}\ndescribe('test', () => {\n  it('should pass', async () => {\n    expect(mockFn).toHaveBeenCalled();\n    expect(mockFn).toHaveBeenCalledTimes(1);\n    expect(mockFn).toHaveBeenCalledWith(arg);\n    expect(mockFn).toHaveBeenLastCalledWith(arg);\n    expect(mockFn).toHaveBeenNthCalledWith(1, arg);\n    expect(mockFn).toHaveReturned();\n    expect(mockFn).toHaveReturnedTimes(1);\n    expect(mockFn).toHaveReturnedWith(value);\n    expect(mockFn).toHaveLastReturnedWith(value);\n    expect(mockFn).toHaveNthReturnedWith(1, value);\n    expect(() => someFn()).toThrow();\n    expect(() => someFn()).not.toThrow();\n    await expect(someAsyncFn()).rejects.toThrow();\n    await expect(someAsyncFn()).resolves.not.toThrow();\n  });\n});\n```\n\n{% /tab %}\n{% /tabs %}\n"
+}

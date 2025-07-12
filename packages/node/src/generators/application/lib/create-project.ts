@@ -27,11 +27,11 @@ export function addProject(tree: Tree, options: NormalizedSchema) {
 
   if (options.bundler === 'esbuild') {
     addBuildTargetDefaults(tree, '@nx/esbuild:esbuild');
-    project.targets.build = getEsBuildConfig(project, options);
+    project.targets.build = getEsBuildConfig(tree, project, options);
   } else if (options.bundler === 'webpack') {
     if (!hasWebpackPlugin(tree) && options.addPlugin === false) {
       addBuildTargetDefaults(tree, `@nx/webpack:webpack`);
-      project.targets.build = getWebpackBuildConfig(project, options);
+      project.targets.build = getWebpackBuildConfig(tree, project, options);
     } else if (options.isNest) {
       // If we are using Nest that has the webpack plugin we need to override the
       // build target so that node-env can be set to production or development so the serve target can be run in development mode

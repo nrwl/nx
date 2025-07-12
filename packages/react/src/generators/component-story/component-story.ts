@@ -6,13 +6,14 @@ import {
   normalizePath,
   Tree,
 } from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type * as ts from 'typescript';
 import {
   findExportDeclarationsForJsx,
   getComponentNode,
 } from '../../utils/ast-utils';
 import { getComponentPropDefaults } from '../../utils/component-props';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -33,7 +34,7 @@ export function createComponentStoriesFile(
   const proj = getProjects(host).get(project);
 
   const componentFilePath = joinPathFragments(
-    proj.sourceRoot ?? proj.root,
+    getProjectSourceRoot(proj, host),
     componentPath
   );
 

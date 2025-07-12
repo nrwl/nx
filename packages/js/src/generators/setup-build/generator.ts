@@ -17,7 +17,6 @@ import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-default
 import { basename, dirname, join } from 'node:path/posix';
 import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { ensureProjectIsIncludedInPluginRegistrations } from '../../utils/typescript/plugin';
 import { getImportPath } from '../../utils/get-import-path';
 import {
   getUpdatedPackageJsonContent,
@@ -26,8 +25,12 @@ import {
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
+import { ensureProjectIsIncludedInPluginRegistrations } from '../../utils/typescript/plugin';
 import { readTsConfig } from '../../utils/typescript/ts-config';
-import { isUsingTsSolutionSetup } from '../../utils/typescript/ts-solution-setup';
+import {
+  getProjectSourceRoot,
+  isUsingTsSolutionSetup,
+} from '../../utils/typescript/ts-solution-setup';
 import { nxVersion } from '../../utils/versions';
 import { SetupBuildGeneratorSchema } from './schema';
 
@@ -50,7 +53,7 @@ export async function setupBuildGenerator(
   } else if (options.main) {
     mainFile = options.main;
   } else {
-    const root = project.sourceRoot ?? project.root;
+    const root = getProjectSourceRoot(project, tree);
     for (const f of [
       joinPathFragments(root, 'main.ts'),
       joinPathFragments(root, 'main.js'),

@@ -5,6 +5,8 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { basename, dirname, extname, join, relative } from 'path';
 import {
   findExportDeclarationsForJsx,
@@ -13,7 +15,6 @@ import {
 import { getComponentPropDefaults } from '../../utils/component-props';
 import { nxVersion } from '../../utils/versions';
 import { ComponentTestSchema } from './schema';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -30,17 +31,13 @@ export async function componentTestGenerator(
   options.componentPath = options.componentPath.replace(/\\/g, '/');
 
   const projectConfig = readProjectConfiguration(tree, options.project);
+  const sourceRoot = getProjectSourceRoot(projectConfig, tree);
 
-  const normalizedPath = options.componentPath.startsWith(
-    projectConfig.sourceRoot
-  )
-    ? relative(projectConfig.sourceRoot, options.componentPath)
+  const normalizedPath = options.componentPath.startsWith(sourceRoot)
+    ? relative(sourceRoot, options.componentPath)
     : options.componentPath;
 
-  const componentPath = joinPathFragments(
-    projectConfig.sourceRoot,
-    normalizedPath
-  );
+  const componentPath = joinPathFragments(sourceRoot, normalizedPath);
 
   if (tree.exists(componentPath)) {
     generateSpecsForComponents(tree, componentPath);

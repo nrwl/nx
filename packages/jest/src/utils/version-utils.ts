@@ -1,8 +1,9 @@
+import { getVersion } from 'jest';
 import { major } from 'semver';
 
 export function getInstalledJestVersion(): string | null {
   try {
-    return require('jest/package.json').version;
+    return getVersion();
   } catch {
     return null;
   }

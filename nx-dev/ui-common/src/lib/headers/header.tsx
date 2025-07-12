@@ -228,14 +228,6 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
             >
               Nx Cloud
             </Link>
-            <Link
-              href="/pricing"
-              title="Pricing"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
-              prefetch={false}
-            >
-              Pricing
-            </Link>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
             {/*ENTERPRISE*/}
             <Link
@@ -495,14 +487,6 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                             prefetch={false}
                           >
                             Nx Cloud
-                          </Link>
-                          <Link
-                            href="/pricing"
-                            title="Pricing"
-                            className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
-                            prefetch={false}
-                          >
-                            Pricing
                           </Link>
                           <Disclosure as="div">
                             {({ open }) => (

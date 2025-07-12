@@ -263,7 +263,7 @@ export default defineConfig({
           project: 'cool-lib',
           skipFormat: true,
         })
-    ).rejects.toThrowError(
+    ).rejects.toThrow(
       'Cypress version of 10 or higher is required to use component testing. See the migration guide to upgrade. https://nx.dev/cypress/v11-migration-guide'
     );
   });

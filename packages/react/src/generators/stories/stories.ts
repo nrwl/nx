@@ -1,25 +1,23 @@
-import componentStoryGenerator from '../component-story/component-story';
+import {
+  formatFiles,
+  getProjects,
+  joinPathFragments,
+  ProjectConfiguration,
+  Tree,
+  visitNotIgnoredFiles,
+} from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import {
+  getProjectSourceRoot,
+  getProjectType,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { minimatch } from 'minimatch';
+import { basename, join } from 'path';
 import {
   findExportDeclarationsForJsx,
   getComponentNode,
 } from '../../utils/ast-utils';
-import {
-  addDependenciesToPackageJson,
-  ensurePackage,
-  formatFiles,
-  GeneratorCallback,
-  getProjects,
-  joinPathFragments,
-  ProjectConfiguration,
-  runTasksInSerial,
-  Tree,
-  visitNotIgnoredFiles,
-} from '@nx/devkit';
-import { basename, join } from 'path';
-import { minimatch } from 'minimatch';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { nxVersion } from '../../utils/versions';
-import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import componentStoryGenerator from '../component-story/component-story';
 
 let tsModule: typeof import('typescript');
 
@@ -51,7 +49,7 @@ export async function projectRootPath(
   } else {
     projectDir = '.';
   }
-  return joinPathFragments(config.sourceRoot ?? config.root, projectDir);
+  return joinPathFragments(getProjectSourceRoot(config, tree), projectDir);
 }
 
 export function containsComponentDeclaration(

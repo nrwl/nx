@@ -1470,6 +1470,11 @@ const gettingStartedRedirects = {
   '/getting-started/why-nx': '/getting-started/intro',
 };
 
+// Pricing page: 07/08/25
+const pricingRedirects = {
+  '/pricing': '/nx-cloud#plans',
+};
+
 /**
  * Public export API
  */
@@ -1510,4 +1515,5 @@ module.exports = {
   nxRecipesRedirects,
   nxModuleFederationConceptsRedirects,
   gettingStartedRedirects,
+  pricingRedirects,
 };

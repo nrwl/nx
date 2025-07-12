@@ -52,18 +52,6 @@ export function Faq(): ReactElement {
       ),
     },
     {
-      question: 'What are credits?',
-      answerJson:
-        'Credits are the currency of Nx Cloud. A determined number of credits are included in each plan. These credits are used to pay for Nx Cloud platform usage in real time.',
-      answerUi: (
-        <p>
-          Credits are the currency of Nx Cloud. A determined number of credits
-          are included in each plan. These credits are used to pay for Nx Cloud
-          platform usage in real time.
-        </p>
-      ),
-    },
-    {
       question: 'How much does it cost per individual credit?',
       answerJson:
         "On the Team Plan, each credit costs $0.00055, which is $5.50 for 10,000 credits to help you visualize the pricing. However, you don't need to purchase credits in fixed amounts—we only charge you for the exact number of additional credits you use beyond your included credits. Overages are prorated, so you'll only pay for what you actually consume.",
@@ -102,18 +90,6 @@ export function Faq(): ReactElement {
       ),
     },
     {
-      question: 'What is an active contributor?',
-      answerJson:
-        'Active contributors are calculated based on any person or actor that has triggered a CI Pipeline Execution within the current billing cycle.',
-      answerUi: (
-        <p>
-          Active contributors are calculated based on any person or actor that
-          has triggered a CI Pipeline Execution within the current billing
-          cycle.
-        </p>
-      ),
-    },
-    {
       question: 'What is a concurrent connection?',
       answerJson:
         'Concurrent connections are unique machines that connect to Nx Cloud from a CI environment. If you are using Distributed Task Execution, you should expect to have one concurrent connection from your orchestrator job, and one additional concurrent connection for each live agent that is helping perform work.',
@@ -124,20 +100,6 @@ export function Faq(): ReactElement {
           you should expect to have one concurrent connection from your
           orchestrator job, and one additional concurrent connection for each
           live agent that is helping perform work.
-        </p>
-      ),
-    },
-    {
-      question:
-        "I thought I was on the Pro plan, but I don't see it listed anymore. Does it still exist?",
-      answerJson:
-        "Yes, the Pro plan still exists for users who were grandfathered in. If you're already on the Pro plan, you will continue to receive support without any changes. However, this plan is no longer available to new users.",
-      answerUi: (
-        <p>
-          Yes, the Pro plan still exists for users who were grandfathered in. If
-          you're already on the Pro plan, you will continue to receive support
-          without any changes. However, this plan is no longer available to new
-          users.
         </p>
       ),
     },
@@ -165,91 +127,6 @@ export function Faq(): ReactElement {
       ),
     },
     {
-      question: 'Do I need a credit card to create an account?',
-      answerJson:
-        'No, you can set up a workspace with Nx Cloud completely for free, without entering any billing information.',
-      answerUi: (
-        <p>
-          No, you can set up a workspace with Nx Cloud completely for free,
-          without entering any billing information.
-        </p>
-      ),
-    },
-    {
-      question:
-        'What happens if I consume all my credits while on the Hobby plan?',
-      answerJson:
-        'The Hobby plan allows you to configure and run a small project at no cost. If you consume all the credits, your organization will be disabled until you upgrade to Team or wait for the next billing cycle.',
-      answerUi: (
-        <p>
-          The Hobby plan allows you to configure and run a small project at no
-          cost. If you consume all the credits, your organization will be
-          disabled until you upgrade to Team or wait for the next billing cycle.
-        </p>
-      ),
-    },
-    {
-      question: 'What is a CI Pipeline Execution?',
-      answerJson:
-        'A CI Pipeline Execution is a CI run or a Workflow run (depending on your CI provider). For instance, running a PR or running CI on the main branch are CI Pipeline Executions.',
-      answerUi: (
-        <p>
-          A CI Pipeline Execution is a CI run or a Workflow run (depending on
-          your CI provider). For instance, running a PR or running CI on the
-          main branch are CI Pipeline Executions.
-        </p>
-      ),
-    },
-    {
-      question: 'What is the Team Plan?',
-      answerJson:
-        'The Team Plan is our new offering that provides flexible pricing, designed to better meet the needs of teams of all sizes. The Team Plan replaced the Pro Plan in 2024. ',
-      answerUi: (
-        <p>
-          The Team Plan is our new offering that provides flexible pricing,
-          designed to better meet the needs of teams of all sizes. The Team Plan
-          replaced the Pro Plan in 2024.
-        </p>
-      ),
-    },
-    {
-      question: 'How does the Team Plan differ from the previous Pro Plan?',
-      answerJson:
-        'The Team Plan offers a lower base price with the ability to add contributors and credits as needed, whereas the Pro Plan had a higher base price with fixed allowances.',
-      answerUi: (
-        <p>
-          The Team Plan offers a lower base price with the ability to add
-          contributors and credits as needed, whereas the Pro Plan had a higher
-          base price with fixed allowances.
-        </p>
-      ),
-    },
-    {
-      question:
-        'I think I am on the Pro Plan but don’t see it offered, does it still exist?',
-      answerJson:
-        'Existing Pro Plan users have been grandfathered into their existing plan and can expect no changes. This plan is no longer available to new users. ',
-      answerUi: (
-        <p>
-          Existing Pro Plan users have been grandfathered into their existing
-          plan and can expect no changes. This plan is no longer available to
-          new users.
-        </p>
-      ),
-    },
-    {
-      question: 'Can existing Pro organizations switch to the new Team Plan?',
-      answerJson:
-        'Yes! If the new Team Plan better fits your needs, you can reach out to cloud-support@nrwl.io. If you upgrade to a new plan, please note that you will not be able to switch back to a legacy plan. ',
-      answerUi: (
-        <p>
-          Yes! If the new Team Plan better fits your needs, you can reach out to
-          cloud-support@nrwl.io. If you upgrade to a new plan, please note that
-          you will not be able to switch back to a legacy plan.
-        </p>
-      ),
-    },
-    {
       question: 'Is there a plan for open source projects?',
       answerJson:
         'Yes, we are happy to collaborate with open source projects. Please complete this form, and we will review your request and get back to you: https://nx.dev/pricing/special-offer',
@@ -265,41 +142,6 @@ export function Faq(): ReactElement {
           >
             https://nx.dev/pricing/special-offer
           </Link>
-        </p>
-      ),
-    },
-    {
-      question: 'What if I need help picking the right plan?',
-      answerJson:
-        'We have a helpful comparison above. If you have additional questions, or these plans don’t fit your needs please reach out to https://nx.dev/contact/sales and we will do our best to help.',
-      answerUi: (
-        <p>
-          We have a helpful comparison above. If you have additional questions,
-          or these plans don’t fit your needs please reach out to
-          https://nx.dev/contact/sales and we will do our best to help.
-        </p>
-      ),
-    },
-    {
-      question: 'What if I need more than 30 active contributors?',
-      answerJson: 'Please reach out to https://nx.dev/contact/sales',
-      answerUi: (
-        <p>
-          Please reach out to{' '}
-          <Link href="/contact/sales" title="Contact us" className="underline">
-            https://nx.dev/contact/sales
-          </Link>
-        </p>
-      ),
-    },
-    {
-      question: 'What payment methods do you accept?',
-      answerJson:
-        'We accept Visa, Mastercard, American Express, and Discover from customers worldwide.',
-      answerUi: (
-        <p>
-          We accept Visa, Mastercard, American Express, and Discover from
-          customers worldwide.
         </p>
       ),
     },

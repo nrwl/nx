@@ -134,12 +134,14 @@ export async function applicationGenerator(
 
   if (!options.skipPackageJson) {
     const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+
+    const devDependencies: Record<string, string> = {};
+    const packageVersions = versions(tree);
     if (angularMajorVersion >= 20) {
       const angularDevkitVersion =
         getInstalledAngularDevkitVersion(tree) ??
-        versions(tree).angularDevkitVersion;
+        packageVersions.angularDevkitVersion;
 
-      const devDependencies: Record<string, string> = {};
       if (options.bundler === 'esbuild') {
         devDependencies['@angular/build'] = angularDevkitVersion;
       } else if (isRspack) {
@@ -148,7 +150,11 @@ export async function applicationGenerator(
       } else {
         devDependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
       }
-
+    }
+    if (options.style === 'less') {
+      devDependencies['less'] = packageVersions.lessVersion;
+    }
+    if (Object.keys(devDependencies).length) {
       addDependenciesToPackageJson(tree, {}, devDependencies, undefined, true);
     }
   }

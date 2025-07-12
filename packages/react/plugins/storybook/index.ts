@@ -5,8 +5,10 @@ import {
   ProjectGraphProjectNode,
   workspaceRoot,
 } from '@nx/devkit';
-import { composePluginsSync } from '@nx/webpack/src/utils/config';
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { NormalizedWebpackExecutorOptions } from '@nx/webpack/src/executors/webpack/schema';
+import { composePluginsSync } from '@nx/webpack/src/utils/config';
+import { existsSync } from 'fs';
 import { join } from 'path';
 import {
   Configuration,
@@ -14,9 +16,8 @@ import {
   ResolvePluginInstance,
   WebpackPluginInstance,
 } from 'webpack';
-import { mergePlugins } from './merge-plugins';
 import { withReact } from '../with-react';
-import { existsSync } from 'fs';
+import { mergePlugins } from './merge-plugins';
 
 // This is shamelessly taken from CRA and modified for NX use
 // https://github.com/facebook/create-react-app/blob/4784997f0682e75eb32a897b4ffe34d735912e6c/packages/react-scripts/config/env.js#L71
@@ -90,7 +91,7 @@ const getProjectData = async (
     ? {
         workspaceRoot: process.env.NX_WORKSPACE_ROOT,
         projectRoot: projectNode.data.root,
-        sourceRoot: projectNode.data.sourceRoot,
+        sourceRoot: getProjectSourceRoot(projectNode.data),
         projectNode,
       }
     : // Edge-case: missing project node
@@ -182,7 +183,7 @@ export const webpack = async (
     ...options,
     root: projectData.workspaceRoot,
     projectRoot: projectData.projectRoot,
-    sourceRoot: projectData.sourceRoot,
+    sourceRoot: getProjectSourceRoot(projectData.projectNode.data),
     fileReplacements: [],
     sourceMap: true,
     styles: options.styles ?? [],

@@ -327,7 +327,7 @@ jobs:
 
       # As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: './nx run-many -t test build'
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ai
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: ./nx fix-ci
         if: always()
 ```

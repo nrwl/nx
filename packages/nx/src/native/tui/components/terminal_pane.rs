@@ -406,29 +406,6 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
             .border_style(border_style)
             .padding(Padding::new(2, 2, 1, 1));
 
-        // If task hasn't started yet, show pending message
-        if matches!(state.task_status, TaskStatus::NotStarted) {
-            let message_style = if state.is_focused {
-                Style::default().fg(THEME.secondary_fg)
-            } else {
-                Style::default()
-                    .fg(THEME.secondary_fg)
-                    .add_modifier(Modifier::DIM)
-            };
-            let message = vec![Line::from(vec![Span::styled(
-                "Task is pending...",
-                message_style,
-            )])];
-
-            let paragraph = Paragraph::new(message)
-                .block(block)
-                .alignment(Alignment::Center)
-                .style(Style::default());
-
-            Widget::render(paragraph, safe_area, buf);
-            return;
-        }
-
         // If the task is in progress, we need to check if a pty instance is available, and if not
         // it implies that the task is being run outside the pseudo-terminal and all we can do is
         // wait for the task results to arrive

@@ -33,6 +33,16 @@ export function shouldUseTui(
   const isCapable =
     skipCapabilityCheck || (process.stderr.isTTY && isUnicodeSupported());
 
+  if (typeof nxArgs.tui === 'boolean') {
+    if (nxArgs.tui && !isCapable) {
+      logger.warn(
+        'Nx Terminal UI was not enabled as it is not supported in this environment.'
+      );
+      return false;
+    }
+    return nxArgs.tui;
+  }
+
   if (!isCapable) {
     return false;
   }

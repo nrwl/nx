@@ -14,10 +14,7 @@ import {
   TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import {
-  calculateHashesForCreateNodes,
-  calculateHashForCreateNodes,
-} from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
+import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import {
   clearRequireCache,
   loadConfigFile,
@@ -30,9 +27,8 @@ import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/pack
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { dirname, isAbsolute, join, relative, resolve } from 'path';
-import { getInstalledJestMajorVersion } from '../utils/version-utils';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
-import { normalize, sep } from 'node:path';
+import { normalize } from 'node:path';
 import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
 
 const pmc = getPackageManagerCommand();
@@ -458,12 +454,10 @@ async function buildJestTargets(
         context.workspaceRoot
       )) as typeof import('jest');
       const source = new jest.SearchSource(jestContext);
-
-      const jestVersion = getInstalledJestMajorVersion()!;
-      const specs =
-        jestVersion >= 30
-          ? await source.getTestPaths(config.globalConfig, config.projectConfig)
-          : await source.getTestPaths(config.globalConfig);
+      const specs = await source.getTestPaths(
+        config.globalConfig,
+        config.projectConfig
+      );
 
       const testPaths = new Set(specs.tests.map(({ path }) => path));
 
@@ -608,8 +602,9 @@ function resolvePresetInputWithJestResolver(
   const { default: jestResolve } = requireJestUtil<
     typeof import('jest-resolve')
   >('jest-resolve', projectRoot, workspaceRoot);
+  const absoluteProjectRoot = join(workspaceRoot, projectRoot);
   const presetModule = jestResolve.findNodeModule(presetPath, {
-    basedir: projectRoot,
+    basedir: absoluteProjectRoot,
     extensions: ['.json', '.js', '.cjs', '.mjs'],
   });
 
@@ -621,7 +616,7 @@ function resolvePresetInputWithJestResolver(
     return { externalDependencies: [presetValue] };
   }
 
-  const relativePath = relative(join(workspaceRoot, projectRoot), presetModule);
+  const relativePath = relative(absoluteProjectRoot, presetModule);
   return relativePath.startsWith('..')
     ? join('{workspaceRoot}', join(projectRoot, relativePath))
     : join('{projectRoot}', relativePath);

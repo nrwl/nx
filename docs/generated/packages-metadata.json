@@ -440,6 +440,26 @@
     ],
     "migrations": [
       {
+        "description": "Update the @angular/cli package version to ~20.1.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-1-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-20-1-0",
+        "version": "21.3.0-beta.4",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/update-angular-cli-version-20-1-0",
+        "type": "migration"
+      },
+      {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.3.0-package-updates.json",
+        "hidden": false,
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.4",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/21.3.0-package-updates",
+        "type": "migration"
+      },
+      {
         "description": "Update the @angular/cli package version to ~20.0.0.",
         "file": "generated/packages/angular/migrations/update-angular-cli-version-20-0-0.json",
         "hidden": false,
@@ -2382,6 +2402,36 @@
       }
     ],
     "migrations": [
+      {
+        "description": "Rename the CLI option `testPathPattern` to `testPathPatterns`.",
+        "file": "generated/packages/jest/migrations/rename-test-path-pattern.json",
+        "hidden": false,
+        "name": "rename-test-path-pattern",
+        "version": "21.3.0-beta.3",
+        "originalFilePath": "/packages/jest",
+        "path": "jest/migrations/rename-test-path-pattern",
+        "type": "migration"
+      },
+      {
+        "description": "Replace removed matcher aliases in Jest v30 with their corresponding matcher",
+        "file": "generated/packages/jest/migrations/replace-removed-matcher-aliases.json",
+        "hidden": false,
+        "name": "replace-removed-matcher-aliases",
+        "version": "21.3.0-beta.3",
+        "originalFilePath": "/packages/jest",
+        "path": "jest/migrations/replace-removed-matcher-aliases",
+        "type": "migration"
+      },
+      {
+        "description": "",
+        "file": "generated/packages/jest/migrations/21.3.0-package-updates.json",
+        "hidden": false,
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.3",
+        "originalFilePath": "/packages/jest",
+        "path": "jest/migrations/21.3.0-package-updates",
+        "type": "migration"
+      },
       {
         "description": "Remove the previously deprecated and unused `tsConfig` option from the `@nx/jest:jest` executor.",
         "file": "generated/packages/jest/migrations/remove-tsconfig-option-from-jest-executor.json",
