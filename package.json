@@ -146,8 +146,6 @@
     "@types/flat": "^5.0.1",
     "@types/fs-extra": "^11.0.0",
     "@types/is-ci": "^3.0.0",
-    "@types/jasmine": "~2.8.6",
-    "@types/jasminewd2": "~2.0.3",
     "@types/jest": "30.0.0",
     "@types/js-yaml": "^4.0.9",
     "@types/marked": "^2.0.0",
@@ -203,7 +201,6 @@
     "enhanced-resolve": "^5.8.3",
     "esbuild": "0.25.0",
     "eslint": "8.57.0",
-    "eslint-config-next": "15.3.0",
     "eslint-config-prettier": "10.1.2",
     "eslint-plugin-cypress": "2.14.0",
     "eslint-plugin-import": "2.31.0",
@@ -372,6 +369,7 @@
     "cliui": "^8.0.1",
     "core-js": "3.36.1",
     "enquirer": "~2.3.6",
+    "eslint-config-next": "14.2.28",
     "fast-glob": "3.3.3",
     "form-data": "^4.0.2",
     "framer-motion": "^11.3.0",
@@ -404,6 +402,15 @@
     "minimist": "^1.2.6",
     "underscore": "^1.12.1"
   },
+  "pnpm": {
+    "patchedDependencies": {
+      "@tutorialkit/react": "patches/@tutorialkit__react.patch"
+    },
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "nx"
+    ]
+  },
   "nx": {
     "includedScripts": [
       "lint-pnpm-lock",
@@ -416,14 +423,5 @@
       "check-codeowners"
     ]
   },
-  "packageManager": "pnpm@10.11.1",
-  "pnpm": {
-    "patchedDependencies": {
-      "@tutorialkit/react": "patches/@tutorialkit__react.patch"
-    },
-    "onlyBuiltDependencies": [
-      "@nestjs/core",
-      "nx"
-    ]
-  }
+  "packageManager": "pnpm@10.11.1"
 }

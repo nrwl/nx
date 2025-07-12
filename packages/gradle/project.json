@@ -8,17 +8,25 @@
       "dependsOn": ["^nx-release-publish"],
       "executor": "@nx/js:release-publish",
       "options": {
-        "packageRoot": "build/packages/gradle"
+        "packageRoot": "dist/packages/gradle"
       }
+    },
+    "build": {
+      "outputs": ["{workspaceRoot}/dist/packages/gradle/README.md"],
+      "command": "node ./scripts/copy-readme.js gradle",
+      "dependsOn": ["^build", "build-native", "build-base", "legacy-post-build"]
     },
     "build-base": {
       "dependsOn": [
         "^build-base",
         "build-native",
         "gradle-batch-runner:assemble"
-      ],
-      "executor": "@nx/js:tsc",
+      ]
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/gradle",
@@ -59,10 +67,6 @@
           }
         ]
       }
-    },
-    "build": {
-      "outputs": ["{workspaceRoot}/build/packages/gradle/README.md"],
-      "command": "node ./scripts/copy-readme.js gradle"
     }
   },
   "tags": []

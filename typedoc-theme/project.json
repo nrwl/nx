@@ -4,13 +4,11 @@
   "sourceRoot": "typedoc-theme/src",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
-        "outputPath": "dist/typedoc-theme",
-        "main": "typedoc-theme/src/index.ts",
-        "tsConfig": "typedoc-theme/tsconfig.lib.json",
+        "main": "./src/index.ts",
+        "tsConfig": "./tsconfig.lib.json",
         "assets": ["typedoc-theme/*.md"]
       }
     },

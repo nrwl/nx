@@ -76,20 +76,32 @@
       },
       "currentVersionResolver": "registry",
       "preserveLocalDependencyProtocols": false,
-      "manifestRootsToUpdate": ["build/packages/{projectName}"],
+      "manifestRootsToUpdate": ["dist/packages/{projectName}"],
       "versionActionsOptions": {
         "skipLockFileUpdate": true
       }
     }
   },
   "targetDefaults": {
+    "cleanup-tsconfig": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node ./scripts/cleanup-tsconfig-files.js dist/packages/{projectName}"
+      }
+    },
     "nx-release-publish": {
       "options": {
-        "packageRoot": "build/packages/{projectName}"
+        "packageRoot": "dist/packages/{projectName}"
       }
     },
     "build": {
-      "dependsOn": ["build-base", "build-native"],
+      "dependsOn": [
+        "^build",
+        "typecheck",
+        "legacy-post-build",
+        "build-base",
+        "build-native"
+      ],
       "inputs": ["production", "^production"],
       "cache": true
     },
@@ -100,12 +112,7 @@
     "build-base": {
       "dependsOn": ["^build-base", "build-native"],
       "inputs": ["production", "^production"],
-      "options": {
-        "outputPath": "build/{projectRoot}",
-        "tsConfig": "{projectRoot}/tsconfig.lib.json",
-        "main": "{projectRoot}/index.ts"
-      },
-      "outputs": ["{options.outputPath}"],
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
       "cache": true
     },
     "test-native": {
@@ -185,10 +192,25 @@
     },
     "copy-docs": {
       "cache": true
+    },
+    "legacy-post-build": {
+      "dependsOn": ["build-base"],
+      "cache": true,
+      "inputs": ["production", "^production"],
+      "outputs": ["{workspaceRoot}/dist/packages/{projectName}"]
     }
   },
   "plugins": [
     "@monodon/rust",
+    {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "typecheck": true,
+        "build": {
+          "targetName": "build-base"
+        }
+      }
+    },
     {
       "plugin": "@nx/playwright/plugin",
       "options": {
@@ -261,26 +283,29 @@
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 1,
+  "bust": 3,
   "defaultBase": "master",
+  "sync": {
+    "applyChanges": true
+  },
   "conformance": {
     "rules": [
       {
-        "rule": "@nx/workspace-plugin/conformance-rules/blog-description",
+        "rule": "./tools/workspace-plugin/src/conformance-rules/blog-description",
         "projects": ["docs"],
         "options": {
           "mdGlobPattern": "{blog,shared}/**/!(sitemap).md"
         }
       },
       {
-        "rule": "@nx/workspace-plugin/conformance-rules/blog-cover-image",
+        "rule": "./tools/workspace-plugin/src/conformance-rules/blog-cover-image",
         "projects": ["docs"],
         "options": {
           "mdGlobPattern": "blog/**/!(sitemap).md"
         }
       },
       {
-        "rule": "@nx/workspace-plugin/conformance-rules/project-package-json",
+        "rule": "./tools/workspace-plugin/src/conformance-rules/project-package-json",
         "projects": [
           "!.",
           "!create-nx-*",
@@ -314,7 +339,7 @@
         ]
       },
       {
-        "rule": "@nx/workspace-plugin/conformance-rules/migration-groups",
+        "rule": "./tools/workspace-plugin/src/conformance-rules/migration-groups",
         "options": {
           "versionRange": ">= 19.8",
           "groups": [
@@ -366,12 +391,5 @@
         }
       }
     ]
-  },
-  "generators": {
-    "@nx/react": {
-      "library": {
-        "unitTestRunner": "jest"
-      }
-    }
   }
 }

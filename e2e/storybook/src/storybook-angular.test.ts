@@ -6,7 +6,7 @@ import {
   runCLI,
   runCommandUntil,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Storybook executors for Angular', () => {
   const angularStorybookLib = uniq('test-ui-ng-lib');

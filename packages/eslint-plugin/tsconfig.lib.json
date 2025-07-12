@@ -1,9 +1,11 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
-    "declaration": true,
-    "types": ["node"]
+    "outDir": "../../dist/packages/eslint-plugin",
+    "types": ["node"],
+    "moduleResolution": "node16",
+    "module": "node16",
+    "esModuleInterop": true
   },
   "exclude": [
     "**/*.spec.ts",
@@ -12,5 +14,13 @@
     "**/*_test.ts",
     "jest.config.ts"
   ],
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "**/*.json"],
+  "references": [
+    {
+      "path": "../js/tsconfig.lib.json"
+    },
+    {
+      "path": "../devkit/tsconfig.lib.json"
+    }
+  ]
 }

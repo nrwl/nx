@@ -5,7 +5,7 @@ import {
   runCLI,
   uniq,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 // TODO(jack): This test file can be removed when Vite goes ESM-only.
 // This test ensures that when CJS is gone from the published `vite` package, Nx will continue to work.

@@ -20,7 +20,7 @@
     "CLI",
     "Testing"
   ],
-  "main": "./index",
+  "main": "./index.js",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -37,8 +37,8 @@
   "dependencies": {
     "@jest/reporters": "^30.0.2",
     "@jest/test-result": "^30.0.2",
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
+    "@nx/devkit": "workspace:*",
+    "@nx/js": "workspace:*",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "identity-obj-proxy": "3.0.0",
     "jest-config": "^30.0.2",
@@ -50,6 +50,9 @@
     "semver": "^7.5.3",
     "tslib": "^2.3.0",
     "yargs-parser": "21.1.1"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

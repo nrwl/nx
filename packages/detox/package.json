@@ -24,15 +24,18 @@
   },
   "license": "MIT",
   "author": "Victor Savkin",
-  "main": "./index",
+  "main": "./index.js",
   "types": "index.d.ts",
   "dependencies": {
-    "@nx/devkit": "file:../devkit",
-    "@nx/jest": "file:../jest",
-    "@nx/js": "file:../js",
-    "@nx/eslint": "file:../eslint",
-    "@nx/react": "file:../react",
+    "@nx/devkit": "workspace:*",
+    "@nx/jest": "workspace:*",
+    "@nx/js": "workspace:*",
+    "@nx/eslint": "workspace:*",
+    "@nx/react": "workspace:*",
     "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "peerDependencies": {
     "detox": "^20.9.0"

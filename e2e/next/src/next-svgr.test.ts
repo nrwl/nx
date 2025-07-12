@@ -9,7 +9,7 @@ import {
   runE2ETests,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('NextJs SVGR support', () => {
   beforeAll(() => {

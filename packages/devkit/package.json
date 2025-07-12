@@ -19,7 +19,7 @@
     "Cypress",
     "CLI"
   ],
-  "main": "./index",
+  "main": "./index.js",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -35,7 +35,12 @@
     "semver": "^7.5.3",
     "yargs-parser": "21.1.1",
     "minimatch": "9.0.3",
-    "enquirer": "~2.3.6"
+    "enquirer": "~2.3.6",
+    "nx": "workspace:*"
+  },
+  "devDependencies": {
+    "jest": "^29.4.1",
+    "nx": "workspace:*"
   },
   "peerDependencies": {
     "nx": ">= 20 <= 22"

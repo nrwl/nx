@@ -6,9 +6,9 @@ Detects which package manager is used in the workspace based on the lock file.
 
 #### Parameters
 
-| Name  | Type     | Default value |
-| :---- | :------- | :------------ |
-| `dir` | `string` | `''`          |
+| Name   | Type     |
+| :----- | :------- |
+| `dir?` | `string` |
 
 #### Returns
 

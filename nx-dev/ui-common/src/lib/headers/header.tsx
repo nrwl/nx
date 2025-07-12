@@ -33,8 +33,8 @@ import {
 } from './menu-items';
 import { MobileMenuItem } from './mobile-menu-item';
 import { SectionsMenu } from './sections-menu';
-import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
-import { GitHubIcon, NxIcon } from '@nx/nx-dev/ui-icons';
+import { AlgoliaSearch } from '@nx/nx-dev-feature-search';
+import { GitHubIcon, NxIcon } from '@nx/nx-dev-ui-icons';
 import { useRouter } from 'next/navigation';
 
 interface HeaderProps {

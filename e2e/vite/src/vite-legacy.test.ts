@@ -22,7 +22,7 @@ import {
   updateJson,
   checkFilesExist,
   killProcessAndPorts,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { join } from 'path';
 import { ChildProcess } from 'child_process';
 

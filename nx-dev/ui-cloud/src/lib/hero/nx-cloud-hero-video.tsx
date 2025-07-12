@@ -1,9 +1,9 @@
 'use client';
 import { ReactElement, useState } from 'react';
-import { MovingBorder } from '@nx/nx-dev/ui-animations';
+import { MovingBorder } from '@nx/nx-dev-ui-animations';
 import Image from 'next/image';
 import { PlayButton } from './play-button';
-import { VideoModal } from '@nx/nx-dev/ui-common';
+import { VideoModal } from '@nx/nx-dev-ui-common';
 
 export function NxCloudHeroVideo(): ReactElement {
   const [openVideoUrl, setOpenVideoUrl] = useState<string | null>(null);

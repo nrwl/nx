@@ -8,7 +8,8 @@ export function useNavToggle() {
   }, [navIsOpen, setNavIsOpen]);
 
   useEffect(() => {
-    if (!navIsOpen) return;
+    if (typeof window === 'undefined') return undefined; // Skip on server
+    if (!navIsOpen) return undefined;
 
     function handleRouteChange() {
       setNavIsOpen(false);
@@ -20,8 +21,8 @@ export function useNavToggle() {
   }, [navIsOpen, setNavIsOpen]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (!navIsOpen) return;
+    if (typeof window === 'undefined') return undefined;
+    if (!navIsOpen) return undefined;
 
     function hideNav() {
       setNavIsOpen(false);

@@ -214,7 +214,11 @@ function getPnpmResolver(
   mainFields: string[] = []
 ) {
   if (!resolver) {
-    const fileSystem = new CachedInputFileSystem(fs, 4000);
+    // Create a filesystem adapter that matches enhanced-resolve's expected interface
+    // The issue is that Node.js fs types allow withFileTypes: true, but enhanced-resolve expects withFileTypes?: false
+    // This is compatible with the latest version of enhanced-resolve and is the intended way to use it.
+    // See https://github.com/webpack/enhanced-resolve/commit/d55471f20c17bce4def0b53cfe0b7027e7b48d82
+    const fileSystem = new CachedInputFileSystem(fs as any, 4000);
     resolver = ResolverFactory.createResolver({
       fileSystem,
       extensions: extensions.map((extension) => '.' + extension),

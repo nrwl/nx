@@ -1,7 +1,5 @@
 import { exec } from 'child_process';
 import { existsSync } from 'fs';
-import * as ora from 'ora';
-import * as yargsParser from 'yargs-parser';
 import { readNxJson, type NxJsonConfiguration } from '../../config/nx-json';
 import { runNxAsync } from '../../utils/child-process';
 import { writeJsonFile } from '../../utils/fileutils';
@@ -22,6 +20,7 @@ import {
   runPluginInitGenerator,
   getFailedToInstallPluginErrorMessages,
 } from '../init/configure-plugins';
+import * as ora from 'ora';
 
 export function addHandler(options: AddOptions): Promise<number> {
   return handleErrors(options.verbose, async () => {

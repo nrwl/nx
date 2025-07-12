@@ -1,4 +1,4 @@
-import * as createSpinner from 'ora';
+const createSpinner = require('ora');
 import { join, relative } from 'path';
 import { GitRepository } from '../../../utils/git-utils';
 

@@ -2,7 +2,6 @@
 import * as pc from 'picocolors';
 import enquirer = require('enquirer');
 import yargs = require('yargs');
-
 import {
   determineDefaultBase,
   determineNxCloud,

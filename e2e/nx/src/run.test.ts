@@ -13,7 +13,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
 

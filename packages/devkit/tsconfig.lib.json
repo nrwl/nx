@@ -1,9 +1,8 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "module": "commonjs",
-    "outDir": "../../dist/out-tsc",
-    "declaration": true,
+    "outDir": "../../dist/packages/devkit",
     "types": ["node"]
   },
   "exclude": [
@@ -14,5 +13,10 @@
     "internal-testing-utils.ts",
     "jest.config.ts"
   ],
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "*.json", "migrations.json"],
+  "references": [
+    {
+      "path": "../nx/tsconfig.lib.json"
+    }
+  ]
 }

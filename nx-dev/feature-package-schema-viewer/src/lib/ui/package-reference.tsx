@@ -5,9 +5,9 @@ import {
   DocumentIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline';
-import { DocumentMetadata } from '@nx/nx-dev/models-document';
-import { FileMetadata } from '@nx/nx-dev/models-package';
-import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
+import { DocumentMetadata } from '@nx/nx-dev-models-document';
+import { FileMetadata } from '@nx/nx-dev-models-package';
+import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
 import Link from 'next/link';
 
 export function DocumentList({

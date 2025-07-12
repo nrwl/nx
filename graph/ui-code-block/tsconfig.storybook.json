@@ -2,7 +2,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "emitDecoratorMetadata": true,
-    "outDir": ""
+    "outDir": "../../dist/graph/ui-code-block/storybook",
+    "composite": false
   },
   "files": [
     "../../node_modules/@nx/react/typings/styled-jsx.d.ts",
@@ -25,6 +26,8 @@
     "src/**/*.stories.jsx",
     "src/**/*.stories.tsx",
     "src/**/*.stories.mdx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
     ".storybook/*.js",
     ".storybook/*.ts"
   ]

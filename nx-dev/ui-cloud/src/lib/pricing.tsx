@@ -1,7 +1,7 @@
 'use client';
 import { ReactElement } from 'react';
-import { ButtonLink, SectionHeading, TrustedBy } from '@nx/nx-dev/ui-common';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { ButtonLink, SectionHeading, TrustedBy } from '@nx/nx-dev-ui-common';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import Link from 'next/link';
 import { PlusIcon } from '@heroicons/react/24/outline';

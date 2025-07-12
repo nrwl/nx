@@ -1,5 +1,5 @@
-import { ButtonLinkProps } from '@nx/nx-dev/ui-common';
-import { NxCloudAnimatedIcon } from '@nx/nx-dev/ui-icons';
+import { ButtonLinkProps } from '@nx/nx-dev-ui-common';
+import { NxCloudAnimatedIcon } from '@nx/nx-dev-ui-icons';
 
 export const requestFreeTrial: ButtonLinkProps = {
   href: '/enterprise/trial',

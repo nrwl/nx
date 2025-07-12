@@ -17,7 +17,7 @@ import {
   StorybookIcon,
   StrapiIcon,
   VmwareIcon,
-} from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-icons';
 
 export interface TrustedByProps {
   utmSource?: string;

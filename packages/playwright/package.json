@@ -35,11 +35,14 @@
   },
   "dependencies": {
     "@phenomnomnominal/tsquery": "~5.0.1",
-    "@nx/devkit": "file:../devkit",
-    "@nx/eslint": "file:../eslint",
-    "@nx/js": "file:../js",
+    "@nx/devkit": "workspace:*",
+    "@nx/eslint": "workspace:*",
+    "@nx/js": "workspace:*",
     "tslib": "^2.3.0",
     "minimatch": "9.0.3"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "peerDependencies": {
     "@playwright/test": "^1.36.0"

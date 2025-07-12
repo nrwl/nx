@@ -1,9 +1,9 @@
-import { CallToAction, DefaultLayout } from '@nx/nx-dev/ui-common';
+import { CallToAction, DefaultLayout } from '@nx/nx-dev-ui-common';
 
 import type { Metadata } from 'next';
 import { type ReactElement } from 'react';
 import { contactButton } from '../../lib/header-cta.configs';
-import { Faq, RemoteCacheSolutions } from '@nx/nx-dev/ui-remote-cache';
+import { Faq, RemoteCacheSolutions } from '@nx/nx-dev-ui-remote-cache';
 
 export const metadata: Metadata = {
   title: 'Nx - Remote Cache',

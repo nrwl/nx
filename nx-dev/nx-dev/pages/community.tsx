@@ -5,8 +5,8 @@ import {
   Footer,
   Header,
   SectionHeading,
-} from '@nx/nx-dev/ui-common';
-import { ConnectWithUs } from '@nx/nx-dev/ui-community';
+} from '@nx/nx-dev-ui-common';
+import { ConnectWithUs } from '@nx/nx-dev-ui-community';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';

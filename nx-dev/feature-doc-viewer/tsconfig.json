@@ -14,10 +14,25 @@
   "include": [],
   "references": [
     {
-      "path": "./tsconfig.lib.json"
+      "path": "../feature-feedback"
     },
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../feature-analytics"
+    },
+    {
+      "path": "../ui-primitives"
+    },
+    {
+      "path": "../ui-markdoc"
+    },
+    {
+      "path": "../ui-common"
+    },
+    {
+      "path": "../models-document"
+    },
+    {
+      "path": "./tsconfig.lib.json"
     }
   ]
 }

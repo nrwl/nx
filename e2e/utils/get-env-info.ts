@@ -16,7 +16,7 @@ export function getPublishedVersion(): string {
   process.env.PUBLISHED_VERSION =
     process.env.PUBLISHED_VERSION ||
     // read version of built nx package
-    readJsonFile(join(workspaceRoot, `./build/packages/nx/package.json`))
+    readJsonFile(join(workspaceRoot, `./dist/packages/nx/package.json`))
       .version ||
     // fallback to latest if built nx package is missing
     'latest';
@@ -176,7 +176,7 @@ export function ensurePlaywrightBrowsersInstallation() {
 
 export function getStrippedEnvironmentVariables() {
   return Object.fromEntries(
-    Object.entries(process.env).filter(([key, value]) => {
+    Object.entries(process.env).filter(([key]) => {
       if (key.startsWith('NX_E2E_')) {
         return true;
       }
@@ -193,6 +193,13 @@ export function getStrippedEnvironmentVariables() {
       }
 
       if (key === 'JEST_WORKER_ID') {
+        return false;
+      }
+
+      // Remove NODE_PATH to prevent module resolution conflicts with original workspace.
+      // NODE_PATH is inherited from Jest (which runs from the original workspace) and contains
+      // pnpm paths that cause require.resolve() to find workspace packages instead of e2e test versions.
+      if (key === 'NODE_PATH') {
         return false;
       }
 

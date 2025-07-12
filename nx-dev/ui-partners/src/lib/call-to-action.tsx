@@ -1,4 +1,4 @@
-import { SectionDescription } from '@nx/nx-dev/ui-common';
+import { SectionDescription } from '@nx/nx-dev-ui-common';
 import Link from 'next/link';
 
 export interface CTAProps {

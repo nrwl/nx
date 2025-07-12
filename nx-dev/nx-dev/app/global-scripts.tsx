@@ -50,6 +50,7 @@ export default function GlobalScripts({ gaMeasurementId, gtmMeasurementId }) {
           {/* Google Tag Manager - NoScript */}
           <noscript>
             <iframe
+              title="Google Tag Manager"
               src={`https://www.googletagmanager.com/ns.html?id=${gtmMeasurementId}`}
               height="0"
               width="0"

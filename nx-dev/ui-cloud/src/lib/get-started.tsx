@@ -1,5 +1,5 @@
 import { ReactElement } from 'react';
-import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
+import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 import Image from 'next/image';
 
 export function GetStarted(): ReactElement {
