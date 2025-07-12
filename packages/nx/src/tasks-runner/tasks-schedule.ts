@@ -223,6 +223,7 @@ export class TasksSchedule {
         tasks: {},
         dependencies: {},
         continuousDependencies: {},
+        dependenciesAllowedToFail: {},
         roots: [],
       } as TaskGraph));
 
@@ -231,6 +232,8 @@ export class TasksSchedule {
       this.notScheduledTaskGraph.dependencies[task.id];
     batch.continuousDependencies[task.id] =
       this.notScheduledTaskGraph.continuousDependencies[task.id];
+    batch.dependenciesAllowedToFail[task.id] =
+      this.notScheduledTaskGraph.dependenciesAllowedToFail[task.id];
     if (isRoot) {
       batch.roots.push(task.id);
     }
