@@ -147,8 +147,8 @@ export function getTsNodeTranspiler(
 
   const { transpiler, swc } = service.options;
 
-  // Don't warn if a faster transpiler is enabled
-  if (!transpiler && !swc) {
+  // Don't warn if a faster transpiler is enabled or if ts-node is explicitly preferred
+  if (!transpiler && !swc && process.env.NX_PREFER_TS_NODE !== 'true') {
     warnTsNodeUsage();
   }
 
@@ -260,21 +260,24 @@ export function getTranspiler(
     compilerOptions: CompilerOptions,
     tsNodeOptions?: TsConfigOptions
   ) => (...args: unknown[]) => unknown;
-
-  let registrationKey = JSON.stringify(compilerOptions);
   let tsNodeOptions: TsConfigOptions | undefined;
+  let registrationKey: string;
+
   if (swcNodeInstalled && !preferTsNode) {
     _getTranspiler = getSwcTranspiler;
+    registrationKey = 'swc:' + JSON.stringify(compilerOptions);
   } else if (tsNodeInstalled) {
     // We can fall back on ts-node if it's available
     _getTranspiler = getTsNodeTranspiler;
     tsNodeOptions = filterRecognizedTsConfigTsNodeOptions(
       tsConfigRaw?.['ts-node']
     ).recognized;
-    // include ts-node options in the registration key
-    registrationKey += JSON.stringify(tsNodeOptions);
+    // Use a normalized key that doesn't include environment-specific ts-node options
+    // to allow cache sharing between plugins with equivalent configurations
+    registrationKey = 'ts-node:' + JSON.stringify(compilerOptions);
   } else {
     _getTranspiler = undefined;
+    registrationKey = 'none';
   }
 
   // Just return if transpiler was already registered before.
