@@ -718,12 +718,12 @@ impl TasksList {
 
     /// Updates their status to InProgress and triggers a sort.
     pub fn start_tasks(&mut self, tasks: Vec<Task>) {
-        let current_time = get_current_time_ms();
         for task in tasks {
             if let Some(task_item) = self.tasks.iter_mut().find(|t| t.name == task.id) {
                 task_item.update_status(TaskStatus::InProgress);
                 if task_item.start_time.is_none() {
                     // It should be set, but just in case
+                    let current_time = get_current_time_ms();
                     task_item.start_time = Some(current_time);
                 }
                 // Update duration to show "..." initially for non-continuous tasks
