@@ -128,11 +128,6 @@ const teamMembers = [
     imageUrl: 'juri-strumpflohner.avif',
   },
   {
-    name: 'Katerina Skroumpelou',
-    title: 'Senior Engineer',
-    imageUrl: 'katerina-skroumpelou.avif',
-  },
-  {
     name: 'Leosvel Perez Espinosa',
     title: 'Senior Engineer',
     imageUrl: 'leosvel-perez-espinosa.avif',
