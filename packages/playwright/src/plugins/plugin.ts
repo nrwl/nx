@@ -349,8 +349,10 @@ async function getAllTestFiles(opts: {
   path: string;
   config: PlaywrightTestConfig;
 }) {
-  const files: string[] = [];
-  await getFilesInDirectoryUsingContext(opts.context.workspaceRoot, opts.path);
+  const files = await getFilesInDirectoryUsingContext(
+    opts.context.workspaceRoot,
+    opts.path
+  );
   const matcher = createMatcher(opts.config.testMatch);
   const ignoredMatcher = opts.config.testIgnore
     ? createMatcher(opts.config.testIgnore)
