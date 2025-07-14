@@ -42,7 +42,7 @@ jobs:
   #     we should generate an applicable version number within publish-resolve-data.js and use a custom ref of the PR branch name.
   resolve-required-data:
     name: Resolve Required Data
-    if: ${{ github.repository_owner == 'nrwl' }}
+    # if: ${{ github.repository_owner == 'nrwl' }}
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.script.outputs.version }}
@@ -116,7 +116,7 @@ jobs:
 
   build:
     needs: [ resolve-required-data ]
-    if: ${{ github.repository_owner == 'nrwl' }}
+    # if: ${{ github.repository_owner == 'nrwl' }}
     strategy:
       fail-fast: false
       matrix:
@@ -354,7 +354,7 @@ jobs:
 
   build-freebsd:
     needs: [ resolve-required-data ]
-    if: ${{ github.repository_owner == 'nrwl' }}
+    # if: ${{ github.repository_owner == 'nrwl' }}
     runs-on: ubuntu-latest
     name: Build FreeBSD
     timeout-minutes: 45
