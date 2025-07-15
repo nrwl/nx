@@ -2,7 +2,6 @@ package dev.nx.gradle.utils
 
 import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
-import com.github.javaparser.ast.body.MethodDeclaration
 import dev.nx.gradle.data.NxTargets
 import dev.nx.gradle.data.TargetGroups
 import java.io.File
@@ -50,7 +49,14 @@ private val essentialTestAnnotations =
 
 // Class-level test annotation names (without @ prefix for AST parsing)
 private val classTestAnnotationNames =
-    setOf("Nested", "TestInstance", "TestMethodOrder", "DisplayName", "ExtendWith")
+    setOf(
+        "Nested",
+        "TestInstance",
+        "TestMethodOrder",
+        "DisplayName",
+        "ExtendWith",
+        "TestPropertySource",
+        "AssertFileChannelDataBlocksClosed")
 
 // Method-level test annotation names (without @ prefix for AST parsing)
 private val methodTestAnnotationNames =
@@ -75,7 +81,9 @@ private val classQualifiedTestAnnotations =
         "org.junit.jupiter.api.TestInstance",
         "org.junit.jupiter.api.TestMethodOrder",
         "org.junit.jupiter.api.DisplayName",
-        "org.junit.jupiter.api.extension.ExtendWith")
+        "org.junit.jupiter.api.extension.ExtendWith",
+        "org.springframework.test.context.TestPropertySource",
+        "org.springframework.boot.loader.testsupport.AssertFileChannelDataBlocksClosed")
 
 // Method-level qualified annotation names
 private val methodQualifiedTestAnnotations =
@@ -96,6 +104,22 @@ private val methodQualifiedTestAnnotations =
 // Combined qualified annotation names for general use
 private val qualifiedTestAnnotations =
     classQualifiedTestAnnotations + methodQualifiedTestAnnotations
+
+// Configuration annotations that should be excluded from test target generation
+private val configurationAnnotations =
+    setOf(
+        "TestConfiguration",
+        "Configuration",
+        "ComponentScan",
+        "EntityScan",
+        "EnableAutoConfiguration",
+        "SpringBootConfiguration",
+        "org.springframework.boot.test.context.TestConfiguration",
+        "org.springframework.context.annotation.Configuration",
+        "org.springframework.context.annotation.ComponentScan",
+        "org.springframework.boot.autoconfigure.domain.EntityScan",
+        "org.springframework.boot.autoconfigure.EnableAutoConfiguration",
+        "org.springframework.boot.SpringBootConfiguration")
 
 // Singleton instances for heavy objects to avoid recreation
 private val javaParser by lazy {
@@ -211,8 +235,19 @@ internal fun processTestClasses(
     testTask.logger.info(
         "${testTask.path}: Storing target $targetName with executor: ${builtTarget["executor"]}")
 
+    // Additional validation before storing
+    if (builtTarget["executor"] == null || builtTarget["executor"].toString().isEmpty()) {
+      testTask.logger.error(
+          "${testTask.path}: CRITICAL - Target $targetName has null/empty executor before storage!")
+      builtTarget["executor"] = "@nx/gradle:gradle"
+    }
+
     targets[targetName] = builtTarget
     targetGroups[testCiTargetGroup]?.add(targetName)
+
+    // Debug logging after storing
+    testTask.logger.info(
+        "${testTask.path}: Stored target $targetName, verifying executor: ${targets[targetName]?.get("executor")}")
 
     ciDependsOn.add(mapOf("target" to targetName, "projects" to "self", "params" to "forward"))
   }
@@ -239,8 +274,8 @@ internal fun parseJavaFileWithAst(file: File): MutableMap<String, String>? {
     val topLevelClasses = compilationUnit.types.filterIsInstance<ClassOrInterfaceDeclaration>()
 
     topLevelClasses.forEach { classDecl ->
-      // Skip interfaces - only process classes
-      if (!classDecl.isInterface) {
+      // Skip interfaces and annotation definitions - only process classes
+      if (!classDecl.isInterface && !classDecl.isAnnotationDeclaration) {
         // Skip abstract classes - they shouldn't have individual test targets
         if (classDecl.isAbstract) {
           return@forEach
@@ -256,19 +291,41 @@ internal fun parseJavaFileWithAst(file: File): MutableMap<String, String>? {
               !it.isInterface && !it.isAbstract && hasNestedAnnotation(it)
             }
 
-        // Include parent class if it has test annotations
-        if (hasTestAnnotations) {
-          val fullName = if (packageName.isNotEmpty()) "$packageName.$className" else className
-          result[className] = fullName
+        // If there are @Nested test classes, include them
+        if (nestedTestClasses.isNotEmpty()) {
+          nestedTestClasses.forEach { nestedClass ->
+            val nestedClassName = nestedClass.nameAsString
+            val nestedFullName =
+                if (packageName.isNotEmpty()) "$packageName.$className$$nestedClassName"
+                else "$className$$nestedClassName"
+            result["$className$nestedClassName"] = nestedFullName
+          }
         }
 
-        // Include @Nested test classes
-        nestedTestClasses.forEach { nestedClass ->
-          val nestedClassName = nestedClass.nameAsString
-          val nestedFullName =
-              if (packageName.isNotEmpty()) "$packageName.$className$$nestedClassName"
-              else "$className$$nestedClassName"
-          result["$className$nestedClassName"] = nestedFullName
+        // Include parent class only if it has executable test content
+        // Classes with only setup/configuration annotations (@ExtendWith, @TestPropertySource)
+        // should not generate targets unless they have actual test methods or nested test classes
+        if (hasTestAnnotations) {
+          val shouldIncludeParent =
+              if (nestedTestClasses.isNotEmpty()) {
+                // If there are nested classes, only include parent if it has method-level test
+                // annotations
+                hasMethodLevelTestAnnotations(classDecl)
+              } else {
+                // If no nested classes, only include parent if it has method-level test annotations
+                // Classes with only class-level annotations (@ExtendWith, @TestPropertySource) are
+                // excluded
+                hasMethodLevelTestAnnotations(classDecl)
+              }
+
+          if (shouldIncludeParent) {
+            val fullName = if (packageName.isNotEmpty()) "$packageName.$className" else className
+            result[className] = fullName
+          }
+        } else if (hasMethodLevelTestAnnotations(classDecl)) {
+          // Include classes with method-level test annotations even if they don't have class-level test annotations
+          val fullName = if (packageName.isNotEmpty()) "$packageName.$className" else className
+          result[className] = fullName
         }
       }
     }
@@ -284,16 +341,30 @@ internal fun parseJavaFileWithAst(file: File): MutableMap<String, String>? {
 
 // Check if a class has test annotations (on class or methods)
 private fun hasTestAnnotationsInClass(classDecl: ClassOrInterfaceDeclaration): Boolean {
+  // First check if this is a configuration class - if so, exclude it
+  if (classDecl.annotations.any { isConfigurationAnnotation(it.nameAsString) }) {
+    return false
+  }
+
   // Check class-level annotations
   if (classDecl.annotations.any { isClassTestAnnotation(it.nameAsString) }) {
     return true
   }
 
-  // Check method-level annotations
-  return classDecl.findAll(MethodDeclaration::class.java).any { method ->
+  // Check method-level annotations (only direct methods, not nested class methods)
+  return classDecl.methods.any { method ->
     method.annotations.any { isMethodTestAnnotation(it.nameAsString) }
   }
 }
+
+// Check if a class has method-level test annotations (not just class-level)
+private fun hasMethodLevelTestAnnotations(classDecl: ClassOrInterfaceDeclaration): Boolean {
+  // Only look at direct methods of this class, not methods from nested classes
+  return classDecl.methods.any { method ->
+    method.annotations.any { isMethodTestAnnotation(it.nameAsString) }
+  }
+}
+
 
 // Check if an annotation is a class-level test annotation
 private fun isClassTestAnnotation(annotationName: String): Boolean {
@@ -311,6 +382,11 @@ private fun isMethodTestAnnotation(annotationName: String): Boolean {
 private fun isTestAnnotation(annotationName: String): Boolean {
   return testAnnotationNames.contains(annotationName) ||
       qualifiedTestAnnotations.contains(annotationName)
+}
+
+// Check if an annotation is a configuration annotation (should be excluded)
+private fun isConfigurationAnnotation(annotationName: String): Boolean {
+  return configurationAnnotations.contains(annotationName)
 }
 
 // Check if a class has @Nested annotation
@@ -347,6 +423,21 @@ private fun isKotlinCompilerAvailable(logger: org.gradle.api.logging.Logger? = n
 
 // Check if a Kotlin class contains test annotations (class-level or method-level)
 private fun hasTestAnnotations(ktClass: KtClass): Boolean {
+  // First check if this is a configuration class - if so, exclude it
+  val hasConfigurationAnnotations =
+      ktClass.annotationEntries.any { annotation ->
+        val annotationName = annotation.shortName?.asString()
+        val fullAnnotationText = annotation.text
+
+        // Check short names and qualified names for configuration annotations
+        isConfigurationAnnotation(annotationName ?: "") ||
+            configurationAnnotations.any { fullAnnotationText.contains(it) }
+      }
+
+  if (hasConfigurationAnnotations) {
+    return false
+  }
+
   // Check class-level annotations using predefined sets
   val hasClassTestAnnotations =
       ktClass.annotationEntries.any { annotation ->
@@ -615,6 +706,194 @@ fun getAllVisibleClassesWithNestedAnnotation(
   }
 }
 
+// Check if a class has configuration annotations (for regex parsing)
+private fun hasConfigurationAnnotationsInContent(
+    lines: List<String>,
+    classLineIndex: Int
+): Boolean {
+  // Look at the few lines before the class declaration for annotations
+  val startIndex = maxOf(0, classLineIndex - 10)
+  val endIndex = minOf(lines.size - 1, classLineIndex)
+
+  for (i in startIndex until endIndex) {
+    val line = lines[i].trim()
+    if (line.startsWith("@")) {
+      // Extract annotation name (remove @ and parameters)
+      val annotationName = line.substring(1).split("(")[0].trim()
+      if (isConfigurationAnnotation(annotationName)) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+// Check if a class has method-level test annotations (for regex parsing)
+private fun hasMethodLevelTestAnnotationsInContent(
+    lines: List<String>,
+    classLineIndex: Int
+): Boolean {
+  // Look for method-level test annotations after the class declaration
+  val classEndIndex = findClassEndIndex(lines, classLineIndex)
+  var braceLevel = 0
+  var foundClassOpenBrace = false
+
+  for (i in classLineIndex + 1 until classEndIndex) {
+    val line = lines[i].trim()
+
+    // Track brace levels to avoid looking inside nested classes
+    for (char in line) {
+      when (char) {
+        '{' -> {
+          braceLevel++
+          if (!foundClassOpenBrace) {
+            foundClassOpenBrace = true
+          }
+        }
+        '}' -> {
+          braceLevel--
+        }
+      }
+    }
+
+    // Only look at annotations at the top level of this class (braceLevel == 1)
+    // Skip nested classes (braceLevel > 1)
+    if (foundClassOpenBrace && braceLevel == 1 && line.startsWith("@")) {
+      // Extract annotation name (remove @ and parameters)
+      val annotationName = line.substring(1).split("(")[0].trim()
+      if (isMethodTestAnnotation(annotationName)) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+// Find the end index of a class declaration (simplified heuristic)
+private fun findClassEndIndex(lines: List<String>, classStartIndex: Int): Int {
+  var braceCount = 0
+  var foundOpenBrace = false
+
+  for (i in classStartIndex until lines.size) {
+    val line = lines[i]
+    for (char in line) {
+      when (char) {
+        '{' -> {
+          braceCount++
+          foundOpenBrace = true
+        }
+        '}' -> {
+          braceCount--
+          if (foundOpenBrace && braceCount == 0) {
+            return i
+          }
+        }
+      }
+    }
+  }
+  return lines.size - 1
+}
+
+// Check if a class has nested classes with @Nested annotation (for regex parsing)
+private fun hasNestedTestClassesInContent(
+    lines: List<String>,
+    classLineIndex: Int,
+    className: String
+): Boolean {
+  val classEndIndex = findClassEndIndex(lines, classLineIndex)
+  var braceLevel = 0
+  var foundClassOpenBrace = false
+  var previousLine: String? = null
+
+  for (i in classLineIndex + 1 until classEndIndex) {
+    val line = lines[i].trim()
+
+    // Track brace levels
+    for (char in line) {
+      when (char) {
+        '{' -> {
+          braceLevel++
+          if (!foundClassOpenBrace) {
+            foundClassOpenBrace = true
+          }
+        }
+        '}' -> {
+          braceLevel--
+        }
+      }
+    }
+
+    // Look for nested class declarations at brace level 1 (direct children)
+    if (foundClassOpenBrace && braceLevel == 1) {
+      val match = classDeclarationRegex.find(line)
+      if (match != null) {
+        val isAnnotatedNested = previousLine?.trimStart()?.startsWith("@Nested") == true
+        if (isAnnotatedNested) {
+          return true
+        }
+      }
+    }
+
+    previousLine = line
+  }
+  return false
+}
+
+// Process nested classes with @Nested annotation (for regex parsing)
+private fun processNestedClassesInContent(
+    lines: List<String>,
+    classLineIndex: Int,
+    parentClassName: String,
+    packageName: String?,
+    result: MutableMap<String, String>
+) {
+  val classEndIndex = findClassEndIndex(lines, classLineIndex)
+  var braceLevel = 0
+  var foundClassOpenBrace = false
+  var previousLine: String? = null
+
+  for (i in classLineIndex + 1 until classEndIndex) {
+    val line = lines[i].trim()
+
+    // Track brace levels
+    for (char in line) {
+      when (char) {
+        '{' -> {
+          braceLevel++
+          if (!foundClassOpenBrace) {
+            foundClassOpenBrace = true
+          }
+        }
+        '}' -> {
+          braceLevel--
+        }
+      }
+    }
+
+    // Look for nested class declarations at brace level 1 (direct children)
+    if (foundClassOpenBrace && braceLevel == 1) {
+      val match = classDeclarationRegex.find(line)
+      if (match != null) {
+        val nestedClassName = match.groupValues.getOrNull(2)
+        val isAnnotatedNested = previousLine?.trimStart()?.startsWith("@Nested") == true
+
+        if (isAnnotatedNested && nestedClassName != null) {
+          val nestedKey = "$parentClassName$nestedClassName"
+          val nestedValue =
+              if (packageName != null) {
+                "$packageName.$parentClassName$$nestedClassName"
+              } else {
+                "$parentClassName$$nestedClassName"
+              }
+          result[nestedKey] = nestedValue
+        }
+      }
+    }
+
+    previousLine = line
+  }
+}
+
 // Fallback to original regex-based parsing when AST parsing fails
 internal fun fallbackToRegexParsing(file: File): MutableMap<String, String>? {
   val content = file.takeIf { it.exists() }?.readText() ?: return null
@@ -651,9 +930,21 @@ internal fun fallbackToRegexParsing(file: File): MutableMap<String, String>? {
 
     // Top-level class (no indentation or same as outermost level)
     if (indent == 0) {
-      // Exclude top-level @nested classes
-      if (!isAnnotatedNested) {
-        result.put(className, packageName?.let { "$it.$className" } ?: className)
+      // Exclude top-level @nested classes and configuration classes
+      if (!isAnnotatedNested && !hasConfigurationAnnotationsInContent(lines, i)) {
+
+        // Check if this class has nested classes with @Nested annotation
+        val hasNestedClasses = hasNestedTestClassesInContent(lines, i, className)
+
+        if (hasNestedClasses) {
+          // This top-level class has @Nested children - process them instead of the parent
+          processNestedClassesInContent(lines, i, className, packageName, result)
+        } else {
+          // No @Nested children - include parent if it has method-level test annotations
+          if (hasMethodLevelTestAnnotationsInContent(lines, i)) {
+            result.put(className, packageName?.let { "$it.$className" } ?: className)
+          }
+        }
       }
       classStack.clear()
       classStack.add(className to indent)
@@ -664,7 +955,7 @@ internal fun fallbackToRegexParsing(file: File): MutableMap<String, String>? {
       }
 
       val parent = classStack.lastOrNull()?.first
-      if (isAnnotatedNested && parent != null) {
+      if (isAnnotatedNested && parent != null && !hasConfigurationAnnotationsInContent(lines, i)) {
         val packageClassName = "$parent$$className"
         result["$parent$className"] =
             packageName?.let { "$it.$packageClassName" } ?: packageClassName
@@ -694,9 +985,12 @@ private fun buildTestCiTarget(
   val dependsOnTasks = getDependsOnTask(testTask)
   val taskInputs = getInputsForTask(dependsOnTasks, testTask, projectRoot, workspaceRoot)
 
+  // Ensure executor is never null or undefined by using a constant
+  val executorValue = "@nx/gradle:gradle"
+
   val target =
       mutableMapOf<String, Any?>(
-          "executor" to "@nx/gradle:gradle",
+          "executor" to executorValue,
           "options" to
               mapOf(
                   "taskName" to "${projectBuildPath}:${testTask.name}",
@@ -706,10 +1000,11 @@ private fun buildTestCiTarget(
           "cache" to true,
           "inputs" to taskInputs)
 
-  // Defensive check to ensure executor is never null
-  if (target["executor"] == null) {
-    testTask.logger.warn("${testTask.path}: executor is null, setting to default")
-    target["executor"] = "@nx/gradle:gradle"
+  // Defensive check to ensure executor is never null or empty
+  val currentExecutor = target["executor"]
+  if (currentExecutor == null || currentExecutor.toString().isEmpty()) {
+    testTask.logger.warn("${testTask.path}: executor is null or empty, setting to default")
+    target["executor"] = executorValue
   }
 
   // Debug logging to trace executor value
