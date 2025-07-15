@@ -16,7 +16,7 @@ import { chmodAndroidGradlewFilesTask } from '../../utils/chmod-android-gradle-f
 import { runPodInstall } from '../../utils/pod-install-task';
 import { webConfigurationGenerator } from '../web-configuration/web-configuration';
 
-import { normalizeOptions } from './lib/normalize-options';
+import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import initGenerator from '../init/init';
 import { addProject } from './lib/add-project';
 import { createApplicationFiles } from './lib/create-application-files';
@@ -108,37 +108,8 @@ export async function reactNativeApplicationGeneratorInternal(
     joinPathFragments(host.root, options.androidProjectRoot)
   );
   tasks.push(chmodTaskGradlewTask);
-
-  const podInstallTask = runPodInstall(
-    joinPathFragments(host.root, options.iosProjectRoot)
-  );
-  if (options.install) {
-    const projectPackageJsonPath = joinPathFragments(
-      options.appProjectRoot,
-      'package.json'
-    );
-
-    const workspacePackageJson = readJson<PackageJson>(host, 'package.json');
-    const projectPackageJson = readJson<PackageJson>(
-      host,
-      projectPackageJsonPath
-    );
-
-    await syncDeps(
-      options.name,
-      projectPackageJson,
-      projectPackageJsonPath,
-      workspacePackageJson
-    );
-    tasks.push(podInstallTask);
-  } else {
-    output.log({
-      title: 'Skip `pod install`',
-      bodyLines: [
-        `run 'nx run ${options.name}:pod-install' to install native modules before running iOS app`,
-      ],
-    });
-  }
+  tasks.push(addSyncDepsTask(host, options));
+  tasks.push(addPodInstallTask(host, options));
 
   updateTsconfigFiles(
     host,
@@ -167,6 +138,48 @@ export async function reactNativeApplicationGeneratorInternal(
   });
 
   return runTasksInSerial(...tasks);
+}
+
+function addSyncDepsTask(
+  host: Tree,
+  options: NormalizedSchema
+): GeneratorCallback {
+  const projectPackageJsonPath = joinPathFragments(
+    options.appProjectRoot,
+    'package.json'
+  );
+  return async () => {
+    const workspacePackageJson = readJson<PackageJson>(host, 'package.json');
+    const projectPackageJson = readJson<PackageJson>(
+      host,
+      projectPackageJsonPath
+    );
+    await syncDeps(
+      options.projectName,
+      projectPackageJson,
+      projectPackageJsonPath,
+      workspacePackageJson
+    );
+  };
+}
+
+function addPodInstallTask(
+  host: Tree,
+  options: NormalizedSchema
+): GeneratorCallback {
+  const podInstallTask = runPodInstall(
+    joinPathFragments(host.root, options.iosProjectRoot)
+  );
+  if (options.install) {
+    return podInstallTask;
+  }
+  output.log({
+    title: 'Skip `pod install`',
+    bodyLines: [
+      `run 'nx run ${options.name}:pod-install' to install native modules before running iOS app`,
+    ],
+  });
+  return () => {};
 }
 
 export default reactNativeApplicationGenerator;
