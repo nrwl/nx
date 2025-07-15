@@ -1981,6 +1981,16 @@
       }
     },
     "migrations": {
+      "/technologies/react/expo/api/migrations/update-21-3-0-add-jest-resolver": {
+        "description": "Add custom Jest resolver to handle Expo winter runtime issues",
+        "file": "generated/packages/expo/migrations/update-21-3-0-add-jest-resolver.json",
+        "hidden": false,
+        "name": "update-21-3-0-add-jest-resolver",
+        "version": "21.3.0-beta.8",
+        "originalFilePath": "/packages/expo",
+        "path": "/technologies/react/expo/api/migrations/update-21-3-0-add-jest-resolver",
+        "type": "migration"
+      },
       "/technologies/react/expo/api/migrations/update-21-3-0-remove-deprecated-deps": {
         "description": "Remove deprecated dependencies from package.json",
         "file": "generated/packages/expo/migrations/update-21-3-0-remove-deprecated-deps.json",

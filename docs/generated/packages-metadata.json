@@ -2212,6 +2212,16 @@
     ],
     "migrations": [
       {
+        "description": "Add custom Jest resolver to handle Expo winter runtime issues",
+        "file": "generated/packages/expo/migrations/update-21-3-0-add-jest-resolver.json",
+        "hidden": false,
+        "name": "update-21-3-0-add-jest-resolver",
+        "version": "21.3.0-beta.8",
+        "originalFilePath": "/packages/expo",
+        "path": "expo/migrations/update-21-3-0-add-jest-resolver",
+        "type": "migration"
+      },
+      {
         "description": "Remove deprecated dependencies from package.json",
         "file": "generated/packages/expo/migrations/update-21-3-0-remove-deprecated-deps.json",
         "hidden": false,
