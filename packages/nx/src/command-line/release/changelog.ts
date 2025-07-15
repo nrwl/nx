@@ -367,6 +367,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                 projectsPreId?.[Object.keys(projectsPreId)[0]],
               releaseTagPatternRequireSemver:
                 nxReleaseConfig.releaseTagPatternRequireSemver,
+              releaseTagPatternStrictPreid:
+                nxReleaseConfig.releaseTagPatternStrictPreid,
             }
           )
         )?.tag;
@@ -556,7 +558,9 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                       releaseGroup.releaseTagPatternCheckAllBranchesWhen,
                     preId: projectsPreId[project.name],
                     releaseTagPatternRequireSemver:
-                      releaseGroup.releaseTagPatternRequireSemver ?? true,
+                      releaseGroup.releaseTagPatternRequireSemver,
+                    releaseTagPatternStrictPreid:
+                      releaseGroup.releaseTagPatternStrictPreid,
                   }
                 )
               )?.tag;
@@ -707,6 +711,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                     projectsPreId?.[Object.keys(projectsPreId)[0]],
                   releaseTagPatternRequireSemver:
                     releaseGroup.releaseTagPatternRequireSemver,
+                  releaseTagPatternStrictPreid:
+                    releaseGroup.releaseTagPatternStrictPreid,
                 }
               )
             )?.tag;

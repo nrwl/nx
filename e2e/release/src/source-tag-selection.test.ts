@@ -57,11 +57,12 @@ describe('nx release source tag selection', () => {
 
   afterEach(() => cleanupProject());
 
-  describe('when no preid is specified', () => {
+  describe('when releaseTagPatternStrictPreid is false', () => {
     beforeEach(() => {
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
           releaseTagPattern: 'v{version}',
+          releaseTagPatternStrictPreid: false,
           version: {
             conventionalCommits: true,
           },
@@ -70,39 +71,47 @@ describe('nx release source tag selection', () => {
       });
     });
 
-    it('does not use pre-release tags as source', async () => {
-      await runCommandAsync(`git tag -a v1.0.0-beta.1 -m "v1.0.0-beta.1"`);
-
-      expect(
-        runCLI(`release version -d`, {
-          silenceError: true,
-        })
-      ).toContain(
-        `No git tags matching pattern "v{version}" for project "${pkg1}" were found`
-      );
+    describe('when no preid is specified', () => {
+      it('uses the latest tag as source', async () => {
+        await runCommandAsync(`git tag -a v1.0.0 -m "v1.0.0"`);
+        await runCommandAsync(`git tag -a v2.0.0-beta.1 -m "v2.0.0-beta.1"`);
+        await runCommandAsync(`git tag -a v2.0.0 -m "v2.0.0"`);
+        await runCommandAsync(`git tag -a v3.0.0-beta.1 -m "v3.0.0-beta.1"`);
+        
+        expect(
+          runCLI(`release version -d`, {
+            silenceError: true,
+          })
+        ).toContain(
+          `Resolved the current version as 3.0.0-beta.1 from git tag "v3.0.0-beta.1"`
+        );
+      });
     });
 
-    it('uses the latest stable tag as source', async () => {
-      await runCommandAsync(`git tag -a v1.0.0 -m "v1.0.0"`);
-      await runCommandAsync(`git tag -a v2.0.0-beta.1 -m "v2.0.0-beta.1"`);
-      await runCommandAsync(`git tag -a v2.0.0 -m "v2.0.0"`);
-      await runCommandAsync(`git tag -a v3.0.0-beta.1 -m "v3.0.0-beta.1"`);
-
-      expect(
-        runCLI(`release version -d`, {
-          silenceError: true,
-        })
-      ).toContain(
-        `Resolved the current version as 2.0.0 from git tag "v2.0.0"`
-      );
+    describe('when a preid is specified', () => {
+      it('uses the latest tag as source', async () => {
+        await runCommandAsync(`git tag -a v1.0.0 -m "v1.0.0"`);
+        await runCommandAsync(`git tag -a v2.0.0-beta.1 -m "v2.0.0-beta.1"`);
+        await runCommandAsync(`git tag -a v2.0.0 -m "v2.0.0"`);
+        await runCommandAsync(`git tag -a v3.0.0-beta.1 -m "v3.0.0-beta.1"`);
+        
+        expect(
+          runCLI(`release version --preid=sigma -d`, {
+            silenceError: true,
+          })
+        ).toContain(
+          `Resolved the current version as 3.0.0-beta.1 from git tag "v3.0.0-beta.1"`
+        );
+      });
     });
   });
 
-  describe('when a preid is specified', () => {
+  describe('when releaseTagPatternStrictPreid is true', () => {
     beforeEach(() => {
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
           releaseTagPattern: 'v{version}',
+          releaseTagPatternStrictPreid: true,
           version: {
             conventionalCommits: true,
           },
@@ -111,43 +120,74 @@ describe('nx release source tag selection', () => {
       });
     });
 
-    it('uses the latest pre-release tag as source', async () => {
-      await runCommandAsync(`git tag -a v1.0.0-alpha.1 -m "v1.0.0-alpha.1"`);
-      await runCommandAsync(`git tag -a v1.0.1-alpha.1 -m "v1.0.1-alpha.1"`);
-
-      expect(
-        runCLI(`release version --preid=alpha -d`, {
-          silenceError: true,
-        })
-      ).toContain(
-        `Resolved the current version as 1.0.1-alpha.1 from git tag "v1.0.1-alpha.1"`
-      );
+    describe('when no preid is specified', () => {
+      it('does not use pre-release tags as source', async () => {
+        await runCommandAsync(`git tag -a v1.0.0-beta.1 -m "v1.0.0-beta.1"`);
+  
+        expect(
+          runCLI(`release version -d`, {
+            silenceError: true,
+          })
+        ).toContain(
+          `No git tags matching pattern "v{version}" for project "${pkg1}" were found`
+        );
+      });
+  
+      it('uses the latest stable tag as source', async () => {
+        await runCommandAsync(`git tag -a v1.0.0 -m "v1.0.0"`);
+        await runCommandAsync(`git tag -a v2.0.0-beta.1 -m "v2.0.0-beta.1"`);
+        await runCommandAsync(`git tag -a v2.0.0 -m "v2.0.0"`);
+        await runCommandAsync(`git tag -a v3.0.0-beta.1 -m "v3.0.0-beta.1"`);
+  
+        expect(
+          runCLI(`release version -d`, {
+            silenceError: true,
+          })
+        ).toContain(
+          `Resolved the current version as 2.0.0 from git tag "v2.0.0"`
+        );
+      });
     });
-
-    it('does not use a tag with a different preid', async () => {
-      await runCommandAsync(`git tag -a v1.0.0-alpha.1 -m "v1.0.0-alpha.1"`);
-      await runCommandAsync(`git tag -a v1.0.0-beta.1 -m "v1.0.0-beta.1"`);
-
-      expect(
-        runCLI(`release version --preid=alpha -d`, {
-          silenceError: true,
-        })
-      ).toContain(
-        `Resolved the current version as 1.0.0-alpha.1 from git tag "v1.0.0-alpha.1"`
-      );
-    });
-
-    it('uses the latest stable tag as source when no tags are found for the preid', async () => {
-      await runCommandAsync(`git tag -a v1.0.0 -m "v1.0.0"`);
-      await runCommandAsync(`git tag -a v1.0.1-alpha.1 -m "v1.0.1-alpha.1"`);
-
-      expect(
-        runCLI(`release version --preid=beta -d`, {
-          silenceError: true,
-        })
-      ).toContain(
-        `Resolved the current version as 1.0.0 from git tag "v1.0.0"`
-      );
+  
+    describe('when a preid is specified', () => {
+      it('uses the latest pre-release tag as source', async () => {
+        await runCommandAsync(`git tag -a v1.0.0-alpha.1 -m "v1.0.0-alpha.1"`);
+        await runCommandAsync(`git tag -a v1.0.1-alpha.1 -m "v1.0.1-alpha.1"`);
+  
+        expect(
+          runCLI(`release version --preid=alpha -d`, {
+            silenceError: true,
+          })
+        ).toContain(
+          `Resolved the current version as 1.0.1-alpha.1 from git tag "v1.0.1-alpha.1"`
+        );
+      });
+  
+      it('does not use a tag with a different preid', async () => {
+        await runCommandAsync(`git tag -a v1.0.0-alpha.1 -m "v1.0.0-alpha.1"`);
+        await runCommandAsync(`git tag -a v1.0.0-beta.1 -m "v1.0.0-beta.1"`);
+  
+        expect(
+          runCLI(`release version --preid=alpha -d`, {
+            silenceError: true,
+          })
+        ).toContain(
+          `Resolved the current version as 1.0.0-alpha.1 from git tag "v1.0.0-alpha.1"`
+        );
+      });
+  
+      it('uses the latest stable tag as source when no tags are found for the preid', async () => {
+        await runCommandAsync(`git tag -a v1.0.0 -m "v1.0.0"`);
+        await runCommandAsync(`git tag -a v1.0.1-alpha.1 -m "v1.0.1-alpha.1"`);
+  
+        expect(
+          runCLI(`release version --preid=beta -d`, {
+            silenceError: true,
+          })
+        ).toContain(
+          `Resolved the current version as 1.0.0 from git tag "v1.0.0"`
+        );
+      });
     });
   });
 });

@@ -593,8 +593,6 @@ describe('nx release - independent projects', () => {
               fixed: {
                 projects: [pkg3],
                 projectsRelationship: 'fixed',
-                // Use a different release tag pattern for the fixed release group because the previous tag is not following the default pattern
-                releaseTagPattern: '{projectName}@{version}',
               },
             },
           },

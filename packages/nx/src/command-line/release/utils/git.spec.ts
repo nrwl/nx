@@ -137,189 +137,277 @@ See merge request nx-release-test/nx-release-test!2`,
     });
   });
 
-  const releaseTagPatternTestCases = [
-    {
-      pattern: 'v{version}',
-      projectName: 'my-lib-1',
-      expectedTag: 'v4.0.1',
-      expectedVersion: '4.0.1',
-      releaseTagPatternRequireSemver: true,
-    },
-    {
-      pattern: 'x{version}',
-      projectName: 'my-lib-1',
-      expectedTag: 'x5.0.0',
-      expectedVersion: '5.0.0',
-      releaseTagPatternRequireSemver: true,
-    },
-    {
-      pattern: 'release/{version}',
-      projectName: 'my-lib-1',
-      expectedTag: 'release/4.2.1',
-      expectedVersion: '4.2.1',
-      releaseTagPatternRequireSemver: true,
-    },
-    {
-      pattern: 'release/{projectName}@v{version}',
-      projectName: 'my-lib-1',
-      expectedTag: 'release/my-lib-1@v4.2.1',
-      expectedVersion: '4.2.1',
-      releaseTagPatternRequireSemver: true,
-    },
-    {
-      pattern: '{version}',
-      projectName: 'my-lib-1',
-      expectedTag: '4.0.0-rc.1+build.1',
-      expectedVersion: '4.0.0-rc.1+build.1',
-      releaseTagPatternRequireSemver: true,
-      preId: 'rc',
-    },
-    {
-      pattern: '{projectName}@v{version}',
-      projectName: 'my-lib-1',
-      expectedTag: 'my-lib-1@v4.0.0-beta.1',
-      expectedVersion: '4.0.0-beta.1',
-      releaseTagPatternRequireSemver: true,
-      preId: 'beta',
-    },
-    {
-      pattern: '{projectName}v{version}',
-      projectName: 'my-lib-2',
-      expectedTag: 'my-lib-2v4.0.0-beta.1',
-      expectedVersion: '4.0.0-beta.1',
-      releaseTagPatternRequireSemver: true,
-      preId: 'beta',
-    },
-    {
-      pattern: '{projectName}{version}',
-      projectName: 'my-lib-3',
-      expectedTag: 'my-lib-34.0.0-beta.1',
-      expectedVersion: '4.0.0-beta.1',
-      releaseTagPatternRequireSemver: true,
-      preId: 'beta',
-    },
-    {
-      pattern: '{version}-{projectName}',
-      projectName: 'my-lib-1',
-      expectedTag: '4.0.0-beta.0-my-lib-1',
-      expectedVersion: '4.0.0-beta.0',
-      releaseTagPatternRequireSemver: true,
-      preId: 'beta',
-    },
-    {
-      pattern: '{version}-{projectName}',
-      projectName: 'alpha',
-      expectedTag: '3.0.0-beta.0-alpha',
-      expectedVersion: '3.0.0-beta.0',
-      releaseTagPatternRequireSemver: true,
-      preId: 'beta',
-    },
-    {
-      pattern: 'hotfix/{projectName}/{version}',
-      projectName: 'api',
-      expectedTag: 'hotfix/api/2506.30.abcdef',
-      expectedVersion: '2506.30.abcdef',
-      releaseTagPatternRequireSemver: false,
-    },
-    {
-      pattern: 'release/{projectName}/{version}',
-      projectName: 'api',
-      expectedTag: 'release/api/2506.30.abcdef',
-      expectedVersion: '2506.30.abcdef',
-      releaseTagPatternRequireSemver: false,
-    },
-    {
-      pattern: '{projectName}@{version}',
-      projectName: 'my-lib-4',
-      expectedTag: 'my-lib-4@1.2.4-beta.1',
-      expectedVersion: '1.2.4-beta.1',
-      preId: 'beta',
-    },
-    {
-      pattern: '{projectName}@{version}',
-      projectName: 'my-lib-4',
-      expectedTag: 'my-lib-4@1.2.4-alpha.1',
-      expectedVersion: '1.2.4-alpha.1',
-      preId: 'alpha',
-    },
-    {
-      pattern: '{projectName}@{version}',
-      projectName: 'alpha-lib',
-      expectedTag: 'alpha-lib@1.2.4',
-      expectedVersion: '1.2.4',
-      preId: 'alpha',
-    },
-    {
-      pattern: '{projectName}@{version}',
-      projectName: 'alpha-lib',
-      expectedTag: 'alpha-lib@1.2.4-beta.1',
-      expectedVersion: '1.2.4-beta.1',
-      preId: 'beta',
-    },
-    {
-      pattern: '{projectName}@{version}',
-      projectName: 'my-lib-4',
-      expectedTag: 'my-lib-4@1.2.3',
-      expectedVersion: '1.2.3',
-    },
-    {
-      pattern: '{projectName}@{version}',
-      projectName: 'lib-no-tags',
-      expectedTag: undefined,
-      expectedVersion: undefined,
-    },
-    {
-      pattern: '{projectName}@{version}',
-      projectName: 'lib-only-pre-release',
-      expectedTag: undefined,
-      expectedVersion: undefined,
-    },
-    {
-      pattern: '{projectName}@{version}',
-      projectName: 'lib-only-pre-release',
-      expectedTag: 'lib-only-pre-release@1.2.4-beta.1',
-      expectedVersion: '1.2.4-beta.1',
-      preId: 'beta',
-    },
-    {
-      pattern: '{projectName}@{version}',
-      projectName: 'lib-only-pre-release',
-      expectedTag: undefined,
-      expectedVersion: undefined,
-      preId: 'alpha',
-    },
-  ];
-
   describe('getLatestGitTagForPattern', () => {
     afterEach(() => {
       jest.clearAllMocks();
     });
 
-    it.each(releaseTagPatternTestCases)(
-      'should return tag $expectedTag for pattern $pattern and preId $preId',
-      async ({
-        pattern,
-        projectName,
-        expectedTag,
-        expectedVersion,
-        releaseTagPatternRequireSemver,
-        preId,
-      }) => {
-        const result = await getLatestGitTagForPattern(
-          pattern,
-          {
-            projectName,
-          },
-          {
-            releaseTagPatternRequireSemver,
-            preId,
-          }
-        );
+    describe('when releaseTagPatternStrictPreid is false', () => {
+      const releaseTagPatternTestCases = [
+        {
+          pattern: 'v{version}',
+          projectName: 'my-lib-1',
+          expectedTag: 'v4.0.1',
+          expectedVersion: '4.0.1',
+          releaseTagPatternRequireSemver: true,
+        },
+        {
+          pattern: 'x{version}',
+          projectName: 'my-lib-1',
+          expectedTag: 'x5.0.0',
+          expectedVersion: '5.0.0',
+          releaseTagPatternRequireSemver: true,
+        },
+        {
+          pattern: 'release/{version}',
+          projectName: 'my-lib-1',
+          expectedTag: 'release/4.2.1',
+          expectedVersion: '4.2.1',
+          releaseTagPatternRequireSemver: true,
+        },
+        {
+          pattern: 'release/{projectName}@v{version}',
+          projectName: 'my-lib-1',
+          expectedTag: 'release/my-lib-1@v4.2.1',
+          expectedVersion: '4.2.1',
+          releaseTagPatternRequireSemver: true,
+        },
+        {
+          pattern: '{version}',
+          projectName: 'my-lib-1',
+          expectedTag: '4.0.0-rc.1+build.1',
+          expectedVersion: '4.0.0-rc.1+build.1',
+          releaseTagPatternRequireSemver: true,
+        },
+        {
+          pattern: '{projectName}@v{version}',
+          projectName: 'my-lib-1',
+          expectedTag: 'my-lib-1@v4.0.0-beta.1',
+          expectedVersion: '4.0.0-beta.1',
+          releaseTagPatternRequireSemver: true,
+        },
+        {
+          pattern: '{projectName}v{version}',
+          projectName: 'my-lib-2',
+          expectedTag: 'my-lib-2v4.0.0-beta.1',
+          expectedVersion: '4.0.0-beta.1',
+          releaseTagPatternRequireSemver: true,
+        },
+        {
+          pattern: '{projectName}{version}',
+          projectName: 'my-lib-3',
+          expectedTag: 'my-lib-34.0.0-beta.1',
+          expectedVersion: '4.0.0-beta.1',
+          releaseTagPatternRequireSemver: true,
+        },
+        {
+          pattern: '{version}-{projectName}',
+          projectName: 'my-lib-1',
+          expectedTag: '4.0.0-beta.0-my-lib-1',
+          expectedVersion: '4.0.0-beta.0',
+          releaseTagPatternRequireSemver: true,
+        },
+        {
+          pattern: '{version}-{projectName}',
+          projectName: 'alpha',
+          expectedTag: '3.0.0-beta.0-alpha',
+          expectedVersion: '3.0.0-beta.0',
+          releaseTagPatternRequireSemver: true,
+        },
+        {
+          pattern: 'hotfix/{projectName}/{version}',
+          projectName: 'api',
+          expectedTag: 'hotfix/api/2506.30.abcdef',
+          expectedVersion: '2506.30.abcdef',
+          releaseTagPatternRequireSemver: false,
+        },
+        {
+          pattern: 'release/{projectName}/{version}',
+          projectName: 'api',
+          expectedTag: 'release/api/2506.30.abcdef',
+          expectedVersion: '2506.30.abcdef',
+          releaseTagPatternRequireSemver: false,
+        },
+        {
+          pattern: '{projectName}@{version}',
+          projectName: 'my-lib-4',
+          expectedTag: 'my-lib-4@1.2.4-beta.1',
+          expectedVersion: '1.2.4-beta.1',
+          preId: 'beta',
+        },
+        {
+          pattern: '{projectName}@{version}',
+          projectName: 'my-lib-4',
+          expectedTag: 'my-lib-4@1.2.4-beta.1',
+          expectedVersion: '1.2.4-beta.1',
+          preId: 'alpha',
+        },
+        {
+          pattern: '{projectName}@{version}',
+          projectName: 'alpha-lib',
+          expectedTag: 'alpha-lib@1.2.4',
+          expectedVersion: '1.2.4',
+          preId: 'alpha',
+        },
+        {
+          pattern: '{projectName}@{version}',
+          projectName: 'alpha-lib',
+          expectedTag: 'alpha-lib@1.2.4',
+          expectedVersion: '1.2.4',
+          preId: 'beta',
+        },
+        {
+          pattern: '{projectName}@{version}',
+          projectName: 'my-lib-4',
+          expectedTag: 'my-lib-4@1.2.4-beta.1',
+          expectedVersion: '1.2.4-beta.1',
+        },
+        {
+          pattern: '{projectName}@{version}',
+          projectName: 'lib-no-tags',
+          expectedTag: undefined,
+          expectedVersion: undefined,
+        },
+        {
+          pattern: '{projectName}@{version}',
+          projectName: 'lib-only-pre-release',
+          expectedTag: 'lib-only-pre-release@1.2.4-beta.1',
+          expectedVersion: '1.2.4-beta.1',
+        },
+        {
+          pattern: '{projectName}@{version}',
+          projectName: 'lib-only-pre-release',
+          expectedTag: 'lib-only-pre-release@1.2.4-beta.1',
+          expectedVersion: '1.2.4-beta.1',
+          preId: 'beta',
+        },
+        {
+          pattern: '{projectName}@{version}',
+          projectName: 'lib-only-pre-release',
+          expectedTag: 'lib-only-pre-release@1.2.4-beta.1',
+          expectedVersion: '1.2.4-beta.1',
+          preId: 'alpha',
+        },
+      ];
 
-        expect(result?.tag).toEqual(expectedTag);
-        expect(result?.extractedVersion).toEqual(expectedVersion);
-      }
-    );
+      it.each(releaseTagPatternTestCases)(
+        'should return tag $expectedTag for pattern $pattern and preId $preId',
+        async ({
+          pattern,
+          projectName,
+          expectedTag,
+          expectedVersion,
+          releaseTagPatternRequireSemver,
+          preId,
+        }) => {
+          const result = await getLatestGitTagForPattern(
+            pattern,
+            {
+              projectName,
+            },
+            {
+              releaseTagPatternRequireSemver,
+              preId,
+              releaseTagPatternStrictPreid: false,
+            }
+          );
+
+          expect(result?.tag).toEqual(expectedTag);
+          expect(result?.extractedVersion).toEqual(expectedVersion);
+        }
+      );
+    });
+
+    describe('when releaseTagPatternStrictPreid is true', () => {
+      const releaseTagPatternTestCases = [
+        {
+          pattern: '{projectName}@{version}',
+          projectName: 'my-lib-4',
+          expectedTag: 'my-lib-4@1.2.4-beta.1',
+          expectedVersion: '1.2.4-beta.1',
+          preId: 'beta',
+        },
+        {
+          pattern: '{projectName}@{version}',
+          projectName: 'my-lib-4',
+          expectedTag: 'my-lib-4@1.2.4-alpha.1',
+          expectedVersion: '1.2.4-alpha.1',
+          preId: 'alpha',
+        },
+        {
+          pattern: '{projectName}@{version}',
+          projectName: 'alpha-lib',
+          expectedTag: 'alpha-lib@1.2.4',
+          expectedVersion: '1.2.4',
+          preId: 'alpha',
+        },
+        {
+          pattern: '{projectName}@{version}',
+          projectName: 'alpha-lib',
+          expectedTag: 'alpha-lib@1.2.4-beta.1',
+          expectedVersion: '1.2.4-beta.1',
+          preId: 'beta',
+        },
+        {
+          pattern: '{projectName}@{version}',
+          projectName: 'my-lib-4',
+          expectedTag: 'my-lib-4@1.2.3',
+          expectedVersion: '1.2.3',
+        },
+        {
+          pattern: '{projectName}@{version}',
+          projectName: 'lib-no-tags',
+          expectedTag: undefined,
+          expectedVersion: undefined,
+        },
+        {
+          pattern: '{projectName}@{version}',
+          projectName: 'lib-only-pre-release',
+          expectedTag: undefined,
+          expectedVersion: undefined,
+        },
+        {
+          pattern: '{projectName}@{version}',
+          projectName: 'lib-only-pre-release',
+          expectedTag: 'lib-only-pre-release@1.2.4-beta.1',
+          expectedVersion: '1.2.4-beta.1',
+          preId: 'beta',
+        },
+        {
+          pattern: '{projectName}@{version}',
+          projectName: 'lib-only-pre-release',
+          expectedTag: undefined,
+          expectedVersion: undefined,
+          preId: 'alpha',
+        },
+      ];
+
+      it.each(releaseTagPatternTestCases)(
+        'should return tag $expectedTag for pattern $pattern and preId $preId',
+        async ({
+          pattern,
+          projectName,
+          expectedTag,
+          expectedVersion,
+          preId,
+        }) => {
+          const result = await getLatestGitTagForPattern(
+            pattern,
+            {
+              projectName,
+            },
+            {
+              preId,
+              releaseTagPatternRequireSemver: true,
+              releaseTagPatternStrictPreid: true,
+            }
+          );
+
+          expect(result?.tag).toEqual(expectedTag);
+          expect(result?.extractedVersion).toEqual(expectedVersion);
+        }
+      );
+    });
 
     it('should return null if execCommand throws an error', async () => {
       // should return null if execCommand throws an error
@@ -330,6 +418,9 @@ See merge request nx-release-test/nx-release-test!2`,
       });
       const result = await getLatestGitTagForPattern('#{version}', {
         projectName: 'my-lib-1',
+      }, {
+        releaseTagPatternRequireSemver: true,
+        releaseTagPatternStrictPreid: false,
       });
       expect(result).toEqual(null);
     });
@@ -337,6 +428,9 @@ See merge request nx-release-test/nx-release-test!2`,
     it('should return null if no tags match the pattern', async () => {
       const result = await getLatestGitTagForPattern('#{version}', {
         projectName: 'my-lib-1',
+      }, {
+        releaseTagPatternRequireSemver: true,
+        releaseTagPatternStrictPreid: false,
       });
 
       expect(result).toEqual(null);

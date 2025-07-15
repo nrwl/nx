@@ -344,6 +344,8 @@ export class ReleaseGroupProcessor {
               preId: this.options.preid,
               releaseTagPatternRequireSemver:
                 releaseGroupNode.group.releaseTagPatternRequireSemver,
+              releaseTagPatternStrictPreid:
+                releaseGroupNode.group.releaseTagPatternStrictPreid,
             }
           );
           this.cachedLatestMatchingGitTag.set(

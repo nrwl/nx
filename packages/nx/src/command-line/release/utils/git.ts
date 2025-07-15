@@ -44,8 +44,9 @@ export interface GitCommit extends RawGitCommit {
 
 export interface GetLatestGitTagForPatternOptions {
   checkAllBranchesWhen?: boolean | string[];
-  releaseTagPatternRequireSemver?: boolean;
   preId?: string;
+  releaseTagPatternRequireSemver: boolean;
+  releaseTagPatternStrictPreid: boolean;
 }
 
 function escapeRegExp(string) {
@@ -102,11 +103,12 @@ export function extractTagAndVersion(
 export async function getLatestGitTagForPattern(
   releaseTagPattern: string,
   additionalInterpolationData = {},
-  options: GetLatestGitTagForPatternOptions = {}
+  options: GetLatestGitTagForPatternOptions
 ): Promise<GitTagAndVersion | null> {
   const {
     checkAllBranchesWhen,
     releaseTagPatternRequireSemver = true,
+    releaseTagPatternStrictPreid,
     preId = '',
   } = options;
 
@@ -213,6 +215,11 @@ export async function getLatestGitTagForPattern(
 
     if (!matchingTags.length) {
       return null;
+    }
+
+    if (!releaseTagPatternStrictPreid) {
+      // If not using strict preid, we can just return the first matching tag
+      return extractTagAndVersion(matchingTags[0], tagRegexp, options);
     }
 
     if (preId && preId.length > 0) {
