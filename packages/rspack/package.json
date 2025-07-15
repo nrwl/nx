@@ -60,8 +60,8 @@
     "nx": "workspace:*"
   },
   "peerDependencies": {
-    "@module-federation/enhanced": "^0.15.0",
-    "@module-federation/node": "^2.6.26"
+    "@module-federation/enhanced": "^0.17.0",
+    "@module-federation/node": "^2.7.9"
   },
   "nx-migrations": {
     "migrations": "./migrations.json"
