@@ -67,6 +67,10 @@ export async function initTasksRunner(nxArgs: NxArgs) {
           acc[task.id] = [];
           return acc;
         }, {} as any),
+        dependenciesAllowedToFail: opts.tasks.reduce((acc, task) => {
+          acc[task.id] = [];
+          return acc;
+        }, {} as any),
       };
 
       const taskResults = await invokeTasksRunner({
@@ -129,6 +133,10 @@ async function createOrchestrator(
       return acc;
     }, {} as any),
     continuousDependencies: tasks.reduce((acc, task) => {
+      acc[task.id] = [];
+      return acc;
+    }, {} as any),
+    dependenciesAllowedToFail: tasks.reduce((acc, task) => {
       acc[task.id] = [];
       return acc;
     }, {} as any),
