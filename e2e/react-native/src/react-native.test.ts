@@ -76,7 +76,7 @@ describe('@nx/react-native', () => {
 
   it('should start the app', async () => {
     let process: ChildProcess;
-    const port = 8081;
+    const port = 8082;
 
     try {
       process = await runCommandUntil(
