@@ -2,12 +2,20 @@ const outputMessages = {
   'create-nx-workspace-success-ci-setup': [
     {
       code: 'ci-setup-visit',
-      createMessage: (url: string | null) => {
+      createMessage: (url: string | null, pushedToVcs: boolean) => {
         return {
           title: `Your CI setup is almost complete.`,
           type: 'success',
           bodyLines: [
-            `Push your repository and finish the setup${url ? `: ${url}` : ''}`,
+            `${
+              pushedToVcs
+                ? url
+                  ? `Go to Nx Cloud and finish the setup: ${url}`
+                  : 'Return to Nx Cloud and finish the setup'
+                : `Once you have pushed your repo, ${
+                    url ? 'go' : 'return'
+                  } to Nx Cloud and finish the setup${url ? `: ${url}` : ''}`
+            }`,
           ],
         };
       },
@@ -16,12 +24,21 @@ const outputMessages = {
   'create-nx-workspace-success-cache-setup': [
     {
       code: 'remote-cache-visit',
-      createMessage: (url: string | null) => {
+      createMessage: (url: string | null, pushedToVcs: boolean) => {
         return {
           title: `Your remote cache is almost complete.`,
           type: 'success',
           bodyLines: [
-            `Push your repository and finish the setup${url ? `: ${url}` : ''}`,
+            `${
+              pushedToVcs
+                ? url
+                  ? `Go to Nx Cloud and finish the setup: ${url}`
+                  : 'Return to Nx Cloud and finish the setup'
+                : `Once you have pushed your repo, ${
+                    url ? 'go' : 'return'
+                  } to Nx Cloud and finish the setup${url ? `: ${url}` : ''}`
+            }`,
+            `You can also set up a remote cache later by running \`nx g @nx/nx-cloud:init\``,
           ],
         };
       },

@@ -264,6 +264,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       messages.codeOfSelectedPromptMessage('setupNxCloud'),
       parsedArgs.nxCloud,
       rawArgs.nxCloud,
+      workspaceInfo.pushedToVcs.toString()
     ],
   });
 
