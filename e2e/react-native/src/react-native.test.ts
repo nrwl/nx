@@ -10,6 +10,7 @@ import {
   checkFilesExist,
   runE2ETests,
   updateFile,
+  readJson,
 } from '@nx/e2e-utils';
 
 describe('@nx/react-native', () => {
@@ -43,6 +44,25 @@ describe('@nx/react-native', () => {
   it('should test and lint', async () => {
     expect(() => runCLI(`test ${appName}`)).not.toThrow();
     expect(() => runCLI(`lint ${appName}`)).not.toThrow();
+  });
+
+  it('should have dependencies synced after React Native app creation', () => {
+    // Check that the app's package.json exists
+    checkFilesExist(`${appName}/package.json`);
+
+    // Read the app's package.json
+    const appPackageJson = readJson(`${appName}/package.json`);
+
+    // Verify that the app package.json has dependencies section
+    expect(appPackageJson.dependencies).toBeDefined();
+
+    // Verify that React Native specific dependencies are synced
+    expect(appPackageJson.dependencies).toEqual(
+      expect.objectContaining({
+        react: '*',
+        'react-native': '*',
+      })
+    );
   });
 
   it('should bundle the app', async () => {
