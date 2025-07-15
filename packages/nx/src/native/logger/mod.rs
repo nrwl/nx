@@ -103,6 +103,13 @@ where
 /// - `NX_NATIVE_LOGGING=[{project_name=project}]` - enable logs that contain the project in its span
 /// NX_NATIVE_FILE_LOGGING acts the same but logs to .nx/workspace-data/nx.log instead of stdout
 pub(crate) fn enable_logger() {
+    // Skip logger initialization in test environments to prevent Jest hanging
+    if env::var("NODE_ENV").map_or(false, |env| env == "test")
+        || env::var("JEST_WORKER_ID").is_ok()
+        || env::var("VITEST").is_ok()
+    {
+        return;
+    }
     let stdout_layer = tracing_subscriber::fmt::layer()
         .with_ansi(std::io::stdout().is_terminal())
         .with_writer(std::io::stdout)
