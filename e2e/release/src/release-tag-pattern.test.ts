@@ -134,7 +134,7 @@ describe('nx release releaseTagPattern', () => {
         `Resolved the current version as 2.2.2 from git tag "v2.2.2"`
       );
     });
-    
+
     it('should check all branches immediately when releaseTagPatternCheckAllBranchesWhen is true', async () => {
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {

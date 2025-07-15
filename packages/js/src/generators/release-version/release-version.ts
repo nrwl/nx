@@ -312,8 +312,7 @@ To fix this you will either need to add a package.json file at that location, or
                 checkAllBranchesWhen:
                   options.releaseGroup.releaseTagPatternCheckAllBranchesWhen,
                 preId: options.preid,
-                releaseTagPatternRequireSemver:
-                  releaseTagPatternRequireSemver,
+                releaseTagPatternRequireSemver: releaseTagPatternRequireSemver,
                 releaseTagPatternStrictPreid:
                   options.releaseGroup.releaseTagPatternStrictPreid,
               }

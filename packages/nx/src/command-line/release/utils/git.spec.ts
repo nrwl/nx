@@ -416,22 +416,30 @@ See merge request nx-release-test/nx-release-test!2`,
       ).mockImplementationOnce(() => {
         throw new Error('error');
       });
-      const result = await getLatestGitTagForPattern('#{version}', {
-        projectName: 'my-lib-1',
-      }, {
-        releaseTagPatternRequireSemver: true,
-        releaseTagPatternStrictPreid: false,
-      });
+      const result = await getLatestGitTagForPattern(
+        '#{version}',
+        {
+          projectName: 'my-lib-1',
+        },
+        {
+          releaseTagPatternRequireSemver: true,
+          releaseTagPatternStrictPreid: false,
+        }
+      );
       expect(result).toEqual(null);
     });
 
     it('should return null if no tags match the pattern', async () => {
-      const result = await getLatestGitTagForPattern('#{version}', {
-        projectName: 'my-lib-1',
-      }, {
-        releaseTagPatternRequireSemver: true,
-        releaseTagPatternStrictPreid: false,
-      });
+      const result = await getLatestGitTagForPattern(
+        '#{version}',
+        {
+          projectName: 'my-lib-1',
+        },
+        {
+          releaseTagPatternRequireSemver: true,
+          releaseTagPatternStrictPreid: false,
+        }
+      );
 
       expect(result).toEqual(null);
     });
