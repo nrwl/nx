@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`CI Workflow generator connected to nxCloud optional e2e should add e2e to azure CI config 1`] = `
 "name: CI
@@ -58,7 +58,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -92,7 +91,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # npx nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             # When you enable task distribution, run the e2e-ci task instead of e2e
             - npx nx affected --base=origin/main -t lint test build e2e
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -115,7 +113,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - npx nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - npx nx affected -t lint test build e2e-ci --base=HEAD~1
 "
 `;
@@ -146,7 +143,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run:
           command: npx nx affected -t lint test build e2e
@@ -204,7 +200,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run: npx nx affected -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -253,7 +248,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run: npx nx affected -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -322,7 +316,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: bun nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: bun nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - script: bun nx fix-ci
@@ -390,7 +383,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: bun nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: bun nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - script: bun nx fix-ci
@@ -424,7 +416,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # bun nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - bun nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -448,7 +439,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - bun nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - bun nx affected -t lint test build --base=HEAD~1
 "
 `;
@@ -479,7 +469,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # bun nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - bun nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -503,7 +492,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - bun nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - bun nx affected -t lint test build --base=HEAD~1
 "
 `;
@@ -537,7 +525,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: bun nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run:
           command: bun nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -583,7 +570,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: bun nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run:
           command: bun nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -637,7 +623,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: bun nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: bun nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: bun nx fix-ci
@@ -682,7 +667,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: bun nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: bun nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: bun nx fix-ci
@@ -727,7 +711,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: bun nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: bun nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: bun nx fix-ci
@@ -761,7 +744,6 @@ CI:
 
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - bun nx-cloud record -- echo Hello World
-    # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
     - bun nx affected -t lint test build
     # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -827,7 +809,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - script: npx nx fix-ci
@@ -892,7 +873,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - script: npx nx fix-ci
@@ -924,7 +904,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # npx nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - npx nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -946,7 +925,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - npx nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - npx nx affected -t lint test build --base=HEAD~1
 "
 `;
@@ -975,7 +953,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # npx nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - npx nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -997,7 +974,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - npx nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - npx nx affected -t lint test build --base=HEAD~1
 "
 `;
@@ -1027,7 +1003,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run:
           command: npx nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -1069,7 +1044,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run:
           command: npx nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -1125,7 +1099,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: npx nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: npx nx fix-ci
@@ -1172,7 +1145,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: npx nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: npx nx fix-ci
@@ -1219,7 +1191,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: npx nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: npx nx fix-ci
@@ -1251,7 +1222,6 @@ CI:
 
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - npx nx-cloud record -- echo Hello World
-    # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
     - npx nx affected -t lint test build
     # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -1320,7 +1290,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: pnpm exec nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - script: pnpm exec nx fix-ci
@@ -1388,7 +1357,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: pnpm exec nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - script: pnpm exec nx fix-ci
@@ -1422,7 +1390,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # pnpm exec nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - pnpm exec nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -1446,7 +1413,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - pnpm exec nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - pnpm exec nx affected -t lint test build --base=HEAD~1
 "
 `;
@@ -1477,7 +1443,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # pnpm exec nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - pnpm exec nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -1501,7 +1466,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - pnpm exec nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - pnpm exec nx affected -t lint test build --base=HEAD~1
 "
 `;
@@ -1535,7 +1499,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run:
           command: pnpm exec nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -1581,7 +1544,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run:
           command: pnpm exec nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -1643,7 +1605,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: pnpm exec nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: pnpm exec nx fix-ci
@@ -1695,7 +1656,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: pnpm exec nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: pnpm exec nx fix-ci
@@ -1748,7 +1708,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: pnpm exec nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: pnpm exec nx fix-ci
@@ -1782,7 +1741,6 @@ CI:
 
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - pnpm exec nx-cloud record -- echo Hello World
-    # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
     - pnpm exec nx affected -t lint test build
     # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -1848,7 +1806,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: yarn nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - script: yarn nx fix-ci
@@ -1913,7 +1870,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: yarn nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - script: yarn nx fix-ci
@@ -1945,7 +1901,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # yarn nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - yarn nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -1967,7 +1922,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - yarn nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - yarn nx affected -t lint test build --base=HEAD~1
 "
 `;
@@ -1996,7 +1950,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # yarn nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - yarn nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -2018,7 +1971,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - yarn nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - yarn nx affected -t lint test build --base=HEAD~1
 "
 `;
@@ -2048,7 +2000,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: yarn nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run:
           command: yarn nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -2090,7 +2041,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: yarn nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run:
           command: yarn nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -2146,7 +2096,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: yarn nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: yarn nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: yarn nx fix-ci
@@ -2195,7 +2144,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: yarn nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: yarn nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: yarn nx fix-ci
@@ -2242,7 +2190,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: yarn nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: yarn nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: yarn nx fix-ci
@@ -2274,7 +2221,6 @@ CI:
 
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - yarn nx-cloud record -- echo Hello World
-    # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
     - yarn nx affected -t lint test build
     # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -2341,7 +2287,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -2375,7 +2320,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # npx nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             # When you enable task distribution, run the e2e-ci task instead of e2e
             - npx nx affected --base=origin/main -t lint test build e2e
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -2399,7 +2343,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - npx nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - npx nx affected -t lint test build e2e-ci --base=HEAD~1
 "
 `;
@@ -2430,7 +2373,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run:
           command: npx nx affected -t lint test build e2e
@@ -2488,7 +2430,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run: npx nx affected -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -2537,7 +2478,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run: npx nx affected -t lint test build e2e
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -2606,7 +2546,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: bun nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: bun nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - script: bun nx fix-ci
@@ -2674,7 +2613,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: bun nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: bun nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - script: bun nx fix-ci
@@ -2708,7 +2646,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # bun nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - bun nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -2733,7 +2670,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - bun nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - bun nx affected -t lint test build --base=HEAD~1
 "
 `;
@@ -2764,7 +2700,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # bun nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - bun nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -2789,7 +2724,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - bun nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - bun nx affected -t lint test build --base=HEAD~1
 "
 `;
@@ -2823,7 +2757,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: bun nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run:
           command: bun nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -2869,7 +2802,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: bun nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run:
           command: bun nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -2923,7 +2855,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: bun nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: bun nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: bun nx fix-ci
@@ -2968,7 +2899,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: bun nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: bun nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: bun nx fix-ci
@@ -3013,7 +2943,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: bun nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: bun nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: bun nx fix-ci
@@ -3047,7 +2976,6 @@ CI:
 
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - bun nx-cloud record -- echo Hello World
-    # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
     - bun nx affected -t lint test build
     # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -3113,7 +3041,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - script: npx nx fix-ci
@@ -3178,7 +3105,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - script: npx nx fix-ci
@@ -3210,7 +3136,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # npx nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - npx nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -3233,7 +3158,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - npx nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - npx nx affected -t lint test build --base=HEAD~1
 "
 `;
@@ -3262,7 +3186,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # npx nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - npx nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -3285,7 +3208,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - npx nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - npx nx affected -t lint test build --base=HEAD~1
 "
 `;
@@ -3315,7 +3237,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run:
           command: npx nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -3357,7 +3278,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run:
           command: npx nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -3413,7 +3333,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: npx nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: npx nx fix-ci
@@ -3460,7 +3379,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: npx nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: npx nx fix-ci
@@ -3507,7 +3425,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: npx nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: npx nx fix-ci
@@ -3539,7 +3456,6 @@ CI:
 
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - npx nx-cloud record -- echo Hello World
-    # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
     - npx nx affected -t lint test build
     # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -3608,7 +3524,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: pnpm exec nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - script: pnpm exec nx fix-ci
@@ -3676,7 +3591,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: pnpm exec nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - script: pnpm exec nx fix-ci
@@ -3710,7 +3624,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # pnpm exec nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - pnpm exec nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -3735,7 +3648,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - pnpm exec nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - pnpm exec nx affected -t lint test build --base=HEAD~1
 "
 `;
@@ -3766,7 +3678,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # pnpm exec nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - pnpm exec nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -3791,7 +3702,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - pnpm exec nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - pnpm exec nx affected -t lint test build --base=HEAD~1
 "
 `;
@@ -3825,7 +3735,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run:
           command: pnpm exec nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -3871,7 +3780,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run:
           command: pnpm exec nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -3933,7 +3841,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: pnpm exec nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: pnpm exec nx fix-ci
@@ -3985,7 +3892,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: pnpm exec nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: pnpm exec nx fix-ci
@@ -4038,7 +3944,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: pnpm exec nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: pnpm exec nx fix-ci
@@ -4072,7 +3977,6 @@ CI:
 
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - pnpm exec nx-cloud record -- echo Hello World
-    # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
     - pnpm exec nx affected -t lint test build
     # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -4138,7 +4042,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: yarn nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - script: yarn nx fix-ci
@@ -4203,7 +4106,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: yarn nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - script: yarn nx fix-ci
@@ -4235,7 +4137,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # yarn nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - yarn nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -4258,7 +4159,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - yarn nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - yarn nx affected -t lint test build --base=HEAD~1
 "
 `;
@@ -4287,7 +4187,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # yarn nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - yarn nx affected --base=origin/main -t lint test build
             # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
@@ -4310,7 +4209,6 @@ pipelines:
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - yarn nx-cloud record -- echo Hello World
-            # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
             - yarn nx affected -t lint test build --base=HEAD~1
 "
 `;
@@ -4340,7 +4238,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: yarn nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run:
           command: yarn nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -4382,7 +4279,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: yarn nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run:
           command: yarn nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -4438,7 +4334,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: yarn nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: yarn nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: yarn nx fix-ci
@@ -4487,7 +4382,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: yarn nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: yarn nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: yarn nx fix-ci
@@ -4534,7 +4428,6 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: yarn nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: yarn nx affected -t lint test build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: yarn nx fix-ci
@@ -4566,7 +4459,6 @@ CI:
 
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - yarn nx-cloud record -- echo Hello World
-    # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
     - yarn nx affected -t lint test build
     # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
