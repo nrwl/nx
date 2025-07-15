@@ -7,10 +7,6 @@ description: In this tutorial you'll create a TypeScript monorepo with Nx.
 
 In this tutorial, you'll learn how to create a new TypeScript monorepo using the Nx platform.
 
-{% callout type="note" title="Prerequisites" %}
-This tutorial requires a [GitHub account](https://github.com) to demonstrate the full value of **Nx** - including task running, caching, and CI integration.
-{% /callout %}
-
 What will you learn?
 
 - how to create a new TypeScript workspace with [GitHub Actions](https://github.com/features/actions) preconfigured
@@ -19,48 +15,62 @@ What will you learn?
 - how to benefit from caching that works both locally and in CI
 - how to set up self-healing CI to apply fixes directly from your local editor
 
-## Creating a new TypeScript Monorepo
+## Prerequisite: Tutorial Setup
 
-To get started, let's create a new TypeScript monorepo with Nx Cloud and GitHub Actions preconfigured.
+{% callout type="note" title="Prerequisites" %}
+This tutorial requires a [GitHub account](https://github.com) to demonstrate the full value of **Nx** - including task running, caching, and CI integration.
+{% /callout %}
+
+### Step 1: Creating a new Nx TypeScript workspace
+
+Let's start by creating a new TypeScript monorepo with Nx Cloud and GitHub Actions preconfigured. You'll be guided through an interactive setup process to create your workspace. After completing the setup, return here to continue with this tutorial.
 
 {% call-to-action title="Create a new TypeScript monorepo" url="https://cloud.nx.app/create-nx-workspace?preset=ts" description="With Nx and GitHub Actions fully set up" /%}
 
-You should now have a new workspace called `acme` with TypeScript, Vitest, ESLint, and Prettier preconfigured.
+### Step 2: Verify Your Setup
 
-```
-acme
-├── .github
-│   └── workflows
-│       └── ci.yml
-├── packages
-│   └── .gitkeep
-├── README.md
-├── nx.json
-├── package-lock.json
-├── package.json
-├── tsconfig.base.json
-└── tsconfig.json
-```
-
-The `.github/workflows/ci.yml` file preconfigures your CI in GitHub Actions to run build and test through Nx.
-
-The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx itself and global default settings that individual projects inherit.
-
-Before continuing, it is **important** to make sure that your GitHub repository is [connected to your Nx Cloud organization](https://cloud.nx.app/setup) to enable remote caching and self-healing in CI.
-
-### Checkpoint: Workspace Created and Connected
-
-At this point you should have:
+Please verify closely that you have the following setup:
 
 1. A new Nx workspace on your local machine
-2. A new GitHub repository for the workspace with `.github/workflows/ci.yml` pipeline preconfigured
-3. A workspace in Nx Cloud that is connected to the GitHub repository
+2. A corresponding GitHub repository for the workspace with a `.github/workflows/ci.yml` pipeline preconfigured
+3. You completed the full Nx Cloud onboarding and you now have a Nx Cloud dashboard that is connected to your example repository on GitHub.
 
 You should see your workspace in your [Nx Cloud organization](https://cloud.nx.app/orgs).
 
 ![](/shared/images/tutorials/connected-workspace.avif)
 
-If you do not see your workspace in Nx Cloud then please follow the steps outlined in the [Nx Cloud setup](https://cloud.nx.app/create-nx-workspace).
+If you do not see your workspace in Nx Cloud then please follow the steps outlined in the [Nx Cloud setup](https://cloud.nx.app/create-nx-workspace?preset=ts).
+
+This is important for using remote caching and self-healing in CI later in the tutorial.
+
+## Explore the Nx Workspace Setup
+
+Let's take a look at the structure of our new Nx workspace:
+
+```plaintext
+acme
+├─ .github
+│  └─ workflows
+│     └─ ci.yml
+├─ .nx
+│  └─ ...
+├─ packages
+│  └─ .gitkeep
+├─ README.md
+├─ .prettierignore
+├─ .prettierrc
+├─ nx.json
+├─ package-lock.json
+├─ package.json
+├─ tsconfig.base.json
+└─ tsconfig.json
+```
+
+Here are some files that might jump to your eyes:
+
+- The `.nx` folder is where Nx stores local metadata about your workspaces using the [Nx Daemon](/concepts/nx-daemon).
+- The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx itself and global default settings that individual projects inherit.
+- The `.github/workflows/ci.yml` file preconfigures your CI in GitHub Actions to run build and test through Nx.
 
 Now, let's build some features and see how Nx helps get us to production faster.
 
@@ -82,7 +92,7 @@ npx nx g @nx/js:lib packages/zoo --bundler=tsc --unitTestRunner=vitest --linter=
 
 Running these commands should lead to new directories and files in your workspace:
 
-```
+```plaintext
 acme
 ├── packages
 │   ├── animal
@@ -159,7 +169,34 @@ Nx uses the following syntax to run tasks:
 
 ### Inferred Tasks
 
-Nx identifies available tasks for your project from [tooling configuration files](/concepts/inferred-tasks) such as `package.json` scripts and TypeScript configuration. To view the tasks that Nx has detected, look in the [Nx Console](/getting-started/editor-setup) project detail view or run:
+By default Nx simply runs your `package.json` scripts. However, you can also adopt [Nx technology plugins](/technologies) that help abstract away some of the lower-level config and have Nx manage that. One such thing is to automatically identify tasks that can be run for your project from [tooling configuration files](/concepts/inferred-tasks) such as `package.json` scripts and TypeScript configuration.
+
+In `nx.json` there's already the `@nx/js` plugin registered which automatically identifies `typecheck` and `build` targets.
+
+```json {% fileName="nx.json" %}
+{
+  ...
+  "plugins": [
+    {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "typecheck": {
+          "targetName": "typecheck"
+        },
+        "build": {
+          "targetName": "build",
+          "configName": "tsconfig.lib.json",
+          "buildDepsName": "build-deps",
+          "watchDepsName": "watch-deps"
+        }
+      }
+    }
+  ]
+}
+
+```
+
+To view the tasks that Nx has detected, look in the [Nx Console](/getting-started/editor-setup) project detail view or run:
 
 ```shell
 npx nx show project animal
@@ -292,7 +329,7 @@ npx nx show project animal
 
 {% /project-details %}
 
-The `@nx/js` plugin automatically configures both the build and typecheck tasks based on your TypeScript configuration. Notice that the outputs are set to `{projectRoot}/dist` - this is where your compiled TypeScript files will be placed, and it defined by the `outDir` option in `packages/animal/tsconfig.lib.json`.
+The `@nx/js` plugin automatically configures both the build and typecheck tasks based on your TypeScript configuration. Notice also how the outputs are set to `{projectRoot}/dist` - this is where your compiled TypeScript files will be placed, and it defined by the `outDir` option in `packages/animal/tsconfig.lib.json`.
 
 {% callout type="note" title="Overriding inferred task options" %}
 You can override the options for inferred tasks by modifying the [`targetDefaults` in `nx.json`](/reference/nx-json#target-defaults) or setting a value in your [`project.json` file](/reference/project-configuration). Nx will merge the values from the inferred tasks with the values you define in `targetDefaults` and in your specific project's configuration.
@@ -312,13 +349,13 @@ When you develop packages, creating shared utilities that multiple packages can 
 
 Let's create a shared utilities library that both our existing packages can use:
 
-```
+```shell
 npx nx g @nx/js:library packages/util --bundler=tsc --unitTestRunner=vitest --linter=none
 ```
 
 Now we have:
 
-```
+```plaintext
 acme
 ├── packages
 │   ├── animal

@@ -7,10 +7,6 @@ description: In this tutorial you'll create a frontend-focused workspace with Nx
 
 In this tutorial, you'll learn how to create a new React monorepo using the Nx platform.
 
-{% callout type="note" title="Prerequisites" %}
-This tutorial requires a [GitHub account](https://github.com) to demonstrate the full value of **Nx** - including task running, caching, and CI integration.
-{% /callout %}
-
 What will you learn?
 
 - how to create a new React workspace with [GitHub Actions](https://github.com/features/actions) preconfigured
@@ -19,15 +15,39 @@ What will you learn?
 - how to benefit from caching that works both locally and in CI
 - how to set up self-healing CI to apply fixes directly from your local editor
 
-## Creating a new React Monorepo
+## Prerequisite: Tutorial Setup
 
-To get started, let's create a new React monorepo with Nx Cloud and GitHub Actions preconfigured.
+{% callout type="note" title="Prerequisites" %}
+This tutorial requires a [GitHub account](https://github.com) to demonstrate the full value of **Nx** - including task running, caching, and CI integration.
+{% /callout %}
+
+### Step 1: Creating a new Nx React workspace
+
+Let's start by creating a new React monorepo with Nx Cloud and GitHub Actions preconfigured. You'll be guided through an interactive setup process to create your workspace. After completing the setup, return here to continue with this tutorial.
 
 {% call-to-action title="Create a new React monorepo" url="https://cloud.nx.app/create-nx-workspace?preset=react" description="With Nx and GitHub Actions fully set up" /%}
 
-You should now have a new workspace called `acme` with Vite, Vitest, ESLint, and Prettier preconfigured.
+### Step 2: Verify Your Setup
 
-```
+Please verify closely that you have the following setup:
+
+1. A new Nx workspace on your local machine
+2. A corresponding GitHub repository for the workspace with a `.github/workflows/ci.yml` pipeline preconfigured
+3. You completed the full Nx Cloud onboarding and you now have a Nx Cloud dashboard that is connected to your example repository on GitHub.
+
+You should see your workspace in your [Nx Cloud organization](https://cloud.nx.app/orgs).
+
+![](/shared/images/tutorials/connected-workspace.avif)
+
+If you do not see your workspace in Nx Cloud then please follow the steps outlined in the [Nx Cloud setup](https://cloud.nx.app/create-nx-workspace?preset=react).
+
+This is important for using remote caching and self-healing in CI later in the tutorial.
+
+## Explore the Nx Workspace Setup
+
+Let's take a look at the structure of our new Nx workspace:
+
+```plaintext
 acme
 ├── .github
 │   └── workflows
@@ -44,27 +64,11 @@ acme
 └── vitest.workspace.ts
 ```
 
-The `.github/workflows/ci.yml` file preconfigures your CI in GitHub Actions to run build and test through Nx.
+Here are some files that might jump to your eyes:
 
-The `demo` app is created under the `apps` directory as a convention. Later in this tutorial we'll create libraries under the `packages` folder. In practice, you can choose any folder structure you like.
-
-The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx itself and global default settings that individual projects inherit.
-
-Before continuing, it is **important** to make sure that your GitHub repository is [connected to your Nx Cloud organization](https://cloud.nx.app/setup) to enable remote caching and self-healing in CI.
-
-### Checkpoint: Workspace Created and Connected
-
-At this point you should have:
-
-1. A new Nx workspace on your local machine with a React app in `apps/demo`
-2. A new GitHub repository for the workspace with `.github/workflows/ci.yml` pipeline preconfigured
-3. A workspace in Nx Cloud that is connected to the GitHub repository
-
-You should see your workspace in your [Nx Cloud organization](https://cloud.nx.app/orgs).
-
-![](/shared/images/tutorials/connected-workspace.avif)
-
-If you do not see your workspace in Nx Cloud then please follow the steps outlined in the [Nx Cloud setup](https://cloud.nx.app/create-nx-workspace).
+- The `.nx` folder is where Nx stores local metadata about your workspaces using the [Nx Daemon](/concepts/nx-daemon).
+- The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx itself and global default settings that individual projects inherit.
+- The `.github/workflows/ci.yml` file preconfigures your CI in GitHub Actions to run build and test through Nx.
 
 Now, let's build some features and see how Nx helps get us to production faster.
 
@@ -84,7 +88,33 @@ Nx uses the following syntax to run tasks:
 
 ### Inferred Tasks
 
-Nx identifies available tasks for your project from [tooling configuration files](/concepts/inferred-tasks) such as `package.json` scripts and `vite.config.ts`. To view the tasks that Nx has detected, look in the [Nx Console](/getting-started/editor-setup) project detail view or run:
+By default Nx simply runs your `package.json` scripts. However, you can also adopt [Nx technology plugins](/technologies) that help abstract away some of the lower-level config and have Nx manage that. One such thing is to automatically identify tasks that can be run for your project from [tooling configuration files](/concepts/inferred-tasks) such as `package.json` scripts and `vite.config.ts`.
+
+In `nx.json` there's already the `@nx/vite` plugin registered which automatically identifies `build`, `test`, `serve`, and other Vite-related targets.
+
+```json {% fileName="nx.json" %}
+{
+  ...
+  "plugins": [
+    {
+      "plugin": "@nx/vite/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "testTargetName": "test",
+        "serveTargetName": "serve",
+        "devTargetName": "dev",
+        "previewTargetName": "preview",
+        "serveStaticTargetName": "serve-static",
+        "typecheckTargetName": "typecheck",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
+      }
+    }
+  ]
+}
+```
+
+To view the tasks that Nx has detected, look in the [Nx Console](/getting-started/editor-setup) project detail view or run:
 
 ```shell
 npx nx show project demo
@@ -446,7 +476,7 @@ Not all tasks might be cacheable though. You can configure the `cache` settings 
 
 In this section, we'll explore how Nx Cloud can help your pull request get to green faster with self-healing CI. Recall that our demo app has a test failure, so let's see how this can be automatically resolved.
 
-The `npx nx-cloud fix-ci` command that is already included in your GitHub Actions workflow (`github/workflows/ci.yml`)is responsible for enabling self-healing CI and will automatically suggest fixes to your failing tasks.
+The `npx nx-cloud fix-ci` command that is already included in your GitHub Actions workflow (`github/workflows/ci.yml`) is responsible for enabling self-healing CI and will automatically suggest fixes to your failing tasks.
 
 ```yaml {% fileName=".github/workflows/ci.yml" highlightLines=[31,32] %}
 name: CI
