@@ -2,9 +2,9 @@ import { names } from '@nx/devkit';
 import {
   cleanupProject,
   getPackageManagerCommand,
+  getRandomPort,
   getSelectedPackageManager,
   newProject,
-  readFile,
   runCLI,
   runCommand,
   uniq,
@@ -85,7 +85,3 @@ describe('Node Esbuild Applications', () => {
     );
   });
 });
-
-function getRandomPort() {
-  return Math.floor(1000 + Math.random() * 7000);
-}
