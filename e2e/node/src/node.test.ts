@@ -6,8 +6,8 @@ import {
   cleanupProject,
   createFile,
   detectPackageManager,
-  expectJestTestsToPass,
   getPackageManagerCommand,
+  getRandomPort,
   killPorts,
   newProject,
   packageInstall,
@@ -30,10 +30,6 @@ import { satisfies } from 'semver';
 import { join } from 'path';
 
 let originalEnvPort;
-
-function getRandomPort() {
-  return Math.floor(1000 + Math.random() * 9000);
-}
 
 function getData(port, path = '/api'): Promise<any> {
   return new Promise((resolve) => {
