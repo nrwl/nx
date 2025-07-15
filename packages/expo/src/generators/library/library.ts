@@ -21,7 +21,7 @@ import {
 } from '@nx/js';
 import init from '../init/init';
 import { addLinting } from '../../utils/add-linting';
-import { addJest } from '../../utils/add-jest';
+import { addJest } from '../../utils/jest/add-jest';
 import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
