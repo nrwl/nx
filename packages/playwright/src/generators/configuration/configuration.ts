@@ -412,8 +412,8 @@ function ignoreTestOutput(
   if (!/^test-output$/gm.test(content)) {
     newContent = `${content}\ntest-output\n`;
   }
-  if (!/^\.nx-atomized-blob-reports$/gm.test(content)) {
-    newContent = `${content}\n.nx-atomized-blob-reports\n`;
+  if (!/^\.nx-atomized-blob-reports$/gm.test(newContent)) {
+    newContent = `${newContent}\n.nx-atomized-blob-reports\n`;
   }
 
   if (newContent !== content) {
