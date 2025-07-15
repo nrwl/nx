@@ -96,17 +96,6 @@ export async function expoLibraryGeneratorInternal(
   });
   tasks.push(lintTask);
 
-  const jestTask = await addJest(
-    host,
-    options.unitTestRunner,
-    options.projectName,
-    options.projectRoot,
-    options.js,
-    options.skipPackageJson,
-    options.addPlugin
-  );
-  tasks.push(jestTask);
-
   const relativeCwd = getRelativeCwd();
   const path = joinPathFragments(
     options.projectRoot,
@@ -144,6 +133,20 @@ export async function expoLibraryGeneratorInternal(
       ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
       : undefined
   );
+
+  // Update Jest tsconfig after general tsconfig updates to ensure Jest resolver configuration is preserved
+  if (options.unitTestRunner === 'jest') {
+    const jestTask = await addJest(
+      host,
+      options.unitTestRunner,
+      options.projectName,
+      options.projectRoot,
+      options.js,
+      options.skipPackageJson,
+      options.addPlugin
+    );
+    tasks.push(jestTask);
+  }
 
   sortPackageJsonFields(host, options.projectRoot);
 
@@ -231,7 +234,6 @@ async function addProject(
         name: options.projectName,
         format: ['cjs', 'esm'],
         style: 'none',
-        js: options.js,
         skipFormat: true,
       },
       external
