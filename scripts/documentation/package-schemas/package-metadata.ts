@@ -4,7 +4,7 @@ import {
 } from '@nx/nx-dev/models-document';
 import { readFileSync, existsSync } from 'fs';
 import { readJsonSync } from 'fs-extra';
-import { sync } from 'glob';
+import { globSync } from 'glob';
 import { join, resolve } from 'path';
 import * as DocumentationMap from '../../../docs/map.json';
 import {
@@ -132,10 +132,13 @@ export function findPackageMetadataList(
   if (specificPackages && specificPackages.length > 0) {
     packagePaths = specificPackages.map((pkg) => `${packagesDir}/${pkg}`);
   } else {
-    packagePaths = sync(`${packagesDir}/*`, {
+    packagePaths = globSync(`${packagesDir}/*`, {
       ignore: [`${packagesDir}/cli`, `${packagesDir}/*-e2e`],
     });
   }
+
+  // Sort package paths to ensure consistent ordering regardless of glob version
+  packagePaths.sort();
 
   // Do not use map.json, but add a documentation property on the package.json directly that can be easily resolved
   return packagePaths
