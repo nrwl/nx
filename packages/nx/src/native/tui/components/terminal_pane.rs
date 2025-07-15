@@ -495,6 +495,35 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
             return;
         }
 
+        // If the task completed successfully but has no PTY output (e.g., nx:noop tasks), show completion message
+        if matches!(
+            state.task_status,
+            TaskStatus::Success
+                | TaskStatus::LocalCache
+                | TaskStatus::LocalCacheKeptExisting
+                | TaskStatus::RemoteCache
+        ) && !state.has_pty
+        {
+            let message_style = if state.is_focused {
+                self.get_base_style(state.task_status)
+            } else {
+                self.get_base_style(state.task_status)
+                    .add_modifier(Modifier::DIM)
+            };
+            let message = vec![Line::from(vec![Span::styled(
+                "Task completed successfully",
+                message_style,
+            )])];
+
+            let paragraph = Paragraph::new(message)
+                .block(block)
+                .alignment(Alignment::Center)
+                .style(Style::default());
+
+            Widget::render(paragraph, safe_area, buf);
+            return;
+        }
+
         let inner_area = block.inner(safe_area);
 
         if let Some(pty_data) = &self.pty_data {
