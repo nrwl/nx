@@ -12,7 +12,8 @@ import { Preset } from './utils/preset/preset';
 
 export async function createWorkspace<T extends CreateWorkspaceOptions>(
   preset: string,
-  options: T
+  options: T,
+  rawArgs?: T
 ) {
   const {
     packageManager,
@@ -67,6 +68,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       nxCloud,
       token,
       directory,
+      rawArgs?.nxCloud,
       useGitHub
     );
     connectUrl = connectCloudUrl;

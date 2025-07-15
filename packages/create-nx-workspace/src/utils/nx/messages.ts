@@ -2,21 +2,29 @@ const outputMessages = {
   'create-nx-workspace-success-ci-setup': [
     {
       code: 'ci-setup-visit',
-      createMessage: (url: string) => ({
-        title: `Your CI setup is almost complete.`,
-        type: 'success',
-        bodyLines: [`Finish it by visiting: ${url}`],
-      }),
+      createMessage: (url: string | null) => {
+        return {
+          title: `Your CI setup is almost complete.`,
+          type: 'success',
+          bodyLines: [
+            `Push your repository and finish the setup${url ? `: ${url}` : ''}`,
+          ],
+        };
+      },
     },
   ],
   'create-nx-workspace-success-cache-setup': [
     {
       code: 'remote-cache-visit',
-      createMessage: (url: string) => ({
-        title: `Your remote cache setup is almost complete.`,
-        type: 'success',
-        bodyLines: [`Finish it by visiting: ${url}`],
-      }),
+      createMessage: (url: string | null) => {
+        return {
+          title: `Your remote cache is almost complete.`,
+          type: 'success',
+          bodyLines: [
+            `Push your repository and finish the setup${url ? `: ${url}` : ''}`,
+          ],
+        };
+      },
     },
   ],
 } as const;

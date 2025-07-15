@@ -25,7 +25,9 @@ use crate::native::{
         app::Focus,
         components::Component,
         lifecycle::RunMode,
-        utils::{format_duration_since, sort_task_items},
+        utils::{
+            format_duration_since, format_live_duration, get_current_time_ms, sort_task_items,
+        },
     },
 };
 
@@ -719,6 +721,15 @@ impl TasksList {
         for task in tasks {
             if let Some(task_item) = self.tasks.iter_mut().find(|t| t.name == task.id) {
                 task_item.update_status(TaskStatus::InProgress);
+                if task_item.start_time.is_none() {
+                    // It should be set, but just in case
+                    let current_time = get_current_time_ms();
+                    task_item.start_time = Some(current_time);
+                }
+                // Update duration to show "..." initially for non-continuous tasks
+                if !task_item.continuous {
+                    task_item.duration = DURATION_NOT_YET_KNOWN.to_string();
+                }
             }
         }
         self.sort_tasks();
@@ -729,6 +740,17 @@ impl TasksList {
         if let Some(task_item) = self.tasks.iter_mut().find(|t| t.name == task_id) {
             task_item.update_status(status);
             self.sort_tasks();
+        }
+    }
+
+    /// Updates the live duration for all InProgress tasks that have a start_time.
+    fn update_live_durations(&mut self) {
+        for task in &mut self.tasks {
+            if matches!(task.status, TaskStatus::InProgress) && !task.continuous {
+                if let Some(start_time) = task.start_time {
+                    task.duration = format_live_duration(start_time);
+                }
+            }
         }
     }
 
@@ -1423,7 +1445,15 @@ impl Component for TasksList {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) -> Result<()> {
         // --- 1. Calculate Context ---
         let column_visibility = self.calculate_column_visibility(area.width);
-        // Cache the column visibility result
+        // If duration column is visible and was not visible before, update live durations
+        let previous_show_duration = self
+            .column_visibility
+            .as_ref()
+            .map_or(false, |cv| cv.show_duration);
+        if column_visibility.show_duration && !previous_show_duration {
+            self.update_live_durations();
+        }
+        // Cache the column visibility
         self.column_visibility = Some(column_visibility.clone());
         let _has_narrow_area_width = area.width < 90; // Keep for backward compatibility with bottom layout
         let filter_is_active = self.filter_mode || !self.filter_text.is_empty();
@@ -1805,6 +1835,15 @@ impl Component for TasksList {
         match action {
             Action::Tick => {
                 self.throbber_counter = self.throbber_counter.wrapping_add(1);
+                // Update live duration only if Duration column is visible
+                if self
+                    .column_visibility
+                    .as_ref()
+                    .map(|cv| cv.show_duration)
+                    .unwrap_or(false)
+                {
+                    self.update_live_durations();
+                }
             }
             Action::EnterFilterMode => {
                 if self.filter_mode {

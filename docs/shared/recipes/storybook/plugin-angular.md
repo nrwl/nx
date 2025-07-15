@@ -118,6 +118,7 @@ const meta: Meta<MyButton> = {
   title: 'MyButton',
 };
 export default meta;
+
 type Story = StoryObj<MyButton>;
 
 export const Primary: Story = {
@@ -136,7 +137,7 @@ export const Heading: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    expect(canvas.getByText(/my-button works!/gi)).toBeTruthy();
+    expect(canvas.getByText(/my-button/gi)).toBeTruthy();
   },
 };
 ```

@@ -43,19 +43,9 @@ function getNxTasksCommand(
   }`;
 
   const commandType = useRunMany ? 'run-many' : 'affected';
-  const nxCommandComments = useRunMany
-    ? [
-        `As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
-      ]
-    : [
-        `Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
-      ];
-
-  if (hasE2E) {
-    nxCommandComments.push(
-      `When you enable task distribution, run the e2e-ci task instead of e2e`
-    );
-  }
+  const nxCommandComments = hasE2E
+    ? [`When you enable task distribution, run the e2e-ci task instead of e2e`]
+    : [];
 
   const args = getCiArgs(ci, mainBranch, useRunMany);
   const nxCommand = `${packageManagerPrefix} nx ${commandType} ${args}-t ${tasks}`;
@@ -145,13 +135,6 @@ function getBitbucketBranchCommands(
 
   // Build nx command comments and command
   const commandType = useRunMany ? 'run-many' : 'affected';
-  const nxCommandComments = useRunMany
-    ? [
-        `As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
-      ]
-    : [
-        `Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
-      ];
 
   // Build command with conditional base arg
   const baseArg = useRunMany ? '' : ' --base=HEAD~1';
@@ -162,7 +145,6 @@ function getBitbucketBranchCommands(
       comments: nxCloudComments,
     },
     {
-      comments: nxCommandComments,
       command,
     },
   ];

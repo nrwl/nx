@@ -2543,6 +2543,16 @@
     "executors": {},
     "generators": {},
     "migrations": {
+      "/technologies/module-federation/api/migrations/21.3.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/module-federation/migrations/21.3.0-package-updates.json",
+        "hidden": false,
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.8",
+        "originalFilePath": "/packages/module-federation",
+        "path": "/technologies/module-federation/api/migrations/21.3.0-package-updates",
+        "type": "migration"
+      },
       "/technologies/module-federation/api/migrations/21.2.0-package-updates": {
         "description": "",
         "file": "generated/packages/module-federation/migrations/21.2.0-package-updates.json",
@@ -4720,6 +4730,16 @@
       }
     },
     "migrations": {
+      "/technologies/build-tools/rspack/api/migrations/21.3.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/rspack/migrations/21.3.0-package-updates.json",
+        "hidden": false,
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.8",
+        "originalFilePath": "/packages/rspack",
+        "path": "/technologies/build-tools/rspack/api/migrations/21.3.0-package-updates",
+        "type": "migration"
+      },
       "/technologies/build-tools/rspack/api/migrations/21.0.1-package-updates": {
         "description": "",
         "file": "generated/packages/rspack/migrations/21.0.1-package-updates.json",

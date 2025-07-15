@@ -102,16 +102,17 @@ export default MyButton;
 The [`@nx/react:storybook-configuration` generator](/technologies/react/api/generators/storybook-configuration) would generate a Story file that looks like this:
 
 ```typescript {% fileName="libs/feature/ui/src/lib/my-button/my-button.stories.tsx" %}
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { MyButton } from './my-button';
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
-const meta: Meta<typeof MyButton> = {
+const meta = {
   component: MyButton,
   title: 'MyButton',
-};
+} satisfies Meta<typeof MyButton>;
 export default meta;
+
 type Story = StoryObj<typeof MyButton>;
 
 export const Primary = {
@@ -120,9 +121,9 @@ export const Primary = {
     padding: 0,
     disabled: false,
   },
-};
+} satisfies Story;
 
-export const Heading: Story = {
+export const Heading = {
   args: {
     text: '',
     padding: 0,
@@ -130,9 +131,9 @@ export const Heading: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    expect(canvas.getByText(/Welcome to MyButton!/gi)).toBeTruthy();
+    expect(canvas.getByText(/MyButton!/gi)).toBeTruthy();
   },
-};
+} satisfies Story;
 ```
 
 Notice the interaction test on the second story, inside the `play` function. This just tests if the default text that appears on generated components exists in the rendered component. You can edit this test to suit your needs. You can read more about interaction tests [here](https://storybook.js.org/docs/react/writing-tests/interaction-testing).
