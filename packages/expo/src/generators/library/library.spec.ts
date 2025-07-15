@@ -281,6 +281,22 @@ describe('lib', () => {
       expect(packageJson.devDependencies['jest-expo']).toBeUndefined();
     });
 
+    it('should not reference tsconfig.spec.json when unitTestRunner is none', async () => {
+      await expoLibraryGenerator(appTree, {
+        ...defaultSchema,
+        unitTestRunner: 'none',
+      });
+
+      const tsconfigJson = readJson(appTree, 'my-lib/tsconfig.json');
+      expect(tsconfigJson.references).toEqual([
+        {
+          path: './tsconfig.lib.json',
+        },
+      ]);
+
+      expect(appTree.exists('my-lib/tsconfig.spec.json')).toBeFalsy();
+    });
+
     it('should generate test configuration and install test dependencies when unitTestRunner is jest', async () => {
       await expoLibraryGenerator(appTree, {
         ...defaultSchema,
@@ -358,6 +374,16 @@ describe('lib', () => {
       expect(appTree.exists('my-lib/rollup.config.cjs')).toBeTruthy();
       expect(hasRollupPlugin(appTree)).toBeTruthy();
     });
+
+    it('should add @nx/rollup to devDependencies', async () => {
+      await expoLibraryGenerator(appTree, {
+        ...defaultSchema,
+        buildable: true,
+      });
+
+      const packageJson = readJson(appTree, 'package.json');
+      expect(packageJson.devDependencies['@nx/rollup']).toBeDefined();
+    });
   });
 
   describe('--publishable', () => {
@@ -370,6 +396,17 @@ describe('lib', () => {
 
       expect(appTree.exists('my-lib/rollup.config.cjs')).toBeTruthy();
       expect(hasRollupPlugin(appTree)).toBeTruthy();
+    });
+
+    it('should add @nx/rollup to devDependencies', async () => {
+      await expoLibraryGenerator(appTree, {
+        ...defaultSchema,
+        publishable: true,
+        importPath: '@proj/my-lib',
+      });
+
+      const packageJson = readJson(appTree, 'package.json');
+      expect(packageJson.devDependencies['@nx/rollup']).toBeDefined();
     });
 
     it('should fail if no importPath is provided with publishable', async () => {
@@ -581,13 +618,13 @@ describe('lib', () => {
             "**/*.test.jsx",
             "**/*.spec.jsx",
             "src/test-setup.ts",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
             "jest.config.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
             "jest.resolver.js",
-            "eslint.config.js",
-            "eslint.config.cjs",
-            "eslint.config.mjs",
           ],
           "extends": "../tsconfig.base.json",
           "include": [
@@ -603,8 +640,6 @@ describe('lib', () => {
         {
           "compilerOptions": {
             "jsx": "react-jsx",
-            "module": "esnext",
-            "moduleResolution": "bundler",
             "outDir": "./out-tsc/jest",
             "types": [
               "jest",
@@ -627,11 +662,6 @@ describe('lib', () => {
             "src/**/*.spec.jsx",
             "src/**/*.d.ts",
             "jest.resolver.js",
-          ],
-          "references": [
-            {
-              "path": "./tsconfig.lib.json",
-            },
           ],
         }
       `);
