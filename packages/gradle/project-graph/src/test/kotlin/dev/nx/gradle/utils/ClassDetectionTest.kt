@@ -279,4 +279,127 @@ class ClassDetectionTest {
 
     assertEquals(expected, result)
   }
+
+  @Test
+  fun `detects only nested classes when parent has no direct test methods but has nested tests`() {
+    val javaSource =
+        """
+            package com.example;
+
+            import org.junit.jupiter.api.extension.ExtendWith;
+            import org.junit.jupiter.api.Nested;
+            import org.junit.jupiter.api.Test;
+            import org.junit.jupiter.api.BeforeEach;
+            import org.junit.jupiter.api.AfterEach;
+
+            @ExtendWith(OutputCaptureExtension.class)
+            @AssertFileChannelDataBlocksClosed
+            class LauncherTests {
+
+                /**
+                 * Jar Mode tests.
+                 */
+                @Nested
+                class JarMode {
+
+                    @BeforeEach
+                    void setup() {
+                        System.setProperty(JarModeRunner.DISABLE_SYSTEM_EXIT, "true");
+                    }
+
+                    @AfterEach
+                    void cleanup() {
+                        System.clearProperty("jarmode");
+                        System.clearProperty(JarModeRunner.DISABLE_SYSTEM_EXIT);
+                    }
+
+                    @Test
+                    void launchWhenJarModePropertyIsSetLaunchesJarMode() throws Exception {
+                        // test implementation
+                    }
+
+                    @Test
+                    void launchWhenJarModePropertyIsNotAcceptedThrowsException() throws Exception {
+                        // test implementation
+                    }
+
+                    @Test
+                    void launchWhenJarModeRunFailsWithErrorExceptionPrintsSimpleMessage() throws Exception {
+                        // test implementation
+                    }
+
+                    @Test
+                    void launchWhenJarModeRunFailsWithErrorExceptionPrintsStackTrace() throws Exception {
+                        // test implementation
+                    }
+                }
+
+                private static final class TestLauncher extends Launcher {
+                    @Override
+                    protected String getMainClass() throws Exception {
+                        throw new IllegalStateException("Should not be called");
+                    }
+                }
+            }
+        """
+            .trimIndent()
+
+    // Write to temp file
+    val tempFile = File.createTempFile("LauncherTest", ".java")
+    tempFile.writeText(javaSource)
+    tempFile.deleteOnExit()
+
+    // Run the function
+    val result = getAllVisibleClassesWithNestedAnnotation(tempFile)
+
+    // Expected output - should detect only the nested class, not the parent
+    val expected = mapOf("LauncherTestsJarMode" to "com.example.LauncherTests\$JarMode")
+
+    assertEquals(expected, result)
+  }
+
+  @Test
+  fun `excludes classes with only setup annotations but no test methods`() {
+    val javaSource =
+        """
+            package com.example;
+
+            import org.springframework.test.context.TestPropertySource;
+            import org.junit.jupiter.api.extension.ExtendWith;
+
+            @TestPropertySource(properties = { "spring.jersey.type=filter", "server.servlet.register-default-servlet=true" })
+            class JerseyFilterApplicationTests extends AbstractJerseyApplicationTests {
+                // No test methods, no @Nested classes
+                // Should NOT generate a target
+            }
+            
+            @ExtendWith(SomeExtension.class)
+            class AnotherSetupOnlyClass {
+                // No test methods, no @Nested classes
+                // Should NOT generate a target
+            }
+            
+            @TestPropertySource(properties = { "some.prop=value" })
+            class ClassWithTestMethod {
+                @Test
+                void actualTest() {
+                    // This class should generate a target because it has a test method
+                }
+            }
+        """
+            .trimIndent()
+
+    // Write to temp file
+    val tempFile = File.createTempFile("SetupOnlyTest", ".java")
+    tempFile.writeText(javaSource)
+    tempFile.deleteOnExit()
+
+    // Run the function
+    val result = getAllVisibleClassesWithNestedAnnotation(tempFile)
+
+    // Expected output - should only include the class with actual test methods
+    val expected = mapOf("ClassWithTestMethod" to "com.example.ClassWithTestMethod")
+
+    assertEquals(expected, result)
+  }
 }
