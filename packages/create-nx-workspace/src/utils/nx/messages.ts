@@ -22,7 +22,6 @@ const outputMessages = {
           type: 'success',
           bodyLines: [
             `Push your repository and finish the setup${url ? `: ${url}` : ''}`,
-            `You can also set up a remote cache later by running \`nx g @nx/nx-cloud:init\``,
           ],
         };
       },
