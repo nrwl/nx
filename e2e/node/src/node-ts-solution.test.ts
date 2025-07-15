@@ -14,6 +14,7 @@ import {
   uniq,
   updateFile,
   updateJson,
+  getRandomPort,
 } from '@nx/e2e/utils';
 import { execSync } from 'child_process';
 import * as http from 'http';
@@ -312,10 +313,6 @@ describe('Node Applications', () => {
     );
   }, 300_000);
 });
-
-function getRandomPort() {
-  return Math.floor(1000 + Math.random() * 9000);
-}
 
 function getData(port, path = '/api'): Promise<any> {
   return new Promise((resolve) => {
