@@ -350,6 +350,7 @@ jobs:
           path: |
             packages/**/*.node
             packages/**/*.wasm
+            !packages/*/node_modules/**
           if-no-files-found: error
 
   build-freebsd:
@@ -414,7 +415,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bindings-freebsd
-          path: packages/**/*.node
+          path: |
+            packages/**/*.node
+            !packages/*/node_modules/**
           if-no-files-found: error
 
   publish:
