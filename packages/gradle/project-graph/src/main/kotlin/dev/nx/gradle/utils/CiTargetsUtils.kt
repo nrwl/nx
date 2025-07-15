@@ -211,8 +211,19 @@ internal fun processTestClasses(
     testTask.logger.info(
         "${testTask.path}: Storing target $targetName with executor: ${builtTarget["executor"]}")
 
+    // Additional validation before storing
+    if (builtTarget["executor"] == null || builtTarget["executor"].toString().isEmpty()) {
+      testTask.logger.error(
+          "${testTask.path}: CRITICAL - Target $targetName has null/empty executor before storage!")
+      builtTarget["executor"] = "@nx/gradle:gradle"
+    }
+
     targets[targetName] = builtTarget
     targetGroups[testCiTargetGroup]?.add(targetName)
+
+    // Debug logging after storing
+    testTask.logger.info(
+        "${testTask.path}: Stored target $targetName, verifying executor: ${targets[targetName]?.get("executor")}")
 
     ciDependsOn.add(mapOf("target" to targetName, "projects" to "self", "params" to "forward"))
   }
@@ -694,9 +705,12 @@ private fun buildTestCiTarget(
   val dependsOnTasks = getDependsOnTask(testTask)
   val taskInputs = getInputsForTask(dependsOnTasks, testTask, projectRoot, workspaceRoot)
 
+  // Ensure executor is never null or undefined by using a constant
+  val executorValue = "@nx/gradle:gradle"
+
   val target =
       mutableMapOf<String, Any?>(
-          "executor" to "@nx/gradle:gradle",
+          "executor" to executorValue,
           "options" to
               mapOf(
                   "taskName" to "${projectBuildPath}:${testTask.name}",
@@ -706,10 +720,11 @@ private fun buildTestCiTarget(
           "cache" to true,
           "inputs" to taskInputs)
 
-  // Defensive check to ensure executor is never null
-  if (target["executor"] == null) {
-    testTask.logger.warn("${testTask.path}: executor is null, setting to default")
-    target["executor"] = "@nx/gradle:gradle"
+  // Defensive check to ensure executor is never null or empty
+  val currentExecutor = target["executor"]
+  if (currentExecutor == null || currentExecutor.toString().isEmpty()) {
+    testTask.logger.warn("${testTask.path}: executor is null or empty, setting to default")
+    target["executor"] = executorValue
   }
 
   // Debug logging to trace executor value
