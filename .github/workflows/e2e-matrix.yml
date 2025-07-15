@@ -28,13 +28,13 @@ jobs:
           # - windows-latest Windows fails to build gradle wrapper which always runs when we build nx.
           ## https://staging.nx.app/runs/LgD4vxGn8w?utm_source=pull-request&utm_medium=comment
         node_version:
-          - 20
           - 22
+          - 24
           # - 23
         exclude:
           # run just node v20 on macos and windows
           - os: macos-latest
-            node_version: 22
+            node_version: 24.4.0
           # - os: macos-latest
           #   node_version: 23
           # - os: windows-latest TODO (emily): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
