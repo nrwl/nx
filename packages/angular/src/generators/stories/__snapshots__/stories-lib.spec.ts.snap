@@ -10,6 +10,7 @@ const meta: Meta<Standalone> = {
   title: 'Standalone',
 };
 export default meta;
+
 type Story = StoryObj<Standalone>;
 
 export const Primary: Story = {
@@ -19,7 +20,7 @@ export const Primary: Story = {
 export const Heading: Story = {
   args: {},
   play: async ({ canvas }) => {
-    await expect(canvas.getByText(/standalone works!/gi)).toBeTruthy();
+    await expect(canvas.getByText(/standalone/gi)).toBeTruthy();
   },
 };
 "
@@ -35,6 +36,7 @@ const meta: Meta<SecondaryStandalone> = {
   title: 'SecondaryStandalone',
 };
 export default meta;
+
 type Story = StoryObj<SecondaryStandalone>;
 
 export const Primary: Story = {
@@ -44,9 +46,7 @@ export const Primary: Story = {
 export const Heading: Story = {
   args: {},
   play: async ({ canvas }) => {
-    await expect(
-      canvas.getByText(/secondary-standalone works!/gi)
-    ).toBeTruthy();
+    await expect(canvas.getByText(/secondary-standalone/gi)).toBeTruthy();
   },
 };
 "
@@ -62,6 +62,7 @@ const meta: Meta<TestButton> = {
   title: 'TestButton',
 };
 export default meta;
+
 type Story = StoryObj<TestButton>;
 
 export const Primary: Story = {
@@ -81,7 +82,7 @@ export const Heading: Story = {
     isOn: false,
   },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText(/test-button works!/gi)).toBeTruthy();
+    await expect(canvas.getByText(/test-button/gi)).toBeTruthy();
   },
 };
 "
@@ -97,6 +98,7 @@ const meta: Meta<TestButton> = {
   title: 'TestButton',
 };
 export default meta;
+
 type Story = StoryObj<TestButton>;
 
 export const Primary: Story = {
@@ -116,7 +118,7 @@ export const Heading: Story = {
     isOn: false,
   },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText(/test-button works!/gi)).toBeTruthy();
+    await expect(canvas.getByText(/test-button/gi)).toBeTruthy();
   },
 };
 "

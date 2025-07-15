@@ -9,6 +9,7 @@ const meta: Meta<TestButtonComponent> = {
   title: 'TestButtonComponent',
 };
 export default meta;
+
 type Story = StoryObj<TestButtonComponent>;
 
 export const Primary: Story = {
