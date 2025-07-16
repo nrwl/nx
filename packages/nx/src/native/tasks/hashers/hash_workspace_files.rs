@@ -9,6 +9,8 @@ use anyhow::*;
 use dashmap::DashMap;
 use tracing::{debug, debug_span, trace, warn};
 
+use crate::native::utils::BufferedHasher;
+
 fn globs_from_workspace_inputs(workspace_file_sets: &[String]) -> Vec<String> {
     workspace_file_sets
         .iter()
@@ -60,17 +62,18 @@ pub fn hash_workspace_files(
 
     let glob = build_glob_set(&globs)?;
 
-    let mut hasher = xxhash_rust::xxh3::Xxh3::new();
     debug_span!("Hashing workspace fileset", cache_key).in_scope(|| {
+        let mut hasher = BufferedHasher::with_default_capacity();
+
         for file in all_workspace_files
             .iter()
             .filter(|file| glob.is_match(&file.file))
         {
             debug!("Adding {:?} ({:?}) to hash", file.hash, file.file);
-            hasher.update(file.file.clone().as_bytes());
-            hasher.update(file.hash.clone().as_bytes());
+            hasher.update_multiple(&[file.file.as_bytes(), file.hash.as_bytes()]);
         }
-        let hashed_value = hasher.digest().to_string();
+
+        let hashed_value = hasher.digest();
         debug!("Hash Value: {:?}", hashed_value);
 
         cache.insert(cache_key.to_string(), hashed_value.clone());

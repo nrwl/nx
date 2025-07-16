@@ -101,8 +101,8 @@ node_modules/
 .cursorindexingignore
 # OS specific
 # Task files
-tasks.json
-tasks/
+/tasks.json
+/tasks/
 
 # Upstream docs local configuration (machine-specific)
 .upstreamdocs.local.json

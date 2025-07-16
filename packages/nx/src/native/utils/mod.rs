@@ -1,3 +1,4 @@
+mod buffered_hasher;
 mod find_matching_projects;
 mod get_mod_time;
 pub mod json;
@@ -6,6 +7,7 @@ pub mod path;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod socket_path;
 
+pub use buffered_hasher::BufferedHasher;
 pub use find_matching_projects::*;
 pub use get_mod_time::*;
 pub use normalize_trait::Normalize;
