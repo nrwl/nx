@@ -228,7 +228,7 @@ npx nx conformance check
 
 ### Retrieve a personal access token
 
-Because publishing Conformance rules is a privileged action, you'll need to have a [personal access token](/ci/recipes/security/personal-access-tokens). Run `npx nx login` to retreive this.
+Because publishing Conformance rules is a privileged action, you'll need to have a [personal access token](/ci/recipes/security/personal-access-tokens). Run `npx nx login` to retrieve this.
 
 ### Publishing Rules to Nx Cloud
 
