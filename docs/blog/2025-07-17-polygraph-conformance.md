@@ -3,8 +3,8 @@ title: 'Nx Cloud Conformance: Automate Consistency Across Your Organization'
 slug: nx-cloud-conformance-automate-consistency
 authors: ['Philip Fulcher']
 tags: ['nx-cloud', 'polygraph', 'enterprise']
-cover_image: /blog/images/2025-07-16/header.avif
-description: 'Learn how Nx Cloud Conformance eliminates manual compliance tracking and enforces coding standards across your entire organization. See how to solve real problems like inconsistent code review processes with technology-agnostic rules.'
+cover_image: /blog/images/2025-07-17/header.avif
+description: 'Learn how Conformance with Nx Cloud eliminates manual compliance tracking and enforces coding standards across your entire organization. See how to solve real problems like inconsistent code review processes with technology-agnostic rules.'
 youtubeUrl: https://www.youtube.com/watch?v=F645Elxy1dw
 ---
 
@@ -225,7 +225,7 @@ Run the rule:
 npx nx conformance check
 ```
 
-![Screenshot of result of running the rule](/blog/images/2025-07-16/results.avif)
+![Screenshot of result of running the rule](/blog/images/2025-07-17/results.avif)
 
 ### Retrieve a personal access token
 
@@ -247,7 +247,7 @@ After publishing, head to your Nx Cloud dashboard and navigate to the Conformanc
 
 ### Rule Configuration Options
 
-![Screenshot of scheduling status](/blog/images/2025-07-16/scheduling-status.avif)
+![Screenshot of scheduling status](/blog/images/2025-07-17/scheduling-status.avif)
 
 When configuring a rule, you have three status options:
 
@@ -259,7 +259,7 @@ You can start with "evaluated" mode to see current compliance levels, then sched
 
 ### Running Rules with Custom Workflows
 
-![Screenshot of custom workflows](/blog/images/2025-07-16/custom-workflows.avif)
+![Screenshot of custom workflows](/blog/images/2025-07-17/custom-workflows.avif)
 
 Here's where Conformance really shines. Instead of requiring every team to add Conformance checks to their CI pipelines, you can use **[Custom Workflows](/ci/recipes/enterprise/custom-workflows)** to run these checks automatically.
 
@@ -278,7 +278,7 @@ This means your platform team can enforce standards across your entire organizat
 
 ## The Platform Engineering Superpower
 
-![Screenshot of results of Conformance rule across multiple workspaces](/blog/images/2025-07-16/rule-results.avif)
+![Screenshot of results of Conformance rule across multiple workspaces](/blog/images/2025-07-17/rule-results.avif)
 
 Conformance transforms how platform teams operate. Instead of manually tracking compliance across dozens or hundreds of repositories, a single platform engineer can:
 
@@ -314,7 +314,7 @@ Conformance is available now for all [Nx Enterprise](/enterprise) customers as p
 
 The combination of technology-agnostic rules, automated enforcement, and organization-wide visibility makes Conformance a game-changer for platform teams looking to scale their impact.
 
-{% call-to-action size="lg" title="Ready to automate your consistency?" url="/contact/sales" icon="nxcloud" description="Let's talk about how Nx Enterprise and Conformance can transform your development workflow." /%}
+{% call-to-action size="lg" title="Reach out to our team!" url="/contact/sales" icon="nxcloud" description="Let's talk about how Nx Enterprise and Conformance can transform your development workflow." /%}
 
 ## What's Next?
 
