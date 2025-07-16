@@ -37,7 +37,7 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "@napi-rs/wasm-runtime": "0.2.4",
+    "@napi-rs/wasm-runtime": "^0.2.4",
     "@yarnpkg/lockfile": "^1.1.0",
     "@yarnpkg/parsers": "3.0.2",
     "@zkochan/js-yaml": "0.0.7",
