@@ -1,7 +1,7 @@
-import { Tree, offsetFromRoot, generateFiles } from '@nx/devkit';
-import { configurationGenerator } from '@nx/jest';
+import { Tree, offsetFromRoot, generateFiles, ensurePackage } from '@nx/devkit';
 import { join } from 'path';
 import { updateTsConfigFiles } from '../update-tsconfig-files';
+import { nxVersion } from '../versions';
 
 export async function addJest(
   host: Tree,
@@ -15,6 +15,11 @@ export async function addJest(
   if (unitTestRunner !== 'jest') {
     return () => {};
   }
+
+  const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
+    '@nx/jest',
+    nxVersion
+  );
 
   const jestTask = await configurationGenerator(host, {
     js,

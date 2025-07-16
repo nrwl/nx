@@ -23,6 +23,7 @@ interface NormalizedSchema {
   tsConfigPaths: string[];
   skipPackageJson?: boolean;
   addPlugin?: boolean;
+  buildable?: boolean;
 }
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
@@ -39,6 +40,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     skipPackageJson: options.skipPackageJson,
     setParserOptionsProject: options.setParserOptionsProject,
     addPlugin: options.addPlugin,
+    addPackageJsonDependencyChecks: options.buildable
   });
 
   tasks.push(lintTask);
