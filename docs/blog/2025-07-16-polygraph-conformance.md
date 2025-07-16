@@ -104,7 +104,7 @@ For our CODEOWNERS rule, we'll choose `consistency` since it helps make the code
 Here's what our CODEOWNERS conformance rule looks like:
 
 ```typescript
-import { createConformanceRule, ConformanceViolation } from '@nx/conformance';
+import { createConformanceRule, ConformanceViolation, ConformanceRuleResultSeverity } from '@nx/conformance';
 import { workspaceRoot } from '@nx/devkit';
 import { join } from 'path';
 import { readFileSync } from 'fs';
@@ -120,7 +120,7 @@ export default createConformanceRule({
 
     try {
       // try to read CODEOWNERS file from the root of the repo
-      codeowners = await readFileSync(
+      codeowners = readFileSync(
         join(workspaceRoot, 'CODEOWNERS'),
         'utf-8'
       );
