@@ -10,7 +10,6 @@ import {
 import { createRequire } from 'node:module';
 import { basename, dirname, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { NodePackageImporter } from 'sass';
 import type { FileImporter } from 'sass';
 import type {
   HashFormat,
@@ -333,7 +332,6 @@ function getSassLoaderOptions(
     webpackImporter: false,
     sassOptions: (loaderContext: LoaderContext<unknown>) => ({
       importers: [
-        new NodePackageImporter(),
         getSassResolutionImporter(loaderContext, root, preserveSymlinks),
       ],
       loadPaths: includePaths,
