@@ -63,7 +63,7 @@ export async function getCommonConfig(
     output: {
       uniqueName: normalizedOptions.projectName ?? 'rspack-angular',
       publicPath: normalizedOptions.deployUrl ?? '',
-      clean: normalizedOptions.deleteOutputPath,
+      clean: false, // already taken care for by AngularRspackPlugin
       crossOriginLoading,
       trustedTypes: { policyName: 'angular#bundler' },
       sourceMapFilename: normalizedOptions.sourceMap.scripts

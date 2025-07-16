@@ -21,6 +21,7 @@ describe('createConfig', () => {
     scripts: [],
     aot: true,
     skipTypeChecking: false,
+    deleteOutputPath: false,
   };
 
   beforeEach(() => {

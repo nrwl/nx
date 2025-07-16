@@ -51,7 +51,7 @@ export async function _createConfig(
   );
   const hashFormat = getOutputHashFormat(normalizedOptions.outputHashing);
 
-  if (options.deleteOutputPath) {
+  if (normalizedOptions.deleteOutputPath) {
     await deleteOutputDir(
       normalizedOptions.root,
       normalizedOptions.outputPath.base
