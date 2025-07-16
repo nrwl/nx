@@ -37,8 +37,10 @@
     }
   },
   "executors": "./executors.json",
+  "generators": "./generators.json",
   "dependencies": {
     "@nx/devkit": "file:../devkit",
+    "enquirer": "~2.3.6",
     "tslib": "^2.3.0"
   }
 }

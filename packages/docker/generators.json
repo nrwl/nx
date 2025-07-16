@@ -1,0 +1,13 @@
+{
+  "name": "Nx Docker",
+  "version": "0.1",
+  "generators": {
+    "init": {
+      "factory": "./src/generators/init/init#initGeneratorInternal",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the `@nx/docker` plugin.",
+      "aliases": ["ng-add"],
+      "hidden": true
+    }
+  }
+}

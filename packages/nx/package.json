@@ -132,6 +132,7 @@
       "@nx/vue",
       "@nx/web",
       "@nx/webpack",
+      "@nx/docker",
       {
         "package": "nx-cloud",
         "version": "latest"
