@@ -9,7 +9,7 @@ export interface CTAProps {
 export function CallToAction({
   mainActionTitle = 'Get started with Nx',
   mainActionLinkText = 'Get started',
-  mainActionLink = '/getting-started/intro',
+  mainActionLink = 'https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=homepage_links&utm_campaign=try-nx-cloud',
 }: CTAProps): JSX.Element {
   return (
     <section className="relative isolate px-6 py-32 sm:py-40 lg:px-8">

@@ -56,7 +56,7 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
         </SectionHeading>
         <div className="mt-10 flex gap-x-6">
           <ButtonLink
-            href="/getting-started/intro?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker_getstarted#try-nx-yourself"
+            href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=homepage_links&utm_campaign=try-nx-cloud"
             title="Get started"
             variant="primary"
             size="large"

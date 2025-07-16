@@ -1,375 +1,651 @@
 ---
 title: 'TypeScript Monorepo Tutorial'
-description: In this tutorial you'll add Nx to an existing TypeScript repo
+description: In this tutorial you'll create a TypeScript monorepo with Nx.
 ---
 
-# TypeScript Monorepo Tutorial
+# Building and Testing TypeScript Packages in Nx
 
-In this tutorial, you'll learn how to add Nx to a repository with an existing TypeScript project. The starting repository uses [NPM workspaces](https://docs.npmjs.com/cli/using-npm/workspaces) for project linking and is configured to build with [TypeScript project references](https://www.typescriptlang.org/docs/handbook/project-references.html).
+In this tutorial, you'll learn how to create a new TypeScript monorepo using the Nx platform.
 
 What will you learn?
 
-- how to add Nx to the repository with a single command
-- how to configure caching for your tasks
-- how to configure a task pipeline
-- how to configure projects automatically with Nx Plugins
-- how to manage your releases with `nx release`
-- [how to speed up CI with Nx Cloud ⚡](#fast-ci)
+- how to create a new TypeScript workspace with [GitHub Actions](https://github.com/features/actions) preconfigured
+- how to run a single task (i.e. build your packages) or run multiple tasks in parallel
+- how to modularize your codebase with local libraries for better code organization
+- how to benefit from caching that works both locally and in CI
+- how to set up self-healing CI to apply fixes directly from your local editor
 
-<!-- ## Final Source Code
+## Prerequisite: Tutorial Setup
 
-Here's the source code of the final result for this tutorial.
+{% callout type="note" title="Prerequisites" %}
+This tutorial requires a [GitHub account](https://github.com) to demonstrate the full value of **Nx** - including task running, caching, and CI integration.
+{% /callout %}
 
-{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/typescript-packages" /%} -->
+### Step 1: Creating a new Nx TypeScript workspace
 
-<!-- {% youtube
-src="https://www.youtube.com/embed/ZA9K4iT3ANc"
-title="Nx NPM Workspaces Tutorial Walkthrough"
-/%} -->
+Let's start by creating a new TypeScript monorepo with Nx Cloud and GitHub Actions preconfigured. You'll be guided through an interactive setup process to create your workspace. After completing the setup, return here to continue with this tutorial.
 
-## Starting Repository
+{% call-to-action title="Create a new TypeScript monorepo" url="https://cloud.nx.app/create-nx-workspace?preset=ts" description="With Nx and GitHub Actions fully set up" /%}
 
-<!-- {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=51" /%} -->
+### Step 2: Verify Your Setup
 
-To get started, fork [the sample repository](https://github.com/nrwl/tuskydesign/fork) and clone it on your local machine:
+Please verify closely that you have the following setup:
 
-```shell
-git clone https://github.com/<your-username>/tuskydesign.git
+1. A new Nx workspace on your local machine
+2. A corresponding GitHub repository for the workspace with a `.github/workflows/ci.yml` pipeline preconfigured
+3. You completed the full Nx Cloud onboarding and you now have a Nx Cloud dashboard that is connected to your example repository on GitHub.
+
+You should see your workspace in your [Nx Cloud organization](https://cloud.nx.app/orgs).
+
+![](/shared/images/tutorials/connected-workspace.avif)
+
+If you do not see your workspace in Nx Cloud then please follow the steps outlined in the [Nx Cloud setup](https://cloud.nx.app/create-nx-workspace?preset=ts).
+
+This is important for using remote caching and self-healing in CI later in the tutorial.
+
+## Explore the Nx Workspace Setup
+
+Let's take a look at the structure of our new Nx workspace:
+
+```plaintext
+acme
+├─ .github
+│  └─ workflows
+│     └─ ci.yml
+├─ .nx
+│  └─ ...
+├─ packages
+│  └─ .gitkeep
+├─ README.md
+├─ .prettierignore
+├─ .prettierrc
+├─ nx.json
+├─ package-lock.json
+├─ package.json
+├─ tsconfig.base.json
+└─ tsconfig.json
 ```
 
-The repository has three TypeScript packages under `packages/animals`, `packages/names` and `packages/zoo`. The `zoo` package uses `animals` and `names` to generate a random message. The root `package.json` has a `workspaces` property that tells NPM how to find the projects in the repository.
+Here are some files that might jump to your eyes:
 
-```json {% fileName="package.json" %}
-{
-  "workspaces": ["packages/*"]
+- The `.nx` folder is where Nx stores local metadata about your workspaces using the [Nx Daemon](/concepts/nx-daemon).
+- The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx itself and global default settings that individual projects inherit.
+- The `.github/workflows/ci.yml` file preconfigures your CI in GitHub Actions to run build and test through Nx.
+
+Now, let's build some features and see how Nx helps get us to production faster.
+
+## Building TypeScript Packages
+
+Let's create two TypeScript packages that demonstrate how to structure a TypeScript monorepo. We'll create an `animal` package and a `zoo` package where `zoo` depends on `animal`.
+
+First, generate the `animal` package:
+
+```shell
+npx nx g @nx/js:lib packages/animal --bundler=tsc --unitTestRunner=vitest --linter=none
+```
+
+Then generate the `zoo` package:
+
+```shell
+npx nx g @nx/js:lib packages/zoo --bundler=tsc --unitTestRunner=vitest --linter=none
+```
+
+Running these commands should lead to new directories and files in your workspace:
+
+```plaintext
+acme
+├── packages
+│   ├── animal
+│   └── zoo
+├── ...
+└── vitest.workspace.ts
+```
+
+Let's add some code to our packages. First, add the following code to the `animal` package:
+
+```ts {% fileName="packages/animal/src/lib/animal.ts" highlightLines=["5-18"] %}
+export function animal(): string {
+  return 'animal';
+}
+
+export interface Animal {
+  name: string;
+  sound: string;
+}
+
+const animals: Animal[] = [
+  { name: 'cow', sound: 'moo' },
+  { name: 'dog', sound: 'woof' },
+  { name: 'pig', sound: 'oink' },
+];
+
+export function getRandomAnimal(): Animal {
+  return animals[Math.floor(Math.random() * animals.length)];
 }
 ```
 
-Because of this setting, when the install command is run at the root, the correct packages are installed for each project. NPM will create dedicated `node_modules` folders inside of each project folder where necessary.
+Now let's update the `zoo` package to use the `animal` package:
+
+```ts {% fileName="packages/zoo/src/lib/zoo.ts" %}
+import { getRandomAnimal } from '@acme/animal';
+
+export function zoo(): string {
+  const result = getRandomAnimal();
+  return `${result.name} says ${result.sound}!`;
+}
+```
+
+Also create an executable entry point for the zoo package:
+
+```ts {% fileName="packages/zoo/src/index.ts" %}
+import { zoo } from './lib/zoo.js';
+
+console.log(zoo());
+```
+
+To build your packages, run:
 
 ```shell
-npm install
+npx nx build animal
 ```
 
-Now let's try running some tasks. To build the `animals` package, use the `build` npm script:
+This creates a compiled version of your package in the `dist/packages/animal` folder. Since the `zoo` package depends on `animal`, building `zoo` will automatically build `animal` first:
 
-```text {% command="npm run build -w @tuskdesign/animals" path="~/tuskydesigns" %}
-> @tuskdesign/animals@1.2.0 build
-> tsc --build tsconfig.lib.json
+```shell
+npx nx build zoo
 ```
 
-The repository is set up using [TypeScript project references](https://www.typescriptlang.org/docs/handbook/project-references.html) so building the `zoo` package will automatically build all its dependencies.
+You'll see both packages are built, with outputs in their respective `dist` folders. This is how you would prepare packages for use internally or for publishing to a package registry like NPM.
 
-```text {% command="npm run build -w @tuskdesign/zoo" path="~/tuskydesigns" %}
-> @tuskdesign/zoo@1.2.0 build
-> tsc --build tsconfig.lib.json
+You can also run the `zoo` package to see it in action:
+
+```shell
+node packages/zoo/dist/index.js
 ```
 
-To run the `zoo` package use the `serve` script:
+Nx uses the following syntax to run tasks:
 
-```text {% command="npm run serve -w @tuskdesign/zoo" path="~/tuskydesigns" %}
-> @tuskdesign/zoo@1.2.0 serve
-> node dist/index.js
+![Syntax for Running Tasks in Nx](/shared/images/run-target-syntax.svg)
 
-Bo the pig says oink!
-```
+### Inferred Tasks
 
-Now that you have a basic understanding of the repository we're working with, let's see how Nx can help us.
+By default Nx simply runs your `package.json` scripts. However, you can also adopt [Nx technology plugins](/technologies) that help abstract away some of the lower-level config and have Nx manage that. One such thing is to automatically identify tasks that can be run for your project from [tooling configuration files](/concepts/inferred-tasks) such as `package.json` scripts and TypeScript configuration.
 
-## Smart Monorepo
-
-<!-- {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=170" /%} -->
-
-Nx offers many features, but at its core, it is a task runner. Out of the box, it can cache your tasks and ensure those tasks are run in the correct order. After the initial set up, you can incrementally add on other features that would be helpful in your organization.
-
-### Add Nx
-
-To enable Nx in your repository, run a single command:
-
-```shell {% path="~/tuskydesigns" %}
-npx nx@latest init
-```
-
-This command will download the latest version of Nx and help set up your repository to take advantage of it.
-
-First, the script will propose installing some plugins based on the packages that are being used in your repository.
-
-- Deselect both proposed plugins so that we can explore what Nx provides without any plugins.
-
-Second, the script asks a series of questions to help set up caching for you.
-
-- `Which scripts need to be run in order?` - Choose `build`
-- `Which scripts are cacheable?` - Choose `build` and `typecheck`
-- `Does the "build" script create any outputs?` - Enter `dist`
-- `Does the "typecheck" script create any outputs?` - Enter nothing
-- `Would you like remote caching to make your build faster?` - Choose `Skip for now`
-
-### Explore Your Workspace
-
-<!-- {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=250" /%} -->
-
-If you run `nx graph` as instructed, you'll see the dependencies between your projects.
-
-```shell {% path="~/tuskydesigns" %}
-npx nx graph --focus=@tuskdesign/zoo
-```
-
-{% graph title="Tusk Design" height="200px" jsonFile="shared/tutorials/typescript-packages-project-graph.json" %}
-{% /graph %}
-
-Nx uses this graph to determine the order tasks are run and enforce module boundaries. You can also leverage this graph to gain an accurate understanding of the architecture of your codebase. Part of what makes this graph invaluable is that it is derived directly from your codebase, so it will never become out of date.
-
-### Caching Pre-configured
-
-<!-- {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=285" /%} -->
-
-Nx has been configured to run your `build`, `typecheck` and `lint` tasks. You can run a single task like this:
-
-```shell {% path="~/tuskydesigns" %}
-npx nx build @tuskdesign/zoo
-```
-
-Or all tasks with a certain name like this:
-
-```shell {% path="~/tuskydesigns" %}
-npx nx run-many -t typecheck
-```
-
-During the `init` script, Nx also configured caching for these tasks. You can see in the `nx.json` file that the `build`, `typecheck` and `lint` targets have the `cache` property set to `true` and the `build` target specifies that its output goes to the project's `dist` folder.
+In `nx.json` there's already the `@nx/js` plugin registered which automatically identifies `typecheck` and `build` targets.
 
 ```json {% fileName="nx.json" %}
 {
-  "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "targetDefaults": {
-    "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["{projectRoot}/dist"],
-      "cache": true
-    },
-    "typecheck": {
-      "cache": true
-    },
-    "lint": {
-      "cache": true
+  ...
+  "plugins": [
+    {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "typecheck": {
+          "targetName": "typecheck"
+        },
+        "build": {
+          "targetName": "build",
+          "configName": "tsconfig.lib.json",
+          "buildDepsName": "build-deps",
+          "watchDepsName": "watch-deps"
+        }
+      }
+    }
+  ]
+}
+
+```
+
+To view the tasks that Nx has detected, look in the [Nx Console](/getting-started/editor-setup) project detail view or run:
+
+```shell
+npx nx show project animal
+```
+
+{% project-details title="Project Details View (Simplified)" %}
+
+```json
+{
+  "project": {
+    "name": "@acme/animal",
+    "type": "lib",
+    "data": {
+      "root": "packages/animal",
+      "targets": {
+        "typecheck": {
+          "dependsOn": ["^typecheck"],
+          "options": {
+            "cwd": "packages/animal",
+            "command": "tsc --build --emitDeclarationOnly"
+          },
+          "cache": true,
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": ["typescript"]
+            }
+          ],
+          "outputs": ["{projectRoot}/dist"],
+          "executor": "nx:run-commands",
+          "configurations": {}
+        },
+        "build": {
+          "options": {
+            "cwd": "packages/animal",
+            "command": "tsc --build tsconfig.lib.json"
+          },
+          "cache": true,
+          "dependsOn": ["^build"],
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": ["typescript"]
+            }
+          ],
+          "outputs": ["{projectRoot}/dist"],
+          "executor": "nx:run-commands",
+          "configurations": {}
+        }
+      },
+      "name": "animal",
+      "$schema": "../../node_modules/nx/schemas/project-schema.json",
+      "sourceRoot": "packages/animal/src",
+      "projectType": "library",
+      "tags": [],
+      "implicitDependencies": []
     }
   },
-  "defaultBase": "main"
-}
-```
-
-Try running `build` for the `zoo` app a second time:
-
-```shell {% path="~/tuskydesigns" %}
-npx nx build @tuskdesign/zoo
-```
-
-The first time `nx build` was run, it took about 1 second - just like running `npm run build`. But the second time you run `nx build`, it completes instantly and displays this message:
-
-```text
-Nx read the output from the cache instead of running the command for 3 out of 3 tasks.
-```
-
-You can see the same caching behavior working when you run `npx nx typecheck`.
-
-### Use Task Pipelines
-
-<!-- {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=358" /%} -->
-
-You may be wondering why the caching message in the previous section mentioned 3 tasks when you only ran the `build` task from the terminal. When we said that `build` tasks must be run in order during the setup script, Nx created a simple task pipeline. You can see the configuration for it in the `nx.json` file:
-
-```json {% fileName="nx.json" %}
-{
-  "targetDefaults": {
-    "build": {
-      "dependsOn": ["^build"]
-    }
+  "sourceMap": {
+    "root": ["packages/animal/project.json", "nx/core/project-json"],
+    "targets": ["packages/animal/project.json", "nx/core/project-json"],
+    "targets.typecheck": ["packages/animal/project.json", "@nx/js/typescript"],
+    "targets.typecheck.command": [
+      "packages/animal/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.typecheck.options": [
+      "packages/animal/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.typecheck.cache": [
+      "packages/animal/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.typecheck.dependsOn": [
+      "packages/animal/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.typecheck.inputs": [
+      "packages/animal/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.typecheck.outputs": [
+      "packages/animal/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.typecheck.options.cwd": [
+      "packages/animal/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.build": ["packages/animal/project.json", "@nx/js/typescript"],
+    "targets.build.command": [
+      "packages/animal/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.build.options": [
+      "packages/animal/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.build.cache": [
+      "packages/animal/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.build.dependsOn": [
+      "packages/animal/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.build.inputs": [
+      "packages/animal/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.build.outputs": [
+      "packages/animal/project.json",
+      "@nx/js/typescript"
+    ],
+    "targets.build.options.cwd": [
+      "packages/animal/project.json",
+      "@nx/js/typescript"
+    ],
+    "name": ["packages/animal/project.json", "nx/core/project-json"],
+    "$schema": ["packages/animal/project.json", "nx/core/project-json"],
+    "sourceRoot": ["packages/animal/project.json", "nx/core/project-json"],
+    "projectType": ["packages/animal/project.json", "nx/core/project-json"],
+    "tags": ["packages/animal/project.json", "nx/core/project-json"]
   }
 }
 ```
 
-This configuration means that if you run `build` on any project, Nx will first run `build` for the dependencies of that project and then run `build` on the project itself. The `^build` text means "the `build` tasks of the project's dependencies." You can visualize this in the Nx graph by selecting the `Tasks` dropdown in the top left and clicking `Show all tasks`:
+{% /project-details %}
 
-```shell {% path="~/tuskydesigns" %}
+The `@nx/js` plugin automatically configures both the build and typecheck tasks based on your TypeScript configuration. Notice also how the outputs are set to `{projectRoot}/dist` - this is where your compiled TypeScript files will be placed, and it defined by the `outDir` option in `packages/animal/tsconfig.lib.json`.
+
+{% callout type="note" title="Overriding inferred task options" %}
+You can override the options for inferred tasks by modifying the [`targetDefaults` in `nx.json`](/reference/nx-json#target-defaults) or setting a value in your [`project.json` file](/reference/project-configuration). Nx will merge the values from the inferred tasks with the values you define in `targetDefaults` and in your specific project's configuration.
+{% /callout %}
+
+## Code Sharing with Local Libraries
+
+When you develop packages, creating shared utilities that multiple packages can use is a common pattern. This approach offers several benefits:
+
+- better separation of concerns
+- better reusability
+- more explicit APIs between different parts of your system
+- better scalability in CI by enabling independent test/lint/build commands for each package
+- most importantly: better caching because changes to one package don't invalidate the cache for unrelated packages
+
+### Create a Shared Utilities Library
+
+Let's create a shared utilities library that both our existing packages can use:
+
+```shell
+npx nx g @nx/js:library packages/util --bundler=tsc --unitTestRunner=vitest --linter=none
+```
+
+Now we have:
+
+```plaintext
+acme
+├── packages
+│   ├── animal
+│   ├── util
+│   └── zoo
+└── ...
+```
+
+Let's add a utility function that our packages can share:
+
+```ts {% fileName="packages/util/src/lib/util.ts"  highlightLines=["5-11"] %}
+export function util(): string {
+  return 'util';
+}
+
+export function formatMessage(prefix: string, message: string): string {
+  return `[${prefix}] ${message}`;
+}
+
+export function getRandomItem<T>(items: T[]): T {
+  return items[Math.floor(Math.random() * items.length)];
+}
+```
+
+### Import the Shared Library
+
+This allows us to easily import them into other packages. Let's update our `animals` package to use the shared utility:
+
+```ts {% fileName="packages/animals/src/lib/animals.ts"  highlightLines=[1, "18-20"]%}
+import { getRandomItem } from '@acme/util';
+
+export function animal(): string {
+  return 'animal';
+}
+
+export interface Animal {
+  name: string;
+  sound: string;
+}
+
+const animals: Animal[] = [
+  { name: 'cow', sound: 'moo' },
+  { name: 'dog', sound: 'woof' },
+  { name: 'pig', sound: 'oink' },
+];
+
+export function getRandomAnimal(): Animal {
+  return getRandomItem(animals);
+}
+```
+
+And update the `zoo` package to use the formatting utility:
+
+```ts {% fileName="packages/zoo/src/lib/zoo.ts"  highlightLines=[2, 6, 7] %}
+import { getRandomAnimal } from '@acme/animal';
+import { formatMessage } from '@acme/util';
+
+export function zoo(): string {
+  const result = getRandomAnimal();
+  const message = `${result.name} says ${result.sound}!`;
+  return formatMessage('ZOO', message);
+}
+```
+
+Now when you run `npx nx build zoo`, Nx will automatically build all the dependencies in the correct order: first `util`, then `animal`, and finally `zoo`.
+
+Run the `zoo` package to see the updated output format:
+
+```shell
+node packages/zoo/dist/index.js
+```
+
+## Visualize your Project Structure
+
+Nx automatically detects the dependencies between the various parts of your workspace and builds a [project graph](/features/explore-graph). This graph is used by Nx to perform various optimizations such as determining the correct order of execution when running tasks like `npx nx build`, enabling intelligent caching, and more. Interestingly, you can also visualize it.
+
+Just run:
+
+```shell
 npx nx graph
 ```
 
-Alternatively, you can pass the `--graph` option to the run command to inspect the task graph.
+You should be able to see something similar to the following in your browser.
 
-```shell {% path="~/tuskydesigns" %}
-npx nx run @tuskdesign/zoo:build --graph
+{% graph height="450px" %}
+
+```json
+{
+  "projects": [
+    {
+      "name": "@acme/animal",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "@acme/util",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "@acme/zoo",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    }
+  ],
+  "dependencies": {
+    "@acme/animal": [
+      { "source": "@acme/animal", "target": "@acme/util", "type": "static" }
+    ],
+    "@acme/util": [],
+    "@acme/zoo": [
+      { "source": "@acme/zoo", "target": "@acme/animal", "type": "static" },
+      { "source": "@acme/zoo", "target": "@acme/util", "type": "static" }
+    ]
+  },
+  "affectedProjectIds": [],
+  "focus": null,
+  "groupByFolder": false
+}
 ```
 
-{% graph height="200px" title="Build Task Pipeline" type="task" jsonFile="shared/tutorials/typescript-packages-build-tasks1.json" %}
 {% /graph %}
 
-### Create a Task Pipeline
-
-<!-- {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=450" /%} -->
-
-You may have noticed in the `packages/zoo/package.json` file, there is a `serve` script that expects the `build` task to already have created the `dist` folder. Let's set up a task pipeline that will guarantee that the project's `build` task has been run.
-
-```json {% fileName="nx.json" highlightLines=[5] %}
-{
-  "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "targetDefaults": {
-    "serve": {
-      "dependsOn": ["build"]
-    },
-    "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["{projectRoot}/dist"],
-      "cache": true
-    },
-    "typecheck": {
-      "cache": true
-    }
-  },
-  "defaultBase": "main"
-}
-```
-
-The `serve` target's `dependsOn` line makes Nx run the `build` task for the current project before running the current project's `build` task. Now `nx serve` will run the `build` task before running the `serve` task.
-
-### Use Nx Plugins to Enhance Your Workspace
-
-<!-- {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=507" /%} -->
-
-We mentioned earlier that this repository is using TypeScript project references defined in the `tsconfig.json` files to incrementally build each project so that the output is available for other projects in the repository. In order for this feature to work, the `references` section in the `tsconfig.json` files for each project need to accurately reflect the actual dependencies of that project. This can be difficult to maintain, but Nx already knows the dependencies of every project and you can use the `@nx/js` plugin to automatically keep the TypeScript project references in sync with the code base.
-
-Nx plugins can:
-
-- automatically configure caching for you, including inputs and outputs based on the underlying tooling configuration
-- infer tasks that can be run on a project because of the tooling present
-- keep tooling configuration in sync with the structure of your codebase
-- provide code generators to help scaffold out projects
-- automatically keep the tooling versions and configuration files up to date
-
-For this tutorial, we'll focus on inferring tasks and keeping tooling configuration in sync.
-
-First, let's remove the existing `build` and `typecheck` scripts from each project's `package.json` files to allow the `@nx/js` plugin to infer those tasks for us.
-
-```json {% fileName="packages/animals/package.json" %}
-{
-  "scripts": {}
-}
-```
-
-```json {% fileName="packages/names/package.json" %}
-{
-  "scripts": {}
-}
-```
-
-```json {% fileName="packages/zoo/package.json" %}
-{
-  "scripts": {
-    "serve": "node dist/index.js"
-  }
-}
-```
-
-Now let's add the `@nx/js` plugin:
-
-```{% command="npx nx add @nx/js" path="~/tuskydesign" %}
-✔ Installing @nx/js...
-✔ Initializing @nx/js...
- NX  Generating @nx/js:init
-
-UPDATE nx.json
-UPDATE package.json
-
- NX   Package @nx/js added successfully.
-```
-
-The `nx add` command installs the version of the plugin that matches your repo's Nx version and runs that plugin's initialization script. For `@nx/js`, the initialization script registers the plugin in the `plugins` array of `nx.json`. The registered plugin automatically infers `build` and `typecheck` tasks for any project with a `tsconfig.json` file. Open the project details view for the `zoo` package and look at the `build` task.
-
-```shell {% path="~/tuskydesigns" %}
-npx nx show project @tuskdesign/zoo
-```
-
-{% project-details title="Project Details View" jsonFile="shared/tutorials/typescript-packages-pdv.json" %}
-{% /project-details %}
-
-Notice that the `inputs` that are inferred for the `build` task match the `include` and `exclude` settings in the `tsconfig.lib.json` file. As those settings are changed, the cache `inputs` will automatically update to the correct values.
-
-The `build` task also has a [sync generator](/concepts/sync-generators) defined. The `@nx/js:typescript-sync` generator will automatically update the `references` property in the `tsconfig.json` files across the repository to match the actual dependencies in your code.
-
-Let's see this behavior in action by extracting some common code into a new `util` library.
-
-First, create a library with `@nx/js:lib` generator:
+Let's create a git branch with our new packages so we can open a pull request later:
 
 ```shell
-nx g @nx/js:lib packages/util
+git checkout -b add-zoo-packages
+git add .
+git commit -m 'add animal and zoo packages'
 ```
 
-Set the bundler to `tsc`, the linter to `none` and the unit test runner to `none`.
+## Building and Testing - Running Multiple Tasks
 
-Now we can move the `getRandomItem` function from `packages/names/names.ts` and `packages/animals/animals.ts` into the `packages/util/src/lib/util.ts` file.
+Our packages come with preconfigured building and testing . Let's intentionally introduce a typo in our test to demonstrate the self-healing CI feature later.
 
-```ts {% fileName="packages/util/src/lib/util.ts" %}
-export function getRandomItem<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
+You can run tests for individual packages:
+
+```shell
+npx nx build zoo
 ```
 
-```ts {% fileName="packages/animals/animals.ts" %}
-import { getRandomItem } from '@tuskdesign/util';
+Or run multiple tasks in parallel across all packages:
 
-// ...
+```shell
+npx nx run-many -t build test
 ```
 
-```ts {% fileName="packages/names/names.ts" %}
-import { getRandomItem } from '@tuskdesign/util';
+This is exactly what is configured in `.github/workflows/ci.yml` for the CI pipeline. The `run-many` command allows you to run multiple tasks across multiple projects in parallel, which is particularly useful in a monorepo setup.
 
-// ...
+There is a test failure for the `zoo` package due to the updated message. Don't worry about it for now, we'll fix it in a moment with the help of Nx Cloud's self-healing feature.
+
+### Local Task Cache
+
+One thing to highlight is that Nx is able to [cache the tasks you run](/features/cache-task-results).
+
+Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, there will be a note that a matching cache result was found and therefore the task was not run again.
+
+```{% command="npx nx run-many -t built test" path="~/acme" %}
+      ✔  nx run @acme/util:build
+   ✔  nx run @acme/util:test
+   ✔  nx run @acme/animal:test
+   ✔  nx run @acme/animal:build
+   ✖  nx run @acme/zoo:test
+   ✔  nx run @acme/zoo:build
+
+——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+ NX   Ran targets test, build for 3 projects (800ms)
+
+   ✔  5/6 succeeded [5 read from cache]
+
+   ✖  1/6 targets failed, including the following:
+
+      - nx run @acme/zoo:test
 ```
 
-Now if you run the build, Nx will notice that the TypeScript project references need to be updated and ask your permission to update them.
+Not all tasks might be cacheable though. You can configure the `cache` settings in the `targetDefaults` property of the `nx.json` file. You can also [learn more about how caching works](/features/cache-task-results).
 
-```text {% command="nx build @tuskdesign/zoo" path="~/tuskydesigns" %}
- NX   The workspace is out of sync
+## Self-Healing CI with Nx Cloud
 
-[@nx/js:typescript-sync]: Some TypeScript configuration files are missing project references to the projects they depend on or contain outdated project references.
+In this section, we'll explore how Nx Cloud can help your pull request get to green faster with self-healing CI. Recall that our zoo package has a test with a typo, so let's see how this can be automatically resolved.
 
-This will result in an error in CI.
+The `npx nx-cloud fix-ci` command that is already included in your GitHub Actions workflow (`github/workflows/ci.yml`) is responsible for enabling self-healing CI and will automatically suggest fixes to your failing tasks.
 
-? Would you like to sync the identified changes to get your workspace up to date? …
-❯ Yes, sync the changes and run the tasks
-  No, run the tasks without syncing the changes
+```yaml {% fileName=".github/workflows/ci.yml" highlightLines=[31,32] %}
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: tree:0
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - run: npm ci --legacy-peer-deps
+
+      - run: npx nx run-many -t lint test build
+
+      - run: npx nx-cloud fix-ci
+        if: always()
 ```
 
-Allow the sync to happen and you'll see that the `tsconfig.json` and `tsconfig.lib.json` files have been updated to include references to the new `util` library. With this system in place, no matter how your codebase changes, the TypeScript project references will always be correct.
+You will also need to install the [Nx Console](/getting-started/editor-setup) editor extension for VS Code, Cursor, or IntelliJ. For the complete AI setup guide, see our [AI integration documentation](/getting-started/ai-integration).
 
-### Checkpoint
+{% install-nx-console /%}
 
-At this point, the repository is still using all the same tools to run tasks, but now Nx runs those tasks in a smarter way. The tasks are efficiently cached so that there is no repeated work and the cache configuration settings are automatically synced with your tooling configuration files by Nx plugins. Also, any task dependencies are automatically executed whenever needed because we configured task pipelines for the projects.
+Now, let's push the `add-zoo-packages` branch to GitHub and open a new pull request.
 
-Open up the task graph for `zoo` app's `serve` task again to see the changes.
-
-```shell {% path="~/tuskydesigns" %}
-npx nx run @tuskdesign/zoo:serve --graph
+```shell
+git push origin add-zoo-packages
+# Don't forget to open a pull request on GitHub
 ```
 
-{% graph height="200px" title="Build Task Pipeline" type="task" jsonFile="shared/tutorials/typescript-packages-build-tasks2.json" %}
-{% /graph %}
+As expected, the CI check may show failures or issues. But rather than looking at the pull request, Nx Console notifies you that the run has completed, and if there are any issues, it may have suggested fixes. This means that you don't have to waste time **babysitting your PRs**, and fixes can be applied directly from your editor.
+
+![Nx Console with notification](/shared/images/tutorials/ts-ci-notification.avif)
+
+### Fix CI from Your Editor
+
+From the Nx Console notification, if there's a suggested fix (such as fixing the typo "formated" to "formatted"), you can click `Show Suggested Fix` button. Review the suggested fix and approve it by clicking `Apply Fix`.
+
+![Suggestion to fix the typo in the editor](/shared/images/tutorials/ts-ci-suggestion.avif)
+
+You didn't have to leave your editor or do any manual work to fix it. This is the power of self-healing CI with Nx Cloud.
+
+### Remote Cache for Faster Time To Green
+
+After the fix has been applied and committed, CI will re-run automatically, and you will be notified of the results in your editor.
+
+![Notication of successful run](/shared/images/tutorials/ts-remote-cache-notification.avif)
+
+When you click `View Results` to show the run in Nx Cloud, you'll notice something interesting. The tasks for packages that weren't affected by your change were read from remote cache and did not have to run again, thus each taking less than a second to complete.
+
+![Nx Cloud run showing remote cache hits](/shared/images/tutorials/ts-remote-cache-cloud.avif)
+
+This happens because Nx Cloud caches the results of tasks and reuses them across different CI runs. As long as the inputs for each task have not changed (e.g. source code), then their results can be replayed from Nx Cloud's [Remote Cache](/ci/features/remote-cache).
+
+This significantly speeds up the time to green for your pull requests, because subsequent changes to them have a good chance to replay tasks from cache.
+
+{% callout type="note" title="Remote Cache Outputs" %}
+Outputs from cached tasks, such as the `dist` folder for builds or `coverage` folder for tests, are also read from cache. Even though a task was not run again, its outputs are available. The [Cache Task Results](/features/cache-task-results) page provides more details on caching.
+{% /callout %}
+
+This pull request is now ready to be merged with the help of Nx Cloud's self-healing CI and remote caching.
+
+![Pull request is green](/shared/images/tutorials/ts-ci-green.avif)
+
+The next section deals with publishing packages to a registry like NPM, but if you are not interested in publishing your packages, you can skip to [the end](#next-steps).
 
 ## Manage Releases
 
-<!-- {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=713" /%} -->
-
-If you decide to publish the `animals` or `names` packages on NPM, Nx can also help you [manage the release process](/features/manage-releases). Release management involves updating the version of your package, populating a changelog, and publishing the new version to the NPM registry.
+If you decide to publish your packages to NPM, Nx can help you [manage the release process](/features/manage-releases). Release management involves updating the version of your packages, populating a changelog, and publishing the new version to the NPM registry.
 
 First you'll need to define which projects Nx should manage releases for by setting the `release.projects` property in `nx.json`:
 
-```json {% fileName="nx.json" %}
+```json {% fileName="nx.json" highlightLines=["3-5"] %}
 {
+  ...
   "release": {
     "projects": ["packages/*"]
   }
 }
 ```
 
-Now you're ready to use the `nx release` command to publish the `animals` and `names` packages. The first time you run `nx release`, you need to add the `--first-release` flag so that Nx doesn't try to find the previous version to compare against. It's also recommended to use the `--dry-run` flag until you're sure about the results of the `nx release` command, then you can run it a final time without the `--dry-run` flag.
+You'll also need to ensure that each package's `package.json` file sets `"private": false` so that Nx can publish them. If you have any packages that you do not want to publish, make sure to set `"private": true` in their `package.json`.
+
+Now you're ready to use the `nx release` command to publish your packages. The first time you run `nx release`, you need to add the `--first-release` flag so that Nx doesn't try to find the previous version to compare against. It's also recommended to use the `--dry-run` flag until you're sure about the results of the `nx release` command, then you can run it a final time without the `--dry-run` flag.
 
 To preview your first release, run:
 
@@ -385,122 +661,16 @@ npx nx release --first-release
 
 After this first release, you can remove the `--first-release` flag and just run `nx release --dry-run`. There is also a [dedicated feature page](/features/manage-releases) that goes into more detail about how to use the `nx release` command.
 
-## Fast CI ⚡ {% highlightColor="green" %}
-
-<!-- {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=821" /%} -->
-
-{% callout type="check" title="Forked repository with Nx" %}
-Make sure you have completed the previous sections of this tutorial before starting this one. If you want a clean starting point, you can fork the [sample repository with Nx already added](https://github.com/nrwl/nx-recipes/tree/main/typescript-packages).
-{% /callout %}
-
-So far in this tutorial you've seen how Nx improves the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
-
-- Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
-- Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
-- Nx Agents [efficiently distribute tasks across machines](/ci/features/distribute-task-execution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
-- Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
-
-### Connect to Nx Cloud {% highlightColor="green" %}
-
-Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
-
-Now that we're working on the CI pipeline, it is important for your changes to be pushed to a GitHub repository.
-
-1. Commit your existing changes with `git add . && git commit -am "updates"`
-2. Push your changes to your forked GitHub repository with `git push`
-
-Now connect your repository to Nx Cloud with the following command:
-
-```shell
-npx nx connect
-```
-
-A browser window will open to register your repository in your [Nx Cloud](https://cloud.nx.app) account. The link is also printed to the terminal if the windows does not open, or you closed it before finishing the steps. The app will guide you to create a PR to enable Nx Cloud on your repository.
-
-![](/shared/tutorials/nx-cloud-github-connect.avif)
-
-Once the PR is created, merge it into your main branch.
-
-![](/shared/tutorials/github-cloud-pr-merged.avif)
-
-And make sure you pull the latest changes locally:
-
-```shell
-git pull
-```
-
-You should now have an `nxCloudId` property specified in the `nx.json` file.
-
-### Create a CI Workflow {% highlightColor="green" %}
-
-Use the following command to generate a CI workflow file.
-
-```shell
-npx nx generate ci-workflow --ci=github --useRunMany
-```
-
-This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects. If you would like to also distribute tasks across multiple machines to ensure fast and reliable CI runs, uncomment the `nx-cloud start-ci-run` line and have the `nx run-many` line run the `e2e-ci` task instead of `e2e`.
-
-The key lines in the CI pipeline are:
-
-```yml {% fileName=".github/workflows/ci.yml" highlightLines=["12-16", "22-24"] %}
-name: CI
-# ...
-jobs:
-  main:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          filter: tree:0
-
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Uncomment this line to enable task distribution
-      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
-          cache: 'npm'
-      - run: npm ci --legacy-peer-deps
-      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: npx nx-cloud record -- echo Hello World
-      # As your workspace grows, you can change this to use Nx Affected to run only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      # When you enable task distribution, run the e2e-ci task instead of e2e
-      - run: npx nx run-many -t lint test build e2e
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-      - run: npx nx fix-ci
-        if: always()
-```
-
-### Open a Pull Request {% highlightColor="green" %}
-
-Commit the changes and open a new PR on GitHub.
-
-```shell
-git add .
-git commit -m 'add CI workflow file'
-git push origin add-workflow
-```
-
-When you view the PR on GitHub, you will see a comment from Nx Cloud that reports on the status of the CI run.
-
-![Nx Cloud report](/shared/tutorials/github-pr-cloud-report.avif)
-
-The `See all runs` link goes to a page with the progress and results of tasks that were run in the CI pipeline.
-
-![Run details](/shared/tutorials/nx-cloud-run-details.avif)
-
-For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:
-
-- [Circle CI with Nx](/ci/intro/tutorials/circle)
-- [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
-
 ## Next Steps
 
-Connect with the rest of the Nx community with these resources:
+Here are some things you can dive into next:
+
+- Learn more about the [underlying mental model of Nx](/concepts/mental-model)
+- Learn how to [migrate your existing project to Nx](/recipes/adopting-nx/adding-to-existing-project)
+- [Learn more about Nx release for publishing packages](/features/manage-releases)
+- Learn about [enforcing boundaries between projects](/features/enforce-module-boundaries)
+
+Also, make sure you
 
 - ⭐️ [Star us on GitHub](https://github.com/nrwl/nx) to show your support and stay updated on new releases!
 - [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
