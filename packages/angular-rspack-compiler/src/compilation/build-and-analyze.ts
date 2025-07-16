@@ -1,4 +1,4 @@
-import { JavaScriptTransformer } from '@angular/build/src/tools/esbuild/javascript-transformer';
+import { JavaScriptTransformer } from '@angular/build/private';
 import { normalize } from 'path';
 import { AngularCompilation } from '../models';
 

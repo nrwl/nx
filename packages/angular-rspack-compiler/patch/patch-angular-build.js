@@ -7,8 +7,6 @@ function main() {
   const fileContentsJson = JSON.parse(
     readFileSync(angularBuildPackageJson, 'utf8')
   );
-  fileContentsJson.exports['./src/tools/esbuild/javascript-transformer'] =
-    './src/tools/esbuild/javascript-transformer.js';
   fileContentsJson.exports[
     './src/tools/angular/compilation/parallel-compilation'
   ] = './src/tools/angular/compilation/parallel-compilation.js';
