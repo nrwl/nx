@@ -1,4 +1,4 @@
-import { JavaScriptTransformer } from '@angular/build/src/tools/esbuild/javascript-transformer';
+import { JavaScriptTransformer } from '@angular/build/private';
 import { ParallelCompilation } from '@angular/build/src/tools/angular/compilation/parallel-compilation';
 import { AotCompilation } from '@angular/build/src/tools/angular/compilation/aot-compilation';
 import { JitCompilation } from '@angular/build/src/tools/angular/compilation/jit-compilation';
