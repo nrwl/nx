@@ -216,6 +216,14 @@ export async function normalizeOptions(
         type: budget.type as any,
       }));
 
+  const stylePreprocessorOptions = options.stylePreprocessorOptions ?? {};
+  if (stylePreprocessorOptions.includePaths?.length) {
+    stylePreprocessorOptions.includePaths = [
+      ...stylePreprocessorOptions.includePaths,
+      'node_modules',
+    ];
+  }
+
   return {
     advancedOptimizations,
     appShell: options.appShell ?? false,
@@ -257,7 +265,7 @@ export async function normalizeOptions(
     ssr: normalizedSsr,
     statsJson: options.statsJson ?? false,
     styles: options.styles ?? [],
-    stylePreprocessorOptions: options.stylePreprocessorOptions,
+    stylePreprocessorOptions,
     subresourceIntegrity: options.subresourceIntegrity ?? false,
     supportedBrowsers: getSupportedBrowsers(root, { warn: console.warn }),
     tsConfig,
