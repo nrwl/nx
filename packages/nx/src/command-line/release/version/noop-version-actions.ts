@@ -36,6 +36,22 @@ export class NOOP_VERSION_ACTIONS extends VersionActions {
     });
   }
 
+  async calculateNewVersion(
+    currentVersion: string | null,
+    newVersionInput: string,
+    newVersionInputReason: string,
+    newVersionInputReasonData: Record<string, unknown>,
+    preid: string
+  ): Promise<{
+    newVersion: string;
+    logText: string;
+  }> {
+    return Promise.resolve({
+      newVersion: '0.0.0',
+      logText: 'Skipped default versioning as no-op.',
+    });
+  }
+
   updateProjectDependencies(
     tree: Tree,
     projectGraph: ProjectGraph,

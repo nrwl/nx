@@ -1692,7 +1692,17 @@
         "type": "executor"
       }
     ],
-    "generators": [],
+    "generators": [
+      {
+        "description": "Initialize the `@nx/docker` plugin.",
+        "file": "generated/packages/docker/generators/init.json",
+        "hidden": true,
+        "name": "init",
+        "originalFilePath": "/packages/docker/src/generators/init/schema.json",
+        "path": "docker/generators/init",
+        "type": "generator"
+      }
+    ],
     "migrations": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "docker",
