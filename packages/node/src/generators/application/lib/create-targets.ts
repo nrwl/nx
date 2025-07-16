@@ -114,7 +114,9 @@ export function getServeConfig(options: NormalizedSchema): TargetConfiguration {
   };
 }
 
-export function getNestWebpackBuildConfig(project: ProjectConfiguration): TargetConfiguration {
+export function getNestWebpackBuildConfig(
+  project: ProjectConfiguration
+): TargetConfiguration {
   return {
     executor: 'nx:run-commands',
     options: {
