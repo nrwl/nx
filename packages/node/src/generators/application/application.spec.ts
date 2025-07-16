@@ -575,14 +575,14 @@ describe('app', () => {
   ])('debug support', (framework, _) => {
     let getPackageManagerCommandSpy: jest.SpyInstance;
 
-    beforeAll(() => {
+    beforeEach(() => {
       // Mock package manager for deterministic snapshots
       getPackageManagerCommandSpy = jest
         .spyOn(devkit, 'detectPackageManager')
         .mockReturnValue('npm');
     });
 
-    afterAll(() => {
+    afterEach(() => {
       getPackageManagerCommandSpy.mockRestore();
     });
 
