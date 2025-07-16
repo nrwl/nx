@@ -10,7 +10,8 @@ exports[`app debug support should generate a debug config for vscode by default 
     "internalConsoleOptions": "neverOpen",
     "name": "Debug api-fastify with Nx",
     "outFiles": [
-      "\${workspaceFolder}/api-fastify/dist/**/*.js",
+      "\${workspaceFolder}/api-fastify/dist/**/*.(m|c|)js",
+      "!**/node_modules/**",
     ],
     "request": "launch",
     "runtimeArgs": [
@@ -18,7 +19,7 @@ exports[`app debug support should generate a debug config for vscode by default 
       "serve",
       "api-fastify",
     ],
-    "runtimeExecutable": "pnpm exec",
+    "runtimeExecutable": "npx",
     "skipFiles": [
       "<node_internals>/**",
     ],
@@ -38,7 +39,8 @@ exports[`app debug support should generate a debug config for vscode by default 
     "internalConsoleOptions": "neverOpen",
     "name": "Debug api-express with Nx",
     "outFiles": [
-      "\${workspaceFolder}/api-express/dist/**/*.js",
+      "\${workspaceFolder}/api-express/dist/**/*.(m|c|)js",
+      "!**/node_modules/**",
     ],
     "request": "launch",
     "runtimeArgs": [
@@ -46,7 +48,7 @@ exports[`app debug support should generate a debug config for vscode by default 
       "serve",
       "api-express",
     ],
-    "runtimeExecutable": "pnpm exec",
+    "runtimeExecutable": "npx",
     "skipFiles": [
       "<node_internals>/**",
     ],
@@ -66,7 +68,8 @@ exports[`app debug support should generate a debug config for vscode by default 
     "internalConsoleOptions": "neverOpen",
     "name": "Debug api-koa with Nx",
     "outFiles": [
-      "\${workspaceFolder}/api-koa/dist/**/*.js",
+      "\${workspaceFolder}/api-koa/dist/**/*.(m|c|)js",
+      "!**/node_modules/**",
     ],
     "request": "launch",
     "runtimeArgs": [
@@ -74,7 +77,7 @@ exports[`app debug support should generate a debug config for vscode by default 
       "serve",
       "api-koa",
     ],
-    "runtimeExecutable": "pnpm exec",
+    "runtimeExecutable": "npx",
     "skipFiles": [
       "<node_internals>/**",
     ],
@@ -94,7 +97,8 @@ exports[`app debug support should generate a debug config for vscode by default 
     "internalConsoleOptions": "neverOpen",
     "name": "Debug api-nest with Nx",
     "outFiles": [
-      "\${workspaceFolder}/api-nest/dist/**/*.js",
+      "\${workspaceFolder}/api-nest/dist/**/*.(m|c|)js",
+      "!**/node_modules/**",
     ],
     "request": "launch",
     "runtimeArgs": [
@@ -102,7 +106,7 @@ exports[`app debug support should generate a debug config for vscode by default 
       "serve",
       "api-nest",
     ],
-    "runtimeExecutable": "pnpm exec",
+    "runtimeExecutable": "npx",
     "skipFiles": [
       "<node_internals>/**",
     ],
