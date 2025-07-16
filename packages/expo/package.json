@@ -30,11 +30,8 @@
   "dependencies": {
     "@nx/devkit": "file:../devkit",
     "@nx/eslint": "file:../eslint",
-    "@nx/jest": "file:../jest",
     "@nx/js": "file:../js",
     "@nx/react": "file:../react",
-    "@nx/web": "file:../web",
-    "@nx/webpack": "file:../webpack",
     "enhanced-resolve": "^5.8.3",
     "picocolors": "^1.1.0",
     "tsconfig-paths": "^4.1.2",
