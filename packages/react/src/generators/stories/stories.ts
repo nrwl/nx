@@ -118,7 +118,10 @@ export async function createAllStories(
 
   await Promise.all(
     componentPaths.map(async (componentPath) => {
-      const relativeCmpDir = componentPath.replace(`${sourceRoot}/`, '');
+      const relativeCmpDir = componentPath.replace(
+        `${sourceRoot.replace(/^\.\//, '')}/`,
+        ''
+      );
 
       if (!containsComponentDeclaration(tree, componentPath)) {
         return;
