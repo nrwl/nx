@@ -8,7 +8,7 @@ description: 'Learn how Nx Cloud Conformance eliminates manual compliance tracki
 youtubeUrl: https://www.youtube.com/watch?v=F645Elxy1dw
 ---
 
-If you've got consistency problems in your organization, we've got the solution for you. **Conformance** is a powerful new tool within Nx Cloud's Polygraph suite that brings automated consistency and maintainability to your entire organization—regardless of what technology stack you're using.
+If you've got consistency problems in your organization, we've got the solution for you. **Conformance** is a powerful new tool within Nx Cloud's [Polygraph](/blog/nx-cloud-introducing-polygraph) suite that brings automated consistency and maintainability to your entire organization—regardless of what technology stack you're using.
 
 Say goodbye to spreadsheets for tracking compliance. Get those maintenance items out of your backlog. It's time to solve everything with one tool.
 
@@ -38,7 +38,7 @@ Think of it as automated governance for your entire codebase. Platform teams can
 
 ## Real-World Example: Enforcing CODEOWNERS Standards
 
-Let's solve this code review problem. We'll create a conformance rule that ensures every repository has a properly configured CODEOWNERS file.
+Let's solve this code review problem. We'll create a Conformance rule that ensures every repository has a properly configured CODEOWNERS file.
 
 First, we need to define our requirements:
 
@@ -48,7 +48,7 @@ First, we need to define our requirements:
 
 ### Setting Up Your Conformance Rules
 
-You have two options for storing conformance rules:
+You have two options for storing Conformance rules:
 
 **Create a new workspace from the `@nx/conformance` preset**
 
@@ -57,7 +57,9 @@ You have two options for storing conformance rules:
 3. Run `npx nx login` in your new example workspace.
 4. Publish your rules using the `publish-conformance-rules` target on the `conformance-rules` project: `npx nx publish-conformance-rules`
 
-**Add conformance rules to an existing workspace**
+**Add Conformance rules to an existing workspace**
+
+You can check out the [full details in our docs](/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud), but here's an overview of adding Conformance rules to an existing workspace.
 
 1. Open your existing Nx workspace.
 2. Add the `@nx/conformance` plugin: `npx nx add @nx/conformance`.
@@ -72,15 +74,13 @@ For our example today, we'll create a new workspace named `stellar-conformance`:
 npx create-nx-workspace@latest stellar-conformance --preset=@nx/conformance
 ```
 
-This creates a new Nx workspace specifically for managing your organization's conformance rules. The preset includes example rules and the structure you need to get started.
+This creates a new Nx workspace specifically for managing your organization's Conformance rules. The preset includes example rules and the structure you need to get started.
 
 ### Writing Your First Conformance Rule
 
 We'll use the `@nx/conformance:conformance-rule` generator to create our CODEOWNERS rule:
 
-```shell
-npx nx g @nx/conformance:create-rule codeowners-lint
-
+```{% command="npx nx g @nx/conformance:create-rule codeowners-lint" %}
  NX  Generating @nx/conformance:create-rule
 
 ✔ Which directory do you want to create the rule directory in? · packages/conformance-rules/src
@@ -101,10 +101,14 @@ For our CODEOWNERS rule, we'll choose `consistency` since it helps make the code
 
 ### Implementing the Rule Logic
 
-Here's what our CODEOWNERS conformance rule looks like:
+Here's what our CODEOWNERS Conformance rule looks like:
 
 ```typescript
-import { createConformanceRule, ConformanceViolation, ConformanceRuleResultSeverity } from '@nx/conformance';
+import {
+  createConformanceRule,
+  ConformanceViolation,
+  ConformanceRuleResultSeverity,
+} from '@nx/conformance';
 import { workspaceRoot } from '@nx/devkit';
 import { join } from 'path';
 import { readFileSync } from 'fs';
@@ -120,10 +124,7 @@ export default createConformanceRule({
 
     try {
       // try to read CODEOWNERS file from the root of the repo
-      codeowners = readFileSync(
-        join(workspaceRoot, 'CODEOWNERS'),
-        'utf-8'
-      );
+      codeowners = readFileSync(join(workspaceRoot, 'CODEOWNERS'), 'utf-8');
     } catch (error) {
       // if not found, return high severity violation
       return {
@@ -204,8 +205,6 @@ export default createConformanceRule({
 
 ### Testing Your Rule Locally
 
-![Screenshot of result of running the rule](/blog/images/2025-07-16/results.avif)
-
 Before publishing, test your rule locally by adding it to your `nx.json`:
 
 ```json
@@ -225,6 +224,8 @@ Run the rule:
 ```shell
 npx nx conformance check
 ```
+
+![Screenshot of result of running the rule](/blog/images/2025-07-16/results.avif)
 
 ### Retrieve a personal access token
 
@@ -260,24 +261,24 @@ You can start with "evaluated" mode to see current compliance levels, then sched
 
 ![Screenshot of custom workflows](/blog/images/2025-07-16/custom-workflows.avif)
 
-Here's where Conformance really shines. Instead of requiring every team to add conformance checks to their CI pipelines, you can use **[Custom Workflows](/ci/recipes/enterprise/custom-workflows)** to run these checks automatically.
+Here's where Conformance really shines. Instead of requiring every team to add Conformance checks to their CI pipelines, you can use **[Custom Workflows](/ci/recipes/enterprise/custom-workflows)** to run these checks automatically.
 
 Custom Workflows allow you to:
 
-- **Run conformance checks on any repository** without requiring local configuration changes
+- **Run Conformance checks on any repository** without requiring local configuration changes
 - **Schedule recurring checks** (daily, weekly, etc.) to maintain compliance
 - **Apply rules to non-Nx repositories** through [metadata-only workspaces](/ci/recipes/enterprise/metadata-only-workspace)
 - **Collect compliance data** without impacting individual team workflows
 
 ### Supporting Non-Nx Repositories
 
-One of the most powerful aspects of Conformance is that it works with **any repository**, even those that don't use Nx. You can connect legacy repositories as [metadata-only workspaces](/ci/recipes/enterprise/metadata-only-workspace) and apply the same conformance rules.
+One of the most powerful aspects of Conformance is that it works with **any repository**, even those that don't use Nx. You can connect legacy repositories as [metadata-only workspaces](/ci/recipes/enterprise/metadata-only-workspace) and apply the same Conformance rules.
 
 This means your platform team can enforce standards across your entire organization's codebase, regardless of the underlying technology or build system.
 
 ## The Platform Engineering Superpower
 
-![Screenshot of results of conformance rule across multiple workspaces](/blog/images/2025-07-16/rule-results.avif)
+![Screenshot of results of Conformance rule across multiple workspaces](/blog/images/2025-07-16/rule-results.avif)
 
 Conformance transforms how platform teams operate. Instead of manually tracking compliance across dozens or hundreds of repositories, a single platform engineer can:
 
@@ -309,7 +310,7 @@ Conformance represents a fundamental shift from reactive to proactive organizati
 
 ## Getting Started Today
 
-Conformance is available now for all **Nx Enterprise** customers as part of the Polygraph suite. If you're an existing Enterprise customer, you can start using Conformance immediately in your Nx Cloud dashboard.
+Conformance is available now for all [Nx Enterprise](/enterprise) customers as part of the Polygraph suite. If you're an existing Enterprise customer, you can start using Conformance immediately in your Nx Cloud dashboard.
 
 The combination of technology-agnostic rules, automated enforcement, and organization-wide visibility makes Conformance a game-changer for platform teams looking to scale their impact.
 
@@ -328,6 +329,7 @@ Together, these features bring the power of monorepo-level visibility and effici
 Learn more:
 
 - 📄 [Conformance Documentation](/ci/recipes/enterprise/polygraph#conformance)
+- 📄 [More about Polygraph](/blog/nx-cloud-introducing-polygraph)
 - 🌩️ [Nx Cloud](/nx-cloud)
 - 🌩️ [Nx Cloud Live demo](https://staging.nx.app/orgs/62d013d4d26f260059f7765e/workspaces/62d013ea0852fe0a2df74438/overview)
 - 👩‍💻 [Nx Enterprise](/enterprise)
