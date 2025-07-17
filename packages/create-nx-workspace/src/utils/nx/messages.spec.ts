@@ -1,4 +1,5 @@
 import { getMessageFactory } from './messages';
+import { VcsPushStatus } from '../git/git';
 
 describe('Nx Cloud Messages', () => {
   describe('CI Setup Messages', () => {
@@ -12,7 +13,7 @@ describe('Nx Cloud Messages', () => {
     it('should show the setup link user pushed but is not coming from Nx Cloud', () => {
       const message = messageFactory.createMessage(
         'https://nx.app/setup/123',
-        true
+        VcsPushStatus.PushedToVcs
       );
       expect(message).toMatchInlineSnapshot(`
         {
@@ -26,7 +27,10 @@ describe('Nx Cloud Messages', () => {
     });
 
     it('should instruct the user to return to Nx Cloud when they have pushed the repo without instructing them to push', () => {
-      const message = messageFactory.createMessage(null, true);
+      const message = messageFactory.createMessage(
+        null,
+        VcsPushStatus.PushedToVcs
+      );
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
@@ -38,10 +42,26 @@ describe('Nx Cloud Messages', () => {
       `);
     });
 
-    it('should instruct user to go to Nx Cloud after pushing when they have not pushed and URL is available', () => {
+    it('should instruct user to push repo first when they opted out of pushing', () => {
       const message = messageFactory.createMessage(
         'https://nx.app/setup/123',
-        false
+        VcsPushStatus.OptedOutOfPushingToVcs
+      );
+      expect(message).toMatchInlineSnapshot(`
+        {
+          "bodyLines": [
+            "Push your repo, then go to Nx Cloud and finish the setup: https://nx.app/setup/123",
+          ],
+          "title": "Your CI setup is almost complete.",
+          "type": "success",
+        }
+      `);
+    });
+
+    it('should instruct user to go to Nx Cloud after pushing when they have failed to push and URL is available', () => {
+      const message = messageFactory.createMessage(
+        'https://nx.app/setup/123',
+        VcsPushStatus.FailedToPushToVcs
       );
       expect(message).toMatchInlineSnapshot(`
         {
@@ -54,12 +74,31 @@ describe('Nx Cloud Messages', () => {
       `);
     });
 
-    it('should show "return to Nx Cloud" when not pushed and no URL', () => {
-      const message = messageFactory.createMessage(null, false);
+    it('should show "return to Nx Cloud" when failed to push and no URL', () => {
+      const message = messageFactory.createMessage(
+        null,
+        VcsPushStatus.FailedToPushToVcs
+      );
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
             "Once you have pushed your repo, return to Nx Cloud and finish the setup",
+          ],
+          "title": "Your CI setup is almost complete.",
+          "type": "success",
+        }
+      `);
+    });
+
+    it('should show "return to Nx Cloud" when opted out and no URL', () => {
+      const message = messageFactory.createMessage(
+        null,
+        VcsPushStatus.OptedOutOfPushingToVcs
+      );
+      expect(message).toMatchInlineSnapshot(`
+        {
+          "bodyLines": [
+            "Push your repo, then return to Nx Cloud and finish the setup",
           ],
           "title": "Your CI setup is almost complete.",
           "type": "success",
@@ -79,7 +118,7 @@ describe('Nx Cloud Messages', () => {
     it('should show the setup link when user pushed but is not coming from Nx Cloud', () => {
       const message = messageFactory.createMessage(
         'https://nx.app/setup/456',
-        true
+        VcsPushStatus.PushedToVcs
       );
       expect(message).toMatchInlineSnapshot(`
         {
@@ -94,7 +133,10 @@ describe('Nx Cloud Messages', () => {
     });
 
     it('should instruct the user to return to Nx Cloud when they have pushed the repo without instructing them to push', () => {
-      const message = messageFactory.createMessage(null, true);
+      const message = messageFactory.createMessage(
+        null,
+        VcsPushStatus.PushedToVcs
+      );
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
@@ -107,10 +149,27 @@ describe('Nx Cloud Messages', () => {
       `);
     });
 
-    it('should instruct user to go to Nx Cloud after pushing when they have not pushed and URL is available', () => {
+    it('should instruct user to push repo first when they opted out of pushing', () => {
       const message = messageFactory.createMessage(
         'https://nx.app/setup/456',
-        false
+        VcsPushStatus.OptedOutOfPushingToVcs
+      );
+      expect(message).toMatchInlineSnapshot(`
+        {
+          "bodyLines": [
+            "Push your repo, then go to Nx Cloud and finish the setup: https://nx.app/setup/456",
+            "You can also set up a remote cache later by running \`nx g @nx/nx-cloud:init\`",
+          ],
+          "title": "Your remote cache is almost complete.",
+          "type": "success",
+        }
+      `);
+    });
+
+    it('should instruct user to go to Nx Cloud after pushing when they have failed to push and URL is available', () => {
+      const message = messageFactory.createMessage(
+        'https://nx.app/setup/456',
+        VcsPushStatus.FailedToPushToVcs
       );
       expect(message).toMatchInlineSnapshot(`
         {
@@ -124,8 +183,11 @@ describe('Nx Cloud Messages', () => {
       `);
     });
 
-    it('should instruct user to return to Nx Cloud after pushing when they have not pushed and no URL is available', () => {
-      const message = messageFactory.createMessage(null, false);
+    it('should instruct user to return to Nx Cloud after pushing when they have failed to push and no URL is available', () => {
+      const message = messageFactory.createMessage(
+        null,
+        VcsPushStatus.FailedToPushToVcs
+      );
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
@@ -138,10 +200,27 @@ describe('Nx Cloud Messages', () => {
       `);
     });
 
+    it('should show "return to Nx Cloud" when opted out and no URL', () => {
+      const message = messageFactory.createMessage(
+        null,
+        VcsPushStatus.OptedOutOfPushingToVcs
+      );
+      expect(message).toMatchInlineSnapshot(`
+        {
+          "bodyLines": [
+            "Push your repo, then return to Nx Cloud and finish the setup",
+            "You can also set up a remote cache later by running \`nx g @nx/nx-cloud:init\`",
+          ],
+          "title": "Your remote cache is almost complete.",
+          "type": "success",
+        }
+      `);
+    });
+
     it('should always include the additional setup command for alternative installation', () => {
       const message = messageFactory.createMessage(
         'https://nx.app/setup/456',
-        true
+        VcsPushStatus.PushedToVcs
       );
       expect(message.bodyLines).toContain(
         'You can also set up a remote cache later by running `nx g @nx/nx-cloud:init`'
@@ -151,16 +230,19 @@ describe('Nx Cloud Messages', () => {
     it('should always include exactly two body lines for cache setup messages', () => {
       const messageWithUrl = messageFactory.createMessage(
         'https://nx.app/setup/456',
-        true
+        VcsPushStatus.PushedToVcs
       );
-      const messageWithoutUrl = messageFactory.createMessage(null, true);
+      const messageWithoutUrl = messageFactory.createMessage(
+        null,
+        VcsPushStatus.PushedToVcs
+      );
       const messageNotPushedWithUrl = messageFactory.createMessage(
         'https://nx.app/setup/456',
-        false
+        VcsPushStatus.FailedToPushToVcs
       );
       const messageNotPushedWithoutUrl = messageFactory.createMessage(
         null,
-        false
+        VcsPushStatus.FailedToPushToVcs
       );
 
       expect(messageWithUrl.bodyLines).toHaveLength(2);
@@ -171,10 +253,18 @@ describe('Nx Cloud Messages', () => {
 
     it('should have consistent title and type across all cache setup scenarios', () => {
       const scenarios = [
-        { url: 'https://nx.app/setup/456', pushed: true },
-        { url: null, pushed: true },
-        { url: 'https://nx.app/setup/456', pushed: false },
-        { url: null, pushed: false },
+        { url: 'https://nx.app/setup/456', pushed: VcsPushStatus.PushedToVcs },
+        { url: null, pushed: VcsPushStatus.PushedToVcs },
+        {
+          url: 'https://nx.app/setup/456',
+          pushed: VcsPushStatus.FailedToPushToVcs,
+        },
+        { url: null, pushed: VcsPushStatus.FailedToPushToVcs },
+        {
+          url: 'https://nx.app/setup/456',
+          pushed: VcsPushStatus.OptedOutOfPushingToVcs,
+        },
+        { url: null, pushed: VcsPushStatus.OptedOutOfPushingToVcs },
       ];
 
       scenarios.forEach(({ url, pushed }) => {
@@ -182,39 +272,6 @@ describe('Nx Cloud Messages', () => {
         expect(message.title).toBe('Your remote cache is almost complete.');
         expect(message.type).toBe('success');
       });
-    });
-  });
-
-  describe('Message Structure', () => {
-    it('should return consistent message structure for CI setup', () => {
-      const messageFactory = getMessageFactory(
-        'create-nx-workspace-success-ci-setup'
-      );
-      const message = messageFactory.createMessage(
-        'https://nx.app/setup/123',
-        true
-      );
-
-      expect(message).toHaveProperty('title');
-      expect(message).toHaveProperty('type', 'success');
-      expect(message).toHaveProperty('bodyLines');
-      expect(Array.isArray(message.bodyLines)).toBe(true);
-    });
-
-    it('should return consistent message structure for cache setup', () => {
-      const messageFactory = getMessageFactory(
-        'create-nx-workspace-success-cache-setup'
-      );
-      const message = messageFactory.createMessage(
-        'https://nx.app/setup/456',
-        true
-      );
-
-      expect(message).toHaveProperty('title');
-      expect(message).toHaveProperty('type', 'success');
-      expect(message).toHaveProperty('bodyLines');
-      expect(Array.isArray(message.bodyLines)).toBe(true);
-      expect(message.bodyLines).toHaveLength(2);
     });
   });
 });

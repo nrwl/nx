@@ -71,7 +71,7 @@ export async function getNxCloudInfo(
   const out = new CLIOutput(false);
   const message = createMessage(
     typeof rawNxCloud === 'string' ? null : connectCloudUrl,
-    pushedToVcs === VcsPushStatus.PushedToVcs
+    pushedToVcs
   );
   if (message.type === 'success') {
     out.success(message);
