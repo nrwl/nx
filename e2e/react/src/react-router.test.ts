@@ -2,9 +2,11 @@ import {
   checkFilesExist,
   cleanupProject,
   ensureCypressInstallation,
+  ensurePlaywrightBrowsersInstallation,
   newProject,
   readFile,
   runCLI,
+  runE2ETests,
   uniq,
 } from '@nx/e2e-utils';
 
@@ -13,9 +15,9 @@ describe('React Router Applications', () => {
     const appName = uniq('app');
     beforeAll(() => {
       newProject({ packages: ['@nx/react'] });
-      ensureCypressInstallation();
+      ensurePlaywrightBrowsersInstallation();
       runCLI(
-        `generate @nx/react:app ${appName} --use-react-router --routing --linter=eslint --unit-test-runner=vitest --no-interactive`
+        `generate @nx/react:app ${appName} --use-react-router --routing --linter=eslint --unit-test-runner=vitest --e2e-test-runner=playwright --no-interactive`
       );
     });
 
@@ -36,18 +38,15 @@ describe('React Router Applications', () => {
       checkFilesExist(`${appName}/vite.config.ts`);
     });
 
-    it('should be able to build a react-router application', async () => {
+    it('should be able to build, lint, test and typecheck a react-router application', async () => {
       const buildResult = runCLI(`build ${appName}`);
-      expect(buildResult).toContain('Successfully ran target build');
-    });
-
-    it('should be able to lint a react-router application', async () => {
       const lintResult = runCLI(`lint ${appName}`);
-      expect(lintResult).toContain('Successfully ran target lint');
-    });
-
-    it('should be able to test and typecheck a react-router application', async () => {
+      const testResult = runCLI(`test ${appName}`);
       const typeCheckResult = runCLI(`typecheck ${appName}`);
+
+      expect(buildResult).toContain('Successfully ran target build');
+      expect(lintResult).toContain('Successfully ran target lint');
+      expect(testResult).toContain('Successfully ran target test');
       expect(typeCheckResult).toContain('Successfully ran target typecheck');
     });
 
@@ -62,15 +61,38 @@ describe('React Router Applications', () => {
 
       const typeCheckResult = runCLI(`typecheck ${jestApp}`);
       expect(typeCheckResult).toContain('Successfully ran target typecheck');
+    });
+
+    it('should execute e2e tests using playwright', () => {
+      if (runE2ETests()) {
+        const result = runCLI(`e2e ${appName}-e2e --verbose`);
+        expect(result).toContain(
+          `Successfully ran target e2e for project ${appName}-e2e`
+        );
+      }
+    });
+
+    it('should execute e2e tests using cypress', () => {
+      const cypressAppName = uniq('cypress-app');
+      ensureCypressInstallation();
+      runCLI(
+        `generate @nx/react:app ${cypressAppName} --use-react-router --routing --linter=eslint --unit-test-runner=none  --no-interactive`
+      );
+      if (runE2ETests()) {
+        const result = runCLI(`e2e ${cypressAppName}-e2e --verbose`);
+        expect(result).toContain(
+          `Successfully ran target e2e for project ${cypressAppName}-e2e`
+        );
+      }
     });
   });
   describe('TS Solution', () => {
     const appName = uniq('app');
     beforeAll(() => {
       newProject({ preset: 'ts', packages: ['@nx/react'] });
-      ensureCypressInstallation();
+      ensurePlaywrightBrowsersInstallation();
       runCLI(
-        `generate @nx/react:app ${appName} --use-react-router --routing --linter=eslint --unit-test-runner=vitest --no-interactive`
+        `generate @nx/react:app ${appName} --use-react-router --routing --linter=eslint --unit-test-runner=vitest --e2e-test-runner=playwright --no-interactive`
       );
     });
 
@@ -91,24 +113,17 @@ describe('React Router Applications', () => {
       checkFilesExist(`${appName}/vite.config.ts`);
     });
 
-    it('should be able to build a react-router application', async () => {
+    it('should be able to build, lint, test and typecheck a react-router application', async () => {
       const buildResult = runCLI(`build ${appName}`);
-      expect(buildResult).toContain('Successfully ran target build');
-    });
-
-    it('should be able to lint a react-router application', async () => {
       const lintResult = runCLI(`lint ${appName}`);
-      expect(lintResult).toContain('Successfully ran target lint');
-    });
-
-    it('should be able to test and typecheck a react-router application', async () => {
       const testResult = runCLI(`test ${appName}`);
-      expect(testResult).toContain('Successfully ran target test');
-
       const typeCheckResult = runCLI(`typecheck ${appName}`);
+
+      expect(buildResult).toContain('Successfully ran target build');
+      expect(lintResult).toContain('Successfully ran target lint');
+      expect(testResult).toContain('Successfully ran target test');
       expect(typeCheckResult).toContain('Successfully ran target typecheck');
     });
-
     it('should be able to test and typecheck a react-router application with jest', async () => {
       const jestApp = uniq('jestApp');
       runCLI(
@@ -120,6 +135,29 @@ describe('React Router Applications', () => {
 
       const typeCheckResult = runCLI(`typecheck ${jestApp}`);
       expect(typeCheckResult).toContain('Successfully ran target typecheck');
+    });
+
+    it('should execute e2e tests using playwright', () => {
+      if (runE2ETests()) {
+        const result = runCLI(`e2e ${appName}-e2e --verbose`);
+        expect(result).toContain(
+          `Successfully ran target e2e for project ${appName}-e2e`
+        );
+      }
+    });
+
+    it('should execute e2e tests using cypress', () => {
+      const cypressAppName = uniq('cypress-app');
+      ensureCypressInstallation();
+      runCLI(
+        `generate @nx/react:app ${cypressAppName} --use-react-router --routing --linter=eslint --unit-test-runner=none  --no-interactive`
+      );
+      if (runE2ETests()) {
+        const result = runCLI(`e2e ${cypressAppName}-e2e --verbose`);
+        expect(result).toContain(
+          `Successfully ran target e2e for project ${cypressAppName}-e2e`
+        );
+      }
     });
   });
 });

@@ -30,27 +30,28 @@ export default config;
 `;
 
 exports[`react:storybook-configuration should generate stories for components 1`] = `
-"import type { Meta, StoryObj } from 'storybook/internal/types';
+"import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import { MyComponent } from './my-component';
 import { expect } from 'storybook/test';
 
-const meta: Meta<typeof MyComponent> = {
+const meta = {
   component: MyComponent,
   title: 'MyComponent',
-};
+} satisfies Meta<typeof MyComponent>;
 export default meta;
+
 type Story = StoryObj<typeof MyComponent>;
 
 export const Primary = {
   args: {},
-};
+} satisfies Story;
 
-export const Heading: Story = {
+export const Heading = {
   args: {},
   play: async ({ canvas }) => {
-    await expect(canvas.getByText(/Welcome to MyComponent!/gi)).toBeTruthy();
+    await expect(canvas.getByText(/MyComponent/gi)).toBeTruthy();
   },
-};
+} satisfies Story;
 "
 `;
 

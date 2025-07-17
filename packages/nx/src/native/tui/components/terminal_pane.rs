@@ -15,6 +15,7 @@ use tracing::debug;
 use tui_term::widget::PseudoTerminal;
 
 use crate::native::tui::components::tasks_list::TaskStatus;
+use crate::native::tui::scroll_momentum::{ScrollDirection, ScrollMomentum};
 use crate::native::tui::theme::THEME;
 use crate::native::tui::{action::Action, pty::PtyInstance};
 
@@ -23,6 +24,8 @@ pub struct TerminalPaneData {
     pub is_interactive: bool,
     pub is_continuous: bool,
     pub can_be_interactive: bool,
+    // Momentum scrolling state
+    scroll_momentum: ScrollMomentum,
 }
 
 impl TerminalPaneData {
@@ -32,6 +35,7 @@ impl TerminalPaneData {
             is_interactive: false,
             is_continuous: false,
             can_be_interactive: false,
+            scroll_momentum: ScrollMomentum::new(),
         }
     }
 
@@ -42,30 +46,24 @@ impl TerminalPaneData {
                 // Scrolling keybindings (up/down arrow keys or 'k'/'j') are only handled if we're not in interactive mode.
                 // If interactive, the event falls through to be forwarded to the PTY so that we can support things like interactive prompts within tasks.
                 KeyCode::Up | KeyCode::Char('k') if !self.is_interactive => {
-                    pty_mut.scroll_up();
+                    self.scroll(ScrollDirection::Up);
                     return Ok(None);
                 }
                 KeyCode::Down | KeyCode::Char('j') if !self.is_interactive => {
-                    pty_mut.scroll_down();
+                    self.scroll(ScrollDirection::Down);
                     return Ok(None);
                 }
                 // Handle ctrl+u and ctrl+d for scrolling when not in interactive mode
                 KeyCode::Char('u')
                     if key.modifiers.contains(KeyModifiers::CONTROL) && !self.is_interactive =>
                 {
-                    // Scroll up a somewhat arbitrary "chunk" (12 lines)
-                    for _ in 0..12 {
-                        pty_mut.scroll_up();
-                    }
+                    pty_mut.scroll_up(12);
                     return Ok(None);
                 }
                 KeyCode::Char('d')
                     if key.modifiers.contains(KeyModifiers::CONTROL) && !self.is_interactive =>
                 {
-                    // Scroll down a somewhat arbitrary "chunk" (12 lines)
-                    for _ in 0..12 {
-                        pty_mut.scroll_down();
-                    }
+                    pty_mut.scroll_down(12);
                     return Ok(None);
                 }
                 // Handle 'c' for copying when not in interactive mode
@@ -135,10 +133,10 @@ impl TerminalPaneData {
             } else {
                 match event.kind {
                     MouseEventKind::ScrollUp => {
-                        pty_mut.scroll_up();
+                        self.scroll(ScrollDirection::Up);
                     }
                     MouseEventKind::ScrollDown => {
-                        pty_mut.scroll_down();
+                        self.scroll(ScrollDirection::Down);
                     }
                     _ => {}
                 }
@@ -149,10 +147,25 @@ impl TerminalPaneData {
 
     pub fn set_interactive(&mut self, interactive: bool) {
         self.is_interactive = interactive;
+        // Reset scroll momentum when changing modes
+        self.scroll_momentum.reset();
     }
 
     pub fn is_interactive(&self) -> bool {
         self.is_interactive
+    }
+
+    /// Scroll with momentum in the given direction
+    fn scroll(&mut self, direction: ScrollDirection) {
+        if let Some(pty) = &self.pty {
+            let mut pty_mut = pty.as_ref().clone();
+            let scroll_amount = self.scroll_momentum.calculate_momentum(direction);
+
+            match direction {
+                ScrollDirection::Up => pty_mut.scroll_up(scroll_amount),
+                ScrollDirection::Down => pty_mut.scroll_down(scroll_amount),
+            }
+        }
     }
 }
 

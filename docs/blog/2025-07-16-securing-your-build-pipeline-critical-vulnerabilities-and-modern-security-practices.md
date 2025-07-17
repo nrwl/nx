@@ -7,7 +7,7 @@ authors: ['Jeff Cross', 'Victor Savkin']
 tags: [webinar]
 cover_image: /blog/images/2025-07-09/2025-July-Webinar-Card.avif
 time: 1pm ET/5pm UTC
-status: Upcoming
+status: Past - Gated
 registrationUrl: https://go.nx.dev/july2025-webinar
 ---
 

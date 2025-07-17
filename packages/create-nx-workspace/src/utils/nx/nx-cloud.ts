@@ -31,6 +31,7 @@ export async function getOnboardingInfo(
   nxCloud: NxCloud,
   token: string,
   directory: string,
+  rawNxCloud?: NxCloud,
   useGitHub?: boolean
 ) {
   // nx-ignore-next-line
@@ -55,7 +56,9 @@ export async function getOnboardingInfo(
     code
   );
   const out = new CLIOutput(false);
-  const message = createMessage(connectCloudUrl);
+  const message = createMessage(
+    typeof rawNxCloud === 'string' ? null : connectCloudUrl
+  );
   if (message.type === 'success') {
     out.success(message);
   } else {

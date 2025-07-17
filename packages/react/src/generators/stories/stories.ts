@@ -17,6 +17,7 @@ import {
   findExportDeclarationsForJsx,
   getComponentNode,
 } from '../../utils/ast-utils';
+import { getUiFramework } from '../../utils/framework';
 import componentStoryGenerator from '../component-story/component-story';
 
 let tsModule: typeof import('typescript');
@@ -26,6 +27,7 @@ export interface StorybookStoriesSchema {
   interactionTests?: boolean;
   js?: boolean;
   ignorePaths?: string[];
+  uiFramework?: string;
   skipFormat?: boolean;
 }
 
@@ -80,16 +82,12 @@ export function containsComponentDeclaration(
 
 export async function createAllStories(
   tree: Tree,
-  projectName: string,
-  interactionTests: boolean,
-  js: boolean,
-  projects: Map<string, ProjectConfiguration>,
-  projectConfiguration: ProjectConfiguration,
-  ignorePaths?: string[]
+  schema: StorybookStoriesSchema,
+  projectConfiguration: ProjectConfiguration
 ) {
   const { isTheFileAStory } = await import('@nx/storybook/src/utils/utilities');
 
-  const { sourceRoot, root } = projectConfiguration;
+  const sourceRoot = getProjectSourceRoot(projectConfiguration, tree);
   let componentPaths: string[] = [];
 
   const projectPath = await projectRootPath(tree, projectConfiguration);
@@ -97,7 +95,7 @@ export async function createAllStories(
     // Ignore private files starting with "_".
     if (basename(path).startsWith('_')) return;
 
-    if (ignorePaths?.some((pattern) => minimatch(path, pattern))) return;
+    if (schema.ignorePaths?.some((pattern) => minimatch(path, pattern))) return;
 
     if (
       (path.endsWith('.tsx') && !path.endsWith('.spec.tsx')) ||
@@ -121,7 +119,7 @@ export async function createAllStories(
   await Promise.all(
     componentPaths.map(async (componentPath) => {
       const relativeCmpDir = componentPath.replace(
-        join(sourceRoot ?? root, '/'),
+        `${sourceRoot.replace(/^\.\//, '')}/`,
         ''
       );
 
@@ -131,9 +129,10 @@ export async function createAllStories(
 
       await componentStoryGenerator(tree, {
         componentPath: relativeCmpDir,
-        project: projectName,
+        project: schema.project,
+        interactionTests: schema.interactionTests,
+        uiFramework: schema.uiFramework,
         skipFormat: true,
-        interactionTests,
       });
     })
   );
@@ -146,15 +145,8 @@ export async function storiesGenerator(
   const projects = getProjects(host);
   const projectConfiguration = projects.get(schema.project);
   schema.interactionTests = schema.interactionTests ?? true;
-  await createAllStories(
-    host,
-    schema.project,
-    schema.interactionTests,
-    schema.js,
-    projects,
-    projectConfiguration,
-    schema.ignorePaths
-  );
+  schema.uiFramework ??= getUiFramework(host, schema.project);
+  await createAllStories(host, schema, projectConfiguration);
 
   if (!schema.skipFormat) {
     await formatFiles(host);
