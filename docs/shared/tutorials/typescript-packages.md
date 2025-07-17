@@ -25,7 +25,7 @@ This tutorial requires a [GitHub account](https://github.com) to demonstrate the
 
 Let's start by creating a new TypeScript monorepo with Nx Cloud and GitHub Actions preconfigured. You'll be guided through an interactive setup process to create your workspace. After completing the setup, return here to continue with this tutorial.
 
-{% call-to-action title="Create a new TypeScript monorepo" url="https://cloud.nx.app/create-nx-workspace?preset=ts" description="With Nx and GitHub Actions fully set up" /%}
+{% call-to-action title="Create a new TypeScript monorepo" url="https://cloud.nx.app/create-nx-workspace?preset=typescript" description="With Nx and GitHub Actions fully set up" /%}
 
 ### Step 2: Verify Your Setup
 
@@ -39,7 +39,7 @@ You should see your workspace in your [Nx Cloud organization](https://cloud.nx.a
 
 ![](/shared/images/tutorials/connected-workspace.avif)
 
-If you do not see your workspace in Nx Cloud then please follow the steps outlined in the [Nx Cloud setup](https://cloud.nx.app/create-nx-workspace?preset=ts).
+If you do not see your workspace in Nx Cloud then please follow the steps outlined in the [Nx Cloud setup](https://cloud.nx.app/create-nx-workspace?preset=typescript).
 
 This is important for using remote caching and self-healing in CI later in the tutorial.
 

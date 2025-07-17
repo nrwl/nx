@@ -151,7 +151,7 @@ export function applyWebConfig(
             sassOptions: {
               fiber: false,
               precision: 8,
-              includePaths,
+              loadPaths: includePaths,
               ...(sassOptions ?? {}),
             },
           },
@@ -218,7 +218,7 @@ export function applyWebConfig(
               fiber: false,
               // bootstrap-sass requires a minimum precision of 8
               precision: 8,
-              includePaths,
+              loadPaths: includePaths,
               ...(sassOptions ?? {}),
             },
           },
@@ -288,7 +288,7 @@ export function applyWebConfig(
               fiber: false,
               // bootstrap-sass requires a minimum precision of 8
               precision: 8,
-              includePaths,
+              loadPaths: includePaths,
               ...(sassOptions ?? {}),
             },
           },
