@@ -17,6 +17,8 @@ export const reactNativeWebVersion = '~0.20.0';
 export const expoMetroConfigVersion = '~0.20.14';
 export const expoMetroRuntimeVersion = '~5.0.4';
 
+export const metroVersion = '~0.82.4';
+
 export const reactNativeSvgTransformerVersion = '~1.5.1';
 export const reactNativeSvgVersion = '~15.11.2';
 

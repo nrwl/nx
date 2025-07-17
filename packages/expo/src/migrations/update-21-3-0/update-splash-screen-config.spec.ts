@@ -9,7 +9,7 @@ describe('update-splash-screen-config migration', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it('should update legacy splash screen configuration in app.json', async () => {
+  it('should transform legacy splash screen configuration to plugin format in app.json', async () => {
     // Add an Expo project with legacy splash screen config
     tree.write(
       'apps/my-app/project.json',
@@ -50,13 +50,23 @@ describe('update-splash-screen-config migration', () => {
     await update(tree);
 
     const appConfig = readJson(tree, 'apps/my-app/app.json');
-    expect(appConfig.expo.splash.image).toBe('./assets/splash.png');
-    expect(appConfig.expo.splash.backgroundColor).toBe('#ffffff');
-    expect(appConfig.expo.splash.resizeMode).toBe('contain');
-    expect(appConfig.expo.splash.tabletImage).toBe(
-      './assets/splash-tablet.png'
-    );
-    expect(appConfig.expo.splash.imageUrl).toBeUndefined();
+
+    // Should have plugins array with expo-splash-screen
+    expect(appConfig.expo.plugins).toBeDefined();
+    expect(appConfig.expo.plugins).toHaveLength(1);
+    expect(appConfig.expo.plugins[0]).toEqual([
+      'expo-splash-screen',
+      {
+        image: './assets/splash.png',
+        imageWidth: 200,
+        backgroundColor: '#ffffff',
+        resizeMode: 'contain',
+        tabletImage: './assets/splash-tablet.png',
+      },
+    ]);
+
+    // Legacy splash config should be removed
+    expect(appConfig.expo.splash).toBeUndefined();
   });
 
   it('should not modify projects that are not Expo projects', async () => {
@@ -87,7 +97,7 @@ describe('update-splash-screen-config migration', () => {
     expect(tree.exists('apps/react-app/app.json')).toBeFalsy();
   });
 
-  it('should add migration comment to JS config files', async () => {
+  it('should transform splash configuration to plugin format in JS config files', async () => {
     tree.write(
       'apps/my-expo-app/project.json',
       JSON.stringify({
@@ -129,9 +139,14 @@ export default config;
 
     const updatedContent = tree.read('apps/my-expo-app/app.config.ts', 'utf-8');
     expect(updatedContent).toContain(
-      'splash screen configuration has been updated'
+      'migrated to use expo-splash-screen plugin'
     );
-    expect(updatedContent).toContain("imageUrl' should be changed to 'image'");
+    expect(updatedContent).toContain('plugins: [');
+    expect(updatedContent).toContain('expo-splash-screen');
+    expect(updatedContent).toContain("image: './assets/splash.png'");
+    expect(updatedContent).toContain("backgroundColor: '#ffffff'");
+    expect(updatedContent).toContain('imageWidth: 200');
+    expect(updatedContent).not.toContain('splash: {');
   });
 
   it('should skip projects without splash screen configuration', async () => {
@@ -169,9 +184,128 @@ export default config;
 
     const appConfig = readJson(tree, 'apps/simple-expo/app.json');
     expect(appConfig.expo.splash).toBeUndefined();
+    expect(appConfig.expo.plugins).toBeUndefined();
   });
 
-  it('should handle projects with already updated splash configuration', async () => {
+  it('should handle existing plugins array and update expo-splash-screen plugin', async () => {
+    tree.write(
+      'apps/existing-plugins/project.json',
+      JSON.stringify({
+        name: 'existing-plugins',
+        projectType: 'application',
+        root: 'apps/existing-plugins',
+        targets: {},
+      })
+    );
+
+    tree.write(
+      'apps/existing-plugins/package.json',
+      JSON.stringify({
+        name: 'existing-plugins',
+        dependencies: {
+          expo: '^53.0.0',
+        },
+      })
+    );
+
+    tree.write(
+      'apps/existing-plugins/app.json',
+      JSON.stringify({
+        expo: {
+          name: 'ExistingPlugins',
+          slug: 'existing-plugins',
+          plugins: [
+            'expo-font',
+            ['expo-splash-screen', { image: './old-image.png' }],
+          ],
+          splash: {
+            image: './assets/new-splash.png',
+            backgroundColor: '#000000',
+            resizeMode: 'cover',
+          },
+        },
+      })
+    );
+
+    await update(tree);
+
+    const appConfig = readJson(tree, 'apps/existing-plugins/app.json');
+
+    // Should update the existing plugin configuration
+    expect(appConfig.expo.plugins).toHaveLength(2);
+    expect(appConfig.expo.plugins[0]).toBe('expo-font');
+    expect(appConfig.expo.plugins[1]).toEqual([
+      'expo-splash-screen',
+      {
+        image: './assets/new-splash.png',
+        imageWidth: 200,
+        backgroundColor: '#000000',
+        resizeMode: 'cover',
+      },
+    ]);
+
+    // Legacy splash config should be removed
+    expect(appConfig.expo.splash).toBeUndefined();
+  });
+
+  it('should add expo-splash-screen plugin to existing plugins array', async () => {
+    tree.write(
+      'apps/add-plugin/project.json',
+      JSON.stringify({
+        name: 'add-plugin',
+        projectType: 'application',
+        root: 'apps/add-plugin',
+        targets: {},
+      })
+    );
+
+    tree.write(
+      'apps/add-plugin/package.json',
+      JSON.stringify({
+        name: 'add-plugin',
+        dependencies: {
+          expo: '^53.0.0',
+        },
+      })
+    );
+
+    tree.write(
+      'apps/add-plugin/app.json',
+      JSON.stringify({
+        expo: {
+          name: 'AddPlugin',
+          slug: 'add-plugin',
+          plugins: ['expo-font', 'expo-notifications'],
+          splash: {
+            image: './assets/splash.png',
+            backgroundColor: '#ff0000',
+          },
+        },
+      })
+    );
+
+    await update(tree);
+
+    const appConfig = readJson(tree, 'apps/add-plugin/app.json');
+
+    // Should add the splash screen plugin to existing plugins
+    expect(appConfig.expo.plugins).toHaveLength(3);
+    expect(appConfig.expo.plugins[0]).toBe('expo-font');
+    expect(appConfig.expo.plugins[1]).toBe('expo-notifications');
+    expect(appConfig.expo.plugins[2]).toEqual([
+      'expo-splash-screen',
+      {
+        image: './assets/splash.png',
+        imageWidth: 200,
+        backgroundColor: '#ff0000',
+      },
+    ]);
+
+    // Legacy splash config should be removed
+    expect(appConfig.expo.splash).toBeUndefined();
+  });
+
+  it('should transform splash configuration with image property to plugin format', async () => {
     tree.write(
       'apps/updated-expo/project.json',
       JSON.stringify({
@@ -210,8 +344,21 @@ export default config;
     await update(tree);
 
     const appConfig = readJson(tree, 'apps/updated-expo/app.json');
-    expect(appConfig.expo.splash.image).toBe('./assets/splash.png');
-    expect(appConfig.expo.splash.backgroundColor).toBe('#ffffff');
-    expect(appConfig.expo.splash.resizeMode).toBe('contain');
+
+    // Should have plugins array with expo-splash-screen
+    expect(appConfig.expo.plugins).toBeDefined();
+    expect(appConfig.expo.plugins).toHaveLength(1);
+    expect(appConfig.expo.plugins[0]).toEqual([
+      'expo-splash-screen',
+      {
+        image: './assets/splash.png',
+        imageWidth: 200,
+        backgroundColor: '#ffffff',
+        resizeMode: 'contain',
+      },
+    ]);
+
+    // Legacy splash config should be removed
+    expect(appConfig.expo.splash).toBeUndefined();
   });
 });

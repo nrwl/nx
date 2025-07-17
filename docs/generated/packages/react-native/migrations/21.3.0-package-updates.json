@@ -1,6 +1,6 @@
 {
-  "name": "21.2.0-beta.0-package-updates",
-  "version": "21.2.0-beta.0",
+  "name": "21.3.0-package-updates",
+  "version": "21.3.0-beta.8",
   "packages": {
     "react-native": { "version": "~0.79.3", "alwaysAddToPackageJson": false },
     "@react-native-community/cli": {
@@ -29,6 +29,10 @@
     },
     "react": { "version": "19.0.0", "alwaysAddToPackageJson": false },
     "react-dom": { "version": "19.0.0", "alwaysAddToPackageJson": false },
+    "react-test-renderer": {
+      "version": "~19.0.0",
+      "alwaysAddToPackageJson": false
+    },
     "@types/react": { "version": "~19.0.10", "alwaysAddToPackageJson": false },
     "@types/react-dom": {
       "version": "~19.0.6",
@@ -48,9 +52,9 @@
     },
     "react-native-svg-web": {
       "version": "~1.0.9",
-      "addToPackageJson": "devDependencies"
+      "alwaysAddToPackageJson": false
     },
-    "@babel/runtime": { "version": "^7.25.0", "alwaysAddToPackageJson": false }
+    "@babel/runtime": { "version": "~7.27.6", "alwaysAddToPackageJson": false }
   },
   "aliases": [],
   "description": "",
