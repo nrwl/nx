@@ -164,9 +164,9 @@ export async function pushToGitHub(
   }
 ): Promise<VcsPushStatus> {
   try {
-    if (process.env['NX_SKIP_GH_PUSH'] === 'false') {
+    if (process.env['NX_SKIP_GH_PUSH'] === 'true') {
       throw new GitHubPushSkippedError(
-        'NX_SKIP_GH_PUSH is false so skipping GitHub push.'
+        'NX_SKIP_GH_PUSH is true so skipping GitHub push.'
       );
     }
 

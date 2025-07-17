@@ -10,16 +10,10 @@ function getSetupMessage(
       : 'Return to Nx Cloud and finish the setup';
   }
 
-  if (pushedToVcs === VcsPushStatus.OptedOutOfPushingToVcs) {
-    const action = url ? 'go' : 'return';
-    const urlSuffix = url ? `: ${url}` : '';
-    return `Push your repo, then ${action} to Nx Cloud and finish the setup${urlSuffix}`;
-  }
-
   // Default case: FailedToPushToVcs
   const action = url ? 'go' : 'return';
   const urlSuffix = url ? `: ${url}` : '';
-  return `Once you have pushed your repo, ${action} to Nx Cloud and finish the setup${urlSuffix}`;
+  return `Push your repo, then ${action} to Nx Cloud and finish the setup${urlSuffix}`;
 }
 
 const outputMessages = {

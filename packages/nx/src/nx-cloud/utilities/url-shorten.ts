@@ -19,17 +19,6 @@ export async function createNxCloudOnboardingURL(
     usesGithub = await repoUsesGithub(undefined, githubSlug, apiUrl);
   }
 
-  try {
-    const version = await getNxCloudVersion(apiUrl);
-    if (!version || isOldNxCloudVersion(version)) {
-      return apiUrl;
-    }
-  } catch (e) {
-    logger.verbose(`Failed to get Nx Cloud version.
-    ${e}`);
-    return apiUrl;
-  }
-
   const source = getSource(onboardingSource);
 
   try {
@@ -112,7 +101,7 @@ export function getURLifShortenFailed(
         githubSlug
       )}&source=${source}`;
     } else {
-      return `${apiUrl}/setup/connect-workspace/github/select&source=${source}`;
+      return `${apiUrl}/setup/connect-workspace/github/select?source=${source}`;
     }
   }
   return `${apiUrl}/setup/connect-workspace/manual?accessToken=${accessToken}&source=${source}`;
