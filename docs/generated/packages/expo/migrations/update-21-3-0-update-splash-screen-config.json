@@ -1,6 +1,6 @@
 {
   "name": "update-21-3-0-update-splash-screen-config",
-  "version": "21.3.0-beta.4",
+  "version": "21.3.0-beta.8",
   "cli": "nx",
   "description": "Update Expo splash screen configuration to use the new format",
   "factory": "./src/migrations/update-21-3-0/update-splash-screen-config",
