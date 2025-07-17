@@ -57,6 +57,54 @@ describe('nx release source tag selection', () => {
 
   afterEach(() => cleanupProject());
 
+  describe('when releaseTagPatternStrictPreid is undefined', () => {
+    beforeEach(() => {
+      updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+        nxJson.release = {
+          releaseTagPattern: 'v{version}',
+          version: {
+            conventionalCommits: true,
+          },
+        };
+        return nxJson;
+      });
+    });
+
+    describe('when no preid is specified', () => {
+      it('uses the latest tag as source', async () => {
+        await runCommandAsync(`git tag -a v1.0.0 -m "v1.0.0"`);
+        await runCommandAsync(`git tag -a v2.0.0-beta.1 -m "v2.0.0-beta.1"`);
+        await runCommandAsync(`git tag -a v2.0.0 -m "v2.0.0"`);
+        await runCommandAsync(`git tag -a v3.0.0-beta.1 -m "v3.0.0-beta.1"`);
+
+        expect(
+          runCLI(`release version -d`, {
+            silenceError: true,
+          })
+        ).toContain(
+          `Resolved the current version as 3.0.0-beta.1 from git tag "v3.0.0-beta.1"`
+        );
+      });
+    });
+
+    describe('when a preid is specified', () => {
+      it('uses the latest tag as source', async () => {
+        await runCommandAsync(`git tag -a v1.0.0 -m "v1.0.0"`);
+        await runCommandAsync(`git tag -a v2.0.0-beta.1 -m "v2.0.0-beta.1"`);
+        await runCommandAsync(`git tag -a v2.0.0 -m "v2.0.0"`);
+        await runCommandAsync(`git tag -a v3.0.0-beta.1 -m "v3.0.0-beta.1"`);
+
+        expect(
+          runCLI(`release version --preid=sigma -d`, {
+            silenceError: true,
+          })
+        ).toContain(
+          `Resolved the current version as 3.0.0-beta.1 from git tag "v3.0.0-beta.1"`
+        );
+      });
+    });
+  });
+
   describe('when releaseTagPatternStrictPreid is false', () => {
     beforeEach(() => {
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
