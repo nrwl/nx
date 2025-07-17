@@ -40,7 +40,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     skipFormat: true,
     skipPackageJson: options.skipPackageJson,
     addPlugin: options.addPlugin,
-    addPackageJsonDependencyChecks: options.buildable
+    addPackageJsonDependencyChecks: options.buildable,
   });
 
   tasks.push(lintTask);

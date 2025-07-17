@@ -14,6 +14,7 @@ import {
   nxVersion,
   reactDomVersion,
   reactNativeVersion,
+  reactNativeMetroConfigVersion,
   reactVersion,
 } from '../../utils/versions';
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
@@ -112,6 +113,8 @@ export function updateDependencies(host: Tree, schema: Schema) {
       react: reactVersion,
       'react-dom': reactDomVersion,
       'react-native': reactNativeVersion,
+      'metro-config': reactNativeMetroConfigVersion,
+      'metro-resolver': reactNativeMetroConfigVersion,
     },
     {
       '@nx/react-native': nxVersion,
