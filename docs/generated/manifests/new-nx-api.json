@@ -2021,16 +2021,6 @@
         "path": "/technologies/react/expo/api/migrations/21.3.0-package-updates",
         "type": "migration"
       },
-      "/technologies/react/expo/api/migrations/21.2.0-package-updates": {
-        "description": "",
-        "file": "generated/packages/expo/migrations/21.2.0-package-updates.json",
-        "hidden": false,
-        "name": "21.2.0-package-updates",
-        "version": "21.2.0-beta.0",
-        "originalFilePath": "/packages/expo",
-        "path": "/technologies/react/expo/api/migrations/21.2.0-package-updates",
-        "type": "migration"
-      },
       "/technologies/react/expo/api/migrations/20.3.0-package-updates": {
         "description": "",
         "file": "generated/packages/expo/migrations/20.3.0-package-updates.json",
@@ -4407,14 +4397,24 @@
         "path": "/technologies/react/react-native/api/migrations/update-21-3-0-remove-deprecated-deps",
         "type": "migration"
       },
-      "/technologies/react/react-native/api/migrations/21.2.0-beta.0-package-updates": {
-        "description": "",
-        "file": "generated/packages/react-native/migrations/21.2.0-beta.0-package-updates.json",
+      "/technologies/react/react-native/api/migrations/update-21-3-0-upgrade-react-native-projects": {
+        "description": "Run nx upgrade for each React Native project",
+        "file": "generated/packages/react-native/migrations/update-21-3-0-upgrade-react-native-projects.json",
         "hidden": false,
-        "name": "21.2.0-beta.0-package-updates",
-        "version": "21.2.0-beta.0",
+        "name": "update-21-3-0-upgrade-react-native-projects",
+        "version": "21.3.0-beta.8",
         "originalFilePath": "/packages/react-native",
-        "path": "/technologies/react/react-native/api/migrations/21.2.0-beta.0-package-updates",
+        "path": "/technologies/react/react-native/api/migrations/update-21-3-0-upgrade-react-native-projects",
+        "type": "migration"
+      },
+      "/technologies/react/react-native/api/migrations/21.3.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/react-native/migrations/21.3.0-package-updates.json",
+        "hidden": false,
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.8",
+        "originalFilePath": "/packages/react-native",
+        "path": "/technologies/react/react-native/api/migrations/21.3.0-package-updates",
         "type": "migration"
       },
       "/technologies/react/react-native/api/migrations/20.3.0-package-updates": {
@@ -4422,7 +4422,7 @@
         "file": "generated/packages/react-native/migrations/20.3.0-package-updates.json",
         "hidden": false,
         "name": "20.3.0-package-updates",
-        "version": "20.3.0-beta.8",
+        "version": "20.3.0-beta.0",
         "originalFilePath": "/packages/react-native",
         "path": "/technologies/react/react-native/api/migrations/20.3.0-package-updates",
         "type": "migration"

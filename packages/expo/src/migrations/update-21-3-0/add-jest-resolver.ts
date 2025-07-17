@@ -1,12 +1,19 @@
 import { formatFiles, getProjects, Tree } from '@nx/devkit';
 import { join } from 'path';
 import { updateTsConfigFiles } from '../../utils/update-tsconfig-files';
+import { isExpoProject } from '../../utils/expo-project-detection';
 
 export default async function addJestResolver(tree: Tree) {
   const projects = getProjects(tree);
 
   for (const [, config] of projects) {
     if (config.targets?.test?.executor === '@nx/jest:jest') {
+      // Check if this is an Expo project
+      const expoProjectDetectionResult = isExpoProject(tree, config.root);
+      if (!(await expoProjectDetectionResult).isExpo) {
+        continue;
+      }
+
       // Check if this is an Expo project by looking for jest.config file with expo preset
       const jestConfigPath = join(config.root, 'jest.config.ts');
       const jestConfigJsPath = join(config.root, 'jest.config.js');

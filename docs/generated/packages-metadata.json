@@ -2253,16 +2253,6 @@
       },
       {
         "description": "",
-        "file": "generated/packages/expo/migrations/21.2.0-package-updates.json",
-        "hidden": false,
-        "name": "21.2.0-package-updates",
-        "version": "21.2.0-beta.0",
-        "originalFilePath": "/packages/expo",
-        "path": "expo/migrations/21.2.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
         "file": "generated/packages/expo/migrations/20.3.0-package-updates.json",
         "hidden": false,
         "name": "20.3.0-package-updates",
@@ -4791,13 +4781,23 @@
         "type": "migration"
       },
       {
-        "description": "",
-        "file": "generated/packages/react-native/migrations/21.2.0-beta.0-package-updates.json",
+        "description": "Run nx upgrade for each React Native project",
+        "file": "generated/packages/react-native/migrations/update-21-3-0-upgrade-react-native-projects.json",
         "hidden": false,
-        "name": "21.2.0-beta.0-package-updates",
-        "version": "21.2.0-beta.0",
+        "name": "update-21-3-0-upgrade-react-native-projects",
+        "version": "21.3.0-beta.8",
         "originalFilePath": "/packages/react-native",
-        "path": "react-native/migrations/21.2.0-beta.0-package-updates",
+        "path": "react-native/migrations/update-21-3-0-upgrade-react-native-projects",
+        "type": "migration"
+      },
+      {
+        "description": "",
+        "file": "generated/packages/react-native/migrations/21.3.0-package-updates.json",
+        "hidden": false,
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.8",
+        "originalFilePath": "/packages/react-native",
+        "path": "react-native/migrations/21.3.0-package-updates",
         "type": "migration"
       },
       {
@@ -4805,7 +4805,7 @@
         "file": "generated/packages/react-native/migrations/20.3.0-package-updates.json",
         "hidden": false,
         "name": "20.3.0-package-updates",
-        "version": "20.3.0-beta.8",
+        "version": "20.3.0-beta.0",
         "originalFilePath": "/packages/react-native",
         "path": "react-native/migrations/20.3.0-package-updates",
         "type": "migration"

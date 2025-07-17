@@ -14,6 +14,7 @@ import {
   expoCliVersion,
   expoMetroConfigVersion,
   expoVersion,
+  metroVersion,
   nxVersion,
   reactDomVersion,
   reactNativeVersion,
@@ -93,8 +94,8 @@ export function updateDependencies(host: Tree, schema: Schema) {
       'react-dom': reactDomVersion,
       'react-native': reactNativeVersion,
       expo: expoVersion,
-      'metro-config': expoMetroConfigVersion,
-      'metro-resolver': expoMetroConfigVersion,
+      'metro-config': metroVersion,
+      'metro-resolver': metroVersion,
     },
     {
       '@nx/expo': nxVersion,
