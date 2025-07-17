@@ -48,7 +48,7 @@ import {
 } from './utils/resolve-local-package-dependencies';
 import { sortProjectsTopologically } from './utils/sort-projects-topologically';
 
-function resolvePreIdSpecifier(currentSpecifier: string, preid?: string) {
+function resolvePreidSpecifier(currentSpecifier: string, preid?: string) {
   if (!currentSpecifier.startsWith('pre') && preid) {
     return `pre${currentSpecifier}`;
   }
@@ -98,7 +98,7 @@ Valid values are: ${validReleaseVersionPrefixes
 
     // Set default for updateDependents
     const updateDependents = options.updateDependents ?? 'auto';
-    const updateDependentsBump = resolvePreIdSpecifier(
+    const updateDependentsBump = resolvePreidSpecifier(
       'patch',
       options.preid
     ) as ReleaseType;
@@ -311,7 +311,7 @@ To fix this you will either need to add a package.json file at that location, or
               {
                 checkAllBranchesWhen:
                   options.releaseGroup.releaseTagPatternCheckAllBranchesWhen,
-                preId: options.preid,
+                preid: options.preid,
                 releaseTagPatternRequireSemver: releaseTagPatternRequireSemver,
                 releaseTagPatternStrictPreid:
                   options.releaseGroup.releaseTagPatternStrictPreid,
@@ -461,7 +461,7 @@ To fix this you will either need to add a package.json file at that location, or
               );
             } else {
               let extraText = '';
-              const prereleaseSpecifier = resolvePreIdSpecifier(
+              const prereleaseSpecifier = resolvePreidSpecifier(
                 specifier,
                 options.preid
               );

@@ -341,7 +341,7 @@ export class ReleaseGroupProcessor {
             {
               checkAllBranchesWhen:
                 releaseGroupNode.group.releaseTagPatternCheckAllBranchesWhen,
-              preId: this.options.preid,
+              preid: this.options.preid,
               releaseTagPatternRequireSemver:
                 releaseGroupNode.group.releaseTagPatternRequireSemver,
               releaseTagPatternStrictPreid:

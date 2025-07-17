@@ -247,15 +247,15 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     /**
      * Extract the preid from the workspace version and the project versions
      */
-    const workspacePreId: string | undefined = workspaceChangelogVersion
-      ? extractPreId(workspaceChangelogVersion)
+    const workspacePreid: string | undefined = workspaceChangelogVersion
+      ? extractPreid(workspaceChangelogVersion)
       : undefined;
 
-    const projectsPreId: { [projectName: string]: string | undefined } =
+    const projectsPreid: { [projectName: string]: string | undefined } =
       Object.fromEntries(
         Object.entries(projectsVersionData).map(([projectName, v]) => [
           projectName,
-          v.newVersion ? extractPreId(v.newVersion) : undefined,
+          v.newVersion ? extractPreid(v.newVersion) : undefined,
         ])
       );
 
@@ -362,9 +362,9 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             {
               checkAllBranchesWhen:
                 nxReleaseConfig.releaseTagPatternCheckAllBranchesWhen,
-              preId:
-                workspacePreId ??
-                projectsPreId?.[Object.keys(projectsPreId)[0]],
+              preid:
+                workspacePreid ??
+                projectsPreid?.[Object.keys(projectsPreid)[0]],
               releaseTagPatternRequireSemver:
                 nxReleaseConfig.releaseTagPatternRequireSemver,
               releaseTagPatternStrictPreid:
@@ -556,7 +556,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                   {
                     checkAllBranchesWhen:
                       releaseGroup.releaseTagPatternCheckAllBranchesWhen,
-                    preId: projectsPreId[project.name],
+                    preid: projectsPreid[project.name],
                     releaseTagPatternRequireSemver:
                       releaseGroup.releaseTagPatternRequireSemver,
                     releaseTagPatternStrictPreid:
@@ -706,9 +706,9 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                 {
                   checkAllBranchesWhen:
                     releaseGroup.releaseTagPatternCheckAllBranchesWhen,
-                  preId:
-                    workspacePreId ??
-                    projectsPreId?.[Object.keys(projectsPreId)[0]],
+                  preid:
+                    workspacePreid ??
+                    projectsPreid?.[Object.keys(projectsPreid)[0]],
                   releaseTagPatternRequireSemver:
                     releaseGroup.releaseTagPatternRequireSemver,
                   releaseTagPatternStrictPreid:
@@ -1488,17 +1488,21 @@ function versionPlanSemverReleaseTypeToChangelogType(bump: ReleaseType): {
   }
 }
 
-function extractPreId(version: string): string | undefined {
+function extractPreid(version: string): string | undefined {
   if (!isPrerelease(version)) {
     return undefined;
   }
 
-  const preId = prerelease(version)[0];
-  if (typeof preId === 'string') {
-    return preId;
+  const preid = prerelease(version)?.[0];
+  if (typeof preid === 'string') {
+    if (preid.trim() === '') {
+      return undefined;
+    }
+
+    return preid;
   }
-  if (typeof preId === 'number') {
-    return preId.toString();
+  if (typeof preid === 'number') {
+    return preid.toString();
   }
   return undefined;
 }

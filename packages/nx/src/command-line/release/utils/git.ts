@@ -44,7 +44,7 @@ export interface GitCommit extends RawGitCommit {
 
 export interface GetLatestGitTagForPatternOptions {
   checkAllBranchesWhen?: boolean | string[];
-  preId?: string;
+  preid?: string;
   releaseTagPatternRequireSemver: boolean;
   releaseTagPatternStrictPreid: boolean;
 }
@@ -109,7 +109,7 @@ export async function getLatestGitTagForPattern(
     checkAllBranchesWhen,
     releaseTagPatternRequireSemver = true,
     releaseTagPatternStrictPreid,
-    preId = '',
+    preid,
   } = options;
 
   /**
@@ -222,18 +222,18 @@ export async function getLatestGitTagForPattern(
       return extractTagAndVersion(matchingTags[0], tagRegexp, options);
     }
 
-    if (preId && preId.length > 0) {
+    if (preid && preid.length > 0) {
       // When a preid is provided, first try to find a tag for it
-      const preIdReleaseTags = matchingTags.filter((tag) => {
+      const preidReleaseTags = matchingTags.filter((tag) => {
         const match = tag.match(tagRegexp);
         if (!match) return false;
 
         const version = match.find((part) => part.match(SEMVER_REGEX));
-        return version && version.includes(`-${preId}.`);
+        return version && version.includes(`-${preid}.`);
       });
 
-      if (preIdReleaseTags.length > 0) {
-        return extractTagAndVersion(preIdReleaseTags[0], tagRegexp, options);
+      if (preidReleaseTags.length > 0) {
+        return extractTagAndVersion(preidReleaseTags[0], tagRegexp, options);
       }
     }
 
