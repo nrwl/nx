@@ -12,6 +12,7 @@ import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { createNodesV2 } from '../../../plugins/plugin';
 import {
   expoCliVersion,
+  expoMetroConfigVersion,
   expoVersion,
   nxVersion,
   reactDomVersion,
@@ -92,6 +93,8 @@ export function updateDependencies(host: Tree, schema: Schema) {
       'react-dom': reactDomVersion,
       'react-native': reactNativeVersion,
       expo: expoVersion,
+      'metro-config': expoMetroConfigVersion,
+      'metro-resolver': expoMetroConfigVersion,
     },
     {
       '@nx/expo': nxVersion,
