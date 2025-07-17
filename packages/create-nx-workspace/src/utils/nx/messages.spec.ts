@@ -2,7 +2,7 @@ import { getMessageFactory } from './messages';
 
 describe('Nx Cloud Messages', () => {
   describe('CI Setup Messages', () => {
-    let messageFactory : ReturnType<typeof getMessageFactory>;
+    let messageFactory: ReturnType<typeof getMessageFactory>;
     beforeEach(() => {
       messageFactory = getMessageFactory(
         'create-nx-workspace-success-ci-setup'

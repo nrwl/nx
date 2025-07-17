@@ -146,4 +146,3 @@ impl NxTaskHistory {
             .collect()
     }
 }
-task_history

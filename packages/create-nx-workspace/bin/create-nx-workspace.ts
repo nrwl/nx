@@ -264,7 +264,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       messages.codeOfSelectedPromptMessage('setupNxCloud'),
       parsedArgs.nxCloud,
       rawArgs.nxCloud,
-      workspaceInfo.pushedToVcs.toString()
+      workspaceInfo.pushedToVcs,
     ],
   });
 
@@ -290,7 +290,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
 async function normalizeArgsMiddleware(
   argv: yargs.Arguments<Arguments>
 ): Promise<void> {
-  rawArgs = argv;
+  rawArgs = { ...argv };
   output.log({
     title:
       "Let's create a new workspace [https://nx.dev/getting-started/intro]",

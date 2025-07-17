@@ -3,6 +3,22 @@ import { output } from '../output';
 import { execAndWait, spawnAndWait } from '../child-process-utils';
 import * as enquirer from 'enquirer';
 
+export enum VcsPushStatus {
+  PushedToVcs = 'PushedToVcs',
+  OptedOutOfPushingToVcs = 'OptedOutOfPushingToVcs',
+  FailedToPushToVcs = 'FailedToPushToVcs',
+  SkippedGit = 'SkippedGit',
+}
+
+export class GitHubPushSkippedError extends Error {
+  public readonly title = 'Push your workspace';
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'GitHubPushSkippedError';
+  }
+}
+
 export async function checkGitVersion(): Promise<string | null | undefined> {
   try {
     const result = await execAndWait('git --version', process.cwd());
@@ -17,7 +33,7 @@ async function getGitHubUsername(directory: string): Promise<string> {
   const result = await execAndWait('gh api user --jq .login', directory);
   const username = result.stdout.trim();
   if (!username) {
-    throw new Error('GitHub CLI is not authenticated');
+    throw new GitHubPushSkippedError('GitHub CLI is not authenticated');
   }
   return username;
 }
@@ -146,8 +162,14 @@ export async function pushToGitHub(
     defaultBase: string;
     verbose?: boolean;
   }
-): Promise<boolean> {
+): Promise<VcsPushStatus> {
   try {
+    if (process.env['NX_SKIP_GH_PUSH'] === 'false') {
+      throw new GitHubPushSkippedError(
+        'NX_SKIP_GH_PUSH is false so skipping GitHub push.'
+      );
+    }
+
     const username = await getGitHubUsername(directory);
 
     // First prompt: Ask if they want to push to GitHub
@@ -162,7 +184,7 @@ export async function pushToGitHub(
     ]);
 
     if (push !== 'Yes') {
-      return false;
+      return VcsPushStatus.OptedOutOfPushingToVcs;
     }
 
     // Preload existing repositories for validation
@@ -196,7 +218,15 @@ export async function pushToGitHub(
     // This will automatically add remote origin and push the current branch
     await spawnAndWait(
       'gh',
-      ['repo', 'create', repoName, '--private', '--push', '--source', directory],
+      [
+        'repo',
+        'create',
+        repoName,
+        '--private',
+        '--push',
+        '--source',
+        directory,
+      ],
       directory
     );
 
@@ -210,25 +240,31 @@ export async function pushToGitHub(
     output.log({
       title: `Successfully created and pushed to GitHub repository: ${repoUrl}`,
     });
-    return true;
+    return VcsPushStatus.PushedToVcs;
   } catch (e) {
     const isVerbose =
       options.verbose || process.env.NX_VERBOSE_LOGGING === 'true';
     const errorMessage = e instanceof Error ? e.message : String(e);
 
+    // Error code 127 means gh wasn't installed
+    const title =
+      e instanceof GitHubPushSkippedError || (e as any)?.code === 127
+        ? 'Push your workspace to GitHub'
+        : 'Failed to push workspace to GitHub';
+
     const createRepoUrl = `https://github.com/new?name=${encodeURIComponent(
       options.name
     )}`;
     output.log({
-      title: 'Failed to push workspace to GitHub',
+      title,
       bodyLines: isVerbose
         ? [
-            `Please create a repo at ${createRepoUrl} and push this workspace.`,
+            `Please create a repo at ${createRepoUrl} and push this workspace`,
             'Error details:',
             errorMessage,
           ]
-        : [`Please create a repo at ${createRepoUrl} and push this workspace.`],
+        : [`Please create a repo at ${createRepoUrl} and push this workspace`],
     });
-    return false;
+    return VcsPushStatus.FailedToPushToVcs;
   }
 }

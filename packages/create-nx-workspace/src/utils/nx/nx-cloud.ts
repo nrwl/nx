@@ -1,3 +1,4 @@
+import { VcsPushStatus } from '../git/git';
 import { CLIOutput } from '../output';
 import { getMessageFactory } from './messages';
 import * as ora from 'ora';
@@ -59,7 +60,7 @@ export async function createNxCloudOnboardingUrl(
 export async function getNxCloudInfo(
   nxCloud: NxCloud,
   connectCloudUrl: string,
-  pushedToVcs: boolean,
+  pushedToVcs: VcsPushStatus,
   rawNxCloud?: NxCloud
 ) {
   const source =
@@ -70,7 +71,7 @@ export async function getNxCloudInfo(
   const out = new CLIOutput(false);
   const message = createMessage(
     typeof rawNxCloud === 'string' ? null : connectCloudUrl,
-    pushedToVcs
+    pushedToVcs === VcsPushStatus.PushedToVcs
   );
   if (message.type === 'success') {
     out.success(message);

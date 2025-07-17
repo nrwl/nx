@@ -9,7 +9,11 @@ import { createSandbox } from './create-sandbox';
 import { createEmptyWorkspace } from './create-empty-workspace';
 import { createPreset } from './create-preset';
 import { setupCI } from './utils/ci/setup-ci';
-import { initializeGitRepo, pushToGitHub } from './utils/git/git';
+import {
+  initializeGitRepo,
+  pushToGitHub,
+  VcsPushStatus,
+} from './utils/git/git';
 import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
 import { mapErrorToBodyLines } from './utils/error-utils';
 import { Preset } from './utils/preset/preset';
@@ -78,7 +82,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     );
   }
 
-  let pushedToVcs = false;
+  let pushedToVcs = VcsPushStatus.SkippedGit;
 
   if (!skipGit) {
     try {
