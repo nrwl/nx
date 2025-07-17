@@ -1,4 +1,4 @@
-import { ProjectGraph } from '@nx/devkit';
+import type { ProjectGraph } from '@nx/devkit';
 import { getDependentPackagesForProject } from './dependencies';
 
 export function isReactProject(

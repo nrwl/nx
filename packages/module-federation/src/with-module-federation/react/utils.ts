@@ -1,4 +1,4 @@
-import { SharedLibraryConfig } from '../../utils';
+import type { SharedLibraryConfig } from '../../utils';
 
 export function applyDefaultEagerPackages(
   sharedConfig: Record<string, SharedLibraryConfig>
