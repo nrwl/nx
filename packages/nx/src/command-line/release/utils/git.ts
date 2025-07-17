@@ -70,7 +70,7 @@ export function extractTagAndVersion(
   tagRegexp: string,
   options: GetLatestGitTagForPatternOptions
 ): GitTagAndVersion {
-  const { releaseTagPatternRequireSemver = true } = options;
+  const { releaseTagPatternRequireSemver } = options;
 
   const [latestMatchingTag, ...rest] = tag.match(tagRegexp);
   let version = releaseTagPatternRequireSemver
@@ -107,7 +107,7 @@ export async function getLatestGitTagForPattern(
 ): Promise<GitTagAndVersion | null> {
   const {
     checkAllBranchesWhen,
-    releaseTagPatternRequireSemver = true,
+    releaseTagPatternRequireSemver,
     releaseTagPatternStrictPreid,
     preid,
   } = options;
