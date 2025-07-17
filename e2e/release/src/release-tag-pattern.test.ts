@@ -61,7 +61,6 @@ describe('nx release releaseTagPattern', () => {
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
       nxJson.release = {
         releaseTagPattern: 'v{version}',
-        releaseTagPatternStrictPreid: false,
         version: {
           conventionalCommits: true,
         },
