@@ -100,7 +100,9 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
         console.log(
           'NOTE: @nx/playwright couldn\'t be found in this project\'s dependencies and will be installed once you remove the "dryRun" flag (or once you hit the "Generate" button if you are running this in Nx Console)'
         );
+        return;
       }
+      throw e;
     }
 
     const packageJson: PackageJson = {
