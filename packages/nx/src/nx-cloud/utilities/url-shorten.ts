@@ -19,17 +19,6 @@ export async function createNxCloudOnboardingURL(
     usesGithub = await repoUsesGithub(undefined, githubSlug, apiUrl);
   }
 
-  try {
-    const version = await getNxCloudVersion(apiUrl);
-    if (!version || isOldNxCloudVersion(version)) {
-      return apiUrl;
-    }
-  } catch (e) {
-    logger.verbose(`Failed to get Nx Cloud version.
-    ${e}`);
-    return apiUrl;
-  }
-
   const source = getSource(onboardingSource);
 
   try {
@@ -112,7 +101,7 @@ export function getURLifShortenFailed(
         githubSlug
       )}&source=${source}`;
     } else {
-      return `${apiUrl}/setup/connect-workspace/github/select&source=${source}`;
+      return `${apiUrl}/setup/connect-workspace/github/select?source=${source}`;
     }
   }
   return `${apiUrl}/setup/connect-workspace/manual?accessToken=${accessToken}&source=${source}`;
@@ -136,69 +125,4 @@ async function getInstallationSupportsGitHub(apiUrl: string): Promise<boolean> {
     }
     return false;
   }
-}
-
-export async function getNxCloudVersion(
-  apiUrl: string
-): Promise<string | null> {
-  try {
-    const response = await require('axios').get(
-      `${apiUrl}/nx-cloud/system/version`
-    );
-    const version = removeVersionModifier(response.data.version);
-    const isValid = versionIsValid(version);
-    if (!version) {
-      throw new Error('Failed to extract version from response.');
-    }
-    if (!isValid) {
-      throw new Error(`Invalid version format: ${version}`);
-    }
-    return version;
-  } catch (e) {
-    logger.verbose(`Failed to get version of Nx Cloud.
-      ${e}`);
-    return null;
-  }
-}
-
-export function removeVersionModifier(versionString: string): string {
-  // Cloud version string is in the format of YYMM.DD.BuildNumber-Modifier
-  return versionString.split(/[\.-]/).slice(0, 3).join('.');
-}
-
-export function versionIsValid(version: string): boolean {
-  // Updated Regex pattern to require YYMM.DD.BuildNumber format
-  // All parts are required, including the BuildNumber.
-  const pattern = /^\d{4}\.\d{2}\.\d+$/;
-  return pattern.test(version);
-}
-
-export function isOldNxCloudVersion(version: string): boolean {
-  const [major, minor, buildNumber] = version
-    .split('.')
-    .map((part) => parseInt(part, 10));
-
-  // for on-prem images we are using YYYY.MM.BuildNumber format
-  // the first year is 2025
-  if (major >= 2025 && major < 2300) {
-    return false;
-  }
-
-  // Previously we used YYMM.DD.BuildNumber
-  // All versions before '2406.11.5' had different URL shortening logic
-  const newVersionMajor = 2406;
-  const newVersionMinor = 11;
-  const newVersionBuildNumber = 5;
-
-  if (major !== newVersionMajor) {
-    return major < newVersionMajor;
-  }
-  if (minor !== newVersionMinor) {
-    return minor < newVersionMinor;
-  }
-  if (buildNumber !== newVersionBuildNumber) {
-    return buildNumber < newVersionBuildNumber;
-  }
-
-  return false;
 }
