@@ -88,7 +88,7 @@ function updateProjectVersion(
   if (!isDryRun) {
     execSync(`docker tag ${imageRef} ${fullImageRef}`);
   }
-  const logs = [`Image ${imageRef} tagged with ${fullImageRef}.`];
+  const logs = [`Image tagged with ${fullImageRef}.`];
   if (isDryRun) {
     logs.push(`No changes were applied as --dry-run is enabled.`);
   } else {
