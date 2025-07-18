@@ -1,5 +1,5 @@
 'use client';
-import { DefaultLayout } from '@nx/nx-dev/ui-common';
+import { DefaultLayout } from '@nx/nx-dev-ui-common';
 import type { ReactElement } from 'react';
 import { NextSeo } from 'next-seo';
 import {
@@ -13,7 +13,7 @@ import {
   Pricing,
   Security,
   TimeToGreen,
-} from '@nx/nx-dev/ui-cloud';
+} from '@nx/nx-dev-ui-cloud';
 
 export function NxCloud(): ReactElement {
   return (

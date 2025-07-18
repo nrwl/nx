@@ -13,7 +13,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { angularCliVersion } from '@nx/workspace/src/utils/versions';
 import { ensureDirSync } from 'fs-extra';
 import { execSync } from 'node:child_process';

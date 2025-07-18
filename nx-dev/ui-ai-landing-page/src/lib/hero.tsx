@@ -1,14 +1,14 @@
 'use client';
 import { ComponentProps, ReactElement, useState } from 'react';
-import { ButtonLink, SectionHeading, VideoModal } from '@nx/nx-dev/ui-common';
+import { ButtonLink, SectionHeading, VideoModal } from '@nx/nx-dev-ui-common';
 import {
   PlayIcon,
   CommandLineIcon,
   CpuChipIcon,
 } from '@heroicons/react/24/outline';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
-import { cx } from '@nx/nx-dev/ui-primitives';
-import { MovingBorder } from '@nx/nx-dev/ui-animations';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { cx } from '@nx/nx-dev-ui-primitives';
+import { MovingBorder } from '@nx/nx-dev-ui-animations';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 

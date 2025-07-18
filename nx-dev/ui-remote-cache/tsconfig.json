@@ -10,6 +10,15 @@
   "include": [],
   "references": [
     {
+      "path": "../ui-primitives"
+    },
+    {
+      "path": "../feature-analytics"
+    },
+    {
+      "path": "../ui-common"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ],

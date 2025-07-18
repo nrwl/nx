@@ -1,6 +1,6 @@
 import Editor, { useMonaco } from '@monaco-editor/react';
-import { JsonSchema } from '@nx/nx-dev/models-package';
-import { useTheme } from '@nx/nx-dev/ui-theme';
+import { JsonSchema } from '@nx/nx-dev-models-package';
+import { useTheme } from '@nx/nx-dev-ui-theme';
 import { useEffect } from 'react';
 
 export const SchemaEditor = ({

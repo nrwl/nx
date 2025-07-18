@@ -1,7 +1,7 @@
 'use client';
 import { forwardRef, ReactElement, ReactNode, useRef } from 'react';
-import { cx } from '@nx/nx-dev/ui-primitives';
-import { AnimatedCurvedBeam } from '@nx/nx-dev/ui-animations';
+import { cx } from '@nx/nx-dev-ui-primitives';
+import { AnimatedCurvedBeam } from '@nx/nx-dev-ui-animations';
 import {
   ClockIcon,
   FunnelIcon,

@@ -14,7 +14,7 @@ import {
   isWindows,
   fileExists,
   removeFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { join } from 'path';
 
 describe('Nx Affected and Graph Tests', () => {

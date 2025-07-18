@@ -8,7 +8,7 @@ import {
   uniq,
   updateFile,
   runCommandAsync,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Remix E2E Tests', () => {
   describe('--integrated (npm)', () => {

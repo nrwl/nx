@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import AuthorDetail from './author-detail';
-import type { BlogAuthor } from '@nx/nx-dev/data-access-documents/node-only';
+import type { BlogAuthor } from '@nx/nx-dev-data-access-documents/node-only';
 
 export function BlogAuthors({
   authors,

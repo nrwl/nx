@@ -12,7 +12,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { fork } from 'child_process';
 
 import { readdir, stat } from 'fs/promises';

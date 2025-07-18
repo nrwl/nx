@@ -6,7 +6,7 @@ import {
   runCLI,
   runCLIAsync,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Angular Package', () => {
   describe('ngrx', () => {

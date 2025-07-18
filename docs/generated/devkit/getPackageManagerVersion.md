@@ -8,10 +8,10 @@ but it can also be passed in explicitly.
 
 #### Parameters
 
-| Name             | Type                                                                    |
-| :--------------- | :---------------------------------------------------------------------- |
-| `packageManager` | [`PackageManager`](/reference/core-api/devkit/documents/PackageManager) |
-| `cwd`            | `string`                                                                |
+| Name              | Type                                                                    |
+| :---------------- | :---------------------------------------------------------------------- |
+| `packageManager?` | [`PackageManager`](/reference/core-api/devkit/documents/PackageManager) |
+| `cwd?`            | `string`                                                                |
 
 #### Returns
 

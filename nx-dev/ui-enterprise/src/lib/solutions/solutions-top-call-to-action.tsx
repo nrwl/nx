@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { SectionHeading, Strong } from '@nx/nx-dev/ui-common';
+import { SectionHeading, Strong } from '@nx/nx-dev-ui-common';
 
 export function SolutionsTopCallToAction(): ReactElement {
   return (

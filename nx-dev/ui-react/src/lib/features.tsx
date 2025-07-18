@@ -1,5 +1,5 @@
-import { SectionHeading } from '@nx/nx-dev/ui-common';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import React, { ReactElement } from 'react';
 
 export function Features(): ReactElement {
@@ -201,7 +201,6 @@ export function Features(): ReactElement {
         />
         <FeatureCard
           title="Zero Configuration"
-          j
           description="Add Nx to your existing monorepo in minutes."
           href="/recipes/adopting-nx/adding-to-monorepo"
           icon={

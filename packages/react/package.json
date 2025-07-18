@@ -17,7 +17,7 @@
     "CLI",
     "Front-end"
   ],
-  "main": "./index",
+  "main": "./index.js",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -38,14 +38,19 @@
     "minimatch": "9.0.3",
     "picocolors": "^1.1.0",
     "tslib": "^2.3.0",
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
-    "@nx/eslint": "file:../eslint",
-    "@nx/web": "file:../web",
-    "@nx/module-federation": "file:../module-federation",
+    "@nx/devkit": "workspace:*",
+    "@nx/js": "workspace:*",
+    "@nx/eslint": "workspace:*",
+    "@nx/web": "workspace:*",
+    "@nx/vite": "workspace:*",
+    "@nx/module-federation": "workspace:*",
+    "@nx/rollup": "workspace:*",
     "express": "^4.21.2",
     "http-proxy-middleware": "^3.0.3",
     "semver": "^7.6.3"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

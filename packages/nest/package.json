@@ -17,7 +17,7 @@
     "CLI",
     "Backend"
   ],
-  "main": "./index",
+  "main": "./index.js",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -32,10 +32,10 @@
   },
   "dependencies": {
     "@nestjs/schematics": "^11.0.0",
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
-    "@nx/eslint": "file:../eslint",
-    "@nx/node": "file:../node",
+    "@nx/devkit": "workspace:*",
+    "@nx/js": "workspace:*",
+    "@nx/eslint": "workspace:*",
+    "@nx/node": "workspace:*",
     "tslib": "^2.3.0"
   },
   "publishConfig": {

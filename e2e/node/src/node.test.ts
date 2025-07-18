@@ -22,7 +22,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { execSync } from 'child_process';
 import * as http from 'http';
 import { getLockFileName } from '@nx/js';

@@ -8,7 +8,7 @@ import {
   SectionDescription,
   SectionHeading,
   Strong,
-} from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev-ui-common';
 import { ReactElement } from 'react';
 import Link from 'next/link';
 

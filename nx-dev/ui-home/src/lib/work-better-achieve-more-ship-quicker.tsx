@@ -3,7 +3,7 @@ import {
   SectionHeading,
   Strong,
   TextLink,
-} from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev-ui-common';
 import Image from 'next/image';
 
 export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {

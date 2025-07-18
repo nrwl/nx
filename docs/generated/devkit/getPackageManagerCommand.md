@@ -14,10 +14,10 @@ execSync(`${getPackageManagerCommand().addDev} my-dev-package`);
 
 #### Parameters
 
-| Name             | Type                                                                    | Default value   | Description                                                                                 |
-| :--------------- | :---------------------------------------------------------------------- | :-------------- | :------------------------------------------------------------------------------------------ |
-| `packageManager` | [`PackageManager`](/reference/core-api/devkit/documents/PackageManager) | `undefined`     | The package manager to use. If not provided, it will be detected based on the lock file.    |
-| `root`           | `string`                                                                | `workspaceRoot` | The directory the commands will be ran inside of. Defaults to the current workspace's root. |
+| Name              | Type                                                                    | Description                                                                                 |
+| :---------------- | :---------------------------------------------------------------------- | :------------------------------------------------------------------------------------------ |
+| `packageManager?` | [`PackageManager`](/reference/core-api/devkit/documents/PackageManager) | The package manager to use. If not provided, it will be detected based on the lock file.    |
+| `root?`           | `string`                                                                | The directory the commands will be ran inside of. Defaults to the current workspace's root. |
 
 #### Returns
 

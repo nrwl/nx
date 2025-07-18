@@ -1,9 +1,20 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
-    "types": ["node"]
+    "outDir": "../../dist/out-tsc/nx-dev/data-access-courses",
+    "types": ["node"],
+    "composite": true,
+    "declaration": true,
+    "jsx": "react-jsx"
   },
+  "references": [
+    {
+      "path": "../data-access-documents/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-markdoc/tsconfig.lib.json"
+    }
+  ],
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
   "include": ["src/**/*.ts"]
 }
