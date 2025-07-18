@@ -292,4 +292,8 @@ export class TasksSchedule {
       return this.taskGraph.tasks[taskId].parallelism === true;
     }
   }
+
+  public getEstimatedTaskTimings(): Record<string, number> {
+    return this.estimatedTaskTimings;
+  }
 }

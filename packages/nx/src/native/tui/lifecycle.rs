@@ -299,6 +299,15 @@ impl AppLifeCycle {
         self.app.lock().set_cloud_message(Some(message));
         Ok(())
     }
+
+    #[napi]
+    pub fn set_estimated_task_timings(
+        &mut self,
+        timings: std::collections::HashMap<String, i64>,
+    ) -> napi::Result<()> {
+        self.app.lock().set_estimated_task_timings(timings);
+        Ok(())
+    }
 }
 
 #[napi]
