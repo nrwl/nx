@@ -107,3 +107,7 @@ tasks/
 # Upstream docs local configuration (machine-specific)
 .upstreamdocs.local.json
 
+# Repository update system
+tools/update-repos/repos/
+tools/update-repos/dist/
+
