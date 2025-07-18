@@ -3,6 +3,7 @@
 import { execSync, exec } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
@@ -18,7 +19,7 @@ interface Config {
 }
 
 const SCRIPT_DIR = __dirname;
-const REPOS_DIR = path.join(SCRIPT_DIR, '..', 'repos');
+const REPOS_DIR = path.join(os.tmpdir(), 'updating-nx', 'repos');
 const CONFIG_FILE = path.join(SCRIPT_DIR, '..', 'config', 'repos.json');
 
 function log(message: string) {
@@ -89,6 +90,7 @@ async function main(): Promise<void> {
 
     // Create repos directory if it doesn't exist
     if (!fs.existsSync(REPOS_DIR)) {
+      log(`Creating repos directory: ${REPOS_DIR}`);
       fs.mkdirSync(REPOS_DIR, { recursive: true });
     }
 

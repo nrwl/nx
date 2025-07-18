@@ -3,6 +3,7 @@
 import { execSync, exec, spawn } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
@@ -20,7 +21,7 @@ interface Config {
 type PackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun';
 
 const SCRIPT_DIR = __dirname;
-const REPOS_DIR = path.join(SCRIPT_DIR, '..', 'repos');
+const REPOS_DIR = path.join(os.tmpdir(), 'updating-nx', 'repos');
 const CONFIG_FILE = path.join(SCRIPT_DIR, '..', 'config', 'repos.json');
 
 function log(message: string) {
@@ -211,8 +212,13 @@ async function updateRepository(repoName: string): Promise<void> {
 
   log(`Starting update for repository: ${repoName}`);
 
-  // Check if repository directory exists
+  // Check if repository directory exists, create parent directory if needed
   if (!fs.existsSync(repoDir)) {
+    // Create parent directory if it doesn't exist
+    if (!fs.existsSync(REPOS_DIR)) {
+      log(`Creating repos directory: ${REPOS_DIR}`);
+      fs.mkdirSync(REPOS_DIR, { recursive: true });
+    }
     throw new Error(
       `Repository directory not found: ${repoDir}. Please run setup-repos.ts first`
     );
