@@ -67,6 +67,7 @@ export const BUMP_TYPE_REASON_TEXT = {
     ', because a dependency project belonging to another release group was bumped, ',
   OTHER_PROJECT_IN_FIXED_GROUP_WAS_BUMPED_DUE_TO_DEPENDENCY:
     ', because of a dependency-only bump to another project in the same fixed release group, ',
+  NOOP_VERSION_ACTIONS: ', because this project uses docker, ',
 } as const;
 
 interface ReleaseGroupProcessorOptions {
@@ -776,13 +777,16 @@ export class ReleaseGroupProcessor {
         finalConfigForProject
       );
 
-      logs.forEach((log) => console.log(log));
+      logs.forEach((log) =>
+        this.getProjectLoggerForProject(project).buffer(log)
+      );
       const newVersionData = {
         ...this.versionData.get(project),
         dockerVersion: newVersion,
       };
       this.versionData.set(project, newVersionData);
     }
+    this.flushAllProjectLoggers();
   }
 
   private async processGroup(releaseGroupName: string): Promise<void> {
@@ -1128,6 +1132,15 @@ export class ReleaseGroupProcessor {
       }
       return `${log} within release group "${releaseGroup.name}"`;
     };
+    const versionActions = this.getVersionActionsForProject(projectName);
+    if (versionActions instanceof NOOP_VERSION_ACTIONS) {
+      return {
+        newVersionInput: 'none',
+        newVersionInputReason: 'NOOP_VERSION_ACTIONS',
+        newVersionInputReasonData: {},
+      };
+    }
+
     if (cachedFinalConfigForProject.specifierSource === 'prompt') {
       let specifier: SemverBumpType | SemverVersion;
       if (releaseGroup.projectsRelationship === 'independent') {
