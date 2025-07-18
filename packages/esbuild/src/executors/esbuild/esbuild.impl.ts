@@ -95,7 +95,8 @@ export async function* esbuildExecutor(
       // TODO(jack): make types generate with esbuild
       skipTypings: true,
       generateLockfile: true,
-      outputFileExtensionForCjs: getOutExtension('cjs', options),
+      outputFileExtensionForCjs: getOutExtension('cjs', options, context),
+      outputFileExtensionForEsm: getOutExtension('esm', options, context),
       excludeLibsInPackageJson: !options.thirdParty,
       // TODO(jack): Remove the need to pass updateBuildableProjectDepsInPackageJson option when overrideDependencies or extraDependencies are passed.
       // Add this back to fix a regression.
