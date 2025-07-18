@@ -1,11 +1,19 @@
 import { CreateWorkspaceOptions } from './create-workspace-options';
 import { output } from './utils/output';
-import { getOnboardingInfo, readNxCloudToken } from './utils/nx/nx-cloud';
+import {
+  createNxCloudOnboardingUrl,
+  getNxCloudInfo,
+  readNxCloudToken,
+} from './utils/nx/nx-cloud';
 import { createSandbox } from './create-sandbox';
 import { createEmptyWorkspace } from './create-empty-workspace';
 import { createPreset } from './create-preset';
 import { setupCI } from './utils/ci/setup-ci';
-import { initializeGitRepo } from './utils/git/git';
+import {
+  initializeGitRepo,
+  pushToGitHub,
+  VcsPushStatus,
+} from './utils/git/git';
 import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
 import { mapErrorToBodyLines } from './utils/error-utils';
 import { Preset } from './utils/preset/preset';
@@ -24,6 +32,8 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     commit,
     cliName,
     useGitHub,
+    skipGitHubPush = false,
+    verbose = false,
   } = options;
 
   if (cliName) {
@@ -64,20 +74,29 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       await setupCI(directory, nxCloud, packageManager);
     }
 
-    const { connectCloudUrl, output } = await getOnboardingInfo(
+    connectUrl = await createNxCloudOnboardingUrl(
       nxCloud,
       token,
       directory,
-      rawArgs?.nxCloud,
       useGitHub
     );
-    connectUrl = connectCloudUrl;
-    nxCloudInfo = output;
   }
+
+  let pushedToVcs = VcsPushStatus.SkippedGit;
 
   if (!skipGit) {
     try {
       await initializeGitRepo(directory, { defaultBase, commit, connectUrl });
+
+      // Push to GitHub if commit was made, GitHub push is not skipped, and CI provider is GitHub
+      if (commit && !skipGitHubPush && nxCloud === 'github') {
+        pushedToVcs = await pushToGitHub(directory, {
+          skipGitHubPush,
+          name,
+          defaultBase,
+          verbose,
+        });
+      }
     } catch (e) {
       if (e instanceof Error) {
         output.error({
@@ -90,9 +109,19 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     }
   }
 
+  if (connectUrl) {
+    nxCloudInfo = await getNxCloudInfo(
+      nxCloud,
+      connectUrl,
+      pushedToVcs,
+      rawArgs?.nxCloud
+    );
+  }
+
   return {
     nxCloudInfo,
     directory,
+    pushedToVcs,
   };
 }
 

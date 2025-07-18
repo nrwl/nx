@@ -1,3 +1,4 @@
+import { VcsPushStatus } from '../git/git';
 import { CLIOutput } from '../output';
 import { getMessageFactory } from './messages';
 import * as ora from 'ora';
@@ -27,11 +28,10 @@ export function readNxCloudToken(directory: string) {
   return accessToken || nxCloudId;
 }
 
-export async function getOnboardingInfo(
+export async function createNxCloudOnboardingUrl(
   nxCloud: NxCloud,
   token: string,
   directory: string,
-  rawNxCloud?: NxCloud,
   useGitHub?: boolean
 ) {
   // nx-ignore-next-line
@@ -47,22 +47,36 @@ export async function getOnboardingInfo(
     nxCloud === 'yes'
       ? 'create-nx-workspace-success-cache-setup'
       : 'create-nx-workspace-success-ci-setup';
-  const { code, createMessage } = getMessageFactory(source);
-  const connectCloudUrl = await createNxCloudOnboardingURL(
+  const { code } = getMessageFactory(source);
+  return await createNxCloudOnboardingURL(
     source,
     token,
     useGitHub ??
       (nxCloud === 'yes' || nxCloud === 'github' || nxCloud === 'circleci'),
     code
   );
+}
+
+export async function getNxCloudInfo(
+  nxCloud: NxCloud,
+  connectCloudUrl: string,
+  pushedToVcs: VcsPushStatus,
+  rawNxCloud?: NxCloud
+) {
+  const source =
+    nxCloud === 'yes'
+      ? 'create-nx-workspace-success-cache-setup'
+      : 'create-nx-workspace-success-ci-setup';
+  const { createMessage } = getMessageFactory(source);
   const out = new CLIOutput(false);
   const message = createMessage(
-    typeof rawNxCloud === 'string' ? null : connectCloudUrl
+    typeof rawNxCloud === 'string' ? null : connectCloudUrl,
+    pushedToVcs
   );
   if (message.type === 'success') {
     out.success(message);
   } else {
     out.warn(message);
   }
-  return { output: out.getOutput(), connectCloudUrl };
+  return out.getOutput();
 }

@@ -32,8 +32,8 @@ export function pruneProjectGraph(
     builder
   );
 
-  for (const nodeName of workspacePackages.keys()) {
-    const node = graph.nodes[nodeName];
+  for (const project of workspacePackages.values()) {
+    const node = graph.nodes[project.name];
     builder.addNode(node);
   }
 
