@@ -67,7 +67,7 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
     await execAndWait(fullCommand, tmpDir);
 
     workspaceSetupSpinner.succeed(
-      `Successfully created the workspace: ${directory}.`
+      `Successfully created the workspace: ${directory}`
     );
   } catch (e) {
     workspaceSetupSpinner.fail();

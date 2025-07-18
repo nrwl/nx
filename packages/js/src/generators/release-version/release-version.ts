@@ -22,6 +22,7 @@ import {
 import {
   getFirstGitCommit,
   getLatestGitTagForPattern,
+  GitTagAndVersion,
 } from 'nx/src/command-line/release/utils/git';
 import {
   resolveSemverSpecifierFromConventionalCommits,
@@ -47,7 +48,7 @@ import {
 } from './utils/resolve-local-package-dependencies';
 import { sortProjectsTopologically } from './utils/sort-projects-topologically';
 
-function resolvePreIdSpecifier(currentSpecifier: string, preid?: string) {
+function resolvePreidSpecifier(currentSpecifier: string, preid?: string) {
   if (!currentSpecifier.startsWith('pre') && preid) {
     return `pre${currentSpecifier}`;
   }
@@ -97,7 +98,7 @@ Valid values are: ${validReleaseVersionPrefixes
 
     // Set default for updateDependents
     const updateDependents = options.updateDependents ?? 'auto';
-    const updateDependentsBump = resolvePreIdSpecifier(
+    const updateDependentsBump = resolvePreidSpecifier(
       'patch',
       options.preid
     ) as ReleaseType;
@@ -126,10 +127,7 @@ Valid values are: ${validReleaseVersionPrefixes
 
     // only used for options.currentVersionResolver === 'git-tag', but
     // must be declared here in order to reuse it for additional projects
-    let latestMatchingGitTag:
-      | { tag: string; extractedVersion: string }
-      | null
-      | undefined = undefined;
+    let latestMatchingGitTag: GitTagAndVersion | null | undefined = undefined;
 
     // if specifier is undefined, then we haven't resolved it yet
     // if specifier is null, then it has been resolved and no changes are necessary
@@ -310,8 +308,14 @@ To fix this you will either need to add a package.json file at that location, or
               {
                 projectName: project.name,
               },
-              options.releaseGroup.releaseTagPatternCheckAllBranchesWhen,
-              releaseTagPatternRequireSemver ?? true
+              {
+                checkAllBranchesWhen:
+                  options.releaseGroup.releaseTagPatternCheckAllBranchesWhen,
+                preid: options.preid,
+                releaseTagPatternRequireSemver: releaseTagPatternRequireSemver,
+                releaseTagPatternStrictPreid:
+                  options.releaseGroup.releaseTagPatternStrictPreid,
+              }
             );
             if (!latestMatchingGitTag) {
               if (options.fallbackCurrentVersionResolver === 'disk') {
@@ -457,7 +461,7 @@ To fix this you will either need to add a package.json file at that location, or
               );
             } else {
               let extraText = '';
-              const prereleaseSpecifier = resolvePreIdSpecifier(
+              const prereleaseSpecifier = resolvePreidSpecifier(
                 specifier,
                 options.preid
               );

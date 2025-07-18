@@ -1,4 +1,4 @@
-import { joinPathFragments } from '@nx/devkit';
+import { joinPathFragments, NxJsonConfiguration } from '@nx/devkit';
 import {
   cleanupProject,
   exists,
@@ -572,7 +572,7 @@ describe('nx release - independent projects', () => {
       expect(runCommand(`git rev-parse HEAD`).trim()).toEqual(updatedHeadSHA);
 
       // Disable git commit and tag operations for the changelog command via config
-      updateJson('nx.json', (json) => {
+      updateJson<NxJsonConfiguration>('nx.json', (json) => {
         return {
           ...json,
           release: {

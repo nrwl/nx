@@ -234,11 +234,15 @@ export async function createNxReleaseConfig(
 
   const defaultFixedReleaseTagPattern = 'v{version}';
   /**
-   * TODO(v21): in v21, make it so that this pattern is used by default when any custom groups are used
+   * TODO(v22): in v22, make it so that this pattern is used by default when any custom groups are used
    */
   const defaultFixedGroupReleaseTagPattern = '{releaseGroupName}-v{version}';
   const defaultIndependentReleaseTagPattern = '{projectName}@{version}';
   const defaultReleaseTagPatternRequireSemver = true;
+  /**
+   * TODO(v22): in v22, set this to true by default
+   */
+  const defaultReleaseTagPatternStrictPreid = false;
 
   const workspaceProjectsRelationship =
     userConfig.projectsRelationship || 'fixed';
@@ -345,6 +349,9 @@ export async function createNxReleaseConfig(
     releaseTagPatternRequireSemver:
       userConfig.releaseTagPatternRequireSemver ??
       defaultReleaseTagPatternRequireSemver,
+    releaseTagPatternStrictPreid:
+      userConfig.releaseTagPatternStrictPreid ??
+      defaultReleaseTagPatternStrictPreid,
     conventionalCommits: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
     versionPlans: (userConfig.versionPlans ||
       false) as NxReleaseConfig['versionPlans'],
@@ -355,6 +362,9 @@ export async function createNxReleaseConfig(
   const groupReleaseTagPatternRequireSemver =
     userConfig.releaseTagPatternRequireSemver ??
     WORKSPACE_DEFAULTS.releaseTagPatternRequireSemver;
+  const groupReleaseTagPatternStrictPreid =
+    userConfig.releaseTagPatternStrictPreid ??
+    defaultReleaseTagPatternStrictPreid;
 
   const GROUP_DEFAULTS: Omit<NxReleaseConfig['groups'][string], 'projects'> = {
     projectsRelationship: groupProjectsRelationship,
@@ -396,6 +406,7 @@ export async function createNxReleaseConfig(
     releaseTagPatternCheckAllBranchesWhen:
       userConfig.releaseTagPatternCheckAllBranchesWhen ?? undefined,
     releaseTagPatternRequireSemver: groupReleaseTagPatternRequireSemver,
+    releaseTagPatternStrictPreid: groupReleaseTagPatternStrictPreid,
     versionPlans: false,
   };
 
@@ -663,6 +674,10 @@ export async function createNxReleaseConfig(
         releaseGroup.releaseTagPatternRequireSemver ??
         userConfig.releaseTagPatternRequireSemver ??
         defaultReleaseTagPatternRequireSemver,
+      releaseTagPatternStrictPreid:
+        releaseGroup.releaseTagPatternStrictPreid ??
+        userConfig.releaseTagPatternStrictPreid ??
+        defaultReleaseTagPatternStrictPreid,
       versionPlans: releaseGroup.versionPlans ?? rootVersionPlansConfig,
     };
 
@@ -760,6 +775,8 @@ export async function createNxReleaseConfig(
         WORKSPACE_DEFAULTS.releaseTagPatternCheckAllBranchesWhen,
       releaseTagPatternRequireSemver:
         WORKSPACE_DEFAULTS.releaseTagPatternRequireSemver,
+      releaseTagPatternStrictPreid:
+        WORKSPACE_DEFAULTS.releaseTagPatternStrictPreid,
       git: rootGitConfig,
       version: rootVersionConfig,
       changelog: rootChangelogConfig,

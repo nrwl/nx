@@ -176,7 +176,7 @@ async function main(parsedArgs: yargs.Arguments<CreateNxPluginArguments>) {
 async function normalizeArgsMiddleware(
   argv: yargs.Arguments<CreateNxPluginArguments>
 ): Promise<void> {
-  rawArgs = argv;
+  rawArgs = { ...argv };
   try {
     const pluginName = await determinePluginName(argv);
     const createPackageName = await determineCreatePackageName(argv);

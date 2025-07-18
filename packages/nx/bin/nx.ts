@@ -89,14 +89,14 @@ async function main() {
       handleNoWorkspace(GLOBAL_NX_VERSION);
     }
 
-    if (!localNx) {
+    if (!localNx && !isNxCloudCommand(process.argv[2])) {
       handleMissingLocalInstallation(workspace ? workspace.dir : null);
     }
 
     // this file is already in the local workspace
     if (isLocalInstall) {
       await initLocal(workspace);
-    } else {
+    } else if (localNx) {
       // Nx is being run from globally installed CLI - hand off to the local
       warnIfUsingOutdatedGlobalInstall(GLOBAL_NX_VERSION, LOCAL_NX_VERSION);
       if (localNx.includes('.nx')) {
@@ -105,6 +105,10 @@ async function main() {
       } else {
         require(localNx);
       }
+    } else if (isNxCloudCommand(process.argv[2])) {
+      // nx-cloud commands can run without local Nx installation
+      process.env.NX_DAEMON = 'false';
+      require('nx/src/command-line/nx-commands').commandsObject.argv;
     }
   }
 }
@@ -171,6 +175,19 @@ function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
   return require.resolve('nx/bin/nx.js', {
     paths: [workspace ? workspace.dir : globalsRoot],
   });
+}
+
+function isNxCloudCommand(command: string): boolean {
+  const nxCloudCommands = [
+    'start-ci-run',
+    'login',
+    'logout',
+    'connect',
+    'view-logs',
+    'fix-ci',
+    'record',
+  ];
+  return nxCloudCommands.includes(command);
 }
 
 function handleMissingLocalInstallation(detectedWorkspaceRoot: string | null) {
