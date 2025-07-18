@@ -294,10 +294,10 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     for (const releaseGroup of releaseGroups) {
       if (
         'docker' in releaseGroup.version &&
-        releaseGroup.version.docker.preVersionCommand
+        releaseGroup.version.docker.groupPreVersionCommand
       ) {
         runPreVersionCommand(
-          releaseGroup.version.docker.preVersionCommand,
+          releaseGroup.version.docker.groupPreVersionCommand,
           {
             dryRun: args.dryRun,
             verbose: args.verbose,

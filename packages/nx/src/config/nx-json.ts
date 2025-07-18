@@ -90,10 +90,17 @@ export interface NxReleaseVersionConfiguration {
   docker?: {
     /**
      * A command to run after validation of nx release configuration, but before versioning begins.
-     * Useful for preparing build artifacts. If --dry-run is passed, the command is still executed,
+     * Useful for preparing docker build artifacts. If --dry-run is passed, the command is still executed,
      * but with the NX_DRY_RUN environment variable set to 'true'.
      */
     preVersionCommand?: string;
+    /**
+     * A command to run after validation of nx release configuration, but before versioning begins.
+     * Used for preparing docker build artifacts. If --dry-run is passed, the command is still executed, but
+     * with the NX_DRY_RUN environment variable set to 'true'.
+     * It will run in addition to the global `preVersionCommand`
+     */
+    groupPreVersionCommand?: string;
     /**
      * Array of projects which should use a no-op VersionActions implementation rather than any potentially inferred by default or via Inference Plugins.
      */

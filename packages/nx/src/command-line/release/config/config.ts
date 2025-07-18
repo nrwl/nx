@@ -302,6 +302,9 @@ export async function createNxReleaseConfig(
             updateDependents:
               (userConfig.version as NxReleaseVersionConfiguration | undefined)
                 ?.updateDependents ?? 'auto',
+            docker:
+              (userConfig.version as NxReleaseVersionConfiguration | undefined)
+                ?.docker ?? undefined,
           }),
     } as DeepRequired<NxReleaseConfiguration['version']>,
     changelog: {
@@ -491,6 +494,8 @@ export async function createNxReleaseConfig(
   >;
   delete rootVersionWithoutGlobalOptions.git;
   delete rootVersionWithoutGlobalOptions.preVersionCommand;
+  delete (rootVersionWithoutGlobalOptions as NxReleaseVersionConfiguration)
+    .docker?.preVersionCommand;
 
   // Apply conventionalCommits shorthand to the final group defaults if explicitly configured in the original user config
   if (userConfig.version?.conventionalCommits === true) {
