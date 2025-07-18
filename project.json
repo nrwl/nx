@@ -96,6 +96,54 @@
         "check-format:quick",
         "check-lock-files"
       ]
+    },
+    "setup-update-repos": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["compile-update-repos"],
+      "options": {
+        "command": "node tools/update-repos/dist/setup-repos.js"
+      }
+    },
+    "update-nx-repo": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["compile-update-repos"],
+      "options": {
+        "command": "node tools/update-repos/dist/update-repo.js nx"
+      }
+    },
+    "update-ocean-repo": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["compile-update-repos"],
+      "options": {
+        "command": "node tools/update-repos/dist/update-repo.js ocean"
+      }
+    },
+    "update-nx-examples-repo": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["compile-update-repos"],
+      "options": {
+        "command": "node tools/update-repos/dist/update-repo.js nx-examples"
+      }
+    },
+    "update-all-repos": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["update-nx-repo", "update-ocean-repo", "update-nx-examples-repo"],
+      "options": {
+        "command": "echo '🎉 All repositories updated successfully!'"
+      }
+    },
+    "compile-update-repos": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cd tools/update-repos && npx tsc"
+      },
+      "cache": true,
+      "inputs": [
+        "{workspaceRoot}/tools/update-repos/scripts/**/*",
+        "{workspaceRoot}/tools/update-repos/config/**/*",
+        "{workspaceRoot}/tools/update-repos/tsconfig.json"
+      ],
+      "outputs": ["{workspaceRoot}/tools/update-repos/dist"]
     }
   }
 }
