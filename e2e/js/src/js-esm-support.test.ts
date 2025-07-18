@@ -271,7 +271,7 @@ describe('JS ESM/CJS Support', () => {
 
       checkFilesExist(`dist/apps/${nodeapp}/main.js`);
       checkFilesExist(`dist/libs/${cjsLib}/index.cjs`);
-      checkFilesExist(`dist/libs/${esmLib}/index.mjs`);
+      checkFilesExist(`dist/libs/${esmLib}/index.js`);
 
       const result = execSync(`node dist/apps/${nodeapp}/main.js`, {
         cwd: tmpProjPath(),

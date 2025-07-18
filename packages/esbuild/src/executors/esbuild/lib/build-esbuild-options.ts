@@ -15,7 +15,7 @@ import { NormalizedEsBuildExecutorOptions } from '../schema';
 import { getEntryPoints } from '../../../utils/get-entry-points';
 import { join, relative } from 'path';
 
-const ESM_FILE_EXTENSION = '.js'; // Changed from .mjs to match package.json exports
+const ESM_FILE_EXTENSION = '.js';
 const CJS_FILE_EXTENSION = '.cjs';
 
 export function buildEsbuildOptions(
@@ -267,21 +267,15 @@ export function getOutExtension(
   const userDefinedExt = options.userDefinedBuildOptions?.outExtension?.['.js'];
   // Allow users to change the output extensions from default CJS and ESM extensions.
   // CJS -> .js
-  // ESM -> .mjs for libraries, .js for applications
+  // ESM -> .mjs
 
-  if (userDefinedExt === '.js' && format === 'cjs') {
-    return '.js';
-  }
-
-  if (userDefinedExt === '.mjs' && format === 'esm') {
-    return '.mjs';
-  }
-
-  if (format === 'esm') {
-    return '.js';
-  }
-
-  return CJS_FILE_EXTENSION;
+  return userDefinedExt === '.js' && format === 'cjs'
+    ? '.js'
+    : userDefinedExt === '.mjs' && format === 'esm'
+    ? '.mjs'
+    : format === 'esm'
+    ? ESM_FILE_EXTENSION
+    : CJS_FILE_EXTENSION;
 }
 
 export function getOutfile(
@@ -397,7 +391,7 @@ const __dirname = dirname(__filename);
 const distPath = __dirname;
 const manifest = ${JSON.stringify(manifest)};
 
-// Simple ESM resolver for workspace libraries
+// Resolver for workspace libs
 const originalResolve = import.meta.resolve;
 if (originalResolve) {
   import.meta.resolve = function(specifier, parent) {
