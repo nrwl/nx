@@ -3,7 +3,9 @@ use tracing::debug;
 
 const AI_ENV_VARS: &[&str] = &[
     "CLAUDECODE",
-    "CURSOR_TRACE_ID",
+    "CURSOR_AI_AGENT",
+    "CURSOR_COMPOSER_MODE",
+    "CURSOR_AGENT_MODE",
 ];
 
 /// Detects if the current process is being run by an AI agent
@@ -49,8 +51,10 @@ mod tests {
 
         // Test multiple AI environment variables
         let test_cases = [
-            ("CLAUDE_CODE", "1"),
-            ("AI_ASSISTANT", "test_ai"),
+            ("CLAUDECODE", "1"),
+            ("CURSOR_AI_AGENT", "1"),
+            ("CURSOR_COMPOSER_MODE", "active"),
+            ("CURSOR_AGENT_MODE", "enabled"),
         ];
 
         for (var, value) in &test_cases {
