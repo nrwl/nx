@@ -11,6 +11,9 @@ export default async function dockerReleasePublish(
   schema: DockerReleasePublishSchema,
   context: ExecutorContext
 ) {
+  logger.warn(
+    `Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.`
+  );
   const projectConfig = context.projectGraph.nodes[context.projectName];
   const options = normalizeOptions(projectConfig, schema);
   if (!options.dryRun) {

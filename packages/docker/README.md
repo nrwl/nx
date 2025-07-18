@@ -15,4 +15,6 @@ An AI-first build platform that connects everything from your editor to CI. Help
 
 This package is a [Docker plugin for Nx](https://nx.dev/nx-api/docker).
 
+**Experimental**: Support for Docker is currently experimental. Breaking changes may occur and not adhere to semver versioning.
+
 {{content}}

@@ -6,6 +6,7 @@ import {
   addDependenciesToPackageJson,
   formatFiles,
   runTasksInSerial,
+  logger,
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { InitGeneratorSchema } from './schema';
@@ -32,6 +33,9 @@ export async function initGeneratorInternal(
   tree: Tree,
   schema: InitGeneratorSchema
 ) {
+  logger.warn(
+    `Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.`
+  );
   const nxJson = readNxJson(tree);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&
