@@ -64,7 +64,7 @@
     "@jest/test-result": "30.0.2",
     "@jest/types": "30.0.1",
     "@ltd/j-toml": "^1.38.0",
-    "@module-federation/enhanced": "0.17.0",
+    "@module-federation/enhanced": "^0.17.0",
     "@module-federation/sdk": "^0.17.0",
     "@monodon/rust": "2.3.0",
     "@napi-rs/cli": "3.0.0-alpha.56",
