@@ -20,7 +20,7 @@ tools/update-repos/
 │   └── update-repo.ts          # Update repos with migrations
 ├── config/
 │   └── repos.json              # Repository configuration
-├── repos/                      # Git clones (gitignored)
+├── repos/                      # Git clones (located in OS temp dir/updating-nx/repos)
 │   ├── nx/                     # Nx repo clone
 │   ├── ocean/                  # Ocean repo clone  
 │   └── nx-examples/            # Nx examples repo clone
@@ -295,7 +295,7 @@ To add a new repository to the update system:
 ## Security
 
 - Uses GitHub CLI for authenticated operations
-- Repository clones are isolated and gitignored
+- Repository clones are isolated in OS temp directory (`os.tmpdir()/updating-nx/repos`)
 - No secrets or tokens are stored in configuration files
 - Force push is scoped to update branches only (`upnx`)
 
