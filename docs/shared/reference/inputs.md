@@ -29,12 +29,12 @@ Changing source code will often change the behavior of a task. Nx can consider t
 Source file inputs are defined like this:
 
 ```jsonc
-"inputs": {
+"inputs": [
   "{projectRoot}/**/*", // All files in a project
   "{workspaceRoot}/.gitignore", // A specific file in the workspace
   "{projectRoot}/**/*.ts", // A glob pattern for files
   "!{projectRoot}/**/*.spec.ts", // Excluding files matching a glob pattern
-}
+]
 ```
 
 Source file inputs must be prefixed with either `{projectRoot}` or `{workspaceRoot}` to distinguish where the paths should be resolved from. `{workspaceRoot}` should only appear in the beginning of an input but `{projectRoot}` and `{projectName}` can be specified later in the input to interpolate the root or name of the project into the input location.
