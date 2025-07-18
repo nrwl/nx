@@ -33,7 +33,7 @@ export interface VersionDataEntry {
   }[];
 }
 
-function isPrerelease(version: string): boolean {
+export function isPrerelease(version: string): boolean {
   // prerelease returns an array of matching prerelease "components", or null if the version is not a prerelease
   try {
     return prerelease(version) !== null;

@@ -1,7 +1,7 @@
 import * as chalk from 'chalk';
 import { prompt } from 'enquirer';
 import { readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { ReleaseType, valid } from 'semver';
+import { prerelease, ReleaseType } from 'semver';
 import { dirSync } from 'tmp';
 import type { DependencyBump } from '../../../release/changelog-renderer';
 import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
@@ -68,6 +68,7 @@ import {
   createCommitMessageValues,
   createGitTagValues,
   handleDuplicateGitTags,
+  isPrerelease,
   noDiffInChangelogMessage,
 } from './utils/shared';
 
@@ -244,6 +245,21 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     const headSHA = to === 'HEAD' ? toSHA : await getCommitHash('HEAD');
 
     /**
+     * Extract the preid from the workspace version and the project versions
+     */
+    const workspacePreid: string | undefined = workspaceChangelogVersion
+      ? extractPreid(workspaceChangelogVersion)
+      : undefined;
+
+    const projectsPreid: { [projectName: string]: string | undefined } =
+      Object.fromEntries(
+        Object.entries(projectsVersionData).map(([projectName, v]) => [
+          projectName,
+          v.newVersion ? extractPreid(v.newVersion) : undefined,
+        ])
+      );
+
+    /**
      * Protect the user against attempting to create a new commit when recreating an old release changelog,
      * this seems like it would always be unintentional.
      */
@@ -343,8 +359,17 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           await getLatestGitTagForPattern(
             nxReleaseConfig.releaseTagPattern,
             {},
-            nxReleaseConfig.releaseTagPatternCheckAllBranchesWhen,
-            nxReleaseConfig.releaseTagPatternRequireSemver
+            {
+              checkAllBranchesWhen:
+                nxReleaseConfig.releaseTagPatternCheckAllBranchesWhen,
+              preid:
+                workspacePreid ??
+                projectsPreid?.[Object.keys(projectsPreid)[0]],
+              releaseTagPatternRequireSemver:
+                nxReleaseConfig.releaseTagPatternRequireSemver,
+              releaseTagPatternStrictPreid:
+                nxReleaseConfig.releaseTagPatternStrictPreid,
+            }
           )
         )?.tag;
       if (!workspaceChangelogFromRef) {
@@ -528,8 +553,15 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                     projectName: project.name,
                     releaseGroupName: releaseGroup.name,
                   },
-                  releaseGroup.releaseTagPatternCheckAllBranchesWhen,
-                  releaseGroup.releaseTagPatternRequireSemver
+                  {
+                    checkAllBranchesWhen:
+                      releaseGroup.releaseTagPatternCheckAllBranchesWhen,
+                    preid: projectsPreid[project.name],
+                    releaseTagPatternRequireSemver:
+                      releaseGroup.releaseTagPatternRequireSemver,
+                    releaseTagPatternStrictPreid:
+                      releaseGroup.releaseTagPatternStrictPreid,
+                  }
                 )
               )?.tag;
 
@@ -671,8 +703,17 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
               await getLatestGitTagForPattern(
                 releaseGroup.releaseTagPattern,
                 {},
-                releaseGroup.releaseTagPatternCheckAllBranchesWhen,
-                releaseGroup.releaseTagPatternRequireSemver
+                {
+                  checkAllBranchesWhen:
+                    releaseGroup.releaseTagPatternCheckAllBranchesWhen,
+                  preid:
+                    workspacePreid ??
+                    projectsPreid?.[Object.keys(projectsPreid)[0]],
+                  releaseTagPatternRequireSemver:
+                    releaseGroup.releaseTagPatternRequireSemver,
+                  releaseTagPatternStrictPreid:
+                    releaseGroup.releaseTagPatternStrictPreid,
+                }
               )
             )?.tag;
           if (!fromRef) {
@@ -1445,4 +1486,23 @@ function versionPlanSemverReleaseTypeToChangelogType(bump: ReleaseType): {
     default:
       throw new Error(`Invalid semver bump type: ${bump}`);
   }
+}
+
+function extractPreid(version: string): string | undefined {
+  if (!isPrerelease(version)) {
+    return undefined;
+  }
+
+  const preid = prerelease(version)?.[0];
+  if (typeof preid === 'string') {
+    if (preid.trim() === '') {
+      return undefined;
+    }
+
+    return preid;
+  }
+  if (typeof preid === 'number') {
+    return preid.toString();
+  }
+  return undefined;
 }

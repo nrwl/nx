@@ -207,6 +207,13 @@
                 ],
                 "description": "By default, we will try and resolve the latest match for the releaseTagPattern from the current branch, falling back to all branches if no match is found on the current branch. Setting this to true will cause us to ALWAYS check all branches for the latest match. Setting it to false will cause us to ONLY check the current branch for the latest match. Setting it to an array of strings will cause us to check all branches WHEN the current branch is one of the strings in the array. Glob patterns are supported."
               },
+              "releaseTagPatternRequireSemver": {
+                "type": "boolean",
+                "description": "Whether to require semver to be used for the release tag pattern. If set to false, the release tag pattern will not be checked for semver compliance."
+              },
+              "releaseTagPatternStrictPreid": {
+                "$ref": "#/definitions/NxReleaseReleaseTagPatternStrictPreidConfiguration"
+              },
               "versionPlans": {
                 "oneOf": [
                   {
@@ -295,6 +302,13 @@
             }
           ],
           "description": "By default, we will try and resolve the latest match for the releaseTagPattern from the current branch, falling back to all branches if no match is found on the current branch. Setting this to true will cause us to ALWAYS check all branches for the latest match. Setting it to false will cause us to ONLY check the current branch for the latest match. Setting it to an array of strings will cause us to check all branches WHEN the current branch is one of the strings in the array. Glob patterns are supported."
+        },
+        "releaseTagPatternRequireSemver": {
+          "type": "boolean",
+          "description": "Whether to require semver to be used for the release tag pattern. If set to false, the release tag pattern will not be checked for semver compliance."
+        },
+        "releaseTagPatternStrictPreid": {
+          "$ref": "#/definitions/NxReleaseReleaseTagPatternStrictPreidConfiguration"
         }
       }
     },
@@ -924,6 +938,10 @@
           "description": "Changes to files matching any of these optional patterns will be excluded from the affected project logic within the `nx release plan:check` command. This is useful for ignoring files that are not relevant to the versioning process, such as documentation or configuration files."
         }
       }
+    },
+    "NxReleaseReleaseTagPatternStrictPreidConfiguration": {
+      "type": "boolean",
+      "description": "When set to true and multiple tags match your configured \"releaseTagPattern\", the git tag matching logic will strictly prefer the tag which contain a semver preid which matches the one given to the nx release invocation.\n\nFor example, let's say your \"releaseTagPattern\" is \"{projectName}@{version}\" and you have the following tags for project \"my-lib\", which uses semver:\n- my-lib@1.2.4-beta.1\n- my-lib@1.2.4-alpha.1\n- my-lib@1.2.3\n\nIf \"releaseTagPatternStrictPreid\" is set to true and you run:\n- `nx release --preid beta`, the git tag \"my-lib@1.2.4-beta.1\" will be resolved.\n- `nx release --preid alpha`, the git tag \"my-lib@1.2.4-alpha.1\" will be resolved.\n- `nx release` (no preid), the git tag \"my-lib@1.2.3\" will be resolved.\n\nIf \"releaseTagPatternStrictPreid\" is set to false, the git tag \"my-lib@1.2.4-beta.1\" will always be resolved as the latest tag that matches the pattern, regardless of any preid which gets passed to nx release.\n\nNOTE: This feature was added in a minor version and is therefore set to false by default, but this may change in a future major version."
     },
     "ChangelogRenderOptions": {
       "type": "object",
