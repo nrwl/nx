@@ -92,6 +92,7 @@ export async function* esbuildExecutor(
 
     const cpjOptions: CopyPackageJsonOptions = {
       ...options,
+      format: options.format,
       // TODO(jack): make types generate with esbuild
       skipTypings: true,
       generateLockfile: true,
