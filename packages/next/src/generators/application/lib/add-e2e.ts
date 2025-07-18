@@ -91,13 +91,15 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
   } else if (options.e2eTestRunner === 'playwright') {
     let playwrightPkg: typeof import('@nx/playwright');
     try {
-      playwrightPkg = ensurePackage<
-        typeof playwrightPkg
-      >('@nx/playwright', nxVersion);
-    }
-    catch (e) {
+      playwrightPkg = ensurePackage<typeof playwrightPkg>(
+        '@nx/playwright',
+        nxVersion
+      );
+    } catch (e) {
       if (e instanceof Error && e.cause === ERR_MODULE_NOT_FOUND) {
-        console.log("NOTE: @nx/playwright couldn't be found in this project's dependencies and will be installed once you remove the \"dryRun\" flag (or once you hit the \"Generate\" button if you are running this in Nx Console)")
+        console.log(
+          'NOTE: @nx/playwright couldn\'t be found in this project\'s dependencies and will be installed once you remove the "dryRun" flag (or once you hit the "Generate" button if you are running this in Nx Console)'
+        );
       }
     }
 

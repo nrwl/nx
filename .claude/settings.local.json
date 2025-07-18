@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node:*)",
+      "Bash(npx create-nx-workspace:*)",
+      "Bash(npx nx show projects:*)",
+      "Bash(cat:*)",
+      "Bash(npx nx build:*)",
+      "Bash(npx nx run:*)",
+      "Bash(npx esbuild:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "nx"
+  ]
+}

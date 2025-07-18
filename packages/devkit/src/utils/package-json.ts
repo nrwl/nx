@@ -487,8 +487,8 @@ export function ensurePackage<T extends any = any>(
 
   if (process.env.NX_DRY_RUN && process.env.NX_DRY_RUN !== 'false') {
     throw new Error(
-      `NOTE: This generator does not support --dry-run for ${pkgOrTree}. If you are running this in Nx Console, it should execute fine once you hit the "Generate" button.\n`, 
-      { 'cause': errorCode }
+      `NOTE: This generator does not support --dry-run for ${pkgOrTree}. If you are running this in Nx Console, it should execute fine once you hit the "Generate" button.\n`,
+      { cause: errorCode }
     );
   }
 
