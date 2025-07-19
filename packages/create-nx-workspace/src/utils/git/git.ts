@@ -238,7 +238,7 @@ export async function pushToGitHub(
     const repoUrl = repoResult.stdout.trim();
 
     output.success({
-      title: `Successfully created and pushed to GitHub repository: ${repoUrl}`,
+      title: `Successfully pushed to GitHub repository: ${repoUrl}`,
     });
     return VcsPushStatus.PushedToVcs;
   } catch (e) {

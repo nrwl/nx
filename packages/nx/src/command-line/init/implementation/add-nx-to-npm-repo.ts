@@ -19,7 +19,7 @@ type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'> & {
   legacy?: boolean;
 };
 
-export async function addNxToNpmRepo(options: Options) {
+export async function addNxToNpmRepo(options: Options, guided: boolean = true) {
   const repoRoot = process.cwd();
 
   output.log({ title: '🐳 Nx initialization' });
@@ -33,7 +33,7 @@ export async function addNxToNpmRepo(options: Options) {
     (s) => !s.startsWith('pre') && !s.startsWith('post')
   );
 
-  if (options.interactive && scripts.length > 0) {
+  if (options.interactive && scripts.length > 0 && guided) {
     output.log({
       title:
         '🧑‍🔧 Please answer the following questions about the scripts found in your package.json in order to generate task runner configuration',
