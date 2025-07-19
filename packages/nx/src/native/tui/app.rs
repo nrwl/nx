@@ -1158,9 +1158,23 @@ impl App {
             .collect()
     }
 
+    /// Clears PTY reference and related state for a specific pane
+    fn clear_pane_pty_reference(&mut self, pane_idx: usize) {
+        if pane_idx < 2 {
+            self.terminal_pane_data[pane_idx].pty = None;
+            self.terminal_pane_data[pane_idx].can_be_interactive = false;
+            self.terminal_pane_data[pane_idx].set_interactive(false);
+        }
+    }
+
     /// Clears all output panes and resets their associated state.
     fn clear_all_panes(&mut self) {
         self.pane_tasks = [None, None];
+
+        // Clear PTY references for both panes
+        self.clear_pane_pty_reference(0);
+        self.clear_pane_pty_reference(1);
+
         self.update_focus(Focus::TaskList);
         self.set_spacebar_mode(false, None);
         self.dispatch_action(Action::UnpinAllTasks);
@@ -1368,6 +1382,12 @@ impl App {
 
         // If we're in spacebar mode and this is pane 0, convert to pinned mode
         if self.spacebar_mode && pane_idx == 0 {
+            // Clear the PTY reference when converting from spacebar to pinned mode
+            self.clear_pane_pty_reference(pane_idx);
+
+            // Pin the currently selected task to the pane
+            self.pane_tasks[pane_idx] = Some(task_name.clone());
+
             // When converting from spacebar to pinned, stay in name-tracking mode
             self.set_spacebar_mode(false, Some(SelectionMode::TrackByName));
             if self.layout_manager.get_pane_arrangement() == PaneArrangement::None {
@@ -1380,6 +1400,9 @@ impl App {
             if self.pane_tasks[pane_idx].as_deref() == Some(task_name.as_str()) {
                 // Unpin the task if it's already pinned
                 self.pane_tasks[pane_idx] = None;
+
+                // Clear the PTY reference when unpinning
+                self.clear_pane_pty_reference(pane_idx);
 
                 // If this was previously pane 2 and its now unpinned and pane 1 is still set, set the pane arrangement to single
                 if pane_idx == 1 && self.pane_tasks[0].is_some() {
@@ -1724,6 +1747,10 @@ impl App {
             if let Some(pty) = self.pty_instances.get(&task_name) {
                 terminal_pane_data.can_be_interactive = in_progress && pty.can_be_interactive();
                 terminal_pane_data.pty = Some(pty.clone());
+            } else {
+                // Clear PTY data if the task exists but doesn't have a PTY instance
+                terminal_pane_data.pty = None;
+                terminal_pane_data.can_be_interactive = false;
             }
         } else {
             // Clear PTY data when switching to a task that doesn't have a PTY instance
