@@ -6,22 +6,30 @@ use tracing::{trace, trace_span};
 use crate::native::glob::build_glob_set;
 use crate::native::types::FileData;
 
+use crate::native::utils::BufferedHasher;
+
 pub fn hash_project_files(
     project_name: &str,
     project_root: &str,
     file_sets: &[String],
     project_file_map: &HashMap<String, Vec<FileData>>,
 ) -> Result<String> {
+    let start = std::time::Instant::now();
     let _span = trace_span!("hash_project_files", project_name).entered();
     let collected_files =
         collect_project_files(project_name, project_root, file_sets, project_file_map)?;
+    trace!("collected_files in: {:?}", start.elapsed());
     trace!("collected_files: {:?}", collected_files.len());
-    let mut hasher = xxhash_rust::xxh3::Xxh3::new();
+    let hash_start = std::time::Instant::now();
+    let mut hasher = BufferedHasher::with_default_capacity();
+
     for file in collected_files {
-        hasher.update(file.hash.as_bytes());
-        hasher.update(file.file.as_bytes());
+        hasher.update_multiple(&[file.hash.as_bytes(), file.file.as_bytes()]);
     }
-    Ok(hasher.digest().to_string())
+
+    let result = hasher.digest();
+    trace!("hashed project files in: {:?}", hash_start.elapsed());
+    Ok(result)
 }
 
 /// base function that should be testable (to make sure that we're getting the proper files back)

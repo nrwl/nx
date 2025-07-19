@@ -10,6 +10,7 @@ use crate::native::{
 use crate::native::{
     project_graph::utils::ProjectRootMappings,
     tasks::hashers::{hash_env, hash_runtime, hash_workspace_files},
+    utils::BufferedHasher,
 };
 use crate::native::{
     tasks::hashers::{
@@ -135,23 +136,48 @@ impl TaskHasher {
                 Ok::<(), anyhow::Error>(())
             })?;
 
-        hashes.iter_mut().for_each(|mut h| {
+        let instruction_hashing_time = hash_time.elapsed();
+        let overall_assemble_time = std::time::Instant::now();
+
+        hashes.par_iter_mut().for_each(|mut h| {
+            let hash_time = std::time::Instant::now();
             let (hash_id, hash_details) = h.pair_mut();
-            let mut keys = hash_details.details.keys().collect::<Vec<_>>();
-            keys.par_sort();
-            let mut hasher = xxhash_rust::xxh3::Xxh3::new();
+
+            // Optimization 1: Collect into a Vec of tuples to avoid multiple HashMap lookups
+            let mut entries: Vec<(&String, &String)> = hash_details.details.iter().collect();
+
+            // Optimization 2: Use unstable sort for better performance (still deterministic)
+            entries.sort_unstable_by(|a, b| a.0.cmp(b.0));
+
             trace_span!("Assembling hash", hash_id).in_scope(|| {
-                for key in keys {
-                    trace!("Adding {} ({}) to hash", hash_details.details[key], key);
-                    hasher.update(hash_details.details[key].as_bytes());
+                let assemble_time = std::time::Instant::now();
+
+                // Optimization: Use BufferedHasher for better performance
+                let mut hasher = BufferedHasher::with_default_capacity();
+
+                for (key, value) in entries {
+                    trace!("Adding {} ({}) to hash", value, key);
+                    hasher.update(value.as_bytes());
                 }
-                let hash = hasher.digest().to_string();
+
+                let hash = hasher.digest();
                 trace!("Hash Value: {}", hash);
+                trace!("Assembling hash took {:?}", assemble_time.elapsed());
+                trace!(
+                    "Total hashing time for {} took {:?}",
+                    hash_id,
+                    hash_time.elapsed()
+                );
                 hash_details.value = hash;
             });
         });
 
-        trace!("hashing took {:?}", hash_time.elapsed());
+        debug!(
+            "hashing took {:?} (instructions: {:?}, assembly: {:?})",
+            hash_time.elapsed(),
+            instruction_hashing_time,
+            overall_assemble_time.elapsed()
+        );
         Ok(hashes)
     }
 

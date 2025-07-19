@@ -81,6 +81,15 @@ impl HashPlanner {
                     .chain(self_inputs)
                     .collect();
 
+                // If AllExternalDependencies is present, remove specific External entries
+                let has_all_external = inputs
+                    .iter()
+                    .any(|i| matches!(i, HashInstruction::AllExternalDependencies));
+
+                if has_all_external {
+                    inputs.retain(|i| !matches!(i, HashInstruction::External(_)));
+                }
+
                 inputs.par_sort();
                 inputs.dedup();
 
