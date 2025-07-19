@@ -286,6 +286,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -304,11 +305,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -491,6 +494,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -509,11 +513,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -699,6 +705,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -717,11 +724,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -938,6 +947,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -956,11 +966,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -1161,6 +1173,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -1179,11 +1192,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -1392,6 +1407,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -1410,11 +1426,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -1624,6 +1642,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -1642,11 +1661,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -1836,6 +1857,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -1854,11 +1876,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -2047,6 +2071,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -2065,11 +2090,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -2258,6 +2285,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -2284,6 +2312,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -2303,11 +2332,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -2507,6 +2538,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -2525,11 +2557,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -2723,6 +2757,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -2756,6 +2791,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -2774,11 +2810,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -2970,6 +3008,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "independent",
                 "releaseTagPattern": "{projectName}@{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -2988,11 +3027,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -3175,6 +3216,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -3197,6 +3239,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": false,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -3215,11 +3258,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -3233,6 +3278,778 @@ describe('createNxReleaseConfig()', () => {
               },
               "logUnchangedProjects": true,
               "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should allow groups to define their own docker options', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          'group-1': {
+            projects: ['lib-a'],
+            version: {
+              docker: {
+                versionSchemes: {
+                  production: '{currentDate|YYMM.DD}.{shortCommitSha}',
+                  hotfix: '{currentDate|YYMM.DD}-hotfix',
+                },
+              },
+            },
+          },
+          'group-2': {
+            projects: ['lib-b'],
+            version: {
+              docker: {
+                versionSchemes: {
+                  production: '{currentDate|YY.MM.DD}',
+                  hotfix: '{currentDate|YYMM.DD}.{shortCommitSha}-hotfix',
+                },
+              },
+            },
+          },
+        },
+      });
+
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": false,
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "group-1": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
+                "releaseTagPatternRequireSemver": true,
+                "version": {
+                  "conventionalCommits": false,
+                  "docker": {
+                    "versionSchemes": {
+                      "hotfix": "{currentDate|YYMM.DD}-hotfix",
+                      "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
+                    },
+                  },
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+              "group-2": {
+                "changelog": false,
+                "projects": [
+                  "lib-b",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
+                "releaseTagPatternRequireSemver": true,
+                "version": {
+                  "conventionalCommits": false,
+                  "docker": {
+                    "versionSchemes": {
+                      "hotfix": "{currentDate|YYMM.DD}.{shortCommitSha}-hotfix",
+                      "production": "{currentDate|YY.MM.DD}",
+                    },
+                  },
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
+            "releaseTagPatternRequireSemver": true,
+            "version": {
+              "conventionalCommits": false,
+              "currentVersionResolver": undefined,
+              "docker": undefined,
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "logUnchangedProjects": true,
+              "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should allow groups to define their own docker groupPreVersionCommand', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          'group-1': {
+            projects: ['lib-a'],
+            version: {
+              docker: {
+                versionSchemes: {
+                  production: '{currentDate|YYMM.DD}.{shortCommitSha}',
+                  hotfix: '{currentDate|YYMM.DD}-hotfix',
+                },
+                groupPreVersionCommand: 'npx nx run-many -t docker-build',
+              },
+            },
+          },
+          'group-2': {
+            projects: ['lib-b'],
+            version: {
+              docker: {
+                versionSchemes: {
+                  production: '{currentDate|YY.MM.DD}',
+                  hotfix: '{currentDate|YYMM.DD}.{shortCommitSha}-hotfix',
+                },
+                groupPreVersionCommand: 'npx nx run-many -t docker:build',
+              },
+            },
+          },
+        },
+      });
+
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": false,
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "group-1": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
+                "releaseTagPatternRequireSemver": true,
+                "version": {
+                  "conventionalCommits": false,
+                  "docker": {
+                    "groupPreVersionCommand": "npx nx run-many -t docker-build",
+                    "versionSchemes": {
+                      "hotfix": "{currentDate|YYMM.DD}-hotfix",
+                      "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
+                    },
+                  },
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+              "group-2": {
+                "changelog": false,
+                "projects": [
+                  "lib-b",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
+                "releaseTagPatternRequireSemver": true,
+                "version": {
+                  "conventionalCommits": false,
+                  "docker": {
+                    "groupPreVersionCommand": "npx nx run-many -t docker:build",
+                    "versionSchemes": {
+                      "hotfix": "{currentDate|YYMM.DD}.{shortCommitSha}-hotfix",
+                      "production": "{currentDate|YY.MM.DD}",
+                    },
+                  },
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
+            "releaseTagPatternRequireSemver": true,
+            "version": {
+              "conventionalCommits": false,
+              "currentVersionResolver": undefined,
+              "docker": undefined,
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "logUnchangedProjects": true,
+              "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+    it('should not apply top level prevserion command to docker groups', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        version: {
+          preVersionCommand: 'npx nx run-many -t build',
+        },
+        groups: {
+          'group-1': {
+            projects: ['lib-a'],
+            version: {
+              docker: {
+                versionSchemes: {
+                  production: '{currentDate|YYMM.DD}.{shortCommitSha}',
+                  hotfix: '{currentDate|YYMM.DD}-hotfix',
+                },
+                groupPreVersionCommand: 'npx nx run-many -t docker-build',
+              },
+            },
+          },
+          'group-2': {
+            projects: ['lib-b'],
+            version: {
+              docker: {
+                versionSchemes: {
+                  production: '{currentDate|YY.MM.DD}',
+                  hotfix: '{currentDate|YYMM.DD}.{shortCommitSha}-hotfix',
+                },
+                groupPreVersionCommand: 'npx nx run-many -t docker:build',
+              },
+            },
+          },
+        },
+      });
+
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": false,
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "group-1": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
+                "releaseTagPatternRequireSemver": true,
+                "version": {
+                  "conventionalCommits": false,
+                  "docker": {
+                    "groupPreVersionCommand": "npx nx run-many -t docker-build",
+                    "versionSchemes": {
+                      "hotfix": "{currentDate|YYMM.DD}-hotfix",
+                      "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
+                    },
+                  },
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+              "group-2": {
+                "changelog": false,
+                "projects": [
+                  "lib-b",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
+                "releaseTagPatternRequireSemver": true,
+                "version": {
+                  "conventionalCommits": false,
+                  "docker": {
+                    "groupPreVersionCommand": "npx nx run-many -t docker:build",
+                    "versionSchemes": {
+                      "hotfix": "{currentDate|YYMM.DD}.{shortCommitSha}-hotfix",
+                      "production": "{currentDate|YY.MM.DD}",
+                    },
+                  },
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
+            "releaseTagPatternRequireSemver": true,
+            "version": {
+              "conventionalCommits": false,
+              "currentVersionResolver": undefined,
+              "docker": undefined,
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "logUnchangedProjects": true,
+              "preVersionCommand": "npx nx run-many -t build",
               "preserveLocalDependencyProtocols": true,
               "specifierSource": undefined,
               "updateDependents": "auto",
@@ -3412,6 +4229,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -3433,11 +4251,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "generatorOptions": {
                 "foo": "bar",
               },
@@ -3629,6 +4449,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -3647,11 +4468,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": true,
                 "commitArgs": "--no-verify",
@@ -3843,6 +4666,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -3861,11 +4685,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": true,
                 "commitArgs": "--no-verify",
@@ -4053,6 +4879,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -4071,11 +4898,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -4266,6 +5095,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -4284,11 +5114,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -4471,6 +5303,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": false,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -4493,6 +5326,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -4511,6 +5345,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": false,
             "releaseTagPatternStrictPreid": false,
             "version": {
@@ -4743,6 +5578,7 @@ describe('createNxReleaseConfig()', () => {
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -4948,6 +5784,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -4966,11 +5803,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -5158,6 +5997,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{projectName}__{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -5176,11 +6016,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "{projectName}__{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -5387,6 +6229,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -5409,11 +6252,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -5593,6 +6438,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -5611,11 +6457,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -5836,6 +6684,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -5854,11 +6703,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -6069,6 +6920,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -6087,11 +6939,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -6280,6 +7134,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -6298,11 +7153,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -6496,6 +7353,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -6514,11 +7372,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -6715,6 +7575,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -6733,11 +7594,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -6934,6 +7797,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -6952,11 +7816,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -7154,6 +8020,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -7172,11 +8039,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -7452,6 +8321,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -7470,11 +8340,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -7688,6 +8560,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -7706,11 +8579,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -8090,6 +8965,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -8108,11 +8984,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -8299,6 +9177,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -8317,11 +9196,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -8544,6 +9425,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -8562,11 +9444,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -8765,6 +9649,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -8783,11 +9668,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -8989,6 +9876,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -9007,11 +9895,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -9214,6 +10104,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -9232,11 +10123,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -9442,6 +10335,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -9460,11 +10354,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -9695,6 +10591,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -9717,6 +10614,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -9750,6 +10648,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -9768,11 +10667,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -10005,6 +10906,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{projectName}-{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -10023,11 +10925,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -10257,6 +11161,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -10275,11 +11180,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -10490,6 +11397,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -10508,11 +11416,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -10944,6 +11854,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -10962,11 +11873,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -11334,6 +12247,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "independent",
                 "releaseTagPattern": "{projectName}@{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -11357,6 +12271,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -11375,11 +12290,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "independent",
             "releaseTagPattern": "{projectName}@{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -11555,6 +12472,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "independent",
                 "releaseTagPattern": "{projectName}@{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -11573,11 +12491,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "independent",
             "releaseTagPattern": "{projectName}@{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -11770,6 +12690,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -11792,11 +12713,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "generatorOptions": {
                 "currentVersionResolver": "git-tag",
                 "specifierSource": "conventional-commits",
@@ -11989,6 +12912,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -12011,11 +12935,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "generatorOptions": {
                 "currentVersionResolver": "registry",
                 "specifierSource": "prompt",
@@ -12207,6 +13133,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -12227,11 +13154,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": true,
               "currentVersionResolver": "git-tag",
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -12426,6 +13355,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -12445,11 +13375,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": true,
               "currentVersionResolver": "git-tag",
+              "docker": undefined,
               "fallbackCurrentVersionResolver": "disk",
               "git": {
                 "commit": false,
@@ -12641,6 +13573,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -12664,11 +13597,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": true,
               "currentVersionResolver": "git-tag",
+              "docker": undefined,
               "generatorOptions": {
                 "someUnrelatedOption": "foobar",
               },
@@ -12902,6 +13837,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -12921,11 +13857,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -13116,6 +14054,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -13139,11 +14078,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -13334,6 +14275,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -13357,6 +14299,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -13375,11 +14318,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -13566,6 +14511,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -13593,6 +14539,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -13611,11 +14558,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -13802,6 +14751,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -13824,6 +14774,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -13843,11 +14794,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -14036,6 +14989,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -14058,6 +15012,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -14081,11 +15036,13 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
               "conventionalCommits": false,
               "currentVersionResolver": undefined,
+              "docker": undefined,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -14309,6 +15266,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "releaseTagPatternPreferDockerVersion": false,
                 "releaseTagPatternRequireSemver": true,
                 "releaseTagPatternStrictPreid": false,
                 "version": {
@@ -14329,6 +15287,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "releaseTagPatternPreferDockerVersion": false,
             "releaseTagPatternRequireSemver": true,
             "releaseTagPatternStrictPreid": false,
             "version": {
