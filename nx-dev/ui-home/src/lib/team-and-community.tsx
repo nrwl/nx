@@ -30,6 +30,7 @@ export function TeamAndCommunity(): ReactElement {
   };
 
   return (
+    // <section className="mt-32 scroll-mt-24 border-b border-t border-slate-200 bg-slate-50 py-24 sm:py-32 dark:border-slate-800 dark:bg-slate-900">
     <section className="mx-auto max-w-7xl px-6 lg:px-8">
       <article className="max-w-5xl">
         <SectionHeading

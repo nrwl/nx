@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 406.26 400">
+  <defs>
+    <style>
+      .cls-1 {
+        mask: url(#mask);
+      }
+
+      .cls-2 {
+        filter: url(#luminosity-invert);
+      }
+
+      .cls-3 {
+        mix-blend-mode: multiply;
+        opacity: .4;
+      }
+
+      .cls-4 {
+        isolation: isolate;
+      }
+
+      .cls-5 {
+        stroke: url(#linear-gradient-2);
+      }
+
+      .cls-5, .cls-6, .cls-7, .cls-8, .cls-9 {
+        stroke-miterlimit: 10;
+      }
+
+      .cls-5, .cls-6, .cls-7, .cls-9 {
+        fill: none;
+      }
+
+      .cls-6 {
+        stroke-width: .5px;
+      }
+
+      .cls-6, .cls-8, .cls-9 {
+        stroke: #fff;
+      }
+
+      .cls-10 {
+        fill: #fff;
+      }
+
+      .cls-7 {
+        stroke: url(#linear-gradient);
+      }
+
+      .cls-8 {
+        fill: #17283f;
+      }
+
+      .cls-8, .cls-9 {
+        stroke-width: 2px;
+      }
+
+      .cls-11 {
+        fill: #161616;
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="201.19" y1="-660.27" x2="201.19" y2="-556.84" gradientTransform="translate(392.58 -362.01) rotate(-180)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+      <stop offset=".1" stop-color="#fff" stop-opacity=".14"/>
+      <stop offset=".29" stop-color="#fff" stop-opacity=".4"/>
+      <stop offset=".47" stop-color="#fff" stop-opacity=".61"/>
+      <stop offset=".63" stop-color="#fff" stop-opacity=".78"/>
+      <stop offset=".78" stop-color="#fff" stop-opacity=".9"/>
+      <stop offset=".91" stop-color="#fff" stop-opacity=".97"/>
+      <stop offset="1" stop-color="#fff"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-2" x1="54.4" y1="-574.84" x2="54.4" y2="-471.41" xlink:href="#linear-gradient"/>
+    <filter id="luminosity-invert" x="307.93" y="261.07" width="31" height="35" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feColorMatrix result="cm" values="-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 0 0 0 1 0"/>
+    </filter>
+    <mask id="mask" x="307.93" y="261.07" width="31" height="35" maskUnits="userSpaceOnUse">
+      <g class="cls-2">
+        <image width="31" height="35" transform="translate(307.93 261.07)" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAAjCAYAAABsFtHvAAAACXBIWXMAAAsSAAALEgHS3X78AAAEl0lEQVRYhcWXTU8TXRiGr5nSoV8whdIy9AOVFkoLC0qAoiGsCGxIYGk3XbgS418weRN/gQuJCQkLZYFJE0OirtwYRT4SPqsLYkxIABeSQkCLTSkzLkjHt5bi+yLCnZzFM3PPc53z5DlnZgRA45IkXhYYoKzUjYGBAbxeL3t7eyQSiYuFRyIRuru7kSSJaDTK27dvmZqauhh4IBCgq6sLm82Goiik0+mLgd++fZuuri7q6uoAuHLlCoqinCsYSjRcOBzG6/XqcUVFBQ6H42LgHo+HyspKPTYajbS0tHDnzp0ib2dnJ729vWeCF5V9ZGSE5uZmDAZDwfXq6mquXbtWlKCpqYlgMMj169dZX1/n6dOnZ4eHw2HcbjcA2WyW9+/f4/P5EEWRioqKogRms5mrV6/i8XhIpVIoisKDBw/OBlcURYe8efOGvr4+nj17RltbGxaLpSjBly9fUFUVp9NJIBAgEAgQDodZWlri0aNHp8INwD/5YGRkhMHBQVwuFwDJZJLJyUmGhoZobGzEaDSiaRpLS0t6grW1NZxOJ06nk6qqKn0CLS0tdHZ2Ul9fz/z8/O9XHgqF9O0F6BWQZRm73c7R0RGhUKgoydjYGNlslt3dXWRZpra2FofDgc/no6Ojg2AwyNzcHE+ePCl6VsuPRCKhHR4eankdHBxoi4uLWiaT0ePx8XHt38/8Ol68eKH9qk+fPmmJREKLxWIFXn3lt27dwu/3U1b2sxhms5lIJKLH5eXl2O32E0uY19evX9E0DUEQ9GvV1dXU1dXpjZyXvs99Ph9WqxVVVdnf32d2dpbNzc1CsygSDoe5e/duSXgul0PTjt/S6XSa169fs7y8zNbWFgcHBwVefZnZbJZUKgXA7Ows8Xice/fuMTw8jN/vR5ZlAGpra2loaCgJV1VVh797947+/n5u3ryJ1WplfX39ZPjHjx9ZXV1FlmVWVlYAuH//PqlUimg0Sn9/P4qiYDKZ9ImcJE3TUFUVQRDY3d0FYHJy8kSvDk8kEmQyGRwOB58/f9YNo6OjjI6OMjExweDgIGVlZVit1lPhmqZxdHTE4eFhSV8BHOD58+cljTMzM4RCIfx+P16vl3g8zuPHj4t8+UbLT+A/w0/Tw4cPiUQiyLKMJEnU19ef6BMEoaDTzwUOsLGxwdbWFrlcriRAkiQMBgOqqp4v/MOHD7hcLkwmE3t7ewDcuHEDi8XCq1evAKiqqkIUxaK9/sfwfFPW1NTw7ds3ANra2mhtbSUWi+F2u4lGo8Bx+UXx9I/j/wWHn03Z3t5Ob28vXq+X1tZW/H4/LpdLPyFFUSw4Lc8Fntfi4iJwfDI2Njbi8XiKPkBsNtupOQpeqWdRMpnEbDaTyWSw2WxYLBYkSTpObjBgMpmYnp7+O3CAlZUVXr58idFoZGdnB0mS9C3pdrsJBoPU1NSQTCbPH57X3NwcU1NTegXKy8ux2WzY7XYsFguCILC2tvZ34HlNT08jiiL7+/vkcjl9bG9v670Cf9Bwv9P4+DgAsViMhoYGzGYz6XS6wCNwQb/IPT09fP/+nYWFhYuHn6RL/T+/VPgP+2+p9fQNEzQAAAAASUVORK5CYII="/>
+      </g>
+    </mask>
+  </defs>
+  <g class="cls-4">
+    <g id="features">
+      <g>
+        <path class="cls-9" d="M376.12,91.9l-214.82,124.02c-1.94,1.12-5.32.98-7.55-.31L20.26,138.53c-2.23-1.29-2.48-3.24-.54-4.36L234.54,10.15c1.94-1.12,5.32-.98,7.55.31l133.5,77.07c2.23,1.29,2.48,3.24.54,4.36Z"/>
+        <line class="cls-6" x1="24.33" y1="141.68" x2="246.16" y2="13.61"/>
+        <g>
+          <path class="cls-6" d="M40.05,128.08c.83.48.83,1.26,0,1.74s-2.18.48-3.01,0-.83-1.26,0-1.74,2.18-.48,3.01,0Z"/>
+          <path class="cls-6" d="M33.94,131.61c.83.48.83,1.26,0,1.74s-2.18.48-3.01,0-.83-1.26,0-1.74,2.18-.48,3.01,0Z"/>
+          <path class="cls-6" d="M27.83,135.13c.83.48.83,1.26,0,1.74s-2.18.48-3.01,0-.83-1.26,0-1.74,2.18-.48,3.01,0Z"/>
+        </g>
+        <line class="cls-6" x1="98.97" y1="98.89" x2="231.64" y2="175.49"/>
+        <line class="cls-6" x1="176.23" y1="53.71" x2="308.91" y2="130.31"/>
+        <line class="cls-6" x1="190.16" y1="151.36" x2="267.77" y2="106.56"/>
+        <g>
+          <line class="cls-7" x1="191.4" y1="298.26" x2="191.4" y2="194.83"/>
+          <circle class="cls-10" cx="191.4" cy="192.13" r="2.82"/>
+          <line class="cls-5" x1="338.19" y1="212.83" x2="338.19" y2="109.4"/>
+          <circle class="cls-10" cx="338.19" cy="106.7" r="2.82"/>
+        </g>
+      </g>
+      <g>
+        <g>
+          <path class="cls-8" d="M302.38,244.68v39.41c0,3.62,1.92,6.97,5.04,8.8l33.55,19.68c3.16,1.85,7.07,1.87,10.25.04l34.32-19.73c3.17-1.83,5.13-5.21,5.12-8.87l-.1-39.89c0-3.63-1.94-6.97-5.08-8.8l-33.28-19.35c-3.16-1.84-7.06-1.84-10.22-.02l-34.49,19.87c-3.16,1.82-5.11,5.19-5.11,8.84Z"/>
+          <path class="cls-6" d="M312.15,244.46l27.84,16.18c4.15,2.41,9.28,2.38,13.4-.09l27.66-16.58c4.27-2.56,4.23-8.76-.08-11.26l-30.61-17.79c-2.02-1.18-4.52-1.18-6.55-.01l-31.65,18.24c-4.35,2.51-4.37,8.79-.02,11.32Z"/>
+          <g>
+            <g>
+              <path class="cls-10" d="M319.57,280.09l-4.66-2.69-1.07,3.34-3.05-1.76,5.03-14.99,3.05,1.76,5.01,20.79-3.21-1.85-1.11-4.61ZM315.62,275.01l3.34,1.93-1.58-6.89-.2-.12-1.56,5.08Z"/>
+              <path class="cls-10" d="M325.22,284.2l3.94,2.28v-11.66s-3.94-2.28-3.94-2.28v-3.12s10.96,6.33,10.96,6.33v3.12s-3.96-2.29-3.96-2.29v11.66s3.96,2.29,3.96,2.29v3.12s-10.96-6.33-10.96-6.33v-3.12Z"/>
+            </g>
+            <g class="cls-1">
+              <g class="cls-3">
+                <g>
+                  <path class="cls-11" d="M319.57,280.09l-4.66-2.69-1.07,3.34-3.05-1.76,5.03-14.99,3.05,1.76,5.01,20.79-3.21-1.85-1.11-4.61ZM315.62,275.01l3.34,1.93-1.58-6.89-.2-.12-1.56,5.08Z"/>
+                  <path class="cls-11" d="M325.22,284.2l3.94,2.28v-11.66s-3.94-2.28-3.94-2.28v-3.12s10.96,6.33,10.96,6.33v3.12s-3.96-2.29-3.96-2.29v11.66s3.96,2.29,3.96,2.29v3.12s-10.96-6.33-10.96-6.33v-3.12Z"/>
+                </g>
+              </g>
+            </g>
+          </g>
+        </g>
+        <g>
+          <line class="cls-6" x1="138.33" y1="304.4" x2="149.01" y2="337.08"/>
+          <line class="cls-6" x1="129.66" y1="353.7" x2="149.01" y2="337.08"/>
+          <line class="cls-6" x1="137.86" y1="371.33" x2="149.01" y2="337.08"/>
+          <line class="cls-6" x1="193.28" y1="367.06" x2="149.01" y2="337.08"/>
+          <line class="cls-6" x1="226.22" y1="337.51" x2="193.28" y2="367.06"/>
+          <line class="cls-6" x1="210.08" y1="310.18" x2="226.22" y2="337.51"/>
+          <line class="cls-6" x1="255.21" y1="296.85" x2="226.22" y2="337.51"/>
+          <line class="cls-6" x1="248.43" y1="354.26" x2="226.22" y2="337.51"/>
+          <circle class="cls-8" cx="149.77" cy="336.36" r="10.91"/>
+          <circle class="cls-8" cx="193.45" cy="366.2" r="19.35"/>
+          <line class="cls-6" x1="180.76" y1="310.17" x2="210.31" y2="309.41"/>
+          <circle class="cls-8" cx="226.26" cy="336.79" r="13.96"/>
+          <circle class="cls-8" cx="210.56" cy="310.73" r="8.42"/>
+          <circle class="cls-8" cx="138.06" cy="303.89" r="6.62"/>
+          <circle class="cls-8" cx="255.65" cy="296.65" r="5.44"/>
+          <circle class="cls-8" cx="248.43" cy="354.26" r="4.1"/>
+          <circle class="cls-8" cx="137.86" cy="371.33" r="4.1"/>
+          <circle class="cls-8" cx="129.66" cy="353.7" r="4.1"/>
+          <circle class="cls-8" cx="180.76" cy="310.17" r="6.62"/>
+        </g>
+        <path class="cls-9" d="M252.26,319.28c5.29-3.05,5.29,10.86,10.57,7.81s5.29-16.96,10.57-20.02,5.29,10.86,10.58,7.81,5.29-16.97,10.58-20.02"/>
+      </g>
+    </g>
+  </g>
+</svg>

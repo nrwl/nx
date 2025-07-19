@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="features" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 500 289.32">
+  <defs>
+    <style>
+      .cls-1, .cls-2, .cls-3, .cls-4, .cls-5 {
+        fill: none;
+        stroke-miterlimit: 10;
+      }
+
+      .cls-1, .cls-2, .cls-5 {
+        stroke: #fff;
+      }
+
+      .cls-2 {
+        stroke-dasharray: 5.01 5.01;
+      }
+
+      .cls-2, .cls-4, .cls-5 {
+        stroke-width: 2px;
+      }
+
+      .cls-6 {
+        fill: #fff;
+      }
+
+      .cls-3 {
+        stroke: url(#linear-gradient);
+      }
+
+      .cls-4 {
+        stroke: #17283f;
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="305.09" y1="127.6" x2="436.35" y2="127.6" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+      <stop offset=".1" stop-color="#fff" stop-opacity=".14"/>
+      <stop offset=".29" stop-color="#fff" stop-opacity=".4"/>
+      <stop offset=".47" stop-color="#fff" stop-opacity=".61"/>
+      <stop offset=".63" stop-color="#fff" stop-opacity=".78"/>
+      <stop offset=".78" stop-color="#fff" stop-opacity=".9"/>
+      <stop offset=".91" stop-color="#fff" stop-opacity=".97"/>
+      <stop offset="1" stop-color="#fff"/>
+    </linearGradient>
+  </defs>
+  <polyline class="cls-3" points="305.34 101.3 394.28 153.82 436.35 153.82"/>
+  <g>
+    <line class="cls-5" x1="45.98" y1="250.66" x2="304.91" y2="101.17"/>
+    <path class="cls-1" d="M46.41,250.89c3.42,1.98,3.4,5.19-.04,7.18s-9.01,2-12.43.02-3.4-5.19.04-7.18,9.01-2,12.43-.02Z"/>
+    <path class="cls-1" d="M431.49,28.57c3.42,1.98,3.4,5.19-.04,7.18s-9.01,2-12.43.02-3.4-5.19.04-7.18,9.01-2,12.43-.02Z"/>
+    <path class="cls-5" d="M304.92,101.18c7.24-4.15,28.6,6.28,35.82,2.12,13.15-7.59-66.56-44.35-56.36-48.98,11.05-5.02,133.62,73.28,145.5,67.69,13.67-6.44-151.16-92.57-140.63-98.23,9.58-5.15,87.58,44.89,98.8,40.02,8.17-3.54-2.19-9.27,5.06-13.42"/>
+    <g>
+      <line class="cls-5" x1="304.93" y1="101" x2="307.09" y2="99.76"/>
+      <line class="cls-2" x1="311.44" y1="97.26" x2="387.53" y2="53.63"/>
+      <line class="cls-5" x1="389.7" y1="52.39" x2="391.87" y2="51.14"/>
+    </g>
+    <line class="cls-5" x1="391.9" y1="51.17" x2="418.8" y2="35.64"/>
+    <path class="cls-1" d="M95.38,222.07l1.49-17.53c.49-5.75,4.68-11.19,11.75-15.27l130.29-75.22c7.53-4.35,19.01-5.44,28.49-2.72l12.68,3.64"/>
+    <path class="cls-1" d="M95.62,221.93l-13.78-26.47c-4.24-8.14-.35-16.99,10.11-23.03l122.39-70.66c8.41-4.86,21.58-5.59,31.35-1.75l36.66,14.4"/>
+    <path class="cls-1" d="M95.3,221.93l30.36-.86c9.95-.28,19.39-2.7,26.46-6.78l130.04-75.08c7.65-4.42,9.48-11.18,4.5-16.69l-6.36-7.05"/>
+    <path class="cls-1" d="M95.54,221.79l45.85,7.96c14.1,2.45,29.44.2,39.9-5.84l122.37-70.65c8.42-4.86,9.69-12.47,3.02-18.12l-24.43-20.68"/>
+    <path class="cls-6" d="M284.26,112.73c1.7.98,1.69,2.58-.02,3.57s-4.48.99-6.18.01-1.69-2.58.02-3.57,4.48-.99,6.18-.01Z"/>
+  </g>
+  <circle class="cls-6" cx="451.41" cy="151.94" r="15.06"/>
+  <polyline class="cls-4" points="444.75 152.93 449.09 158.51 459.32 146.42"/>
+</svg>
