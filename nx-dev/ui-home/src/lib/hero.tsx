@@ -9,7 +9,7 @@ export function Hero(): ReactElement {
       <div className="z-20 mx-auto grid h-screen max-w-6xl grid-cols-1 place-items-center text-center">
         <div className="container">
           <SectionHeading as="h1" variant="display" data-cy="primary-heading">
-            <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
+            <span className="rounded-lg bg-gradient-to-tl from-slate-900 via-blue-800 to-cyan-500 bg-clip-text text-transparent">
               Smart
             </span>{' '}
             Repos
@@ -21,7 +21,7 @@ export function Hero(): ReactElement {
             >
               <circle cx={1} cy={1} r={1} />
             </svg>
-            <span className="rounded-lg bg-gradient-to-r from-pink-500 to-fuchsia-500 bg-clip-text text-transparent">
+            <span className="rounded-lg bg-gradient-to-tl from-slate-900 via-pink-700 to-fuchsia-500 bg-clip-text text-transparent">
               Fast
             </span>{' '}
             Builds
@@ -31,16 +31,8 @@ export function Hero(): ReactElement {
             variant="subtitle"
             className="mx-auto mt-6 max-w-3xl"
           >
-            An{' '}
-            <strong className="rounded-lg bg-gradient-to-r from-pink-500 to-fuchsia-500 bg-clip-text text-transparent">
-              AI-first
-            </strong>{' '}
-            build platform that connects everything{' '}
-            <strong className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
-              from your editor to CI
-            </strong>
-            . <br className="hidden md:block" />
-            Helping you deliver fast, without breaking things.
+            Nx is the only AI-first build platform that provides a powerful
+            local development experience and ultra-fast self-healing CI.
           </SectionHeading>
           <div className="mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row">
             <ButtonLink
@@ -61,7 +53,7 @@ export function Hero(): ReactElement {
             </ButtonLink>
           </div>
 
-          <div className="mt-4 flex items-center justify-center gap-2 text-sm italic">
+          <div className="mt-8 flex items-center justify-center gap-2 text-sm italic">
             Built with
             <RustIcon aria-hidden="true" className="size-5 shrink-0" />
             <span className="sr-only">Rust</span> for speed &

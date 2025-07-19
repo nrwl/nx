@@ -9,6 +9,13 @@ import {
   Statistics,
   TeamAndCommunity,
   WorkBetterAchieveMoreShipQuicker,
+  Problem,
+  Solution,
+  FeaturesWhileCoding,
+  FeaturesWhileRunningCI,
+  FeaturesWhileScalingYourOrganization,
+  WrapUpCta,
+  CallToActionJuriGraphic,
 } from '@nx/nx-dev-ui-home';
 import { contactButton } from '../lib/header-cta.configs';
 
@@ -48,21 +55,27 @@ export default function Index(): JSX.Element {
           <HetznerCloudTestimonial />
         </div>
         <div className="mt-32 lg:mt-56">
-          <MonorepoAiSupport />
+          <Problem />
         </div>
         <div className="mt-32 lg:mt-56">
-          <CiForMonorepos />
+          <Solution />
         </div>
         <div className="mt-32 lg:mt-56">
-          <WorkBetterAchieveMoreShipQuicker />
+          <CallToActionJuriGraphic />
         </div>
         <div className="mt-32 lg:mt-56">
-          <SmarterToolsForMonorepos />
+          <FeaturesWhileCoding />
+        </div>
+        <div className="mt-12 lg:mt-12">
+          <FeaturesWhileRunningCI />
+        </div>
+        <div className="mt-12 lg:mt-12">
+          <FeaturesWhileScalingYourOrganization />
         </div>
         <div className="mt-32 lg:mt-56">
           <TeamAndCommunity />
         </div>
-        <div className="mt-32 lg:mt-56">
+        <div className="mb-32 mt-32 lg:mt-56">
           <CallToAction />
         </div>
       </DefaultLayout>
