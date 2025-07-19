@@ -1,5 +1,5 @@
 import type { NxJsonConfiguration } from '../config/nx-json';
-import { IS_WASM } from '../native';
+import { IS_WASM, isAiAgent } from '../native';
 import { NxArgs } from '../utils/command-line-utils';
 import { isCI } from '../utils/is-ci';
 import { logger } from '../utils/logger';
@@ -70,6 +70,8 @@ export function shouldUseTui(
   if (
     // Interactive TUI doesn't make sense on CI
     isCI() ||
+    // Interactive TUI doesn't make sense in an AI agent context
+    isAiAgent() ||
     // TODO(@JamesHenry): Remove this check once Windows issues are fixed.
     // Windows is not working well right now, temporarily disable it on Windows even if it has been specified as enabled
     isWindows ||
