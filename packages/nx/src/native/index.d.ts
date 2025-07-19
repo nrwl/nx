@@ -63,6 +63,7 @@ export declare class ImportResult {
   sourceProject: string
   dynamicImportExpressions: Array<string>
   staticImportExpressions: Array<string>
+  typeImportExpressions: Array<string>
 }
 
 export declare class NxCache {
