@@ -22,6 +22,7 @@ export declare class AppLifeCycle {
   setTaskStatus(taskId: string, status: TaskStatus): void
   registerForcedShutdownCallback(forcedShutdownCallback: () => any): void
   __setCloudMessage(message: string): Promise<void>
+  setEstimatedTaskTimings(timings: Record<string, number>): void
 }
 
 export declare class ChildProcess {

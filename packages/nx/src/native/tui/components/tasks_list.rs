@@ -527,6 +527,15 @@ impl TasksList {
         self.pinned_tasks = [None, None];
     }
 
+    /// Get task timing information for a specific task
+    pub fn get_task_timing(&self, task_name: &str) -> (Option<i64>, Option<i64>) {
+        if let Some(task_item) = self.tasks.iter().find(|t| t.name == task_name) {
+            (task_item.start_time, task_item.end_time)
+        } else {
+            (None, None)
+        }
+    }
+
     pub fn sort_tasks(&mut self) {
         // Set the appropriate selection mode based on our current state
         let should_track_by_name = self.spacebar_mode;
