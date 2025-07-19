@@ -24,7 +24,34 @@ To set up the lint rule, install these dependencies:
 nx add @nx/eslint-plugin @nx/devkit
 ```
 
-And configure the rule in your root `.eslintrc.json` file:
+And configure the rule in your ESLint configuration:
+
+{% tabs %}
+{% tab label="Flat Config" %}
+
+```javascript {% fileName="eslint.config.mjs" %}
+import nx from '@nx/eslint-plugin';
+
+export default [
+  ...nx.configs['flat/base'],
+  ...nx.configs['flat/typescript'],
+  ...nx.configs['flat/javascript'],
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          /* options */
+        },
+      ],
+    },
+  },
+];
+```
+
+{% /tab %}
+{% tab label="Legacy (.eslintrc.json)" %}
 
 ```jsonc {% fileName=".eslintrc.json" %}
 {
@@ -40,6 +67,9 @@ And configure the rule in your root `.eslintrc.json` file:
   }
 }
 ```
+
+{% /tab %}
+{% /tabs %}
 
 ## Tags
 
@@ -104,9 +134,52 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 {% /tab %}
 {% /tabs %}
 
-Next, you should update your root lint configuration:
+Next, you should update your root ESLint configuration to set up `depConstraints` based on your tags:
 
-- If you are using **ESLint** you should look for an existing rule entry in your root `.eslintrc.json` called `@nx/enforce-module-boundaries` and you should update the `depConstraints`:
+{% tabs %}
+{% tab label="Flat Config" %}
+
+```javascript {% fileName="eslint.config.mjs" %}
+import nx from '@nx/eslint-plugin';
+
+export default [
+  ...nx.configs['flat/base'],
+  ...nx.configs['flat/typescript'],
+  ...nx.configs['flat/javascript'],
+  {
+    ignores: ['**/dist'],
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          allow: [],
+          // update depConstraints based on your tags
+          depConstraints: [
+            {
+              sourceTag: 'scope:shared',
+              onlyDependOnLibsWithTags: ['scope:shared'],
+            },
+            {
+              sourceTag: 'scope:admin',
+              onlyDependOnLibsWithTags: ['scope:shared', 'scope:admin'],
+            },
+            {
+              sourceTag: 'scope:client',
+              onlyDependOnLibsWithTags: ['scope:shared', 'scope:client'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+];
+```
+
+{% /tab %}
+{% tab label="Legacy (.eslintrc.json)" %}
 
 ```jsonc {% fileName=".eslintrc.json" %}
 {
@@ -138,6 +211,9 @@ Next, you should update your root lint configuration:
   // ... more ESLint config here
 }
 ```
+
+{% /tab %}
+{% /tabs %}
 
 With these constraints in place, `scope:client` projects can only depend on projects with `scope:client` or `scope:shared`. And `scope:admin` projects can only depend on projects with `scope:admin` or `scope:shared`. So `scope:client` and `scope:admin` cannot depend on each other.
 
