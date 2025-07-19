@@ -8,15 +8,14 @@ export type MessageOptionKey = 'yes' | 'skip';
 const messageOptions = {
   setupNxCloud: [
     {
-      code: 'enable-caching',
-      message: `Would you like remote caching to make your build faster?`,
+      code: 'enable-ci',
+      message: `Would you like to enable AI-powered self-healing CI and remote caching?`,
       initial: 0,
       choices: [
         { value: 'yes', name: 'Yes' },
         { value: 'skip', name: 'Skip for now' },
       ],
-      footer:
-        '\nWatch a short video on Nx Cloud at https://nx.dev/ci/intro/why-nx-cloud',
+      footer: '\nLearn about Nx Cloud at https://nx.dev/nx-cloud',
       hint: `\n(it's free and can be disabled any time)`,
     },
   ],
