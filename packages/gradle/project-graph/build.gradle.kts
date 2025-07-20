@@ -10,19 +10,18 @@ plugins {
 
 group = "dev.nx.gradle"
 
-version = "0.1.3"
+version = "0.0.1-alpha.9"
 
 repositories { mavenCentral() }
 
 dependencies {
   implementation("com.google.code.gson:gson:2.10.1")
   implementation("com.github.javaparser:javaparser-core:3.25.8")
-  // Use kotlin-compiler-embeddable with exclusion to avoid CI classpath conflicts
-  implementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.0.21") {
-    exclude(group = "org.jetbrains.kotlin", module = "kotlin-gradle-plugin")
-  }
   testImplementation(kotlin("test"))
   testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
+  testImplementation("org.mockito:mockito-core:5.8.0")
+  testImplementation("org.springframework.boot:spring-boot-test:3.2.0")
+  testImplementation("org.springframework:spring-context:6.1.0")
 }
 
 java {
