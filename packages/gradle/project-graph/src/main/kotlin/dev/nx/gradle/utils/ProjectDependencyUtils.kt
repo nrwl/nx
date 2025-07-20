@@ -16,14 +16,20 @@ private fun buildDependenciesForProject(project: Project): Set<Dependency> {
 
   // Include subprojects manually
   project.subprojects.forEach { childProject ->
-    dependencies.add(
-        Dependency(project.projectDir.path, childProject.projectDir.path, project.buildFile.path))
+    val buildFilePath = if (project.buildFile.exists()) project.buildFile.path else null
+    if (buildFilePath != null) {
+      dependencies.add(
+          Dependency(project.projectDir.path, childProject.projectDir.path, buildFilePath))
+    }
   }
 
   // Include included builds manually
   project.gradle.includedBuilds.forEach { includedBuild ->
-    dependencies.add(
-        Dependency(project.projectDir.path, includedBuild.projectDir.path, project.buildFile.path))
+    val buildFilePath = if (project.buildFile.exists()) project.buildFile.path else null
+    if (buildFilePath != null) {
+      dependencies.add(
+          Dependency(project.projectDir.path, includedBuild.projectDir.path, buildFilePath))
+    }
   }
 
   return dependencies

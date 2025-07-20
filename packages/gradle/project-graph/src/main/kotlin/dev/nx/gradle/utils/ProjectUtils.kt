@@ -52,8 +52,14 @@ fun createNodeForProject(
     nodes = emptyMap()
     externalNodes = emptyMap()
   }
-  val buildFileRelativePath = project.buildFile.relativeTo(File(workspaceRoot)).path
-  return GradleNodeReport(nodes, dependencies, externalNodes, listOf(buildFileRelativePath))
+  val buildFileRelativePath =
+      if (project.buildFile.exists()) {
+        project.buildFile.relativeTo(File(workspaceRoot)).path
+      } else {
+        null
+      }
+  return GradleNodeReport(
+      nodes, dependencies, externalNodes, buildFileRelativePath?.let { listOf(it) } ?: emptyList())
 }
 
 /**
