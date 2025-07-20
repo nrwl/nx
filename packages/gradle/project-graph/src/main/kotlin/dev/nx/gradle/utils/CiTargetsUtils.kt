@@ -7,17 +7,6 @@ import dev.nx.gradle.data.TargetGroups
 import java.io.File
 import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
-import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
-import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
-import org.jetbrains.kotlin.com.intellij.openapi.util.Disposer
-import org.jetbrains.kotlin.com.intellij.psi.PsiManager
-import org.jetbrains.kotlin.com.intellij.testFramework.LightVirtualFile
-import org.jetbrains.kotlin.config.CompilerConfiguration
-import org.jetbrains.kotlin.idea.KotlinFileType
-import org.jetbrains.kotlin.lexer.KtTokens
-import org.jetbrains.kotlin.psi.KtClass
-import org.jetbrains.kotlin.psi.KtFile
-import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 
 const val testCiTargetGroup = "verification"
 
@@ -192,26 +181,73 @@ private fun processTestFiles(
     targetGroups: TargetGroups,
     ciDependsOn: MutableList<Map<String, String>>
 ) {
-  testFiles
-      .filter { it.path.startsWith(workspaceRoot) }
-      .forEach { testFile ->
-        val content = testFile.takeIf { it.exists() }?.readText()
-        if (content != null && containsEssentialTestAnnotations(content)) {
-          val classNames = getAllVisibleClassesWithNestedAnnotation(testFile, testTask)
-          classNames?.let {
-            processTestClasses(
-                it,
-                ciTestTargetName,
-                projectBuildPath,
-                testTask,
-                projectRoot,
-                workspaceRoot,
-                targets,
-                targetGroups,
-                ciDependsOn)
+  // Try to get test class directories from the test task if it's a Test task
+  val testClassDirs =
+      if (testTask is org.gradle.api.tasks.testing.Test) {
+        val testClassesDirs = testTask.testClassesDirs
+        if (testClassesDirs != null) {
+          testClassesDirs.files.filter { it.exists() }
+        } else {
+          emptyList()
+        }
+      } else {
+        // Fallback: look for compiled test classes in standard locations
+        val buildDir = testTask.project.layout.buildDirectory.get().asFile
+        val testClassDirs =
+            listOf(File(buildDir, "classes/java/test"), File(buildDir, "classes/kotlin/test"))
+                .filter { it.exists() }
+        testClassDirs
+      }
+
+  val testClassNames = mutableMapOf<String, String>()
+
+  // First, try runtime class inspection if compiled classes are available
+  if (testClassDirs.isNotEmpty()) {
+    testTask.logger.info(
+        "${testTask.path}: Using Gradle test discovery with ${testClassDirs.size} class directories")
+
+    // Create a class loader for the test classes
+    val testClassLoader = createTestClassLoader(testTask, testTask.logger)
+
+    testClassDirs.forEach { classDir ->
+      discoverTestClasses(classDir, testClassLoader, testClassNames, testTask.logger)
+    }
+  }
+
+  // Fall back to regex parsing if no compiled classes found or no test classes discovered
+  if (testClassNames.isEmpty()) {
+    testTask.logger.info(
+        "${testTask.path}: No compiled test classes found, falling back to regex parsing")
+
+    // Use regex parsing to find test classes in source files
+    testFiles.forEach { file ->
+      if (file.exists() && (file.extension == "kt" || file.extension == "java")) {
+        try {
+          val content = file.readText()
+          val className = extractClassNameFromFile(file, content)
+
+          if (className != null && isTestClassByRegex(content)) {
+            testClassNames[className] = className
           }
+        } catch (e: Exception) {
+          testTask.logger.debug("${testTask.path}: Error parsing file ${file.path}: ${e.message}")
         }
       }
+    }
+  }
+
+  if (testClassNames.isNotEmpty()) {
+    processTestClasses(
+        testClassNames,
+        ciTestTargetName,
+        projectBuildPath,
+        testTask,
+        projectRoot,
+        workspaceRoot,
+        targets,
+        targetGroups,
+        ciDependsOn)
+  }
 }
 
 internal fun processTestClasses(
@@ -253,89 +289,211 @@ internal fun processTestClasses(
   }
 }
 
-private fun containsEssentialTestAnnotations(content: String): Boolean {
-  return essentialTestAnnotations.any { content.contains(it) }
+// Helper function to extract class name from file
+private fun extractClassNameFromFile(file: File, content: String): String? {
+  // Try to extract class name from the file content
+  val classRegex = Regex("class\\s+(\\w+)")
+  val match = classRegex.find(content)
+  return match?.groupValues?.get(1)
 }
 
-// AST-based parser for Java files
-internal fun parseJavaFileWithAst(file: File): MutableMap<String, String>? {
-  return try {
-    val parseResult = javaParser.parse(file)
+// Helper function to check if content contains test methods or annotations
+private fun isTestClassByRegex(content: String): Boolean {
+  // Skip abstract classes as they can't be instantiated
+  if (content.contains("abstract class")) {
+    return false
+  }
 
-    if (!parseResult.isSuccessful) {
-      return null
+  // Look for test annotations or test methods
+  val testIndicators =
+      listOf(
+          "@Test",
+          "@org.junit.Test",
+          "@org.junit.jupiter.api.Test",
+          "@ExtendWith",
+          "@Nested",
+          "fun test",
+          "void test",
+          "public void test")
+
+  return testIndicators.any { content.contains(it) }
+}
+
+// Create a class loader for test classes
+private fun createTestClassLoader(
+    testTask: Task,
+    logger: org.gradle.api.logging.Logger
+): ClassLoader {
+  return try {
+    val allPaths = mutableListOf<java.net.URL>()
+
+    // Add test classpath if it's a Test task
+    if (testTask is org.gradle.api.tasks.testing.Test) {
+      allPaths.addAll(testTask.classpath.files.map { it.toURI().toURL() })
+      allPaths.addAll(testTask.testClassesDirs.files.map { it.toURI().toURL() })
+    } else {
+      // Fallback: use project configurations
+      val project = testTask.project
+      val testRuntimeClasspath = project.configurations.findByName("testRuntimeClasspath")
+      val testCompileClasspath = project.configurations.findByName("testCompileClasspath")
+
+      testRuntimeClasspath?.files?.forEach { allPaths.add(it.toURI().toURL()) }
+      testCompileClasspath?.files?.forEach { allPaths.add(it.toURI().toURL()) }
+
+      // Add build directories
+      val buildDir = project.layout.buildDirectory.get().asFile
+      listOf(
+              File(buildDir, "classes/java/main"),
+              File(buildDir, "classes/kotlin/main"),
+              File(buildDir, "classes/java/test"),
+              File(buildDir, "classes/kotlin/test"))
+          .filter { it.exists() }
+          .forEach { allPaths.add(it.toURI().toURL()) }
     }
 
-    val compilationUnit = parseResult.result.orElse(null) ?: return null
-    val result = mutableMapOf<String, String>()
-    val packageName = compilationUnit.packageDeclaration.map { it.nameAsString }.orElse("")
+    logger.debug("${testTask.path}: Created test class loader with ${allPaths.size} paths")
+    java.net.URLClassLoader(allPaths.toTypedArray(), Thread.currentThread().contextClassLoader)
+  } catch (e: Exception) {
+    logger.warn("${testTask.path}: Failed to create test class loader: ${e.message}")
+    Thread.currentThread().contextClassLoader
+  }
+}
 
-    // Find only top-level class declarations (excluding interfaces)
-    val topLevelClasses = compilationUnit.types.filterIsInstance<ClassOrInterfaceDeclaration>()
-
-    topLevelClasses.forEach { classDecl ->
-      // Skip interfaces and annotation definitions - only process classes
-      if (!classDecl.isInterface && !classDecl.isAnnotationDeclaration) {
-        // Skip abstract classes - they shouldn't have individual test targets
-        if (classDecl.isAbstract) {
-          return@forEach
-        }
-
-        val className = classDecl.nameAsString
-        val hasTestAnnotations = hasTestAnnotationsInClass(classDecl)
-
-        // Check for direct nested classes with @Nested annotation (also excluding interfaces and
-        // abstract classes)
-        val nestedTestClasses =
-            classDecl.members.filterIsInstance<ClassOrInterfaceDeclaration>().filter {
-              !it.isInterface && !it.isAbstract && hasNestedAnnotation(it)
-            }
-
-        // If there are @Nested test classes, include them
-        if (nestedTestClasses.isNotEmpty()) {
-          nestedTestClasses.forEach { nestedClass ->
-            val nestedClassName = nestedClass.nameAsString
-            val nestedFullName =
-                if (packageName.isNotEmpty()) "$packageName.$className$$nestedClassName"
-                else "$className$$nestedClassName"
-            result["$className$nestedClassName"] = nestedFullName
+// Discover test classes in a directory using runtime class inspection
+private fun discoverTestClasses(
+    classDir: File,
+    classLoader: ClassLoader,
+    testClassNames: MutableMap<String, String>,
+    logger: org.gradle.api.logging.Logger
+) {
+  classDir
+      .walkTopDown()
+      .filter { it.isFile && it.name.endsWith(".class") }
+      .forEach { classFile ->
+        try {
+          val className = getClassNameFromFile(classFile, classDir)
+          if (className != null) {
+            val clazz = classLoader.loadClass(className)
+            val testClasses = inspectTestClass(clazz, logger)
+            testClassNames.putAll(testClasses)
           }
-        }
-
-        // Include parent class only if it has executable test content
-        // Classes with only setup/configuration annotations (@ExtendWith, @TestPropertySource)
-        // should not generate targets unless they have actual test methods or nested test classes
-        if (hasTestAnnotations) {
-          val shouldIncludeParent =
-              if (nestedTestClasses.isNotEmpty()) {
-                // If there are nested classes, only include parent if it has method-level test
-                // annotations
-                hasMethodLevelTestAnnotations(classDecl)
-              } else {
-                // If no nested classes, only include parent if it has method-level test annotations
-                // Classes with only class-level annotations (@ExtendWith, @TestPropertySource) are
-                // excluded
-                hasMethodLevelTestAnnotations(classDecl)
-              }
-
-          if (shouldIncludeParent) {
-            val fullName = if (packageName.isNotEmpty()) "$packageName.$className" else className
-            result[className] = fullName
-          }
-        } else if (hasMethodLevelTestAnnotations(classDecl)) {
-          // Include classes with method-level test annotations even if they don't have class-level test annotations
-          val fullName = if (packageName.isNotEmpty()) "$packageName.$className" else className
-          result[className] = fullName
+        } catch (e: Throwable) {
+          // Catch all throwables including NoClassDefFoundError, LinkageError, etc.
+          logger.debug(
+              "${classFile.name}: Failed to load class: ${e.javaClass.simpleName}: ${e.message}")
         }
       }
+}
+
+// Get class name from compiled class file
+internal fun getClassNameFromFile(classFile: File, classDir: File): String? {
+  return try {
+    val relativePath = classDir.toPath().relativize(classFile.toPath()).toString()
+    relativePath.removeSuffix(".class").replace(File.separatorChar, '.')
+  } catch (e: Exception) {
+    null
+  }
+}
+
+// Inspect a loaded class for test annotations and nested test classes
+internal fun inspectTestClass(
+    clazz: Class<*>,
+    logger: org.gradle.api.logging.Logger
+): Map<String, String> {
+  val result = mutableMapOf<String, String>()
+
+  try {
+    // Skip interfaces, enums, and annotation types
+    if (clazz.isInterface || clazz.isEnum || clazz.isAnnotation) {
+      return result
     }
 
-    result
+    // Check for test annotations on the class
+    val hasClassTestAnnotations = hasClassTestAnnotations(clazz)
+    val hasMethodTestAnnotations = hasMethodTestAnnotations(clazz)
+
+    // Get nested classes with @Nested annotation
+    val nestedTestClasses =
+        try {
+          clazz.declaredClasses.filter { nestedClass ->
+            !nestedClass.isInterface &&
+                !nestedClass.isEnum &&
+                !nestedClass.isAnnotation &&
+                isNestedTestClass(nestedClass)
+          }
+        } catch (e: Throwable) {
+          // Ignore classes with unavailable dependencies
+          emptyList()
+        }
+
+    if (nestedTestClasses.isNotEmpty()) {
+      // Process nested test classes
+      nestedTestClasses.forEach { nestedClass ->
+        val simpleName = nestedClass.simpleName
+        val nestedKey = "${clazz.simpleName}$simpleName"
+        result[nestedKey] = nestedClass.name
+      }
+    } else if (hasClassTestAnnotations || hasMethodTestAnnotations) {
+      // Include the main class if it has test annotations
+      result[clazz.simpleName] = clazz.name
+    }
+
+    logger.debug("${clazz.simpleName}: Found ${result.size} test classes")
   } catch (e: Exception) {
-    // Log the exception for debugging
-    // Note: We can't access logger here since it's not passed in,
-    // but the calling function will log the fallback
-    null
+    logger.warn("Failed to inspect class ${clazz.name}: ${e.message}")
+  }
+
+  return result
+}
+
+// Check if a class has class-level test annotations
+internal fun hasClassTestAnnotations(clazz: Class<*>): Boolean {
+  return try {
+    clazz.annotations.any { annotation ->
+      val annotationName = annotation.annotationClass.simpleName
+      val qualifiedName = annotation.annotationClass.qualifiedName
+      classTestAnnotationNames.contains(annotationName) ||
+          classQualifiedTestAnnotations.contains(qualifiedName)
+    }
+  } catch (e: Throwable) {
+    // Ignore classes that reference unavailable dependencies
+    false
+  }
+}
+
+// Check if a class has method-level test annotations
+internal fun hasMethodTestAnnotations(clazz: Class<*>): Boolean {
+  return try {
+    clazz.declaredMethods.any { method ->
+      try {
+        method.annotations.any { annotation ->
+          val annotationName = annotation.annotationClass.simpleName
+          val qualifiedName = annotation.annotationClass.qualifiedName
+          methodTestAnnotationNames.contains(annotationName) ||
+              methodQualifiedTestAnnotations.contains(qualifiedName)
+        }
+      } catch (e: Throwable) {
+        // Ignore classes that reference unavailable dependencies
+        false
+      }
+    }
+  } catch (e: Throwable) {
+    // Ignore classes that reference unavailable dependencies
+    false
+  }
+}
+
+// Check if a nested class is a test class with @Nested annotation
+internal fun isNestedTestClass(nestedClass: Class<*>): Boolean {
+  return try {
+    nestedClass.annotations.any { annotation ->
+      val annotationName = annotation.annotationClass.simpleName
+      val qualifiedName = annotation.annotationClass.qualifiedName
+      annotationName == "Nested" || qualifiedName == "org.junit.jupiter.api.Nested"
+    }
+  } catch (e: Throwable) {
+    // Ignore classes that reference unavailable dependencies
+    false
   }
 }
 
@@ -365,7 +523,6 @@ private fun hasMethodLevelTestAnnotations(classDecl: ClassOrInterfaceDeclaration
   }
 }
 
-
 // Check if an annotation is a class-level test annotation
 private fun isClassTestAnnotation(annotationName: String): Boolean {
   return classTestAnnotationNames.contains(annotationName) ||
@@ -393,316 +550,6 @@ private fun isConfigurationAnnotation(annotationName: String): Boolean {
 private fun hasNestedAnnotation(classDecl: ClassOrInterfaceDeclaration): Boolean {
   return classDecl.annotations.any {
     it.nameAsString == "Nested" || it.nameAsString == "org.junit.jupiter.api.Nested"
-  }
-}
-
-// Quick check if core Kotlin compiler classes are available to avoid expensive object creation
-private fun isKotlinCompilerAvailable(logger: org.gradle.api.logging.Logger? = null): Boolean {
-  val requiredClasses = listOf("org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment")
-
-  return try {
-    // Check only the most essential classes that would fail fast
-    requiredClasses.forEach { className ->
-      try {
-        Class.forName(className)
-      } catch (e: ClassNotFoundException) {
-        logger?.info("Kotlin compiler class not available: $className")
-        throw e
-      } catch (e: NoClassDefFoundError) {
-        logger?.info("Kotlin compiler class definition error: $className - ${e.message}")
-        throw e
-      }
-    }
-    true
-  } catch (e: ClassNotFoundException) {
-    false
-  } catch (e: NoClassDefFoundError) {
-    false
-  }
-}
-
-// Check if a Kotlin class contains test annotations (class-level or method-level)
-private fun hasTestAnnotations(ktClass: KtClass): Boolean {
-  // First check if this is a configuration class - if so, exclude it
-  val hasConfigurationAnnotations =
-      ktClass.annotationEntries.any { annotation ->
-        val annotationName = annotation.shortName?.asString()
-        val fullAnnotationText = annotation.text
-
-        // Check short names and qualified names for configuration annotations
-        isConfigurationAnnotation(annotationName ?: "") ||
-            configurationAnnotations.any { fullAnnotationText.contains(it) }
-      }
-
-  if (hasConfigurationAnnotations) {
-    return false
-  }
-
-  // Check class-level annotations using predefined sets
-  val hasClassTestAnnotations =
-      ktClass.annotationEntries.any { annotation ->
-        val annotationName = annotation.shortName?.asString()
-        val fullAnnotationText = annotation.text
-
-        // Check short names and qualified names for class-level annotations
-        classTestAnnotationNames.contains(annotationName) ||
-            classQualifiedTestAnnotations.any { fullAnnotationText.contains(it) }
-      }
-
-  if (hasClassTestAnnotations) {
-    return true
-  }
-
-  // Check method-level annotations using predefined sets
-  val methods =
-      ktClass.body?.children?.filterIsInstance<org.jetbrains.kotlin.psi.KtNamedFunction>()
-          ?: emptyList()
-  return methods.any { method ->
-    method.annotationEntries.any { annotation ->
-      val annotationName = annotation.shortName?.asString()
-      val fullAnnotationText = annotation.text
-
-      // Check short names and qualified names for method-level annotations
-      methodTestAnnotationNames.contains(annotationName) ||
-          methodQualifiedTestAnnotations.any { fullAnnotationText.contains(it) }
-    }
-  }
-}
-
-// True AST-based parser for Kotlin files using Kotlin compiler
-internal fun parseKotlinFileWithAst(
-    file: File,
-    psiManager: PsiManager,
-    logger: org.gradle.api.logging.Logger? = null
-): MutableMap<String, String>? {
-  return try {
-    val content = file.readText()
-    val result = mutableMapOf<String, String>()
-
-    // Create virtual file and parse it using provided PsiManager
-    val ktFile =
-        try {
-          val virtualFile = LightVirtualFile(file.name, KotlinFileType.INSTANCE, content)
-          psiManager.findFile(virtualFile) as? KtFile
-        } catch (e: Exception) {
-          logger?.warn(
-              "PSI parsing error for ${file.name}: ${e.javaClass.simpleName} - ${e.message}")
-          return null
-        } ?: return null
-
-    // Get package name - use regex as fallback since AST sometimes fails on temp files
-    val packageNameFromAST = ktFile.packageFqName.asString()
-    val packageName =
-        if (packageNameFromAST.isNotEmpty()) {
-          packageNameFromAST
-        } else {
-          // Fallback to regex parsing
-          packageDeclarationRegex.find(content)?.groupValues?.get(1) ?: ""
-        }
-
-    // Process all top-level classes
-    val topLevelClasses = ktFile.getChildrenOfType<KtClass>()
-
-    for (topClass in topLevelClasses) {
-      processClass(topClass, packageName, null, result)
-    }
-
-    result
-  } catch (e: Exception) {
-    // Fall back to regex parsing if AST parsing fails
-    logger?.warn(
-        "Kotlin AST parsing failed for ${file.name}: ${e.javaClass.simpleName} - ${e.message}")
-    null
-  }
-}
-
-private fun processClass(
-    ktClass: KtClass,
-    packageName: String,
-    parentClass: KtClass?,
-    result: MutableMap<String, String>
-) {
-  val className = ktClass.name ?: return
-
-  // Only include regular classes - skip data classes, object declarations, enum classes, etc.
-  if (ktClass.hasModifier(KtTokens.DATA_KEYWORD) ||
-      ktClass.hasModifier(KtTokens.ENUM_KEYWORD) ||
-      ktClass.hasModifier(KtTokens.SEALED_KEYWORD) ||
-      ktClass.hasModifier(KtTokens.ANNOTATION_KEYWORD)) {
-    return
-  }
-
-  // Skip object declarations (they're a different type but check anyway)
-  if (ktClass.isInterface()) {
-    return
-  }
-
-  // Skip private and internal classes
-  if (ktClass.hasModifier(KtTokens.PRIVATE_KEYWORD) ||
-      ktClass.hasModifier(KtTokens.INTERNAL_KEYWORD)) {
-    return
-  }
-
-  // Skip abstract classes for top-level classes
-  if (parentClass == null && ktClass.hasModifier(KtTokens.ABSTRACT_KEYWORD)) {
-    return
-  }
-
-  // Only process classes that contain test annotations
-  if (!hasTestAnnotations(ktClass)) {
-    return
-  }
-
-  // Check for @Nested annotation on this class
-  val hasNestedAnnotation =
-      ktClass.annotationEntries.any { annotation ->
-        val annotationName = annotation.shortName?.asString()
-        annotationName == "Nested" || annotation.text.contains("org.junit.jupiter.api.Nested")
-      }
-
-  if (parentClass == null) {
-    // Top-level class
-
-    // Skip top-level classes with @Nested annotation (invalid usage)
-    if (hasNestedAnnotation) {
-      return
-    }
-
-    // Check if this class has any nested classes with @Nested annotation
-    // Look for nested classes in the class body
-    val nestedClasses = ktClass.body?.getChildrenOfType<KtClass>()?.toList() ?: emptyList()
-    val nestedWithAnnotation =
-        nestedClasses.filter { nested ->
-          !nested.hasModifier(KtTokens.PRIVATE_KEYWORD) &&
-              nested.annotationEntries.any { annotation ->
-                val annotationName = annotation.shortName?.asString()
-                annotationName == "Nested" ||
-                    annotation.text.contains("org.junit.jupiter.api.Nested")
-              }
-        }
-
-    if (nestedWithAnnotation.isNotEmpty()) {
-      // This top-level class has @Nested children - process them instead of the parent
-      for (nestedClass in nestedWithAnnotation) {
-        val nestedClassName = nestedClass.name ?: continue
-        val nestedKey = "$className$nestedClassName"
-        val nestedValue =
-            if (packageName.isNotEmpty()) {
-              "$packageName.$className$$nestedClassName"
-            } else {
-              "$className$$nestedClassName"
-            }
-        result[nestedKey] = nestedValue
-      }
-    } else {
-      // No @Nested children - include the top-level class
-      val fullName = if (packageName.isNotEmpty()) "$packageName.$className" else className
-      result[className] = fullName
-    }
-  } else {
-    // This should not be reached with the current logic, but keeping for completeness
-    if (hasNestedAnnotation) {
-      val parentName = parentClass.name ?: return
-      val nestedKey = "$parentName$className"
-      val nestedValue =
-          if (packageName.isNotEmpty()) {
-            "$packageName.$parentName$$className"
-          } else {
-            "$parentName$$className"
-          }
-      result[nestedKey] = nestedValue
-    }
-  }
-}
-
-// This function returns all class names and nested class names inside a file
-// Uses AST parsing for Java and Kotlin files, falls back to regex parsing
-fun getAllVisibleClassesWithNestedAnnotation(
-    file: File,
-    testTask: Task? = null
-): MutableMap<String, String>? {
-  val logger = testTask?.logger
-  // Use AST-based parsing
-  return when {
-    file.name.endsWith(".java") -> {
-      logger?.info("Attempting Java AST parsing for: ${file.name}")
-      try {
-        val astResult = parseJavaFileWithAst(file)
-        if (astResult != null) {
-          logger?.info("Successfully used Java AST parsing for: ${file.name}")
-          astResult
-        } else {
-          logger?.info("Java AST parsing failed, falling back to regex for: ${file.name}")
-          fallbackToRegexParsing(file)
-        }
-      } catch (e: Exception) {
-        logger?.warn(
-            "Java AST parsing exception for ${file.name}: ${e.javaClass.simpleName} - ${e.message}")
-        logger?.info("Falling back to regex parsing for: ${file.name}")
-        fallbackToRegexParsing(file)
-      } catch (e: Error) {
-        logger?.warn(
-            "Java AST parsing error for ${file.name}: ${e.javaClass.simpleName} - ${e.message}")
-        logger?.info("Falling back to regex parsing for: ${file.name}")
-        fallbackToRegexParsing(file)
-      }
-    }
-    file.name.endsWith(".kt") -> {
-      logger?.info("Attempting Kotlin AST parsing for: ${file.name}")
-      try {
-        // Check if Kotlin compiler classes are available using reflection
-        if (!isKotlinCompilerAvailable(logger)) {
-          logger?.info("Kotlin compiler not available, using regex parsing for: ${file.name}")
-          logger?.debug(
-              "Kotlin AST parsing failed: Required Kotlin compiler classes not found on classpath")
-          return fallbackToRegexParsing(file)
-        }
-
-        // Create PsiManager directly with proper error handling
-        val disposable = Disposer.newDisposable()
-        val compilerConfiguration =
-            try {
-              CompilerConfiguration()
-            } catch (e: NoClassDefFoundError) {
-              logger?.warn("CompilerConfiguration initialization failed: ${e.message}")
-              logger?.info("Falling back to regex parsing for: ${file.name}")
-              return fallbackToRegexParsing(file)
-            }
-
-        val environment =
-            KotlinCoreEnvironment.createForProduction(
-                disposable, compilerConfiguration, EnvironmentConfigFiles.JVM_CONFIG_FILES)
-        val psiManager = PsiManager.getInstance(environment.project)
-
-        val astResult = parseKotlinFileWithAst(file, psiManager, logger)
-        disposable.dispose() // Clean up resources
-
-        if (astResult != null) {
-          logger?.info("Successfully used Kotlin AST parsing for: ${file.name}")
-          astResult
-        } else {
-          logger?.info("Kotlin AST parsing failed, falling back to regex for: ${file.name}")
-          fallbackToRegexParsing(file)
-        }
-      } catch (e: Exception) {
-        logger?.warn(
-            "Kotlin AST parsing failed for ${file.name}: ${e.javaClass.simpleName} - ${e.message}")
-        logger?.debug("Exception details: ${e.stackTrace.take(3).joinToString { it.toString() }}")
-        logger?.info("Falling back to regex parsing for: ${file.name}")
-        fallbackToRegexParsing(file)
-      } catch (e: Error) {
-        // Catch JVM errors like NoClassDefFoundError, LinkageError, etc.
-        logger?.warn(
-            "Kotlin AST parsing failed for ${file.name}: ${e.javaClass.simpleName} - ${e.message}")
-        logger?.debug("Error details: ${e.stackTrace.take(3).joinToString { it.toString() }}")
-        logger?.info("Falling back to regex parsing for: ${file.name}")
-        fallbackToRegexParsing(file)
-      }
-    }
-    else -> {
-      logger?.info("Using regex parsing for non-Java/Kotlin file: ${file.name}")
-      fallbackToRegexParsing(file)
-    }
   }
 }
 
@@ -894,7 +741,7 @@ private fun processNestedClassesInContent(
   }
 }
 
-// Fallback to original regex-based parsing when AST parsing fails
+// Legacy function - no longer used since we switched to Gradle test discovery
 internal fun fallbackToRegexParsing(file: File): MutableMap<String, String>? {
   val content = file.takeIf { it.exists() }?.readText() ?: return null
 
