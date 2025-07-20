@@ -23,6 +23,9 @@ dependencies {
   }
   testImplementation(kotlin("test"))
   testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
+  testImplementation("org.mockito:mockito-core:5.8.0")
+  testImplementation("org.springframework.boot:spring-boot-test:3.2.0")
+  testImplementation("org.springframework:spring-context:6.1.0")
 }
 
 java {
