@@ -48,7 +48,7 @@ describe('nx init (for NestCLI - legacy)', () => {
       }
     );
 
-    expect(output).toContain('Run it again to replay the cached computation.');
+    expect(output).toContain('Learn more about what to do next');
 
     // nest-cli.json is removed
     expect(exists(`${projectRoot}/nest-cli.json`)).toBeFalsy();
