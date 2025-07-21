@@ -1,6 +1,6 @@
 {
-  "name": "21.3.0-package-updates",
-  "version": "21.3.0-beta.8",
+  "name": "21.4.0-package-updates",
+  "version": "21.4.0-beta.0",
   "packages": {
     "react-native": { "version": "~0.79.3", "alwaysAddToPackageJson": false },
     "@react-native-community/cli": {

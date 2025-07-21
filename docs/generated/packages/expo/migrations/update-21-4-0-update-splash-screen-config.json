@@ -1,0 +1,14 @@
+{
+  "name": "update-21-4-0-update-splash-screen-config",
+  "version": "21.4.0-beta.0",
+  "cli": "nx",
+  "description": "Update Expo splash screen configuration to use the new format",
+  "factory": "./src/migrations/update-21-4-0/update-splash-screen-config",
+  "implementation": "/packages/expo/src/migrations/update-21-4-0/update-splash-screen-config.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/expo",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}
