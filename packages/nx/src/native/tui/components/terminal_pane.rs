@@ -742,6 +742,11 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                         scrollbar.render(safe_area, buf, &mut state.scrollbar_state);
                     }
 
+                    let show_interactive_status = state.task_status == TaskStatus::InProgress
+                        && state.is_focused
+                        && pty_data.can_be_interactive
+                        && !self.minimal;
+
                     // Show instructions to quit in minimal mode if somehow terminal became non-interactive
                     if self.minimal && !self.is_currently_interactive() {
                         let top_text = Line::from(vec![
@@ -773,11 +778,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                         }
 
                     // Show interactive/readonly status for focused, in progress tasks, when not in minimal mode
-                    } else if state.task_status == TaskStatus::InProgress
-                        && state.is_focused
-                        && pty_data.can_be_interactive
-                        && !self.minimal
-                    {
+                    } else if show_interactive_status {
                         // Bottom right status
                         let bottom_text = if self.is_currently_interactive() {
                             Line::from(vec![
@@ -824,7 +825,10 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                                 .style(border_style)
                                 .render(bottom_right_area, buf);
                         }
-                    } else if needs_scrollbar {
+                    }
+
+                    // Render scrollbar padding when needed, but not for minimal non-interactive panes
+                    if needs_scrollbar && !(self.minimal && !self.is_currently_interactive()) {
                         // Render padding for both top and bottom when scrollbar is present
                         let padding_text = Line::from(vec![Span::raw("  ")]);
                         let padding_width = 2;
@@ -846,20 +850,22 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                                 .style(border_style)
                                 .render(top_right_area, buf);
 
-                            // Bottom padding
-                            let bottom_right_area = Rect {
-                                x: safe_area.x + safe_area.width
-                                    - padding_width
-                                    - Self::CONFIG.right_margin,
-                                y: safe_area.y + safe_area.height - 1,
-                                width: padding_width + Self::CONFIG.width_padding,
-                                height: 1,
-                            };
+                            // Bottom padding (only if interactive status is not being displayed)
+                            if !show_interactive_status {
+                                let bottom_right_area = Rect {
+                                    x: safe_area.x + safe_area.width
+                                        - padding_width
+                                        - Self::CONFIG.right_margin,
+                                    y: safe_area.y + safe_area.height - 1,
+                                    width: padding_width + Self::CONFIG.width_padding,
+                                    height: 1,
+                                };
 
-                            Paragraph::new(padding_text)
-                                .alignment(Alignment::Right)
-                                .style(border_style)
-                                .render(bottom_right_area, buf);
+                                Paragraph::new(padding_text)
+                                    .alignment(Alignment::Right)
+                                    .style(border_style)
+                                    .render(bottom_right_area, buf);
+                            }
                         }
                     }
 
@@ -1046,7 +1052,7 @@ mod tests {
         );
         assert!(!terminal_pane.should_show_duration_display(&state, area));
 
-        // Test edge case: exactly at minimum width
+        // Test edge case: exactly at minimum width (insufficient space)
         let min_area = Rect::new(0, 0, TerminalPane::CONFIG.min_duration_display_width, 10);
         let state = create_terminal_pane_state(
             TaskStatus::InProgress,
