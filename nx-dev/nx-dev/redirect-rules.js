@@ -1475,6 +1475,13 @@ const pricingRedirects = {
   '/pricing': '/nx-cloud#plans',
 };
 
+// Removed CI tutorials: 07/21/25
+const ciTutorialRedirects = {
+  '/ci/intro/tutorials/circle': '/ci/recipes/set-up/monorepo-ci-circle-ci',
+  '/ci/intro/tutorials/github-actions':
+    '/ci/recipes/set-up/monorepo-ci-github-actions',
+};
+
 /**
  * Public export API
  */
@@ -1516,4 +1523,5 @@ module.exports = {
   nxModuleFederationConceptsRedirects,
   gettingStartedRedirects,
   pricingRedirects,
+  ciTutorialRedirects,
 };

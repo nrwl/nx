@@ -9,35 +9,31 @@ Below is an example of a GitLab setup, building and testing only what is affecte
 
 ```yaml {% fileName=".gitlab-ci.yml" %}
 image: node:20
-
 variables:
-  GIT_DEPTH: 0
+  CI: 'true'
 
-main:
+# Main job
+CI:
   interruptible: true
   only:
     - main
     - merge_requests
-  cache:
-    key:
-      files:
-        - package-lock.json
-    paths:
-      - .npm/
   script:
-    # Connect your workspace on <%= nxCloudHost %> and uncomment this to enable task distribution.
-    # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
-    # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+    # This enables task distribution via Nx Cloud
+    # Run this command as early as possible, before dependencies are installed
+    # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+    # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+    # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-    - npm ci --cache .npm --prefer-offline
+    - npm ci --legacy-peer-deps
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-    # This requires connecting your workspace to Nx Cloud. Run "nx connect" to get started w/ Nx Cloud
-    # - npx nx-cloud record -- nx format:check
+    # - npx nx-cloud record -- echo Hello World
+    - npx nx affected -t lint test build
+    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
 
-    # Without Nx Cloud, run format:check directly
-    - npx nx format:check --base=$NX_BASE --head=$NX_HEAD
-    - npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build e2e-ci
+  after_script:
+    - npx nx fix-ci
 ```
