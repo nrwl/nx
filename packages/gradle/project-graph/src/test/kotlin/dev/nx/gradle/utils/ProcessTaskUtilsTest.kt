@@ -29,6 +29,16 @@ class ProcessTaskUtilsTest {
         "{workspaceRoot}/project/src/main/java",
         replaceRootInPath(path, "/other/path", workspaceRoot))
     assertNull(replaceRootInPath("/external/other", projectRoot, workspaceRoot))
+
+    // Test edge case: path that starts with projectRoot but is not a child directory
+    val similarPath = "/home/user/workspace/project-backend/src/file.kt"
+    assertEquals(
+        "{workspaceRoot}/project-backend/src/file.kt",
+        replaceRootInPath(similarPath, projectRoot, workspaceRoot))
+
+    // Test exact match cases
+    assertEquals("{projectRoot}", replaceRootInPath(projectRoot, projectRoot, workspaceRoot))
+    assertEquals("{workspaceRoot}", replaceRootInPath(workspaceRoot, projectRoot, workspaceRoot))
   }
 
   @Test
