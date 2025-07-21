@@ -75,13 +75,10 @@ export async function initHandler(options: InitArgs): Promise<void> {
         type: 'select',
         name: 'setupPreference',
         message: 'Would you like a minimum or guided setup?',
-        choices: [
-          { name: 'Minimum', value: 'min' },
-          { name: 'Guided', value: 'guided' },
-        ],
+        choices: [{ name: 'Minimum' }, { name: 'Guided' }],
       },
     ]).then((r) => r.setupPreference);
-    guided = setupType === 'guided';
+    guided = setupType === 'Guided';
   }
 
   /**
