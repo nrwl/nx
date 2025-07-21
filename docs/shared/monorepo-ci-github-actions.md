@@ -9,14 +9,13 @@ Below is an example of a GitHub Actions setup, building, and testing only what i
 
 ```yaml {% fileName=".github/workflows/ci.yml" %}
 name: CI
+
 on:
   push:
     branches:
-      # Change this if your primary branch is not main
       - main
   pull_request:
 
-# Needed for nx-set-shas when run on the main branch
 permissions:
   actions: read
   contents: read
@@ -27,26 +26,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           filter: tree:0
+          fetch-depth: 0
 
-      - uses: actions/setup-node@v3
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
-      # This line enables distribution
-      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
-      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
-      - run: npm ci
+
+      - run: npm ci --legacy-peer-deps
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # This requires connecting your workspace to Nx Cloud. Run "nx connect" to get started w/ Nx Cloud
-      # - run: npx nx-cloud record -- nx format:check
-
-      # Without Nx Cloud, run format:check directly
-      - run: npx nx format:check
-      - run: npx nx affected -t lint test build e2e-ci
+      # - run: npx nx-cloud record -- echo Hello World
+      - run: npx nx affected -t lint test build
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      - run: npx nx fix-ci
+        if: always()
 ```
 
 ### Get the Commit of the Last Successful Build

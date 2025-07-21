@@ -30,9 +30,9 @@ npx nx connect
 
 {% link-card title="E2E Test Auto-Splitting and Distribution" type="video" url="https://youtu.be/0YxcxIR7QU0" icon="nxagents" /%}
 
-{% link-card title="Circle CI with Nx" type="tutorial" url="/ci/intro/tutorials/circle" icon="circleci" /%}
+{% link-card title="Circle CI with Nx" type="tutorial" url="/ci/recipes/set-up/monorepo-ci-circle-ci" icon="circleci" /%}
 
-{% link-card title="GitHub Actions with Nx" type="tutorial" url="/ci/intro/tutorials/github-actions" icon="github" /%}
+{% link-card title="GitHub Actions with Nx" type="tutorial" url="/ci/recipes/set-up/monorepo-ci-github-actions" icon="github" /%}
 
 {% /cards %}
 

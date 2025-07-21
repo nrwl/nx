@@ -2525,23 +2525,6 @@
               "name": "Connect to Nx Cloud",
               "id": "connect-to-nx-cloud",
               "file": "nx-cloud/intro/connect-to-cloud"
-            },
-            {
-              "name": "Tutorials",
-              "id": "tutorials",
-              "description": "Tutorials setting up CI with Nx",
-              "itemList": [
-                {
-                  "name": "Circle CI with Nx",
-                  "id": "circle",
-                  "file": "nx-cloud/tutorial/circle"
-                },
-                {
-                  "name": "GitHub Actions with Nx",
-                  "id": "github-actions",
-                  "file": "nx-cloud/tutorial/github-actions"
-                }
-              ]
             }
           ]
         },
