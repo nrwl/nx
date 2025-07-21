@@ -434,7 +434,7 @@ function mapWorkspaceModules(
 ) {
   const output: Record<string, NpmDependencyV3 & NpmDependencyV1> = {};
   for (const [pkgName, pkgVersion] of Object.entries(
-    packageJson.dependencies
+    packageJson.dependencies ?? {}
   )) {
     if (workspaceModules.has(pkgName)) {
       let workspaceModuleDefinition: NpmDependencyV3 & NpmDependencyV1;
@@ -481,7 +481,7 @@ function mapPackageJsonWithWorkspaceModules(
   packageJson: NormalizedPackageJson
 ) {
   for (const [pkgName, pkgVersion] of Object.entries(
-    packageJson.dependencies
+    packageJson.dependencies ?? {}
   )) {
     if (pkgVersion.startsWith('workspace:') || pkgVersion.startsWith('file:')) {
       packageJson.dependencies[pkgName] = `workspace_modules/${pkgName}`;
