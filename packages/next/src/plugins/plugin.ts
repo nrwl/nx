@@ -1,28 +1,27 @@
 import {
   CreateDependencies,
   CreateNodes,
-  CreateNodesV2,
   CreateNodesContext,
+  createNodesFromFiles,
+  CreateNodesV2,
   detectPackageManager,
+  getPackageManagerCommand,
+  logger,
   NxJsonConfiguration,
   readJsonFile,
   TargetConfiguration,
   writeJsonFile,
-  createNodesFromFiles,
-  logger,
-  getPackageManagerCommand,
 } from '@nx/devkit';
-import { dirname, join } from 'path';
-
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync } from 'fs';
-
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
-import { hashObject } from 'nx/src/devkit-internals';
+import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
+import { getLockFileName } from '@nx/js';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { existsSync, readdirSync } from 'fs';
+import { hashObject } from 'nx/src/devkit-internals';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { dirname, join } from 'path';
 
 export interface NextPluginOptions {
   buildTargetName?: string;
@@ -70,11 +69,18 @@ export const createNodesV2: CreateNodesV2<NextPluginOptions> = [
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `next-${optionsHash}.json`);
     const targetsCache = readTargetsCache(cachePath);
+    const isTsSolutionSetup = isUsingTsSolutionSetup();
 
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache),
+          createNodesInternal(
+            configFile,
+            options,
+            context,
+            targetsCache,
+            isTsSolutionSetup
+          ),
         configFiles,
         options,
         context
@@ -99,12 +105,14 @@ export const createNodes: CreateNodes<NextPluginOptions> = [
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `next-${optionsHash}.json`);
     const targetsCache = readTargetsCache(cachePath);
+    const isTsSolutionSetup = isUsingTsSolutionSetup();
 
     const result = await createNodesInternal(
       configFilePath,
       options,
       context,
-      targetsCache
+      targetsCache,
+      isTsSolutionSetup
     );
     writeTargetsToCache(cachePath, targetsCache);
     return result;
@@ -118,7 +126,8 @@ async function createNodesInternal(
   targetsCache: Record<
     string,
     Record<string, TargetConfiguration<NextPluginOptions>>
-  >
+  >,
+  isTsSolutionSetup: boolean
 ) {
   const projectRoot = dirname(configFilePath);
 
@@ -143,7 +152,8 @@ async function createNodesInternal(
     configFilePath,
     projectRoot,
     options,
-    context
+    context,
+    isTsSolutionSetup
   );
 
   return {
@@ -160,7 +170,8 @@ async function buildNextTargets(
   nextConfigPath: string,
   projectRoot: string,
   options: NextPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContext,
+  isTsSolutionSetup: boolean
 ) {
   const nextConfig = await getNextConfig(nextConfigPath, context);
   const namedInputs = getNamedInputs(projectRoot, context);
@@ -170,10 +181,14 @@ async function buildNextTargets(
   targets[options.buildTargetName] = await getBuildTargetConfig(
     namedInputs,
     projectRoot,
-    nextConfig
+    nextConfig,
+    isTsSolutionSetup
   );
 
-  targets[options.devTargetName] = getDevTargetConfig(projectRoot);
+  targets[options.devTargetName] = getDevTargetConfig(
+    projectRoot,
+    isTsSolutionSetup
+  );
 
   const startTarget = getStartTargetConfig(options, projectRoot);
 
@@ -195,7 +210,8 @@ async function buildNextTargets(
 async function getBuildTargetConfig(
   namedInputs: { [inputName: string]: any[] },
   projectRoot: string,
-  nextConfig: any
+  nextConfig: any,
+  isTsSolutionSetup: boolean
 ) {
   const nextOutputPath = await getOutputs(projectRoot, nextConfig);
   // Set output path here so that `withNx` can pick it up.
@@ -214,10 +230,14 @@ async function getBuildTargetConfig(
   // This doesn't actually need to be tty, but next.js has a bug, https://github.com/vercel/next.js/issues/62906, where it exits 0 when SIGINT is sent.
   targetConfig.options.tty = false;
 
+  if (isTsSolutionSetup) {
+    targetConfig.syncGenerators = ['@nx/js:typescript-sync'];
+  }
+
   return targetConfig;
 }
 
-function getDevTargetConfig(projectRoot: string) {
+function getDevTargetConfig(projectRoot: string, isTsSolutionSetup: boolean) {
   const targetConfig: TargetConfiguration = {
     continuous: true,
     command: `next dev`,
@@ -225,6 +245,10 @@ function getDevTargetConfig(projectRoot: string) {
       cwd: projectRoot,
     },
   };
+
+  if (isTsSolutionSetup) {
+    targetConfig.syncGenerators = ['@nx/js:typescript-sync'];
+  }
 
   return targetConfig;
 }
