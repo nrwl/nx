@@ -7,7 +7,7 @@ import {
   writeJsonFile,
   CreateNodesContext,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
+import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { existsSync } from 'fs';
@@ -37,7 +37,7 @@ function writeTargetsCache(
   writeJsonFile(cachePath, results ?? {});
 }
 
-const dockerfileGlob = '**/Dockerfile';
+const dockerfileGlob = 'Dockerfile,**/Dockerfile';
 
 export const createNodesV2: CreateNodesV2<DockerPluginOptions> = [
   dockerfileGlob,
@@ -48,10 +48,23 @@ export const createNodesV2: CreateNodesV2<DockerPluginOptions> = [
       `docker-${optionsHash}.hash`
     );
     const targetsCache = readTargetsCache(cachePath);
+    const projectRoots = configFilePaths.map((c) => dirname(c));
+    const normalizedOptions = normalizePluginOptions(options);
+    const hashes = await calculateHashesForCreateNodes(
+      projectRoots,
+      normalizedOptions,
+      context
+    );
     try {
       return await createNodesFromFiles(
-        (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache),
+        (configFile, _, context, idx) =>
+          createNodesInternal(
+            configFile,
+            hashes[idx] + configFile,
+            normalizedOptions,
+            context,
+            targetsCache
+          ),
         configFilePaths,
         options,
         context
@@ -64,17 +77,12 @@ export const createNodesV2: CreateNodesV2<DockerPluginOptions> = [
 
 async function createNodesInternal(
   configFilePath: string,
-  options: DockerPluginOptions,
+  hash: string,
+  normalizedOptions: NormalizedDockerPluginOptions,
   context: CreateNodesContext,
   targetsCache: Record<string, DockerTargets>
 ) {
   const projectRoot = dirname(configFilePath);
-  const normalizedOptions = normalizePluginOptions(options);
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    normalizedOptions,
-    context
-  );
 
   targetsCache[hash] ??= await createDockerTargets(
     projectRoot,
@@ -121,7 +129,12 @@ async function createDockerTargets(
       description: `Run Docker build`,
       help: {
         command: `docker build --help`,
-        example: {},
+        example: {
+          options: {
+            'cache-from': 'type=s3,region=eu-west-1,bucket=mybucket .',
+            'cache-to': 'type=s3,region=eu-west-1,bucket=mybucket .',
+          },
+        },
       },
     },
   };
@@ -142,7 +155,11 @@ async function createDockerTargets(
       description: `Run Docker run`,
       help: {
         command: `docker run --help`,
-        example: {},
+        example: {
+          options: {
+            args: ['-p', '3000:3000'],
+          },
+        },
       },
     },
   };

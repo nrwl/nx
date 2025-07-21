@@ -2,13 +2,17 @@ import { execSync } from 'child_process';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { prompt } from 'enquirer';
-import { ProjectGraphProjectNode } from '@nx/devkit';
+import { ProjectGraphProjectNode, workspaceRoot } from '@nx/devkit';
 import type { FinalConfigForProject } from 'nx/src/command-line/release/version/release-group-processor';
 import { interpolateVersionPattern } from './version-pattern-utils';
 
 const DEFAULT_VERSION_SCHEMES = {
   production: '{currentDate|YYMM.DD}.{shortCommitSha}',
   hotfix: '{currentDate|YYMM.DD}.{shortCommitSha}-hotfix',
+};
+
+export const getDockerVersionPath = (projectRoot: string) => {
+  return join(workspaceRoot, 'tmp', projectRoot, '.docker-version');
 };
 
 export async function handleDockerVersion(
@@ -92,7 +96,7 @@ function updateProjectVersion(
   if (isDryRun) {
     logs.push(`No changes were applied as --dry-run is enabled.`);
   } else {
-    writeFileSync(join(projectRoot, '.docker-version'), fullImageRef);
+    writeFileSync(getDockerVersionPath(projectRoot), fullImageRef);
   }
   return logs;
 }

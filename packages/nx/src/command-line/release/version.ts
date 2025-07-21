@@ -308,6 +308,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       }
     }
 
+    // TODO(colum): Remove when Docker support is no longer experimental
+    output.warn({
+      title: 'Warning!',
+      bodyLines: [
+        `Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.`,
+      ],
+    });
     await processor.processDockerProjects();
 
     const versionData = processor.getVersionData();

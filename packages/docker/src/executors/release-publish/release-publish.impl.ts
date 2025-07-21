@@ -6,18 +6,16 @@ import {
 } from './schema';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
+import { getDockerVersionPath } from '../../release/version-utils';
 
 export default async function dockerReleasePublish(
   schema: DockerReleasePublishSchema,
   context: ExecutorContext
 ) {
-  logger.warn(
-    `Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.`
-  );
   const projectConfig = context.projectGraph.nodes[context.projectName];
   const options = normalizeOptions(projectConfig, schema);
   if (!options.dryRun) {
-    const digest = dockerPush(options.imageReference);
+    const digest = dockerPush(options.imageReference, options.quiet);
     logger.log(
       `Successfully pushed ${options.imageReference}. Digest: ${digest}`
     );
@@ -36,6 +34,7 @@ function normalizeOptions(
   schema: DockerReleasePublishSchema
 ): NormalizedDockerReleasePublishSchema {
   return {
+    quiet: schema.quiet ?? false,
     imageReference: findImageReference(projectConfig, schema),
     dryRun: process.env.NX_DRY_RUN === 'true' || schema.dryRun || false,
   };
@@ -57,10 +56,10 @@ function findImageReference(
 }
 
 function readVersionFromFile(projectRoot: string) {
-  const versionFilePath = join(projectRoot, '.docker-version');
+  const versionFilePath = getDockerVersionPath(projectRoot);
   if (!existsSync(versionFilePath)) {
     throw new Error(
-      "Could not find .docker-version file. Did you run 'nx release version'?"
+      `Could not find ${versionFilePath} file. Did you run 'nx release version'?`
     );
   }
 
@@ -80,11 +79,14 @@ function checkDockerImageExistsLocally(imageRef: string) {
   }
 }
 
-function dockerPush(imageReference: string) {
+function dockerPush(imageReference: string, quiet: boolean) {
   try {
-    const result = execSync(`docker push ${imageReference} --quiet`, {
-      encoding: 'utf8',
-    });
+    const result = execSync(
+      `docker push ${imageReference}${quiet ? ' --quiet' : ''}`,
+      {
+        encoding: 'utf8',
+      }
+    );
     return result.trim();
   } catch (e) {
     logger.error(`Failed to push ${imageReference}`);

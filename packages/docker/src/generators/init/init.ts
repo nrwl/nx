@@ -25,36 +25,23 @@ export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
   );
 }
 
-export function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
-  return initGeneratorInternal(tree, { addPlugin: false, ...schema });
-}
-
-export async function initGeneratorInternal(
-  tree: Tree,
-  schema: InitGeneratorSchema
-) {
+export async function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
   logger.warn(
     `Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.`
   );
   const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  schema.addPlugin ??= addPluginDefault;
 
-  if (schema.addPlugin) {
-    await addPlugin(
-      tree,
-      await createProjectGraphAsync(),
-      '@nx/docker',
-      createNodesV2,
-      {
-        buildTarget: ['docker:build', 'docker-build', 'build-docker'],
-        runTarget: ['docker:run', 'docker-run', 'run-docker'],
-      },
-      schema.updatePackageScripts
-    );
-  }
+  await addPlugin(
+    tree,
+    await createProjectGraphAsync(),
+    '@nx/docker',
+    createNodesV2,
+    {
+      buildTarget: ['docker:build', 'docker-build', 'build-docker'],
+      runTarget: ['docker:run', 'docker-run', 'run-docker'],
+    },
+    schema.updatePackageScripts
+  );
 
   const tasks: GeneratorCallback[] = [];
   if (!schema.skipPackageJson) {
