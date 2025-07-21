@@ -5,15 +5,15 @@ description: In this tutorial you'll create a frontend-focused workspace with Nx
 
 # Building and Testing Angular Apps in Nx
 
-In this tutorial, you'll learn how to create a new Angular monorepo using the Nx platform.
+This tutorial walks you through creating an Angular monorepo with Nx. You'll build a small example application to understand the core concepts and workflows.
 
-What will you learn?
+What you'll learn:
 
-- how to create a new Angular workspace with [GitHub Actions](https://github.com/features/actions) preconfigured
-- how to run a single task (i.e. serve your app) or run multiple tasks in parallel
-- how to modularize your codebase with local libraries for better code organization
-- how to benefit from caching that works both locally and in CI
-- how to set up self-healing CI to apply fixes directly from your local editor
+- How to structure multiple Angular apps and libraries in a single repository
+- How Nx's caching speeds up your local development and CI pipelines
+- How to run builds, tests, and serve commands efficiently across multiple projects
+- How to share UI components and utilities between Angular applications
+- How to fix CI failures directly from your editor with Nx Cloud
 
 ## Prerequisite: Tutorial Setup
 
@@ -23,9 +23,9 @@ This tutorial requires a [GitHub account](https://github.com) to demonstrate the
 
 ### Step 1: Creating a new Nx Angular workspace
 
-Let's start by creating a new Angular monorepo with Nx Cloud and GitHub Actions preconfigured. You'll be guided through an interactive setup process to create your workspace. After completing the setup, return here to continue with this tutorial.
+Let's create your workspace. The setup process takes about 2 minutes and will configure Angular, testing, and CI/CD automatically.
 
-{% call-to-action title="Create a new Angular monorepo" url="https://cloud.nx.app/create-nx-workspace?preset=angular" description="With Nx and GitHub Actions fully set up" /%}
+{% call-to-action title="Set up your Angular workspace" url="https://cloud.nx.app/create-nx-workspace?preset=angular" description="Interactive setup with Angular and CI preconfigured" /%}
 
 ### Step 2: Verify Your Setup
 
