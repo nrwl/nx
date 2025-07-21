@@ -46,7 +46,7 @@ jobs:
       ...
       - run: npx nx affected -t lint test build
 
-      - run: npx nx cloud fix-ci
+      - run: npx nx-cloud fix-ci
         if: always()
 ```
 
