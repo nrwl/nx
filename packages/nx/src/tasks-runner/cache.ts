@@ -76,9 +76,7 @@ export class DbCache {
     cacheDir,
     getDbConnection(),
     undefined,
-    this.nxJson.maxCacheSize !== undefined
-      ? parseMaxCacheSize(this.nxJson.maxCacheSize)
-      : getDefaultMaxCacheSize(cacheDir)
+    resolveMaxCacheSize(this.nxJson)
   );
 
   private remoteCache: RemoteCacheV2 | null;
@@ -595,6 +593,20 @@ function tryAndRetry<T>(fn: () => Promise<T>): Promise<T> {
     }
   };
   return _try();
+}
+
+/**
+ * Resolves the max cache size from environment variable or nx.json configuration
+ * and converts it to a number of bytes.
+ *
+ * @param nxJson The nx.json configuration object
+ * @returns The resolved max cache size in bytes
+ */
+export function resolveMaxCacheSize(nxJson: NxJsonConfiguration): number {
+  const rawMaxCacheSize = process.env.NX_MAX_CACHE_SIZE ?? nxJson.maxCacheSize;
+  return rawMaxCacheSize !== undefined
+    ? parseMaxCacheSize(rawMaxCacheSize)
+    : getDefaultMaxCacheSize(cacheDir);
 }
 
 /**

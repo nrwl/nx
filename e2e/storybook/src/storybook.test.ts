@@ -10,7 +10,7 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { writeFileSync } from 'fs';
 import { createFileSync } from 'fs-extra';
 

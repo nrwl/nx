@@ -47,6 +47,7 @@ export interface RunOptions {
 
 export interface TuiOptions {
   tuiAutoExit: boolean | number;
+  tui: boolean;
 }
 
 export function withTuiOptions<T>(yargs: Argv<T>): Argv<T & TuiOptions> {
@@ -56,6 +57,11 @@ export function withTuiOptions<T>(yargs: Argv<T>): Argv<T & TuiOptions> {
         'Whether or not to exit the TUI automatically after all tasks finish, and after how long. If set to `true`, the TUI will exit immediately. If set to `false` the TUI will not automatically exit. If set to a number, an interruptible countdown popup will be shown for that many seconds before the TUI exits.',
       type: 'string',
       coerce: (v) => coerceTuiAutoExit(v),
+    })
+    .option('tui', {
+      describe: 'Enable or disable the Nx Terminal UI.',
+      type: 'boolean',
+      conflicts: 'outputStyle',
     })
     .middleware((args) => {
       if (args.tuiAutoExit !== undefined) {

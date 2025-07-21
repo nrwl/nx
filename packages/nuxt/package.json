@@ -15,7 +15,7 @@
     "CLI",
     "Front-end"
   ],
-  "main": "./index",
+  "main": "./index.js",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -25,18 +25,32 @@
   "homepage": "https://nx.dev",
   "generators": "./generators.json",
   "executors": "./executors.json",
+  "exports": {
+    ".": {
+      "default": "./index.js",
+      "types": "./index.d.ts"
+    },
+    "./package.json": "./package.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./migrations.json": "./migrations.json",
+    "./plugin": "./plugin.js"
+  },
   "nx-migrations": {
     "migrations": "./migrations.json"
   },
   "dependencies": {
     "tslib": "^2.3.0",
     "@nuxt/kit": "^3.10.0",
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
-    "@nx/eslint": "file:../eslint",
-    "@nx/vue": "file:../vue",
-    "@nx/vite": "file:../vite",
+    "@nx/devkit": "workspace:*",
+    "@nx/js": "workspace:*",
+    "@nx/eslint": "workspace:*",
+    "@nx/vue": "workspace:*",
+    "@nx/vite": "workspace:*",
     "@phenomnomnominal/tsquery": "~5.0.1"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "peerDependencies": {
     "@nuxt/schema": "^3.10.0"

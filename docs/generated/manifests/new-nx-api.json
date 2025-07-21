@@ -399,6 +399,26 @@
       }
     },
     "migrations": {
+      "/technologies/angular/api/migrations/update-angular-cli-version-20-1-0": {
+        "description": "Update the @angular/cli package version to ~20.1.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-1-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-20-1-0",
+        "version": "21.3.0-beta.4",
+        "originalFilePath": "/packages/angular",
+        "path": "/technologies/angular/api/migrations/update-angular-cli-version-20-1-0",
+        "type": "migration"
+      },
+      "/technologies/angular/api/migrations/21.3.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.3.0-package-updates.json",
+        "hidden": false,
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.4",
+        "originalFilePath": "/packages/angular",
+        "path": "/technologies/angular/api/migrations/21.3.0-package-updates",
+        "type": "migration"
+      },
       "/technologies/angular/api/migrations/update-angular-cli-version-20-0-0": {
         "description": "Update the @angular/cli package version to ~20.0.0.",
         "file": "generated/packages/angular/migrations/update-angular-cli-version-20-0-0.json",
@@ -2198,6 +2218,36 @@
       }
     },
     "migrations": {
+      "/technologies/test-tools/jest/api/migrations/rename-test-path-pattern": {
+        "description": "Rename the CLI option `testPathPattern` to `testPathPatterns`.",
+        "file": "generated/packages/jest/migrations/rename-test-path-pattern.json",
+        "hidden": false,
+        "name": "rename-test-path-pattern",
+        "version": "21.3.0-beta.3",
+        "originalFilePath": "/packages/jest",
+        "path": "/technologies/test-tools/jest/api/migrations/rename-test-path-pattern",
+        "type": "migration"
+      },
+      "/technologies/test-tools/jest/api/migrations/replace-removed-matcher-aliases": {
+        "description": "Replace removed matcher aliases in Jest v30 with their corresponding matcher",
+        "file": "generated/packages/jest/migrations/replace-removed-matcher-aliases.json",
+        "hidden": false,
+        "name": "replace-removed-matcher-aliases",
+        "version": "21.3.0-beta.3",
+        "originalFilePath": "/packages/jest",
+        "path": "/technologies/test-tools/jest/api/migrations/replace-removed-matcher-aliases",
+        "type": "migration"
+      },
+      "/technologies/test-tools/jest/api/migrations/21.3.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/jest/migrations/21.3.0-package-updates.json",
+        "hidden": false,
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.3",
+        "originalFilePath": "/packages/jest",
+        "path": "/technologies/test-tools/jest/api/migrations/21.3.0-package-updates",
+        "type": "migration"
+      },
       "/technologies/test-tools/jest/api/migrations/remove-tsconfig-option-from-jest-executor": {
         "description": "Remove the previously deprecated and unused `tsConfig` option from the `@nx/jest:jest` executor.",
         "file": "generated/packages/jest/migrations/remove-tsconfig-option-from-jest-executor.json",
@@ -2493,6 +2543,16 @@
     "executors": {},
     "generators": {},
     "migrations": {
+      "/technologies/module-federation/api/migrations/21.3.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/module-federation/migrations/21.3.0-package-updates.json",
+        "hidden": false,
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.8",
+        "originalFilePath": "/packages/module-federation",
+        "path": "/technologies/module-federation/api/migrations/21.3.0-package-updates",
+        "type": "migration"
+      },
       "/technologies/module-federation/api/migrations/21.2.0-package-updates": {
         "description": "",
         "file": "generated/packages/module-federation/migrations/21.2.0-package-updates.json",
@@ -3274,6 +3334,39 @@
         "path": "/reference/core-api/nx/documents/logout",
         "tags": ["login"],
         "originalFilePath": "generated/cli/logout"
+      },
+      "/reference/core-api/nx/documents/fix-ci": {
+        "id": "fix-ci",
+        "name": "fix-ci",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/fix-ci",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/core-api/nx/documents/fix-ci",
+        "tags": ["nx-cloud", "ci"],
+        "originalFilePath": "generated/cli/fix-ci"
+      },
+      "/reference/core-api/nx/documents/record": {
+        "id": "record",
+        "name": "record",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/record",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/core-api/nx/documents/record",
+        "tags": ["nx-cloud", "ci"],
+        "originalFilePath": "generated/cli/record"
+      },
+      "/reference/core-api/nx/documents/start-ci-run": {
+        "id": "start-ci-run",
+        "name": "start-ci-run",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/start-ci-run",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/core-api/nx/documents/start-ci-run",
+        "tags": ["nx-cloud", "ci"],
+        "originalFilePath": "generated/cli/start-ci-run"
       }
     },
     "root": "/packages/nx",
@@ -4637,6 +4730,16 @@
       }
     },
     "migrations": {
+      "/technologies/build-tools/rspack/api/migrations/21.3.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/rspack/migrations/21.3.0-package-updates.json",
+        "hidden": false,
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.8",
+        "originalFilePath": "/packages/rspack",
+        "path": "/technologies/build-tools/rspack/api/migrations/21.3.0-package-updates",
+        "type": "migration"
+      },
       "/technologies/build-tools/rspack/api/migrations/21.0.1-package-updates": {
         "description": "",
         "file": "generated/packages/rspack/migrations/21.0.1-package-updates.json",
@@ -4953,6 +5056,16 @@
       }
     },
     "migrations": {
+      "/technologies/build-tools/vite/api/migrations/21.3.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/vite/migrations/21.3.0-package-updates.json",
+        "hidden": false,
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.3",
+        "originalFilePath": "/packages/vite",
+        "path": "/technologies/build-tools/vite/api/migrations/21.3.0-package-updates",
+        "type": "migration"
+      },
       "/technologies/build-tools/vite/api/migrations/21.2.0-package-updates": {
         "description": "",
         "file": "generated/packages/vite/migrations/21.2.0-package-updates.json",

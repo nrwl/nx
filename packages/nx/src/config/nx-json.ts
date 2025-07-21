@@ -384,6 +384,33 @@ export interface NxReleaseConfiguration {
        */
       releaseTagPatternCheckAllBranchesWhen?: boolean | string[];
       /**
+       * By default, we will use semver when searching through the tags to find the latest matching tag.
+       *
+       * - Setting this to true will cause us to use semver to match the version
+       * - Setting this to false will cause us to not use semver to match the version allowing for non-semver versions
+       */
+      releaseTagPatternRequireSemver?: boolean;
+      /**
+       * When set to true and multiple tags match your configured "releaseTagPattern", the git tag matching logic will strictly prefer the tag which contain a semver preid which matches the one
+       * given to the nx release invocation.
+       *
+       * For example, let's say your "releaseTagPattern" is "{projectName}@{version}" and you have the following tags for project "my-lib", which uses semver:
+       * - my-lib@1.2.4-beta.1
+       * - my-lib@1.2.4-alpha.1
+       * - my-lib@1.2.3
+       *
+       * If "releaseTagPatternStrictPreid" is set to true and you run:
+       * - `nx release --preid beta`, the git tag "my-lib@1.2.4-beta.1" will be resolved.
+       * - `nx release --preid alpha`, the git tag "my-lib@1.2.4-alpha.1" will be resolved.
+       * - `nx release` (no preid), the git tag "my-lib@1.2.3" will be resolved.
+       *
+       * If "releaseTagPatternStrictPreid" is set to false, the git tag "my-lib@1.2.4-beta.1" will always be resolved as the latest tag that matches the pattern,
+       * regardless of any preid which gets passed to nx release.
+       *
+       * NOTE: This feature was added in a minor version and is therefore set to false by default, but this may change in a future major version.
+       */
+      releaseTagPatternStrictPreid?: boolean;
+      /**
        * Enables using version plans as a specifier source for versioning and
        * to determine changes for changelog generation.
        */
@@ -455,6 +482,33 @@ export interface NxReleaseConfiguration {
    * - Setting it to an array of strings will cause us to check all branches WHEN the current branch matches one of the strings in the array. Glob patterns are supported.
    */
   releaseTagPatternCheckAllBranchesWhen?: boolean | string[];
+  /**
+   * By default, we will use semver when searching through the tags to find the latest matching tag.
+   *
+   * - Setting this to true will cause us to use semver to match the version
+   * - Setting this to false will cause us to not use semver to match the version allowing for non-semver versions
+   */
+  releaseTagPatternRequireSemver?: boolean;
+  /**
+   * When set to true and multiple tags match your configured "releaseTagPattern", the git tag matching logic will strictly prefer the tag which contain a semver preid which matches the one
+   * given to the nx release invocation.
+   *
+   * For example, let's say your "releaseTagPattern" is "{projectName}@{version}" and you have the following tags for project "my-lib", which uses semver:
+   * - my-lib@1.2.4-beta.1
+   * - my-lib@1.2.4-alpha.1
+   * - my-lib@1.2.3
+   *
+   * If "releaseTagPatternStrictPreid" is set to true and you run:
+   * - `nx release --preid beta`, the git tag "my-lib@1.2.4-beta.1" will be resolved.
+   * - `nx release --preid alpha`, the git tag "my-lib@1.2.4-alpha.1" will be resolved.
+   * - `nx release` (no preid), the git tag "my-lib@1.2.3" will be resolved.
+   *
+   * If "releaseTagPatternStrictPreid" is set to false, the git tag "my-lib@1.2.4-beta.1" will always be resolved as the latest tag that matches the pattern,
+   * regardless of any preid which gets passed to nx release.
+   *
+   * NOTE: This feature was added in a minor version and is therefore set to false by default, but this may change in a future major version.
+   */
+  releaseTagPatternStrictPreid?: boolean;
   /**
    * Enable and configure automatic git operations as part of the release
    */

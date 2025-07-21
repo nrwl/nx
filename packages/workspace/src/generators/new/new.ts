@@ -64,7 +64,9 @@ export async function newGenerator(tree: Tree, opts: Schema) {
 
   return async () => {
     if (!options.skipInstall) {
-      const pmc = getPackageManagerCommand(options.packageManager as PackageManager);
+      const pmc = getPackageManagerCommand(
+        options.packageManager as PackageManager
+      );
       if (pmc.preInstall) {
         execSync(pmc.preInstall, {
           cwd: joinPathFragments(tree.root, options.directory),

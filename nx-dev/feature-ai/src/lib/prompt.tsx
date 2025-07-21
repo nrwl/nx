@@ -6,10 +6,10 @@ import {
   PlusIcon,
   StopIcon,
 } from '@heroicons/react/24/outline';
-import { Button } from '@nx/nx-dev/ui-common';
+import { Button } from '@nx/nx-dev-ui-common';
 import Textarea from 'react-textarea-autosize';
 import { ChatRequestOptions } from 'ai';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 
 export function Prompt({
   isGenerating,

@@ -1,12 +1,5 @@
 import { getGithubSlugOrNull } from '../../utils/git-utils';
-import {
-  removeVersionModifier,
-  isOldNxCloudVersion,
-  getNxCloudVersion,
-  versionIsValid,
-  getURLifShortenFailed,
-  repoUsesGithub,
-} from './url-shorten';
+import { getURLifShortenFailed, repoUsesGithub } from './url-shorten';
 import { getCloudUrl } from './get-cloud-options';
 
 jest.mock('axios', () => ({
@@ -22,92 +15,6 @@ jest.mock('./get-cloud-options', () => ({
 }));
 
 describe('URL shorten various functions', () => {
-  describe('isOldNxCloudVersion', () => {
-    it('should compare versions of the same format', () => {
-      expect(isOldNxCloudVersion('2407.11.5')).toBe(false);
-      expect(isOldNxCloudVersion('2406.12.5')).toBe(false);
-      expect(isOldNxCloudVersion('2406.11.6')).toBe(false);
-      expect(isOldNxCloudVersion('2406.11.5')).toBe(false);
-      expect(isOldNxCloudVersion('2406.11.4')).toBe(true);
-
-      expect(isOldNxCloudVersion('2307.13.12')).toBe(true);
-      expect(isOldNxCloudVersion('2406.10.55')).toBe(true);
-      expect(isOldNxCloudVersion('2406.11.1')).toBe(true);
-    });
-
-    it('should compare versions of different format', () => {
-      expect(isOldNxCloudVersion('2025.11.5')).toBe(false);
-      expect(isOldNxCloudVersion('2026.12.5')).toBe(false);
-    });
-  });
-
-  describe('removeVersionModifier', () => {
-    it('should return the version without the modifier', () => {
-      expect(removeVersionModifier('2406.13.5.hotfix2')).toBe('2406.13.5');
-      expect(removeVersionModifier('2024.07.01.beta')).toBe('2024.07.01');
-      expect(removeVersionModifier('2023.12.25.alpha1')).toBe('2023.12.25');
-    });
-
-    it('should return the original version if there is no modifier', () => {
-      expect(removeVersionModifier('2406.13.5')).toBe('2406.13.5');
-      expect(removeVersionModifier('2024.07.01')).toBe('2024.07.01');
-      expect(removeVersionModifier('2023.12.25')).toBe('2023.12.25');
-    });
-
-    it('should handle versions with multiple dots and hyphens correctly', () => {
-      expect(removeVersionModifier('2406-13-5-hotfix2')).toBe('2406.13.5');
-      expect(removeVersionModifier('2024.07.01-patch')).toBe('2024.07.01');
-      expect(removeVersionModifier('2023.12.25.alpha-1')).toBe('2023.12.25');
-    });
-  });
-
-  describe('getNxCloudVersion', () => {
-    const axios = require('axios');
-    const apiUrl = 'https://cloud.nx.app';
-
-    it('should return the version if the response is successful', async () => {
-      const mockVersion = '2406.13.5.hotfix2';
-      axios.get.mockResolvedValue({
-        data: { version: mockVersion },
-      });
-
-      const version = await getNxCloudVersion(apiUrl);
-      expect(version).toBe('2406.13.5');
-      expect(axios.get).toHaveBeenCalledWith(
-        `${apiUrl}/nx-cloud/system/version`
-      );
-    });
-
-    it('should return null if the request fails', async () => {
-      const mockError = new Error('Request failed');
-      axios.get.mockRejectedValue(mockError);
-      const version = await getNxCloudVersion(apiUrl);
-      expect(version).toBeNull();
-    });
-  });
-
-  describe('versionIsValid', () => {
-    it('should return true for valid versions with build numbers', () => {
-      expect(versionIsValid('2407.01.100')).toBe(true);
-      expect(versionIsValid('2312.25.50')).toBe(true);
-    });
-
-    it('should return false for versions without build numbers', () => {
-      expect(versionIsValid('2407.01')).toBe(false); // Missing build number
-      expect(versionIsValid('2312.25')).toBe(false); // Missing build number
-    });
-
-    it('should return false for invalid versions', () => {
-      expect(versionIsValid('240701.100')).toBe(false); // No periods separating parts
-      expect(versionIsValid('2312.250.50')).toBe(false); // Day part has three digits
-      expect(versionIsValid('2401.1.100')).toBe(false); // Day part has one digit
-      expect(versionIsValid('23.12.26')).toBe(false); // YearMonth part has two digits
-      expect(versionIsValid('2312.26.')).toBe(false); // Extra period at the end
-      expect(versionIsValid('.2312.26.100')).toBe(false); // Extra period at the beginning
-      expect(versionIsValid('2312.26.extra')).toBe(false); // Non-numeric build number
-    });
-  });
-
   describe('getURLifShortenFailed', () => {
     const apiUrl = 'https://example.com';
     const source = 'source-test';
@@ -143,7 +50,7 @@ describe('URL shorten various functions', () => {
       );
 
       expect(result).toBe(
-        `${apiUrl}/setup/connect-workspace/github/select&source=${source}`
+        `${apiUrl}/setup/connect-workspace/github/select?source=${source}`
       );
     });
 

@@ -1,4 +1,4 @@
-import type { FederationRuntimePlugin } from '@module-federation/enhanced/runtime';
+import type { ModuleFederationRuntimePlugin } from '@module-federation/enhanced/runtime';
 
 const runtimeStore: {
   name?: string;
@@ -14,7 +14,7 @@ if (process.env.NX_MF_DEV_REMOTES) {
     .NX_MF_DEV_REMOTES as unknown as string[];
 }
 
-const nxRuntimeLibraryControlPlugin: () => FederationRuntimePlugin =
+const nxRuntimeLibraryControlPlugin: () => ModuleFederationRuntimePlugin =
   function () {
     return {
       name: 'nx-runtime-library-control-plugin',

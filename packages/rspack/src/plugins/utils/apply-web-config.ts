@@ -1,25 +1,26 @@
+import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import {
-  type RspackPluginInstance,
   type Configuration,
+  type RspackPluginInstance,
   type RuleSetRule,
-  LightningCssMinimizerRspackPlugin,
-  DefinePlugin,
   CssExtractRspackPlugin,
+  DefinePlugin,
   EnvironmentPlugin,
-  RspackOptionsNormalized,
   HtmlRspackPlugin,
+  LightningCssMinimizerRspackPlugin,
+  RspackOptionsNormalized,
 } from '@rspack/core';
-import { WriteIndexHtmlPlugin } from '../write-index-html-plugin';
-import { instantiateScriptPlugins } from './instantiate-script-plugins';
 import { join, resolve } from 'path';
+import { WriteIndexHtmlPlugin } from '../write-index-html-plugin';
 import { getOutputHashFormat } from './hash-format';
-import { normalizeExtraEntryPoints } from './normalize-entry';
+import { instantiateScriptPlugins } from './instantiate-script-plugins';
 import {
   getCommonLoadersForCssModules,
   getCommonLoadersForGlobalCss,
   getCommonLoadersForGlobalStyle,
 } from './loaders/stylesheet-loaders';
 import { NormalizedNxAppRspackPluginOptions } from './models';
+import { normalizeExtraEntryPoints } from './normalize-entry';
 
 export function applyWebConfig(
   options: NormalizedNxAppRspackPluginOptions,
@@ -43,7 +44,9 @@ export function applyWebConfig(
     ? join(options.root, options.index)
     : join(
         options.root,
-        options.projectGraph.nodes[options.projectName].data.sourceRoot,
+        getProjectSourceRoot(
+          options.projectGraph.nodes[options.projectName].data
+        ),
         'index.html'
       );
   options.styles ??= [];
@@ -167,7 +170,7 @@ export function applyWebConfig(
             sassOptions: {
               fiber: false,
               precision: 8,
-              includePaths,
+              loadPaths: includePaths,
               ...(sassOptions ?? {}),
             },
           },
@@ -234,7 +237,7 @@ export function applyWebConfig(
               fiber: false,
               // bootstrap-sass requires a minimum precision of 8
               precision: 8,
-              includePaths,
+              loadPaths: includePaths,
               ...(sassOptions ?? {}),
             },
           },
@@ -304,7 +307,7 @@ export function applyWebConfig(
               fiber: false,
               // bootstrap-sass requires a minimum precision of 8
               precision: 8,
-              includePaths,
+              loadPaths: includePaths,
               ...(sassOptions ?? {}),
             },
           },

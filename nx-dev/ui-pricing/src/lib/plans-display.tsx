@@ -2,9 +2,9 @@
 import { ReactElement } from 'react';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
-import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
+import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
 import Link from 'next/link';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 
 export function PlansDisplay(): ReactElement {
   return (
@@ -87,7 +87,7 @@ export function PlansDisplay(): ReactElement {
                       className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                     />
                     <Link
-                      href="/nx-cloud#ai-for-your-ci"
+                      href="/ai"
                       target="_blank"
                       title="Check our AI integrations and how to use them"
                       onClick={() =>
@@ -226,7 +226,7 @@ export function PlansDisplay(): ReactElement {
                     className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                   />
                   <Link
-                    href="/nx-cloud#ai-for-your-ci"
+                    href="/ai"
                     target="_blank"
                     title="Check our AI integrations and how to use them"
                     onClick={() =>

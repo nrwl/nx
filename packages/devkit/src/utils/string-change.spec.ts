@@ -219,7 +219,7 @@ describe('applyChangesToString', () => {
           text: 'a',
         },
       ]);
-    }).toThrowError();
+    }).toThrow();
   });
 
   it('should throw an error if a negative number is passed', () => {
@@ -233,6 +233,6 @@ describe('applyChangesToString', () => {
           text: 'a',
         },
       ]);
-    }).toThrowError();
+    }).toThrow();
   });
 });

@@ -1,4 +1,4 @@
-import { MenuItem } from '@nx/nx-dev/models-menu';
+import { MenuItem } from '@nx/nx-dev-models-menu';
 import { outputFileSync } from 'fs-extra';
 import {
   bold,

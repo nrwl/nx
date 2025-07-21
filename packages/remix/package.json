@@ -29,11 +29,15 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
-    "@nx/react": "file:../react",
+    "@nx/devkit": "workspace:*",
+    "@nx/js": "workspace:*",
+    "@nx/react": "workspace:*",
+    "@nx/workspace": "workspace:*",
     "tslib": "^2.3.1",
     "@phenomnomnominal/tsquery": "~5.0.1"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "peerDependencies": {
     "@remix-run/dev": "^2.14.0"
@@ -42,7 +46,15 @@
     "access": "public"
   },
   "exports": {
-    ".": "./index.js",
+    ".": {
+      "defautl": "./index.js",
+      "types": "./index.d.ts"
+    },
+    "./package.json": "./package.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./migrations.json": "./migrations.json",
+    "./generators": "./generators.js",
     "./plugin": "./plugin.js",
     "./plugins/component-testing": "./plugins/component-testing/index.js"
   }

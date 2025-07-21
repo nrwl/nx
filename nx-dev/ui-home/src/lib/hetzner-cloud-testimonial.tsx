@@ -4,16 +4,16 @@ import {
   ButtonLink,
   SectionDescription,
   SectionHeading,
-} from '@nx/nx-dev/ui-common';
-import { HetznerCloudIcon } from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-common';
+import { HetznerCloudIcon } from '@nx/nx-dev-ui-icons';
 import Link from 'next/link';
-import { cx } from '@nx/nx-dev/ui-primitives';
-import { MovingBorder } from '@nx/nx-dev/ui-animations';
+import { cx } from '@nx/nx-dev-ui-primitives';
+import { MovingBorder } from '@nx/nx-dev-ui-animations';
 import { motion } from 'framer-motion';
 import { PlayIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
-import { VideoModal } from '@nx/nx-dev/ui-common/src/lib/video-modal';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { VideoModal } from '@nx/nx-dev-ui-common/src/lib/video-modal';
 
 function PlayButton({
   className,

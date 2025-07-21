@@ -1,0 +1,24 @@
+{
+  "name": "@nx/nx-dev-data-access-documents",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "private": true,
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./node-only": {
+      "import": "./src/node.index.ts",
+      "default": "./src/node.index.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@nx/devkit": "workspace:*",
+    "@nx/nx-dev-models-document": "workspace:*",
+    "@nx/nx-dev-models-package": "workspace:*",
+    "@nx/nx-dev-ui-markdoc": "workspace:*"
+  },
+  "devDependencies": {}
+}

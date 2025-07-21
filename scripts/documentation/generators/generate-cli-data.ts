@@ -1,9 +1,7 @@
 import * as chalk from 'chalk';
 import { readFileSync } from 'fs';
-import { readJsonSync } from 'fs-extra';
 import { codeBlock, h1, h2, h3, lines } from 'markdown-factory';
 import { join } from 'path';
-import { register as registerTsConfigPaths } from 'tsconfig-paths';
 
 import { examples } from '../../../packages/nx/src/command-line/examples';
 import {
@@ -38,11 +36,6 @@ export async function generateCliDocumentation(
    * are just statically generating documentation for the current execution.
    */
   process.env.NX_GENERATE_DOCS_PROCESS = 'true';
-
-  const config = readJsonSync(
-    join(__dirname, '../../../tsconfig.base.json')
-  ).compilerOptions;
-  registerTsConfigPaths(config);
 
   console.log(`\n${chalk.blue('i')} Generating Documentation for Nx Commands`);
 

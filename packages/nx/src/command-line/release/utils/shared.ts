@@ -33,9 +33,14 @@ export interface VersionDataEntry {
   }[];
 }
 
-function isPrerelease(version: string): boolean {
+export function isPrerelease(version: string): boolean {
   // prerelease returns an array of matching prerelease "components", or null if the version is not a prerelease
-  return prerelease(version) !== null;
+  try {
+    return prerelease(version) !== null;
+  } catch {
+    // If non-semver, prerelease will error. Prevent this from erroring the command
+    return false;
+  }
 }
 
 export class ReleaseVersion {

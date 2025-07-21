@@ -234,10 +234,15 @@ export async function createNxReleaseConfig(
 
   const defaultFixedReleaseTagPattern = 'v{version}';
   /**
-   * TODO(v21): in v21, make it so that this pattern is used by default when any custom groups are used
+   * TODO(v22): in v22, make it so that this pattern is used by default when any custom groups are used
    */
   const defaultFixedGroupReleaseTagPattern = '{releaseGroupName}-v{version}';
   const defaultIndependentReleaseTagPattern = '{projectName}@{version}';
+  const defaultReleaseTagPatternRequireSemver = true;
+  /**
+   * TODO(v22): in v22, set this to true by default
+   */
+  const defaultReleaseTagPatternStrictPreid = false;
 
   const workspaceProjectsRelationship =
     userConfig.projectsRelationship || 'fixed';
@@ -341,6 +346,12 @@ export async function createNxReleaseConfig(
         : defaultFixedReleaseTagPattern),
     releaseTagPatternCheckAllBranchesWhen:
       userConfig.releaseTagPatternCheckAllBranchesWhen ?? undefined,
+    releaseTagPatternRequireSemver:
+      userConfig.releaseTagPatternRequireSemver ??
+      defaultReleaseTagPatternRequireSemver,
+    releaseTagPatternStrictPreid:
+      userConfig.releaseTagPatternStrictPreid ??
+      defaultReleaseTagPatternStrictPreid,
     conventionalCommits: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
     versionPlans: (userConfig.versionPlans ||
       false) as NxReleaseConfig['versionPlans'],
@@ -348,6 +359,12 @@ export async function createNxReleaseConfig(
 
   const groupProjectsRelationship =
     userConfig.projectsRelationship || WORKSPACE_DEFAULTS.projectsRelationship;
+  const groupReleaseTagPatternRequireSemver =
+    userConfig.releaseTagPatternRequireSemver ??
+    WORKSPACE_DEFAULTS.releaseTagPatternRequireSemver;
+  const groupReleaseTagPatternStrictPreid =
+    userConfig.releaseTagPatternStrictPreid ??
+    defaultReleaseTagPatternStrictPreid;
 
   const GROUP_DEFAULTS: Omit<NxReleaseConfig['groups'][string], 'projects'> = {
     projectsRelationship: groupProjectsRelationship,
@@ -388,6 +405,8 @@ export async function createNxReleaseConfig(
         : WORKSPACE_DEFAULTS.releaseTagPattern,
     releaseTagPatternCheckAllBranchesWhen:
       userConfig.releaseTagPatternCheckAllBranchesWhen ?? undefined,
+    releaseTagPatternRequireSemver: groupReleaseTagPatternRequireSemver,
+    releaseTagPatternStrictPreid: groupReleaseTagPatternStrictPreid,
     versionPlans: false,
   };
 
@@ -541,6 +560,9 @@ export async function createNxReleaseConfig(
             // If the user has set something custom for releaseTagPattern at the top level, respect it for the implicit default group
             releaseTagPattern:
               userConfig.releaseTagPattern || GROUP_DEFAULTS.releaseTagPattern,
+            releaseTagPatternRequireSemver:
+              userConfig.releaseTagPatternRequireSemver ??
+              GROUP_DEFAULTS.releaseTagPatternRequireSemver,
             // Directly inherit the root level config for projectChangelogs, if set
             changelog: rootChangelogConfig.projectChangelogs || false,
             versionPlans: rootVersionPlansConfig || GROUP_DEFAULTS.versionPlans,
@@ -648,6 +670,14 @@ export async function createNxReleaseConfig(
         releaseGroup.releaseTagPatternCheckAllBranchesWhen ??
         userConfig.releaseTagPatternCheckAllBranchesWhen ??
         undefined,
+      releaseTagPatternRequireSemver:
+        releaseGroup.releaseTagPatternRequireSemver ??
+        userConfig.releaseTagPatternRequireSemver ??
+        defaultReleaseTagPatternRequireSemver,
+      releaseTagPatternStrictPreid:
+        releaseGroup.releaseTagPatternStrictPreid ??
+        userConfig.releaseTagPatternStrictPreid ??
+        defaultReleaseTagPatternStrictPreid,
       versionPlans: releaseGroup.versionPlans ?? rootVersionPlansConfig,
     };
 
@@ -743,6 +773,10 @@ export async function createNxReleaseConfig(
       releaseTagPattern: WORKSPACE_DEFAULTS.releaseTagPattern,
       releaseTagPatternCheckAllBranchesWhen:
         WORKSPACE_DEFAULTS.releaseTagPatternCheckAllBranchesWhen,
+      releaseTagPatternRequireSemver:
+        WORKSPACE_DEFAULTS.releaseTagPatternRequireSemver,
+      releaseTagPatternStrictPreid:
+        WORKSPACE_DEFAULTS.releaseTagPatternStrictPreid,
       git: rootGitConfig,
       version: rootVersionConfig,
       changelog: rootChangelogConfig,

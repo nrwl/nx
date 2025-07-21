@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "astro": "npx astro",
-    "build": "npx astro check && npx astro build",
+    "build-old": "npx astro check && npx astro build",
     "dev": "npx astro dev",
     "preview": "npx astro preview",
     "serve": "npx astro dev --port 4200"

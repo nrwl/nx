@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Popover } from '@nx/graph/ui-common';
+import { Popover } from '@nx/graph-ui-common';
 
 export interface MigrationSettingsPanelProps {
   createCommits: boolean;

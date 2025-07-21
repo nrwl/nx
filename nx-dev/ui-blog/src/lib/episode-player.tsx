@@ -6,7 +6,7 @@ import {
   ApplePodcastsIcon,
   IHeartRadioIcon,
   SpotifyIcon,
-} from '@nx/nx-dev/ui-icons';
+} from '@nx/nx-dev-ui-icons';
 import Link from 'next/link';
 
 export function EpisodePlayer({

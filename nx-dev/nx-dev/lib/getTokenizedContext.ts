@@ -7,11 +7,10 @@ import {
   getUserQuery,
   MIN_CONTENT_LENGTH,
   PageSection,
-} from '@nx/nx-dev/util-ai';
-import { getOpenAI, getSupabaseClient } from '@nx/nx-dev/util-ai';
+} from '@nx/nx-dev-util-ai';
+import { getOpenAI, getSupabaseClient } from '@nx/nx-dev-util-ai';
 import { SupabaseClient } from '@supabase/supabase-js';
 import GPT3Tokenizer from 'gpt3-tokenizer';
-import { NextRequest } from 'next/server';
 import OpenAI from 'openai';
 
 const supabaseUrl = process.env['NX_NEXT_PUBLIC_SUPABASE_URL'];

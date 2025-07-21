@@ -77,7 +77,7 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "nx watch --projects=docs,tutorial -- nx run-many -t=copy-docs,copy-tutorial -p nx-dev",
+          "nx watch --projects=docs -- nx run-many -t=copy-docs -p nx-dev",
           "nx run nx-dev:serve"
         ],
         "parallel": true
@@ -89,7 +89,7 @@
     },
     "serve": {
       "executor": "@nx/next:server",
-      "dependsOn": ["copy-docs", "copy-tutorial"],
+      "dependsOn": ["copy-docs"],
       "options": {
         "buildTarget": "nx-dev:build-base",
         "dev": true
@@ -119,10 +119,6 @@
           {
             "command": "nx copy-docs nx-dev",
             "description": "Copy generated docs to build output"
-          },
-          {
-            "command": "nx copy-tutorial nx-dev",
-            "description": "Copy tutorial to build output"
           },
           {
             "command": "npx ts-node -P scripts/tsconfig.scripts.json scripts/documentation/plugin-quality-indicators.ts",

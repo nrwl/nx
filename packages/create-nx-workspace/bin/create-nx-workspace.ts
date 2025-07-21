@@ -243,6 +243,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
     nxVersion
   ) as yargs.Argv<Arguments>;
 
+let rawArgs: Arguments;
 async function main(parsedArgs: yargs.Arguments<Arguments>) {
   output.log({
     title: `Creating your v${nxVersion} workspace.`,
@@ -250,7 +251,8 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
 
   const workspaceInfo = await createWorkspace<Arguments>(
     parsedArgs.preset,
-    parsedArgs
+    parsedArgs,
+    rawArgs
   );
 
   await recordStat({
@@ -261,6 +263,8 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       messages.codeOfSelectedPromptMessage('setupCI'),
       messages.codeOfSelectedPromptMessage('setupNxCloud'),
       parsedArgs.nxCloud,
+      rawArgs.nxCloud,
+      workspaceInfo.pushedToVcs,
     ],
   });
 
@@ -286,6 +290,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
 async function normalizeArgsMiddleware(
   argv: yargs.Arguments<Arguments>
 ): Promise<void> {
+  rawArgs = { ...argv };
   output.log({
     title:
       "Let's create a new workspace [https://nx.dev/getting-started/intro]",

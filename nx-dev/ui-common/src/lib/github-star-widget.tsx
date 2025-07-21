@@ -1,4 +1,4 @@
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 import type { ReactElement } from 'react';
 
 export const GithubIcon = (props: any) => {

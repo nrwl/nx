@@ -4,7 +4,7 @@ import {
   newProject,
   runCLI,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Next.js Storybook', () => {
   const appName = uniq('app');

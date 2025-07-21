@@ -4,13 +4,14 @@
   "sourceRoot": "packages/vite",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "dependsOn": ["^build-base"],
-      "executor": "@nx/js:swc",
+    "build": {
+      "outputs": ["{workspaceRoot}/dist/packages/vite/README.md"],
+      "command": "node ./scripts/copy-readme.js vite"
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
-        "outputPath": "build/packages/vite",
-        "tsConfig": "packages/vite/tsconfig.lib.json",
-        "main": "packages/vite/index.ts",
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/vite",
@@ -45,12 +46,7 @@
             "output": "/"
           }
         ]
-      },
-      "outputs": ["{options.outputPath}"]
-    },
-    "build": {
-      "outputs": ["{workspaceRoot}/build/packages/vite/README.md"],
-      "command": "node ./scripts/copy-readme.js vite"
+      }
     }
   }
 }

@@ -8,7 +8,7 @@ import {
   updateJson,
   isVerboseE2ERun,
   readFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { spawn } from 'child_process';
 import { join } from 'path';
 import { writeFileSync, mkdtempSync } from 'fs';

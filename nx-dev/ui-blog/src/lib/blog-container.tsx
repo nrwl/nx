@@ -1,5 +1,5 @@
 'use client';
-import { BlogPostDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
+import { BlogPostDataEntry } from '@nx/nx-dev-data-access-documents/node-only';
 import { MoreBlogs } from './more-blogs';
 import { FeaturedBlogs } from './featured-blogs';
 import { useEffect, useMemo, useState } from 'react';

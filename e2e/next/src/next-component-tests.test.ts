@@ -2,11 +2,12 @@ import {
   cleanupProject,
   createFile,
   newProject,
+  packageInstall,
   runCLI,
   runE2ETests,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('NextJs Component Testing', () => {
   beforeAll(() => {
@@ -109,6 +110,9 @@ function addBabelSupport(path: string) {
       'nxComponentTestingPreset(__filename, {compiler: "babel"})'
     );
   });
+
+  // Install babel-plugin-istanbul needed for code coverage
+  packageInstall('babel-plugin-istanbul', null, '7.0.0');
 
   //  added needed .babelrc file with defaults
   createFile(

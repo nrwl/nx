@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { useHeadingsObserver } from './use-headings-observer';
-import { ProcessedDocument } from '@nx/nx-dev/models-document';
+import { ProcessedDocument } from '@nx/nx-dev-models-document';
 
 interface Heading {
   id: string;

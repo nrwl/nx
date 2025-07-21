@@ -1,4 +1,4 @@
-import { CallToAction, DefaultLayout } from '@nx/nx-dev/ui-common';
+import { CallToAction, DefaultLayout } from '@nx/nx-dev-ui-common';
 import { NextSeo } from 'next-seo';
 import {
   CiForMonorepos,
@@ -9,8 +9,8 @@ import {
   Statistics,
   TeamAndCommunity,
   WorkBetterAchieveMoreShipQuicker,
-} from '@nx/nx-dev/ui-home';
-import { contactButton } from '../lib/components/headerCtaConfigs';
+} from '@nx/nx-dev-ui-home';
+import { contactButton } from '../lib/header-cta.configs';
 
 export default function Index(): JSX.Element {
   const headerCTAConfig = [contactButton];

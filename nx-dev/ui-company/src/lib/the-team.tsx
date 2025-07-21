@@ -1,4 +1,4 @@
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 import { ReactElement } from 'react';
 
 const teamMembers = [
@@ -6,6 +6,11 @@ const teamMembers = [
     name: 'Altan Stalker',
     title: 'Architect',
     imageUrl: 'altan-stalker.avif',
+  },
+  {
+    name: 'Andrew Glidden',
+    title: 'Account Executive',
+    imageUrl: 'andrew-glidden.avif',
   },
   {
     name: 'Austin Fahsl',
@@ -51,6 +56,11 @@ const teamMembers = [
     name: 'Emily Xiong',
     title: 'Senior Engineer',
     imageUrl: 'emily-xiong.avif',
+  },
+  {
+    name: 'Dillon Chanis',
+    title: 'Senior Engineer',
+    imageUrl: 'dillon-chanis.avif',
   },
   {
     name: 'Drew Romney',
@@ -116,11 +126,6 @@ const teamMembers = [
     name: 'Juri Strumpflohner',
     title: 'Director of Developer Experience',
     imageUrl: 'juri-strumpflohner.avif',
-  },
-  {
-    name: 'Katerina Skroumpelou',
-    title: 'Senior Engineer',
-    imageUrl: 'katerina-skroumpelou.avif',
   },
   {
     name: 'Leosvel Perez Espinosa',
@@ -198,9 +203,9 @@ const teamMembers = [
     imageUrl: 'steven-nance.avif',
   },
   {
-    name: 'Whitney Loy',
-    title: 'Operations Manager',
-    imageUrl: 'whitney-loy.avif',
+    name: 'Szymon Wojciechowski',
+    title: 'Senior Engineer',
+    imageUrl: 'szymon-wojciechowski.avif',
   },
   {
     name: 'Zack DeRose',

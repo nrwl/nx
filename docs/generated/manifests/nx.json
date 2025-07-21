@@ -413,14 +413,14 @@
         "file": "",
         "itemList": [
           {
-            "id": "affected",
-            "name": "Run Only Tasks Affected by a PR",
-            "description": "",
+            "id": "self-healing-ci",
+            "name": "AI-Powered Self-Healing CI",
+            "description": "Learn how Nx Cloud Self-Healing CI uses AI to automatically detect, analyze, and fix CI failures, eliminating the need to babysit PRs.",
             "mediaImage": "",
             "file": "",
             "itemList": [],
             "isExternal": true,
-            "path": "/ci/features/affected",
+            "path": "/ci/features/self-healing-ci",
             "tags": []
           },
           {
@@ -443,6 +443,17 @@
             "itemList": [],
             "isExternal": true,
             "path": "/ci/features/distribute-task-execution",
+            "tags": []
+          },
+          {
+            "id": "affected",
+            "name": "Run Only Tasks Affected by a PR",
+            "description": "",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [],
+            "isExternal": true,
+            "path": "/ci/features/affected",
             "tags": []
           },
           {
@@ -595,14 +606,14 @@
     "file": "",
     "itemList": [
       {
-        "id": "affected",
-        "name": "Run Only Tasks Affected by a PR",
-        "description": "",
+        "id": "self-healing-ci",
+        "name": "AI-Powered Self-Healing CI",
+        "description": "Learn how Nx Cloud Self-Healing CI uses AI to automatically detect, analyze, and fix CI failures, eliminating the need to babysit PRs.",
         "mediaImage": "",
         "file": "",
         "itemList": [],
         "isExternal": true,
-        "path": "/ci/features/affected",
+        "path": "/ci/features/self-healing-ci",
         "tags": []
       },
       {
@@ -625,6 +636,17 @@
         "itemList": [],
         "isExternal": true,
         "path": "/ci/features/distribute-task-execution",
+        "tags": []
+      },
+      {
+        "id": "affected",
+        "name": "Run Only Tasks Affected by a PR",
+        "description": "",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/ci/features/affected",
         "tags": []
       },
       {
@@ -665,15 +687,15 @@
     "path": "/features/ci-features",
     "tags": []
   },
-  "/ci/features/affected": {
-    "id": "affected",
-    "name": "Run Only Tasks Affected by a PR",
-    "description": "",
+  "/ci/features/self-healing-ci": {
+    "id": "self-healing-ci",
+    "name": "AI-Powered Self-Healing CI",
+    "description": "Learn how Nx Cloud Self-Healing CI uses AI to automatically detect, analyze, and fix CI failures, eliminating the need to babysit PRs.",
     "mediaImage": "",
     "file": "",
     "itemList": [],
     "isExternal": true,
-    "path": "/ci/features/affected",
+    "path": "/ci/features/self-healing-ci",
     "tags": []
   },
   "/ci/features/remote-cache": {
@@ -696,6 +718,17 @@
     "itemList": [],
     "isExternal": true,
     "path": "/ci/features/distribute-task-execution",
+    "tags": []
+  },
+  "/ci/features/affected": {
+    "id": "affected",
+    "name": "Run Only Tasks Affected by a PR",
+    "description": "",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/ci/features/affected",
     "tags": []
   },
   "/ci/features/dynamic-agents": {

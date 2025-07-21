@@ -9,7 +9,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { execSync } from 'child_process';
 import { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
 import type { PackageJson } from 'nx/src/utils/package-json';

@@ -1,4 +1,4 @@
-import { PodcastDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
+import { PodcastDataEntry } from '@nx/nx-dev-data-access-documents/node-only';
 import { PodcastListItem } from './podcast-list-item';
 
 export interface PodcastListProps {

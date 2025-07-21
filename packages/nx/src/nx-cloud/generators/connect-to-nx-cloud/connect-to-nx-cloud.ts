@@ -44,7 +44,7 @@ function getNxInitDate(): string | null {
     const nxInitDate = new Date(nxInitIso);
     return nxInitDate.toISOString();
   } catch (e) {
-    return null;
+    return new Date().toISOString();
   }
 }
 
@@ -103,14 +103,10 @@ export async function printSuccessMessage(
     usesGithub
   );
   output.note({
-    title: `Your Nx Cloud workspace is ready.`,
+    title: `Your Self-Healing CI and Remote Caching setup is almost complete`,
     bodyLines: [
-      `To claim it, connect it to your Nx Cloud account:`,
-      `- Commit and push your changes.`,
-      `- Create a pull request for the changes.`,
-      `- Go to the following URL to connect your workspace to Nx Cloud:`,
-      '',
-      `${connectCloudUrl}`,
+      `1. Commit your changes and push a pull request to your repository.`,
+      `2. Go to Nx Cloud and finish the setup: ${connectCloudUrl}`,
     ],
   });
   return connectCloudUrl;

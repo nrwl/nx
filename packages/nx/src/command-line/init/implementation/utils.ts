@@ -19,7 +19,7 @@ import { nxVersion } from '../../../utils/versions';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { printSuccessMessage } from '../../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 import { repoUsesGithub } from '../../../nx-cloud/utilities/url-shorten';
-import { connectWorkspaceToCloud } from '../../connect/connect-to-nx-cloud';
+import { connectWorkspaceToCloud } from '../../nx-cloud/connect/connect-to-nx-cloud';
 import { deduceDefaultBase } from './deduce-default-base';
 import { getRunNxBaseCommand } from '../../../utils/child-process';
 
@@ -333,18 +333,12 @@ export function printFinalMessage({
   learnMoreLink?: string;
   appendLines?: string[];
 }): void {
-  const pmc = getPackageManagerCommand();
-
   output.success({
     title: '🎉 Done!',
     bodyLines: [
-      `- Run "${getRunNxBaseCommand(
-        pmc
-      )} run-many -t build" to run the build target for every project in the workspace. Run it again to replay the cached computation. https://nx.dev/features/cache-task-results`,
-      `- Run "${getRunNxBaseCommand(
-        pmc
-      )} graph" to see the graph of projects and tasks in your workspace. https://nx.dev/core-features/explore-graph`,
-      learnMoreLink ? `- Learn more at ${learnMoreLink}.` : undefined,
+      `- Learn more about what to do next at ${
+        learnMoreLink ?? 'https://nx.dev/getting-started/adding-to-existing'
+      }`,
       ...(appendLines ?? []),
     ].filter(Boolean),
   });
