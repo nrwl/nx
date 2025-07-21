@@ -28,7 +28,6 @@
   "main": "./index.js",
   "types": "index.d.ts",
   "dependencies": {
-    "@nx/detox": "workspace:*",
     "@nx/devkit": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/js": "workspace:*",
@@ -41,6 +40,10 @@
   "peerDependencies": {
     "metro-config": ">= 0.82.0",
     "metro-resolver": ">= 0.82.0"
+  },
+  "optionalDependencies": {
+    "@nx/detox": "workspace:*",
+    "@nx/rollup": "workspace:*"
   },
   "executors": "./executors.json",
   "ng-update": {

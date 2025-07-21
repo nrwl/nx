@@ -11,6 +11,9 @@
   "include": ["**/*.ts", "**/*.json"],
   "references": [
     {
+      "path": "../rollup/tsconfig.lib.json"
+    },
+    {
       "path": "../react/tsconfig.lib.json"
     },
     {

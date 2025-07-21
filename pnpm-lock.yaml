@@ -2820,9 +2820,6 @@ importers:
 
   packages/expo:
     dependencies:
-      '@nx/detox':
-        specifier: workspace:*
-        version: link:../detox
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
@@ -2853,6 +2850,13 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+    optionalDependencies:
+      '@nx/detox':
+        specifier: workspace:*
+        version: link:../detox
+      '@nx/rollup':
+        specifier: workspace:*
+        version: link:../rollup
 
   packages/express:
     dependencies:
@@ -3466,9 +3470,6 @@ importers:
 
   packages/react-native:
     dependencies:
-      '@nx/detox':
-        specifier: workspace:*
-        version: link:../detox
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
@@ -3508,6 +3509,13 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+    optionalDependencies:
+      '@nx/detox':
+        specifier: workspace:*
+        version: link:../detox
+      '@nx/rollup':
+        specifier: workspace:*
+        version: link:../rollup
 
   packages/remix:
     dependencies:
