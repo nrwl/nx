@@ -4,13 +4,7 @@
   "include": [],
   "references": [
     {
-      "path": "../webpack"
-    },
-    {
-      "path": "../web"
-    },
-    {
-      "path": "../rollup"
+      "path": "../detox"
     },
     {
       "path": "../react"
@@ -19,16 +13,10 @@
       "path": "../js"
     },
     {
-      "path": "../jest"
-    },
-    {
       "path": "../eslint"
     },
     {
       "path": "../devkit"
-    },
-    {
-      "path": "../detox"
     },
     {
       "path": "./tsconfig.lib.json"

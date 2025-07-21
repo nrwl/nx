@@ -28,6 +28,7 @@
   "main": "./index.js",
   "types": "index.d.ts",
   "dependencies": {
+    "@nx/detox": "workspace:*",
     "@nx/devkit": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/js": "workspace:*",
