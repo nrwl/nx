@@ -19,6 +19,9 @@
       "path": "../detox"
     },
     {
+      "path": "../rollup"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ]

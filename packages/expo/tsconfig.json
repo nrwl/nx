@@ -4,6 +4,9 @@
   "include": [],
   "references": [
     {
+      "path": "../rollup"
+    },
+    {
       "path": "../react"
     },
     {

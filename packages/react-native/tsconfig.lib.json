@@ -22,6 +22,9 @@
     },
     {
       "path": "../detox/tsconfig.lib.json"
+    },
+    {
+      "path": "../rollup/tsconfig.lib.json"
     }
   ]
 }
