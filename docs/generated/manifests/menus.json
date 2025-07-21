@@ -6802,31 +6802,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Tutorials",
-            "path": "/ci/intro/tutorials",
-            "id": "tutorials",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "Circle CI with Nx",
-                "path": "/ci/intro/tutorials/circle",
-                "id": "circle",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "GitHub Actions with Nx",
-                "path": "/ci/intro/tutorials/github-actions",
-                "id": "github-actions",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
