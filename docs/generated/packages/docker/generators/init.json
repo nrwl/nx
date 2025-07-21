@@ -1,6 +1,6 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init#initGeneratorInternal",
+  "factory": "./src/generators/init/init",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "$id": "Init",
@@ -43,7 +43,7 @@
   "description": "Initialize the `@nx/docker` plugin. **Experimental**: Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.",
   "aliases": ["ng-add"],
   "hidden": true,
-  "implementation": "/packages/docker/src/generators/init/init#initGeneratorInternal.ts",
+  "implementation": "/packages/docker/src/generators/init/init.ts",
   "path": "/packages/docker/src/generators/init/schema.json",
   "type": "generator"
 }

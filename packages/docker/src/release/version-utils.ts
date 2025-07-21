@@ -2,7 +2,7 @@ import { execSync } from 'child_process';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { prompt } from 'enquirer';
-import { ProjectGraphProjectNode, workspaceRoot } from '@nx/devkit';
+import type { ProjectGraphProjectNode } from '@nx/devkit';
 import type { FinalConfigForProject } from 'nx/src/command-line/release/version/release-group-processor';
 import { interpolateVersionPattern } from './version-pattern-utils';
 
@@ -11,11 +11,15 @@ const DEFAULT_VERSION_SCHEMES = {
   hotfix: '{currentDate|YYMM.DD}.{shortCommitSha}-hotfix',
 };
 
-export const getDockerVersionPath = (projectRoot: string) => {
+export const getDockerVersionPath = (
+  workspaceRoot: string,
+  projectRoot: string
+) => {
   return join(workspaceRoot, 'tmp', projectRoot, '.docker-version');
 };
 
 export async function handleDockerVersion(
+  workspaceRoot: string,
   projectGraphNode: ProjectGraphProjectNode,
   finalConfigForProject: FinalConfigForProject
 ) {
@@ -33,6 +37,7 @@ export async function handleDockerVersion(
   );
   const logs = updateProjectVersion(
     newVersion,
+    workspaceRoot,
     projectGraphNode.data.root,
     finalConfigForProject.dockerOptions.repositoryName,
     finalConfigForProject.dockerOptions.registryUrl
@@ -81,6 +86,7 @@ function calculateNewVersion(
 
 function updateProjectVersion(
   newVersion: string,
+  workspaceRoot: string,
   projectRoot: string,
   repositoryName?: string,
   registry?: string
@@ -96,7 +102,10 @@ function updateProjectVersion(
   if (isDryRun) {
     logs.push(`No changes were applied as --dry-run is enabled.`);
   } else {
-    writeFileSync(getDockerVersionPath(projectRoot), fullImageRef);
+    writeFileSync(
+      getDockerVersionPath(workspaceRoot, projectRoot),
+      fullImageRef
+    );
   }
   return logs;
 }

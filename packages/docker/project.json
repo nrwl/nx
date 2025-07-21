@@ -8,13 +8,10 @@
       "command": "node ./scripts/copy-readme.js docker",
       "outputs": ["{workspaceRoot}/build/packages/docker/README.md"]
     },
-    "build-base": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
-        "outputPath": "build/packages/docker",
-        "tsConfig": "packages/docker/tsconfig.lib.json",
-        "main": "packages/docker/index.ts",
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/docker",

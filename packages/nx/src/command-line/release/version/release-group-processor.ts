@@ -12,6 +12,7 @@ import {
   IMPLICIT_DEFAULT_RELEASE_GROUP,
   type NxReleaseConfig,
 } from '../config/config';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { getLatestGitTagForPattern } from '../utils/git';
 import { resolveSemverSpecifierFromPrompt } from '../utils/resolve-semver-specifier';
@@ -766,13 +767,28 @@ export class ReleaseGroupProcessor {
     if (dockerProjects.size === 0) {
       return;
     }
-    const { handleDockerVersion } = await import(
-      // @ts-ignore
-      '@nx/docker/release/version-utils'
-    );
+    let handleDockerVersion: (
+      workspaceRoot: string,
+      projectGraphNode: ProjectGraphProjectNode,
+      finalConfigForProject: FinalConfigForProject
+    ) => Promise<{ newVersion: string; logs: string[] }>;
+    try {
+      const {
+        handleDockerVersion: _handleDockerVersion,
+        // nx-ignore-next-line
+      } = require(// @ts-ignore
+      '@nx/docker/release/version-utils');
+      handleDockerVersion = _handleDockerVersion;
+    } catch (e) {
+      console.error(
+        'Could not find `@nx/docker`. Please run `nx add @nx/docker` before attempting to releas Docker images.'
+      );
+      throw e;
+    }
     for (const [project, finalConfigForProject] of dockerProjects.entries()) {
       const projectNode = this.projectGraph.nodes[project];
       const { newVersion, logs } = await handleDockerVersion(
+        workspaceRoot,
         projectNode,
         finalConfigForProject
       );

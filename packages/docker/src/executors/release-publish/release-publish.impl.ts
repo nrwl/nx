@@ -1,10 +1,14 @@
-import { ExecutorContext, ProjectGraphProjectNode, logger } from '@nx/devkit';
+import {
+  ExecutorContext,
+  ProjectGraphProjectNode,
+  logger,
+  workspaceRoot,
+} from '@nx/devkit';
 import { execSync } from 'child_process';
 import {
   DockerReleasePublishSchema,
   NormalizedDockerReleasePublishSchema,
 } from './schema';
-import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 import { getDockerVersionPath } from '../../release/version-utils';
 
@@ -56,7 +60,7 @@ function findImageReference(
 }
 
 function readVersionFromFile(projectRoot: string) {
-  const versionFilePath = getDockerVersionPath(projectRoot);
+  const versionFilePath = getDockerVersionPath(workspaceRoot, projectRoot);
   if (!existsSync(versionFilePath)) {
     throw new Error(
       `Could not find ${versionFilePath} file. Did you run 'nx release version'?`

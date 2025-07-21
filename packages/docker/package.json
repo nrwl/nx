@@ -32,15 +32,22 @@
       "types": "./src/release/version-utils.d.ts",
       "default": "./src/release/version-utils.js"
     },
-    "./package.json": {
-      "default": "./package.json"
-    }
+    "./package.json": "./package.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./migrations.json": "./migrations.json"
+  },
+  "nx-migrations": {
+    "migrations": "./migrations.json"
   },
   "executors": "./executors.json",
   "generators": "./generators.json",
   "dependencies": {
-    "@nx/devkit": "file:../devkit",
+    "@nx/devkit": "workspace:*",
     "enquirer": "~2.3.6",
     "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   }
 }
