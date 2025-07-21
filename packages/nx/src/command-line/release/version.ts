@@ -186,7 +186,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     /**
      * Run any configured top level pre-version command
      */
-    runPreVersionCommand(nxReleaseConfig.version.preVersionCommand, {
+    runPreVersionCommand(nxReleaseConfig.version?.preVersionCommand, {
       dryRun: args.dryRun,
       verbose: args.verbose,
     });
@@ -196,7 +196,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
      */
     for (const releaseGroup of releaseGroups) {
       runPreVersionCommand(
-        releaseGroup.version.groupPreVersionCommand,
+        releaseGroup.version?.groupPreVersionCommand,
         {
           dryRun: args.dryRun,
           verbose: args.verbose,
@@ -272,7 +272,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     // After all version actions have run, process docker projects as a layer above
     if (
       'docker' in nxReleaseConfig.version &&
-      nxReleaseConfig.version.docker.preVersionCommand
+      nxReleaseConfig.version.docker?.preVersionCommand
     ) {
       /**
        * Run any configured top level docker pre-version command
@@ -294,7 +294,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     for (const releaseGroup of releaseGroups) {
       if (
         'docker' in releaseGroup.version &&
-        releaseGroup.version.docker.groupPreVersionCommand
+        releaseGroup.version.docker?.groupPreVersionCommand
       ) {
         runPreVersionCommand(
           releaseGroup.version.docker.groupPreVersionCommand,
@@ -315,7 +315,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         `Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.`,
       ],
     });
-    await processor.processDockerProjects();
+    await processor.processDockerProjects(args.dockerVersionScheme);
 
     const versionData = processor.getVersionData();
 

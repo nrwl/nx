@@ -52,6 +52,7 @@ export type VersionOptions = NxReleaseArgs &
      */
     generatorOptionsOverrides?: Record<string, unknown>;
     versionActionsOptionsOverrides?: Record<string, unknown>;
+    dockerVersionScheme?: string;
   };
 
 export type ChangelogOptions = NxReleaseArgs &
@@ -254,6 +255,11 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
             type: 'boolean',
             describe:
               'Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.',
+          })
+          .options('dockerVersionScheme', {
+            type: 'string',
+            describe:
+              'Exact docker version scheme to apply to the selected release group.',
           })
       )
     ),

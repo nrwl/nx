@@ -21,15 +21,19 @@ export const getDockerVersionPath = (
 export async function handleDockerVersion(
   workspaceRoot: string,
   projectGraphNode: ProjectGraphProjectNode,
-  finalConfigForProject: FinalConfigForProject
+  finalConfigForProject: FinalConfigForProject,
+  dockerVersionScheme?: string
 ) {
   const availableVersionSchemes =
     finalConfigForProject.dockerOptions.versionSchemes ??
     DEFAULT_VERSION_SCHEMES;
-  const versionScheme = await promptForNewVersion(
-    availableVersionSchemes,
-    projectGraphNode.name
-  );
+  const versionScheme =
+    dockerVersionScheme && dockerVersionScheme in availableVersionSchemes
+      ? dockerVersionScheme
+      : await promptForNewVersion(
+          availableVersionSchemes,
+          projectGraphNode.name
+        );
   const newVersion = calculateNewVersion(
     projectGraphNode.name,
     versionScheme,
