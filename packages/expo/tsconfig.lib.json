@@ -11,13 +11,7 @@
   "include": ["**/*.ts", "**/*.json"],
   "references": [
     {
-      "path": "../webpack/tsconfig.lib.json"
-    },
-    {
-      "path": "../web/tsconfig.lib.json"
-    },
-    {
-      "path": "../rollup/tsconfig.lib.json"
+      "path": "../detox/tsconfig.lib.json"
     },
     {
       "path": "../react/tsconfig.lib.json"
@@ -26,16 +20,10 @@
       "path": "../js/tsconfig.lib.json"
     },
     {
-      "path": "../jest/tsconfig.lib.json"
-    },
-    {
       "path": "../eslint/tsconfig.lib.json"
     },
     {
       "path": "../devkit/tsconfig.lib.json"
-    },
-    {
-      "path": "../detox/tsconfig.lib.json"
     }
   ]
 }

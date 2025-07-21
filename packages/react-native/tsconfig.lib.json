@@ -10,10 +10,7 @@
   "include": ["**/*.ts", "**/*.json"],
   "references": [
     {
-      "path": "../workspace/tsconfig.lib.json"
-    },
-    {
-      "path": "../rollup/tsconfig.lib.json"
+      "path": "../detox/tsconfig.lib.json"
     },
     {
       "path": "../react/tsconfig.lib.json"
@@ -25,16 +22,10 @@
       "path": "../js/tsconfig.lib.json"
     },
     {
-      "path": "../jest/tsconfig.lib.json"
-    },
-    {
-      "path": "../nx/tsconfig.lib.json"
-    },
-    {
       "path": "../devkit/tsconfig.lib.json"
     },
     {
-      "path": "../detox/tsconfig.lib.json"
+      "path": "../nx/tsconfig.lib.json"
     }
   ]
 }
