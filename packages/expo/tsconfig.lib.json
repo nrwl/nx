@@ -11,9 +11,6 @@
   "include": ["**/*.ts", "**/*.json"],
   "references": [
     {
-      "path": "../detox/tsconfig.lib.json"
-    },
-    {
       "path": "../react/tsconfig.lib.json"
     },
     {
@@ -24,6 +21,9 @@
     },
     {
       "path": "../devkit/tsconfig.lib.json"
+    },
+    {
+      "path": "../detox/tsconfig.lib.json"
     }
   ]
 }

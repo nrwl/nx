@@ -4,9 +4,6 @@
   "include": [],
   "references": [
     {
-      "path": "../detox"
-    },
-    {
       "path": "../react"
     },
     {
@@ -17,6 +14,9 @@
     },
     {
       "path": "../devkit"
+    },
+    {
+      "path": "../detox"
     },
     {
       "path": "./tsconfig.lib.json"

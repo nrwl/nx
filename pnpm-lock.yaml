@@ -3508,10 +3508,6 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
-    devDependencies:
-      nx:
-        specifier: workspace:*
-        version: link:../nx
 
   packages/remix:
     dependencies:

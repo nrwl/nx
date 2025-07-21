@@ -45,7 +45,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
 
   tasks.push(lintTask);
 
-  // Add jest.resolver.js to ignored files in dependency-checks rule
+  // Add ignored dependencies and files to dependency-checks rule
   if (isEslintConfigSupported(host)) {
     updateOverrideInLintConfig(
       host,
@@ -53,8 +53,24 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       (override) => Boolean(override.rules?.['@nx/dependency-checks']),
       (override) => {
         const rule = override.rules['@nx/dependency-checks'];
-        if (Array.isArray(rule) && rule.length > 1 && rule[1].ignoredFiles) {
-          rule[1].ignoredFiles.push('{projectRoot}/jest.resolver.js');
+        if (Array.isArray(rule) && rule.length > 1) {
+          // Ensure ignoredDependencies array exists
+          if (!rule[1].ignoredDependencies) {
+            rule[1].ignoredDependencies = [];
+          }
+
+          // Add ignored dependencies if they don't already exist
+          const ignoredDeps = [
+            '@nx/jest',
+            '@nx/rollup',
+            '@rollup/plugin-url',
+            '@svgr/rollup',
+          ];
+          for (const dep of ignoredDeps) {
+            if (!rule[1].ignoredDependencies.includes(dep)) {
+              rule[1].ignoredDependencies.push(dep);
+            }
+          }
         }
         return override;
       }
