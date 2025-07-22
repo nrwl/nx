@@ -86,4 +86,4 @@ Consolidating projects into a single repository **eliminated the complexity of m
 
 Hetzner Cloud continues to **work closely with the Nx Developer Productivity Engineering (DPE) team** to monitor and refine their setup. By actively collaborating, they ensure that their monorepo remains optimized and that their CI is continuously improved. This ongoing partnership allows Hetzner Cloud to adapt to new challenges, fine-tune configurations, and further push the boundaries of efficiency in their development workflow.
 
-{% call-to-action title="Want to achieve similar results?" url="/enterprise" icon="nxcloud" description="Learn more about Nx Enterprise or get started with a free trial." /%}
+{% call-to-action title="Reach out to our team!" url="/contact/sales" icon="nxcloud" description="Looking to transform your teams velocity? Reach out to learn more about Nx Enterprise and see how we can help your team achieve similar results." /%}
