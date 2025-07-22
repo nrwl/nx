@@ -67,6 +67,10 @@ class ProcessTaskUtilsTest {
   @Test
   fun `test getDependsOnForTask with direct dependsOn`() {
     val project = ProjectBuilder.builder().withName("myApp").build()
+    // Create a build file so the task dependencies are properly detected
+    val buildFile = java.io.File(project.projectDir, "build.gradle")
+    buildFile.writeText("// test build file")
+
     val taskA = project.tasks.register("taskA").get()
     val taskB = project.tasks.register("taskB").get()
 
@@ -281,6 +285,10 @@ class ProcessTaskUtilsTest {
   @Test
   fun `test getDependsOnForTask with pre-computed dependsOnTasks`() {
     val project = ProjectBuilder.builder().withName("testProject").build()
+    // Create a build file so the task dependencies are properly detected
+    val buildFile = java.io.File(project.projectDir, "build.gradle")
+    buildFile.writeText("// test build file")
+
     val taskA = project.tasks.register("taskA").get()
     val taskB = project.tasks.register("taskB").get()
     val taskC = project.tasks.register("taskC").get()
@@ -390,6 +398,10 @@ class ProcessTaskUtilsTest {
   @Test
   fun `test processTask uses getDependsOnTask efficiently`() {
     val project = ProjectBuilder.builder().withName("testProject").build()
+    // Create a build file so the task dependencies are properly detected
+    val buildFile = java.io.File(project.projectDir, "build.gradle")
+    buildFile.writeText("// test build file")
+
     val dependentTask = project.tasks.register("compile").get()
     val outputFile = java.io.File("${project.rootDir.path}/build/classes")
     dependentTask.outputs.dir(outputFile)
