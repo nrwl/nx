@@ -28,7 +28,6 @@ jobs:
       NX_ALLOW_NON_CACHEABLE_DTE: 'true'
       NX_CLOUD_USE_NEW_TASK_APIS: 'true'
       NX_CLOUD_USE_NEW_STREAM_OUTPUT: 'true'
-      KOTLIN_VERSION: '2.0.21'
 
     steps:
       - name: Checkout
@@ -45,12 +44,6 @@ jobs:
         uses: nrwl/nx-set-shas@v4
         with:
           main-branch-name: 'master'
-
-      - name: Setup Java 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
 
       - name: Start CI Run
         run: npx nx-cloud@next start-ci-run --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
