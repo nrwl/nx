@@ -1,7 +1,5 @@
 package dev.nx.gradle.utils
 
-import com.github.javaparser.JavaParser
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import dev.nx.gradle.data.NxTargets
 import dev.nx.gradle.data.TargetGroups
 import java.io.File
@@ -9,32 +7,6 @@ import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
 
 const val testCiTargetGroup = "verification"
-
-// Regex patterns for fallback parsing (kept for compatibility and fallback scenarios)
-private val packageDeclarationRegex =
-    Regex(
-        """^\s*package\s+([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)\s*$""",
-        RegexOption.MULTILINE)
-private val classDeclarationRegex =
-    Regex(
-        """^\s*(?:@\w+\s*)*(?:public|open|sealed|final|enum|annotation)?\s*(class)\s+([A-Za-z_][A-Za-z0-9_]*)""")
-private val excludedClassRegex =
-    Regex("""^\s*(?:@\w+\s*)*(?:private|internal)\s+class\s+([A-Za-z_][A-Za-z0-9_]*)""")
-private val abstractClassRegex =
-    Regex(
-        """^\s*(?:@\w+\s*)*(?:public\s+|protected\s+)?abstract\s+class\s+([A-Za-z_][A-Za-z0-9_]*)""")
-
-// Essential annotations (most common subset)
-private val essentialTestAnnotations =
-    setOf(
-        "@Test",
-        "@TestTemplate",
-        "@ParameterizedTest",
-        "@RepeatedTest",
-        "@TestFactory",
-        "@org.junit.Test", // JUnit 4
-        "@org.testng.annotations.Test" // TestNG
-        )
 
 // Class-level test annotation names (without @ prefix for AST parsing)
 private val classTestAnnotationNames =
@@ -59,9 +31,6 @@ private val methodTestAnnotationNames =
         "AfterEach",
         "BeforeAll",
         "AfterAll")
-
-// Combined test annotation names for general use
-private val testAnnotationNames = classTestAnnotationNames + methodTestAnnotationNames
 
 // Class-level qualified annotation names
 private val classQualifiedTestAnnotations =
@@ -90,40 +59,6 @@ private val methodQualifiedTestAnnotations =
         "org.testng.annotations.Test",
         "kotlin.test.Test")
 
-// Combined qualified annotation names for general use
-private val qualifiedTestAnnotations =
-    classQualifiedTestAnnotations + methodQualifiedTestAnnotations
-
-// Configuration annotations that should be excluded from test target generation
-private val configurationAnnotations =
-    setOf(
-        "TestConfiguration",
-        "Configuration",
-        "ComponentScan",
-        "EntityScan",
-        "EnableAutoConfiguration",
-        "SpringBootConfiguration",
-        "org.springframework.boot.test.context.TestConfiguration",
-        "org.springframework.context.annotation.Configuration",
-        "org.springframework.context.annotation.ComponentScan",
-        "org.springframework.boot.autoconfigure.domain.EntityScan",
-        "org.springframework.boot.autoconfigure.EnableAutoConfiguration",
-        "org.springframework.boot.SpringBootConfiguration")
-
-// Singleton instances for heavy objects to avoid recreation
-private val javaParser by lazy {
-  try {
-    JavaParser().apply {
-      // Use the latest available language level for better compatibility
-      parserConfiguration.setLanguageLevel(
-          com.github.javaparser.ParserConfiguration.LanguageLevel.CURRENT)
-    }
-  } catch (e: Exception) {
-    // Fallback to default parser if configuration fails
-    JavaParser()
-  }
-}
-
 fun addTestCiTargets(
     testFiles: FileCollection,
     projectBuildPath: String,
@@ -141,9 +76,7 @@ fun addTestCiTargets(
 
   val ciDependsOn = mutableListOf<Map<String, String>>()
 
-  // Use JUnit discovery when available, fall back to AST/regex parsing
-  testTask.logger.info(
-      "${testTask.path}: Processing test files with JUnit discovery and AST parsing")
+  testTask.logger.info("${testTask.path}: Processing test files with JUnit discovery")
   processTestFiles(
       testFiles,
       workspaceRoot,
@@ -224,7 +157,7 @@ private fun processTestFiles(
       if (file.exists() && (file.extension == "kt" || file.extension == "java")) {
         try {
           val content = file.readText()
-          val className = extractClassNameFromFile(file, content)
+          val className = extractClassNameFromFile(content)
 
           if (className != null && isTestClassByRegex(content)) {
             testClassNames[className] = className
@@ -290,7 +223,7 @@ internal fun processTestClasses(
 }
 
 // Helper function to extract class name from file
-private fun extractClassNameFromFile(file: File, content: String): String? {
+private fun extractClassNameFromFile(content: String): String? {
   // Try to extract class name from the file content
   val classRegex = Regex("class\\s+(\\w+)")
   val match = classRegex.find(content)
@@ -495,327 +428,6 @@ internal fun isNestedTestClass(nestedClass: Class<*>): Boolean {
     // Ignore classes that reference unavailable dependencies
     false
   }
-}
-
-// Check if a class has test annotations (on class or methods)
-private fun hasTestAnnotationsInClass(classDecl: ClassOrInterfaceDeclaration): Boolean {
-  // First check if this is a configuration class - if so, exclude it
-  if (classDecl.annotations.any { isConfigurationAnnotation(it.nameAsString) }) {
-    return false
-  }
-
-  // Check class-level annotations
-  if (classDecl.annotations.any { isClassTestAnnotation(it.nameAsString) }) {
-    return true
-  }
-
-  // Check method-level annotations (only direct methods, not nested class methods)
-  return classDecl.methods.any { method ->
-    method.annotations.any { isMethodTestAnnotation(it.nameAsString) }
-  }
-}
-
-// Check if a class has method-level test annotations (not just class-level)
-private fun hasMethodLevelTestAnnotations(classDecl: ClassOrInterfaceDeclaration): Boolean {
-  // Only look at direct methods of this class, not methods from nested classes
-  return classDecl.methods.any { method ->
-    method.annotations.any { isMethodTestAnnotation(it.nameAsString) }
-  }
-}
-
-// Check if an annotation is a class-level test annotation
-private fun isClassTestAnnotation(annotationName: String): Boolean {
-  return classTestAnnotationNames.contains(annotationName) ||
-      classQualifiedTestAnnotations.contains(annotationName)
-}
-
-// Check if an annotation is a method-level test annotation
-private fun isMethodTestAnnotation(annotationName: String): Boolean {
-  return methodTestAnnotationNames.contains(annotationName) ||
-      methodQualifiedTestAnnotations.contains(annotationName)
-}
-
-// Check if an annotation is a test annotation (combined for general use)
-private fun isTestAnnotation(annotationName: String): Boolean {
-  return testAnnotationNames.contains(annotationName) ||
-      qualifiedTestAnnotations.contains(annotationName)
-}
-
-// Check if an annotation is a configuration annotation (should be excluded)
-private fun isConfigurationAnnotation(annotationName: String): Boolean {
-  return configurationAnnotations.contains(annotationName)
-}
-
-// Check if a class has @Nested annotation
-private fun hasNestedAnnotation(classDecl: ClassOrInterfaceDeclaration): Boolean {
-  return classDecl.annotations.any {
-    it.nameAsString == "Nested" || it.nameAsString == "org.junit.jupiter.api.Nested"
-  }
-}
-
-// Check if a class has configuration annotations (for regex parsing)
-private fun hasConfigurationAnnotationsInContent(
-    lines: List<String>,
-    classLineIndex: Int
-): Boolean {
-  // Look at the few lines before the class declaration for annotations
-  val startIndex = maxOf(0, classLineIndex - 10)
-  val endIndex = minOf(lines.size - 1, classLineIndex)
-
-  for (i in startIndex until endIndex) {
-    val line = lines[i].trim()
-    if (line.startsWith("@")) {
-      // Extract annotation name (remove @ and parameters)
-      val annotationName = line.substring(1).split("(")[0].trim()
-      if (isConfigurationAnnotation(annotationName)) {
-        return true
-      }
-    }
-  }
-  return false
-}
-
-// Check if a class has method-level test annotations (for regex parsing)
-private fun hasMethodLevelTestAnnotationsInContent(
-    lines: List<String>,
-    classLineIndex: Int
-): Boolean {
-  // Look for method-level test annotations after the class declaration
-  val classEndIndex = findClassEndIndex(lines, classLineIndex)
-  var braceLevel = 0
-  var foundClassOpenBrace = false
-
-  for (i in classLineIndex + 1 until classEndIndex) {
-    val line = lines[i].trim()
-
-    // Track brace levels to avoid looking inside nested classes
-    for (char in line) {
-      when (char) {
-        '{' -> {
-          braceLevel++
-          if (!foundClassOpenBrace) {
-            foundClassOpenBrace = true
-          }
-        }
-        '}' -> {
-          braceLevel--
-        }
-      }
-    }
-
-    // Only look at annotations at the top level of this class (braceLevel == 1)
-    // Skip nested classes (braceLevel > 1)
-    if (foundClassOpenBrace && braceLevel == 1 && line.startsWith("@")) {
-      // Extract annotation name (remove @ and parameters)
-      val annotationName = line.substring(1).split("(")[0].trim()
-      if (isMethodTestAnnotation(annotationName)) {
-        return true
-      }
-    }
-  }
-  return false
-}
-
-// Find the end index of a class declaration (simplified heuristic)
-private fun findClassEndIndex(lines: List<String>, classStartIndex: Int): Int {
-  var braceCount = 0
-  var foundOpenBrace = false
-
-  for (i in classStartIndex until lines.size) {
-    val line = lines[i]
-    for (char in line) {
-      when (char) {
-        '{' -> {
-          braceCount++
-          foundOpenBrace = true
-        }
-        '}' -> {
-          braceCount--
-          if (foundOpenBrace && braceCount == 0) {
-            return i
-          }
-        }
-      }
-    }
-  }
-  return lines.size - 1
-}
-
-// Check if a class has nested classes with @Nested annotation (for regex parsing)
-private fun hasNestedTestClassesInContent(
-    lines: List<String>,
-    classLineIndex: Int,
-    className: String
-): Boolean {
-  val classEndIndex = findClassEndIndex(lines, classLineIndex)
-  var braceLevel = 0
-  var foundClassOpenBrace = false
-  var previousLine: String? = null
-
-  for (i in classLineIndex + 1 until classEndIndex) {
-    val line = lines[i].trim()
-
-    // Track brace levels
-    for (char in line) {
-      when (char) {
-        '{' -> {
-          braceLevel++
-          if (!foundClassOpenBrace) {
-            foundClassOpenBrace = true
-          }
-        }
-        '}' -> {
-          braceLevel--
-        }
-      }
-    }
-
-    // Look for nested class declarations at brace level 1 (direct children)
-    if (foundClassOpenBrace && braceLevel == 1) {
-      val match = classDeclarationRegex.find(line)
-      if (match != null) {
-        val isAnnotatedNested = previousLine?.trimStart()?.startsWith("@Nested") == true
-        if (isAnnotatedNested) {
-          return true
-        }
-      }
-    }
-
-    previousLine = line
-  }
-  return false
-}
-
-// Process nested classes with @Nested annotation (for regex parsing)
-private fun processNestedClassesInContent(
-    lines: List<String>,
-    classLineIndex: Int,
-    parentClassName: String,
-    packageName: String?,
-    result: MutableMap<String, String>
-) {
-  val classEndIndex = findClassEndIndex(lines, classLineIndex)
-  var braceLevel = 0
-  var foundClassOpenBrace = false
-  var previousLine: String? = null
-
-  for (i in classLineIndex + 1 until classEndIndex) {
-    val line = lines[i].trim()
-
-    // Track brace levels
-    for (char in line) {
-      when (char) {
-        '{' -> {
-          braceLevel++
-          if (!foundClassOpenBrace) {
-            foundClassOpenBrace = true
-          }
-        }
-        '}' -> {
-          braceLevel--
-        }
-      }
-    }
-
-    // Look for nested class declarations at brace level 1 (direct children)
-    if (foundClassOpenBrace && braceLevel == 1) {
-      val match = classDeclarationRegex.find(line)
-      if (match != null) {
-        val nestedClassName = match.groupValues.getOrNull(2)
-        val isAnnotatedNested = previousLine?.trimStart()?.startsWith("@Nested") == true
-
-        if (isAnnotatedNested && nestedClassName != null) {
-          val nestedKey = "$parentClassName$nestedClassName"
-          val nestedValue =
-              if (packageName != null) {
-                "$packageName.$parentClassName$$nestedClassName"
-              } else {
-                "$parentClassName$$nestedClassName"
-              }
-          result[nestedKey] = nestedValue
-        }
-      }
-    }
-
-    previousLine = line
-  }
-}
-
-// Legacy function - no longer used since we switched to Gradle test discovery
-internal fun fallbackToRegexParsing(file: File): MutableMap<String, String>? {
-  val content = file.takeIf { it.exists() }?.readText() ?: return null
-
-  val lines = content.lines()
-  val result = mutableMapOf<String, String>()
-  var packageName: String?
-  val classStack = mutableListOf<Pair<String, Int>>() // (className, indent)
-
-  var previousLine: String? = null
-
-  for (i in lines.indices) {
-    val line = lines[i]
-    val trimmed = line.trimStart()
-    val indent = line.indexOfFirst { !it.isWhitespace() }.takeIf { it >= 0 } ?: 0
-
-    // Skip private, internal, and abstract classes
-    if (excludedClassRegex.containsMatchIn(trimmed)) continue
-    if (abstractClassRegex.containsMatchIn(trimmed)) continue
-
-    packageName = packageDeclarationRegex.find(content)?.groupValues?.getOrNull(1)
-    val match = classDeclarationRegex.find(trimmed)
-    if (match == null) {
-      previousLine = trimmed
-      continue
-    }
-
-    val className = match.groupValues.getOrNull(2)
-    if (className == null) {
-      previousLine = trimmed
-      continue
-    }
-    val isAnnotatedNested = previousLine?.trimStart()?.startsWith("@Nested") == true
-
-    // Top-level class (no indentation or same as outermost level)
-    if (indent == 0) {
-      // Exclude top-level @nested classes and configuration classes
-      if (!isAnnotatedNested && !hasConfigurationAnnotationsInContent(lines, i)) {
-
-        // Check if this class has nested classes with @Nested annotation
-        val hasNestedClasses = hasNestedTestClassesInContent(lines, i, className)
-
-        if (hasNestedClasses) {
-          // This top-level class has @Nested children - process them instead of the parent
-          processNestedClassesInContent(lines, i, className, packageName, result)
-        } else {
-          // No @Nested children - include parent if it has method-level test annotations
-          if (hasMethodLevelTestAnnotationsInContent(lines, i)) {
-            result.put(className, packageName?.let { "$it.$className" } ?: className)
-          }
-        }
-      }
-      classStack.clear()
-      classStack.add(className to indent)
-    } else {
-      // Maintain nesting stack
-      while (classStack.isNotEmpty() && indent <= classStack.last().second) {
-        classStack.removeLast()
-      }
-
-      val parent = classStack.lastOrNull()?.first
-      if (isAnnotatedNested && parent != null && !hasConfigurationAnnotationsInContent(lines, i)) {
-        val packageClassName = "$parent$$className"
-        result["$parent$className"] =
-            packageName?.let { "$it.$packageClassName" } ?: packageClassName
-        result.remove(parent) // remove the parent class since child nested class is added
-      }
-
-      classStack.add(className to indent)
-    }
-
-    previousLine = trimmed
-  }
-
-  return result
 }
 
 fun ensureTargetGroupExists(targetGroups: TargetGroups, group: String) {
