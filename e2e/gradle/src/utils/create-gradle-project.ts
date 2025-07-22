@@ -9,7 +9,7 @@ import { readFileSync } from 'fs';
 import { createFileSync, writeFileSync } from 'fs-extra';
 import { join, resolve } from 'path';
 
-const kotlinVersion = '2.0.21';
+const kotlinVersion = '2.1.20';
 
 export function createGradleProject(
   projectName: string,
