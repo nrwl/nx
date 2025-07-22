@@ -2218,6 +2218,26 @@
       }
     },
     "migrations": {
+      "/technologies/test-tools/jest/api/migrations/21.3.3-jest-util-package-updates": {
+        "description": "",
+        "file": "generated/packages/jest/migrations/21.3.3-jest-util-package-updates.json",
+        "hidden": false,
+        "name": "21.3.3-jest-util-package-updates",
+        "version": "21.3.3-beta.3",
+        "originalFilePath": "/packages/jest",
+        "path": "/technologies/test-tools/jest/api/migrations/21.3.3-jest-util-package-updates",
+        "type": "migration"
+      },
+      "/technologies/test-tools/jest/api/migrations/21.3.3-package-updates": {
+        "description": "",
+        "file": "generated/packages/jest/migrations/21.3.3-package-updates.json",
+        "hidden": false,
+        "name": "21.3.3-package-updates",
+        "version": "21.3.3-beta.0",
+        "originalFilePath": "/packages/jest",
+        "path": "/technologies/test-tools/jest/api/migrations/21.3.3-package-updates",
+        "type": "migration"
+      },
       "/technologies/test-tools/jest/api/migrations/rename-test-path-pattern": {
         "description": "Rename the CLI option `testPathPattern` to `testPathPatterns`.",
         "file": "generated/packages/jest/migrations/rename-test-path-pattern.json",
