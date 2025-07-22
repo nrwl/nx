@@ -3621,6 +3621,9 @@ importers:
       '@nx/eslint':
         specifier: workspace:*
         version: link:../../packages/eslint
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../../packages/js
       '@nx/plugin':
         specifier: workspace:*
         version: link:../../packages/plugin

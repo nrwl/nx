@@ -4,13 +4,17 @@
     "outDir": "../../dist/workspace-plugin",
     "declaration": true,
     "types": ["node"],
-    "composite": true
+    "composite": true,
+    "esModuleInterop": true
   },
   "include": ["src/**/*.ts"],
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
   "references": [
     {
       "path": "../../packages/nx/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/js/tsconfig.lib.json"
     },
     {
       "path": "../../packages/plugin/tsconfig.lib.json"

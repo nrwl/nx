@@ -3,7 +3,8 @@
   "compilerOptions": {
     "module": "commonjs",
     "outDir": "../../dist/packages/create-nx-workspace",
-    "types": ["node"]
+    "types": ["node"],
+    "tsBuildInfoFile": "../../dist/packages/create-nx-workspace/tsconfig.tsbuildinfo"
   },
   "exclude": [
     "**/*.spec.ts",

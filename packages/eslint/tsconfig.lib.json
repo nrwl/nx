@@ -3,7 +3,8 @@
   "compilerOptions": {
     "module": "commonjs",
     "outDir": "../../dist/packages/eslint",
-    "types": ["node"]
+    "types": ["node"],
+    "tsBuildInfoFile": "../../dist/packages/eslint/tsconfig.tsbuildinfo"
   },
   "exclude": [
     "**/*.spec.ts",

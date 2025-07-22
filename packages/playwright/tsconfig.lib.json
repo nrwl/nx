@@ -2,7 +2,8 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "../../dist/packages/playwright",
-    "types": ["node"]
+    "types": ["node"],
+    "tsBuildInfoFile": "../../dist/packages/playwright/tsconfig.tsbuildinfo"
   },
   "include": ["**/*.ts", "**/*.json"],
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],

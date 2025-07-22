@@ -4,7 +4,8 @@
     "module": "commonjs",
     "outDir": "../../dist/packages/angular",
     "types": ["node"],
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "tsBuildInfoFile": "../../dist/packages/angular/tsconfig.tsbuildinfo"
   },
   "exclude": [
     "**/*.spec.ts",

@@ -3,7 +3,8 @@
   "compilerOptions": {
     "module": "commonjs",
     "outDir": "../../dist/packages/plugin",
-    "types": ["node", "jest"]
+    "types": ["node", "jest"],
+    "tsBuildInfoFile": "../../dist/packages/plugin/tsconfig.tsbuildinfo"
   },
   "exclude": [
     "**/*.spec.ts",
