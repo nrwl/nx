@@ -12,7 +12,7 @@ export function MetricsCTA() {
         Ready to get started?
       </h3>
       <ButtonLink
-        href="/enterprise/trial"
+        href="/contact/sales"
         title="Reach out"
         variant="primary"
         size="default"

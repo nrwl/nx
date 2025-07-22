@@ -94,7 +94,7 @@ The routes exist as projects which are then imported by the application. We can 
 
 Adopting a monorepo powered by Nx on its own does not solve build speeds or CI pipeline times. But adopting a monorepo and taking the time to reevaluate your architecture can lead to a significant improvement in build times when best practices are applied. If you're curious to know more, reach out to us to see how Nx can improve your monorepo experience and ship faster!
 
-{% call-to-action title="Explore Nx Cloud for Enterprises" url="/enterprise" icon="nxcloud" description="Learn more about our offerings for enterprises and contact our team" %} Explore Nx Cloud for Enterprises {% /call-to-action %}
+{% call-to-action title="Explore Nx Cloud for Enterprises" url="/contact/sales" icon="nxcloud" description="Learn more about our offerings for enterprises and contact our team" %} Explore Nx Cloud for Enterprises {% /call-to-action %}
 
 ## Further reading
 
