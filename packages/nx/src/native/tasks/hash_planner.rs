@@ -82,7 +82,7 @@ impl HashPlanner {
                     .collect();
 
                 inputs.par_sort();
-                inputs.dedup();
+                inputs = combine_instructions(inputs);
 
                 Ok((id.to_string(), inputs))
             })
@@ -429,6 +429,64 @@ impl HashPlanner {
     }
 }
 
+fn combine_instructions(mut instructions: Vec<HashInstruction>) -> Vec<HashInstruction> {
+    use std::collections::BTreeMap;
+
+    // Group instructions that can be combined
+    let mut workspace_file_sets: Vec<String> = Vec::new();
+    let mut project_file_sets: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    let mut task_outputs: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    let mut other_instructions: Vec<HashInstruction> = Vec::new();
+
+    for instruction in instructions.drain(..) {
+        match instruction {
+            HashInstruction::WorkspaceFileSet(patterns) => {
+                workspace_file_sets.extend(patterns);
+            }
+            HashInstruction::ProjectFileSet(project, patterns) => {
+                project_file_sets
+                    .entry(project)
+                    .or_default()
+                    .extend(patterns);
+            }
+            HashInstruction::TaskOutput(task_id, outputs) => {
+                task_outputs.entry(task_id).or_default().extend(outputs);
+            }
+            other => {
+                other_instructions.push(other);
+            }
+        }
+    }
+
+    let mut result: Vec<HashInstruction> = other_instructions;
+
+    // Add combined workspace file sets
+    if !workspace_file_sets.is_empty() {
+        workspace_file_sets.sort();
+        workspace_file_sets.dedup();
+        result.push(HashInstruction::WorkspaceFileSet(workspace_file_sets));
+    }
+
+    // Add combined project file sets
+    for (project, mut patterns) in project_file_sets {
+        patterns.sort();
+        patterns.dedup();
+        result.push(HashInstruction::ProjectFileSet(project, patterns));
+    }
+
+    // Add combined task outputs
+    for (task_id, mut outputs) in task_outputs {
+        outputs.sort();
+        outputs.dedup();
+        result.push(HashInstruction::TaskOutput(task_id, outputs));
+    }
+
+    // Sort and dedup the final result to maintain deterministic order
+    result.par_sort();
+    result.dedup();
+    result
+}
+
 fn find_external_dependency_node_name<'a>(
     package_name: &str,
     project_graph: &'a ProjectGraph,
@@ -447,5 +505,139 @@ fn find_external_dependency_node_name<'a>(
             }
         }
         None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn should_combine_multiple_workspace_file_sets() {
+        let instructions = vec![
+            HashInstruction::WorkspaceFileSet(vec!["*.js".to_string()]),
+            HashInstruction::WorkspaceFileSet(vec!["*.ts".to_string(), "*.json".to_string()]),
+            HashInstruction::Environment("NODE_ENV".to_string()),
+        ];
+
+        let result = combine_instructions(instructions);
+
+        // Should have one combined WorkspaceFileSet and the Environment instruction
+        assert_eq!(result.len(), 2);
+
+        // Find the workspace file set
+        let workspace_fileset = result
+            .iter()
+            .find(|instr| matches!(instr, HashInstruction::WorkspaceFileSet(_)));
+        assert!(workspace_fileset.is_some());
+
+        if let HashInstruction::WorkspaceFileSet(patterns) = workspace_fileset.unwrap() {
+            assert_eq!(
+                patterns,
+                &vec!["*.js".to_string(), "*.json".to_string(), "*.ts".to_string()]
+            );
+        }
+    }
+
+    #[test]
+    fn should_combine_project_file_sets_for_same_project() {
+        let instructions = vec![
+            HashInstruction::ProjectFileSet(
+                "myproject".to_string(),
+                vec!["src/**/*.js".to_string()],
+            ),
+            HashInstruction::ProjectFileSet("myproject".to_string(), vec!["**/*.json".to_string()]),
+            HashInstruction::ProjectFileSet(
+                "otherproject".to_string(),
+                vec!["lib/**/*.ts".to_string()],
+            ),
+        ];
+
+        let result = combine_instructions(instructions);
+
+        assert_eq!(result.len(), 2);
+
+        // Find myproject file set
+        let myproject_fileset = result.iter().find(|instr| {
+            matches!(instr, HashInstruction::ProjectFileSet(proj, _) if proj == "myproject")
+        });
+        assert!(myproject_fileset.is_some());
+
+        if let HashInstruction::ProjectFileSet(_, patterns) = myproject_fileset.unwrap() {
+            assert_eq!(
+                patterns,
+                &vec!["**/*.json".to_string(), "src/**/*.js".to_string()]
+            );
+        }
+    }
+
+    #[test]
+    fn should_combine_task_outputs_for_same_task() {
+        let instructions = vec![
+            HashInstruction::TaskOutput("build".to_string(), vec!["dist/**/*".to_string()]),
+            HashInstruction::TaskOutput("build".to_string(), vec!["lib/**/*".to_string()]),
+            HashInstruction::TaskOutput("test".to_string(), vec!["coverage/**/*".to_string()]),
+        ];
+
+        let result = combine_instructions(instructions);
+
+        assert_eq!(result.len(), 2);
+
+        // Find build task output
+        let build_output = result
+            .iter()
+            .find(|instr| matches!(instr, HashInstruction::TaskOutput(task, _) if task == "build"));
+        assert!(build_output.is_some());
+
+        if let HashInstruction::TaskOutput(_, outputs) = build_output.unwrap() {
+            assert_eq!(
+                outputs,
+                &vec!["dist/**/*".to_string(), "lib/**/*".to_string()]
+            );
+        }
+    }
+
+    #[test]
+    fn should_handle_empty_input() {
+        let instructions = vec![];
+        let result = combine_instructions(instructions);
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn should_preserve_non_combinable_instructions() {
+        let instructions = vec![
+            HashInstruction::Runtime("node".to_string()),
+            HashInstruction::Environment("NODE_ENV".to_string()),
+            HashInstruction::ProjectConfiguration("myproject".to_string()),
+            HashInstruction::AllExternalDependencies,
+        ];
+
+        let result = combine_instructions(instructions.clone());
+
+        // All instructions should be preserved as-is
+        assert_eq!(result.len(), 4);
+
+        // Verify all original instructions are present (order may differ due to sorting)
+        for instruction in instructions {
+            assert!(result.contains(&instruction));
+        }
+    }
+
+    #[test]
+    fn should_deduplicate_patterns_within_combined_instructions() {
+        let instructions = vec![
+            HashInstruction::WorkspaceFileSet(vec!["*.js".to_string(), "*.js".to_string()]),
+            HashInstruction::WorkspaceFileSet(vec!["*.ts".to_string()]),
+        ];
+
+        let result = combine_instructions(instructions);
+
+        assert_eq!(result.len(), 1);
+
+        if let HashInstruction::WorkspaceFileSet(patterns) = &result[0] {
+            // Should deduplicate the duplicate *.js pattern
+            assert_eq!(patterns, &vec!["*.js".to_string(), "*.ts".to_string()]);
+        }
     }
 }
