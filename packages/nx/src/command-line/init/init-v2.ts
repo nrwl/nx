@@ -176,12 +176,11 @@ export async function initHandler(options: InitArgs): Promise<void> {
   }
 
   printFinalMessage({
-    learnMoreLink: _isMonorepo
-      ? 'https://nx.dev/recipes/adopting-nx/adding-to-monorepo'
-      : 'https://nx.dev/getting-started/adding-to-existing',
+    learnMoreLink: 'https://nx.dev/getting-started/adding-to-existing',
     appendLines: _isMonorepo
       ? [
-          `- Learn how Nx helps manage your TypeScript monorepo at https://nx.dev/features/maintain-ts-monorepos.`,
+          `- Read a detailed guide about adding Nx to NPM/YARN/PNPM workspaces: https://nx.dev/recipes/adopting-nx/adding-to-monorepos`,
+          `- Learn how Nx helps manage your TypeScript monorepo: https://nx.dev/features/maintain-ts-monorepos`,
         ]
       : [],
   });
