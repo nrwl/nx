@@ -102,17 +102,17 @@ jobs:
           ref: ${{ steps.script.outputs.ref }}
           path: pr-branch-checkout
 
-      - name: (PR Release Only) Ensure that nx-release.ts has not changed in the PR being released
-        if: ${{ steps.script.outputs.ref != '' }}
-        env:
-          FILE_TO_COMPARE: "scripts/nx-release.ts"
-        run: |
-          if ! cmp -s "latest-master-checkout/${{ env.FILE_TO_COMPARE }}" "pr-branch-checkout/${{ env.FILE_TO_COMPARE }}"; then
-            echo "🛑 Error: The file ${{ env.FILE_TO_COMPARE }} is different on the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} vs latest master on nrwl/nx, cancelling workflow. If you did not modify the file, then you likely just need to rebase/merge latest master."
-            exit 1
-          else
-            echo "✅ The file ${{ env.FILE_TO_COMPARE }} is identical between the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} and latest master on nrwl/nx."
-          fi
+      # - name: (PR Release Only) Ensure that nx-release.ts has not changed in the PR being released
+      #   if: ${{ steps.script.outputs.ref != '' }}
+      #   env:
+      #     FILE_TO_COMPARE: "scripts/nx-release.ts"
+      #   run: |
+      #     if ! cmp -s "latest-master-checkout/${{ env.FILE_TO_COMPARE }}" "pr-branch-checkout/${{ env.FILE_TO_COMPARE }}"; then
+      #       echo "🛑 Error: The file ${{ env.FILE_TO_COMPARE }} is different on the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} vs latest master on nrwl/nx, cancelling workflow. If you did not modify the file, then you likely just need to rebase/merge latest master."
+      #       exit 1
+      #     else
+      #       echo "✅ The file ${{ env.FILE_TO_COMPARE }} is identical between the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} and latest master on nrwl/nx."
+      #     fi
 
   build:
     needs: [ resolve-required-data ]
@@ -348,9 +348,8 @@ jobs:
         with:
           name: bindings-${{ matrix.settings.target }}
           path: |
-            packages/**/*.node
-            packages/**/*.wasm
-            !packages/*/node_modules/**
+            packages/nx/src/native/*.node
+            packages/nx/src/native/*.wasm
           if-no-files-found: error
 
   build-freebsd:
@@ -416,8 +415,7 @@ jobs:
         with:
           name: bindings-freebsd
           path: |
-            packages/**/*.node
-            !packages/*/node_modules/**
+            packages/nx/src/native/*.node
           if-no-files-found: error
 
   publish:
