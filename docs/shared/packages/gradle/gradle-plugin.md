@@ -152,7 +152,8 @@ The `@nx/gradle` is configured in the `plugins` array in `nx.json`.
         "testTargetName": "test",
         "classesTargetName": "classes",
         "buildTargetName": "build",
-        "ciTestTargetName": "test-ci"
+        "ciTestTargetName": "test-ci",
+        "ciIntTestTargetName": "intTest-ci"
       }
     }
   ]
@@ -161,22 +162,100 @@ The `@nx/gradle` is configured in the `plugins` array in `nx.json`.
 
 Once a Gradle configuration file has been identified, the targets are created with the name you specify under `testTargetName`, `classesTargetName` or `buildTargetName` in the `nx.json` `plugins` array. The default names for the inferred targets are `test`, `classes` and `build`.
 
-### Splitting Tests
+### Test Distribution
 
-The `@nx/gradle` plugin will automatically split your testing tasks by test class if you provide a `ciTestTargetName`. You can read more about the Atomizer feature [here](/ci/features/split-e2e-tasks). Nx will create a task with the name that you specify which can be used in CI to run the tests for each test class in a distributed fashion.
+Nx provides powerful features for distributing tasks in CI, including test splitting (also known as atomization) and optimized build targets. For Gradle projects, this is facilitated by the `@nx/gradle` plugin, allowing you to run your tests and builds more efficiently in your Continuous Integration (CI) environment.
 
-```json {% fileName="nx.json" highlightLines=[6] %}
+#### How to Set Up Test Distribution (Atomizer) in CI
+
+To enable test distribution for your Gradle projects in CI, follow these steps:
+
+1.  **Generate CI Workflow**: Run the `ci-workflow` generator to set up the necessary CI configurations. This generator creates a GitHub Actions workflow file that integrates with Nx's distributed task execution capabilities.
+
+    ```shell
+    nx g @nx/gradle:ci-workflow
+    ```
+
+    This command will generate a workflow file (e.g., `.github/workflows/ci.yml`) tailored for your Nx workspace with Gradle projects.
+
+2.  **Configure `nx.json` for Atomizer**: Add or ensure the presence of `ciTestTargetName` or `ciIntTestTargetName` in the `@nx/gradle` plugin options within your `nx.json`.
+
+    ```json {% fileName="nx.json" highlightLines=[6,7] %}
+    {
+      "plugins": [
+        {
+          "plugin": "@nx/gradle",
+          "options": {
+            "ciTestTargetName": "test-ci",
+            "ciIntTestTargetName": "intTest-ci"
+          }
+        }
+      ]
+    }
+    ```
+
+    Setting these options turns on the atomizer feature in CI. Nx will automatically split your testing tasks (unit and integration tests, respectively) by test class, allowing them to be run in a distributed fashion across your CI agents.
+
+3.  **Update CI Workflow Command**: In your generated CI workflow file, modify the command used to run affected tasks. Instead of using a generic `build` target, leverage the `build-ci` target provided by the `@nx/gradle` plugin:
+
+    ```shell
+    # Before:
+    # ./nx affected --base=$NX_BASE --head=$NX_HEAD -t build
+
+    # After:
+    ./nx affected --base=$NX_BASE --head=$NX_HEAD -t build-ci
+    ```
+
+    This ensures that your CI pipeline utilizes the optimized `build-ci` target, which is designed to integrate seamlessly with Nx's test distribution and caching mechanisms.
+
+#### The `ci-workflow` Generator
+
+The `@nx/gradle:ci-workflow` generator is a utility that automates the setup of a CI workflow for your Nx workspace containing Gradle projects. It creates a `.github/workflows` file (or equivalent for other CI providers) that includes steps for checking out code, setting up Java and Gradle, restoring caches, and running affected Nx tasks. Its primary purpose is to streamline the integration of Nx's CI features, such as distributed task execution and caching, into your existing CI pipeline.
+
+#### The `build-ci` Target
+
+The `@nx/gradle` plugin can create a `build-ci` target that is specifically designed for use in CI environments. This target allows for a more optimized and consistent build process by ensuring that the `check` task is rewired to its CI counterpart (`check-ci`), which also implies that test tasks (`test` and `intTest`) are rewired to their atomized `test-ci` and `intTest-ci` counterparts respectively.
+
+##### What is it?
+
+The `build-ci` target is a synthetic Nx target that acts as a placeholder for your Gradle `build` task in a CI context. Instead of directly running the `build` task, the `build-ci` target ensures that the `check` task (a dependency of `build`) first executes its CI-optimized version (`check-ci`), which in turn uses the split/atomized test tasks (`test-ci`, `intTest-ci`). This allows for distributed execution of tests and efficient caching in CI.
+
+##### How to Enable?
+
+To enable the `build-ci` target, you need to configure `ciTestTargetName` or `ciIntTestTargetName` in the `@nx/gradle` plugin options in your `nx.json`.
+
+For example:
+
+```json {% fileName="nx.json" %}
 {
   "plugins": [
     {
       "plugin": "@nx/gradle",
       "options": {
-        "ciTestTargetName": "test-ci"
+        "ciTestTargetName": "test-ci",
+        "ciBuildTargetName": "build-ci"
       }
     }
   ]
 }
 ```
+
+When `ciTestTargetName` (or `ciIntTestTargetName`) is set, the `build-ci` target is automatically created if the `build` task exists for a given Gradle project.
+
+##### Expected Behavior
+
+When you run `nx build-ci <your-gradle-project>`, Nx will:
+
+1.  Execute the `check-ci` task (if defined) instead of the standard `check` task.
+2.  The `check-ci` task will, in turn, trigger the atomized test tasks (`test-ci` and `intTest-ci`) if they are configured.
+3.  The `build-ci` target itself will use the `nx:noop` executor, meaning it doesn't execute a direct Gradle command, but rather relies on its dependencies (`check-ci`) to orchestrate the build process in a CI-friendly manner.
+4.  The `build-ci` target is cacheable.
+
+This setup ensures that your build process in CI leverages Nx's caching and distribution capabilities effectively.
+
+##### How to Turn it Off?
+
+To disable the `build-ci` target, simply remove the `ciBuildTargetName` option from the `@nx/gradle` plugin configuration in your `nx.json` file. If `ciTestTargetName` and `ciIntTestTargetName` are also removed, then the special CI targets for tests and check will also be turned off.
 
 ### Continuous Tasks
 

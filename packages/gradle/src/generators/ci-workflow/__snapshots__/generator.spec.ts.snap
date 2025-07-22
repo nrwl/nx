@@ -29,9 +29,10 @@ jobs:
       - nx/set-shas:
           main-branch-name: 'main'
 
-      # Change from check to check-ci if you turn on the atomizer. Learn more: https://nx.dev/nx-api/gradle#splitting-e2e-tests.
+      # # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.
+      # # Change from build to build-ci if you turn on the atomizer. Learn more: https://nx.dev/nx-api/gradle#splitting-e2e-tests.
       - run:
-          command: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t assemble check
+          command: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run:
           command: ./nx fix-ci
@@ -85,12 +86,13 @@ jobs:
           architecture: x64
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       - uses: nrwl/nx-set-shas@v4
 
-      # Change from check to check-ci if you turn on the atomizer. Learn more: https://nx.dev/nx-api/gradle#splitting-tests
-      - run: ./nx affected -t assemble check
+      # # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.
+      # # Change from build to build-ci if you turn on the atomizer. Learn more: https://nx.dev/nx-api/gradle#splitting-tests
+      - run: ./nx affected -t build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: ./nx fix-ci
         if: always()
@@ -126,9 +128,10 @@ jobs:
       - nx/set-shas:
           main-branch-name: 'main'
 
-      # Change from check to check-ci if you turn on the atomizer. Learn more: https://nx.dev/nx-api/gradle#splitting-e2e-tests.
+      # # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.
+      # # Change from build to build-ci if you turn on the atomizer. Learn more: https://nx.dev/nx-api/gradle#splitting-e2e-tests.
       - run:
-          command: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t assemble check
+          command: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run:
           command: ./nx fix-ci
@@ -182,12 +185,13 @@ jobs:
           architecture: x64
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       - uses: nrwl/nx-set-shas@v4
 
-      # Change from check to check-ci if you turn on the atomizer. Learn more: https://nx.dev/nx-api/gradle#splitting-tests
-      - run: ./nx affected -t assemble check
+      # # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.
+      # # Change from build to build-ci if you turn on the atomizer. Learn more: https://nx.dev/nx-api/gradle#splitting-tests
+      - run: ./nx affected -t build
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: ./nx fix-ci
         if: always()
