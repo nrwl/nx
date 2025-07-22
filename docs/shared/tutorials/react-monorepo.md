@@ -5,15 +5,15 @@ description: In this tutorial you'll create a frontend-focused workspace with Nx
 
 # Building and Testing React Apps in Nx
 
-In this tutorial, you'll learn how to create a new React monorepo using the Nx platform.
+This tutorial walks you through creating a React monorepo with Nx. You'll build a small example application to understand the core concepts and workflows.
 
-What will you learn?
+What you'll learn:
 
-- how to create a new React workspace with [GitHub Actions](https://github.com/features/actions) preconfigured
-- how to run a single task (i.e. serve your app) or run multiple tasks in parallel
-- how to modularize your codebase with local libraries for better code organization
-- how to benefit from caching that works both locally and in CI
-- how to set up self-healing CI to apply fixes directly from your local editor
+- How to structure multiple React apps and libraries in a single repository
+- How Nx's caching speeds up your local development and CI pipelines
+- How to run builds, tests, and serve commands efficiently across multiple projects
+- How to share React components and hooks between applications
+- How to fix CI failures directly from your editor with Nx Cloud
 
 ## Prerequisite: Tutorial Setup
 
@@ -23,9 +23,9 @@ This tutorial requires a [GitHub account](https://github.com) to demonstrate the
 
 ### Step 1: Creating a new Nx React workspace
 
-Let's start by creating a new React monorepo with Nx Cloud and GitHub Actions preconfigured. You'll be guided through an interactive setup process to create your workspace. After completing the setup, return here to continue with this tutorial.
+Let's create your workspace. The setup process takes about 2 minutes and will configure React, testing, and CI/CD automatically.
 
-{% call-to-action title="Create a new React monorepo" url="https://cloud.nx.app/create-nx-workspace?preset=react" description="With Nx and GitHub Actions fully set up" /%}
+{% call-to-action title="Set up your React workspace" url="https://cloud.nx.app/create-nx-workspace?preset=react" description="Interactive setup with React and CI preconfigured" /%}
 
 ### Step 2: Verify Your Setup
 
