@@ -19,6 +19,7 @@ assignment-rules:
         parallelism: 1
   - projects:
       - angular
+      - react
     targets:
       - test
     run-on:
