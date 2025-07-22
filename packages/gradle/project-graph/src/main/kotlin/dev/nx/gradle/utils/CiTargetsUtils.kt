@@ -138,6 +138,10 @@ private fun processTestFiles(
   if (testClassDirs.isNotEmpty()) {
     testTask.logger.info(
         "${testTask.path}: Using Gradle test discovery with ${testClassDirs.size} class directories")
+    
+    testClassDirs.forEach { classDir ->
+      testTask.logger.info("${testTask.path}: Class directory: ${classDir.absolutePath}")
+    }
 
     // Create a class loader for the test classes
     val testClassLoader = createTestClassLoader(testTask, testTask.logger)
@@ -145,10 +149,7 @@ private fun processTestFiles(
     testClassDirs.forEach { classDir ->
       discoverTestClasses(classDir, testClassLoader, testClassNames, testTask.logger)
     }
-  }
-
-  // Fall back to regex parsing if no compiled classes found or no test classes discovered
-  if (testClassNames.isEmpty()) {
+  } else { // Fall back to regex parsing if no compiled classes found or no test classes discovered
     testTask.logger.info(
         "${testTask.path}: No compiled test classes found, falling back to regex parsing")
 
