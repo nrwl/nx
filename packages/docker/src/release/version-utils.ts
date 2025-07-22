@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
-import { writeFileSync } from 'fs';
-import { join } from 'path';
+import { writeFileSync, mkdirSync } from 'fs';
+import { dirname, join } from 'path';
 import { prompt } from 'enquirer';
 import type { ProjectGraphProjectNode } from '@nx/devkit';
 import type { FinalConfigForProject } from 'nx/src/command-line/release/version/release-group-processor';
@@ -106,10 +106,9 @@ function updateProjectVersion(
   if (isDryRun) {
     logs.push(`No changes were applied as --dry-run is enabled.`);
   } else {
-    writeFileSync(
-      getDockerVersionPath(workspaceRoot, projectRoot),
-      fullImageRef
-    );
+    const dockerVersionPath = getDockerVersionPath(workspaceRoot, projectRoot);
+    mkdirSync(dirname(dockerVersionPath), { recursive: true });
+    writeFileSync(dockerVersionPath, fullImageRef);
   }
   return logs;
 }
