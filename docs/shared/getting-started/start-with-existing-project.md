@@ -26,7 +26,7 @@ After initializing Nx, you can explore your workspace with the following command
 - `nx graph` to view an interactive graph
 - `nx show projects` to see a list of all projects
 - `nx show project <project-name>` to view an interactive project detailed view
-- `nx <target> <project>` to run a task with Nx, e.g. `nx build my-project`
+- `nx run-many -t <target>` to run tasks with Nx, e.g. `nx run-many -t build`
 
 ### Update CI Configurations
 
@@ -35,11 +35,18 @@ Now that Nx is installed, you'll want to update CI configurations to leverage Nx
 For example, switching from `pnpm` commands to use `nx`
 
 ```diff {% fileName=".github/workflows/ci.yaml" %}
-
 -     - run: pnpm run -r build
--     - run: pnpm run -r lint
 -     - run: pnpm run -r test
-+     - run: npx nx run-many -t lint test build
++     - run: npx nx run-many -t test build
+```
+
+You can directly invoke `package.json` scripts with `nx` as well
+
+```diff {% fileName=".github/workflows/ci.yaml" %}
+-     - run: npm run build
+-     - run: npm run test
++     - run: npx nx build
++     - run: npx nx test
 ```
 
 [View CI provider specific setups](/ci/recipes/set-up) to learn more.
@@ -63,8 +70,6 @@ To leverage Self Healing CI, you'll need to add the following to your CI configu
 +     - run: npx nx fix-ci
 +       if: always()
 ```
-
-Interested in Nx Agents? [View the Nx Agents (DTE) detailed guide](/ci/features/distribute-task-execution)
 
 ### Empower Your Editor
 
