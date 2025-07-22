@@ -20,9 +20,6 @@
     "Playwright",
     "CLI"
   ],
-  "bin": {
-    "create-nx-workspace": "./bin/index.js"
-  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -41,5 +38,10 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "nxConfig": {
+    "bin": {
+      "create-nx-workspace": "./bin/index.js"
+    }
   }
 }

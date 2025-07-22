@@ -8,9 +8,6 @@
     "url": "https://github.com/nrwl/nx.git",
     "directory": "packages/nx"
   },
-  "scripts": {
-    "postinstall": "node ./bin/post-install || exit 0"
-  },
   "keywords": [
     "Monorepo",
     "Angular",
@@ -26,10 +23,6 @@
     "Backend",
     "Mobile"
   ],
-  "bin": {
-    "nx": "./bin/nx.js",
-    "nx-cloud": "./bin/nx-cloud.js"
-  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -147,6 +140,15 @@
   "builders": "./executors.json",
   "publishConfig": {
     "access": "public"
+  },
+  "nxConfig": {
+    "bin": {
+      "nx": "./bin/nx.js",
+      "nx-cloud": "./bin/nx-cloud.js"
+    },
+    "scripts": {
+      "postinstall": "node ./bin/post-install"
+    }
   },
   "napi": {
     "binaryName": "nx",
