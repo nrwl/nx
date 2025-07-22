@@ -17,16 +17,16 @@ nx@latest init
 
 > _Note: make sure you have [Nx installed globally](/getting-started/installation) or use `npx` if you're in a JavaScript environment_
 
-This command automatically detects your underlying workspace structure, whether it's a monorepo, a single project, or something in between. Nx will then ask you a series of targeted questions about your setup and preferences, using your answers to auto-configure itself seamlessly into your existing workspace. This intelligent setup process ensures you get the benefits of Nx with minimal configuration changes or disruption to your current development workflow.
+Whether a monorepo, single project or something in between, `nx init` walks you through adding and configuring Nx. You can pick a minimal approach or detailed guided setup. At the end you'll have an Nx workspace ready for anything!
 
 ## Next Steps
 
-Explore your workspace:
+After initializing Nx, you can explore your workspace with the following commands:
 
-- Run `nx graph` to view an interactive graph
-- Run `nx show projects` to see a list of all projects
-- Run `nx show project <project-name>` to view an interactive project detailed view
-- Run `nx <target> <project>` to run a task with Nx, e.g. `nx build my-project`
+- `nx graph` to view an interactive graph
+- `nx show projects` to see a list of all projects
+- `nx show project <project-name>` to view an interactive project detailed view
+- `nx <target> <project>` to run a task with Nx, e.g. `nx build my-project`
 
 ### Update CI Configurations
 
