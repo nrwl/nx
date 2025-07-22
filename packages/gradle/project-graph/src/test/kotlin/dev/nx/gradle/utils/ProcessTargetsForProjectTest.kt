@@ -16,6 +16,10 @@ class ProcessTargetsForProjectTest {
     val projectDir = File(workspaceRoot, "project-a").apply { mkdirs() }
     val project = ProjectBuilder.builder().withProjectDir(projectDir).build()
 
+    // Create a build file so the task dependencies are properly detected
+    val buildFile = File(projectDir, "build.gradle")
+    buildFile.writeText("// test build file")
+
     // Create tasks that would normally trigger atomized targets
     val testFile1 =
         File(projectDir, "src/test/kotlin/MyFirstTest.kt").apply {
@@ -115,6 +119,10 @@ class ProcessTargetsForProjectTest {
     val workspaceRoot = workspaceDir.absolutePath
     val projectDir = File(workspaceRoot, "project-a").apply { mkdirs() }
     val project = ProjectBuilder.builder().withProjectDir(projectDir).build()
+
+    // Create a build file so the task dependencies are properly detected
+    val buildFile = File(projectDir, "build.gradle")
+    buildFile.writeText("// test build file")
 
     // Create tasks that would normally trigger atomized targets
     val testFile1 =

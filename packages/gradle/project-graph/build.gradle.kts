@@ -16,7 +16,6 @@ repositories { mavenCentral() }
 
 dependencies {
   implementation("com.google.code.gson:gson:2.10.1")
-  implementation("com.github.javaparser:javaparser-core:3.25.8")
   testImplementation(kotlin("test"))
   testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
   testImplementation("org.mockito:mockito-core:5.8.0")
