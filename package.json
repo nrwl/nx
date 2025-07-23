@@ -343,7 +343,7 @@
   "dependencies": {
     "@astrojs/markdoc": "^0.15.0",
     "@astrojs/netlify": "^6.4.0",
-    "@astrojs/starlight": "^0.34.4",
+    "@astrojs/starlight": "0.34.6",
     "@astrojs/starlight-markdoc": "^0.4.0",
     "@docsearch/react": "^3.3.0",
     "@docusaurus/core": "3.8.1",
