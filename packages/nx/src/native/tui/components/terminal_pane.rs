@@ -416,7 +416,6 @@ impl<'a> TerminalPane<'a> {
                     | TaskStatus::LocalCacheKeptExisting
                     | TaskStatus::LocalCache
                     | TaskStatus::RemoteCache
-                    | TaskStatus::Skipped
             )
             && area.width > Self::CONFIG.min_duration_display_width
     }
@@ -881,7 +880,10 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                             let remaining_width =
                                 safe_area.width.saturating_sub(task_name_display_len as u16);
 
-                            if duration_width as u16 + Self::CONFIG.right_margin < remaining_width
+                            if duration_width as u16
+                                + Self::CONFIG.right_margin
+                                + Self::CONFIG.width_padding
+                                <= remaining_width
                                 && safe_area.height > 1
                                 && safe_area.width >= Self::CONFIG.min_duration_display_width
                             {
@@ -1009,7 +1011,7 @@ mod tests {
             None,
             None,
         );
-        assert!(terminal_pane.should_show_duration_display(&state, area));
+        assert!(!terminal_pane.should_show_duration_display(&state, area));
 
         // Test that duration display is NOT shown for continuous tasks
         let state = create_terminal_pane_state(
