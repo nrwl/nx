@@ -1,5 +1,57 @@
 # Enterprise Release Notes
 
+### 2025.07
+
+##### Breaking Change
+
+This upgrades includes a breaking change to the `nx-cloud` cluster: instead of a messagequeue, the `nx-api` pod need a valid Valkey (Redis) connection string.
+
+1. Install valkey: 2. You can either use the Bitnami chart: https://github.com/bitnami/charts/tree/main/bitnami/valkey 2. Or for a simpler deployment, you can use the Valkey docker image directly: https://hub.docker.com/r/valkey/valkey/ 3. Or you can install it as a system service: https://valkey.io/topics/installation/
+1. Upgrade to the latest Helm chart `0.16.3`
+1. Apply the below values
+
+```yaml
+enableMessageQueue: false
+
+nxApi:
+  # add these env vars to the nx-api
+  deployment:
+    env:
+      - name: VALKEY_CLIENT_PROVIDER
+        value: 'redisson'
+      - name: VALKEY_PASSWORD
+        value: 'valkey'
+      - name: VALKEY_PASSWORD
+        valueFrom:
+          # remember to apply this secret to your cluster
+          secretKeyRef:
+            name: valkey-secrets
+            key: VALKEY_PASSWORD
+      - name: VALKEY_PORT
+        value: '6379'
+      - name: VALKEY_PRIMARY_ADDRESS
+        value: 'valkey'
+      - name: VALKEY_USE_SENTINEL
+        value: 'false'
+      - name: VALKEY_USERNAME
+        value: 'default'
+      - name: NX_CLOUD_CONFORMANCE_RULES_BUCKET
+        value: local-cluster-file-server # use this exact file if you are using the file server, otherwise point it to an S3/Azure/Google bucket
+```
+
+##### Updates
+
+- Feat: Polygraph availability (Conformance, Workspace Graph, Custom Workflows)
+- Feat: Nx 21 [continuous tasks](https://nx.dev/blog/nx-21-continuous-tasks) support
+- Feat: Download artifacts button
+  - When you view a task that just ran in CI on the NxCloud UI, there is now button the download any artifacts that task produced directly from your browser
+  - This is especially useful if you want to view screenshots/videos of a failed e2e tests
+- Feat: [Self-healing CI](https://nx.dev/ci/features/self-healing-ci)
+  - Speak to your assigned DPE about testing this
+  - You will need an Anthropic API key and access to Claude's servers
+- Feat: Dark Mode UI setting
+- Various fixes and stability improvements to DTE, agent visualisation and other areas of the app
+
 ### 2025.06.3
 
 - Fix: add timeouts to GitLab requests
