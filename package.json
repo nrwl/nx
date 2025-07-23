@@ -400,7 +400,8 @@
   },
   "resolutions": {
     "minimist": "^1.2.6",
-    "underscore": "^1.12.1"
+    "underscore": "^1.12.1",
+    "stylus": "0.0.1-security"
   },
   "pnpm": {
     "patchedDependencies": {
