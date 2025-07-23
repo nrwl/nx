@@ -238,13 +238,13 @@ describe('hostGenerator', () => {
         compilerOptions: {
           outDir: '../../out-tsc/server',
           target: 'es2019',
-          types: [
-            'node',
-            '@nx/react/typings/cssmodule.d.ts',
-            '@nx/react/typings/image.d.ts',
-          ],
+          types: ['node'],
         },
         extends: './tsconfig.app.json',
+        files: [
+          '../node_modules/@nx/react/typings/cssmodule.d.ts',
+          '../node_modules/@nx/react/typings/image.d.ts',
+        ],
         include: ['src/remotes.d.ts', 'src/main.server.tsx', 'server.ts'],
       });
 
@@ -284,13 +284,13 @@ describe('hostGenerator', () => {
         compilerOptions: {
           outDir: '../../out-tsc/server',
           target: 'es2019',
-          types: [
-            'node',
-            '@nx/react/typings/cssmodule.d.ts',
-            '@nx/react/typings/image.d.ts',
-          ],
+          types: ['node'],
         },
         extends: './tsconfig.app.json',
+        files: [
+          '../node_modules/@nx/react/typings/cssmodule.d.ts',
+          '../node_modules/@nx/react/typings/image.d.ts',
+        ],
         include: ['src/remotes.d.ts', 'src/main.server.tsx', 'server.ts'],
       });
 

@@ -82,9 +82,11 @@ describe('app', () => {
       const tsconfigApp = readJson(appTree, 'my-app/tsconfig.app.json');
       expect(tsconfigApp.compilerOptions.types).toEqual([
         'node',
-        '@nx/react/typings/cssmodule.d.ts',
-        '@nx/react/typings/image.d.ts',
         'vite/client',
+      ]);
+      expect(tsconfigApp.files).toEqual([
+        '../node_modules/@nx/react/typings/cssmodule.d.ts',
+        '../node_modules/@nx/react/typings/image.d.ts',
       ]);
       const tsconfigSpec = readJson(appTree, 'my-app/tsconfig.spec.json');
       expect(tsconfigSpec.compilerOptions.types).toEqual([
@@ -93,9 +95,13 @@ describe('app', () => {
         'vite/client',
         'node',
         'vitest',
-        '@nx/react/typings/cssmodule.d.ts',
-        '@nx/react/typings/image.d.ts',
       ]);
+      expect(tsconfigSpec.files).toContain(
+        '../node_modules/@nx/react/typings/cssmodule.d.ts'
+      );
+      expect(tsconfigSpec.files).toContain(
+        '../node_modules/@nx/react/typings/image.d.ts'
+      );
       expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
     });
 
@@ -236,9 +242,11 @@ describe('app', () => {
       const tsconfigApp = readJson(appTree, 'my-app/tsconfig.app.json');
       expect(tsconfigApp.compilerOptions.types).toEqual([
         'node',
-        '@nx/react/typings/cssmodule.d.ts',
-        '@nx/react/typings/image.d.ts',
         'vite/client',
+      ]);
+      expect(tsconfigApp.files).toEqual([
+        '../node_modules/@nx/react/typings/cssmodule.d.ts',
+        '../node_modules/@nx/react/typings/image.d.ts',
       ]);
       const tsconfigSpec = readJson(appTree, 'my-app/tsconfig.spec.json');
       expect(tsconfigSpec.compilerOptions.types).toEqual([
@@ -247,9 +255,13 @@ describe('app', () => {
         'vite/client',
         'node',
         'vitest',
-        '@nx/react/typings/cssmodule.d.ts',
-        '@nx/react/typings/image.d.ts',
       ]);
+      expect(tsconfigSpec.files).toContain(
+        '../node_modules/@nx/react/typings/cssmodule.d.ts'
+      );
+      expect(tsconfigSpec.files).toContain(
+        '../node_modules/@nx/react/typings/image.d.ts'
+      );
       expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
     });
 
@@ -1185,14 +1197,13 @@ describe('app', () => {
             "module": "commonjs",
             "moduleResolution": "node10",
             "jsx": "react-jsx",
-            "types": [
-              "jest",
-              "node",
-              "@nx/react/typings/cssmodule.d.ts",
-              "@nx/react/typings/image.d.ts"
-            ]
+            "types": ["jest", "node"]
           },
-          "files": ["src/test-setup.ts"],
+          "files": [
+            "src/test-setup.ts",
+            "../node_modules/@nx/react/typings/cssmodule.d.ts",
+            "../node_modules/@nx/react/typings/image.d.ts"
+          ],
           "include": [
             "jest.config.ts",
             "src/**/*.test.ts",
@@ -1427,8 +1438,6 @@ describe('app', () => {
             "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
-              "@nx/react/typings/cssmodule.d.ts",
-              "@nx/react/typings/image.d.ts",
               "vite/client",
             ],
           },
@@ -1452,6 +1461,10 @@ describe('app', () => {
             "eslint.config.mjs",
           ],
           "extends": "../tsconfig.base.json",
+          "files": [
+            "../node_modules/@nx/react/typings/cssmodule.d.ts",
+            "../node_modules/@nx/react/typings/image.d.ts",
+          ],
           "include": [
             "src/**/*.js",
             "src/**/*.jsx",
@@ -1474,11 +1487,13 @@ describe('app', () => {
               "vite/client",
               "node",
               "vitest",
-              "@nx/react/typings/cssmodule.d.ts",
-              "@nx/react/typings/image.d.ts",
             ],
           },
           "extends": "../tsconfig.base.json",
+          "files": [
+            "../node_modules/@nx/react/typings/cssmodule.d.ts",
+            "../node_modules/@nx/react/typings/image.d.ts",
+          ],
           "include": [
             "vite.config.ts",
             "vite.config.mts",

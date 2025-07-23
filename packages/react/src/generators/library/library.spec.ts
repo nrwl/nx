@@ -79,11 +79,10 @@ describe('lib', () => {
       unitTestRunner: 'vitest',
     });
     const tsconfigApp = readJson(tree, 'my-lib/tsconfig.lib.json');
-    expect(tsconfigApp.compilerOptions.types).toEqual([
-      'node',
-      '@nx/react/typings/cssmodule.d.ts',
-      '@nx/react/typings/image.d.ts',
-      'vite/client',
+    expect(tsconfigApp.compilerOptions.types).toEqual(['node', 'vite/client']);
+    expect(tsconfigApp.files).toEqual([
+      '../node_modules/@nx/react/typings/cssmodule.d.ts',
+      '../node_modules/@nx/react/typings/image.d.ts',
     ]);
     const tsconfigSpec = readJson(tree, 'my-lib/tsconfig.spec.json');
     expect(tsconfigSpec.compilerOptions.types).toEqual([
@@ -1078,8 +1077,6 @@ module.exports = withNx(
             "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
             "types": [
               "node",
-              "@nx/react/typings/cssmodule.d.ts",
-              "@nx/react/typings/image.d.ts",
               "vite/client",
             ],
           },
@@ -1111,6 +1108,10 @@ module.exports = withNx(
             "eslint.config.mjs",
           ],
           "extends": "../../tsconfig.base.json",
+          "files": [
+            "../../node_modules/@nx/react/typings/cssmodule.d.ts",
+            "../../node_modules/@nx/react/typings/image.d.ts",
+          ],
           "include": [
             "src/**/*.js",
             "src/**/*.jsx",

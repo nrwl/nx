@@ -5,6 +5,7 @@ import {
   formatFiles,
   generateFiles,
   joinPathFragments,
+  offsetFromRoot,
   readCachedProjectGraph,
   readNxJson,
   readProjectConfiguration,
@@ -235,6 +236,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
 
   generateFiles(tree, join(__dirname, 'files'), projectRoot, {
     tmpl: '',
+    offsetFromRoot: offsetFromRoot(projectRoot),
     port: Number(options?.serverPort) || 4200,
     extraInclude:
       options.extraInclude?.length > 0

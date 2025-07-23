@@ -59,6 +59,7 @@ export function addModuleFederationFiles(
           ...names(options.projectName),
           ...options,
           tmpl: '',
+          offsetFromRoot: offsetFromRoot(options.appProjectRoot),
         };
 
   generateFiles(
