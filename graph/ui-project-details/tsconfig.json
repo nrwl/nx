@@ -10,6 +10,12 @@
       "path": "../../nx-dev/ui-fence"
     },
     {
+      "path": "../shared"
+    },
+    {
+      "path": "../ui-common"
+    },
+    {
       "path": "../ui-code-block"
     },
     {

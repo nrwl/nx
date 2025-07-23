@@ -2,12 +2,38 @@ import { assign } from '@xstate/immer';
 import { createMachine, send, spawn } from 'xstate';
 import { customSelectedStateConfig } from './custom-selected.state';
 import { focusedStateConfig } from './focused.state';
-import { graphActor } from './graph.actor';
+import { graphClientActor } from './graph.actor';
 import { textFilteredStateConfig } from './text-filtered.state';
 import { tracingStateConfig } from './tracing.state';
 import { unselectedStateConfig } from './unselected.state';
 import { ProjectGraphContext, ProjectGraphMachineEvents } from './interfaces';
 import { compositeGraphStateConfig } from './composite-graph.state';
+
+// Define the set of events that should be forwarded to graphActor
+const GRAPH_CLIENT_EVENTS = new Set([
+  'initGraph',
+  'updateGraph',
+  'showAll',
+  'hideAll',
+  'showAffected',
+  'showNonAffected',
+  'toggleGroupByFolder',
+  'toggleCollapseEdges',
+  'toggleShowOnlyExternalDependencies',
+  'expandCompositeNode',
+  'collapseCompositeNode',
+  'excludeNode',
+  'includeNode',
+  'resetGraph',
+  'selectNode',
+  'focusNode',
+  'removeFocus',
+  'toggleNodeDependencies',
+  'toggleNodeDependents',
+  'updateTransitiveDepth',
+  'trace',
+  'toggleCompositeGraph',
+]);
 
 export const initialContext: ProjectGraphContext = {
   projects: [],
@@ -62,28 +88,28 @@ export const projectGraphMachine = createMachine<
       composite: compositeGraphStateConfig,
     },
     on: {
-      setProjects: {
-        target: 'unselected',
+      setGraphClient: {
         actions: [
-          'setGraph',
-          send(
-            (ctx, event) => ({
-              type: 'notifyGraphInitGraph',
-              projects: ctx.projects,
-              dependencies: ctx.dependencies,
-              fileMap: ctx.fileMap,
-              affectedProjects: ctx.affectedProjects,
-              touchedProjects: [],
-              workspaceLayout: ctx.workspaceLayout,
-              groupByFolder: ctx.groupByFolder,
-              collapseEdges: ctx.collapseEdges,
-              composite: ctx.compositeGraph.enabled,
-            }),
-            {
-              to: (context) => context.graphActor,
-            }
-          ),
+          assign((ctx, event) => {
+            ctx.graphActor = spawn(
+              graphClientActor(event.graphClient),
+              'projectGraphClientActor'
+            );
+          }),
         ],
+      },
+      setGraphClientState: {
+        actions: [
+          assign((ctx, event) => {
+            ctx.collapseEdges = event.state.collapseEdges;
+            ctx.groupByFolder = event.state.groupByFolder;
+            ctx.compositeGraph.enabled = event.state.isComposite;
+          }),
+        ],
+      },
+      initGraph: {
+        target: 'unselected',
+        actions: [send((_, event) => event, { to: (ctx) => ctx.graphActor })],
       },
       setSelectedProjectsFromGraph: {
         actions: [
@@ -96,19 +122,15 @@ export const projectGraphMachine = createMachine<
       },
       selectProject: {
         target: 'customSelected',
-        actions: ['notifyGraphShowProjects'],
       },
       selectProjects: {
         target: 'customSelected',
-        actions: ['notifyGraphShowProjects'],
       },
       selectAll: {
         target: 'customSelected',
-        actions: ['notifyGraphShowAllProjects'],
       },
       selectAffected: {
         target: 'customSelected',
-        actions: ['notifyGraphShowAffectedProjects'],
       },
       deselectProject: [
         {
@@ -117,7 +139,6 @@ export const projectGraphMachine = createMachine<
         },
         {
           target: 'customSelected',
-          actions: ['notifyGraphHideProjects'],
         },
       ],
       deselectProjects: [
@@ -127,7 +148,6 @@ export const projectGraphMachine = createMachine<
         },
         {
           target: 'customSelected',
-          actions: ['notifyGraphHideProjects'],
         },
       ],
       deselectAll: {
@@ -143,50 +163,10 @@ export const projectGraphMachine = createMachine<
         target: 'tracing',
       },
       setCollapseEdges: {
-        actions: [
-          'setCollapseEdges',
-          send(
-            (ctx, event) => ({
-              type: 'notifyGraphUpdateGraph',
-              projects: ctx.projects,
-              dependencies: ctx.dependencies,
-              affectedProjects: ctx.affectedProjects,
-              touchedProjects: [],
-              fileMap: ctx.fileMap,
-              workspaceLayout: ctx.workspaceLayout,
-              groupByFolder: ctx.groupByFolder,
-              collapseEdges: ctx.collapseEdges,
-              selectedProjects: ctx.selectedProjects,
-              composite: ctx.compositeGraph,
-            }),
-            {
-              to: (context) => context.graphActor,
-            }
-          ),
-        ],
+        actions: ['setCollapseEdges'],
       },
       setGroupByFolder: {
-        actions: [
-          'setGroupByFolder',
-          send(
-            (ctx, event) => ({
-              type: 'notifyGraphUpdateGraph',
-              projects: ctx.projects,
-              dependencies: ctx.dependencies,
-              affectedProjects: ctx.affectedProjects,
-              touchedProjects: [],
-              fileMap: ctx.fileMap,
-              workspaceLayout: ctx.workspaceLayout,
-              groupByFolder: ctx.groupByFolder,
-              collapseEdges: ctx.collapseEdges,
-              selectedProjects: ctx.selectedProjects,
-              composite: ctx.compositeGraph,
-            }),
-            {
-              to: (context) => context.graphActor,
-            }
-          ),
-        ],
+        actions: ['setGroupByFolder'],
       },
       setIncludeProjectsByPath: {
         actions: [
@@ -212,7 +192,6 @@ export const projectGraphMachine = createMachine<
           assign((ctx, event) => {
             ctx.tracing.algorithm = event.algorithm;
           }),
-          'notifyGraphTracing',
         ],
       },
       filterByText: {
@@ -220,6 +199,10 @@ export const projectGraphMachine = createMachine<
       },
       enableCompositeGraph: {
         target: 'composite',
+      },
+      '*': {
+        cond: 'isGraphClientEvent',
+        actions: [send((_, event) => event, { to: (ctx) => ctx.graphActor })],
       },
     },
   },
@@ -230,6 +213,9 @@ export const projectGraphMachine = createMachine<
       },
       isCompositeGraphEnabled: (ctx) => {
         return ctx.compositeGraph.enabled;
+      },
+      isGraphClientEvent: (ctx, event) => {
+        return GRAPH_CLIENT_EVENTS.has(event.type) && ctx.graphActor !== null;
       },
     },
     actions: {
@@ -266,126 +252,6 @@ export const projectGraphMachine = createMachine<
 
         ctx.includePath = event.includeProjectsByPath;
       }),
-      setGraph: assign((ctx, event) => {
-        if (event.type !== 'setProjects' && event.type !== 'updateGraph')
-          return;
-        ctx.projects = event.projects;
-        ctx.dependencies = event.dependencies;
-        ctx.fileMap = event.fileMap;
-        ctx.graphActor = spawn(graphActor, 'graphActor');
-        // ctx.routeSetterActor = spawn(createRouteMachine(), {
-        //   name: 'route',
-        // });
-
-        if (event.type === 'setProjects') {
-          ctx.workspaceLayout = event.workspaceLayout;
-          ctx.affectedProjects = event.affectedProjects;
-        }
-      }),
-      notifyGraphTracing: send(
-        (ctx, event) => {
-          return {
-            type: 'notifyGraphTracing',
-            start: ctx.tracing.start,
-            end: ctx.tracing.end,
-            algorithm: ctx.tracing.algorithm,
-          };
-        },
-        {
-          to: (context) => context.graphActor,
-        }
-      ),
-
-      notifyGraphShowProjects: send(
-        (context, event) => {
-          if (event.type !== 'selectProject' && event.type !== 'selectProjects')
-            return;
-
-          if (event.type === 'selectProject') {
-            return {
-              type: 'notifyGraphShowProjects',
-              projectNames: [event.projectName],
-            };
-          } else {
-            return {
-              type: 'notifyGraphShowProjects',
-              projectNames: event.projectNames,
-            };
-          }
-        },
-        {
-          to: (context) => context.graphActor,
-        }
-      ),
-      notifyGraphHideProjects: send(
-        (context, event) => {
-          if (
-            event.type !== 'deselectProject' &&
-            event.type !== 'deselectProjects'
-          )
-            return;
-
-          if (event.type === 'deselectProject') {
-            return {
-              type: 'notifyGraphHideProjects',
-              projectNames: [event.projectName],
-            };
-          } else {
-            return {
-              type: 'notifyGraphHideProjects',
-              projectNames: event.projectNames,
-            };
-          }
-        },
-        {
-          to: (context) => context.graphActor,
-        }
-      ),
-      notifyGraphShowAllProjects: send(
-        (context, event) => ({
-          type: 'notifyGraphShowAllProjects',
-        }),
-        {
-          to: (context) => context.graphActor,
-        }
-      ),
-      notifyGraphHideAllProjects: send(
-        (context, event) => ({
-          type: 'notifyGraphHideAllProjects',
-        }),
-        {
-          to: (context) => context.graphActor,
-        }
-      ),
-      notifyGraphShowAffectedProjects: send(
-        {
-          type: 'notifyGraphShowAffectedProjects',
-        },
-        {
-          to: (ctx) => ctx.graphActor,
-        }
-      ),
-      notifyGraphFocusProject: send(
-        (context, event) => ({
-          type: 'notifyGraphFocusProject',
-          projectName: context.focusedProject,
-          searchDepth: context.searchDepthEnabled ? context.searchDepth : -1,
-        }),
-        {
-          to: (context) => context.graphActor,
-        }
-      ),
-      notifyGraphFilterProjectsByText: send(
-        (context, event) => ({
-          type: 'notifyGraphFilterProjectsByText',
-          search: context.textFilter,
-          includeProjectsByPath: context.includePath,
-          searchDepth: context.searchDepthEnabled ? context.searchDepth : -1,
-        }),
-        {
-          to: (context) => context.graphActor,
-        }
-      ),
     },
   }
 );

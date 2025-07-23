@@ -13,6 +13,7 @@
     "@nx/graph-internal-project-details": "workspace:",
     "@nx/graph-internal-ui-project-details": "workspace:",
     "@nx/graph-migrate": "workspace:",
+    "@nx/graph-shared": "workspace:",
     "@nx/graph-ui-common": "workspace:",
     "@nx/graph-ui-code-block": "workspace:"
   }

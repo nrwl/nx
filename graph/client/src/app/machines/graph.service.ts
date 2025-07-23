@@ -1,7 +1,7 @@
 import {
   getEnvironmentConfig,
   getProjectGraphDataService,
-} from '@nx/graph/legacy/shared';
+} from '@nx/graph-shared';
 import { GraphService } from '@nx/graph/legacy/graph';
 import { selectValueByThemeStatic } from '@nx/graph-internal-ui-theme';
 
@@ -13,7 +13,7 @@ export function getGraphService(): GraphService {
   if (!graphService) {
     const projectDataService = getProjectGraphDataService();
     graphService = new GraphService(
-      'cytoscape-graph',
+      'cytoscape-graph-1',
       selectValueByThemeStatic('dark', 'light'),
       environment.environment === 'nx-console' ? 'nx-console' : undefined,
       'TB',

@@ -9,7 +9,6 @@ export const focusedStateConfig: ProjectGraphStateNodeConfig = {
 
       ctx.focusedProject = event.projectName;
     }),
-    'notifyGraphFocusProject',
   ],
   exit: [
     assign((ctx) => {
@@ -18,41 +17,22 @@ export const focusedStateConfig: ProjectGraphStateNodeConfig = {
   ],
   on: {
     incrementSearchDepth: {
-      actions: ['incrementSearchDepth', 'notifyGraphFocusProject'],
+      actions: ['incrementSearchDepth'],
     },
     decrementSearchDepth: {
-      actions: ['decrementSearchDepth', 'notifyGraphFocusProject'],
+      actions: ['decrementSearchDepth'],
     },
     setSearchDepthEnabled: {
-      actions: ['setSearchDepthEnabled', 'notifyGraphFocusProject'],
+      actions: ['setSearchDepthEnabled'],
     },
     setSearchDepth: {
-      actions: ['setSearchDepth', 'notifyGraphFocusProject'],
+      actions: ['setSearchDepth'],
     },
     unfocusProject: {
       target: 'unselected',
     },
     updateGraph: {
-      actions: [
-        'setGraph',
-        send(
-          (ctx, event) => ({
-            type: 'notifyGraphUpdateGraph',
-            projects: ctx.projects,
-            dependencies: ctx.dependencies,
-            fileMap: ctx.fileMap,
-            affectedProjects: ctx.affectedProjects,
-            workspaceLayout: ctx.workspaceLayout,
-            groupByFolder: ctx.groupByFolder,
-            selectedProjects: ctx.selectedProjects,
-            composite: ctx.compositeGraph,
-          }),
-          {
-            to: (context) => context.graphActor,
-          }
-        ),
-        'notifyGraphFocusProject',
-      ],
+      actions: ['setGraph'],
     },
   },
 };

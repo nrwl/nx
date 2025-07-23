@@ -46,8 +46,8 @@ importers:
         specifier: ^0.1.52
         version: 0.1.73
       '@nx/graph':
-        specifier: 0.4.2
-        version: 0.4.2(@nx/devkit@21.4.0-beta.3(nx@21.4.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))))(nx@21.4.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-dom@18.3.1(react@18.3.1))(react-router-dom@6.30.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+        specifier: file:../ocean-worktrees/graph-trace/dist/libs/nx-packages/nx-graph
+        version: file:../ocean-worktrees/graph-trace/dist/libs/nx-packages/nx-graph(@floating-ui/react@0.26.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@headlessui/react@2.2.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroicons/react@2.2.0(react@18.3.1))(@nx/devkit@21.4.0-beta.3(nx@21.4.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))))(classnames@2.5.1)(cytoscape-dagre@2.5.0(cytoscape@3.32.1))(cytoscape-popper@2.0.0(cytoscape@3.32.1))(cytoscape@3.32.1)(nx@21.4.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-copy-to-clipboard@5.1.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-router-dom@6.30.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(tailwind-merge@2.6.0)
       '@react-spring/three':
         specifier: ^9.7.3
         version: 9.7.5(@react-three/fiber@8.18.0(@types/react@18.3.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.166.1))(react@18.3.1)(three@0.166.1)
@@ -1390,6 +1390,9 @@ importers:
       '@nx/graph-migrate':
         specifier: 'workspace:'
         version: link:../migrate
+      '@nx/graph-shared':
+        specifier: 'workspace:'
+        version: link:../shared
       '@nx/graph-ui-code-block':
         specifier: 'workspace:'
         version: link:../ui-code-block
@@ -1422,12 +1425,24 @@ importers:
       '@nx/graph-internal-ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
+      '@nx/graph-shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@nx/graph-ui-common':
+        specifier: workspace:*
+        version: link:../ui-common
     devDependencies:
       jest:
         specifier: ^29.4.1
         version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@20.16.10)(typescript@5.8.3))
 
+  graph/shared: {}
+
   graph/ui-code-block:
+    dependencies:
+      '@nx/graph-ui-common':
+        specifier: 'workspace:'
+        version: link:../ui-common
     devDependencies:
       jest:
         specifier: ^29.4.1
@@ -1437,9 +1452,15 @@ importers:
 
   graph/ui-project-details:
     dependencies:
+      '@nx/graph-shared':
+        specifier: 'workspace:'
+        version: link:../shared
       '@nx/graph-ui-code-block':
         specifier: 'workspace:'
         version: link:../ui-code-block
+      '@nx/graph-ui-common':
+        specifier: 'workspace:'
+        version: link:../ui-common
       '@nx/nx-dev-ui-fence':
         specifier: 'workspace:'
         version: link:../../nx-dev/ui-fence
@@ -1451,7 +1472,11 @@ importers:
         specifier: ^29.4.1
         version: 29.7.0(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@20.16.10)(typescript@5.8.3))
 
-  graph/ui-theme: {}
+  graph/ui-theme:
+    dependencies:
+      '@nx/graph-shared':
+        specifier: 'workspace:'
+        version: link:../shared
 
   nx-dev/data-access-careers: {}
 
@@ -8544,14 +8569,41 @@ packages:
   '@nx/gradle@21.4.0-beta.3':
     resolution: {integrity: sha512-zW+3Zzz4of30AGLBnOENqgCPQkAmJ1EJQDiFGOLmmu2NVXZlGBknjKdU9TDmOhRNsVzhMWlUsgi38IxTEcAfEg==}
 
-  '@nx/graph@0.4.2':
-    resolution: {integrity: sha512-8sdn77o3O/BeKukKRDTPcktbMGLq4w0B5cij3SUJjzFXEZUmKCKs4LXt4VO48EV0qB4zEmuNYdhVp2erfDF7Jg==}
+  '@nx/graph@file:../ocean-worktrees/graph-trace/dist/libs/nx-packages/nx-graph':
+    resolution: {directory: ../ocean-worktrees/graph-trace/dist/libs/nx-packages/nx-graph, type: directory}
     peerDependencies:
-      '@nx/devkit': '>= 19 < 21'
-      nx: '>= 19 < 21'
+      '@floating-ui/react': ^0.27.7
+      '@headlessui/react': '>= 2.0.0 < 3.0.0'
+      '@heroicons/react': '>= 2.0.0 < 3.0.0'
+      '@nx/devkit': 21.0.0
+      classnames: ~2.5.1
+      cmdk: ~1.1.1
+      cytoscape: '>= 3.0.0 < 4.0.0'
+      cytoscape-dagre: '>= 2.5.0 < 3.0.0'
+      cytoscape-popper: '>= 4.0.0 < 5.0.0'
+      nx: '>= 19 < 22'
       react: '>= 18 < 20'
+      react-copy-to-clipboard: ~5.1.0
       react-dom: '>= 18 < 20'
       react-router-dom: '>= 6.0.0'
+      tailwind-merge: '>= 3.2.0 < 4.0.0'
+    peerDependenciesMeta:
+      '@floating-ui/react':
+        optional: true
+      '@headlessui/react':
+        optional: true
+      '@heroicons/react':
+        optional: true
+      classnames:
+        optional: true
+      cmdk:
+        optional: true
+      cytoscape-popper:
+        optional: true
+      react-copy-to-clipboard:
+        optional: true
+      tailwind-merge:
+        optional: true
 
   '@nx/jest@21.4.0-beta.3':
     resolution: {integrity: sha512-rCS1xr9IIumTMOMiFgAu9wbJ6Dn1fRBNc+b1/YiDPauC1Oby7crZkv1smB31enNbOdSObFi1/QL4kDkmpAYFVw==}
@@ -31438,13 +31490,23 @@ snapshots:
       - '@swc/core'
       - debug
 
-  '@nx/graph@0.4.2(@nx/devkit@21.4.0-beta.3(nx@21.4.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))))(nx@21.4.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-dom@18.3.1(react@18.3.1))(react-router-dom@6.30.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)':
+  '@nx/graph@file:../ocean-worktrees/graph-trace/dist/libs/nx-packages/nx-graph(@floating-ui/react@0.26.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@headlessui/react@2.2.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroicons/react@2.2.0(react@18.3.1))(@nx/devkit@21.4.0-beta.3(nx@21.4.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))))(classnames@2.5.1)(cytoscape-dagre@2.5.0(cytoscape@3.32.1))(cytoscape-popper@2.0.0(cytoscape@3.32.1))(cytoscape@3.32.1)(nx@21.4.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-copy-to-clipboard@5.1.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-router-dom@6.30.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(tailwind-merge@2.6.0)':
     dependencies:
       '@nx/devkit': 21.4.0-beta.3(nx@21.4.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
+      cytoscape: 3.32.1
+      cytoscape-dagre: 2.5.0(cytoscape@3.32.1)
       nx: 21.4.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       react-router-dom: 6.30.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+    optionalDependencies:
+      '@floating-ui/react': 0.26.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@headlessui/react': 2.2.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@heroicons/react': 2.2.0(react@18.3.1)
+      classnames: 2.5.1
+      cytoscape-popper: 2.0.0(cytoscape@3.32.1)
+      react-copy-to-clipboard: 5.1.0(react@18.3.1)
+      tailwind-merge: 2.6.0
 
   '@nx/jest@21.4.0-beta.3(@babel/traverse@7.28.0)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(esbuild-register@3.6.0(esbuild@0.25.0))(nx@21.4.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.8.3))(typescript@5.8.3)(verdaccio@6.0.5(encoding@0.1.13)(typanion@3.14.0))':
     dependencies:

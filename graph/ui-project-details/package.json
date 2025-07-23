@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@nx/graph-ui-code-block": "workspace:",
+    "@nx/graph-ui-common": "workspace:",
+    "@nx/graph-shared": "workspace:",
     "@nx/nx-dev-ui-fence": "workspace:"
   }
 }

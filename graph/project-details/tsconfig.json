@@ -13,6 +13,12 @@
       "path": "../ui-project-details"
     },
     {
+      "path": "../shared"
+    },
+    {
+      "path": "../ui-common"
+    },
+    {
       "path": "../ui-theme"
     },
     {

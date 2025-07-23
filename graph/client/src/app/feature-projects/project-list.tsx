@@ -25,10 +25,9 @@ import { getProjectsByType, parseParentDirectoriesFromFilePath } from '../util';
 import { ExperimentalFeature } from '../ui-components/experimental-feature';
 import { TracingAlgorithmType } from './machines/interfaces';
 import { getProjectGraphService } from '../machines/get-services';
-import { Link, useNavigate, useNavigation } from 'react-router-dom';
-import { useRouteConstructor } from '@nx/graph/legacy/shared';
+import { Link, useNavigate } from 'react-router-dom';
+import { useRouteConstructor } from '@nx/graph-shared';
 import { CompositeNode } from '../interfaces';
-import { useMemo } from 'react';
 
 interface SidebarProject {
   projectGraphNode: ProjectGraphProjectNode;
@@ -169,7 +168,7 @@ function ProjectListItem({
             toggleProject(project.projectGraphNode.name, project.isSelected)
           }
         >
-          <EyeIcon className="h-5 w-5"></EyeIcon>
+          <EyeIcon className="h-5 w-5" />
         </span>
       ) : null}
     </li>
@@ -223,7 +222,7 @@ function SubProjectList({
             data-cy={`toggle-folder-visibility-button-${headerText}`}
             onClick={() => toggleAllProjects(allProjectsSelected)}
           >
-            <EyeIcon className="h-5 w-5"></EyeIcon>
+            <EyeIcon className="h-5 w-5" />
           </span>
         </div>
       ) : null}
@@ -234,7 +233,7 @@ function SubProjectList({
               key={project.projectGraphNode.name}
               project={project}
               tracingInfo={tracingInfo}
-            ></ProjectListItem>
+            />
           );
         })}
       </ul>
@@ -413,7 +412,7 @@ export function ProjectList() {
             headerText={directoryName}
             projects={appDirectoryGroups[directoryName]}
             tracingInfo={tracingInfo}
-          ></SubProjectList>
+          />
         );
       })}
 
@@ -428,7 +427,7 @@ export function ProjectList() {
             headerText={directoryName}
             projects={e2eDirectoryGroups[directoryName]}
             tracingInfo={tracingInfo}
-          ></SubProjectList>
+          />
         );
       })}
 
@@ -443,7 +442,7 @@ export function ProjectList() {
             headerText={directoryName}
             projects={libDirectoryGroups[directoryName]}
             tracingInfo={tracingInfo}
-          ></SubProjectList>
+          />
         );
       })}
     </div>
