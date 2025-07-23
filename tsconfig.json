@@ -381,6 +381,9 @@
     },
     {
       "path": "./e2e/nx"
+    },
+    {
+      "path": "./astro-nx-dev-poc"
     }
   ],
   "extends": "./tsconfig.base.json"

@@ -5,3 +5,4 @@ packages:
   - 'nx-dev/*'
   - 'tools/*'
   - 'typedoc-theme'
+  - 'astro-nx-dev-poc'

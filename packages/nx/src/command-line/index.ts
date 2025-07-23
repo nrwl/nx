@@ -1,7 +1,6 @@
 // CLI Commands Export File for Documentation
 export * from './add/command-object';
 export * from './affected/command-object';
-export * from './connect/command-object';
 export * from './daemon/command-object';
 export * from './exec/command-object';
 export * from './format/command-object';
@@ -10,8 +9,6 @@ export * from './graph/command-object';
 export * from './import/command-object';
 export * from './init/command-object';
 export * from './list/command-object';
-export * from './login/command-object';
-export * from './logout/command-object';
 export * from './migrate/command-object';
 export * from './new/command-object';
 export * from './register/command-object';
