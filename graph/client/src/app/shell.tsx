@@ -13,18 +13,15 @@ import {
   ViewfinderCircleIcon,
 } from '@heroicons/react/24/outline';
 import {
-  ErrorToast,
   fetchProjectGraph,
   getProjectGraphDataService,
   useEnvironmentConfig,
   usePoll,
-} from '@nx/graph/legacy/shared';
-import { Dropdown, Spinner } from '@nx/graph/legacy/components';
-import { Tooltip } from '@nx/graph/legacy/tooltips';
-
+} from '@nx/graph-shared';
+import { Tooltip, Spinner, ErrorToast, Dropdown } from '@nx/graph-ui-common';
 import { getSystemTheme, Theme, ThemePanel } from '@nx/graph-internal-ui-theme';
 import classNames from 'classnames';
-import { useLayoutEffect, useState } from 'react';
+import { useLayoutEffect, useMemo, useState } from 'react';
 import {
   Outlet,
   useNavigate,
@@ -39,35 +36,68 @@ import { getGraphService } from './machines/graph.service';
 import { DebuggerPanel } from './ui-components/debugger-panel';
 import { ExperimentalFeature } from './ui-components/experimental-feature';
 import { TooltipDisplay } from './ui-tooltips/graph-tooltip-display';
+import {
+  NxGraphProjectGraphProvider,
+  useProjectGraphContext,
+} from '@nx/graph/projects';
+import { NxGraphTaskGraphProvider, useTaskGraphContext } from '@nx/graph/tasks';
+
+function useGraphContextFactory(topLevelRoute: string) {
+  return useMemo(() => {
+    return topLevelRoute.includes('/projects')
+      ? useProjectGraphContext
+      : useTaskGraphContext;
+  }, [topLevelRoute]);
+}
+
+const routes = [
+  { route: '/projects', label: 'Projects' },
+  { route: '/tasks', label: 'Tasks' },
+];
 
 export function Shell(): JSX.Element {
-  const projectGraphService = getProjectGraphService();
-  const projectGraphDataService = getProjectGraphDataService();
-  const graphService = getGraphService();
+  const currentPath = useCurrentPath();
+  const currentRoute = currentPath.currentPath;
 
-  const [lastPerfReport, setLastPerfReport] = useState(
-    graphService.lastPerformanceReport
-  );
+  const topLevelRoute = currentRoute.startsWith('/tasks')
+    ? '/tasks'
+    : '/projects';
 
-  useLayoutEffect(() => {
-    graphService.listen(() => {
-      setLastPerfReport(graphService.lastPerformanceReport);
-    });
-  }, []);
-
-  const nodesVisible = lastPerfReport.numNodes !== 0;
-
-  const environment = useEnvironmentConfig();
-  const environmentConfig = useEnvironmentConfig();
-  function onThemeChange(theme: Theme) {
-    graphService.theme = theme === 'system' ? getSystemTheme() : theme;
+  if (topLevelRoute.includes('projects')) {
+    return (
+      <NxGraphProjectGraphProvider renderPlatform="nx" styles={[]}>
+        <InnerShell
+          topLevelRoute={topLevelRoute}
+          workspace={currentPath.workspace}
+        />
+      </NxGraphProjectGraphProvider>
+    );
   }
 
+  return (
+    <NxGraphTaskGraphProvider renderPlatform="nx" styles={[]}>
+      <InnerShell
+        topLevelRoute={topLevelRoute}
+        workspace={currentPath.workspace}
+      />
+    </NxGraphTaskGraphProvider>
+  );
+}
+
+function InnerShell({
+  topLevelRoute,
+  workspace,
+}: {
+  topLevelRoute: string;
+  workspace: string;
+}) {
+  const projectGraphService = getProjectGraphService();
+  const projectGraphDataService = getProjectGraphDataService();
+
+  const environmentConfig = useEnvironmentConfig();
   const navigate = useNavigate();
   const { state: navigationState } = useNavigation();
-  const currentPath = useCurrentPath();
   const params = useParams();
-  const currentRoute = currentPath.currentPath;
 
   const [errors, setErrors] = useState<GraphError[] | undefined>(undefined);
   const { errors: routerErrors } = useRouteLoaderData('selectedWorkspace') as {
@@ -90,17 +120,26 @@ export function Shell(): JSX.Element {
     environmentConfig.watch
   );
 
-  const topLevelRoute = currentRoute.startsWith('/tasks')
-    ? '/tasks'
-    : '/projects';
+  const { containerRef, sendRenderConfigEvent, handleEventResult } =
+    useGraphContextFactory(topLevelRoute)();
 
-  const routes = [
-    { route: '/projects', label: 'Projects' },
-    {
-      route: '/tasks',
-      label: 'Tasks',
-    },
-  ];
+  const nodesVisible = useMemo(() => {
+    let count = 0;
+    if (handleEventResult.type === 'tasks') {
+      count = handleEventResult.tasks.length;
+    } else {
+      count =
+        handleEventResult.projects.length + handleEventResult.composites.length;
+    }
+    return count > 0;
+  }, [handleEventResult]);
+
+  function onThemeChange(theme: Theme) {
+    sendRenderConfigEvent({
+      type: 'ThemeChange',
+      theme: theme === 'system' ? getSystemTheme() : theme,
+    });
+  }
 
   function projectChange(projectGraphId: string) {
     navigate(`/${encodeURIComponent(projectGraphId)}${topLevelRoute}`);
@@ -124,8 +163,7 @@ export function Shell(): JSX.Element {
   }
 
   function resetLayout() {
-    const graph = getGraphService();
-    graph.resetLayout();
+    sendRenderConfigEvent({ type: 'ResetLayout' });
   }
 
   return (
@@ -153,16 +191,12 @@ export function Shell(): JSX.Element {
                 </svg>
                 <Dropdown
                   data-cy="route-select"
-                  defaultValue={
-                    currentRoute.startsWith('/projects')
-                      ? '/projects'
-                      : '/tasks'
-                  }
+                  defaultValue={topLevelRoute}
                   onChange={(event) => {
                     projectGraphService.send('deselectAll');
-                    if (environment.environment === 'dev') {
+                    if (environmentConfig.environment === 'dev') {
                       navigate(
-                        `/${encodeURIComponent(currentPath.workspace)}${
+                        `/${encodeURIComponent(workspace)}${
                           event.currentTarget.value
                         }`
                       );
@@ -205,19 +239,19 @@ export function Shell(): JSX.Element {
             </a>
           </>
         ) : null}
-        <Outlet></Outlet>
+        <Outlet />
       </div>
       <div
         id="main-content"
         className="flex-grow overflow-hidden transition-all"
       >
-        {environment.appConfig.showDebugger ? (
+        {environmentConfig.appConfig.showDebugger ? (
           <DebuggerPanel
-            projects={environment.appConfig.workspaces}
+            projects={environmentConfig.appConfig.workspaces}
             selectedProject={params.selectedWorkspaceId}
-            lastPerfReport={lastPerfReport}
+            graphEventResult={handleEventResult}
             selectedProjectChange={projectChange}
-          ></DebuggerPanel>
+          />
         ) : null}
 
         {!nodesVisible || navigationState === 'loading' ? (
@@ -232,8 +266,8 @@ export function Shell(): JSX.Element {
                 <ArrowLeftCircleIcon className="mr-4 h-6 w-6" />
                 <h4>
                   Please select a{' '}
-                  {currentRoute.startsWith('/tasks') ? 'task' : 'project'} in
-                  the sidebar.
+                  {topLevelRoute.includes('tasks') ? 'task' : 'project'} in the
+                  sidebar.
                 </h4>
               </>
             )}
@@ -242,10 +276,12 @@ export function Shell(): JSX.Element {
 
         <div className="h-full w-full">
           <div
+            ref={containerRef}
             className="h-full w-full cursor-pointer"
             id="cytoscape-graph"
           ></div>
-          <TooltipDisplay></TooltipDisplay>
+
+          <TooltipDisplay />
 
           <Tooltip
             openAction="hover"

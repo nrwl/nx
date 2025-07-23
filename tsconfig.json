@@ -387,6 +387,9 @@
     },
     {
       "path": "./astro-docs"
+    },
+    {
+      "path": "./graph/shared"
     }
   ],
   "extends": "./tsconfig.base.json"

@@ -10,7 +10,6 @@ export const tracingStateConfig: ProjectGraphStateNodeConfig = {
         ctx.tracing.end = event.projectName;
       }
     }),
-    'notifyGraphTracing',
   ],
   exit: [
     assign((ctx, event) => {
@@ -26,7 +25,6 @@ export const tracingStateConfig: ProjectGraphStateNodeConfig = {
         assign((ctx) => {
           ctx.tracing.start = null;
         }),
-        'notifyGraphTracing',
       ],
     },
     clearTraceEnd: {
@@ -34,7 +32,6 @@ export const tracingStateConfig: ProjectGraphStateNodeConfig = {
         assign((ctx) => {
           ctx.tracing.end = null;
         }),
-        'notifyGraphTracing',
       ],
     },
   },

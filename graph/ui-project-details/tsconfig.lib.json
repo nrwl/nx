@@ -33,6 +33,12 @@
       "path": "../../nx-dev/ui-fence/tsconfig.lib.json"
     },
     {
+      "path": "../shared/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-common/tsconfig.lib.json"
+    },
+    {
       "path": "../ui-code-block/tsconfig.lib.json"
     }
   ]

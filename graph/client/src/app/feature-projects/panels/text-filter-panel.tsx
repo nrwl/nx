@@ -1,4 +1,4 @@
-import { DebouncedTextInput } from '@nx/graph/legacy/components';
+import { DebouncedTextInput } from '@nx/graph-ui-common';
 
 export interface TextFilterPanelProps {
   textFilter: string;

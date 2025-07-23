@@ -9,7 +9,6 @@ export const textFilteredStateConfig: ProjectGraphStateNodeConfig = {
 
       ctx.textFilter = event.search;
     }),
-    'notifyGraphFilterProjectsByText',
   ],
   on: {
     clearTextFilter: {
@@ -20,38 +19,19 @@ export const textFilteredStateConfig: ProjectGraphStateNodeConfig = {
       }),
     },
     setIncludeProjectsByPath: {
-      actions: ['setIncludeProjectsByPath', 'notifyGraphFilterProjectsByText'],
+      actions: ['setIncludeProjectsByPath'],
     },
     incrementSearchDepth: {
-      actions: ['incrementSearchDepth', 'notifyGraphFilterProjectsByText'],
+      actions: ['incrementSearchDepth'],
     },
     decrementSearchDepth: {
-      actions: ['decrementSearchDepth', 'notifyGraphFilterProjectsByText'],
+      actions: ['decrementSearchDepth'],
     },
     setSearchDepthEnabled: {
-      actions: ['setSearchDepthEnabled', 'notifyGraphFilterProjectsByText'],
+      actions: ['setSearchDepthEnabled'],
     },
     updateGraph: {
-      actions: [
-        'setGraph',
-        send(
-          (ctx, event) => ({
-            type: 'notifyGraphUpdateGraph',
-            projects: ctx.projects,
-            dependencies: ctx.dependencies,
-            fileMap: ctx.fileMap,
-            affectedProjects: ctx.affectedProjects,
-            workspaceLayout: ctx.workspaceLayout,
-            groupByFolder: ctx.groupByFolder,
-            selectedProjects: ctx.selectedProjects,
-            composite: ctx.compositeGraph,
-          }),
-          {
-            to: (context) => context.graphActor,
-          }
-        ),
-        'notifyGraphFilterProjectsByText',
-      ],
+      actions: ['setGraph'],
     },
   },
 };

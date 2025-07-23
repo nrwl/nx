@@ -1,4 +1,4 @@
-import { getEnvironmentConfig } from '@nx/graph/legacy/shared';
+import { getEnvironmentConfig } from '@nx/graph-shared';
 
 const htmlEl = document.documentElement;
 export const localStorageThemeKey = 'nx-dep-graph-theme';

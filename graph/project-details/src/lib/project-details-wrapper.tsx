@@ -5,16 +5,16 @@ import type { ProjectGraphProjectNode } from '@nx/devkit';
 import { GraphError } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { useNavigate, useNavigation, useSearchParams } from 'react-router-dom';
+import { Spinner, ErrorToast } from '@nx/graph-ui-common';
 import {
-  ErrorToast,
-  ExpandedTargetsContext,
-  getExternalApiService,
   useEnvironmentConfig,
+  getExternalApiService,
   useRouteConstructor,
-} from '@nx/graph/legacy/shared';
-import { Spinner } from '@nx/graph/legacy/components';
-
-import { ProjectDetails } from '@nx/graph-internal-ui-project-details';
+} from '@nx/graph-shared';
+import {
+  ProjectDetails,
+  ExpandedTargetsContext,
+} from '@nx/graph-internal-ui-project-details';
 import { useCallback, useContext, useEffect } from 'react';
 
 interface ProjectDetailsProps {

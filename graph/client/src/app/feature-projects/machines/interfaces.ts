@@ -1,14 +1,23 @@
 import { CompositeNode, GraphPerfReport } from '../../interfaces';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import {
+import type {
   ProjectFileMap,
   ProjectGraphDependency,
   ProjectGraphProjectNode,
-} from 'nx/src/config/project-graph';
+} from '@nx/devkit';
 /* eslint-enable @nx/enforce-module-boundaries */
+import {
+  InitGraphEvent,
+  ProjectGraphClient,
+  ProjectGraphEvent,
+  ProjectGraphHandleEventResult,
+  ProjectGraphRenderScratchData,
+  UpdateGraphEvent,
+} from '@nx/graph/projects';
 import { ActionObject, ActorRef, State, StateNodeConfig } from 'xstate';
 import { GraphRenderEvents } from '../../machines/interfaces';
+import { RenderGraphConfigEvent, RenderGraphScratchData } from '@nx/graph';
 
 // The hierarchical schema for the states
 export interface ProjectGraphSchema {
@@ -24,8 +33,25 @@ export interface ProjectGraphSchema {
 
 export type TracingAlgorithmType = 'shortest' | 'all';
 
+export interface ProjectGraphClientActor {
+  graphClient: ProjectGraphClient;
+  send: (
+    ...events: ProjectGraphEvent[]
+  ) => ProjectGraphHandleEventResult | undefined;
+  sendRenderConfigEvent: (event: RenderGraphConfigEvent) => void;
+}
+
 // The events that the machine handles
 export type ProjectGraphMachineEvents =
+  | ProjectGraphEvent
+  | {
+      type: 'setGraphClient';
+      graphClient: ProjectGraphClientActor;
+    }
+  | {
+      type: 'setGraphClientState';
+      state: RenderGraphScratchData<ProjectGraphRenderScratchData>;
+    }
   | {
       type: 'setSelectedProjectsFromGraph';
       selectedProjectNames: string[];
@@ -66,12 +92,6 @@ export type ProjectGraphMachineEvents =
         appsDir: string;
       };
     }
-  | {
-      type: 'updateGraph';
-      projects: ProjectGraphProjectNode[];
-      dependencies: Record<string, ProjectGraphDependency[]>;
-      fileMap: ProjectFileMap;
-    }
   | { type: 'enableCompositeGraph'; context: string | null }
   | { type: 'setCompositeContext'; context: string | null }
   | { type: 'expandCompositeNode'; id: string }
@@ -95,7 +115,8 @@ export interface ProjectGraphContext {
     libsDir: string;
     appsDir: string;
   };
-  graphActor: ActorRef<GraphRenderEvents>;
+  graphActor: ActorRef<ProjectGraphEvent | RenderGraphConfigEvent>;
+
   lastPerfReport: GraphPerfReport;
   fileMap: ProjectFileMap;
   tracing: {
