@@ -56,7 +56,7 @@
     "sass-loader": "^16.0.4",
     "source-map-loader": "^5.0.0",
     "style-loader": "^3.3.0",
-    "stylus": "^0.64.0",
+    "stylus": "0.0.1-security",
     "stylus-loader": "^7.1.0",
     "terser-webpack-plugin": "^5.3.3",
     "ts-loader": "^9.3.1",
