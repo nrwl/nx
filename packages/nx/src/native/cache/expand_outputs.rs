@@ -311,4 +311,82 @@ mod test {
             ]
         );
     }
+
+    #[test]
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    fn should_not_leak_threads() {
+        use std::process::Command;
+        use std::thread;
+
+        fn get_thread_count() -> usize {
+            let pid = std::process::id();
+            let pid_str = pid.to_string();
+
+            // Use ps command to get thread count (works on Linux and macOS)
+            #[cfg(target_os = "linux")]
+            let ps_args = vec!["-o", "nlwp=", "-p", &pid_str];
+
+            #[cfg(target_os = "macos")]
+            let ps_args = vec!["-M", "-p", &pid_str];
+
+            if let Ok(output) = Command::new("ps").args(&ps_args).output() {
+                if let Ok(output_str) = String::from_utf8(output.stdout) {
+                    #[cfg(target_os = "linux")]
+                    {
+                        // On Linux, nlwp gives us the thread count directly
+                        if let Ok(count) = output_str.trim().parse::<usize>() {
+                            return count;
+                        }
+                    }
+
+                    #[cfg(target_os = "macos")]
+                    {
+                        // On macOS, count lines (excluding header) to get thread count
+                        let thread_count = output_str.lines().count().saturating_sub(1);
+                        if thread_count > 0 {
+                            return thread_count;
+                        }
+                    }
+                }
+            }
+
+            // Fallback to available parallelism if ps command fails
+            thread::available_parallelism()
+                .map(|n| n.get())
+                .unwrap_or(1)
+        }
+
+        enable_logger();
+
+        let initial_count = get_thread_count();
+
+        // Run multiple operations to test for thread leaks
+        for _ in 0..5 {
+            let temp = setup_fs();
+            let entries = vec![
+                "packages/nx/src/native/*.node".to_string(),
+                "multi/*.{js,map,ts}".to_string(),
+                "test.txt".to_string(),
+            ];
+
+            // Test both functions
+            let _result1 = expand_outputs(temp.display().to_string(), entries.clone());
+            let _result2 = get_files_for_outputs(temp.display().to_string(), entries);
+
+            drop(temp);
+        }
+
+        // Allow brief time for any cleanup
+        thread::sleep(std::time::Duration::from_millis(100));
+
+        let final_count = get_thread_count();
+
+        // After fixing nx_walker, thread count should remain stable
+        // Allow minimal variance for system threads
+        assert_eq!(
+            final_count, initial_count,
+            "Thread count changed from {} to {}, indicating a thread leak",
+            initial_count, final_count
+        );
+    }
 }
