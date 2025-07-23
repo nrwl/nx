@@ -441,12 +441,12 @@
     "migrations": [
       {
         "description": "",
-        "file": "generated/packages/angular/migrations/21.3.4-jest-package-updates.json",
+        "file": "generated/packages/angular/migrations/21.3.5-jest-package-updates.json",
         "hidden": false,
-        "name": "21.3.4-jest-package-updates",
-        "version": "21.3.4-beta.0",
+        "name": "21.3.5-jest-package-updates",
+        "version": "21.3.5-beta.0",
         "originalFilePath": "/packages/angular",
-        "path": "angular/migrations/21.3.4-jest-package-updates",
+        "path": "angular/migrations/21.3.5-jest-package-updates",
         "type": "migration"
       },
       {

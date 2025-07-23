@@ -1884,8 +1884,8 @@
         }
       }
     },
-    "21.3.4-jest": {
-      "version": "21.3.4-beta.0",
+    "21.3.5-jest": {
+      "version": "21.3.5-beta.0",
       "requires": {
         "@angular/compiler-cli": ">=18.0.0 <21.0.0",
         "@angular/core": ">=18.0.0 <21.0.0",
