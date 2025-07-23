@@ -3,9 +3,10 @@ use tracing::debug;
 
 const AI_ENV_VARS: &[&str] = &[
     "CLAUDECODE",
-    "CURSOR_AI_AGENT",
-    "CURSOR_COMPOSER_MODE",
-    "CURSOR_AGENT_MODE",
+    "REPL_ID",
+    // TODO: Add Cursor detection when we find reliable environment variables
+    // Cursor doesn't set consistent env vars like CURSOR_AI_AGENT
+    // Consider PAGER="head -n 10000 | cat" but high false positive risk
 ];
 
 /// Detects if the current process is being run by an AI agent
@@ -46,16 +47,13 @@ mod tests {
             .collect();
 
         for &var_name in AI_ENV_VARS {
-            std::env::remove_var(var_name);
+            unsafe {
+                std::env::remove_var(var_name);
+            }
         }
 
         // Test multiple AI environment variables
-        let test_cases = [
-            ("CLAUDECODE", "1"),
-            ("CURSOR_AI_AGENT", "1"),
-            ("CURSOR_COMPOSER_MODE", "active"),
-            ("CURSOR_AGENT_MODE", "enabled"),
-        ];
+        let test_cases = [("CLAUDECODE", "1"), ("REPL_ID", "some-repl-id")];
 
         for (var, value) in &test_cases {
             unsafe {
