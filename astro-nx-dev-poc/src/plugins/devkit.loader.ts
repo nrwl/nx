@@ -466,9 +466,9 @@ function setupTypeDoc(logger: LoaderContext['logger']) {
   );
 
   // Replace relative extends with absolute path
-  if (tsconfigContent.includes('"extends": "./tsconfig.json"')) {
+  if (tsconfigContent.includes('"extends": "../../tsconfig.base.json"')) {
     tsconfigContent = tsconfigContent.replace(
-      '"extends": "./tsconfig.json"',
+      '"extends": "../../tsconfig.base.json"',
       `"extends": "${join(tempDir, 'packages', 'devkit', 'tsconfig.json')}"`
     );
   }

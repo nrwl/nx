@@ -137,14 +137,18 @@ async function runCliParser() {
         console.warn(`⚠️ Could not parse command ${name}:`, error.message);
       }
     }
-
-    // Send result back to parent process
     process.send({ type: 'result', data: { commands } });
-    process.exit(0);
   } catch (error) {
     process.send({ type: 'error', error: error.message });
     process.exit(1);
   }
 }
 
-runCliParser();
+process.on('message', (message) => {
+  if (message.type === 'start') {
+    runCliParser();
+  }
+  if (message.type === 'stop') {
+    process.exit(0);
+  }
+});

@@ -132,18 +132,7 @@ export async function generateNxCliDocs(
       const child = fork(subprocessPath, [], {
         cwd: workspaceRoot,
         silent: true,
-      });
-
-      let stdout = '';
-      let stderr = '';
-
-      child.stdout?.on('data', (data) => {
-        stdout += data.toString();
-      });
-
-      child.stderr?.on('data', (data) => {
-        stderr += data.toString();
-        logger.warn(data.toString());
+        stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
       });
 
       child.on('message', (message: any) => {
@@ -152,6 +141,7 @@ export async function generateNxCliDocs(
         } else if (message.type === 'error') {
           reject(new Error(message.error));
         }
+        child.send({ type: 'stop' });
       });
 
       child.on('error', (error) => {
@@ -160,13 +150,11 @@ export async function generateNxCliDocs(
 
       child.on('exit', (code) => {
         if (code !== 0) {
-          reject(
-            new Error(
-              `CLI subprocess exited with code ${code}\nstderr: ${stderr}`
-            )
-          );
+          reject(new Error(`CLI subprocess exited with code ${code}`));
         }
       });
+
+      child.send({ type: 'start' });
     });
 
     const markdown = generateCLIMarkdown(result.commands);
