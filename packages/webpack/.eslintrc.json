@@ -52,8 +52,6 @@
               "sass-embedded",
               "sass-loader",
               "style-loader",
-              "stylus",
-              "stylus-loader",
               "source-map-loader",
               "swc-loader",
               "@swc/core",
