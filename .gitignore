@@ -108,4 +108,4 @@ tasks/
 # Upstream docs local configuration (machine-specific)
 .upstreamdocs.local.json
 
-astro-nx-dev-poc/.netlify
+astro-docs/.netlify

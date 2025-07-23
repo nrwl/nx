@@ -10,7 +10,7 @@ function getStaticPluginFiles(
   const staticFiles: Array<{ label: string; slug: string }> = [];
   const pluginContentDir = join(
     workspaceRoot,
-    'astro-nx-dev-poc',
+    'astro-docs',
     'src',
     'content',
     'docs',

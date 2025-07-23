@@ -47,7 +47,7 @@ export function DevkitLoader() {
           setupTypeDoc(logger);
 
         const devkitEntryPoint = join(
-          projectRoot,
+          workspaceRoot,
           'build',
           'packages',
           'devkit',
@@ -87,7 +87,7 @@ export function DevkitLoader() {
         store.set(devkitOverviewPage);
 
         const ngcliEntryPoint = join(
-          projectRoot,
+          workspaceRoot,
           'build',
           'packages',
           'devkit',

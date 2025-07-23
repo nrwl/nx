@@ -144,7 +144,7 @@ async function generateCnwDocs(
     // Run the CNW parser in a subprocess to avoid ESM/CJS issues
     const subprocessPath = join(
       workspaceRoot,
-      'astro-nx-dev-poc/src/plugins/utils/cnw-subprocess.cjs'
+      'astro-docs/src/plugins/utils/cnw-subprocess.cjs'
     );
 
     // Run subprocess and get results
@@ -205,7 +205,7 @@ async function generateCnwDocs(
       id: 'cnw-cli',
       body: markdown,
       filePath: relative(
-        join(workspaceRoot, 'astro-nx-dev-poc'),
+        join(workspaceRoot, 'astro-docs'),
         join(
           workspaceRoot,
           'packages/create-nx-workspace/bin/create-nx-workspace.ts'

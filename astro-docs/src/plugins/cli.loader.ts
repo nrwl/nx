@@ -122,7 +122,7 @@ export async function generateNxCliDocs(
     // Run the CLI parser in a subprocess to avoid ESM/CJS issues
     const subprocessPath = join(
       workspaceRoot,
-      'astro-nx-dev-poc/src/plugins/utils/cli-subprocess.cjs'
+      'astro-docs/src/plugins/utils/cli-subprocess.cjs'
     );
 
     // Run subprocess and get results
@@ -169,7 +169,7 @@ export async function generateNxCliDocs(
       id: 'api/nx-cli',
       body: markdown,
       filePath: relative(
-        join(workspaceRoot, 'astro-nx-dev-poc'),
+        join(workspaceRoot, 'astro-docs'),
         join(workspaceRoot, 'packages/nx/src/command-line/nx-commands.ts')
       ),
       data: {

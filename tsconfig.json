@@ -383,7 +383,7 @@
       "path": "./e2e/nx"
     },
     {
-      "path": "./astro-nx-dev-poc"
+      "path": "./astro-docs"
     }
   ],
   "extends": "./tsconfig.base.json"

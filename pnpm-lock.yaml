@@ -12,18 +12,6 @@ importers:
 
   .:
     dependencies:
-      '@astrojs/markdoc':
-        specifier: ^0.15.0
-        version: 0.15.1(@types/react@18.3.1)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))(react@19.1.0)
-      '@astrojs/netlify':
-        specifier: ^6.4.0
-        version: 6.5.3(@types/node@20.16.10)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)
-      '@astrojs/starlight':
-        specifier: 0.34.6
-        version: 0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))
-      '@astrojs/starlight-markdoc':
-        specifier: ^0.4.0
-        version: 0.4.0(@astrojs/markdoc@0.15.1(@types/react@18.3.1)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))(react@19.1.0))(@astrojs/starlight@0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)))
       '@docsearch/react':
         specifier: ^3.3.0
         version: 3.9.0(@algolia/client-search@5.32.0)(@types/react@18.3.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(search-insights@2.17.3)
@@ -93,9 +81,6 @@ importers:
       '@yarnpkg/parsers':
         specifier: 3.0.2
         version: 3.0.2
-      astro:
-        specifier: ^5.10.1
-        version: 5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)
       axios:
         specifier: ^1.8.3
         version: 1.10.0
@@ -185,10 +170,10 @@ importers:
         version: 0.32.6
       starlight-links-validator:
         specifier: ^0.17.0
-        version: 0.17.0(@astrojs/starlight@0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)))
+        version: 0.17.0(@astrojs/starlight@0.34.6(astro@5.12.3(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)))
       starlight-typedoc:
         specifier: ^0.21.3
-        version: 0.21.3(@astrojs/starlight@0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)))(typedoc-plugin-markdown@3.17.1(typedoc@0.25.12(typescript@5.8.3)))(typedoc@0.25.12(typescript@5.8.3))
+        version: 0.21.3(@astrojs/starlight@0.34.6(astro@5.12.3(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)))(typedoc-plugin-markdown@3.17.1(typedoc@0.25.12(typescript@5.8.3)))(typedoc@0.25.12(typescript@5.8.3))
       string-width:
         specifier: ^4.2.3
         version: 4.2.3
@@ -259,12 +244,6 @@ importers:
       '@angular/router':
         specifier: ~20.1.0
         version: 20.1.0(@angular/common@20.1.0(@angular/core@20.1.0(@angular/compiler@20.1.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@20.1.0(@angular/compiler@20.1.0)(rxjs@7.8.2))(@angular/platform-browser@20.1.0(@angular/common@20.1.0(@angular/core@20.1.0(@angular/compiler@20.1.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@20.1.0(@angular/compiler@20.1.0)(rxjs@7.8.2)))(rxjs@7.8.2)
-      '@astrojs/check':
-        specifier: ^0.7.0
-        version: 0.7.0(prettier-plugin-astro@0.14.1)(prettier@2.8.8)(typescript@5.8.3)
-      '@astrojs/react':
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@20.16.10)(@types/react-dom@18.3.0)(@types/react@18.3.1)(jiti@2.4.2)(less@4.1.3)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)
       '@babel/core':
         specifier: ^7.23.2
         version: 7.28.0
@@ -909,7 +888,7 @@ importers:
         version: 11.0.1
       nuxt:
         specifier: ^3.10.0
-        version: 3.17.6(@netlify/blobs@10.0.7)(@parcel/watcher@2.5.1)(@types/node@20.16.10)(@vue/compiler-sfc@3.5.17)(db0@0.3.2)(encoding@0.1.13)(eslint@8.57.0)(ioredis@5.6.1)(less@4.1.3)(magicast@0.3.5)(optionator@0.9.4)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(vite@6.2.0(@types/node@20.16.10)(jiti@2.4.2)(less@4.1.3)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0))(yaml@2.8.0)
+        version: 3.17.6(@parcel/watcher@2.5.1)(@types/node@20.16.10)(@vue/compiler-sfc@3.5.17)(db0@0.3.2)(encoding@0.1.13)(eslint@8.57.0)(ioredis@5.6.1)(less@4.1.3)(magicast@0.3.5)(optionator@0.9.4)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(vite@6.2.0(@types/node@20.16.10)(jiti@2.4.2)(less@4.1.3)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0))(yaml@2.8.0)
       nx:
         specifier: 21.4.0-beta.0
         version: 21.4.0-beta.0(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.8.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))
@@ -1108,6 +1087,30 @@ importers:
       yargs-parser:
         specifier: 21.1.1
         version: 21.1.1
+
+  astro-docs:
+    dependencies:
+      '@astrojs/check':
+        specifier: ^0.7.0
+        version: 0.7.0(prettier-plugin-astro@0.14.1)(prettier@3.6.2)(typescript@5.8.3)
+      '@astrojs/markdoc':
+        specifier: ^0.15.0
+        version: 0.15.1(@types/react@18.3.1)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))(react@19.1.0)
+      '@astrojs/netlify':
+        specifier: ^6.4.0
+        version: 6.5.3(@types/node@20.16.10)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)
+      '@astrojs/react':
+        specifier: ^4.3.0
+        version: 4.3.0(@types/node@20.16.10)(@types/react-dom@18.3.0)(@types/react@18.3.1)(jiti@2.4.2)(less@4.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)
+      '@astrojs/starlight':
+        specifier: 0.34.6
+        version: 0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))
+      '@astrojs/starlight-markdoc':
+        specifier: ^0.4.0
+        version: 0.4.0(@astrojs/markdoc@0.15.1(@types/react@18.3.1)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))(react@19.1.0))(@astrojs/starlight@0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)))
+      astro:
+        specifier: ^5.10.1
+        version: 5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)
 
   e2e/angular:
     dependencies:
@@ -24901,9 +24904,9 @@ snapshots:
       '@csstools/css-tokenizer': 3.0.4
       lru-cache: 10.4.3
 
-  '@astrojs/check@0.7.0(prettier-plugin-astro@0.14.1)(prettier@2.8.8)(typescript@5.8.3)':
+  '@astrojs/check@0.7.0(prettier-plugin-astro@0.14.1)(prettier@3.6.2)(typescript@5.8.3)':
     dependencies:
-      '@astrojs/language-server': 2.15.4(prettier-plugin-astro@0.14.1)(prettier@2.8.8)(typescript@5.8.3)
+      '@astrojs/language-server': 2.15.4(prettier-plugin-astro@0.14.1)(prettier@3.6.2)(typescript@5.8.3)
       chokidar: 3.6.0
       fast-glob: 3.3.3
       kleur: 4.1.5
@@ -24917,7 +24920,7 @@ snapshots:
 
   '@astrojs/internal-helpers@0.6.1': {}
 
-  '@astrojs/language-server@2.15.4(prettier-plugin-astro@0.14.1)(prettier@2.8.8)(typescript@5.8.3)':
+  '@astrojs/language-server@2.15.4(prettier-plugin-astro@0.14.1)(prettier@3.6.2)(typescript@5.8.3)':
     dependencies:
       '@astrojs/compiler': 2.12.2
       '@astrojs/yaml2ts': 0.2.2
@@ -24931,25 +24934,25 @@ snapshots:
       volar-service-css: 0.0.62(@volar/language-service@2.4.18)
       volar-service-emmet: 0.0.62(@volar/language-service@2.4.18)
       volar-service-html: 0.0.62(@volar/language-service@2.4.18)
-      volar-service-prettier: 0.0.62(@volar/language-service@2.4.18)(prettier@2.8.8)
+      volar-service-prettier: 0.0.62(@volar/language-service@2.4.18)(prettier@3.6.2)
       volar-service-typescript: 0.0.62(@volar/language-service@2.4.18)
       volar-service-typescript-twoslash-queries: 0.0.62(@volar/language-service@2.4.18)
       volar-service-yaml: 0.0.62(@volar/language-service@2.4.18)
       vscode-html-languageservice: 5.5.1
       vscode-uri: 3.1.0
     optionalDependencies:
-      prettier: 2.8.8
+      prettier: 3.6.2
       prettier-plugin-astro: 0.14.1
     transitivePeerDependencies:
       - typescript
 
-  '@astrojs/markdoc@0.15.1(@types/react@18.3.1)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))(react@19.1.0)':
+  '@astrojs/markdoc@0.15.1(@types/react@18.3.1)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))(react@19.1.0)':
     dependencies:
       '@astrojs/internal-helpers': 0.6.1
       '@astrojs/markdown-remark': 6.3.3
       '@astrojs/prism': 3.3.0
       '@markdoc/markdoc': 0.5.2(@types/react@18.3.1)(react@19.1.0)
-      astro: 5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)
+      astro: 5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)
       esbuild: 0.25.0
       github-slugger: 2.0.0
       htmlparser2: 10.0.0
@@ -24984,12 +24987,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@astrojs/mdx@4.3.1(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))':
+  '@astrojs/mdx@4.3.1(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))':
     dependencies:
       '@astrojs/markdown-remark': 6.3.3
       '@mdx-js/mdx': 3.1.0(acorn@8.15.0)
       acorn: 8.15.0
-      astro: 5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)
+      astro: 5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)
       es-module-lexer: 1.7.0
       estree-util-visit: 2.0.0
       hast-util-to-html: 9.0.5
@@ -25003,18 +25006,37 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@astrojs/netlify@6.5.3(@types/node@20.16.10)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)':
+  '@astrojs/mdx@4.3.1(astro@5.12.3(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))':
+    dependencies:
+      '@astrojs/markdown-remark': 6.3.3
+      '@mdx-js/mdx': 3.1.0(acorn@8.15.0)
+      acorn: 8.15.0
+      astro: 5.12.3(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)
+      es-module-lexer: 1.7.0
+      estree-util-visit: 2.0.0
+      hast-util-to-html: 9.0.5
+      kleur: 4.1.5
+      rehype-raw: 7.0.0
+      remark-gfm: 4.0.1
+      remark-smartypants: 3.0.2
+      source-map: 0.7.4
+      unist-util-visit: 5.0.0
+      vfile: 6.0.3
+    transitivePeerDependencies:
+      - supports-color
+
+  '@astrojs/netlify@6.5.3(@types/node@20.16.10)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)':
     dependencies:
       '@astrojs/internal-helpers': 0.6.1
       '@astrojs/underscore-redirects': 1.0.0
       '@netlify/blobs': 10.0.7
       '@netlify/functions': 4.1.15(encoding@0.1.13)(rollup@4.44.2)
-      '@netlify/vite-plugin': 2.5.0(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(rollup@4.44.2)(vite@6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.1.3)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0))
+      '@netlify/vite-plugin': 2.5.0(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(rollup@4.44.2)(vite@6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.3.0)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0))
       '@vercel/nft': 0.29.4(encoding@0.1.13)(rollup@4.44.2)
-      astro: 5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)
+      astro: 5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)
       esbuild: 0.25.0
       tinyglobby: 0.2.14
-      vite: 6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.1.3)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)
+      vite: 6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.3.0)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)
     transitivePeerDependencies:
       - '@azure/app-configuration'
       - '@azure/cosmos'
@@ -25052,15 +25074,15 @@ snapshots:
     dependencies:
       prismjs: 1.30.0
 
-  '@astrojs/react@4.3.0(@types/node@20.16.10)(@types/react-dom@18.3.0)(@types/react@18.3.1)(jiti@2.4.2)(less@4.1.3)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)':
+  '@astrojs/react@4.3.0(@types/node@20.16.10)(@types/react-dom@18.3.0)(@types/react@18.3.1)(jiti@2.4.2)(less@4.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)':
     dependencies:
       '@types/react': 18.3.1
       '@types/react-dom': 18.3.0
-      '@vitejs/plugin-react': 4.6.0(vite@6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.1.3)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0))
+      '@vitejs/plugin-react': 4.6.0(vite@6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.3.0)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0))
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
       ultrahtml: 1.6.0
-      vite: 6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.1.3)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)
+      vite: 6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.3.0)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -25081,22 +25103,55 @@ snapshots:
       stream-replace-string: 2.0.0
       zod: 3.25.76
 
-  '@astrojs/starlight-markdoc@0.4.0(@astrojs/markdoc@0.15.1(@types/react@18.3.1)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))(react@19.1.0))(@astrojs/starlight@0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)))':
+  '@astrojs/starlight-markdoc@0.4.0(@astrojs/markdoc@0.15.1(@types/react@18.3.1)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))(react@19.1.0))(@astrojs/starlight@0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)))':
     dependencies:
-      '@astrojs/markdoc': 0.15.1(@types/react@18.3.1)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))(react@19.1.0)
-      '@astrojs/starlight': 0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))
+      '@astrojs/markdoc': 0.15.1(@types/react@18.3.1)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))(react@19.1.0)
+      '@astrojs/starlight': 0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))
 
-  '@astrojs/starlight@0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))':
+  '@astrojs/starlight@0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))':
     dependencies:
       '@astrojs/markdown-remark': 6.3.3
-      '@astrojs/mdx': 4.3.1(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))
+      '@astrojs/mdx': 4.3.1(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))
       '@astrojs/sitemap': 3.4.1
       '@pagefind/default-ui': 1.3.0
       '@types/hast': 3.0.4
       '@types/js-yaml': 4.0.9
       '@types/mdast': 4.0.4
-      astro: 5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)
-      astro-expressive-code: 0.41.3(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))
+      astro: 5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)
+      astro-expressive-code: 0.41.3(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))
+      bcp-47: 2.1.0
+      hast-util-from-html: 2.0.3
+      hast-util-select: 6.0.4
+      hast-util-to-string: 3.0.1
+      hastscript: 9.0.1
+      i18next: 23.16.8
+      js-yaml: 4.1.0
+      klona: 2.0.6
+      mdast-util-directive: 3.1.0
+      mdast-util-to-markdown: 2.1.2
+      mdast-util-to-string: 4.0.0
+      pagefind: 1.3.0
+      rehype: 13.0.2
+      rehype-format: 5.0.1
+      remark-directive: 3.0.1
+      ultrahtml: 1.6.0
+      unified: 11.0.5
+      unist-util-visit: 5.0.0
+      vfile: 6.0.3
+    transitivePeerDependencies:
+      - supports-color
+
+  '@astrojs/starlight@0.34.6(astro@5.12.3(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))':
+    dependencies:
+      '@astrojs/markdown-remark': 6.3.3
+      '@astrojs/mdx': 4.3.1(astro@5.12.3(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))
+      '@astrojs/sitemap': 3.4.1
+      '@pagefind/default-ui': 1.3.0
+      '@types/hast': 3.0.4
+      '@types/js-yaml': 4.0.9
+      '@types/mdast': 4.0.4
+      astro: 5.12.3(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)
+      astro-expressive-code: 0.41.3(astro@5.12.3(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))
       bcp-47: 2.1.0
       hast-util-from-html: 2.0.3
       hast-util-select: 6.0.4
@@ -30460,12 +30515,12 @@ snapshots:
 
   '@netlify/types@2.0.2': {}
 
-  '@netlify/vite-plugin@2.5.0(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(rollup@4.44.2)(vite@6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.1.3)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0))':
+  '@netlify/vite-plugin@2.5.0(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(rollup@4.44.2)(vite@6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.3.0)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0))':
     dependencies:
       '@netlify/dev': 4.5.0(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(rollup@4.44.2)
       '@netlify/dev-utils': 4.1.0
       chalk: 5.4.1
-      vite: 6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.1.3)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)
+      vite: 6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.3.0)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)
     transitivePeerDependencies:
       - '@azure/app-configuration'
       - '@azure/cosmos'
@@ -34817,7 +34872,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitejs/plugin-react@4.6.0(vite@6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.1.3)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0))':
+  '@vitejs/plugin-react@4.6.0(vite@6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.3.0)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0))':
     dependencies:
       '@babel/core': 7.28.0
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.28.0)
@@ -34825,7 +34880,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.19
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.1.3)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)
+      vite: 6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.3.0)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -35755,12 +35810,17 @@ snapshots:
 
   astring@1.9.0: {}
 
-  astro-expressive-code@0.41.3(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)):
+  astro-expressive-code@0.41.3(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)):
     dependencies:
-      astro: 5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)
+      astro: 5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)
       rehype-expressive-code: 0.41.3
 
-  astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0):
+  astro-expressive-code@0.41.3(astro@5.12.3(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)):
+    dependencies:
+      astro: 5.12.3(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)
+      rehype-expressive-code: 0.41.3
+
+  astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.3.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0):
     dependencies:
       '@astrojs/compiler': 2.12.2
       '@astrojs/internal-helpers': 0.6.1
@@ -35814,7 +35874,108 @@ snapshots:
       ultrahtml: 1.6.0
       unifont: 0.5.2
       unist-util-visit: 5.0.0
-      unstorage: 1.16.0(@netlify/blobs@10.0.7)(db0@0.3.2)(ioredis@5.6.1)
+      unstorage: 1.16.1(@netlify/blobs@10.0.7)(db0@0.3.2)(ioredis@5.6.1)
+      vfile: 6.0.3
+      vite: 6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.3.0)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)
+      vitefu: 1.1.1(vite@6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.3.0)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0))
+      xxhash-wasm: 1.1.0
+      yargs-parser: 21.1.1
+      yocto-spinner: 0.2.3
+      zod: 3.25.76
+      zod-to-json-schema: 3.24.6(zod@3.25.76)
+      zod-to-ts: 1.2.0(typescript@5.8.3)(zod@3.25.76)
+    optionalDependencies:
+      sharp: 0.33.5
+    transitivePeerDependencies:
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@deno/kv'
+      - '@netlify/blobs'
+      - '@planetscale/database'
+      - '@types/node'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/kv'
+      - aws4fetch
+      - db0
+      - encoding
+      - idb-keyval
+      - ioredis
+      - jiti
+      - less
+      - lightningcss
+      - rollup
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+      - tsx
+      - typescript
+      - uploadthing
+      - yaml
+
+  astro@5.12.3(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0):
+    dependencies:
+      '@astrojs/compiler': 2.12.2
+      '@astrojs/internal-helpers': 0.6.1
+      '@astrojs/markdown-remark': 6.3.3
+      '@astrojs/telemetry': 3.3.0
+      '@capsizecss/unpack': 2.4.0(encoding@0.1.13)
+      '@oslojs/encoding': 1.1.0
+      '@rollup/pluginutils': 5.2.0(rollup@4.44.2)
+      acorn: 8.15.0
+      aria-query: 5.3.2
+      axobject-query: 4.1.0
+      boxen: 8.0.1
+      ci-info: 4.3.0
+      clsx: 2.1.1
+      common-ancestor-path: 1.0.1
+      cookie: 1.0.2
+      cssesc: 3.0.0
+      debug: 4.4.1(supports-color@8.1.1)
+      deterministic-object-hash: 2.0.2
+      devalue: 5.1.1
+      diff: 5.2.0
+      dlv: 1.1.3
+      dset: 3.1.4
+      es-module-lexer: 1.7.0
+      esbuild: 0.25.0
+      estree-walker: 3.0.3
+      flattie: 1.1.1
+      fontace: 0.3.0
+      github-slugger: 2.0.0
+      html-escaper: 3.0.3
+      http-cache-semantics: 4.2.0
+      import-meta-resolve: 4.1.0
+      js-yaml: 4.1.0
+      kleur: 4.1.5
+      magic-string: 0.30.17
+      magicast: 0.3.5
+      mrmime: 2.0.1
+      neotraverse: 0.6.18
+      p-limit: 6.2.0
+      p-queue: 8.1.0
+      package-manager-detector: 1.3.0
+      picomatch: 4.0.2
+      prompts: 2.4.2
+      rehype: 13.0.2
+      semver: 7.7.2
+      shiki: 3.8.1
+      smol-toml: 1.4.1
+      tinyexec: 0.3.2
+      tinyglobby: 0.2.14
+      tsconfck: 3.1.6(typescript@5.8.3)
+      ultrahtml: 1.6.0
+      unifont: 0.5.2
+      unist-util-visit: 5.0.0
+      unstorage: 1.16.1(@netlify/blobs@10.0.7)(db0@0.3.2)(ioredis@5.6.1)
       vfile: 6.0.3
       vite: 6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.1.3)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)
       vitefu: 1.1.1(vite@6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.1.3)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0))
@@ -42865,7 +43026,7 @@ snapshots:
   magicast@0.3.5:
     dependencies:
       '@babel/parser': 7.28.0
-      '@babel/types': 7.28.0
+      '@babel/types': 7.28.1
       source-map-js: 1.2.1
 
   make-dir@2.1.0:
@@ -44423,7 +44584,7 @@ snapshots:
       rollup: 4.44.2
       tailwindcss: 3.4.4(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.17))(@types/node@20.16.10)(typescript@5.8.3))
 
-  nitropack@2.11.13(@netlify/blobs@10.0.7)(encoding@0.1.13):
+  nitropack@2.11.13(encoding@0.1.13):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.0
       '@netlify/functions': 3.1.10(encoding@0.1.13)(rollup@4.44.2)
@@ -44491,7 +44652,7 @@ snapshots:
       unenv: 2.0.0-rc.18
       unimport: 5.1.0
       unplugin-utils: 0.2.4
-      unstorage: 1.16.0(@netlify/blobs@10.0.7)(db0@0.3.2)(ioredis@5.6.1)
+      unstorage: 1.16.0(db0@0.3.2)(ioredis@5.6.1)
       untyped: 2.0.0
       unwasm: 0.3.9
       youch: 4.1.0-beta.8
@@ -44770,7 +44931,7 @@ snapshots:
 
   nullthrows@1.1.1: {}
 
-  nuxt@3.17.6(@netlify/blobs@10.0.7)(@parcel/watcher@2.5.1)(@types/node@20.16.10)(@vue/compiler-sfc@3.5.17)(db0@0.3.2)(encoding@0.1.13)(eslint@8.57.0)(ioredis@5.6.1)(less@4.1.3)(magicast@0.3.5)(optionator@0.9.4)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(vite@6.2.0(@types/node@20.16.10)(jiti@2.4.2)(less@4.1.3)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0))(yaml@2.8.0):
+  nuxt@3.17.6(@parcel/watcher@2.5.1)(@types/node@20.16.10)(@vue/compiler-sfc@3.5.17)(db0@0.3.2)(encoding@0.1.13)(eslint@8.57.0)(ioredis@5.6.1)(less@4.1.3)(magicast@0.3.5)(optionator@0.9.4)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(vite@6.2.0(@types/node@20.16.10)(jiti@2.4.2)(less@4.1.3)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0))(yaml@2.8.0):
     dependencies:
       '@nuxt/cli': 3.25.1(magicast@0.3.5)
       '@nuxt/devalue': 2.0.2
@@ -44805,7 +44966,7 @@ snapshots:
       mlly: 1.7.4
       mocked-exports: 0.1.1
       nanotar: 0.2.0
-      nitropack: 2.11.13(@netlify/blobs@10.0.7)(encoding@0.1.13)
+      nitropack: 2.11.13(encoding@0.1.13)
       nypm: 0.6.0
       ofetch: 1.4.1
       ohash: 2.0.11
@@ -44827,7 +44988,7 @@ snapshots:
       unimport: 5.1.0
       unplugin: 2.3.5
       unplugin-vue-router: 0.14.0(@vue/compiler-sfc@3.5.17)(vue-router@4.5.1(vue@3.5.17(typescript@5.8.3)))(vue@3.5.17(typescript@5.8.3))
-      unstorage: 1.16.0(@netlify/blobs@10.0.7)(db0@0.3.2)(ioredis@5.6.1)
+      unstorage: 1.16.0(db0@0.3.2)(ioredis@5.6.1)
       untyped: 2.0.0
       vue: 3.5.17(typescript@5.8.3)
       vue-bundle-renderer: 2.1.1
@@ -48923,9 +49084,9 @@ snapshots:
 
   standard-as-callback@2.1.0: {}
 
-  starlight-links-validator@0.17.0(@astrojs/starlight@0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))):
+  starlight-links-validator@0.17.0(@astrojs/starlight@0.34.6(astro@5.12.3(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))):
     dependencies:
-      '@astrojs/starlight': 0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))
+      '@astrojs/starlight': 0.34.6(astro@5.12.3(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))
       '@types/picomatch': 3.0.2
       github-slugger: 2.0.0
       hast-util-from-html: 2.0.3
@@ -48939,9 +49100,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  starlight-typedoc@0.21.3(@astrojs/starlight@0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)))(typedoc-plugin-markdown@3.17.1(typedoc@0.25.12(typescript@5.8.3)))(typedoc@0.25.12(typescript@5.8.3)):
+  starlight-typedoc@0.21.3(@astrojs/starlight@0.34.6(astro@5.12.3(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0)))(typedoc-plugin-markdown@3.17.1(typedoc@0.25.12(typescript@5.8.3)))(typedoc@0.25.12(typescript@5.8.3)):
     dependencies:
-      '@astrojs/starlight': 0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))
+      '@astrojs/starlight': 0.34.6(astro@5.12.3(@types/node@20.16.10)(db0@0.3.2)(encoding@0.1.13)(ioredis@5.6.1)(jiti@2.4.2)(less@4.1.3)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(typescript@5.8.3)(yaml@2.8.0))
       github-slugger: 2.0.0
       typedoc: 0.25.12(typescript@5.8.3)
       typedoc-plugin-markdown: 3.17.1(typedoc@0.25.12(typescript@5.8.3))
@@ -50418,7 +50579,7 @@ snapshots:
       '@unrs/resolver-binding-win32-ia32-msvc': 1.11.1
       '@unrs/resolver-binding-win32-x64-msvc': 1.11.1
 
-  unstorage@1.16.0(@netlify/blobs@10.0.7)(db0@0.3.2)(ioredis@5.6.1):
+  unstorage@1.16.0(db0@0.3.2)(ioredis@5.6.1):
     dependencies:
       anymatch: 3.1.3
       chokidar: 4.0.3
@@ -50429,7 +50590,6 @@ snapshots:
       ofetch: 1.4.1
       ufo: 1.6.1
     optionalDependencies:
-      '@netlify/blobs': 10.0.7
       db0: 0.3.2
       ioredis: 5.6.1
 
@@ -50982,7 +51142,6 @@ snapshots:
       stylus: 0.64.0
       terser: 5.43.1
       yaml: 2.8.0
-    optional: true
 
   vite@7.0.0(@types/node@20.16.10)(jiti@2.4.2)(less@4.1.3)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0):
     dependencies:
@@ -51025,6 +51184,10 @@ snapshots:
   vitefu@1.1.1(vite@6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.1.3)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)):
     optionalDependencies:
       vite: 6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.1.3)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)
+
+  vitefu@1.1.1(vite@6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.3.0)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)):
+    optionalDependencies:
+      vite: 6.3.5(@types/node@20.16.10)(jiti@2.4.2)(less@4.3.0)(sass-embedded@1.85.1)(sass@1.89.2)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0)
 
   vitest@3.0.5(@types/debug@4.1.12)(@types/node@20.16.10)(jiti@2.4.2)(jsdom@26.1.0)(less@4.1.3)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.43.1)(yaml@2.8.0):
     dependencies:
@@ -51133,12 +51296,12 @@ snapshots:
     optionalDependencies:
       '@volar/language-service': 2.4.18
 
-  volar-service-prettier@0.0.62(@volar/language-service@2.4.18)(prettier@2.8.8):
+  volar-service-prettier@0.0.62(@volar/language-service@2.4.18)(prettier@3.6.2):
     dependencies:
       vscode-uri: 3.1.0
     optionalDependencies:
       '@volar/language-service': 2.4.18
-      prettier: 2.8.8
+      prettier: 3.6.2
 
   volar-service-typescript-twoslash-queries@0.0.62(@volar/language-service@2.4.18):
     dependencies:

@@ -45,8 +45,6 @@
     "@angular/core": "~20.1.0",
     "@angular/platform-browser": "~20.1.0",
     "@angular/router": "~20.1.0",
-    "@astrojs/check": "^0.7.0",
-    "@astrojs/react": "^4.3.0",
     "@babel/core": "^7.23.2",
     "@babel/helper-create-regexp-features-plugin": "^7.22.9",
     "@babel/plugin-transform-runtime": "^7.23.2",
@@ -341,10 +339,6 @@
     }
   },
   "dependencies": {
-    "@astrojs/markdoc": "^0.15.0",
-    "@astrojs/netlify": "^6.4.0",
-    "@astrojs/starlight": "0.34.6",
-    "@astrojs/starlight-markdoc": "^0.4.0",
     "@docsearch/react": "^3.3.0",
     "@docusaurus/core": "3.8.1",
     "@docusaurus/preset-classic": "3.8.1",
@@ -368,7 +362,6 @@
     "@types/three": "^0.166.0",
     "@yarnpkg/lockfile": "^1.1.0",
     "@yarnpkg/parsers": "3.0.2",
-    "astro": "^5.10.1",
     "axios": "^1.8.3",
     "classnames": "^2.5.1",
     "cliui": "^8.0.1",
