@@ -16,11 +16,7 @@ require('ts-node').register({
   },
 });
 
-// Register TypeScript paths from the base config in main Nx repo
-const { register: registerTsConfigPaths } = require('tsconfig-paths');
-const tsconfigPath = join(workspaceRoot, 'tsconfig.base.json');
-const config = JSON.parse(readFileSync(tsconfigPath, 'utf-8')).compilerOptions;
-registerTsConfigPaths(config);
+// TypeScript paths are now handled by pnpm workspaces, no need for tsconfig-paths
 
 // Inline command parser functions
 const YargsTypes = ['array', 'count', 'string', 'boolean', 'number'];
