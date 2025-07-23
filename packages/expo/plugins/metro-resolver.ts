@@ -214,7 +214,7 @@ function getPnpmResolver(
   mainFields: string[] = []
 ) {
   if (!resolver) {
-    const fileSystem = new CachedInputFileSystem(fs, 4000);
+    const fileSystem = new CachedInputFileSystem(fs as any, 4000);
     resolver = ResolverFactory.createResolver({
       fileSystem,
       extensions: extensions.map((extension) => '.' + extension),
