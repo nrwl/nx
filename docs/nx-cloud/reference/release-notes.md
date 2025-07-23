@@ -23,8 +23,6 @@ nxApi:
       - name: VALKEY_CLIENT_PROVIDER
         value: 'redisson'
       - name: VALKEY_PASSWORD
-        value: 'valkey'
-      - name: VALKEY_PASSWORD
         valueFrom:
           # remember to apply this secret to your cluster
           secretKeyRef:
