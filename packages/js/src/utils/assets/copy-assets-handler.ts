@@ -133,7 +133,7 @@ export class CopyAssetsHandler {
           dot: true, // enable hidden files
           expandDirectories: false,
           // Ignore common directories that should not be copied or processed
-          ignore: ['**/node_modules/**', '**/dist/**', '**/build/**'],
+          ignore: ['**/node_modules/**', '**/.git/**'],
         });
 
         this.callback(this.filesToEvent(files, ag));
@@ -150,12 +150,7 @@ export class CopyAssetsHandler {
         cwd: this.rootDir,
         dot: true, // enable hidden files
         expandDirectories: false,
-        ignore: [
-          '**/node_modules/**',
-          '**/.git/**',
-          '**/dist/**',
-          '**/build/**',
-        ],
+        ignore: ['**/node_modules/**', '**/.git/**'],
       });
 
       this.callback(this.filesToEvent(files, ag));
