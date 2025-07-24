@@ -62,7 +62,83 @@ const taskDataLoader = async (selectedWorkspaceId: string) => {
     (graph) => graph.id === selectedWorkspaceId
   );
 
-  return await projectGraphDataService.getTaskGraph(workspaceInfo.taskGraphUrl);
+  // Use the new task graph metadata endpoint for faster initial loading
+  const metadataUrl = new URL(
+    workspaceInfo.taskGraphUrl.replace(
+      'task-graph.json',
+      'task-graph-metadata.json'
+    ),
+    window.location.origin
+  ).toString();
+  try {
+    const metadata = await fetch(metadataUrl).then((res) => {
+      if (!res.ok) {
+        throw new Error(`Failed to fetch metadata: ${res.status}`);
+      }
+      return res.json();
+    });
+
+    // Validate metadata structure
+    if (metadata && Array.isArray(metadata.projects)) {
+      return {
+        taskGraphs: {},
+        plans: {},
+        errors: {},
+        metadata, // Include metadata for UI tree building
+      };
+    } else {
+      throw new Error('Invalid metadata structure');
+    }
+  } catch {
+    // Fallback to legacy behavior if metadata endpoint is not available
+    return await projectGraphDataService.getTaskGraph(
+      workspaceInfo.taskGraphUrl
+    );
+  }
+};
+
+// New function to lazy load specific task graphs
+const loadSpecificTaskGraph = async (
+  selectedWorkspaceId: string,
+  projectName: string,
+  targetName: string,
+  configuration?: string
+) => {
+  const workspaceInfo = appConfig.workspaces.find(
+    (graph) => graph.id === selectedWorkspaceId
+  );
+
+  if (!workspaceInfo) {
+    throw new Error(
+      `Workspace not found: ${selectedWorkspaceId}. Available workspaces: ${appConfig.workspaces
+        .map((w) => w.id)
+        .join(', ')}`
+    );
+  }
+
+  if (!workspaceInfo.taskGraphUrl) {
+    throw new Error(
+      `Task graph URL not configured for workspace: ${selectedWorkspaceId}. WorkspaceInfo: ${JSON.stringify(
+        workspaceInfo
+      )}`
+    );
+  }
+
+  const url = new URL(workspaceInfo.taskGraphUrl, window.location.origin);
+  url.searchParams.set('project', projectName);
+  url.searchParams.set('target', targetName);
+  if (configuration) {
+    url.searchParams.set('configuration', configuration);
+  }
+
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch task graph: ${response.status} ${response.statusText}`
+    );
+  }
+
+  return await response.json();
 };
 
 const sourceMapsLoader = async (selectedWorkspaceId: string) => {
@@ -172,6 +248,9 @@ const childRoutes: RouteObject[] = [
     ],
   },
 ];
+
+// Export the lazy loading function for use in components
+export { loadSpecificTaskGraph };
 
 export const devRoutes: RouteObject[] = [
   {
