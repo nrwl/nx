@@ -115,7 +115,6 @@ describe('task planner', () => {
             "parent:TsConfig",
             "tagged:TsConfig",
             "unrelated:TsConfig",
-            "AllExternalDependencies",
           ],
         }
       `);
@@ -581,6 +580,57 @@ describe('task planner', () => {
 
     const plans = planner.getPlans(['app:build'], taskGraph);
     expect(plans).toMatchSnapshot();
+  });
+
+  it('should include specific external dependency when AllExternalDependencies is not used', async () => {
+    let projectFileMap = {
+      app: [{ file: '/filea.ts', hash: 'a.hash' }],
+    };
+    let builder = new ProjectGraphBuilder(undefined, projectFileMap);
+    builder.addNode({
+      name: 'app',
+      type: 'app',
+      data: {
+        root: 'apps/app',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            inputs: [
+              {
+                externalDependencies: ['react'],
+              },
+            ],
+          },
+        },
+      },
+    });
+    builder.addExternalNode({
+      name: 'npm:react',
+      type: 'npm',
+      data: {
+        version: '17.0.0',
+        packageName: 'react',
+      },
+    });
+    builder.addStaticDependency('app', 'npm:react', '/filea.ts');
+    let projectGraph = builder.getUpdatedProjectGraph();
+    let taskGraph = createTaskGraph(
+      projectGraph,
+      { build: ['^build'] },
+      ['app'],
+      ['build'],
+      undefined,
+      {}
+    );
+    let nxJson = {} as any;
+    const transformed = transferProjectGraph(
+      transformProjectGraphForRust(projectGraph)
+    );
+    const planner = new HashPlanner(nxJson as any, transformed);
+
+    const plans = planner.getPlans(['app:build'], taskGraph);
+    expect(plans['app:build']).not.toContain('AllExternalDependencies');
+    expect(plans['app:build']).toContain('npm:react');
   });
 
   describe('dependentTasksOutputFiles', () => {
