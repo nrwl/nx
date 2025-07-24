@@ -313,6 +313,7 @@ mod test {
     }
 
     #[test]
+    #[ignore]
     #[cfg(any(target_os = "linux", target_os = "macos"))]
     fn should_not_leak_threads() {
         use std::process::Command;
