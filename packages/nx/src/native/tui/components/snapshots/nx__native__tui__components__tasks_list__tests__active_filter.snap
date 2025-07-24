@@ -3,7 +3,7 @@ source: packages/nx/src/native/tui/components/tasks_list.rs
 expression: terminal.backend()
 ---
 "                                                                                                                        "
-" NX    Running Test Tasks...                                                                       Cache        Duration"
+" NX    Running Test Tasks...                                                                            Cache   Duration"
 " │                                                                                                                      "
 "                                                                                                                        "
 "                                                                                                                        "
