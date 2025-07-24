@@ -230,7 +230,7 @@
                   {
                     "type": "boolean",
                     "enum": [true],
-                    "description": "Enable docker configuration with default settings."
+                    "description": "Enable docker configuration with default settings. Warning: Docker support is experimental. Breaking changes may occur and not adhere to semver versioning. "
                   },
                   {
                     "$ref": "#/definitions/NxReleaseGroupDockerConfiguration"
@@ -327,7 +327,7 @@
             {
               "type": "boolean",
               "enum": [true],
-              "description": "Enable docker configuration with default settings."
+              "description": "Enable docker configuration with default settings. Warning: Docker support is experimental. Breaking changes may occur and not adhere to semver versioning."
             },
             {
               "$ref": "#/definitions/NxReleaseDockerConfiguration"

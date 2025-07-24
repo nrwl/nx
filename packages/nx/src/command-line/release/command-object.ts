@@ -204,7 +204,7 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
       .options('dockerVersionScheme', {
         type: 'string',
         describe:
-          'Exact docker version scheme to apply to the selected release group.',
+          'Exact docker version scheme to apply to the selected release group. Warning: Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.',
       })
       .option('yes', {
         type: 'boolean',

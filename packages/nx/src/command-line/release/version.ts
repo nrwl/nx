@@ -303,12 +303,14 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     }
 
     // TODO(colum): Remove when Docker support is no longer experimental
-    output.warn({
-      title: 'Warning!',
-      bodyLines: [
-        `Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.`,
-      ],
-    });
+    if (nxReleaseConfig.docker || releaseGroups.some((rg) => rg.docker)) {
+      output.warn({
+        title: 'Warning!',
+        bodyLines: [
+          `Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.`,
+        ],
+      });
+    }
     await processor.processDockerProjects(args.dockerVersionScheme);
 
     const versionData = processor.getVersionData();
@@ -464,11 +466,11 @@ function runPreVersionCommand(
 
   output.logSingleLine(
     releaseGroup
-      ? `Executing ${
-          dockerPreVersionCommand ? `docker` : `release group`
+      ? `Executing${
+          dockerPreVersionCommand ? ` docker` : ` release group`
         } pre-version command for "${releaseGroup.name}"`
-      : `Executing ${
-          dockerPreVersionCommand ? `docker` : ``
+      : `Executing${
+          dockerPreVersionCommand ? ` docker` : ``
         } pre-version command`
   );
   if (verbose) {
