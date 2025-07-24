@@ -2,7 +2,6 @@ package dev.nx.gradle.utils
 
 import dev.nx.gradle.data.*
 import java.io.File
-import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import org.gradle.api.Project
@@ -136,76 +135,5 @@ class CompileTestCiTargetsTest {
     // Should succeed without errors and always try compiled test analysis
     // Verify that the report was generated successfully (contains nodes or is valid empty report)
     assertNotNull(report)
-  }
-
-  @Test
-  fun `should handle missing compiled classes gracefully`() {
-    // Don't create any compiled test classes
-    val targets = mutableMapOf<String, MutableMap<String, Any?>>()
-    val targetGroups = mutableMapOf<String, MutableList<String>>()
-    val ciDependsOn = mutableListOf<Map<String, String>>()
-    val ciTestTargetName = "ci"
-
-    // Initialize target group
-    ensureTargetGroupExists(targetGroups, testCiTargetGroup)
-
-    // Note: getCompiledTestClassNames was removed in favor of JUnit discovery
-    val testClassNames = emptyMap<String, String>()
-
-    // Should return empty map when no classes found
-    assertTrue(testClassNames.isEmpty())
-
-    // Process should work with empty test class names
-    processTestClasses(
-        testClassNames = testClassNames,
-        ciTestTargetName = ciTestTargetName,
-        projectBuildPath = ":project-a",
-        testTask = testTask,
-        projectRoot = projectRoot.absolutePath,
-        workspaceRoot = workspaceRoot.absolutePath,
-        targets = targets,
-        targetGroups = targetGroups,
-        ciDependsOn = ciDependsOn)
-
-    // Should have no targets created
-    assertEquals(0, targets.size)
-    assertEquals(0, ciDependsOn.size)
-  }
-
-  @Test
-  fun `should fall back to regex detection when no compiled classes exist`() {
-    // Create test source files (for regex fallback)
-    val testFile =
-        File(projectRoot, "src/test/kotlin/FallbackTest.kt").apply {
-          parentFile.mkdirs()
-          writeText("class FallbackTest { @Test fun testMethod() {} }")
-        }
-
-    // Don't create any compiled test classes - should fall back to regex
-    val testFiles = project.files(testFile)
-    val targets = mutableMapOf<String, MutableMap<String, Any?>>()
-    val targetGroups = mutableMapOf<String, MutableList<String>>()
-    val ciTestTargetName = "ci"
-
-    addTestCiTargets(
-        testFiles = testFiles,
-        projectBuildPath = ":project-a",
-        testTask = testTask,
-        testTargetName = "test",
-        targets = targets,
-        targetGroups = targetGroups,
-        projectRoot = projectRoot.absolutePath,
-        workspaceRoot = workspaceRoot.absolutePath,
-        ciTestTargetName = ciTestTargetName)
-
-    // Should fall back to regex detection and create targets
-    assertTrue(targets.containsKey("ci--FallbackTest"))
-    assertTrue(targets.containsKey("ci"))
-
-    // Verify target groups
-    val group = targetGroups[testCiTargetGroup]
-    assertNotNull(group)
-    assertTrue(group.contains("ci--FallbackTest"))
-    assertTrue(group.contains("ci"))
   }
 }

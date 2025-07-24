@@ -136,8 +136,7 @@ fun processTargetsForProject(
             targetGroups,
             projectRoot,
             workspaceRoot,
-            ciTestTargetName!!) // Safe to use !! because hasCiTestTarget checks ciTestTargetName !=
-        // null
+            ciTestTargetName)
       }
 
       if (hasCiIntTestTarget && task.name.startsWith("compileIntTest")) {
@@ -150,8 +149,7 @@ fun processTargetsForProject(
             targetGroups,
             projectRoot,
             workspaceRoot,
-            ciIntTestTargetName!!) // Safe to use !! because hasCiIntTestTarget checks
-        // ciIntTestTargetName != null
+            ciIntTestTargetName)
       }
 
       if (ciTestTargetName != null || ciIntTestTargetName != null) {
