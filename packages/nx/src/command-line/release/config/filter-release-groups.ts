@@ -3,10 +3,15 @@ import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { output } from '../../../utils/output';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP, NxReleaseConfig } from './config';
 import { GroupVersionPlan, ProjectsVersionPlan } from './version-plans';
+import { NxReleaseDockerConfiguration } from '../../../config/nx-json';
 
-export type ReleaseGroupWithName = NxReleaseConfig['groups'][string] & {
+export type ReleaseGroupWithName = Omit<
+  NxReleaseConfig['groups'][string],
+  'docker'
+> & {
   name: string;
   resolvedVersionPlans: (ProjectsVersionPlan | GroupVersionPlan)[] | false;
+  docker?: NxReleaseDockerConfiguration & { groupPreVersionCommand?: string };
 };
 
 export function filterReleaseGroups(

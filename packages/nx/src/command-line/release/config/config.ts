@@ -298,7 +298,6 @@ export async function createNxReleaseConfig(
     if (userDockerConfig === true) {
       return {
         preVersionCommand: defaultPreVersionCommand,
-        groupPreVersionCommand: '',
         skipVersionActions: undefined,
         versionSchemes: defaultVersionSchemes,
         repositoryName: undefined,
@@ -310,7 +309,6 @@ export async function createNxReleaseConfig(
     return {
       preVersionCommand:
         userDockerConfig.preVersionCommand ?? defaultPreVersionCommand,
-      groupPreVersionCommand: userDockerConfig.groupPreVersionCommand ?? '',
       skipVersionActions: userDockerConfig.skipVersionActions,
       versionSchemes: userDockerConfig.versionSchemes ?? defaultVersionSchemes,
       repositoryName: userDockerConfig.repositoryName,
@@ -441,7 +439,11 @@ export async function createNxReleaseConfig(
   const GROUP_DEFAULTS: Omit<
     NxReleaseConfig['groups'][string],
     'projects' | 'docker'
-  > & { docker: DeepRequired<NxReleaseDockerConfiguration> | undefined } = {
+  > & {
+    docker:
+      | DeepRequired<NxReleaseConfig['groups'][string]['docker']>
+      | undefined;
+  } = {
     projectsRelationship: groupProjectsRelationship,
     // Only include docker configuration if user has explicitly configured it
     docker:

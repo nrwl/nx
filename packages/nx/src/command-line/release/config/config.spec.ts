@@ -5722,7 +5722,6 @@ describe('createNxReleaseConfig()', () => {
               },
             },
             "docker": {
-              "groupPreVersionCommand": "",
               "preVersionCommand": "npx nx run-many docker:build -p lib-a",
               "registryUrl": undefined,
               "repositoryName": undefined,
@@ -5950,7 +5949,6 @@ describe('createNxReleaseConfig()', () => {
               },
             },
             "docker": {
-              "groupPreVersionCommand": "",
               "preVersionCommand": "npx nx run-many -t docker:build",
               "registryUrl": undefined,
               "repositoryName": undefined,

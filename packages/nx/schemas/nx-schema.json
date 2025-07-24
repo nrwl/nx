@@ -233,7 +233,7 @@
                     "description": "Enable docker configuration with default settings."
                   },
                   {
-                    "$ref": "#/definitions/NxReleaseDockerConfiguration"
+                    "$ref": "#/definitions/NxReleaseGroupDockerConfiguration"
                   }
                 ]
               }
@@ -1028,10 +1028,6 @@
           "type": "string",
           "description": "A command to run after validation of nx release configuration, but before versioning begins. Useful for preparing docker build artifacts. If --dry-run is passed, the command is still executed, but with the NX_DRY_RUN environment variable set to 'true'."
         },
-        "groupPreVersionCommand": {
-          "type": "string",
-          "description": "A command to run after validation of nx release configuration, but before versioning begins. Used for preparing docker build artifacts. If --dry-run is passed, the command is still executed, but with the NX_DRY_RUN environment variable set to 'true'. It will run in addition to the global `preVersionCommand`"
-        },
         "skipVersionActions": {
           "oneOf": [
             {
@@ -1065,6 +1061,17 @@
         }
       },
       "additionalProperties": false
+    },
+    "NxReleaseGroupDockerConfiguration": {
+      "type": "object",
+      "$comment": "We need to improve this configuration definition to be more precise once legacy versioning is removed. Right now it needs to be left open and runtime validation will ensure correct behavior.",
+      "properties": {
+        "groupPreVersionCommand": {
+          "type": "string",
+          "description": "A command to run after validation of nx release configuration, but before versioning begins. Used for preparing docker build artifacts. If --dry-run is passed, the command is still executed, but with the NX_DRY_RUN environment variable set to 'true'. It will run in addition to the global `preVersionCommand`"
+        }
+      },
+      "additionalProperties": true
     }
   }
 }
