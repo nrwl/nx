@@ -68,6 +68,9 @@ class NxProjectGraphReportPlugin : Plugin<Project> {
       project.tasks.findByName("compileTestKotlin")?.let { compileTestKotlin ->
         task.dependsOn(compileTestKotlin)
       }
+      project.tasks.findByName("compileTestGroovy")?.let { compileTestGroovy ->
+        task.dependsOn(compileTestGroovy)
+      }
 
       val outputFileProvider = nxProjectReportTask.map { it.outputFile }
 

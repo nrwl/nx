@@ -2,20 +2,13 @@ package dev.nx.gradle.utils
 
 import dev.nx.gradle.data.NxTargets
 import dev.nx.gradle.data.TargetGroups
+import dev.nx.gradle.utils.parsing.containsEssentialTestAnnotations
+import dev.nx.gradle.utils.parsing.getAllVisibleClassesWithNestedAnnotation
 import java.io.File
 import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
-import org.junit.platform.engine.discovery.DiscoverySelectors
-import org.junit.platform.launcher.LauncherDiscoveryRequest
-import org.junit.platform.launcher.TestIdentifier
-import org.junit.platform.launcher.TestPlan
-import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder
-import org.junit.platform.launcher.core.LauncherFactory
 
 const val testCiTargetGroup = "verification"
-
-// Global JUnit launcher instance - created once and reused for all test discovery
-private val junitLauncher = LauncherFactory.create()
 
 fun addTestCiTargets(
     testFiles: FileCollection,
@@ -28,141 +21,59 @@ fun addTestCiTargets(
     workspaceRoot: String,
     ciTestTargetName: String
 ) {
-  testTask.logger.info("${testTask.path}: Starting addTestCiTargets")
-
-  // Validate testFiles collection and log missing directories
-  val allFiles = testFiles.files
-  val existingFiles = allFiles.filter { it.exists() }
-  val missingFiles = allFiles.filter { !it.exists() }
-
-  if (missingFiles.isNotEmpty()) {
-    testTask.logger.info("${testTask.path}: Skipping ${missingFiles.size} non-existent test files")
-    missingFiles.forEach { file ->
-      testTask.logger.debug("${testTask.path}: Missing test file: ${file.absolutePath}")
-    }
-  }
-
-  if (existingFiles.isEmpty()) {
-    testTask.logger.info("${testTask.path}: No test files found, skipping CI target generation")
-    return
-  }
-
-  testTask.logger.info("${testTask.path}: Processing ${existingFiles.size} existing test files")
-
   ensureTargetGroupExists(targetGroups, testCiTargetGroup)
 
   val ciDependsOn = mutableListOf<Map<String, String>>()
 
-  testTask.logger.info("${testTask.path}: Processing test files with JUnit discovery")
   processTestFiles(
-      existingFiles,
+      testFiles,
+      projectBuildPath,
+      testTask,
+      targets,
+      targetGroups,
+      projectRoot,
       workspaceRoot,
+      ciTestTargetName,
+      ciDependsOn)
+
+  ensureParentCiTarget(
+      targets,
+      targetGroups,
       ciTestTargetName,
       projectBuildPath,
       testTask,
       projectRoot,
-      targets,
-      targetGroups,
+      workspaceRoot,
       ciDependsOn)
-  testTask.logger.info("${testTask.path}: Finished test file processing")
-
-  testTask.logger.info("${testTask.path} generated CI targets: ${ciDependsOn.map { it["target"] }}")
-
-  if (ciDependsOn.isNotEmpty()) {
-    ensureParentCiTarget(
-        targets,
-        targetGroups,
-        ciTestTargetName,
-        projectBuildPath,
-        testTask,
-        testTargetName,
-        ciDependsOn)
-  }
 }
 
 private fun processTestFiles(
-    testFiles: List<File>,
-    workspaceRoot: String,
-    ciTestTargetName: String,
+    testFiles: FileCollection,
     projectBuildPath: String,
     testTask: Task,
-    projectRoot: String,
     targets: NxTargets,
     targetGroups: TargetGroups,
+    projectRoot: String,
+    workspaceRoot: String,
+    ciTestTargetName: String,
     ciDependsOn: MutableList<Map<String, String>>
 ) {
-  // Try to get test class directories from the test task if it's a Test task
-  val testClassDirs =
-      if (testTask is org.gradle.api.tasks.testing.Test) {
-        val testClassesDirs = testTask.testClassesDirs
-        if (testClassesDirs != null) {
-          testClassesDirs.files.filter { it.exists() }
-        } else {
-          emptyList()
-        }
-      } else {
-        // Fallback: look for compiled test classes in standard locations
-        val buildDir = testTask.project.layout.buildDirectory.get().asFile
-        val testClassDirs =
-            listOf(
-                    File(buildDir, "classes/java/test"),
-                    File(buildDir, "classes/kotlin/test"),
-                    File(buildDir, "classes/groovy/test"))
-                .filter { it.exists() }
-        testClassDirs
-      }
+  testFiles
+      .filter { isTestFile(it, workspaceRoot) }
+      .forEach { testFile ->
+        val classNames = getAllVisibleClassesWithNestedAnnotation(testFile, testTask)
 
-  val testClassNames = mutableMapOf<String, String>()
+        classNames?.forEach { (className, testClassPackagePath) ->
+          val targetName = "$ciTestTargetName--$className"
+          targets[targetName] =
+              buildTestCiTarget(
+                  projectBuildPath, testClassPackagePath, testTask, projectRoot, workspaceRoot)
+          targetGroups[testCiTargetGroup]?.add(targetName)
 
-  // First, try runtime class inspection if compiled classes are available
-  if (testClassDirs.isNotEmpty()) {
-    testTask.logger.info(
-        "${testTask.path}: Using Gradle test discovery with ${testClassDirs.size} class directories")
-
-    testClassDirs.forEach { classDir ->
-      testTask.logger.info("${testTask.path}: Class directory: ${classDir.absolutePath}")
-    }
-
-    // Create a class loader for the test classes
-    val testClassLoader = createTestClassLoader(testTask, testTask.logger)
-
-    testClassDirs.forEach { classDir ->
-      discoverTestClasses(classDir, testClassLoader, testClassNames, testTask.logger)
-    }
-  } else { // Fall back to regex parsing if no compiled classes found or no test classes discovered
-    testTask.logger.info(
-        "${testTask.path}: No compiled test classes found, falling back to regex parsing")
-
-    // Use regex parsing to find test classes in source files
-    testFiles.forEach { file ->
-      if (file.exists() &&
-          (file.extension == "kt" || file.extension == "java" || file.extension == "groovy")) {
-        try {
-          val content = file.readText()
-          val className = extractClassNameFromFile(content)
-
-          if (className != null && isTestClassByRegex(content)) {
-            testClassNames[className] = className
-          }
-        } catch (e: Exception) {
-          testTask.logger.debug("${testTask.path}: Error parsing file ${file.path}: ${e.message}")
+          ciDependsOn.add(
+              mapOf("target" to targetName, "projects" to "self", "params" to "forward"))
         }
       }
-    }
-  }
-
-  if (testClassNames.isNotEmpty()) {
-    processTestClasses(
-        testClassNames,
-        ciTestTargetName,
-        projectBuildPath,
-        testTask,
-        projectRoot,
-        workspaceRoot,
-        targets,
-        targetGroups,
-        ciDependsOn)
-  }
 }
 
 internal fun processTestClasses(
@@ -178,342 +89,23 @@ internal fun processTestClasses(
 ) {
   testClassNames.forEach { (className, testClassPackagePath) ->
     val targetName = "$ciTestTargetName--$className"
-    val builtTarget =
+    targets[targetName] =
         buildTestCiTarget(
             projectBuildPath, testClassPackagePath, testTask, projectRoot, workspaceRoot)
-
-    // Debug logging before storing
-    testTask.logger.info(
-        "${testTask.path}: Storing target $targetName with executor: ${builtTarget["executor"]}")
-
-    // Additional validation before storing
-    if (builtTarget["executor"] == null || builtTarget["executor"].toString().isEmpty()) {
-      testTask.logger.error(
-          "${testTask.path}: CRITICAL - Target $targetName has null/empty executor before storage!")
-      builtTarget["executor"] = "@nx/gradle:gradle"
-    }
-
-    targets[targetName] = builtTarget
     targetGroups[testCiTargetGroup]?.add(targetName)
-
-    // Debug logging after storing
-    testTask.logger.info(
-        "${testTask.path}: Stored target $targetName, verifying executor: ${targets[targetName]?.get("executor")}")
 
     ciDependsOn.add(mapOf("target" to targetName, "projects" to "self", "params" to "forward"))
   }
 }
 
-// Helper function to extract class name from file
-private fun extractClassNameFromFile(content: String): String? {
-  // Try to extract class name from the file content
-  val classRegex = Regex("class\\s+(\\w+)")
-  val match = classRegex.find(content)
-  return match?.groupValues?.get(1)
-}
-
-// Helper function to check if content contains test methods or annotations
-private fun isTestClassByRegex(content: String): Boolean {
-  // Parse lines early for reuse
-  val lines = content.lines()
-  val nonEmptyLines = lines.filter { it.trim().isNotEmpty() }
-
-  // Skip abstract classes as they can't be instantiated
-  if (content.contains("abstract class")) {
-    return false
-  }
-
-  // Skip internal classes - check for internal class declaration
-  if (content.contains("internal class")) {
-    return false
-  }
-
-  // Skip data classes
-  if (content.contains("data class")) {
-    return false
-  }
-
-  // Skip classes that implement interfaces but have no actual test methods
-  // This catches test utilities and fakes that implement interfaces
-  if (content.contains(": ") && (content.contains("class ") || content.contains("object "))) {
-    // Check if this class has actual test methods, not just interface implementations
-    val hasTestMethods =
-        lines.any { line ->
-          val trimmedLine = line.trim()
-          !trimmedLine.startsWith("//") &&
-              (trimmedLine.contains("@Test") ||
-                  trimmedLine.contains("fun test") ||
-                  trimmedLine.contains("void test"))
-        }
-    if (!hasTestMethods) {
-      return false
-    }
-  }
-
-  // Check if file is entirely commented out
-  if (nonEmptyLines.isNotEmpty() && nonEmptyLines.all { it.trim().startsWith("//") }) {
-    return false
-  }
-
-  // Look for test annotations or test methods that are NOT commented out
-  val testIndicators =
-      listOf(
-          "@Test",
-          "@org.junit.Test",
-          "@org.junit.jupiter.api.Test",
-          "@kotlin.test.Test",
-          "@ExtendWith",
-          "@Nested",
-          "@ParameterizedTest",
-          "@RepeatedTest",
-          "@TestFactory",
-          "fun test",
-          "void test",
-          "public void test",
-          "def test",
-          "extends Specification",
-          "def \"",
-          "def '",
-          "when:",
-          "then:",
-          "expect:")
-
-  // Check each line to ensure test indicators are not commented out
-  return lines.any { line ->
-    val trimmedLine = line.trim()
-    if (trimmedLine.startsWith("//")) {
-      false // Skip commented lines
-    } else {
-      testIndicators.any { indicator -> trimmedLine.contains(indicator) }
-    }
-  }
-}
-
-// Create a class loader for test classes
-private fun createTestClassLoader(
-    testTask: Task,
-    logger: org.gradle.api.logging.Logger
-): ClassLoader {
-  return try {
-    val allPaths = mutableListOf<java.net.URL>()
-
-    // Add test classpath if it's a Test task
-    if (testTask is org.gradle.api.tasks.testing.Test) {
-      allPaths.addAll(testTask.classpath.files.map { it.toURI().toURL() })
-      allPaths.addAll(testTask.testClassesDirs.files.map { it.toURI().toURL() })
-    } else {
-      // Fallback: use project configurations
-      val project = testTask.project
-      val testRuntimeClasspath = project.configurations.findByName("testRuntimeClasspath")
-      val testCompileClasspath = project.configurations.findByName("testCompileClasspath")
-
-      testRuntimeClasspath?.files?.forEach { allPaths.add(it.toURI().toURL()) }
-      testCompileClasspath?.files?.forEach { allPaths.add(it.toURI().toURL()) }
-
-      // Add build directories
-      val buildDir = project.layout.buildDirectory.get().asFile
-      listOf(
-              File(buildDir, "classes/java/main"),
-              File(buildDir, "classes/kotlin/main"),
-              File(buildDir, "classes/groovy/main"),
-              File(buildDir, "classes/java/test"),
-              File(buildDir, "classes/kotlin/test"),
-              File(buildDir, "classes/groovy/test"))
-          .filter { it.exists() }
-          .forEach { allPaths.add(it.toURI().toURL()) }
-    }
-
-    logger.debug("${testTask.path}: Created test class loader with ${allPaths.size} paths")
-    java.net.URLClassLoader(allPaths.toTypedArray(), Thread.currentThread().contextClassLoader)
-  } catch (e: Exception) {
-    logger.warn("${testTask.path}: Failed to create test class loader: ${e.message}")
-    Thread.currentThread().contextClassLoader
-  }
-}
-
-// Discover test classes in a directory using runtime class inspection
-private fun discoverTestClasses(
-    classDir: File,
-    classLoader: ClassLoader,
-    testClassNames: MutableMap<String, String>,
-    logger: org.gradle.api.logging.Logger
-) {
-  logger.info("Discovering test classes in directory: ${classDir.absolutePath}")
-
-  val classFiles =
-      classDir.walkTopDown().filter { it.isFile && it.name.endsWith(".class") }.toList()
-
-  logger.info("Found ${classFiles.size} .class files in ${classDir.absolutePath}")
-
-  classFiles.forEach { classFile ->
-    logger.info("Processing class file: ${classFile.name}")
-    try {
-      val className = getClassNameFromFile(classFile, classDir)
-      logger.info("Extracted class name: $className from ${classFile.name}")
-
-      if (className != null) {
-        val clazz = classLoader.loadClass(className)
-        logger.info("Successfully loaded class: ${clazz.name}")
-
-        // Use JUnit Platform to determine if this is actually a test class and get test details
-        val testClasses = inspectTestClassWithJUnit(clazz, logger)
-        if (testClasses.isNotEmpty()) {
-          logger.info(
-              "Found ${testClasses.size} test classes in ${clazz.name}: ${testClasses.keys}")
-          testClassNames.putAll(testClasses)
-        } else {
-          logger.info("${clazz.name}: Not a test class according to JUnit discovery")
-        }
-      } else {
-        logger.info("Could not extract class name from ${classFile.name}")
-      }
-    } catch (e: Throwable) {
-      // Catch all throwables including NoClassDefFoundError, LinkageError, etc.
-      logger.info(
-          "${classFile.name}: Failed to load class: ${e.javaClass.simpleName}: ${e.message}")
-    }
-  }
-
-  logger.info("Total test classes discovered: ${testClassNames.size}")
-}
-
-// Use JUnit Platform to discover test classes and their structure
-internal fun inspectTestClassWithJUnit(
-    clazz: Class<*>,
-    logger: org.gradle.api.logging.Logger
-): Map<String, String> {
-  return try {
-    // Skip classes that are obviously not test classes
-    if (shouldSkipClass(clazz)) {
-      logger.debug("${clazz.name}: Skipping class - not a test class type")
-      return emptyMap()
-    }
-
-    // Create a JUnit discovery request for this specific class
-    val request: LauncherDiscoveryRequest =
-        LauncherDiscoveryRequestBuilder.request()
-            .selectors(DiscoverySelectors.selectClass(clazz))
-            .build()
-
-    // Use the global JUnit launcher to discover tests
-    val testPlan = junitLauncher.discover(request)
-
-    // Extract test class information from the test plan
-    val result = mutableMapOf<String, String>()
-
-    testPlan.roots.forEach { root ->
-      extractTestClassesFromDescriptor(testPlan, root, result, logger)
-    }
-
-    logger.debug("${clazz.name}: JUnit discovery found ${result.size} test classes: ${result.keys}")
-    result
-  } catch (e: Exception) {
-    logger.debug("${clazz.name}: JUnit discovery failed: ${e.message}")
-    // If JUnit Platform discovery fails, don't create CI targets
-    emptyMap()
-  }
-}
-
-// Recursively extract test classes from JUnit TestIdentifier tree
-private fun extractTestClassesFromDescriptor(
-    testPlan: TestPlan,
-    identifier: TestIdentifier,
-    result: MutableMap<String, String>,
-    logger: org.gradle.api.logging.Logger
-) {
-  // Check if this identifier represents a test class or test method
-  if (identifier.isTest || identifier.isContainer) {
-    val uniqueId = identifier.uniqueId.toString()
-
-    // Extract class name from the identifier
-    if (identifier.isContainer && uniqueId.contains("[class:")) {
-      // This is a class container
-      val className = extractClassNameFromUniqueId(uniqueId)
-      if (className != null) {
-        val simpleName = className.substringAfterLast('.')
-        result[simpleName] = className
-        logger.debug("Added test class container: $simpleName -> $className")
-      }
-    } else if (identifier.isTest) {
-      // Individual test method - we want the containing class
-      val className = extractClassNameFromUniqueId(uniqueId)
-      if (className != null) {
-        val simpleName = className.substringAfterLast('.')
-        result[simpleName] = className
-        logger.debug("Added test class from method: $simpleName -> $className")
-      }
-    }
-  }
-
-  // Recursively process children
-  testPlan.getChildren(identifier).forEach { child ->
-    extractTestClassesFromDescriptor(testPlan, child, result, logger)
-  }
-}
-
-// Extract class name from JUnit's unique ID format
-private fun extractClassNameFromUniqueId(uniqueId: String): String? {
-  return try {
-    // JUnit unique IDs have format like:
-    // [engine:junit-jupiter]/[class:com.example.MyTest]/[method:testMethod()]
-    val classPattern = Regex("\\[class:([^]]+)\\]")
-    val match = classPattern.find(uniqueId)
-    match?.groupValues?.get(1)
-  } catch (e: Exception) {
-    null
-  }
-}
-
-// Check if a class should be skipped for test discovery
-internal fun shouldSkipClass(clazz: Class<*>): Boolean {
-  // Skip interfaces, enums, and annotation types
-  if (clazz.isInterface || clazz.isEnum || clazz.isAnnotation) {
-    return true
-  }
-
-  // Skip abstract classes
-  if (java.lang.reflect.Modifier.isAbstract(clazz.modifiers)) {
-    return true
-  }
-
-  // Skip data classes - they typically don't contain test methods
-  if (isDataClass(clazz)) {
-    return true
-  }
-
-  return false
-}
-
-// Check if a class is a Kotlin data class
-internal fun isDataClass(clazz: Class<*>): Boolean {
-  return try {
-    // Kotlin data classes have specific characteristics:
-    // 1. They have a copy method with the right signature
-    // 2. They have componentN methods
-    val methods = clazz.declaredMethods
-    val hasCopyMethod = methods.any { it.name == "copy" }
-    val hasComponentMethods = methods.any { it.name.startsWith("component") }
-
-    hasCopyMethod && hasComponentMethods
-  } catch (e: Exception) {
+private fun isTestFile(file: File, workspaceRoot: String): Boolean {
+  val content = file.takeIf { it.exists() }?.readText()
+  return if (content != null && containsEssentialTestAnnotations(content)) {
+    true
+  } else {
+    // Additional check for test files that might not have obvious annotations
+    // Could be extended with more sophisticated logic
     false
-  }
-}
-
-// Get class name from compiled class file
-internal fun getClassNameFromFile(classFile: File, classDir: File): String? {
-  return try {
-    val relativePath = classDir.toPath().relativize(classFile.toPath()).toString()
-    val className = relativePath.removeSuffix(".class").replace(File.separatorChar, '.')
-
-    // Skip inner classes, anonymous classes, and other generated classes
-    if (className.isEmpty() || className.contains("$")) {
-      return null
-    }
-
-    className
-  } catch (e: Exception) {
-    null
   }
 }
 
@@ -528,15 +120,11 @@ private fun buildTestCiTarget(
     projectRoot: String,
     workspaceRoot: String,
 ): MutableMap<String, Any?> {
-  val dependsOnTasks = getDependsOnTask(testTask)
-  val taskInputs = getInputsForTask(dependsOnTasks, testTask, projectRoot, workspaceRoot)
-
-  // Ensure executor is never null or undefined by using a constant
-  val executorValue = "@nx/gradle:gradle"
+  val taskInputs = getInputsForTask(null, testTask, projectRoot, workspaceRoot)
 
   val target =
       mutableMapOf<String, Any?>(
-          "executor" to executorValue,
+          "executor" to "@nx/gradle:gradle",
           "options" to
               mapOf(
                   "taskName" to "${projectBuildPath}:${testTask.name}",
@@ -546,29 +134,13 @@ private fun buildTestCiTarget(
           "cache" to true,
           "inputs" to taskInputs)
 
-  // Defensive check to ensure executor is never null or empty
-  val currentExecutor = target["executor"]
-  if (currentExecutor == null || currentExecutor.toString().isEmpty()) {
-    testTask.logger.warn("${testTask.path}: executor is null or empty, setting to default")
-    target["executor"] = executorValue
-  }
-
-  // Debug logging to trace executor value
-  testTask.logger.info("${testTask.path}: Created target with executor: ${target["executor"]}")
-
-  getDependsOnForTask(dependsOnTasks, testTask)
-      ?.takeIf { it.isNotEmpty() }
-      ?.let {
-        testTask.logger.info("${testTask.path}: found ${it.size} dependsOn entries")
-        target["dependsOn"] = it
-      }
-
   getOutputsForTask(testTask, projectRoot, workspaceRoot)
       ?.takeIf { it.isNotEmpty() }
       ?.let {
         testTask.logger.info("${testTask.path}: found ${it.size} outputs entries")
         target["outputs"] = it
       }
+
   return target
 }
 
@@ -578,28 +150,28 @@ private fun ensureParentCiTarget(
     ciTestTargetName: String,
     projectBuildPath: String,
     testTask: Task,
-    testTargetName: String,
-    dependsOn: List<Map<String, String>>
+    projectRoot: String,
+    workspaceRoot: String,
+    ciDependsOn: List<Map<String, String>>
 ) {
-  val ciTarget =
-      targets.getOrPut(ciTestTargetName) {
+  if (ciDependsOn.isNotEmpty()) {
+    val taskInputs = getInputsForTask(null, testTask, projectRoot, workspaceRoot)
+
+    targets[ciTestTargetName] =
         mutableMapOf<String, Any?>(
             "executor" to "nx:noop",
-            "metadata" to
-                getMetadata(
-                    "Runs Gradle ${testTask.name} in CI",
-                    projectBuildPath,
-                    testTask.name,
-                    testTargetName),
-            "dependsOn" to mutableListOf<Any?>(),
-            "cache" to true)
-      }
+            "metadata" to getMetadata("Runs all Gradle tests in CI", projectBuildPath, "test"),
+            "cache" to true,
+            "inputs" to taskInputs,
+            "dependsOn" to ciDependsOn)
 
-  @Suppress("UNCHECKED_CAST")
-  val dependsOnList = ciTarget["dependsOn"] as? MutableList<Any?> ?: mutableListOf()
-  dependsOnList.addAll(dependsOn)
-
-  if (!targetGroups[testCiTargetGroup].orEmpty().contains(ciTestTargetName)) {
     targetGroups[testCiTargetGroup]?.add(ciTestTargetName)
+
+    getOutputsForTask(testTask, projectRoot, workspaceRoot)
+        ?.takeIf { it.isNotEmpty() }
+        ?.let {
+          testTask.logger.info("${testTask.path}: found ${it.size} outputs entries")
+          (targets[ciTestTargetName] as MutableMap<String, Any?>)["outputs"] = it
+        }
   }
 }
