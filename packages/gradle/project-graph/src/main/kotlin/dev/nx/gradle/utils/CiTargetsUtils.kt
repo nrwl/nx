@@ -7,6 +7,8 @@ import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
 import org.junit.platform.engine.discovery.DiscoverySelectors
 import org.junit.platform.launcher.LauncherDiscoveryRequest
+import org.junit.platform.launcher.TestIdentifier
+import org.junit.platform.launcher.TestPlan
 import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder
 import org.junit.platform.launcher.core.LauncherFactory
 
@@ -14,57 +16,6 @@ const val testCiTargetGroup = "verification"
 
 // Global JUnit launcher instance - created once and reused for all test discovery
 private val junitLauncher = LauncherFactory.create()
-
-// Class-level test annotation names (without @ prefix for AST parsing)
-private val classTestAnnotationNames =
-    setOf(
-        "Nested",
-        "TestInstance",
-        "TestMethodOrder",
-        "DisplayName",
-        "ExtendWith",
-        "TestPropertySource",
-        "AssertFileChannelDataBlocksClosed")
-
-// Method-level test annotation names (without @ prefix for AST parsing)
-private val methodTestAnnotationNames =
-    setOf(
-        "Test",
-        "TestTemplate",
-        "ParameterizedTest",
-        "RepeatedTest",
-        "TestFactory",
-        "BeforeEach",
-        "AfterEach",
-        "BeforeAll",
-        "AfterAll")
-
-// Class-level qualified annotation names
-private val classQualifiedTestAnnotations =
-    setOf(
-        "org.junit.jupiter.api.Nested",
-        "org.junit.jupiter.api.TestInstance",
-        "org.junit.jupiter.api.TestMethodOrder",
-        "org.junit.jupiter.api.DisplayName",
-        "org.junit.jupiter.api.extension.ExtendWith",
-        "org.springframework.test.context.TestPropertySource",
-        "org.springframework.boot.loader.testsupport.AssertFileChannelDataBlocksClosed")
-
-// Method-level qualified annotation names
-private val methodQualifiedTestAnnotations =
-    setOf(
-        "org.junit.Test",
-        "org.junit.jupiter.api.Test",
-        "org.junit.jupiter.api.TestTemplate",
-        "org.junit.jupiter.api.ParameterizedTest",
-        "org.junit.jupiter.api.RepeatedTest",
-        "org.junit.jupiter.api.TestFactory",
-        "org.junit.jupiter.api.BeforeEach",
-        "org.junit.jupiter.api.AfterEach",
-        "org.junit.jupiter.api.BeforeAll",
-        "org.junit.jupiter.api.AfterAll",
-        "org.testng.annotations.Test",
-        "kotlin.test.Test")
 
 fun addTestCiTargets(
     testFiles: FileCollection,
@@ -391,9 +342,9 @@ private fun discoverTestClasses(
         val clazz = classLoader.loadClass(className)
         logger.info("Successfully loaded class: ${clazz.name}")
 
-        // Use JUnit Platform to determine if this is actually a test class
-        if (isActualTestClass(clazz, logger)) {
-          val testClasses = inspectTestClass(clazz, logger)
+        // Use JUnit Platform to determine if this is actually a test class and get test details
+        val testClasses = inspectTestClassWithJUnit(clazz, logger)
+        if (testClasses.isNotEmpty()) {
           logger.info(
               "Found ${testClasses.size} test classes in ${clazz.name}: ${testClasses.keys}")
           testClassNames.putAll(testClasses)
@@ -413,13 +364,16 @@ private fun discoverTestClasses(
   logger.info("Total test classes discovered: ${testClassNames.size}")
 }
 
-// Use JUnit Platform to discover if a class is actually a test class
-internal fun isActualTestClass(clazz: Class<*>, logger: org.gradle.api.logging.Logger): Boolean {
+// Use JUnit Platform to discover test classes and their structure
+internal fun inspectTestClassWithJUnit(
+    clazz: Class<*>,
+    logger: org.gradle.api.logging.Logger
+): Map<String, String> {
   return try {
     // Skip classes that are obviously not test classes
     if (shouldSkipClass(clazz)) {
       logger.debug("${clazz.name}: Skipping class - not a test class type")
-      return false
+      return emptyMap()
     }
 
     // Create a JUnit discovery request for this specific class
@@ -431,16 +385,69 @@ internal fun isActualTestClass(clazz: Class<*>, logger: org.gradle.api.logging.L
     // Use the global JUnit launcher to discover tests
     val testPlan = junitLauncher.discover(request)
 
-    // Check if any test methods were discovered
-    val hasTests = testPlan.roots.any { root -> testPlan.getChildren(root).isNotEmpty() }
+    // Extract test class information from the test plan
+    val result = mutableMapOf<String, String>()
 
-    logger.debug("${clazz.name}: JUnit discovery found tests: $hasTests")
-    hasTests
+    testPlan.roots.forEach { root ->
+      extractTestClassesFromDescriptor(testPlan, root, result, logger)
+    }
+
+    logger.debug("${clazz.name}: JUnit discovery found ${result.size} test classes: ${result.keys}")
+    result
   } catch (e: Exception) {
     logger.debug("${clazz.name}: JUnit discovery failed: ${e.message}")
-    // If JUnit Platform discovery fails, don't create a CI target
-    // This is the most reliable approach - if JUnit can't find tests, we shouldn't either
-    false
+    // If JUnit Platform discovery fails, don't create CI targets
+    emptyMap()
+  }
+}
+
+// Recursively extract test classes from JUnit TestIdentifier tree
+private fun extractTestClassesFromDescriptor(
+    testPlan: TestPlan,
+    identifier: TestIdentifier,
+    result: MutableMap<String, String>,
+    logger: org.gradle.api.logging.Logger
+) {
+  // Check if this identifier represents a test class or test method
+  if (identifier.isTest || identifier.isContainer) {
+    val uniqueId = identifier.uniqueId.toString()
+
+    // Extract class name from the identifier
+    if (identifier.isContainer && uniqueId.contains("[class:")) {
+      // This is a class container
+      val className = extractClassNameFromUniqueId(uniqueId)
+      if (className != null) {
+        val simpleName = className.substringAfterLast('.')
+        result[simpleName] = className
+        logger.debug("Added test class container: $simpleName -> $className")
+      }
+    } else if (identifier.isTest) {
+      // Individual test method - we want the containing class
+      val className = extractClassNameFromUniqueId(uniqueId)
+      if (className != null) {
+        val simpleName = className.substringAfterLast('.')
+        result[simpleName] = className
+        logger.debug("Added test class from method: $simpleName -> $className")
+      }
+    }
+  }
+
+  // Recursively process children
+  testPlan.getChildren(identifier).forEach { child ->
+    extractTestClassesFromDescriptor(testPlan, child, result, logger)
+  }
+}
+
+// Extract class name from JUnit's unique ID format
+private fun extractClassNameFromUniqueId(uniqueId: String): String? {
+  return try {
+    // JUnit unique IDs have format like:
+    // [engine:junit-jupiter]/[class:com.example.MyTest]/[method:testMethod()]
+    val classPattern = Regex("\\[class:([^]]+)\\]")
+    val match = classPattern.find(uniqueId)
+    match?.groupValues?.get(1)
+  } catch (e: Exception) {
+    null
   }
 }
 
@@ -494,120 +501,6 @@ internal fun getClassNameFromFile(classFile: File, classDir: File): String? {
     className
   } catch (e: Exception) {
     null
-  }
-}
-
-// Inspect a loaded class for test annotations and nested test classes
-internal fun inspectTestClass(
-    clazz: Class<*>,
-    logger: org.gradle.api.logging.Logger
-): Map<String, String> {
-  val result = mutableMapOf<String, String>()
-
-  try {
-    logger.info("Inspecting class: ${clazz.name}")
-
-    // Skip interfaces, enums, and annotation types
-    if (clazz.isInterface || clazz.isEnum || clazz.isAnnotation) {
-      logger.info("Skipping ${clazz.name} - interface/enum/annotation")
-      return result
-    }
-
-    // Check for test annotations on the class
-    val hasClassTestAnnotations = hasClassTestAnnotations(clazz)
-    val hasMethodTestAnnotations = hasMethodTestAnnotations(clazz)
-
-    logger.info(
-        "${clazz.name} - Class annotations: $hasClassTestAnnotations, Method annotations: $hasMethodTestAnnotations")
-
-    // Get nested classes with @Nested annotation
-    val nestedTestClasses =
-        try {
-          clazz.declaredClasses.filter { nestedClass ->
-            !nestedClass.isInterface &&
-                !nestedClass.isEnum &&
-                !nestedClass.isAnnotation &&
-                isNestedTestClass(nestedClass)
-          }
-        } catch (e: Throwable) {
-          // Ignore classes with unavailable dependencies
-          logger.info("Failed to get nested classes for ${clazz.name}: ${e.message}")
-          emptyList()
-        }
-
-    logger.info("${clazz.name} - Found ${nestedTestClasses.size} nested test classes")
-
-    if (nestedTestClasses.isNotEmpty()) {
-      // Process nested test classes
-      nestedTestClasses.forEach { nestedClass ->
-        val simpleName = nestedClass.simpleName
-        val nestedKey = "${clazz.simpleName}$simpleName"
-        result[nestedKey] = nestedClass.name
-        logger.info("Added nested test class: $nestedKey -> ${nestedClass.name}")
-      }
-    } else if (hasClassTestAnnotations || hasMethodTestAnnotations) {
-      // Include the main class if it has test annotations
-      result[clazz.simpleName] = clazz.name
-      logger.info("Added main test class: ${clazz.simpleName} -> ${clazz.name}")
-    } else {
-      logger.info("${clazz.name} - No test annotations found")
-    }
-
-    logger.info("${clazz.simpleName}: Found ${result.size} test classes")
-  } catch (e: Exception) {
-    logger.warn("Failed to inspect class ${clazz.name}: ${e.message}")
-  }
-
-  return result
-}
-
-// Check if a class has class-level test annotations
-internal fun hasClassTestAnnotations(clazz: Class<*>): Boolean {
-  return try {
-    clazz.annotations.any { annotation ->
-      val annotationName = annotation.annotationClass.simpleName
-      val qualifiedName = annotation.annotationClass.qualifiedName
-      classTestAnnotationNames.contains(annotationName) ||
-          classQualifiedTestAnnotations.contains(qualifiedName)
-    }
-  } catch (e: Throwable) {
-    // Ignore classes that reference unavailable dependencies
-    false
-  }
-}
-
-// Check if a class has method-level test annotations
-internal fun hasMethodTestAnnotations(clazz: Class<*>): Boolean {
-  return try {
-    clazz.declaredMethods.any { method ->
-      try {
-        method.annotations.any { annotation ->
-          val annotationName = annotation.annotationClass.simpleName
-          val qualifiedName = annotation.annotationClass.qualifiedName
-          methodTestAnnotationNames.contains(annotationName) ||
-              methodQualifiedTestAnnotations.contains(qualifiedName)
-        }
-      } catch (e: Throwable) {
-        false
-      }
-    }
-  } catch (e: Throwable) {
-    // Ignore classes that reference unavailable dependencies
-    false
-  }
-}
-
-// Check if a nested class is a test class with @Nested annotation
-internal fun isNestedTestClass(nestedClass: Class<*>): Boolean {
-  return try {
-    nestedClass.annotations.any { annotation ->
-      val annotationName = annotation.annotationClass.simpleName
-      val qualifiedName = annotation.annotationClass.qualifiedName
-      annotationName == "Nested" || qualifiedName == "org.junit.jupiter.api.Nested"
-    }
-  } catch (e: Throwable) {
-    // Ignore classes that reference unavailable dependencies
-    false
   }
 }
 
