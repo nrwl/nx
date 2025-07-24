@@ -148,7 +148,7 @@ class RuntimeClassInspectionTest {
   }
 
   @Test
-  fun `getClassNameFromFile handles nested class files`() {
+  fun `getClassNameFromFile skips nested class files`() {
     val classDir = java.io.File("/build/classes/kotlin/test")
     val classFile =
         java.io.File(
@@ -156,6 +156,7 @@ class RuntimeClassInspectionTest {
 
     val result = getClassNameFromFile(classFile, classDir)
 
-    assertEquals("dev.nx.gradle.utils.testdata.NestedTestClass\$InnerTests", result)
+    // Should return null for nested classes to avoid creating separate CI targets
+    assertNull(result)
   }
 }

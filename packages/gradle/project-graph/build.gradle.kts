@@ -10,12 +10,16 @@ plugins {
 
 group = "dev.nx.gradle"
 
-version = "0.0.1-alpha.9"
+version = "0.1.3"
 
 repositories { mavenCentral() }
 
 dependencies {
   implementation("com.google.code.gson:gson:2.10.1")
+  implementation("org.junit.platform:junit-platform-engine:1.10.1")
+  implementation("org.junit.platform:junit-platform-commons:1.10.1")
+  implementation("org.junit.platform:junit-platform-launcher:1.10.1")
+  implementation("org.junit.jupiter:junit-jupiter-engine:5.10.1")
   testImplementation(kotlin("test"))
   testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
   testImplementation("org.mockito:mockito-core:5.8.0")
