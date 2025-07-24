@@ -67,6 +67,7 @@ import {
   commitChanges,
   createCommitMessageValues,
   createGitTagValues,
+  shouldPreferDockerVersionForReleaseGroup,
   handleDuplicateGitTags,
   isPrerelease,
   noDiffInChangelogMessage,
@@ -1251,10 +1252,11 @@ async function generateChangelogForProjects({
       continue;
     }
 
+    const preferDockerVersion =
+      shouldPreferDockerVersionForReleaseGroup(releaseGroup);
     const releaseVersion = new ReleaseVersion({
       version:
-        releaseGroup.releaseTagPatternPreferDockerVersion &&
-        projectsVersionData[project.name].dockerVersion
+        preferDockerVersion && projectsVersionData[project.name].dockerVersion
           ? projectsVersionData[project.name].dockerVersion
           : projectsVersionData[project.name].newVersion,
       releaseTagPattern: releaseGroup.releaseTagPattern,

@@ -270,15 +270,12 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     deleted.forEach((f) => additionalDeletedFiles.add(f));
 
     // After all version actions have run, process docker projects as a layer above
-    if (
-      'docker' in nxReleaseConfig.version &&
-      nxReleaseConfig.version.docker?.preVersionCommand
-    ) {
+    if (nxReleaseConfig.docker?.preVersionCommand) {
       /**
        * Run any configured top level docker pre-version command
        */
       runPreVersionCommand(
-        nxReleaseConfig.version.docker.preVersionCommand,
+        nxReleaseConfig.docker.preVersionCommand,
         {
           dryRun: args.dryRun,
           verbose: args.verbose,
@@ -292,12 +289,9 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
      * Run any configured docker pre-version command for the selected release groups
      */
     for (const releaseGroup of releaseGroups) {
-      if (
-        'docker' in releaseGroup.version &&
-        releaseGroup.version.docker?.groupPreVersionCommand
-      ) {
+      if (releaseGroup.docker?.groupPreVersionCommand) {
         runPreVersionCommand(
-          releaseGroup.version.docker.groupPreVersionCommand,
+          releaseGroup.docker.groupPreVersionCommand,
           {
             dryRun: args.dryRun,
             verbose: args.verbose,

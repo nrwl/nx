@@ -1,6 +1,7 @@
 import * as semver from 'semver';
 import {
   ManifestRootToUpdate,
+  NxReleaseDockerConfiguration,
   NxReleaseVersionConfiguration,
 } from '../../../config/nx-json';
 import {
@@ -17,6 +18,7 @@ import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { getLatestGitTagForPattern } from '../utils/git';
 import { resolveSemverSpecifierFromPrompt } from '../utils/resolve-semver-specifier';
 import type { VersionData, VersionDataEntry } from '../utils/shared';
+import { shouldSkipVersionActions } from '../utils/shared';
 import { validReleaseVersionPrefixes } from '../version';
 import { deriveSpecifierFromConventionalCommits } from './derive-specifier-from-conventional-commits';
 import { deriveSpecifierFromVersionPlan } from './deriver-specifier-from-version-plans';
@@ -46,7 +48,7 @@ export interface FinalConfigForProject {
   versionActionsOptions: NxReleaseVersionConfiguration['versionActionsOptions'];
   // Consistently expanded to the object form for easier processing in VersionActions
   manifestRootsToUpdate: Array<Exclude<ManifestRootToUpdate, string>>;
-  dockerOptions: NxReleaseVersionConfiguration['docker'];
+  dockerOptions: NxReleaseDockerConfiguration;
 }
 
 interface GroupNode {
@@ -494,13 +496,13 @@ export class ReleaseGroupProcessor {
             );
           }
           let versionActionsToUse = versionActions;
-          // TODO we may need to use glob matching here rather than a simple project name lookup
-          if (
-            finalConfigForProject.dockerOptions?.ignoreVersionActions &&
-            finalConfigForProject.dockerOptions?.ignoreVersionActions.includes(
-              project
-            )
-          ) {
+          // Check if this project should skip version actions based on docker configuration
+          const shouldSkip = shouldSkipVersionActions(
+            finalConfigForProject.dockerOptions,
+            project
+          );
+
+          if (shouldSkip) {
             versionActionsToUse = new NOOP_VERSION_ACTIONS(
               releaseGroup,
               projectGraphNode,
@@ -1254,6 +1256,9 @@ export class ReleaseGroupProcessor {
     const projectVersionConfig = projectGraphNode.data.release?.version as
       | NxReleaseVersionConfiguration
       | undefined;
+    const projectDockerConfig = projectGraphNode.data.release?.docker as
+      | NxReleaseDockerConfiguration
+      | undefined;
 
     /**
      * specifierSource
@@ -1285,14 +1290,31 @@ Valid values are: ${validReleaseVersionPrefixes
       );
     }
 
+    // Merge docker options configured in project with release group config
+    // Project level configuration should take preference
+    const dockerOptions = {
+      ...(releaseGroup.docker ?? {}),
+      ...(projectDockerConfig ?? {}),
+    };
+
     /**
      * currentVersionResolver, defaults to disk
      */
-    const currentVersionResolver =
+    let currentVersionResolver =
       projectVersionConfig?.currentVersionResolver ??
       releaseGroupVersionConfig?.currentVersionResolver ??
       'disk';
-    if (
+
+    // Check if this project should skip version actions based on docker configuration
+    const shouldSkip = shouldSkipVersionActions(
+      dockerOptions,
+      projectGraphNode.name
+    );
+
+    if (shouldSkip) {
+      // If the project skips version actions, it doesn't need to resolve a current version
+      currentVersionResolver = 'none';
+    } else if (
       specifierSource === 'conventional-commits' &&
       currentVersionResolver !== 'git-tag'
     ) {
@@ -1355,13 +1377,6 @@ Valid values are: ${validReleaseVersionPrefixes
       }
       return manifestRoot;
     });
-
-    // Merge docker options configured in project with release group config
-    // Project level configuration should take preference
-    const dockerOptions = {
-      ...(releaseGroupVersionConfig?.docker ?? {}),
-      ...(projectVersionConfig?.docker ?? {}),
-    };
 
     return {
       specifierSource,

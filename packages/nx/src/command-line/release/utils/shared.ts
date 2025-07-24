@@ -234,6 +234,33 @@ function stripPlaceholders(str: string, placeholders: string[]): string {
   return str;
 }
 
+export function shouldPreferDockerVersionForReleaseGroup(
+  releaseGroup: ReleaseGroupWithName
+): boolean {
+  // Check if the release group has docker configuration at all
+  if (!releaseGroup.docker) {
+    // No docker configuration means we should use the inferred setting
+    // The inference was already done in the config phase, so if docker projects exist,
+    // releaseTagPatternRequireSemver would be false
+    return !releaseGroup.releaseTagPatternRequireSemver;
+  }
+
+  // The inference was already done in the config phase, so if docker projects exist,
+  // releaseTagPatternRequireSemver would be false
+  return !releaseGroup.releaseTagPatternRequireSemver;
+}
+
+export function shouldSkipVersionActions(
+  dockerOptions: { skipVersionActions?: string[] | boolean },
+  projectName: string
+): boolean {
+  return (
+    dockerOptions.skipVersionActions === true ||
+    (Array.isArray(dockerOptions.skipVersionActions) &&
+      dockerOptions.skipVersionActions.includes(projectName))
+  );
+}
+
 export function createGitTagValues(
   releaseGroups: ReleaseGroupWithName[],
   releaseGroupToFilteredProjects: Map<ReleaseGroupWithName, Set<string>>,
@@ -250,9 +277,11 @@ export function createGitTagValues(
       for (const project of releaseGroupProjectNames) {
         const projectVersionData = versionData[project];
         if (projectVersionData.newVersion !== null) {
+          const preferDockerVersion =
+            shouldPreferDockerVersionForReleaseGroup(releaseGroup);
           tags.push(
             interpolate(releaseGroup.releaseTagPattern, {
-              version: releaseGroup.releaseTagPatternPreferDockerVersion
+              version: preferDockerVersion
                 ? projectVersionData.dockerVersion
                 : projectVersionData.newVersion,
               projectName: project,
@@ -265,9 +294,11 @@ export function createGitTagValues(
     // For fixed groups we want one tag for the overall group
     const projectVersionData = versionData[releaseGroupProjectNames[0]]; // all at the same version, so we can just pick the first one
     if (projectVersionData.newVersion !== null) {
+      const preferDockerVersion =
+        shouldPreferDockerVersionForReleaseGroup(releaseGroup);
       tags.push(
         interpolate(releaseGroup.releaseTagPattern, {
-          version: releaseGroup.releaseTagPatternPreferDockerVersion
+          version: preferDockerVersion
             ? projectVersionData.dockerVersion
             : projectVersionData.newVersion,
           releaseGroupName: releaseGroup.name,

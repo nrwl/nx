@@ -82,49 +82,48 @@ export type ManifestRootToUpdate =
   | string
   | { path: string; preserveLocalDependencyProtocols: boolean };
 
+export interface NxReleaseDockerConfiguration {
+  /**
+   * A command to run after validation of nx release configuration, but before versioning begins.
+   * Useful for preparing docker build artifacts. If --dry-run is passed, the command is still executed,
+   * but with the NX_DRY_RUN environment variable set to 'true'.
+   */
+  preVersionCommand?: string;
+  /**
+   * A command to run after validation of nx release configuration, but before versioning begins.
+   * Used for preparing docker build artifacts. If --dry-run is passed, the command is still executed, but
+   * with the NX_DRY_RUN environment variable set to 'true'.
+   * It will run in addition to the global `preVersionCommand`
+   */
+  groupPreVersionCommand?: string;
+  /**
+   * Projects which should use a no-op VersionActions implementation rather than any potentially inferred by default or via Inference Plugins.
+   * Can be an array of project names (subset of projects in the release setup/release group) or a boolean (true means all projects).
+   */
+  skipVersionActions?: string[] | boolean;
+  /**
+   * Record of named version patterns to choose between when versioning docker projects.
+   *
+   * e.g.
+   * ```
+   * "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
+   * "hotfix": "{currentDate|YYMM.DD}-hotfix"
+   * ```
+   */
+  versionSchemes?: Record<string, string>;
+  /**
+   * Repository name for the image on the configured registry
+   */
+  repositoryName?: string;
+  /**
+   * Url of the Docker Image/Container Registry to push images to.
+   * Defaults to Docker Hub.
+   */
+  registryUrl?: string;
+}
+
 // NOTE: It's important to keep the nx-schema.json in sync with this interface. If you make changes here, make sure they are reflected in the schema.
 export interface NxReleaseVersionConfiguration {
-  /**
-   * Configure options to handle versioning docker projects. Docker projects will be identified via the presence of a Dockerfile.
-   */
-  docker?: {
-    /**
-     * A command to run after validation of nx release configuration, but before versioning begins.
-     * Useful for preparing docker build artifacts. If --dry-run is passed, the command is still executed,
-     * but with the NX_DRY_RUN environment variable set to 'true'.
-     */
-    preVersionCommand?: string;
-    /**
-     * A command to run after validation of nx release configuration, but before versioning begins.
-     * Used for preparing docker build artifacts. If --dry-run is passed, the command is still executed, but
-     * with the NX_DRY_RUN environment variable set to 'true'.
-     * It will run in addition to the global `preVersionCommand`
-     */
-    groupPreVersionCommand?: string;
-    /**
-     * Array of projects which should use a no-op VersionActions implementation rather than any potentially inferred by default or via Inference Plugins.
-     */
-    ignoreVersionActions?: string[];
-    /**
-     * Record of named version patterns to choose between when versioning docker projects.
-     *
-     * e.g.
-     * ```
-     * "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
-     * "hotfix": "{currentDate|YYMM.DD}-hotfix"
-     * ```
-     */
-    versionSchemes?: Record<string, string>;
-    /**
-     * Repository name for the image on the configured registry
-     */
-    repositoryName?: string;
-    /**
-     * Url of the Docker Image/Container Registry to push images to.
-     * Defaults to Docker Hub.
-     */
-    registryUrl?: string;
-  };
   /**
    * Whether to use the legacy versioning strategy. This value was true in Nx v20 and became false in Nx v21.
    * The legacy versioning implementation will be removed in Nx v22, as will this flag.
@@ -366,6 +365,11 @@ export interface NxReleaseConfiguration {
    */
   projects?: string[] | string;
   /**
+   * Configure options to handle versioning docker projects. Docker projects will be identified via the presence of a Dockerfile.
+   * Set to `true` to enable with default settings, or provide a configuration object for custom settings.
+   */
+  docker?: NxReleaseDockerConfiguration | true;
+  /**
    * @note When no projects or groups are configured at all (the default), all projects in the workspace are treated as
    * if they were in a release group together with a fixed relationship.
    */
@@ -382,6 +386,11 @@ export interface NxReleaseConfiguration {
        * only be used in a maximum of one release group.
        */
       projects: string[] | string;
+      /**
+       * Configure options to handle versioning docker projects for this group.
+       * Set to `true` to enable with default settings, or provide a configuration object for custom settings.
+       */
+      docker?: NxReleaseDockerConfiguration | true;
       /**
        * Optionally override version configuration for this group.
        *
@@ -424,13 +433,6 @@ export interface NxReleaseConfiguration {
        * - Setting it to an array of strings will cause us to check all branches WHEN the current branch matches one of the strings in the array. Glob patterns are supported.
        */
       releaseTagPatternCheckAllBranchesWhen?: boolean | string[];
-      /**
-       * By default, we will use the version defined in any existing manifest files or passed through from `nx release`.
-       *
-       * - Setting this to true will cause us to use the version calculated for corresponding docker images.
-       * - Setting it to false will use the version found within manifest files or passed through from `nx release`.
-       */
-      releaseTagPatternPreferDockerVersion?: boolean;
       /**
        * By default, we will use semver when searching through the tags to find the latest matching tag.
        *
@@ -530,13 +532,6 @@ export interface NxReleaseConfiguration {
    * - Setting it to an array of strings will cause us to check all branches WHEN the current branch matches one of the strings in the array. Glob patterns are supported.
    */
   releaseTagPatternCheckAllBranchesWhen?: boolean | string[];
-  /**
-   * By default, we will use the version defined in any existing manifest files or passed through from `nx release`.
-   *
-   * - Setting this to true will cause us to use the version calculated for corresponding docker images.
-   * - Setting it to false will use the version found within manifest files or passed through from `nx release`.
-   */
-  releaseTagPatternPreferDockerVersion?: boolean;
   /**
    * By default, we will use semver when searching through the tags to find the latest matching tag.
    *
