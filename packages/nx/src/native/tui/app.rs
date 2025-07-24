@@ -1030,6 +1030,10 @@ impl App {
                         })
                         .collect();
 
+                    // Calculate minimal view context once for all panes
+                    let is_minimal =
+                        self.is_task_list_hidden() && get_task_count(&self.task_graph) == 1;
+
                     for (pane_idx, pane_area, relevant_pane_task) in terminal_panes_data {
                         if let Some(task_name) = relevant_pane_task {
                             let task_status = self
@@ -1039,11 +1043,11 @@ impl App {
                             // If task is pending, show dependency view instead of terminal pane
                             if task_status == TaskStatus::NotStarted {
                                 self.render_dependency_view_internal(
-                                    f, pane_idx, pane_area, task_name,
+                                    f, pane_idx, pane_area, task_name, is_minimal,
                                 );
                             } else {
                                 self.render_terminal_pane_internal(
-                                    f, pane_idx, pane_area, task_name,
+                                    f, pane_idx, pane_area, task_name, is_minimal,
                                 );
                             }
                         } else {
@@ -1660,6 +1664,7 @@ impl App {
         pane_idx: usize,
         pane_area: Rect,
         task_name: String,
+        is_minimal: bool,
     ) {
         // Calculate values that were previously passed in
         let task_status = self
@@ -1704,7 +1709,8 @@ impl App {
 
         // No need to update status in DependencyViewState - we pass the full map to the widget
         if let Some(dep_state) = &mut self.dependency_view_states[pane_idx] {
-            let dependency_view = DependencyView::new(&self.task_status_map, &self.task_graph);
+            let dependency_view =
+                DependencyView::new(&self.task_status_map, &self.task_graph, is_minimal);
             f.render_stateful_widget(dependency_view, pane_area, dep_state);
         }
     }
@@ -1716,13 +1722,13 @@ impl App {
         pane_idx: usize,
         pane_area: Rect,
         task_name: String,
+        is_minimal: bool,
     ) {
         // Calculate values that were previously passed in
         let task_status = self
             .get_task_status(&task_name)
             .unwrap_or(TaskStatus::NotStarted);
         let task_continuous = self.is_task_continuous(&task_name);
-        let tasks_list_hidden = self.is_task_list_hidden();
         let has_pty = self.pty_instances.contains_key(&task_name);
 
         let is_focused = match self.focus {
@@ -1769,7 +1775,7 @@ impl App {
         );
 
         let terminal_pane = TerminalPane::new()
-            .minimal(tasks_list_hidden && get_task_count(&self.task_graph) == 1)
+            .minimal(is_minimal)
             .pty_data(terminal_pane_data)
             .continuous(task_continuous);
 
