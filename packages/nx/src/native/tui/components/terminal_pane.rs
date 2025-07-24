@@ -185,6 +185,8 @@ pub struct TerminalPaneState {
     pub has_pty: bool,
     pub is_next_tab_target: bool,
     pub console_available: bool,
+    // Cache expected viewport dimensions for consistent scrollbar calculations
+    pub expected_viewport_height: Option<u16>,
 }
 
 impl TerminalPaneState {
@@ -207,6 +209,7 @@ impl TerminalPaneState {
             has_pty,
             is_next_tab_target,
             console_available,
+            expected_viewport_height: None,
         }
     }
 }
@@ -322,6 +325,39 @@ impl<'a> TerminalPane<'a> {
             .as_ref()
             .map(|data| data.is_interactive)
             .unwrap_or(false)
+    }
+
+    /// Calculate content rows based on expected viewport height, not current PTY dimensions.
+    /// This provides consistent scrollbar calculations even when PTY hasn't been resized yet.
+    fn calculate_content_rows_for_viewport(
+        &self,
+        pty: &crate::native::tui::pty::PtyInstance,
+        expected_viewport_height: u16,
+    ) -> usize {
+        // Try to get current content rows from PTY
+        let current_content_rows = pty.get_total_content_rows();
+
+        // If we have a cached viewport height and it differs from expected,
+        // we need to estimate content based on the expected dimensions
+        if let Some(screen) = pty.get_screen() {
+            let (current_rows, _current_cols) = screen.size();
+
+            // If current PTY dimensions match expected viewport, use current calculation
+            if current_rows == expected_viewport_height {
+                return current_content_rows;
+            }
+
+            // Otherwise, estimate content rows based on expected viewport height
+            // This is a simple heuristic: assume content scales linearly with viewport height
+            if current_rows > 0 {
+                let scale_factor = expected_viewport_height as f64 / current_rows as f64;
+                let estimated_content = (current_content_rows as f64 * scale_factor) as usize;
+                return estimated_content.max(expected_viewport_height as usize);
+            }
+        }
+
+        // Fallback to current calculation
+        current_content_rows
     }
 }
 
@@ -543,11 +579,21 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
             if let Some(pty) = &pty_data.pty {
                 if let Some(screen) = pty.get_screen() {
                     let viewport_height = inner_area.height;
+
+                    // Cache expected viewport height for consistent calculations
+                    state.expected_viewport_height = Some(viewport_height);
+
                     let current_scroll = pty.get_scroll_offset();
 
-                    let total_content_rows = pty.get_total_content_rows();
+                    // Calculate content based on expected dimensions, not current PTY dimensions
+                    // This prevents scrollbar flash when PTY hasn't been resized yet
+                    let total_content_rows =
+                        self.calculate_content_rows_for_viewport(pty, viewport_height);
                     let scrollable_rows =
                         total_content_rows.saturating_sub(viewport_height as usize);
+
+                    // Determine if scrollbar is needed based on content vs viewport size
+                    // This is deterministic and doesn't depend on actual PTY dimensions
                     let needs_scrollbar = scrollable_rows > 0;
 
                     // Reset scrollbar state if no scrolling needed
