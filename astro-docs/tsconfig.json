@@ -32,5 +32,13 @@
     "allowJs": true,
     // Enable strict mode. This enables a few options at a time, see https://www.typescriptlang.org/tsconfig#strict for a list.
     "strict": true
-  }
+  },
+  "references": [
+    {
+      "path": "../nx-dev/ui-markdoc"
+    },
+    {
+      "path": "../nx-dev/ui-icons"
+    }
+  ]
 }
