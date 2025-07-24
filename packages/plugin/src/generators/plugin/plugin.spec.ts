@@ -86,6 +86,22 @@ describe('NxPlugin Plugin Generator', () => {
     expect(projectE2e.root).toEqual('plugins/my-plugin-e2e');
   });
 
+  it('should place the e2e project in the specified directory', async () => {
+    await pluginGenerator(
+      tree,
+      getSchema({
+        name: 'my-plugin',
+        directory: 'packages/my-plugin',
+        e2eTestRunner: 'jest',
+        e2eProjectDirectory: 'e2e',
+      })
+    );
+    const project = readProjectConfiguration(tree, 'my-plugin');
+    const projectE2e = readProjectConfiguration(tree, 'my-plugin-e2e');
+    expect(project.root).toEqual('packages/my-plugin');
+    expect(projectE2e.root).toEqual('e2e/my-plugin-e2e');
+  });
+
   describe('asset paths', () => {
     it('should generate normalized asset paths for plugin in monorepo', async () => {
       await pluginGenerator(
