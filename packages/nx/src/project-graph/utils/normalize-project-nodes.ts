@@ -149,11 +149,16 @@ function getProjectType(
     return 'app';
   }
 
-  // If there are no exports, assume it is an application since both buildable and non-buildable libraries have exports.
+  // If it doesn't have any common library entry points, assume it is an application
   const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
   try {
     const packageJson = readJsonFile<PackageJson>(packageJsonPath);
-    if (!packageJson.exports) {
+    if (
+      !packageJson.exports &&
+      !packageJson.main &&
+      !packageJson.module &&
+      !packageJson.bin
+    ) {
       return 'app';
     }
   } catch {}
