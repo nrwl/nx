@@ -131,7 +131,7 @@ where
 
             if dir_entry.file_type().is_some_and(|d| d.is_dir()) {
                 return Continue;
-            }
+            };
 
             let Ok(file_path) = dir_entry.path().strip_prefix(directory) else {
                 return Continue;
