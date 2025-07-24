@@ -95,13 +95,7 @@ module.exports = function (modulePath, options) {
   const ext = path.extname(modulePath);
 
   // Handle CSS imports
-  if (
-    ext === '.css' ||
-    ext === '.scss' ||
-    ext === '.sass' ||
-    ext === '.less' ||
-    ext === '.styl'
-  ) {
+  if (ext === '.css' || ext === '.scss' || ext === '.sass' || ext === '.less') {
     return require.resolve('identity-obj-proxy');
   }
 

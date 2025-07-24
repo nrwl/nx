@@ -399,6 +399,16 @@
       }
     },
     "migrations": {
+      "/technologies/angular/api/migrations/21.3.5-jest-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.3.5-jest-package-updates.json",
+        "hidden": false,
+        "name": "21.3.5-jest-package-updates",
+        "version": "21.3.5-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/technologies/angular/api/migrations/21.3.5-jest-package-updates",
+        "type": "migration"
+      },
       "/technologies/angular/api/migrations/update-angular-cli-version-20-1-0": {
         "description": "Update the @angular/cli package version to ~20.1.0.",
         "file": "generated/packages/angular/migrations/update-angular-cli-version-20-1-0.json",
