@@ -367,6 +367,36 @@ describe('TargetProjectLocator', () => {
       expect(res5).toEqual('rootProj');
     });
 
+    it('should be able to resolve a module by using relative paths within a nested project', () => {
+      // Test resolving "./" import from child-project (nested 1 level under parent-project)
+      const res1 = targetProjectLocator.findProjectFromImport(
+        './index.ts',
+        'libs/parent-path/child-path/src/index.ts'
+      );
+      expect(res1).toEqual('child-project');
+
+      // Test resolving "../" import from child-project back to parent-project
+      const res2 = targetProjectLocator.findProjectFromImport(
+        '../index.ts',
+        'libs/parent-path/child-path/index.ts'
+      );
+      expect(res2).toEqual('parent-project');
+
+      // Test resolving "./" import within the same nested project
+      const res3 = targetProjectLocator.findProjectFromImport(
+        './utils.ts',
+        'libs/parent-path/child-path/index.ts'
+      );
+      expect(res3).toEqual('child-project');
+
+      // Test resolving "./" import within the same nested project
+      const res4 = targetProjectLocator.findProjectFromImport(
+        './',
+        'libs/parent-path/child-path/module.ts'
+      );
+      expect(res4).toEqual('child-project');
+    });
+
     it('should be able to resolve a module by using tsConfig paths', () => {
       const proj2 = targetProjectLocator.findProjectFromImport(
         '@proj/my-second-proj',
