@@ -48,17 +48,17 @@ export function DevkitLoader() {
 
         const devkitEntryPoint = join(
           workspaceRoot,
-          'build',
+          'dist',
           'packages',
           'devkit',
           'index.d.ts'
         );
         if (!existsSync(devkitEntryPoint)) {
           logger.warn(
-            'build/packages/devkit/index.d.ts not found, please run build first'
+            'dist/packages/devkit/index.d.ts not found, please run build first'
           );
           throw new Error(
-            `build/packages/devkit/index.d.ts not found, unable to generate docs. Make sure to run devkit build first. ${devkitEntryPoint}`
+            `dist/packages/devkit/index.d.ts not found, unable to generate docs. Make sure to run devkit build first. ${devkitEntryPoint}`
           );
         }
 
@@ -88,7 +88,7 @@ export function DevkitLoader() {
 
         const ngcliEntryPoint = join(
           workspaceRoot,
-          'build',
+          'dist',
           'packages',
           'devkit',
           'ngcli-adapter.d.ts'
@@ -96,10 +96,10 @@ export function DevkitLoader() {
 
         if (!existsSync(ngcliEntryPoint)) {
           logger.warn(
-            'build/packages/devkit/ngcli-adapter.d.ts not found, skipping ngcli_adapter documentation generation'
+            'dist/packages/devkit/ngcli-adapter.d.ts not found, skipping ngcli_adapter documentation generation'
           );
           throw new Error(
-            `build/packages/devkit/ngcli-adapter.d.ts not found, unable to generate docs. Make sure to run devkit build first. ${ngcliEntryPoint}`
+            `dist/packages/devkit/ngcli-adapter.d.ts not found, unable to generate docs. Make sure to run devkit build first. ${ngcliEntryPoint}`
           );
         }
 
@@ -426,7 +426,7 @@ function setupTypeDoc(logger: LoaderContext['logger']) {
   const projectRoot = process.cwd();
 
   // Setup temporary build directory
-  const buildDir = join(workspaceRoot, 'build', 'packages', 'devkit');
+  const buildDir = join(workspaceRoot, 'dist', 'packages', 'devkit');
   const outDir = join(tempDir, 'docs', 'generated', 'devkit');
 
   // Create necessary directories
