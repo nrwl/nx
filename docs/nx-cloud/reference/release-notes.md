@@ -1,5 +1,10 @@
 # Enterprise Release Notes
 
+### 2025.07.1
+
+- Fix: auth redirect loop when using admin login
+- Fix: improvement to the flaky task retry mechanism
+
 ### 2025.07
 
 ##### Breaking Change
@@ -11,7 +16,7 @@ This upgrade includes a breaking change to the `nx-cloud` cluster: instead of a 
    2. Or for a simpler deployment, you can use the Valkey docker image directly: https://hub.docker.com/r/valkey/valkey/
    3. Or you can install it as a system service: https://valkey.io/topics/installation/
 2. Upgrade to the latest Helm chart `0.16.3`
-3. Apply the below values
+3. Apply the following values
 
 ```yaml
 enableMessageQueue: false
@@ -37,7 +42,10 @@ nxApi:
       - name: VALKEY_USERNAME
         value: 'default'
       - name: NX_CLOUD_CONFORMANCE_RULES_BUCKET
-        value: local-cluster-file-server # use this exact value if you are using the file server, otherwise point it to an S3/Azure/Google bucket
+        value:
+          local-cluster-file-server # use this exact value if you are using the file server, otherwise point it to an S3/Azure/Google bucket
+          # it will use the same role-based auth mechanism you already configured for the NxCloud cache
+          # you can also use the same bucket name that you use for the cache (rules will just be stored in a sub-folder)
 ```
 
 ##### Updates
