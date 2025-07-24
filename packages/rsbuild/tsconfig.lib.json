@@ -2,7 +2,8 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "../../dist/packages/rsbuild",
-    "types": ["node"]
+    "types": ["node"],
+    "tsBuildInfoFile": "../../dist/packages/rsbuild/tsconfig.tsbuildinfo"
   },
   "include": ["**/*.ts", "**/*.json"],
   "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
