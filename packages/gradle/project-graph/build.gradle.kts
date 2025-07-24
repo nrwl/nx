@@ -16,6 +16,10 @@ repositories { mavenCentral() }
 
 dependencies {
   implementation("com.google.code.gson:gson:2.10.1")
+  implementation("org.junit.platform:junit-platform-engine:1.10.1")
+  implementation("org.junit.platform:junit-platform-commons:1.10.1")
+  implementation("org.junit.platform:junit-platform-launcher:1.10.1")
+  implementation("org.junit.jupiter:junit-jupiter-engine:5.10.1")
   implementation("com.github.javaparser:javaparser-core:3.25.8")
   // Use kotlin-compiler-embeddable with exclusion to avoid CI classpath conflicts
   implementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.0.21") {

@@ -5,8 +5,15 @@ import dev.nx.gradle.data.TargetGroups
 import java.io.File
 import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
+import org.junit.platform.engine.discovery.DiscoverySelectors
+import org.junit.platform.launcher.LauncherDiscoveryRequest
+import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder
+import org.junit.platform.launcher.core.LauncherFactory
 
 const val testCiTargetGroup = "verification"
+
+// Global JUnit launcher instance - created once and reused for all test discovery
+private val junitLauncher = LauncherFactory.create()
 
 // Class-level test annotation names (without @ prefix for AST parsing)
 private val classTestAnnotationNames =
@@ -72,13 +79,32 @@ fun addTestCiTargets(
 ) {
   testTask.logger.info("${testTask.path}: Starting addTestCiTargets")
 
+  // Validate testFiles collection and log missing directories
+  val allFiles = testFiles.files
+  val existingFiles = allFiles.filter { it.exists() }
+  val missingFiles = allFiles.filter { !it.exists() }
+
+  if (missingFiles.isNotEmpty()) {
+    testTask.logger.info("${testTask.path}: Skipping ${missingFiles.size} non-existent test files")
+    missingFiles.forEach { file ->
+      testTask.logger.debug("${testTask.path}: Missing test file: ${file.absolutePath}")
+    }
+  }
+
+  if (existingFiles.isEmpty()) {
+    testTask.logger.info("${testTask.path}: No test files found, skipping CI target generation")
+    return
+  }
+
+  testTask.logger.info("${testTask.path}: Processing ${existingFiles.size} existing test files")
+
   ensureTargetGroupExists(targetGroups, testCiTargetGroup)
 
   val ciDependsOn = mutableListOf<Map<String, String>>()
 
   testTask.logger.info("${testTask.path}: Processing test files with JUnit discovery")
   processTestFiles(
-      testFiles,
+      existingFiles,
       workspaceRoot,
       ciTestTargetName,
       projectBuildPath,
@@ -104,7 +130,7 @@ fun addTestCiTargets(
 }
 
 private fun processTestFiles(
-    testFiles: FileCollection,
+    testFiles: List<File>,
     workspaceRoot: String,
     ciTestTargetName: String,
     projectBuildPath: String,
@@ -138,7 +164,7 @@ private fun processTestFiles(
   if (testClassDirs.isNotEmpty()) {
     testTask.logger.info(
         "${testTask.path}: Using Gradle test discovery with ${testClassDirs.size} class directories")
-    
+
     testClassDirs.forEach { classDir ->
       testTask.logger.info("${testTask.path}: Class directory: ${classDir.absolutePath}")
     }
@@ -233,24 +259,72 @@ private fun extractClassNameFromFile(content: String): String? {
 
 // Helper function to check if content contains test methods or annotations
 private fun isTestClassByRegex(content: String): Boolean {
+  // Parse lines early for reuse
+  val lines = content.lines()
+  val nonEmptyLines = lines.filter { it.trim().isNotEmpty() }
+
   // Skip abstract classes as they can't be instantiated
   if (content.contains("abstract class")) {
     return false
   }
 
-  // Look for test annotations or test methods
+  // Skip internal classes - check for internal class declaration
+  if (content.contains("internal class")) {
+    return false
+  }
+
+  // Skip data classes
+  if (content.contains("data class")) {
+    return false
+  }
+
+  // Skip classes that implement interfaces but have no actual test methods
+  // This catches test utilities and fakes that implement interfaces
+  if (content.contains(": ") && (content.contains("class ") || content.contains("object "))) {
+    // Check if this class has actual test methods, not just interface implementations
+    val hasTestMethods =
+        lines.any { line ->
+          val trimmedLine = line.trim()
+          !trimmedLine.startsWith("//") &&
+              (trimmedLine.contains("@Test") ||
+                  trimmedLine.contains("fun test") ||
+                  trimmedLine.contains("void test"))
+        }
+    if (!hasTestMethods) {
+      return false
+    }
+  }
+
+  // Check if file is entirely commented out
+  if (nonEmptyLines.isNotEmpty() && nonEmptyLines.all { it.trim().startsWith("//") }) {
+    return false
+  }
+
+  // Look for test annotations or test methods that are NOT commented out
   val testIndicators =
       listOf(
           "@Test",
           "@org.junit.Test",
           "@org.junit.jupiter.api.Test",
+          "@kotlin.test.Test",
           "@ExtendWith",
           "@Nested",
+          "@ParameterizedTest",
+          "@RepeatedTest",
+          "@TestFactory",
           "fun test",
           "void test",
           "public void test")
 
-  return testIndicators.any { content.contains(it) }
+  // Check each line to ensure test indicators are not commented out
+  return lines.any { line ->
+    val trimmedLine = line.trim()
+    if (trimmedLine.startsWith("//")) {
+      false // Skip commented lines
+    } else {
+      testIndicators.any { indicator -> trimmedLine.contains(indicator) }
+    }
+  }
 }
 
 // Create a class loader for test classes
@@ -300,30 +374,124 @@ private fun discoverTestClasses(
     testClassNames: MutableMap<String, String>,
     logger: org.gradle.api.logging.Logger
 ) {
-  classDir
-      .walkTopDown()
-      .filter { it.isFile && it.name.endsWith(".class") }
-      .forEach { classFile ->
-        try {
-          val className = getClassNameFromFile(classFile, classDir)
-          if (className != null) {
-            val clazz = classLoader.loadClass(className)
-            val testClasses = inspectTestClass(clazz, logger)
-            testClassNames.putAll(testClasses)
-          }
-        } catch (e: Throwable) {
-          // Catch all throwables including NoClassDefFoundError, LinkageError, etc.
-          logger.debug(
-              "${classFile.name}: Failed to load class: ${e.javaClass.simpleName}: ${e.message}")
+  logger.info("Discovering test classes in directory: ${classDir.absolutePath}")
+
+  val classFiles =
+      classDir.walkTopDown().filter { it.isFile && it.name.endsWith(".class") }.toList()
+
+  logger.info("Found ${classFiles.size} .class files in ${classDir.absolutePath}")
+
+  classFiles.forEach { classFile ->
+    logger.info("Processing class file: ${classFile.name}")
+    try {
+      val className = getClassNameFromFile(classFile, classDir)
+      logger.info("Extracted class name: $className from ${classFile.name}")
+
+      if (className != null) {
+        val clazz = classLoader.loadClass(className)
+        logger.info("Successfully loaded class: ${clazz.name}")
+
+        // Use JUnit Platform to determine if this is actually a test class
+        if (isActualTestClass(clazz, logger)) {
+          val testClasses = inspectTestClass(clazz, logger)
+          logger.info(
+              "Found ${testClasses.size} test classes in ${clazz.name}: ${testClasses.keys}")
+          testClassNames.putAll(testClasses)
+        } else {
+          logger.info("${clazz.name}: Not a test class according to JUnit discovery")
         }
+      } else {
+        logger.info("Could not extract class name from ${classFile.name}")
       }
+    } catch (e: Throwable) {
+      // Catch all throwables including NoClassDefFoundError, LinkageError, etc.
+      logger.info(
+          "${classFile.name}: Failed to load class: ${e.javaClass.simpleName}: ${e.message}")
+    }
+  }
+
+  logger.info("Total test classes discovered: ${testClassNames.size}")
+}
+
+// Use JUnit Platform to discover if a class is actually a test class
+internal fun isActualTestClass(clazz: Class<*>, logger: org.gradle.api.logging.Logger): Boolean {
+  return try {
+    // Skip classes that are obviously not test classes
+    if (shouldSkipClass(clazz)) {
+      logger.debug("${clazz.name}: Skipping class - not a test class type")
+      return false
+    }
+
+    // Create a JUnit discovery request for this specific class
+    val request: LauncherDiscoveryRequest =
+        LauncherDiscoveryRequestBuilder.request()
+            .selectors(DiscoverySelectors.selectClass(clazz))
+            .build()
+
+    // Use the global JUnit launcher to discover tests
+    val testPlan = junitLauncher.discover(request)
+
+    // Check if any test methods were discovered
+    val hasTests = testPlan.roots.any { root -> testPlan.getChildren(root).isNotEmpty() }
+
+    logger.debug("${clazz.name}: JUnit discovery found tests: $hasTests")
+    hasTests
+  } catch (e: Exception) {
+    logger.debug("${clazz.name}: JUnit discovery failed: ${e.message}")
+    // If JUnit Platform discovery fails, don't create a CI target
+    // This is the most reliable approach - if JUnit can't find tests, we shouldn't either
+    false
+  }
+}
+
+// Check if a class should be skipped for test discovery
+internal fun shouldSkipClass(clazz: Class<*>): Boolean {
+  // Skip interfaces, enums, and annotation types
+  if (clazz.isInterface || clazz.isEnum || clazz.isAnnotation) {
+    return true
+  }
+
+  // Skip abstract classes
+  if (java.lang.reflect.Modifier.isAbstract(clazz.modifiers)) {
+    return true
+  }
+
+  // Skip data classes - they typically don't contain test methods
+  if (isDataClass(clazz)) {
+    return true
+  }
+
+  return false
+}
+
+// Check if a class is a Kotlin data class
+internal fun isDataClass(clazz: Class<*>): Boolean {
+  return try {
+    // Kotlin data classes have specific characteristics:
+    // 1. They have a copy method with the right signature
+    // 2. They have componentN methods
+    val methods = clazz.declaredMethods
+    val hasCopyMethod = methods.any { it.name == "copy" }
+    val hasComponentMethods = methods.any { it.name.startsWith("component") }
+
+    hasCopyMethod && hasComponentMethods
+  } catch (e: Exception) {
+    false
+  }
 }
 
 // Get class name from compiled class file
 internal fun getClassNameFromFile(classFile: File, classDir: File): String? {
   return try {
     val relativePath = classDir.toPath().relativize(classFile.toPath()).toString()
-    relativePath.removeSuffix(".class").replace(File.separatorChar, '.')
+    val className = relativePath.removeSuffix(".class").replace(File.separatorChar, '.')
+
+    // Skip inner classes, anonymous classes, and other generated classes
+    if (className.isEmpty() || className.contains("$")) {
+      return null
+    }
+
+    className
   } catch (e: Exception) {
     null
   }
@@ -337,14 +505,20 @@ internal fun inspectTestClass(
   val result = mutableMapOf<String, String>()
 
   try {
+    logger.info("Inspecting class: ${clazz.name}")
+
     // Skip interfaces, enums, and annotation types
     if (clazz.isInterface || clazz.isEnum || clazz.isAnnotation) {
+      logger.info("Skipping ${clazz.name} - interface/enum/annotation")
       return result
     }
 
     // Check for test annotations on the class
     val hasClassTestAnnotations = hasClassTestAnnotations(clazz)
     val hasMethodTestAnnotations = hasMethodTestAnnotations(clazz)
+
+    logger.info(
+        "${clazz.name} - Class annotations: $hasClassTestAnnotations, Method annotations: $hasMethodTestAnnotations")
 
     // Get nested classes with @Nested annotation
     val nestedTestClasses =
@@ -357,8 +531,11 @@ internal fun inspectTestClass(
           }
         } catch (e: Throwable) {
           // Ignore classes with unavailable dependencies
+          logger.info("Failed to get nested classes for ${clazz.name}: ${e.message}")
           emptyList()
         }
+
+    logger.info("${clazz.name} - Found ${nestedTestClasses.size} nested test classes")
 
     if (nestedTestClasses.isNotEmpty()) {
       // Process nested test classes
@@ -366,13 +543,17 @@ internal fun inspectTestClass(
         val simpleName = nestedClass.simpleName
         val nestedKey = "${clazz.simpleName}$simpleName"
         result[nestedKey] = nestedClass.name
+        logger.info("Added nested test class: $nestedKey -> ${nestedClass.name}")
       }
     } else if (hasClassTestAnnotations || hasMethodTestAnnotations) {
       // Include the main class if it has test annotations
       result[clazz.simpleName] = clazz.name
+      logger.info("Added main test class: ${clazz.simpleName} -> ${clazz.name}")
+    } else {
+      logger.info("${clazz.name} - No test annotations found")
     }
 
-    logger.debug("${clazz.simpleName}: Found ${result.size} test classes")
+    logger.info("${clazz.simpleName}: Found ${result.size} test classes")
   } catch (e: Exception) {
     logger.warn("Failed to inspect class ${clazz.name}: ${e.message}")
   }
@@ -407,7 +588,6 @@ internal fun hasMethodTestAnnotations(clazz: Class<*>): Boolean {
               methodQualifiedTestAnnotations.contains(qualifiedName)
         }
       } catch (e: Throwable) {
-        // Ignore classes that reference unavailable dependencies
         false
       }
     }
