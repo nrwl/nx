@@ -9,10 +9,19 @@ assignment-rules:
       - agent: linux-extra-large
         parallelism: 1
 
+  # These projects should not need to be isolated.
   - projects:
       - nx-dev
     targets:
       - build*
+    run-on:
+      - agent: linux-extra-large
+        parallelism: 1
+  - projects:
+      - angular
+      - react
+    targets:
+      - test
     run-on:
       - agent: linux-extra-large
         parallelism: 1

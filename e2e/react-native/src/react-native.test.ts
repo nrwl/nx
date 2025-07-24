@@ -11,7 +11,7 @@ import {
   runE2ETests,
   updateFile,
   readJson,
-} from 'e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('@nx/react-native', () => {
   let proj: string;

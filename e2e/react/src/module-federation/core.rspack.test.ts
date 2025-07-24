@@ -11,7 +11,7 @@ import {
   runE2ETests,
   uniq,
   updateFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 
 describe('React Rspack Module Federation', () => {

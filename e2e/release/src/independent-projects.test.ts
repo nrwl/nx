@@ -1,4 +1,4 @@
-import { joinPathFragments } from '@nx/devkit';
+import { joinPathFragments, NxJsonConfiguration } from '@nx/devkit';
 import {
   cleanupProject,
   exists,
@@ -10,7 +10,7 @@ import {
   tmpProjPath,
   uniq,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { execSync } from 'child_process';
 
 expect.addSnapshotSerializer({
@@ -572,7 +572,7 @@ describe('nx release - independent projects', () => {
       expect(runCommand(`git rev-parse HEAD`).trim()).toEqual(updatedHeadSHA);
 
       // Disable git commit and tag operations for the changelog command via config
-      updateJson('nx.json', (json) => {
+      updateJson<NxJsonConfiguration>('nx.json', (json) => {
         return {
           ...json,
           release: {

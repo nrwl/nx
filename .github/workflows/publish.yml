@@ -348,8 +348,8 @@ jobs:
         with:
           name: bindings-${{ matrix.settings.target }}
           path: |
-            packages/**/*.node
-            packages/**/*.wasm
+            packages/nx/src/native/*.node
+            packages/nx/src/native/*.wasm
           if-no-files-found: error
 
   build-freebsd:
@@ -398,8 +398,11 @@ jobs:
             whoami
             env
             freebsd-version
+            echo "Installing dependencies"
             pnpm install --frozen-lockfile --ignore-scripts
+            echo "Building FreeBSD bindings"
             pnpm nx run-many --verbose --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd
+            echo "Cleaning up"
             pnpm nx reset
             rm -rf node_modules
             rm -rf dist
@@ -411,7 +414,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bindings-freebsd
-          path: packages/**/*.node
+          path: |
+            packages/nx/src/native/*.node
           if-no-files-found: error
 
   publish:

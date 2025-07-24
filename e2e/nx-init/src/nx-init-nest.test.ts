@@ -4,7 +4,7 @@ import {
   getPackageManagerCommand,
   getPublishedVersion,
   runCLI,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { execSync } from 'child_process';
 import { removeSync } from 'fs-extra';
 
@@ -48,7 +48,7 @@ describe('nx init (for NestCLI - legacy)', () => {
       }
     );
 
-    expect(output).toContain('Run it again to replay the cached computation.');
+    expect(output).toContain('Learn more about what to do next');
 
     // nest-cli.json is removed
     expect(exists(`${projectRoot}/nest-cli.json`)).toBeFalsy();

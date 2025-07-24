@@ -28,7 +28,7 @@ export const autoprefixerVersion = '^10.4.0';
 export const tsNodeVersion = '10.9.1';
 export const lessVersion = '^4.3.0';
 
-export const jestPresetAngularVersion = '~14.6.0';
+export const jestPresetAngularVersion = '~15.0.0';
 export const typesNodeVersion = '18.16.9';
 export const jasmineMarblesVersion = '^0.9.2';
 

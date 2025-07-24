@@ -1,11 +1,11 @@
-import { ButtonLinkProps, DefaultLayout } from '@nx/nx-dev/ui-common';
+import { ButtonLinkProps, DefaultLayout } from '@nx/nx-dev-ui-common';
 import {
   CallToAction,
   Faq,
   GetStarted,
   Hero,
   PowerpackFeatures,
-} from '@nx/nx-dev/ui-powerpack';
+} from '@nx/nx-dev-ui-powerpack';
 
 import type { Metadata } from 'next';
 import { type ReactElement } from 'react';

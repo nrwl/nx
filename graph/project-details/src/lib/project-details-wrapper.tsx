@@ -14,7 +14,7 @@ import {
 } from '@nx/graph/legacy/shared';
 import { Spinner } from '@nx/graph/legacy/components';
 
-import { ProjectDetails } from '@nx/graph-internal/ui-project-details';
+import { ProjectDetails } from '@nx/graph-internal-ui-project-details';
 import { useCallback, useContext, useEffect } from 'react';
 
 interface ProjectDetailsProps {

@@ -18,7 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useEffect, useState, useRef } from 'react';
 import { MigrationCard, MigrationCardHandle } from './migration-card';
-import { Collapsible } from '@nx/graph/ui-common';
+import { Collapsible } from '@nx/graph-ui-common';
 import { twMerge } from 'tailwind-merge';
 import type { Interpreter } from 'xstate';
 import type {

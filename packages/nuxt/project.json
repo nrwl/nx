@@ -4,17 +4,14 @@
   "sourceRoot": "packages/nuxt",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {
+      "outputs": ["{workspaceRoot}/dist/packages/nuxt/README.md"],
+      "command": "node ./scripts/copy-readme.js nuxt"
+    },
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
-        "outputPath": "build/packages/nuxt",
-        "tsConfig": "packages/nuxt/tsconfig.lib.json",
-        "main": "packages/nuxt/index.ts",
-        "generateExportsField": true,
-        "additionalEntryPoints": [
-          "{projectRoot}/{executors,generators,migrations}.json",
-          "{projectRoot}/plugin.ts"
-        ],
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/nuxt",
@@ -49,12 +46,7 @@
             "output": "/"
           }
         ]
-      },
-      "outputs": ["{options.outputPath}"]
-    },
-    "build": {
-      "command": "node ./scripts/copy-readme.js nuxt",
-      "outputs": ["{workspaceRoot}/build/packages/nuxt/README.md"]
+      }
     }
   }
 }

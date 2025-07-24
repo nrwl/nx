@@ -1,11 +1,11 @@
-import { Course } from '@nx/nx-dev/data-access-courses';
-import { ButtonLink } from '@nx/nx-dev/ui-common';
-import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
+import { Course } from '@nx/nx-dev-data-access-courses';
+import { ButtonLink } from '@nx/nx-dev-ui-common';
+import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
 import Link from 'next/link';
-import { BlogAuthors } from '@nx/nx-dev/ui-blog';
-import type { BlogAuthor } from '@nx/nx-dev/data-access-documents/node-only';
+import { BlogAuthors } from '@nx/nx-dev-ui-blog';
+import type { BlogAuthor } from '@nx/nx-dev-data-access-documents/node-only';
 import { LessonsList } from './lessons-list';
-import { GitHubIcon, GithubIcon } from '@nx/nx-dev/ui-icons';
+import { GitHubIcon } from '@nx/nx-dev-ui-icons';
 
 export interface CourseDetailsProps {
   course: Course;

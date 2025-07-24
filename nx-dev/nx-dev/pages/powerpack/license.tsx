@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import { NextSeo } from 'next-seo';
-import { Footer, Header } from '@nx/nx-dev/ui-common';
+import { Footer, Header } from '@nx/nx-dev-ui-common';
 
 export function Contact(): JSX.Element {
   const router = useRouter();

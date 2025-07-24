@@ -1,4 +1,4 @@
-import { MenuItem } from '@nx/nx-dev/models-menu';
+import { MenuItem } from '@nx/nx-dev-models-menu';
 
 export class MenusApi {
   private readonly cache: { id: string; menu: MenuItem[] }[];

@@ -12,12 +12,72 @@ Thanks to [Nx's modular architecture](/getting-started/intro), you can start wit
 Getting started is remarkably simple. You can add Nx to any existing project with a single command:
 
 ```shell
-nx init
+nx@latest init
 ```
 
-_(Note, make sure you have [Nx installed globally](/getting-started/installation) or use `npx` if you're in a JavaScript environment)_
+> _Note: make sure you have [Nx installed globally](/getting-started/installation) or use `npx` if you're in a JavaScript environment_
 
-This command automatically detects your underlying workspace structure, whether it's a monorepo, a single project, or something in between. Nx will then ask you a series of targeted questions about your setup and preferences, using your answers to auto-configure itself seamlessly into your existing workspace. This intelligent setup process ensures you get the benefits of Nx with minimal configuration changes or disruption to your current development workflow.
+Whether a monorepo, single project or something in between, `nx init` walks you through adding and configuring Nx. You can pick a minimal approach or detailed guided setup. At the end you'll have an Nx workspace ready for anything!
+
+## Next Steps
+
+After initializing Nx, you can explore your workspace with the following commands:
+
+- `nx graph` to view an interactive graph
+- `nx show projects` to see a list of all projects
+- `nx show project <project-name>` to view an interactive project detailed view
+- `nx run-many -t <target>` to run tasks with Nx, e.g. `nx run-many -t build`
+
+### Update CI Configurations
+
+Now that Nx is installed, you'll want to update CI configurations to leverage Nx. You can do this by changing previous commands to use `nx` instead.
+
+For example, switching from `pnpm` commands to use `nx`
+
+```diff {% fileName=".github/workflows/ci.yaml" %}
+-     - run: pnpm run -r build
+-     - run: pnpm run -r test
++     - run: npx nx run-many -t test build
+```
+
+You can directly invoke `package.json` scripts with `nx` as well
+
+```diff {% fileName=".github/workflows/ci.yaml" %}
+-     - run: npm run build
+-     - run: npm run test
++     - run: npx nx build
++     - run: npx nx test
+```
+
+[View CI provider specific setups](/ci/recipes/set-up) to learn more.
+
+### Nx Cloud
+
+{% callout type="check" title="How do I know if I enabled Nx Cloud?" %}
+Validate Nx Cloud is enabled by checking the `nx.json` file for `nxCloudId` property.
+You can add Nx Cloud at any point by running the `nx connect` command.
+{%/callout%}
+
+After initializing Nx, you'll need to commit and push the changes to your repository.
+
+Once your changes are pushed, you can finish setting up your workspace by clicking on the list printed to your terminal, or by visiting [Nx Cloud directly](https://cloud.nx.app/get-started?utm_source=nx.dev&utm_campaign=nx_init) and clicking _"Connect an existing Nx repository"_
+
+To leverage Self Healing CI, you'll need to add the following to your CI configuration:
+
+```diff {% fileName=".github/workflows/ci.yaml" %}
+      - run: npx nx run-many -t lint test build
++       # Enable Self Healing CI w/ Nx Cloud
++     - run: npx nx fix-ci
++       if: always()
+```
+
+### Empower Your Editor
+
+Enhance your developer experience by using the Nx Console editor extension.
+
+{% install-nx-console /%}
+
+## In-depth Guides
 
 Here are some guides that give you more details based on the technology stack you're using:
 

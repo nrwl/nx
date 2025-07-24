@@ -1,6 +1,6 @@
 import { ComponentProps, ReactElement } from 'react';
-import { cx } from '@nx/nx-dev/ui-primitives';
-import { MovingBorder } from '@nx/nx-dev/ui-animations';
+import { cx } from '@nx/nx-dev-ui-primitives';
+import { MovingBorder } from '@nx/nx-dev-ui-animations';
 import { motion } from 'framer-motion';
 import { PlayIcon } from '@heroicons/react/24/outline';
 

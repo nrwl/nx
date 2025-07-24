@@ -17,7 +17,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { join, normalize } from 'path';
 
 describe('Angular Projects', () => {

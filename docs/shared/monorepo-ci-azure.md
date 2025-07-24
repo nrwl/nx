@@ -34,8 +34,6 @@ jobs:
       - checkout: self
         fetchDepth: 0
         fetchFilter: tree:0
-        persistCredentials: true
-
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -54,22 +52,22 @@ jobs:
         env:
           AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
 
-      # Connect your workspace on nx.app and uncomment this to enable task distribution.
-      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
-      # - script: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+      # - script: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - script: yarn install --frozen-lockfile
+      - script: npm ci --legacy-peer-deps
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # This requires connecting your workspace to Nx Cloud. Run "nx connect" to get started w/ Nx Cloud
-      # - script: yarn nx-cloud record -- nx format:check
-
-      # Without Nx Cloud, run format:check directly
-      - script: yarn nx format:check
-      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --targets lint test build
-      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --parallel 1 e2e-ci
+      # - script: npx nx-cloud record -- echo Hello World
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      - script: npx nx fix-ci
+        condition: always()
 ```
 
 ## Get the Commit of the Last Successful Build

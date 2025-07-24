@@ -38,40 +38,6 @@
         "isExternal": false,
         "path": "/ci/intro/connect-to-nx-cloud",
         "tags": []
-      },
-      {
-        "id": "tutorials",
-        "name": "Tutorials",
-        "description": "Tutorials setting up CI with Nx",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "circle",
-            "name": "Circle CI with Nx",
-            "description": "",
-            "mediaImage": "",
-            "file": "nx-cloud/tutorial/circle",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/ci/intro/tutorials/circle",
-            "tags": []
-          },
-          {
-            "id": "github-actions",
-            "name": "GitHub Actions with Nx",
-            "description": "",
-            "mediaImage": "",
-            "file": "nx-cloud/tutorial/github-actions",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/ci/intro/tutorials/github-actions",
-            "tags": []
-          }
-        ],
-        "isExternal": false,
-        "path": "/ci/intro/tutorials",
-        "tags": []
       }
     ],
     "isExternal": false,
@@ -109,62 +75,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/intro/connect-to-nx-cloud",
-    "tags": []
-  },
-  "/ci/intro/tutorials": {
-    "id": "tutorials",
-    "name": "Tutorials",
-    "description": "Tutorials setting up CI with Nx",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "circle",
-        "name": "Circle CI with Nx",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/tutorial/circle",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/intro/tutorials/circle",
-        "tags": []
-      },
-      {
-        "id": "github-actions",
-        "name": "GitHub Actions with Nx",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/tutorial/github-actions",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/intro/tutorials/github-actions",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/ci/intro/tutorials",
-    "tags": []
-  },
-  "/ci/intro/tutorials/circle": {
-    "id": "circle",
-    "name": "Circle CI with Nx",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/tutorial/circle",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/intro/tutorials/circle",
-    "tags": []
-  },
-  "/ci/intro/tutorials/github-actions": {
-    "id": "github-actions",
-    "name": "GitHub Actions with Nx",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/tutorial/github-actions",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/intro/tutorials/github-actions",
     "tags": []
   },
   "/ci/features": {

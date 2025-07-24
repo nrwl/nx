@@ -10,7 +10,7 @@ import {
   uniq,
   readJson,
   readFile,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { bold } from 'chalk';
 
 describe('nx wrapper / .nx installation', () => {
@@ -67,6 +67,7 @@ describe('nx wrapper / .nx installation', () => {
     const output = runNxWrapper('report');
     expect(output).toMatch(new RegExp(`nx.*:.*${getPublishedVersion()}`));
     expect(output).toMatch(new RegExp(`@nx/js.*:.*${getPublishedVersion()}`));
+    // nx express exists in the workspace, but it is not installed
     expect(output).not.toContain('@nx/express');
   });
 

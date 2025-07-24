@@ -1,6 +1,6 @@
 import { ReactElement } from 'react';
-import { PayfitIcon } from '@nx/nx-dev/ui-icons';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { PayfitIcon } from '@nx/nx-dev-ui-icons';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 
 export function CustomerMetrics(): ReactElement {
   return (

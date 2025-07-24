@@ -109,7 +109,7 @@ When run on a single machine, `e2e-ci` will be slower because it starts multiple
 npx nx connect
 ```
 
-Follow the onboarding steps and you should be connected within five minutes. For more information, check out our [GitHub Actions Tutorial](/ci/intro/tutorials/github-actions) or our [guides](/ci/recipes/set-up) for all supported CI providers (GitHub, GitLab, Azure, etc.).
+Follow the onboarding steps and you should be connected within five minutes. For more information, check out our [setup guides](/ci/recipes/set-up) for all supported CI providers (GitHub, GitLab, Azure, etc.).
 
 Now, let's take a look at a concrete example to get an idea of how much time-saving you can unlock with Nx Atomizer. I created [this repo](https://github.com/jaysoo/angular-testing-demo) that contains a simple Angular application and a UI package. It also has 40 Playwright test files.
 

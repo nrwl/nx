@@ -3,10 +3,35 @@
   "compilerOptions": {
     "outDir": "../scripts/tools-out",
     "module": "commonjs",
-    "types": ["node"]
+    "types": ["node"],
+    "baseUrl": ".."
   },
   "include": ["**/*.ts"],
+  "references": [
+    {
+      "path": "../packages/devkit/tsconfig.lib.json"
+    },
+    {
+      "path": "../packages/nx/tsconfig.lib.json"
+    },
+    {
+      "path": "../nx-dev/data-access-packages/tsconfig.lib.json"
+    },
+    {
+      "path": "../nx-dev/models-package/tsconfig.lib.json"
+    },
+    {
+      "path": "../nx-dev/models-document/tsconfig.lib.json"
+    },
+    {
+      "path": "../nx-dev/data-access-documents/tsconfig.lib.json"
+    }
+  ],
   "ts-node": {
-    "require": ["tsconfig-paths/register"]
+    "require": ["tsconfig-paths/register"],
+    "transpileOnly": true,
+    "compilerOptions": {
+      "module": "commonjs"
+    }
   }
 }

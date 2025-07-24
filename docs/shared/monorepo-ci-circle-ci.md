@@ -19,22 +19,30 @@ jobs:
       - image: cimg/node:lts-browsers
     steps:
       - checkout
-      # This line enables distribution
-      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
-      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
-      - run: npm ci
 
-      - nx/set-shas
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      - run: npm ci --legacy-peer-deps
+      - nx/set-shas:
+          main-branch-name: 'main'
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # This requires connecting your workspace to Nx Cloud. Run "nx connect" to get started w/ Nx Cloud
-      # - run: npx nx-cloud record -- nx format:check
+      # - run: npx nx-cloud record -- echo Hello World
+      - run:
+          command: npx nx affected -t lint test build
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      - run:
+          command: npx nx fix-ci
+          when: always
 
-      # Without Nx Cloud, run format:check directly
-      - run: npx nx format:check
-      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build e2e-ci
 workflows:
-  build:
+  version: 2
+
+  ci:
     jobs:
       - main
 ```

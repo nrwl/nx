@@ -1,0 +1,8 @@
+{
+  "name": "@nx/e2e-webpack",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@nx/e2e-utils": "workspace:*"
+  }
+}

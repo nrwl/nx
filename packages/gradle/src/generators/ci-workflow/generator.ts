@@ -15,9 +15,12 @@ function getCiCommands(ci: Schema['ci']): Command[] {
       return [
         {
           comments: [
-            `Change from check to check-ci if you turn on the atomizer. Learn more: https://nx.dev/nx-api/gradle#splitting-e2e-tests.`,
+            `# Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.`,
+            `# Change from build to build-ci if you turn on the atomizer. Learn more: https://nx.dev/nx-api/gradle#splitting-e2e-tests.`,
           ],
-          command: `./nx affected --base=$NX_BASE --head=$NX_HEAD -t assemble check`,
+        },
+        {
+          command: `./nx affected --base=$NX_BASE --head=$NX_HEAD -t build`,
         },
         getNxCloudFixCiCommand(),
       ];
@@ -26,9 +29,10 @@ function getCiCommands(ci: Schema['ci']): Command[] {
       return [
         {
           comments: [
-            `Change from check to check-ci if you turn on the atomizer. Learn more: https://nx.dev/nx-api/gradle#splitting-tests`,
+            `# Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.`,
+            `# Change from build to build-ci if you turn on the atomizer. Learn more: https://nx.dev/nx-api/gradle#splitting-tests`,
           ],
-          command: `./nx affected -t assemble check`,
+          command: `./nx affected -t build`,
         },
         getNxCloudFixCiCommand(),
       ];

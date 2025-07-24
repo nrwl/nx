@@ -5,15 +5,15 @@ description: In this tutorial you'll add Nx to an existing Gradle repo
 
 # Gradle Tutorial
 
-In this tutorial, you'll learn how to add Nx to a repository with an existing Gradle setup.
+This tutorial walks you through adding Nx to an existing Gradle project. You'll see how Nx enhances your Gradle workflow with caching, task orchestration, and better developer experience.
 
-What will you learn?
+What you'll learn:
 
-- how to add Nx to a Gradle project
-- how to run a single task (i.e. serve your app) or run multiple tasks in parallel
-- how to leverage code generators to scaffold components
-- how to modularize your codebase and impose architectural constraints for better maintainability
-- [how to speed up CI with Nx Cloud ⚡](#fast-ci)
+- How to integrate Nx with your existing Gradle build system
+- How Nx's caching speeds up your Gradle builds locally and in CI
+- How to visualize and understand project dependencies in your Gradle workspace
+- How to run Gradle tasks more efficiently with Nx's task runner
+- How to set up Nx Cloud for distributed caching and faster CI
 
 ## Prerequisites
 
@@ -350,10 +350,13 @@ The `See all runs` link goes to a page with the progress and results of tasks th
 
 ![Gradle run details](/shared/tutorials/gradle-run-details.webp)
 
-For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:
+For more information about how Nx can improve your CI pipeline, check out one of these guides:
 
-- [Circle CI with Nx](/ci/intro/tutorials/circle)
-- [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
+- [GitHub Actions with Nx](/ci/recipes/set-up/monorepo-ci-github-actions)
+- [Circle CI with Nx](/ci/recipes/set-up/monorepo-ci-circle-ci)
+- [Azure Pipelines with Nx](/ci/recipes/set-up/monorepo-ci-azure)
+- [Bitbucket Pipelines with Nx](/ci/recipes/set-up/monorepo-ci-bitbucket-pipelines)
+- [GitLab with Nx](/ci/recipes/set-up/monorepo-ci-gitlab)
 
 ## Summary
 

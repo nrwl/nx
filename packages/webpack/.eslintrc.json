@@ -1,6 +1,6 @@
 {
   "extends": ["../../.eslintrc.json"],
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": ["!**/*", "node_modules"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
@@ -41,6 +41,7 @@
               "nx",
               "typescript",
               "eslint",
+              "tslib",
               // Used in require.resolve calls
               "@babel/core",
               "css-loader",
@@ -51,8 +52,6 @@
               "sass-embedded",
               "sass-loader",
               "style-loader",
-              "stylus",
-              "stylus-loader",
               "source-map-loader",
               "swc-loader",
               "@swc/core",

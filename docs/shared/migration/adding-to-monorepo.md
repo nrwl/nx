@@ -409,8 +409,11 @@ The `See all runs` link goes to a page with the progress and results of tasks th
 
 For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:
 
-- [Circle CI with Nx](/ci/intro/tutorials/circle)
-- [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
+- [GitHub Actions with Nx](/ci/recipes/set-up/monorepo-ci-github-actions)
+- [Circle CI with Nx](/ci/recipes/set-up/monorepo-ci-circle-ci)
+- [Azure Pipelines with Nx](/ci/recipes/set-up/monorepo-ci-azure)
+- [Bitbucket Pipelines with Nx](/ci/recipes/set-up/monorepo-ci-bitbucket-pipelines)
+- [GitLab with Nx](/ci/recipes/set-up/monorepo-ci-gitlab)
 
 ## Learn More
 
