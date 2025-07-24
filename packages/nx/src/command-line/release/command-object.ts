@@ -201,6 +201,11 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
           'The optional prerelease identifier to apply to the version. This will only be applied in the case that the specifier argument has been set to `prerelease` OR when conventional commits are enabled, in which case it will modify the resolved specifier from conventional commits to be its prerelease equivalent. E.g. minor -> preminor.',
         default: '',
       })
+      .options('dockerVersionScheme', {
+        type: 'string',
+        describe:
+          'Exact docker version scheme to apply to the selected release group.',
+      })
       .option('yes', {
         type: 'boolean',
         alias: 'y',
@@ -255,11 +260,6 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
             type: 'boolean',
             describe:
               'Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.',
-          })
-          .options('dockerVersionScheme', {
-            type: 'string',
-            describe:
-              'Exact docker version scheme to apply to the selected release group.',
           })
       )
     ),

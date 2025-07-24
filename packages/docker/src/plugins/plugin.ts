@@ -37,7 +37,7 @@ function writeTargetsCache(
   writeJsonFile(cachePath, results ?? {});
 }
 
-const dockerfileGlob = 'Dockerfile,**/Dockerfile';
+const dockerfileGlob = '**/Dockerfile';
 
 export const createNodesV2: CreateNodesV2<DockerPluginOptions> = [
   dockerfileGlob,

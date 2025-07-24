@@ -351,7 +351,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     // null means that all projects are versioned together but there were no changes
     if (versionResult.workspaceVersion !== null) {
       hasNewVersion = Object.values(versionResult.projectsVersionData).some(
-        (version) => version.newVersion !== null
+        (version) =>
+          version.newVersion !== null || version.dockerVersion !== null
       );
     }
 

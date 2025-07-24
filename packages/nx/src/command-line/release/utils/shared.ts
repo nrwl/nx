@@ -276,7 +276,10 @@ export function createGitTagValues(
     if (releaseGroup.projectsRelationship === 'independent') {
       for (const project of releaseGroupProjectNames) {
         const projectVersionData = versionData[project];
-        if (projectVersionData.newVersion !== null) {
+        if (
+          projectVersionData.newVersion !== null ||
+          projectVersionData.dockerVersion !== null
+        ) {
           const preferDockerVersion =
             shouldPreferDockerVersionForReleaseGroup(releaseGroup);
           tags.push(
@@ -293,7 +296,10 @@ export function createGitTagValues(
     }
     // For fixed groups we want one tag for the overall group
     const projectVersionData = versionData[releaseGroupProjectNames[0]]; // all at the same version, so we can just pick the first one
-    if (projectVersionData.newVersion !== null) {
+    if (
+      projectVersionData.newVersion !== null ||
+      projectVersionData.dockerVersion !== null
+    ) {
       const preferDockerVersion =
         shouldPreferDockerVersionForReleaseGroup(releaseGroup);
       tags.push(
