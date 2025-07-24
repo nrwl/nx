@@ -2284,7 +2284,7 @@
         "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-3.json",
         "hidden": false,
         "name": "change-plugin-version-0-1-3",
-        "version": "21.3.0-beta.3",
+        "version": "21.4.0-beta.1",
         "originalFilePath": "/packages/gradle",
         "path": "gradle/migrations/change-plugin-version-0-1-3",
         "type": "migration"
