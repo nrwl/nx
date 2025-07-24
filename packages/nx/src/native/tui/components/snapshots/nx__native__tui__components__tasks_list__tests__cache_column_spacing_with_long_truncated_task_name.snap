@@ -5,7 +5,7 @@ expression: terminal.backend()
 "                                                                                          "
 " NX    Completed Test Tasks                                          Cache        Duration"
 "                                                                                          "
-"> ✔    this-is-a-very-long-task-name-that-will-definitely-be Kept Existing             ..."
+">   ✔  this-is-a-very-long-task-name-that-will-definitely-be Kept Existing             ..."
 "                                                                                          "
 "                                                                                          "
 "                                                                                          "

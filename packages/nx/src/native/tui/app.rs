@@ -202,6 +202,11 @@ impl App {
         // Update the App's task status map first
         self.task_status_map.insert(task_id.clone(), status);
 
+        // Auto-switch pane to failed dependency when a task becomes skipped
+        if status == TaskStatus::Skipped {
+            self.handle_automatic_pane_switching(&task_id);
+        }
+
         self.dispatch_action(Action::UpdateTaskStatus(task_id.clone(), status));
         if status == TaskStatus::InProgress && self.should_set_interactive_by_default(&task_id) {
             // Find which pane this task is assigned to
@@ -1040,8 +1045,10 @@ impl App {
                                 .get_task_status(&task_name)
                                 .unwrap_or(TaskStatus::NotStarted);
 
-                            // If task is pending, show dependency view instead of terminal pane
-                            if task_status == TaskStatus::NotStarted {
+                            // If task is pending or skipped, show dependency view
+                            if task_status == TaskStatus::NotStarted
+                                || task_status == TaskStatus::Skipped
+                            {
                                 self.render_dependency_view_internal(
                                     f, pane_idx, pane_area, task_name, is_minimal,
                                 );
@@ -1690,12 +1697,13 @@ impl App {
             });
 
         if should_update {
-            // Same task, update the existing state
+            // Same task, update the existing state (preserves scroll position, etc.)
             if let Some(existing_state) = self.dependency_view_states[pane_idx].as_mut() {
                 existing_state.update(task_status, is_focused, throbber_counter, pane_area);
             }
         } else {
-            // Different task or no existing state, create a new one
+            // Different task or no existing state - create a new one
+            // This ensures we get fresh dependency analysis when task becomes SKIPPED
             let new_state = DependencyViewState::new(
                 task_name.clone(),
                 task_status,
@@ -1796,5 +1804,53 @@ impl App {
                 .alignment(Alignment::Center);
 
         f.render_widget(placeholder, pane_area);
+    }
+
+    /// Handles automatic pane switching when a task becomes skipped.
+    /// If the skipped task is currently being viewed in a pane, automatically
+    /// switches that pane to show the failed dependency's terminal output.
+    fn handle_automatic_pane_switching(&mut self, skipped_task_id: &str) {
+        // Find if this skipped task is currently displayed in any pane
+        for (pane_idx, pane_task) in self.pane_tasks.iter().enumerate() {
+            if let Some(pane_task_id) = pane_task {
+                if pane_task_id == skipped_task_id {
+                    // Found the skipped task in a pane - attempt to switch to failed dependency
+                    if let Some(failed_dep) = self.get_first_failed_dependency(skipped_task_id) {
+                        self.switch_pane_to_task(pane_idx, failed_dep);
+                    }
+                    break; // Only switch the first matching pane
+                }
+            }
+        }
+    }
+
+    /// Switches a pane to display a different task, updating all necessary state.
+    fn switch_pane_to_task(&mut self, pane_idx: usize, task_id: String) {
+        self.pane_tasks[pane_idx] = Some(task_id.clone());
+
+        // Clear cached states so they get recreated for the new task
+        self.dependency_view_states[pane_idx] = None;
+
+        // Assign the PTY for the new task to this pane if available
+        if let Some(pty_instance) = self.pty_instances.get(&task_id) {
+            self.terminal_pane_data[pane_idx].pty = Some(pty_instance.clone());
+        }
+
+        // Update the selection manager to prevent conflicts with manual selection
+        if let Ok(mut selection_manager) = self.selection_manager.lock() {
+            selection_manager.select_task(task_id);
+        }
+    }
+
+    /// Gets the first failed dependency for a given task.
+    ///
+    /// Returns the task name of the first dependency that failed, causing this task to be skipped.
+    /// This is used for automatic pane switching to show the root cause of failures.
+    fn get_first_failed_dependency(&self, task_name: &str) -> Option<String> {
+        use crate::native::tui::graph_utils::get_failed_dependencies;
+
+        let failed_deps =
+            get_failed_dependencies(task_name, &self.task_graph, &self.task_status_map);
+        failed_deps.into_iter().next()
     }
 }

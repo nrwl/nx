@@ -87,6 +87,12 @@
       "cache": true,
       "inputs": ["{projectRoot}/pnpm-lock.yaml"]
     },
+    "echo": {
+      "dependsOn": ["intermediate"]
+    },
+    "intermediate": {
+      "dependsOn": ["fail-task"]
+    },
     "prepush": {
       "dependsOn": [
         "nx:format-native",
