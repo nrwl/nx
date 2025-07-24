@@ -15,7 +15,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 function configureAsEsm(projectPath: string, isLibrary = false) {
   // Update project.json to configure build target for ESM

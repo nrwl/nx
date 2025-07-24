@@ -14,7 +14,7 @@ import {
   updateFile,
   updateJson,
   detectPackageManager,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { execSync } from 'child_process';
 
 function configureAsEsm(projectPath: string) {
