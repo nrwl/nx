@@ -1,0 +1,36 @@
+---
+import { getCollection, render } from 'astro:content';
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+
+export async function getStaticPaths() {
+  const docs = await getCollection(
+    'devkit-docs',
+    // we don't want the overview page, this is custom handled via the index.astro page
+    (doc) => doc.id !== 'ngcli_adapter-overview' && doc.data.docType === 'ngcli_adapter'
+  );
+
+
+  return docs.map(doc => ({
+    params: { name: doc.id.split('ngcli_adapter_')[1] },
+    props: {
+      doc
+    }
+  }));
+}
+
+const { doc, name } = Astro.props;
+if (!doc) {
+  throw new Error(`ngcli_adapter doc not found. ${name}`);
+}
+
+const { Content, headings } = await render(doc);
+---
+
+<StarlightPage
+  frontmatter={{
+    title: doc.data.title
+  }}
+  headings={headings || []}
+>
+  <Content />
+</StarlightPage>

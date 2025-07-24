@@ -1,0 +1,22 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { render, getEntry } from 'astro:content';
+
+const devkitDocs = await getEntry('devkit-docs', 'devkit-overview');
+
+if (!devkitDocs) {
+  throw new Error('DevKit documentation not found');
+}
+
+const { headings, Content } = await render(devkitDocs);
+---
+
+<StarlightPage
+  frontmatter={{
+    title: 'DevKit Documentation',
+    description: 'Documentation for the DevKit'
+  }}
+  headings={headings || []}
+>
+  <Content />
+</StarlightPage>
