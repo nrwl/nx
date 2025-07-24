@@ -42,12 +42,12 @@ nxApi:
 
 ##### Updates
 
-- Feat: Polygraph availability (Conformance, Workspace Graph, Custom Workflows)
-- Feat: Nx 21 [continuous tasks](https://nx.dev/blog/nx-21-continuous-tasks) support
+- Feat: [Polygraph availability](/ci/recipes/enterprise/polygraph) (Conformance, Workspace Graph, Custom Workflows)
+- Feat: Nx 21 [continuous tasks](/blog/nx-21-continuous-tasks) support
 - Feat: Download artifacts button
   - When you view a task that just ran in CI on the NxCloud UI, there is now a button to download any artifacts that task produced directly from your browser
   - This is especially useful if you want to view screenshots/videos of failed e2e tests
-- Feat: [Self-healing CI](https://nx.dev/ci/features/self-healing-ci)
+- Feat: [Self-healing CI](/ci/features/self-healing-ci)
   - Speak to your assigned DPE about testing this
   - You will need an Anthropic API key and access to Claude's servers
 - Feat: Dark Mode UI setting
