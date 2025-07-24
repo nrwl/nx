@@ -16,15 +16,15 @@ repositories { mavenCentral() }
 
 dependencies {
   implementation("com.google.code.gson:gson:2.10.1")
-  implementation("org.junit.platform:junit-platform-engine:1.10.1")
-  implementation("org.junit.platform:junit-platform-commons:1.10.1")
-  implementation("org.junit.platform:junit-platform-launcher:1.10.1")
-  implementation("org.junit.jupiter:junit-jupiter-engine:5.10.1")
+  implementation("com.github.javaparser:javaparser-core:3.25.8")
+  // Use compileOnly to avoid runtime conflicts with Kotlin Gradle plugin
+  compileOnly("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.1.20") {
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-gradle-plugin")
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-gradle-plugin-api")
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-gradle-plugin-idea")
+  }
   testImplementation(kotlin("test"))
   testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
-  testImplementation("org.mockito:mockito-core:5.8.0")
-  testImplementation("org.springframework.boot:spring-boot-test:3.2.0")
-  testImplementation("org.springframework:spring-context:6.1.0")
 }
 
 java {
