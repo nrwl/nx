@@ -1,5 +1,5 @@
 ---
-title: 'Payfit Achieves 75% Faster Feature Development and Reduces Deployment from 5 Days to 2 Hours'
+title: 'Payfit Achieves 75% Faster Feature Development by Reducing Deployment from 5 Days to 2 Hours'
 slug: payfit-success-story
 authors: [Juri Strumpflohner]
 tags: ['customer story']
@@ -17,15 +17,13 @@ metrics:
     label: 'teams wanting to migrate back to monorepo'
 ---
 
-Payfit is a fast-growing startup that provides payroll and HR solutions to businesses across Europe. As their engineering organization scaled, they faced the classic challenge of maintaining development velocity while managing an increasingly complex codebase. With a lean platform team of just four engineers responsible for frontend tooling, design systems, monorepo health, and CI/CD, efficiency wasn't just important—it was critical for survival in the competitive startup landscape.
+PayFit is a leading European HR and payroll platform serving thousands of businesses across the continent with their innovative SaaS solutions. As one of Europe's fastest-growing HR tech companies, PayFit continues to expand rapidly across multiple markets. Their engineering organization faced a classic scale challenge: maintaining development velocity while managing an increasingly complex codebase distributed across multiple repositories.
+
+With a lean but highly strategic platform team of just four engineers responsible for frontend tooling, design systems, monorepo health, and CI/CD infrastructure, PayFit needed maximum efficiency to compete in the demanding startup landscape. When deployment cycles stretched from 2-5 days per feature and teams abandoned their shared monorepo due to poor initial implementation, the company was at a critical inflection point that threatened their competitive advantage in the fast-moving European HR tech market.
 
 ## Challenge
 
-Payfit's journey with Nx began with a top-down mandate that didn't include the necessary knowledge transfer or support systems.
-
-> "Nx was forced from management to all teams to have a monorepo, but no one knows how to use Nx and everything, so no one took care of the monorepo."
-
-This led to a predictable outcome: teams abandoned the monorepo entirely. At a critical tipping point, engineering teams extracted themselves from the shared workspace, prioritizing autonomy over the collaborative benefits that a well-managed monorepo could provide.
+Payfit's journey with Nx began with a top-down mandate that didn't include the necessary knowledge transfer or support systems. This led to a predictable outcome: teams abandoned the monorepo entirely. At a critical tipping point, engineering teams extracted themselves from the shared workspace, prioritizing autonomy over the collaborative benefits that a well-managed monorepo could provide.
 
 The consequences of this fragmentation were severe:
 
@@ -49,7 +47,7 @@ The team focused on making the monorepo a compelling choice rather than a mandat
 
 ### Offloading Complexity with Nx Cloud
 
-One of the most significant improvements came from adopting Nx Cloud to handle CI optimization. This shift from manual CI optimization to automated intelligence freed the platform team to focus on higher-value work while ensuring optimal performance.
+One of the most significant improvements came from adopting [Nx Cloud](https://nx.app) to handle CI optimization. This shift from manual CI optimization to automated intelligence freed the platform team to focus on higher-value work while ensuring optimal performance.
 
 {% testimonial
     name="Nicolas Beaussart"
@@ -104,4 +102,4 @@ For a startup where speed to market is crucial, these improvements translated di
 
 The transformation enabled Payfit to maintain their competitive edge while scaling their engineering organization efficiently.
 
-{% call-to-action title="Ready to transform your development velocity?" url="/contact/sales" icon="nxcloud" description="Learn more about Nx Enterprise and see how we can help your team achieve similar results." /%}
+{% call-to-action title="Reach out to our team!" url="/contact/sales" icon="nxcloud" description="Looking to transform your teams velocity? Reach out to learn more about Nx Enterprise and see how we can help your team achieve similar results." /%}
