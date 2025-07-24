@@ -104,7 +104,10 @@ private fun processTestFiles(
         // Fallback: look for compiled test classes in standard locations
         val buildDir = testTask.project.layout.buildDirectory.get().asFile
         val testClassDirs =
-            listOf(File(buildDir, "classes/java/test"), File(buildDir, "classes/kotlin/test"))
+            listOf(
+                    File(buildDir, "classes/java/test"),
+                    File(buildDir, "classes/kotlin/test"),
+                    File(buildDir, "classes/groovy/test"))
                 .filter { it.exists() }
         testClassDirs
       }
@@ -132,7 +135,8 @@ private fun processTestFiles(
 
     // Use regex parsing to find test classes in source files
     testFiles.forEach { file ->
-      if (file.exists() && (file.extension == "kt" || file.extension == "java")) {
+      if (file.exists() &&
+          (file.extension == "kt" || file.extension == "java" || file.extension == "groovy")) {
         try {
           val content = file.readText()
           val className = extractClassNameFromFile(content)
@@ -265,7 +269,14 @@ private fun isTestClassByRegex(content: String): Boolean {
           "@TestFactory",
           "fun test",
           "void test",
-          "public void test")
+          "public void test",
+          "def test",
+          "extends Specification",
+          "def \"",
+          "def '",
+          "when:",
+          "then:",
+          "expect:")
 
   // Check each line to ensure test indicators are not commented out
   return lines.any { line ->
@@ -304,8 +315,10 @@ private fun createTestClassLoader(
       listOf(
               File(buildDir, "classes/java/main"),
               File(buildDir, "classes/kotlin/main"),
+              File(buildDir, "classes/groovy/main"),
               File(buildDir, "classes/java/test"),
-              File(buildDir, "classes/kotlin/test"))
+              File(buildDir, "classes/kotlin/test"),
+              File(buildDir, "classes/groovy/test"))
           .filter { it.exists() }
           .forEach { allPaths.add(it.toURI().toURL()) }
     }
