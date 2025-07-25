@@ -272,13 +272,13 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     process.stdout.write(workspaceInfo.nxCloudInfo);
   }
 
-  if (isKnownPreset(parsedArgs.preset)) {
-    printSocialInformation();
-  } else {
-    output.log({
-      title: `Successfully applied preset: ${parsedArgs.preset}`,
-    });
-  }
+  // if (isKnownPreset(parsedArgs.preset)) {
+  //   printSocialInformation();
+  // } else {
+  //   output.log({
+  //     title: `Successfully applied preset: ${parsedArgs.preset}`,
+  //   });
+  // }
 }
 
 /**
