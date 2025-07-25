@@ -134,7 +134,7 @@ describe('nx release - independent projects', () => {
         "name": "@proj/{project-name}",
         -   "version": "0.0.0",
         +   "version": "999.9.9-package.1",
-        "scripts": {
+        "exports": {
 
 
         NX   Staging changed files with git
@@ -162,7 +162,7 @@ describe('nx release - independent projects', () => {
         "name": "@proj/{project-name}",
         -   "version": "0.0.0",
         +   "version": "999.9.9-package.2",
-        "scripts": {
+        "exports": {
 
         }
         +
@@ -200,13 +200,13 @@ describe('nx release - independent projects', () => {
         "name": "@proj/{project-name}",
         -   "version": "0.0.0",
         +   "version": "999.9.9-package.3",
-        "scripts": {
+        "exports": {
 
 
         "name": "@proj/{project-name}",
         -   "version": "999.9.9-package.2",
         +   "version": "999.9.9",
-        "scripts": {
+        "exports": {
 
         "dependencies": {
         -     "@proj/{project-name}": "0.0.0"
@@ -249,7 +249,7 @@ describe('nx release - independent projects', () => {
         "name": "@proj/{project-name}",
         -   "version": "999.9.9-version-git-operations-test.1",
         +   "version": "999.9.9-version-git-operations-test.2",
-        "scripts": {
+        "exports": {
 
 
         Skipped lock file update because {package-manager} workspaces are not enabled.
@@ -340,19 +340,19 @@ describe('nx release - independent projects', () => {
         "name": "@proj/{project-name}",
         -   "version": "999.9.9-package.3",
         +   "version": "999.9.9-version-git-operations-test.3",
-        "scripts": {
+        "exports": {
 
 
         "name": "@proj/{project-name}",
         -   "version": "999.9.9-version-git-operations-test.2",
         +   "version": "999.9.9-version-git-operations-test.3",
-        "scripts": {
+        "exports": {
 
 
         "name": "@proj/{project-name}",
         -   "version": "999.9.9",
         +   "version": "999.9.9-version-git-operations-test.3",
-        "scripts": {
+        "exports": {
 
         "dependencies": {
         -     "@proj/{project-name}": "999.9.9-package.3"
