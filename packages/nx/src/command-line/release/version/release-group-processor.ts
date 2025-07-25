@@ -30,8 +30,8 @@ import {
   resolveVersionActionsForProject,
   SemverBumpType,
   VersionActions,
+  NOOP_VERSION_ACTIONS,
 } from './version-actions';
-import { NOOP_VERSION_ACTIONS } from './noop-version-actions';
 
 /**
  * The final configuration for a project after applying release group and project level overrides,
@@ -48,7 +48,9 @@ export interface FinalConfigForProject {
   versionActionsOptions: NxReleaseVersionConfiguration['versionActionsOptions'];
   // Consistently expanded to the object form for easier processing in VersionActions
   manifestRootsToUpdate: Array<Exclude<ManifestRootToUpdate, string>>;
-  dockerOptions: NxReleaseDockerConfiguration;
+  dockerOptions: NxReleaseDockerConfiguration & {
+    groupPreVersionCommand?: string;
+  };
 }
 
 interface GroupNode {
@@ -380,6 +382,7 @@ export class ReleaseGroupProcessor {
         this.versionData.set(projectName, {
           currentVersion: this.getCurrentCachedVersionForProject(projectName),
           newVersion: null,
+          dockerVersion: null,
           dependentProjects: this.getOriginalDependentProjects(projectName),
         });
       }
@@ -930,6 +933,7 @@ export class ReleaseGroupProcessor {
           this.versionData.set(project, {
             currentVersion: this.getCurrentCachedVersionForProject(project),
             newVersion: null,
+            dockerVersion: null,
             dependentProjects: this.getOriginalDependentProjects(project),
           });
           if (project === firstProject) {

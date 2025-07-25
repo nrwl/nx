@@ -27,7 +27,6 @@ describe('resolveCurrentVersion', () => {
       versionActionsOptions: {},
       dockerOptions: {
         preVersionCommand: undefined,
-        groupPreVersionCommand: undefined,
         skipVersionActions: undefined,
         versionSchemes: undefined,
         repositoryName: undefined,

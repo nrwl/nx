@@ -11,6 +11,7 @@ describe('filterReleaseGroups()', () => {
     nxReleaseConfig = {
       projectsRelationship: 'fixed',
       groups: {},
+      docker: undefined,
       changelog: {
         git: {
           commit: true,
@@ -107,6 +108,7 @@ describe('filterReleaseGroups()', () => {
         foo: {
           projectsRelationship: 'fixed',
           projects: ['lib-a'],
+          docker: undefined,
           changelog: false,
           version: {
             conventionalCommits: false,
@@ -139,6 +141,7 @@ describe('filterReleaseGroups()', () => {
         foo: {
           projectsRelationship: 'fixed',
           projects: ['lib-a'],
+          docker: undefined,
           changelog: false,
           version: {
             conventionalCommits: false,
@@ -155,6 +158,7 @@ describe('filterReleaseGroups()', () => {
         bar: {
           projectsRelationship: 'fixed',
           projects: ['lib-b'],
+          docker: undefined,
           changelog: false,
           version: {
             conventionalCommits: false,
@@ -176,6 +180,7 @@ describe('filterReleaseGroups()', () => {
         [
           {
             "changelog": false,
+            "docker": undefined,
             "name": "foo",
             "projects": [
               "lib-a",
@@ -196,6 +201,7 @@ describe('filterReleaseGroups()', () => {
           },
           {
             "changelog": false,
+            "docker": undefined,
             "name": "bar",
             "projects": [
               "lib-b",
@@ -220,6 +226,7 @@ describe('filterReleaseGroups()', () => {
         Map {
           {
             "changelog": false,
+            "docker": undefined,
             "name": "foo",
             "projects": [
               "lib-a",
@@ -242,6 +249,7 @@ describe('filterReleaseGroups()', () => {
           },
           {
             "changelog": false,
+            "docker": undefined,
             "name": "bar",
             "projects": [
               "lib-b",
@@ -272,6 +280,7 @@ describe('filterReleaseGroups()', () => {
           projectsRelationship: 'fixed',
           projects: ['lib-a', 'lib-a'],
           changelog: false,
+          docker: undefined,
           version: {
             conventionalCommits: false,
             generator: '',
@@ -303,6 +312,7 @@ describe('filterReleaseGroups()', () => {
           projectsRelationship: 'fixed', // these projects are not independent, so are not targetable by the projects filter
           projects: ['lib-a'],
           changelog: false,
+          docker: undefined,
           version: {
             conventionalCommits: false,
             generator: '',
@@ -319,6 +329,7 @@ describe('filterReleaseGroups()', () => {
           projectsRelationship: 'independent',
           projects: ['lib-b'],
           changelog: false,
+          docker: undefined,
           version: {
             conventionalCommits: false,
             generator: '',
@@ -351,6 +362,7 @@ describe('filterReleaseGroups()', () => {
           projectsRelationship: 'independent',
           projects: ['lib-a'],
           changelog: false,
+          docker: undefined,
           version: {
             conventionalCommits: false,
             generator: '',
@@ -367,6 +379,7 @@ describe('filterReleaseGroups()', () => {
           projectsRelationship: 'fixed',
           projects: ['lib-b'],
           changelog: false,
+          docker: undefined,
           version: {
             conventionalCommits: false,
             generator: '',
@@ -387,6 +400,7 @@ describe('filterReleaseGroups()', () => {
         [
           {
             "changelog": false,
+            "docker": undefined,
             "name": "foo",
             "projects": [
               "lib-a",
@@ -411,6 +425,7 @@ describe('filterReleaseGroups()', () => {
         Map {
           {
             "changelog": false,
+            "docker": undefined,
             "name": "foo",
             "projects": [
               "lib-a",
@@ -457,6 +472,7 @@ describe('filterReleaseGroups()', () => {
           projectsRelationship: 'fixed',
           projects: ['lib-a'],
           changelog: false,
+          docker: undefined,
           version: {
             conventionalCommits: false,
             generator: '',
@@ -473,6 +489,7 @@ describe('filterReleaseGroups()', () => {
           projectsRelationship: 'fixed',
           projects: ['lib-b'],
           changelog: false,
+          docker: undefined,
           version: {
             conventionalCommits: false,
             generator: '',
@@ -493,6 +510,7 @@ describe('filterReleaseGroups()', () => {
         [
           {
             "changelog": false,
+            "docker": undefined,
             "name": "foo",
             "projects": [
               "lib-a",
@@ -517,6 +535,7 @@ describe('filterReleaseGroups()', () => {
         Map {
           {
             "changelog": false,
+            "docker": undefined,
             "name": "foo",
             "projects": [
               "lib-a",
