@@ -86,7 +86,11 @@ export function syncHandler(options: SyncOptions): Promise<number> {
     if (options.check) {
       output.error({
         title: 'The workspace is out of sync',
-        bodyLines: resultBodyLines,
+        bodyLines: [
+          ...resultBodyLines,
+          '',
+          'Run `nx sync` to sync the workspace.',
+        ],
       });
 
       if (anySyncGeneratorsFailed) {
