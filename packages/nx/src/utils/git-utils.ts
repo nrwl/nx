@@ -231,15 +231,22 @@ export class GitRepository {
   }
 }
 
+export function getGitRemote() {
+  const res = execSync('git remote -v', {
+    stdio: 'pipe',
+    windowsHide: false,
+  })
+    .toString()
+    .trim();
+  return res;
+}
+
 /**
  * This is currently duplicated in Nx Console. Please let @MaxKless know if you make changes here.
  */
 export function getGithubSlugOrNull(): string | null {
   try {
-    const gitRemote = execSync('git remote -v', {
-      stdio: 'pipe',
-      windowsHide: false,
-    }).toString();
+    const gitRemote = getGitRemote();
     // If there are no remotes, we default to github
     if (!gitRemote || gitRemote.length === 0) {
       return 'github';
