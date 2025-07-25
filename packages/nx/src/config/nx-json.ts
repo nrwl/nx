@@ -82,6 +82,47 @@ export type ManifestRootToUpdate =
   | string
   | { path: string; preserveLocalDependencyProtocols: boolean };
 
+export interface NxReleaseDockerConfiguration {
+  /**
+   * A command to run after validation of nx release configuration, but before docker versioning begins.
+   * Useful for preparing docker build artifacts. If --dry-run is passed, the command is still executed,
+   * but with the NX_DRY_RUN environment variable set to 'true'.
+   */
+  preVersionCommand?: string;
+  /**
+   * Projects which should use a no-op VersionActions implementation rather than any potentially inferred by default or via Inference Plugins.
+   * Can be an array of project names (subset of projects in the release setup/release group) or a boolean (true means all projects).
+   * e.g.
+   * Consider a node application called `api` that does not require its `package.json` file to be versioned yet builds versioned docker images.
+   * To ensure that JS Versioning does not take place, the following would be set in the `docker` config in `nx.release`
+   * ```
+   *   "docker": {
+   *     "skipVersionActions": ["api"]
+   *   }
+   * ```
+   */
+  skipVersionActions?: string[] | boolean;
+  /**
+   * Record of named version patterns to choose between when versioning docker projects.
+   *
+   * e.g.
+   * ```
+   * "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
+   * "hotfix": "{currentDate|YYMM.DD}-hotfix"
+   * ```
+   */
+  versionSchemes?: Record<string, string>;
+  /**
+   * Repository name for the image on the configured registry
+   */
+  repositoryName?: string;
+  /**
+   * Url of the Docker Image/Container Registry to push images to.
+   * Defaults to Docker Hub.
+   */
+  registryUrl?: string;
+}
+
 // NOTE: It's important to keep the nx-schema.json in sync with this interface. If you make changes here, make sure they are reflected in the schema.
 export interface NxReleaseVersionConfiguration {
   /**
@@ -325,6 +366,11 @@ export interface NxReleaseConfiguration {
    */
   projects?: string[] | string;
   /**
+   * Configure options to handle versioning docker projects. Docker projects will be identified via the presence of a Dockerfile.
+   * Set to `true` to enable with default settings, or provide a configuration object for custom settings.
+   */
+  docker?: NxReleaseDockerConfiguration | true;
+  /**
    * @note When no projects or groups are configured at all (the default), all projects in the workspace are treated as
    * if they were in a release group together with a fixed relationship.
    */
@@ -341,6 +387,21 @@ export interface NxReleaseConfiguration {
        * only be used in a maximum of one release group.
        */
       projects: string[] | string;
+      /**
+       * Configure options to handle versioning docker projects for this group.
+       * Set to `true` to enable with default settings, or provide a configuration object for custom settings.
+       */
+      docker?:
+        | (NxReleaseDockerConfiguration & {
+            /**
+             * A command to run after validation of nx release configuration, but before docker versioning begins.
+             * Used for preparing docker build artifacts. If --dry-run is passed, the command is still executed, but
+             * with the NX_DRY_RUN environment variable set to 'true'.
+             * It will run in addition to the global `preVersionCommand`
+             */
+            groupPreVersionCommand?: string;
+          })
+        | true;
       /**
        * Optionally override version configuration for this group.
        *

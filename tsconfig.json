@@ -383,6 +383,9 @@
       "path": "./e2e/nx"
     },
     {
+      "path": "./packages/docker"
+    },
+    {
       "path": "./astro-docs"
     }
   ],

@@ -1679,6 +1679,38 @@
     "source": "/packages/devkit/src"
   },
   {
+    "description": "The Nx Plugin for Docker to aid in containerizing projects.",
+    "documents": [],
+    "executors": [
+      {
+        "description": "DO NOT INVOKE DIRECTLY WITH `nx run`. Use `nx release publish` instead.",
+        "file": "generated/packages/docker/executors/release-publish.json",
+        "hidden": true,
+        "name": "release-publish",
+        "originalFilePath": "/packages/docker/src/executors/release-publish/schema.json",
+        "path": "docker/executors/release-publish",
+        "type": "executor"
+      }
+    ],
+    "generators": [
+      {
+        "description": "Initialize the `@nx/docker` plugin. **Experimental**: Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.",
+        "file": "generated/packages/docker/generators/init.json",
+        "hidden": true,
+        "name": "init",
+        "originalFilePath": "/packages/docker/src/generators/init/schema.json",
+        "path": "docker/generators/init",
+        "type": "generator"
+      }
+    ],
+    "migrations": [],
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "docker",
+    "packageName": "@nx/docker",
+    "root": "/packages/docker",
+    "source": "/packages/docker/src"
+  },
+  {
     "description": "The Nx Plugin for esbuild contains executors and generators that support building applications using esbuild",
     "documents": [
       {

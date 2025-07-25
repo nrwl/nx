@@ -1723,11 +1723,13 @@ describe('ReleaseGroupProcessor', () => {
           "libtest1": {
             "currentVersion": "4.5.0",
             "dependentProjects": [],
+            "dockerVersion": null,
             "newVersion": null,
           },
           "my-nest-app": {
             "currentVersion": "1.0.0",
             "dependentProjects": [],
+            "dockerVersion": null,
             "newVersion": null,
           },
         }

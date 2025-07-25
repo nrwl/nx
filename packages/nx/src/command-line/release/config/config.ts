@@ -18,6 +18,7 @@ import {
   NxJsonConfiguration,
   NxReleaseChangelogConfiguration,
   NxReleaseConfiguration,
+  NxReleaseDockerConfiguration,
   NxReleaseGitConfiguration,
   NxReleaseVersionConfiguration,
 } from '../../../config/nx-json';
@@ -38,6 +39,12 @@ import { shouldUseLegacyVersioning } from './use-legacy-versioning';
 type DeepRequired<T> = Required<{
   [K in keyof T]: T[K] extends Required<T[K]> ? T[K] : DeepRequired<T[K]>;
 }>;
+
+type EnsureDockerOptional<T> = {
+  [K in keyof T]: Omit<T[K], 'docker'> & {
+    docker: DeepRequired<NxReleaseDockerConfiguration> | undefined;
+  };
+};
 
 type EnsureProjectsArray<T> = {
   [K in keyof T]: T[K] extends { projects: any }
@@ -77,10 +84,12 @@ export const DEFAULT_VERSION_ACTIONS_PATH =
 export type NxReleaseConfig = Omit<
   DeepRequired<
     NxReleaseConfiguration & {
-      groups: DeepRequired<
-        RemoveTrueFromPropertiesOnEach<
-          EnsureProjectsArray<NxReleaseConfiguration['groups']>,
-          'changelog'
+      groups: EnsureDockerOptional<
+        DeepRequired<
+          RemoveTrueFromPropertiesOnEach<
+            EnsureProjectsArray<NxReleaseConfiguration['groups']>,
+            'changelog' | 'docker'
+          >
         >
       >;
       // Remove the true shorthand from the changelog config types, it will be normalized to a default object
@@ -105,8 +114,11 @@ export type NxReleaseConfig = Omit<
     }
   >,
   // projects is just a shorthand for the default group's projects configuration, it does not exist in the final config
-  'projects'
->;
+  'projects' | 'docker'
+> & {
+  // docker is optional and only present when explicitly configured by the user
+  docker: DeepRequired<NxReleaseDockerConfiguration> | undefined;
+};
 
 // We explicitly handle some possible errors in order to provide the best possible DX
 export interface CreateNxReleaseConfigError {
@@ -272,9 +284,71 @@ export async function createNxReleaseConfig(
     __dirname,
     '../../../../release/changelog-renderer'
   );
+  // Helper function to create meaningful docker defaults when user opts in
+  function createDockerDefaults(
+    userDockerConfig: NxReleaseDockerConfiguration | true
+  ): DeepRequired<NxReleaseDockerConfiguration> {
+    const defaultVersionSchemes = {
+      production: '{currentDate|YYMM.DD}.{shortCommitSha}',
+      hotfix: '{currentDate|YYMM.DD}.{shortCommitSha}-hotfix',
+    };
+    const defaultPreVersionCommand = 'npx nx run-many -t docker:build';
+
+    // If user explicitly sets docker: true, apply meaningful defaults
+    if (userDockerConfig === true) {
+      return {
+        preVersionCommand: defaultPreVersionCommand,
+        skipVersionActions: undefined,
+        versionSchemes: defaultVersionSchemes,
+        repositoryName: undefined,
+        registryUrl: undefined,
+      };
+    }
+
+    // If user provides docker configuration object, merge with base defaults
+    return {
+      preVersionCommand:
+        userDockerConfig.preVersionCommand ?? defaultPreVersionCommand,
+      skipVersionActions: userDockerConfig.skipVersionActions
+        ? Array.isArray(userDockerConfig.skipVersionActions)
+          ? findMatchingProjects(
+              userDockerConfig.skipVersionActions,
+              projectGraph.nodes
+            )
+          : userDockerConfig.skipVersionActions
+        : undefined,
+      versionSchemes: userDockerConfig.versionSchemes ?? defaultVersionSchemes,
+      repositoryName: userDockerConfig.repositoryName,
+      registryUrl: userDockerConfig.registryUrl,
+    };
+  }
+
+  // Helper function to normalize docker config at group level
+  function normalizeDockerConfig(
+    dockerConfig: NxReleaseDockerConfiguration | true
+  ): DeepRequired<NxReleaseDockerConfiguration> | undefined {
+    // If user explicitly sets docker: true at group level, apply meaningful defaults
+    if (dockerConfig === true) {
+      return createDockerDefaults(true);
+    }
+
+    // If user provides docker configuration object at group level, return it
+    if (dockerConfig && typeof dockerConfig === 'object') {
+      return createDockerDefaults(dockerConfig);
+    }
+
+    // No group-level docker config
+    return undefined;
+  }
+
   const WORKSPACE_DEFAULTS: Omit<NxReleaseConfig, 'groups'> = {
     // By default all projects in all groups are released together
     projectsRelationship: workspaceProjectsRelationship,
+    // Create docker defaults only if user has explicitly configured it, otherwise undefined
+    docker:
+      userConfig.docker !== undefined
+        ? createDockerDefaults(userConfig.docker)
+        : undefined,
     git: gitDefaults,
     version: {
       useLegacyVersioning: USE_LEGACY_VERSIONING,
@@ -365,9 +439,27 @@ export async function createNxReleaseConfig(
   const groupReleaseTagPatternStrictPreid =
     userConfig.releaseTagPatternStrictPreid ??
     defaultReleaseTagPatternStrictPreid;
+  const groupDocker = normalizeDockerConfig(
+    userConfig.docker ?? WORKSPACE_DEFAULTS.docker
+  );
 
-  const GROUP_DEFAULTS: Omit<NxReleaseConfig['groups'][string], 'projects'> = {
+  const GROUP_DEFAULTS: Omit<
+    NxReleaseConfig['groups'][string],
+    'projects' | 'docker'
+  > & {
+    docker:
+      | DeepRequired<NxReleaseConfig['groups'][string]['docker']>
+      | undefined;
+  } = {
     projectsRelationship: groupProjectsRelationship,
+    // Only include docker configuration if user has explicitly configured it
+    docker:
+      groupDocker && Object.keys(groupDocker).length > 0
+        ? {
+            ...groupDocker,
+            groupPreVersionCommand: '',
+          }
+        : undefined,
     version: USE_LEGACY_VERSIONING
       ? ({
           conventionalCommits: false,
@@ -431,6 +523,11 @@ export async function createNxReleaseConfig(
     ],
     userConfig.version as Partial<NxReleaseConfig['version']>
   );
+
+  const rootDockerConfig: NxReleaseConfig['docker'] = userConfig.docker && {
+    ...normalizeDockerConfig(WORKSPACE_DEFAULTS.docker),
+    ...normalizeDockerConfig(userConfig.docker),
+  };
 
   if (userConfig.changelog?.workspaceChangelog) {
     userConfig.changelog.workspaceChangelog = normalizeTrueToEmptyObject(
@@ -530,7 +627,10 @@ export async function createNxReleaseConfig(
       .specifierSource;
   }
 
-  const groups: NxReleaseConfig['groups'] =
+  const rootDockerWithoutGlobalOptions = { ...rootDockerConfig };
+  delete rootDockerWithoutGlobalOptions.preVersionCommand;
+
+  const groups: EnsureDockerOptional<NxReleaseConfig['groups']> =
     userConfig.groups && Object.keys(userConfig.groups).length
       ? ensureProjectsConfigIsArray(userConfig.groups)
       : /**
@@ -540,6 +640,14 @@ export async function createNxReleaseConfig(
         {
           [IMPLICIT_DEFAULT_RELEASE_GROUP]: <NxReleaseConfig['groups'][string]>{
             projectsRelationship: GROUP_DEFAULTS.projectsRelationship,
+            // Only include docker configuration if user has explicitly configured it
+            docker:
+              Object.keys(rootDockerWithoutGlobalOptions).length > 0
+                ? (deepMergeDefaults(
+                    [GROUP_DEFAULTS.docker] as any,
+                    rootDockerWithoutGlobalOptions
+                  ) as any)
+                : undefined,
             projects: userConfig.projects
               ? // user-defined top level "projects" config takes priority if set
                 findMatchingProjects(
@@ -573,7 +681,7 @@ export async function createNxReleaseConfig(
    * Resolve all the project names into their release groups, and check
    * that individual projects are not found in multiple groups.
    */
-  const releaseGroups: NxReleaseConfig['groups'] = {};
+  const releaseGroups: EnsureDockerOptional<NxReleaseConfig['groups']> = {};
   const alreadyMatchedProjects = new Set<string>();
 
   for (const [releaseGroupName, releaseGroup] of Object.entries(groups)) {
@@ -640,8 +748,26 @@ export async function createNxReleaseConfig(
       ) as NxReleaseConfig['groups']['string']['changelog'];
     }
 
+    const normalizedGroupDockerConfig = normalizeDockerConfig(
+      releaseGroup.docker
+    );
+
+    // Only include docker configuration if user has explicitly configured it at root or group level
+    const shouldIncludeDockerConfig =
+      Object.keys(rootDockerWithoutGlobalOptions).length > 0 ||
+      normalizedGroupDockerConfig !== undefined;
+
     const groupDefaults: NxReleaseConfig['groups']['string'] = {
       projectsRelationship,
+      // Only include docker configuration if user has explicitly configured it
+      docker: shouldIncludeDockerConfig
+        ? {
+            ...GROUP_DEFAULTS.docker,
+            ...rootDockerWithoutGlobalOptions,
+            groupPreVersionCommand: '',
+            ...releaseGroup.docker,
+          }
+        : undefined,
       projects: matchingProjects,
       version: deepMergeDefaults(
         // First apply any group level defaults, then apply actual root level config, then group level config
@@ -693,6 +819,11 @@ export async function createNxReleaseConfig(
           groupPreVersionCommand?: string;
         }
       >;
+
+    // Clean up docker global options that are not supported at the group level
+    if (finalReleaseGroup.docker) {
+      delete finalReleaseGroup.docker.preVersionCommand;
+    }
 
     // Apply conventionalCommits shorthand to the final group if explicitly configured in the original group
     if (releaseGroup.version?.conventionalCommits === true) {
@@ -755,6 +886,28 @@ export async function createNxReleaseConfig(
     releaseGroups[releaseGroupName] = finalReleaseGroup;
   }
 
+  // Infer docker-related properties based on project configurations
+  for (const [releaseGroupName, releaseGroup] of Object.entries(
+    releaseGroups
+  )) {
+    const hasDockerProjects = releaseGroup.projects.some((projectName) => {
+      const projectNode = projectGraph.nodes[projectName];
+      // Check if project has meaningful docker config (not just undefined/empty values)
+      const projectDockerConfig = projectNode?.data.release?.docker;
+      const hasProjectDockerConfig = projectDockerConfig !== undefined;
+
+      // Check if release group has docker config at all (since we now only include it when explicitly configured)
+      const hasGroupDockerConfig = !!releaseGroup.docker;
+
+      return hasProjectDockerConfig || hasGroupDockerConfig;
+    });
+
+    if (hasDockerProjects) {
+      // If any project in the group has docker configuration, disable semver requirement
+      releaseGroup.releaseTagPatternRequireSemver = false;
+    }
+  }
+
   const configError = validateChangelogConfig(
     releaseGroups,
     rootChangelogConfig
@@ -770,6 +923,10 @@ export async function createNxReleaseConfig(
     error: null,
     nxReleaseConfig: {
       projectsRelationship: WORKSPACE_DEFAULTS.projectsRelationship,
+      // Only include docker configuration if user has explicitly configured it
+      ...(WORKSPACE_DEFAULTS.docker
+        ? { docker: WORKSPACE_DEFAULTS.docker }
+        : {}),
       releaseTagPattern: WORKSPACE_DEFAULTS.releaseTagPattern,
       releaseTagPatternCheckAllBranchesWhen:
         WORKSPACE_DEFAULTS.releaseTagPatternCheckAllBranchesWhen,
@@ -778,6 +935,7 @@ export async function createNxReleaseConfig(
       releaseTagPatternStrictPreid:
         WORKSPACE_DEFAULTS.releaseTagPatternStrictPreid,
       git: rootGitConfig,
+      docker: rootDockerConfig,
       version: rootVersionConfig,
       changelog: rootChangelogConfig,
       groups: releaseGroups,

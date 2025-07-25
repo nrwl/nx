@@ -33,6 +33,7 @@ const scopes = [
   { value: 'webpack',           name: 'webpack:               anything Webpack specific' },
   { value: 'gradle',            name: 'gradle:                anything Gradle specific'},
   { value: 'module-federation', name: 'module-federation:     anything Module Federation specific'},
+  { value: 'docker',            name: 'docker:                anything Docker specific'},
 ];
 
 // precomputed scope
