@@ -6,15 +6,20 @@ import netlify from '@astrojs/netlify';
 import linkValidator from 'starlight-links-validator';
 import react from '@astrojs/react';
 import markdoc from '@astrojs/markdoc';
+import tailwindcss from '@tailwindcss/vite';
 
 // https://astro.build/config
 export default defineConfig({
+  vite: { plugins: [tailwindcss()] },
+  site: 'https://docs.nx.dev',
+  adapter: netlify(),
   integrations: [
     markdoc(),
     starlight({
       title: 'Nx',
       tagline:
         'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.',
+      customCss: ['./src/styles/global.css'],
       favicon: '/favicon.svg',
       logo: {
         src: './src/assets/nx/Nx-light.png',
@@ -52,7 +57,6 @@ export default defineConfig({
       editLink: {
         baseUrl: 'https://github.com/nrwl/nx/tree/main/',
       },
-      customCss: ['./src/styles/custom.css'],
       sidebar: [
         {
           label: 'Getting Started',
@@ -92,6 +96,4 @@ export default defineConfig({
     }),
     react(),
   ],
-  site: 'https://docs.nx.dev',
-  adapter: netlify(),
 });
