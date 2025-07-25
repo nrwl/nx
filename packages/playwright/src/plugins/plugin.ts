@@ -284,6 +284,7 @@ async function buildPlaywrightTargets(
 
         inputs = [
           `{workspaceRoot}/${testFile}`,
+          `{workspaceRoot}/${testFile}-snapshots/**`,
           `{workspaceRoot}/${configFilePath}`,
           ...relativeImports.map(
             (importPath) => `{workspaceRoot}/${importPath}`
