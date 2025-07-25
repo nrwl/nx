@@ -6,6 +6,7 @@ import {
 } from '@nx/nx-dev-ui-common';
 import { ReactElement } from 'react';
 import { FeatureContainer } from './feature-container';
+import Image from 'next/image';
 
 export function FeaturesWhileRunningCI(): ReactElement {
   return (
@@ -44,11 +45,14 @@ export function FeaturesWhileRunningCI(): ReactElement {
               Get started
             </ButtonLink>
           </div>
-          <div
-            className="relative mt-8 flex h-[20rem] w-1/2 items-center justify-center rounded bg-slate-100"
-            title="placeholder for graphic"
-          >
-            <span className="text-2xl font-bold text-slate-300">Graphic</span>
+          <div className="w-1/2">
+            <Image
+              src="/images/home/features-ci.png"
+              width={800}
+              height={800}
+              alt=""
+              className="max-w-[full] lg:max-w-[full]"
+            />
           </div>
         </div>
       </FeatureContainer>

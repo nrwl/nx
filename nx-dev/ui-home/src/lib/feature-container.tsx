@@ -26,7 +26,7 @@ export function FeatureContainer({
             <UserPlusIcon className="h-6 w-6 text-slate-400" />
           )}
         </div>
-        <div className="h-full w-[3px] bg-gradient-to-b from-slate-200 via-purple-500 to-slate-50"></div>
+        <div className="h-full w-[3px] bg-gradient-to-b from-slate-200 via-purple-500 to-slate-50 dark:from-slate-800 dark:via-purple-500 dark:to-slate-900"></div>
       </div>
       <div className="mb-32 ml-16">{children}</div>
     </div>

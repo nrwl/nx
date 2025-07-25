@@ -6,6 +6,7 @@ import {
 } from '@nx/nx-dev-ui-common';
 import { ReactElement } from 'react';
 import { FeatureContainer } from './feature-container';
+import Image from 'next/image';
 
 export function FeaturesWhileScalingYourOrganization(): ReactElement {
   return (
@@ -21,7 +22,7 @@ export function FeaturesWhileScalingYourOrganization(): ReactElement {
               velocity of teams and the quality of products. Nx is the solution.
               By defining project boundaries, developers ensure code stays
               modular and easy to maintain. By using Nx plugins and code
-              generation , developers standardize on best practices and reduce
+              generation, developers standardize on best practices and reduce
               duplication. Plus, they keep everything up-to-date by using Nx's
               automated updating mechanism.
             </SectionHeading>
@@ -36,11 +37,14 @@ export function FeaturesWhileScalingYourOrganization(): ReactElement {
               </ButtonLink>
             </div>
           </div>
-          <div
-            className="relative mt-8 flex h-[20rem] w-1/2 items-center justify-center rounded bg-slate-100"
-            title="placeholder for graphic"
-          >
-            <span className="text-2xl font-bold text-slate-300">Graphic</span>
+          <div className="w-1/2">
+            <Image
+              src="/images/home/features-scaling-org.webp"
+              width={800}
+              height={800}
+              alt=""
+              className="max-w-[full] lg:max-w-[full]"
+            />
           </div>
         </div>
       </FeatureContainer>

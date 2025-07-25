@@ -48,30 +48,29 @@ export default function Index(): JSX.Element {
       <h1 className="sr-only">Build system with advanced CI capabilities.</h1>
       <DefaultLayout isHome headerCTAConfig={headerCTAConfig}>
         <Hero />
-        <div className="mt-16 lg:-mt-32">
+        <div className="mt-16 lg:mt-40">
           <Statistics />
         </div>
-        <div className="mt-32 lg:mt-56">
+        <div className="mt-32 lg:mt-40">
           <HetznerCloudTestimonial />
         </div>
         <div className="mt-32 lg:mt-56">
           <Problem />
         </div>
-        <div className="mt-32 lg:mt-56">
+        <div className="bg-[url(/images/home/wave.svg)] bg-cover bg-center pt-32 lg:pt-56">
           <Solution />
         </div>
-        <div className="mt-32 lg:mt-56">
-          <CallToActionJuriGraphic />
-        </div>
-        <div className="mt-32 lg:mt-56">
-          <FeaturesWhileCoding />
-        </div>
-        <div className="mt-12 lg:mt-12">
-          <FeaturesWhileRunningCI />
-        </div>
-        <div className="mt-12 lg:mt-12">
-          <FeaturesWhileScalingYourOrganization />
-        </div>
+        <section className="mt-32 scroll-mt-24 border-b border-t border-slate-200 bg-slate-50 py-24 sm:py-32 dark:border-slate-800 dark:bg-slate-900">
+          <div className="mt-12 lg:mt-20">
+            <FeaturesWhileCoding />
+          </div>
+          <div className="mt-12 lg:mt-12">
+            <FeaturesWhileRunningCI />
+          </div>
+          <div className="mt-12 lg:mt-12">
+            <FeaturesWhileScalingYourOrganization />
+          </div>
+        </section>
         <div className="mt-32 lg:mt-56">
           <TeamAndCommunity />
         </div>

@@ -1,40 +1,69 @@
 import { WrenchIcon, WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
 import { SectionHeading, Strong, TextLink } from '@nx/nx-dev-ui-common';
+import Image from 'next/image';
 import { ReactElement } from 'react';
 
 export function Problem(): ReactElement {
   return (
-    <article className="mx-auto max-w-7xl px-6 lg:px-8">
-      <div className="mb-12 flex items-center gap-24">
-        <div className="flex w-1/2 flex-col gap-12">
-          <SectionHeading
-            as="h2"
-            variant="title"
-            id=""
-            className="scroll-mt-24"
-          >
-            <span className="font-normal">
-              What every developer wants is simple:
-            </span>{' '}
-            write code. That's what we love doing.
-          </SectionHeading>
-          <SectionHeading
-            as="h2"
-            variant="title"
-            id=""
-            className="scroll-mt-24"
-          >
-            <span className="font-normal">
-              What every business wants is equally simple:
-            </span>{' '}
-            developers merging PRs and shipping features.
-          </SectionHeading>
-        </div>
-        <div className="w-1/2">
-          <SectionHeading as="p" variant="subtitle" className="mt-6">
-            Most of the engineering work isn’t that. It’s:
-          </SectionHeading>
-          <ul className="mt-4 flex flex-col items-start">
+    <section
+      id="ci-bottleneck"
+      className="scroll-mt-24 border-b border-t border-slate-200 bg-slate-50 py-24 sm:py-32 dark:border-slate-800 dark:bg-slate-900"
+    >
+      <article className="mx-auto max-w-7xl px-6 lg:px-8">
+        <Image
+          src="/images/home/problem.webp"
+          width={2400}
+          height={800}
+          alt="problem-sketch"
+          className="max-w-[full] lg:max-w-[full]"
+        />
+        {/* <SectionHeading
+          as="h2"
+          variant="title"
+          id=""
+          className="mb-12 scroll-mt-24"
+        >
+          Developers want to code.
+        </SectionHeading>
+        <SectionHeading
+          as="h2"
+          variant="title"
+          id=""
+          className="ml-14 scroll-mt-24 text-nowrap"
+        >
+          Businesses want to ship.
+        </SectionHeading> */}
+        {/* <div className="mb-12 flex items-center gap-24">
+          <div className="flex w-1/2 flex-col gap-12">
+            <SectionHeading
+              as="h2"
+              variant="title"
+              id=""
+              className="scroll-mt-24 text-nowrap"
+            >
+              Developers want to code.
+            </SectionHeading>
+            <SectionHeading
+              as="h2"
+              variant="title"
+              id=""
+              className="ml-14 scroll-mt-24 text-nowrap"
+            >
+              Businesses want to ship.
+            </SectionHeading>
+          </div>
+          <div className="w-1/2">
+            <SectionHeading as="p" variant="subtitle" className="mt-6">
+              Most of the engineering work isn’t that. It’s:
+            </SectionHeading>
+            <Image
+              src="/images/home/problem-v1.png"
+              width={2400}
+              height={800}
+              alt="problem-sketch"
+              className="max-w-[full] lg:max-w-[full] dark:hidden"
+            />
+            <ul className="mt-4 flex flex-col items-start">
             <ProblemListItem>
               Wrestling with slow local builds and tests
             </ProblemListItem>
@@ -55,9 +84,10 @@ export function Problem(): ReactElement {
               months from now as you are today
             </ProblemListItem>
           </ul>
-        </div>
-      </div>
-    </article>
+          </div>
+        </div> */}
+      </article>
+    </section>
   );
 }
 

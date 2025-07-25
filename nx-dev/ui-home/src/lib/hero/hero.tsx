@@ -2,14 +2,15 @@
 import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev-ui-common';
 import { RustIcon, TypeScriptIcon } from '@nx/nx-dev-ui-icons';
 import { ReactElement } from 'react';
+import { NxHeroVideo } from './nx-hero-video';
 
 export function Hero(): ReactElement {
   return (
-    <div className="mx-auto h-screen w-full max-w-7xl px-6 lg:px-8">
-      <div className="z-20 mx-auto grid h-screen max-w-6xl grid-cols-1 place-items-center text-center">
+    <div className="mx-auto w-full max-w-7xl px-6 lg:px-8">
+      <div className="z-20 mx-auto my-48 grid max-w-6xl grid-cols-1 place-items-center text-center">
         <div className="container">
           <SectionHeading as="h1" variant="display" data-cy="primary-heading">
-            <span className="rounded-lg bg-gradient-to-tl from-slate-900 via-blue-800 to-cyan-500 bg-clip-text text-transparent">
+            <span className="rounded-lg bg-gradient-to-tl from-slate-900 via-blue-800 to-cyan-500 bg-clip-text text-transparent dark:from-slate-100 dark:via-blue-800 dark:to-cyan-500">
               Smart
             </span>{' '}
             Repos
@@ -21,7 +22,7 @@ export function Hero(): ReactElement {
             >
               <circle cx={1} cy={1} r={1} />
             </svg>
-            <span className="rounded-lg bg-gradient-to-tl from-slate-900 via-pink-700 to-fuchsia-500 bg-clip-text text-transparent">
+            <span className="rounded-lg bg-gradient-to-tl from-slate-900 via-pink-700 to-fuchsia-500 bg-clip-text text-transparent dark:from-slate-100 dark:via-pink-700 dark:to-fuchsia-500">
               Fast
             </span>{' '}
             Builds
@@ -62,6 +63,7 @@ export function Hero(): ReactElement {
           </div>
         </div>
       </div>
+      <NxHeroVideo />
     </div>
   );
 }
