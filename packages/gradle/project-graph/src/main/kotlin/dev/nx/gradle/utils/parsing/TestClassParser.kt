@@ -64,21 +64,15 @@ fun getAllVisibleClassesWithNestedAnnotation(
             val (disposable, psiManager) = envPair
             try {
               val astResult = parseKotlinFileWithAst(file, psiManager, logger)
-              return if (astResult != null) {
+              if (astResult != null) {
+                logger?.info("Successfully used Kotlin AST parsing for: ${file.name}")
                 astResult
               } else {
+                logger?.info("Kotlin AST parsing failed, falling back to regex for: ${file.name}")
                 parseTestClassesWithRegex(file)
               }
             } finally {
               disposable.dispose() // Always clean up resources
-            }
-
-            if (astResult != null) {
-              logger?.info("Successfully used Kotlin AST parsing for: ${file.name}")
-              astResult
-            } else {
-              logger?.info("Kotlin AST parsing failed, falling back to regex for: ${file.name}")
-              parseTestClassesWithRegex(file)
             }
           } catch (e: Exception) {
             logger?.warn(
