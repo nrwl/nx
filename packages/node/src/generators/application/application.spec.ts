@@ -78,6 +78,9 @@ describe('app', () => {
         module.exports = {
           output: {
             path: join(__dirname, '../dist/my-node-app'),
+            ...(process.env.NODE_ENV !== 'production' && {
+              devtoolModuleFilenameTemplate: '[absolute-resource-path]',
+            }),
           },
           plugins: [
             new NxAppWebpackPlugin({
@@ -89,6 +92,7 @@ describe('app', () => {
               optimization: false,
               outputHashing: 'none',
               generatePackageJson: true,
+              sourceMaps: true,
             }),
           ],
         };
@@ -563,6 +567,24 @@ describe('app', () => {
     });
   });
 
+  describe.each([
+    ['fastify' as const, true],
+    ['express' as const, false],
+    ['koa' as const, false],
+    ['nest' as const, false],
+  ])('debug support', (framework, _) => {
+    it('should generate a debug config for vscode by default', async () => {
+      await applicationGenerator(tree, {
+        directory: `api-${framework}`,
+        framework,
+        addPlugin: true,
+      });
+      const debugConfig = readJson(tree, '.vscode/launch.json');
+      expect(debugConfig).toBeDefined();
+      expect(debugConfig.configurations).toMatchSnapshot();
+    });
+  });
+
   describe('TS solution setup', () => {
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace();
@@ -821,6 +843,9 @@ describe('app', () => {
         module.exports = {
           output: {
             path: join(__dirname, 'dist'),
+            ...(process.env.NODE_ENV !== 'production' && {
+              devtoolModuleFilenameTemplate: '[absolute-resource-path]',
+            }),
           },
           plugins: [
             new NxAppWebpackPlugin({
@@ -832,6 +857,7 @@ describe('app', () => {
               optimization: false,
               outputHashing: 'none',
               generatePackageJson: true,
+              sourceMaps: true,
             })
           ],
         };

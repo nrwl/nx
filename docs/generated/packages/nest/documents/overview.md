@@ -125,9 +125,34 @@ By default, the serve command will run in `watch` mode. This allows code to be c
 
 Nest applications also have the `inspect` flag set, so you can attach your debugger to the running instance.
 
-Debugging is set to use a random port that is available on the system. The port can be changed by setting the port option in the `serve` target in the `project.json`. Or by running the serve command with `--port <number>`.
+##### VSCode Integration
 
-For additional information on how to debug Node applications, see the [Node.js debugging getting started guide](https://nodejs.org/en/docs/guides/debugging-getting-started/#inspector-clients).
+When generating Nest applications, Nx automatically creates a VSCode debugging configuration for seamless development experience:
+
+- **Automatic setup**: A `.vscode/launch.json` file is created with pre-configured debugging settings.
+- **Smart port allocation**: Debug ports are automatically assigned starting from 9229, preventing conflicts between multiple applications.
+- **Source map support**: Webpack configurations include `devtoolModuleFilenameTemplate` for accurate source mapping.
+- **Multi-format support**: Supports debugging `.js`, `.mjs`, and `.cjs` output files.
+
+To debug your Nest application in VSCode:
+
+1. Open your workspace in VSCode.
+2. Set breakpoints in your TypeScript source files.
+3. Go to the Debug panel `(Ctrl+Shift+D)`.
+4. Select "Debug `{your-app-name}` with Nx" from the dropdown.
+5. Click the play button or press `F5`.
+
+The debugger will automatically:
+
+- Start your application with `nx serve`.
+- Attach to the Node.js debugger on the allocated port.
+- Map compiled JavaScript back to your TypeScript source files.
+
+##### Manual Debugging
+
+For advanced debugging scenarios, you can manually configure the debug port by setting the port option in the `serve` target in the `project.json`, or by running the serve command with `--port <number>`.
+
+For additional information on Node.js debugging, see the [Node.js debugging getting started guide](https://nodejs.org/en/docs/guides/debugging-getting-started/#inspector-clients).
 
 ### Lint
 
