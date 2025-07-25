@@ -1,5 +1,5 @@
 ---
-title: 'From 5 Days to 2 Hours: How PayFit Accelerated Time to Market with Strategic Nx Implementation'
+title: 'From 5 Days to 20 Minutes: How PayFit Accelerated Time to Market with Strategic Nx Implementation'
 slug: payfit-success-story
 authors: [Juri Strumpflohner]
 tags: ['customer story']
@@ -7,7 +7,7 @@ description: Discover how a 4-person platform team at Payfit turned monorepo aba
 cover_image: /blog/images/articles/bg-payfit-customer-success.avif
 youtubeUrl: https://youtu.be/Vdk-tza4PCs
 metrics:
-  - value: '5 days→2 hours'
+  - value: '5 days→20 min'
     label: 'feature deployment time'
   - value: '75% faster'
     label: 'coding time'
@@ -68,14 +68,14 @@ This organic adoption was far more sustainable than the original top-down mandat
 
 The most striking improvement was in feature deployment speed:
 
-- **From 2-5 days to 2 hours maximum** – A reduction of up to 97% in deployment time
+- **From 2-5 days to 20 minutes maximum** – The initial optimization achieved in the October 2024 interview reduced deployment time to 2 hours (a 97% reduction). Since then, the PayFit team has continued optimizing their deployment pipeline, achieving just _20 minutes from branch push to full production deployment across all environments—including merge, dev, staging, e2e, and production_.
 - **75% faster coding** – Features that previously took much longer to code can now be developed in a quarter of the time
 
 {% testimonial
     name="Nicolas Beaussart"
     title="Staff Engineer, Payfit"
     image="/documentation/blog/images/articles/nicolas-beaussart.avif" %}
-A year ago to deploy a feature it took between 2 and 5 days because you had to go through all of the monorepos, all of the systems one by one to be able to deploy that. Today the same feature can be coded in like a quarter of the time and deploying like 2 hours tops.
+A year ago to deploy a feature it took between 2 and 5 days because you had to go through all of the monorepos, all of the systems one by one to be able to deploy that. Today the same feature can be coded in like a quarter of the time and deploying like 2 hours tops (now even down to only 20 min).
 {% /testimonial %}
 
 ### Restored Team Confidence in Monorepo Architecture
