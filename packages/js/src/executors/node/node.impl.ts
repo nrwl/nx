@@ -22,6 +22,7 @@ import { killTree } from './lib/kill-tree';
 import { fileExists } from 'nx/src/utils/fileutils';
 import { getRelativeDirectoryToProjectRoot } from '../../utils/get-main-file-dir';
 import { interpolate } from 'nx/src/tasks-runner/utils';
+import { detectModuleFormat } from './lib/detect-module-format';
 
 interface ActiveTask {
   id: string;
@@ -110,6 +111,17 @@ export async function* nodeExecutor(
     buildTargetExecutor
   );
 
+  // Detect module format for the project
+  const moduleFormat = detectModuleFormat({
+    projectRoot: project.data.root,
+    workspaceRoot: context.root,
+    tsConfig:
+      buildOptions.tsConfig ||
+      join(context.root, project.data.root, 'tsconfig.json'),
+    main: buildOptions.main || fileToRun,
+    buildOptions,
+  });
+
   let additionalExitHandler: null | (() => void) = null;
   let currentTask: ActiveTask = null;
   const tasks: ActiveTask[] = [];
@@ -164,8 +176,13 @@ export async function* nodeExecutor(
 
           // Run the program
           task.promise = new Promise<void>((resolve, reject) => {
+            const loaderFile =
+              moduleFormat === 'esm'
+                ? 'node-with-esm-loader'
+                : 'node-with-require-overrides';
+
             task.childProcess = fork(
-              joinPathFragments(__dirname, 'node-with-require-overrides'),
+              joinPathFragments(__dirname, loaderFile),
               options.args ?? [],
               {
                 execArgv: getExecArgv(options),
