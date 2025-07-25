@@ -1,5 +1,5 @@
-import { existsSync, readdirSync } from 'node:fs';
-import { dirname, join, parse, relative, resolve } from 'node:path';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { dirname, join, parse, relative, resolve, extname } from 'node:path';
 
 import {
   CreateNodes,
@@ -18,6 +18,8 @@ import {
 } from '@nx/devkit';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
+import { findNodes } from '@nx/js';
+import * as ts from 'typescript';
 
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
@@ -37,6 +39,7 @@ export interface PlaywrightPluginOptions {
 interface NormalizedOptions {
   targetName: string;
   ciTargetName?: string;
+  testIsolation?: boolean;
 }
 
 type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
@@ -272,8 +275,27 @@ async function buildPlaywrightTargets(
 
       const targetName = `${options.ciTargetName}--${relativeSpecFilePath}`;
       ciTargetGroup.push(targetName);
+
+      let inputs: TargetConfiguration['inputs'] = [];
+
+      if (options.testIsolation) {
+        const visitedFiles = new Set<string>();
+        const relativeImports = collectRelativeImports(testFile, visitedFiles);
+
+        inputs = [
+          `{workspaceRoot}/${testFile}`,
+          `{workspaceRoot}/${configFilePath}`,
+          ...relativeImports.map(
+            (importPath) => `{workspaceRoot}/${importPath}`
+          ),
+          ...('production' in namedInputs ? ['^production'] : ['^default']),
+          { externalDependencies: ['@playwright/test'] },
+        ];
+      }
+
       targets[targetName] = {
         ...ciBaseTargetConfig,
+        inputs,
         options: {
           ...ciBaseTargetConfig.options,
           env: getOutputEnvVars(reporterOutputs, outputSubfolder),
@@ -571,4 +593,89 @@ function getOutputEnvVars(
     }
   }
   return env;
+}
+
+function collectRelativeImports(
+  filePath: string,
+  visitedFiles: Set<string>
+): string[] {
+  const collected = new Set<string>();
+
+  function doCollect(currFile: string): void {
+    // Prevent circular dependencies from causing infinite loop
+    if (visitedFiles.has(currFile)) return;
+    visitedFiles.add(currFile);
+
+    const absoluteFilePath = resolve(currFile);
+    if (!existsSync(absoluteFilePath)) return;
+
+    const content = readFileSync(absoluteFilePath).toString();
+    const files = getRelativeImportsFromContent({ file: currFile, content });
+    const modules = ensureFileExtensions(files, dirname(absoluteFilePath));
+
+    const relativeDirPath = dirname(currFile);
+
+    for (const moduleName of modules) {
+      const relativeModulePath = join(relativeDirPath, moduleName);
+      collected.add(relativeModulePath);
+      doCollect(relativeModulePath);
+    }
+  }
+
+  doCollect(filePath);
+
+  return Array.from(collected);
+}
+
+function getRelativeImportsFromContent({
+  file,
+  content,
+}: {
+  file: string;
+  content: string;
+}): string[] {
+  const source = ts.createSourceFile(
+    file,
+    content,
+    ts.ScriptTarget.Latest,
+    true
+  );
+  const callExpressionsOrImportDeclarations = findNodes(source, [
+    ts.SyntaxKind.CallExpression,
+    ts.SyntaxKind.ImportDeclaration,
+  ]) as (ts.CallExpression | ts.ImportDeclaration)[];
+  const modulePaths: string[] = [];
+  for (const node of callExpressionsOrImportDeclarations) {
+    if (node.kind === ts.SyntaxKind.ImportDeclaration) {
+      modulePaths.push(stripOuterQuotes(node.moduleSpecifier.getText(source)));
+    } else {
+      if (node.expression.getText(source) === 'require') {
+        modulePaths.push(stripOuterQuotes(node.arguments[0].getText(source)));
+      }
+    }
+  }
+  return modulePaths.filter((path) => path.startsWith('.'));
+}
+
+function stripOuterQuotes(str: string): string {
+  return str.match(/^["'](.*)["']/)?.[1] ?? str;
+}
+
+function ensureFileExtensions(files: string[], absoluteDir: string): string[] {
+  const extensions = ['.js', '.cjs', '.mjs', '.json', '.ts', '.tsx'];
+  return files.map((file) => {
+    const providedExt = extname(file);
+    if (providedExt && extensions.includes(providedExt)) return file;
+
+    const ext = extensions.find((ext) =>
+      existsSync(join(absoluteDir, file + ext))
+    );
+    if (ext) {
+      return file + ext;
+    } else {
+      // If we can't find the file with any extension, return the original
+      // This handles cases where the file might not exist or have a different extension
+      return file;
+    }
+  });
 }
