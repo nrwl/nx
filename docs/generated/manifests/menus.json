@@ -3070,6 +3070,14 @@
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
+                  },
+                  {
+                    "name": "Debug NestJS Apps in Docker",
+                    "path": "/technologies/node/recipes/debug-nestjs-docker",
+                    "id": "debug-nestjs-docker",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
                   }
                 ],
                 "disableCollapsible": false

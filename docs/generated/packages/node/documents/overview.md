@@ -91,6 +91,10 @@ nx g @nx/node:application apps/my-new-app \
 
 Debugging is set to use a random port that is available on the system. The port can be changed by setting the port option in the `serve` target in the project.json. Or by running the serve command with `--port <number>`.
 
+#### Docker Debugging
+
+For debugging Node applications running in Docker containers, see the [Docker debugging guide](/recipes/node/debug-nestjs-docker).
+
 For additional information on how to debug Node applications, see the [Node.js debugging getting started guide](https://nodejs.org/en/docs/guides/debugging-getting-started/#inspector-clients).
 
 ## More Documentation

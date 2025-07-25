@@ -1199,6 +1199,12 @@
                       "id": "wait-for-tasks",
                       "tags": [],
                       "file": "shared/recipes/node/wait-for-tasks"
+                    },
+                    {
+                      "name": "Debug NestJS Apps in Docker",
+                      "id": "debug-nestjs-docker",
+                      "tags": ["node", "nestjs", "docker", "debug", "vscode"],
+                      "file": "shared/recipes/node/debug-nestjs-docker"
                     }
                   ]
                 },

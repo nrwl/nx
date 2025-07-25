@@ -370,6 +370,7 @@
         - [Deploying AWS lambda in Node.js (deprecated)](/technologies/node/recipes/node-aws-lambda)
         - [Set Up Application Proxies](/technologies/node/recipes/application-proxies)
         - [Wait for Tasks to Finish](/technologies/node/recipes/wait-for-tasks)
+        - [Debug NestJS Apps in Docker](/technologies/node/recipes/debug-nestjs-docker)
       - [API](/technologies/node/api)
         - [generators](/technologies/node/api/generators)
           - [init](/technologies/node/api/generators/init)
