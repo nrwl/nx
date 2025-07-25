@@ -49,6 +49,7 @@ export function addProject(tree: Tree, options: NormalizedSchema) {
   if (!options.useProjectJson) {
     packageJson.nx = {
       name: options.name !== options.importPath ? options.name : undefined,
+      projectType: project.projectType,
       targets: project.targets,
       tags: project.tags?.length ? project.tags : undefined,
     };

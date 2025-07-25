@@ -618,6 +618,7 @@ describe('app', () => {
         {
           "name": "@proj/myapp",
           "nx": {
+            "projectType": "application",
             "targets": {
               "serve": {
                 "configurations": {
@@ -742,6 +743,23 @@ describe('app', () => {
           "nx",
         ]
       `);
+    });
+
+    it('should set projectType to application in package.json when useProjectJson is false', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        bundler: 'webpack',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+        useProjectJson: false,
+      });
+
+      const packageJson = readJson(tree, 'myapp/package.json');
+      expect(packageJson.nx.projectType).toBe('application');
+
+      // Also verify that the project is properly recognized as an application
+      const projectConfig = readProjectConfiguration(tree, '@proj/myapp');
+      expect(projectConfig.projectType).toBe('application');
     });
 
     it('should use @swc/jest for jest', async () => {
