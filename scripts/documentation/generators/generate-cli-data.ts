@@ -1,5 +1,5 @@
 import * as chalk from 'chalk';
-import { readFileSync } from 'fs';
+import { copyFileSync, readFileSync } from 'fs';
 import { codeBlock, h1, h2, h3, lines } from 'markdown-factory';
 import { join } from 'path';
 
@@ -25,6 +25,8 @@ const hiddenCommands = [
   // TODO: Introduce custom formatting for such commands, instead of hiding them
   'conformance',
   'conformance:check',
+  // the mcp command only patches through to nx-mcp so there is no relevant information in here
+  'mcp',
 ];
 
 export async function generateCliDocumentation(
@@ -142,6 +144,11 @@ description: "${command.description}"
         templateObject
       );
     })
+  );
+
+  copyFileSync(
+    join(__dirname, '../../../docs/shared/cli/mcp.md'),
+    join(__dirname, '../../../docs/generated/cli/mcp.md')
   );
 
   delete process.env.NX_GENERATE_DOCS_PROCESS;

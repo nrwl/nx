@@ -49,6 +49,7 @@ import {
 } from './deprecated/command-objects';
 import { yargsSyncCheckCommand, yargsSyncCommand } from './sync/command-object';
 import { output } from '../utils/output';
+import { yargsMcpCommand } from './mcp/command-object';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -107,6 +108,7 @@ export const commandsObject = yargs
   .command(yargsRecordCommand)
   .command(yargsStartCiRunCommand)
   .command(yargsFixCiCommand)
+  .command(yargsMcpCommand)
   .command(resolveConformanceCommandObject())
   .command(resolveConformanceCheckCommandObject())
   .scriptName('nx')

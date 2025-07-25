@@ -678,6 +678,7 @@
           - [view-logs](/reference/core-api/nx/documents/view-logs)
           - [release](/reference/core-api/nx/documents/release)
           - [add](/reference/core-api/nx/documents/add)
+          - [mcp](/reference/core-api/nx/documents/mcp)
           - [login](/reference/core-api/nx/documents/login)
           - [logout](/reference/core-api/nx/documents/logout)
           - [fix-ci](/reference/core-api/nx/documents/fix-ci)
