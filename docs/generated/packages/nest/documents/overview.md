@@ -127,6 +127,10 @@ Nest applications also have the `inspect` flag set, so you can attach your debug
 
 Debugging is set to use a random port that is available on the system. The port can be changed by setting the port option in the `serve` target in the `project.json`. Or by running the serve command with `--port <number>`.
 
+##### Docker Debugging
+
+For debugging NestJS applications running in Docker containers with VS Code, including Docker Compose setups, see the comprehensive [Docker debugging guide](/recipes/node/debug-nestjs-docker).
+
 For additional information on how to debug Node applications, see the [Node.js debugging getting started guide](https://nodejs.org/en/docs/guides/debugging-getting-started/#inspector-clients).
 
 ### Lint
@@ -188,7 +192,7 @@ module.exports = {
 Ensuring a smooth and reliable deployment of a Nest.js application in a production environment requires careful planning and the right strategy. Depending on your specific needs and infrastructure, you can choose from several deployment approaches. Below are four commonly used methods:
 
 1. **Using Docker:**
-   Create a Dockerfile that specifies the application's environment and dependencies. Build a Docker image and optionally push it to a container registry. Deploy and run the Docker container on the server. Utilize the `@nx/node:setup-docker` generator to streamline the Docker setup process.
+   Create a Dockerfile that specifies the application's environment and dependencies. Build a Docker image and optionally push it to a container registry. Deploy and run the Docker container on the server. Utilize the `@nx/node:setup-docker` generator to streamline the Docker setup process. For debugging Docker containers during development, see the [Docker debugging guide](/recipes/node/debug-nestjs-docker).
 
 2. **Installing Dependencies on the Server:**
    Transfer the build artifacts to the server, install all dependencies using the package manager of your choice, and start the application. Ensure that [NxAppWebpackPlugin](/technologies/build-tools/webpack/recipes/webpack-plugins#nxappwebpackplugin) is configured with `generatePackageJson: true` so that the build artifacts directory includes `package.json` and `package-lock.json` (or the equivalent files for other package managers).

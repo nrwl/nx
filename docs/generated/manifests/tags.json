@@ -1309,6 +1309,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/node/debug-nestjs-docker",
+      "id": "debug-nestjs-docker",
+      "name": "Debug NestJS Apps in Docker",
+      "path": "/technologies/node/recipes/debug-nestjs-docker"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/database/nestjs-prisma",
       "id": "nestjs-prisma",
       "name": "Prisma with NestJS",
@@ -1341,6 +1348,49 @@
       "id": "serverless-fastify-planetscale",
       "name": "PlanetScale with Serverless Fastify",
       "path": "/showcase/example-repos/serverless-fastify-planetscale"
+    }
+  ],
+  "nestjs": [
+    {
+      "description": "",
+      "file": "shared/recipes/node/debug-nestjs-docker",
+      "id": "debug-nestjs-docker",
+      "name": "Debug NestJS Apps in Docker",
+      "path": "/technologies/node/recipes/debug-nestjs-docker"
+    }
+  ],
+  "docker": [
+    {
+      "description": "",
+      "file": "shared/recipes/node/debug-nestjs-docker",
+      "id": "debug-nestjs-docker",
+      "name": "Debug NestJS Apps in Docker",
+      "path": "/technologies/node/recipes/debug-nestjs-docker"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/ci-deployment",
+      "id": "ci-deployment",
+      "name": "Prepare applications for deployment via CI",
+      "path": "/ci/recipes/other/ci-deployment"
+    }
+  ],
+  "debug": [
+    {
+      "description": "",
+      "file": "shared/recipes/node/debug-nestjs-docker",
+      "id": "debug-nestjs-docker",
+      "name": "Debug NestJS Apps in Docker",
+      "path": "/technologies/node/recipes/debug-nestjs-docker"
+    }
+  ],
+  "vscode": [
+    {
+      "description": "",
+      "file": "shared/recipes/node/debug-nestjs-docker",
+      "id": "debug-nestjs-docker",
+      "name": "Debug NestJS Apps in Docker",
+      "path": "/technologies/node/recipes/debug-nestjs-docker"
     }
   ],
   "eslint": [
@@ -1633,15 +1683,6 @@
       "id": "custom-workflows",
       "name": "Custom Workflows",
       "path": "/ci/recipes/enterprise/custom-workflows"
-    }
-  ],
-  "docker": [
-    {
-      "description": "",
-      "file": "shared/recipes/ci-deployment",
-      "id": "ci-deployment",
-      "name": "Prepare applications for deployment via CI",
-      "path": "/ci/recipes/other/ci-deployment"
     }
   ],
   "deploy": [

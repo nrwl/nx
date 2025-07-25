@@ -4336,6 +4336,17 @@
                 "isExternal": false,
                 "path": "/technologies/node/recipes/wait-for-tasks",
                 "tags": []
+              },
+              {
+                "id": "debug-nestjs-docker",
+                "name": "Debug NestJS Apps in Docker",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/recipes/node/debug-nestjs-docker",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/technologies/node/recipes/debug-nestjs-docker",
+                "tags": ["node", "nestjs", "docker", "debug", "vscode"]
               }
             ],
             "isExternal": false,
@@ -7953,6 +7964,17 @@
             "isExternal": false,
             "path": "/technologies/node/recipes/wait-for-tasks",
             "tags": []
+          },
+          {
+            "id": "debug-nestjs-docker",
+            "name": "Debug NestJS Apps in Docker",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/node/debug-nestjs-docker",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/technologies/node/recipes/debug-nestjs-docker",
+            "tags": ["node", "nestjs", "docker", "debug", "vscode"]
           }
         ],
         "isExternal": false,
@@ -8115,6 +8137,17 @@
         "isExternal": false,
         "path": "/technologies/node/recipes/wait-for-tasks",
         "tags": []
+      },
+      {
+        "id": "debug-nestjs-docker",
+        "name": "Debug NestJS Apps in Docker",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/node/debug-nestjs-docker",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/technologies/node/recipes/debug-nestjs-docker",
+        "tags": ["node", "nestjs", "docker", "debug", "vscode"]
       }
     ],
     "isExternal": false,
@@ -8175,6 +8208,17 @@
     "isExternal": false,
     "path": "/technologies/node/recipes/wait-for-tasks",
     "tags": []
+  },
+  "/technologies/node/recipes/debug-nestjs-docker": {
+    "id": "debug-nestjs-docker",
+    "name": "Debug NestJS Apps in Docker",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/node/debug-nestjs-docker",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/technologies/node/recipes/debug-nestjs-docker",
+    "tags": ["node", "nestjs", "docker", "debug", "vscode"]
   },
   "/technologies/node/api": {
     "id": "api",
