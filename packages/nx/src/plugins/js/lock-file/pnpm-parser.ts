@@ -595,7 +595,9 @@ function mapRootSnapshot(
           for (const [importerPath, importerSnapshot] of Object.entries(
             rootImporters
           )) {
-            const workspaceDep = importerSnapshot.dependencies[packageName];
+            const workspaceDep =
+              importerSnapshot.dependencies &&
+              importerSnapshot.dependencies[packageName];
             if (workspaceDep) {
               const workspaceDepImporterPath = workspaceDep.replace(
                 'link:',
