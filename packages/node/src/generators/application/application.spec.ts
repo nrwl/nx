@@ -92,7 +92,7 @@ describe('app', () => {
               optimization: false,
               outputHashing: 'none',
               generatePackageJson: true,
-              sourceMap: process.env.NODE_ENV !== 'production',
+              sourceMaps: true,
             }),
           ],
         };
@@ -573,19 +573,6 @@ describe('app', () => {
     ['koa' as const, false],
     ['nest' as const, false],
   ])('debug support', (framework, _) => {
-    let getPackageManagerCommandSpy: jest.SpyInstance;
-
-    beforeEach(() => {
-      // Mock package manager for deterministic snapshots
-      getPackageManagerCommandSpy = jest
-        .spyOn(devkit, 'detectPackageManager')
-        .mockReturnValue('npm');
-    });
-
-    afterEach(() => {
-      getPackageManagerCommandSpy.mockRestore();
-    });
-
     it('should generate a debug config for vscode by default', async () => {
       await applicationGenerator(tree, {
         directory: `api-${framework}`,
@@ -870,7 +857,7 @@ describe('app', () => {
               optimization: false,
               outputHashing: 'none',
               generatePackageJson: true,
-              sourceMap: process.env.NODE_ENV !== 'production',
+              sourceMaps: true,
             })
           ],
         };
