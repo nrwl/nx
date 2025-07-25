@@ -227,6 +227,7 @@ describe('application generator', () => {
         {
           "name": "@proj/myapp",
           "nx": {
+            "projectType": "application",
             "targets": {
               "build": {
                 "configurations": {
