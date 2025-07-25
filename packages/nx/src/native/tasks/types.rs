@@ -46,7 +46,7 @@ pub struct TaskGraph {
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub enum HashInstruction {
     WorkspaceFileSet(Vec<String>),
-    Runtime(String),
+    Runtime(String, String), // (project_name, runtime)
     Environment(String),
     ProjectFileSet(String, Vec<String>),
     ProjectConfiguration(String),
@@ -88,7 +88,8 @@ impl fmt::Display for HashInstruction {
                 }
                 HashInstruction::WorkspaceFileSet(file_set) =>
                     format!("workspace:[{}]", file_set.join(",")),
-                HashInstruction::Runtime(runtime) => format!("runtime:{}", runtime),
+                HashInstruction::Runtime(project_name, runtime) =>
+                    format!("{}:runtime:{}", project_name, runtime),
                 HashInstruction::Environment(env) => format!("env:{}", env),
                 HashInstruction::TaskOutput(task_output, dep_outputs) => {
                     let dep_outputs = dep_outputs.join(",");
