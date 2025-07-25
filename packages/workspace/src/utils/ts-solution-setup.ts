@@ -9,11 +9,18 @@ export function getProjectType(
   if (projectType) return projectType;
   if (joinPathFragments(projectRoot, 'tsconfig.lib.json')) return 'library';
   if (joinPathFragments(projectRoot, 'tsconfig.app.json')) return 'application';
-  // If there are no exports, assume it is an application since both buildable and non-buildable libraries have exports.
+  // If it doesn't have any common library entry points, assume it is an application
   const packageJsonPath = joinPathFragments(projectRoot, 'package.json');
   const packageJson = tree.exists(packageJsonPath)
     ? readJson(tree, joinPathFragments(projectRoot, 'package.json'))
     : null;
-  if (!packageJson?.exports) return 'application';
+  if (
+    !packageJson?.exports &&
+    !packageJson?.main &&
+    !packageJson?.module &&
+    !packageJson?.bin
+  ) {
+    return 'application';
+  }
   return 'library';
 }

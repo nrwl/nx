@@ -139,7 +139,7 @@ xdescribe('nx release circular dependencies', () => {
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "2.0.0",
-        "scripts": {
+        "exports": {
 
         "dependencies": {
         -     "@proj/{project-name}": "1.0.0"
@@ -152,7 +152,7 @@ xdescribe('nx release circular dependencies', () => {
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "2.0.0",
-        "scripts": {
+        "exports": {
 
         "devDependencies": {
         -     "@proj/{project-name}": "1.0.0"
@@ -321,7 +321,7 @@ xdescribe('nx release circular dependencies', () => {
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "2.0.0",
-        "scripts": {
+        "exports": {
 
         "dependencies": {
         -     "@proj/{project-name}": "1.0.0"
@@ -334,7 +334,7 @@ xdescribe('nx release circular dependencies', () => {
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "2.0.0",
-        "scripts": {
+        "exports": {
 
         "devDependencies": {
         -     "@proj/{project-name}": "1.0.0"
@@ -504,7 +504,7 @@ xdescribe('nx release circular dependencies', () => {
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "2.0.0",
-        "scripts": {
+        "exports": {
 
         "dependencies": {
         -     "@proj/{project-name}": "1.0.0"
@@ -517,7 +517,7 @@ xdescribe('nx release circular dependencies', () => {
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "2.0.0",
-        "scripts": {
+        "exports": {
 
         "devDependencies": {
         -     "@proj/{project-name}": "1.0.0"
@@ -681,7 +681,7 @@ xdescribe('nx release circular dependencies', () => {
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "2.0.0",
-        "scripts": {
+        "exports": {
 
         }
         +
@@ -807,7 +807,7 @@ xdescribe('nx release circular dependencies', () => {
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "2.0.0",
-        "scripts": {
+        "exports": {
 
         "dependencies": {
         -     "@proj/{project-name}": "1.0.0"
@@ -820,7 +820,7 @@ xdescribe('nx release circular dependencies', () => {
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "2.0.0",
-        "scripts": {
+        "exports": {
 
         "devDependencies": {
         -     "@proj/{project-name}": "1.0.0"
@@ -992,7 +992,7 @@ xdescribe('nx release circular dependencies', () => {
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "2.0.0",
-        "scripts": {
+        "exports": {
 
         "dependencies": {
         -     "@proj/{project-name}": "1.0.0"
@@ -1005,7 +1005,7 @@ xdescribe('nx release circular dependencies', () => {
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "1.0.1",
-        "scripts": {
+        "exports": {
 
         "devDependencies": {
         -     "@proj/{project-name}": "1.0.0"
