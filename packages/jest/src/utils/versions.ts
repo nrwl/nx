@@ -5,5 +5,5 @@ export const jestTypesVersion = '^30.0.0';
 export const tsJestVersion = '^29.4.0';
 export const tslibVersion = '^2.3.0';
 export const swcJestVersion = '~0.2.38';
-export const typesNodeVersion = '18.16.9';
+export const typesNodeVersion = '20.19.9';
 export const tsNodeVersion = '10.9.1';
