@@ -348,9 +348,8 @@ jobs:
         with:
           name: bindings-${{ matrix.settings.target }}
           path: |
-            packages/**/*.node
-            packages/**/*.wasm
-            !packages/*/node_modules/**
+            packages/nx/src/native/*.node
+            packages/nx/src/native/*.wasm
           if-no-files-found: error
 
   build-freebsd:
@@ -416,8 +415,7 @@ jobs:
         with:
           name: bindings-freebsd
           path: |
-            packages/**/*.node
-            !packages/*/node_modules/**
+            packages/nx/src/native/*.node
           if-no-files-found: error
 
   publish:

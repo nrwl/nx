@@ -32,7 +32,7 @@ use crate::native::{
 };
 
 const TASK_NAME_WAITING_FOR_TASKS: &str = "Waiting for task...";
-const CACHE_STATUS_LOCAL_KEPT_EXISTING: &str = "Kept Existing";
+const CACHE_STATUS_LOCAL_MATCH: &str = "Match";
 const CACHE_STATUS_LOCAL: &str = "Local";
 const CACHE_STATUS_REMOTE: &str = "Remote";
 const CACHE_STATUS_NOT_YET_KNOWN: &str = "...";
@@ -52,8 +52,8 @@ const MIN_BOTTOM_SPACING: u16 = 4; // Minimum space between Pag, Cloud, Help
 const STATUS_ICON_WIDTH: u16 = 6; // Width for status icon with NX logo
 const TASK_NAME_RESERVED_MIN_WIDTH: u16 = TASK_NAME_WAITING_FOR_TASKS.len() as u16; // Minimum reserved space for the task name column
 const TASK_NAME_LAYOUT_THRESHOLD: u16 = 30; // Minimum width at which we truncate task names for large task names to allow displaying other columns
-const DURATION_COLUMN_WIDTH: u16 = 15; // Width for duration column
-const CACHE_STATUS_COLUMN_WIDTH: u16 = CACHE_STATUS_LOCAL_KEPT_EXISTING.len() as u16; // Width for cache status column
+const DURATION_COLUMN_WIDTH: u16 = 10; // Width for duration column
+const CACHE_STATUS_COLUMN_WIDTH: u16 = CACHE_STATUS_REMOTE.len() as u16; // Width for cache status column
 const COLUMN_SEPARATOR_WIDTH: u16 = 1; // Column separator width
 
 /// Represents which columns should be displayed in the task list
@@ -124,7 +124,7 @@ impl TaskItem {
         } else {
             self.cache_status = match status {
                 TaskStatus::InProgress => CACHE_STATUS_NOT_YET_KNOWN.to_string(),
-                TaskStatus::LocalCacheKeptExisting => CACHE_STATUS_LOCAL_KEPT_EXISTING.to_string(),
+                TaskStatus::LocalCacheKeptExisting => CACHE_STATUS_LOCAL_MATCH.to_string(),
                 TaskStatus::LocalCache => CACHE_STATUS_LOCAL.to_string(),
                 TaskStatus::RemoteCache => CACHE_STATUS_REMOTE.to_string(),
                 _ => CACHE_STATUS_NOT_APPLICABLE.to_string(),
@@ -576,6 +576,37 @@ impl TasksList {
             .update_entries(entries);
     }
 
+    /// Calculates the effective width needed for task names including pinned indicators
+    fn calculate_effective_task_name_width(&self) -> u16 {
+        self.tasks
+            .iter()
+            .map(|task| {
+                let base_len = task.name.len() as u16;
+
+                // Calculate pinned indicator length for this task
+                let pinned_indicator_len = if !self.spacebar_mode {
+                    let indicator_count = self
+                        .pinned_tasks
+                        .iter()
+                        .filter(|pinned_task| pinned_task.as_deref() == Some(task.name.as_str()))
+                        .count();
+
+                    if indicator_count > 0 {
+                        // Format: " [1]" or " [1] [2]" - 4 chars per indicator (including spaces)
+                        indicator_count * 4
+                    } else {
+                        0
+                    }
+                } else {
+                    0 // No indicators in spacebar mode
+                };
+
+                base_len + pinned_indicator_len as u16
+            })
+            .max()
+            .unwrap_or(0)
+    }
+
     /// Calculates which columns should be displayed based on available space and task name lengths
     fn calculate_column_visibility(&mut self, available_width: u16) -> ColumnVisibility {
         // Only recalculate column visibility if terminal width has changed
@@ -595,13 +626,8 @@ impl TasksList {
             };
         }
 
-        // Find the maximum task name length across all tasks
-        let max_task_name_len = self
-            .tasks
-            .iter()
-            .map(|task| task.name.len())
-            .max()
-            .unwrap_or(0) as u16;
+        // Find the maximum effective task name length across all tasks (including pinned indicators)
+        let max_task_name_len = self.calculate_effective_task_name_width();
 
         // Calculate the minimum required space for the task name column
         let min_required_space_for_task_name =
@@ -1108,11 +1134,7 @@ impl TasksList {
                                 .enumerate()
                                 .filter_map(|(idx, task)| {
                                     if task.as_deref() == Some(task_name.as_str()) {
-                                        Some(if !column_visibility.show_cache_status {
-                                            format!("[{}]", idx + 1)
-                                        } else {
-                                            format!("[Pinned output {}]", idx + 1)
-                                        })
+                                        Some(format!("[{}]", idx + 1))
                                     } else {
                                         None
                                     }
@@ -2585,7 +2607,7 @@ mod tests {
             selection_manager,
         );
 
-        let mut terminal = create_test_terminal(70, 15);
+        let mut terminal = create_test_terminal(48, 15);
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!(terminal.backend());
@@ -2594,7 +2616,7 @@ mod tests {
     #[test]
     fn test_narrow_width_duration_only() {
         let (mut tasks_list, _) = create_test_tasks_list();
-        let mut terminal = create_test_terminal(55, 15); // Just enough for duration but not cache
+        let mut terminal = create_test_terminal(43, 15); // Just enough for duration but not cache
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!(terminal.backend());
@@ -2949,7 +2971,7 @@ mod tests {
         assert!(!result.show_cache_status);
 
         // Narrow - duration only
-        let result = tasks_list.calculate_column_visibility(55);
+        let result = tasks_list.calculate_column_visibility(43);
         assert!(result.show_duration);
         assert!(!result.show_cache_status);
 
@@ -2977,24 +2999,24 @@ mod tests {
         // 29-character task name
         let task_name_29 = "this-is-exactly-29-chars-here"; // 29 characters
         let mut tasks_list_29 = create_tasks_list_with_name(task_name_29);
-        let result = tasks_list_29.calculate_column_visibility(54);
+        let result = tasks_list_29.calculate_column_visibility(47);
         assert!(result.show_duration);
         assert!(!result.show_cache_status);
 
         // 30-character task name (threshold)
         let task_name_30 = "this-is-exactly-thirty-chars-1"; // 30 characters
         let mut tasks_list_30 = create_tasks_list_with_name(task_name_30);
-        let result = tasks_list_30.calculate_column_visibility(55);
+        let result = tasks_list_30.calculate_column_visibility(48);
         assert!(result.show_duration);
         assert!(!result.show_cache_status);
-        let result = tasks_list_30.calculate_column_visibility(87);
+        let result = tasks_list_30.calculate_column_visibility(80);
         assert!(result.show_duration);
         assert!(result.show_cache_status);
 
         // 31-character task name
         let task_name_31 = "this-is-exactly-thirty-one-char"; // 31 characters
         let mut tasks_list_31 = create_tasks_list_with_name(task_name_31);
-        let result = tasks_list_31.calculate_column_visibility(66);
+        let result = tasks_list_31.calculate_column_visibility(54);
         assert!(result.show_duration);
         assert!(!result.show_cache_status);
 
@@ -3002,7 +3024,7 @@ mod tests {
         let long_task_name =
             "very-long-task-name-that-exceeds-thirty-characters-to-test-threshold-logic";
         let mut tasks_list_long = create_tasks_list_with_name(long_task_name);
-        let result = tasks_list_long.calculate_column_visibility(52);
+        let result = tasks_list_long.calculate_column_visibility(47);
         assert!(!result.show_duration);
         assert!(!result.show_cache_status);
         let result = tasks_list_long.calculate_column_visibility(150);
@@ -3079,18 +3101,18 @@ mod tests {
         );
 
         // At narrow width, should hide duration due to insufficient space for 30-char threshold
-        // Base: 7, Duration: 16, Min threshold: 30, Total needed: 53
-        let result = tasks_list.calculate_column_visibility(52);
+        // Base: 7, Duration: 11, Min threshold: 30, Total needed: 48
+        let result = tasks_list.calculate_column_visibility(47);
         assert!(!result.show_duration);
         assert!(!result.show_cache_status);
 
-        let result = tasks_list.calculate_column_visibility(53);
+        let result = tasks_list.calculate_column_visibility(48);
         assert!(result.show_duration);
         assert!(!result.show_cache_status);
 
-        // Should base decision on longest task name, but still show duration at 66 width
-        // Base: 7, Duration: 16, space_for_task_name: 43, which is >= 30 threshold
-        let result = tasks_list.calculate_column_visibility(66);
+        // Should base decision on longest task name, but still show duration at 54 width
+        // Base: 7, Duration: 11, space_for_task_name: 36, which is >= 30 threshold
+        let result = tasks_list.calculate_column_visibility(54);
         assert!(result.show_duration);
         assert!(!result.show_cache_status);
 
@@ -3186,16 +3208,16 @@ mod tests {
         // Force apply filter to update the filtered_names
         tasks_list.apply_filter();
 
-        // Test at medium width - should hide columns due to long task names
-        let visibility_page1 = tasks_list.calculate_column_visibility(66);
+        // Test at medium width - should hide cache column due to long task names
+        let visibility_page1 = tasks_list.calculate_column_visibility(54);
 
         // Navigate to page 2 (with long task names)
         tasks_list.next_page();
-        let visibility_page2 = tasks_list.calculate_column_visibility(66);
+        let visibility_page2 = tasks_list.calculate_column_visibility(54);
 
         // Navigate back to page 1 (with short task names)
         tasks_list.previous_page();
-        let visibility_page1_again = tasks_list.calculate_column_visibility(66);
+        let visibility_page1_again = tasks_list.calculate_column_visibility(54);
 
         // Column visibility should be consistent across pages
         assert_eq!(
@@ -3448,7 +3470,7 @@ mod tests {
 
         tasks_list.update(Action::StartCommand(Some(3))).unwrap();
 
-        // Set the long task name to LocalCacheKeptExisting to show "Keep Existing"
+        // Set the long task name to LocalCacheKeptExisting to show "Match"
         tasks_list
             .update(Action::UpdateTaskStatus(
                 test_tasks[0].id.clone(),
@@ -3458,5 +3480,27 @@ mod tests {
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_pinned_tasks_column_visibility_calculation() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+
+        // Get effective width without pinned tasks
+        let effective_width_without_pins = tasks_list.calculate_effective_task_name_width();
+
+        // Pin a task which adds " [1]" to the effective task name width
+        tasks_list.pin_task(test_tasks[0].id.clone(), 0);
+        let effective_width_with_pins = tasks_list.calculate_effective_task_name_width();
+
+        // The effective width with pins should be larger than without pins
+        assert!(effective_width_with_pins > effective_width_without_pins);
+
+        // The difference should be 4 characters (" [1]" format)
+        let expected_difference = 4; // " [1]" format
+        assert_eq!(
+            effective_width_with_pins,
+            effective_width_without_pins + expected_difference
+        );
     }
 }

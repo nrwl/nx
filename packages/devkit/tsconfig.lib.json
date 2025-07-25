@@ -3,7 +3,8 @@
   "compilerOptions": {
     "module": "commonjs",
     "outDir": "../../dist/packages/devkit",
-    "types": ["node"]
+    "types": ["node"],
+    "tsBuildInfoFile": "../../dist/packages/devkit/tsconfig.tsbuildinfo"
   },
   "exclude": [
     "**/*.spec.ts",

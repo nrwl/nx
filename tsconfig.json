@@ -284,9 +284,6 @@
       "path": "./nx-dev/ui-theme"
     },
     {
-      "path": "./nx-dev/tutorial"
-    },
-    {
       "path": "./nx-dev/ui-cloud"
     },
     {
@@ -384,6 +381,9 @@
     },
     {
       "path": "./e2e/nx"
+    },
+    {
+      "path": "./astro-docs"
     }
   ],
   "extends": "./tsconfig.base.json"

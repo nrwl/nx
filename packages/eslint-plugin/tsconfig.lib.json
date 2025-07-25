@@ -5,7 +5,8 @@
     "types": ["node"],
     "moduleResolution": "node16",
     "module": "node16",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "tsBuildInfoFile": "../../dist/packages/eslint-plugin/tsconfig.tsbuildinfo"
   },
   "exclude": [
     "**/*.spec.ts",

@@ -3,9 +3,8 @@ import { tsquery } from '@phenomnomnominal/tsquery';
 import { SearchSource } from 'jest';
 import { readConfig } from 'jest-config';
 import Runtime from 'jest-runtime';
+import { join, posix, relative } from 'path';
 import type { Identifier } from 'typescript';
-import { join } from 'path';
-import { relative } from 'node:path/posix';
 
 const matcherAliasesMap = new Map<string, string>([
   ['toBeCalled', 'toHaveBeenCalled'],
@@ -70,7 +69,7 @@ async function getTestFilePaths(tree: Tree): Promise<string[]> {
       config.projectConfig
     );
     for (const testPath of specs.tests) {
-      testFilePaths.add(relative(tree.root, testPath.path));
+      testFilePaths.add(posix.normalize(relative(tree.root, testPath.path)));
     }
   }
 

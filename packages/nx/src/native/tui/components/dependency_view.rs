@@ -168,13 +168,19 @@ impl DependencyViewState {
 pub struct DependencyView<'a> {
     status_map: &'a HashMap<String, TaskStatus>,
     task_graph: &'a TaskGraph,
+    is_minimal: bool,
 }
 
 impl<'a> DependencyView<'a> {
-    pub fn new(status_map: &'a HashMap<String, TaskStatus>, task_graph: &'a TaskGraph) -> Self {
+    pub fn new(
+        status_map: &'a HashMap<String, TaskStatus>,
+        task_graph: &'a TaskGraph,
+        is_minimal: bool,
+    ) -> Self {
         Self {
             status_map,
             task_graph,
+            is_minimal,
         }
     }
 
@@ -375,17 +381,23 @@ impl<'a> StatefulWidget for DependencyView<'a> {
             ),
         ];
 
-        let block = Block::default()
-            .title(title)
-            .title_alignment(Alignment::Left)
-            .borders(Borders::ALL)
-            .border_type(if state.is_focused {
-                BorderType::Thick
-            } else {
-                BorderType::Plain
-            })
-            .border_style(border_style)
-            .padding(Padding::new(2, 2, 1, 1));
+        let block = if self.is_minimal {
+            Block::default()
+                .borders(Borders::NONE)
+                .padding(Padding::new(2, 2, 1, 1))
+        } else {
+            Block::default()
+                .title(title)
+                .title_alignment(Alignment::Left)
+                .borders(Borders::ALL)
+                .border_type(if state.is_focused {
+                    BorderType::Thick
+                } else {
+                    BorderType::Plain
+                })
+                .border_style(border_style)
+                .padding(Padding::new(2, 2, 1, 1))
+        };
 
         let inner_area = block.inner(area);
         block.render(area, buf);

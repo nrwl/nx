@@ -432,9 +432,13 @@ export class TargetProjectLocator {
     ) {
       return undefined;
     }
-    const normalizedResolvedModule = resolvedModule.startsWith('./')
+    let normalizedResolvedModule = resolvedModule.startsWith('./')
       ? resolvedModule.substring(2)
       : resolvedModule;
+    // Remove trailing slash to ensure proper project matching
+    if (normalizedResolvedModule.endsWith('/')) {
+      normalizedResolvedModule = normalizedResolvedModule.slice(0, -1);
+    }
     const importedProject = this.findMatchingProjectFiles(
       normalizedResolvedModule
     );

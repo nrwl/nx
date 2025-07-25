@@ -4,7 +4,8 @@
     "resolveJsonModule": true,
     "outDir": "../../dist/packages/rspack",
     "esModuleInterop": true,
-    "types": ["node"]
+    "types": ["node"],
+    "tsBuildInfoFile": "../../dist/packages/rspack/tsconfig.tsbuildinfo"
   },
   "include": ["**/*.ts", "**/*.json"],
   "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],

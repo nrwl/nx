@@ -139,9 +139,25 @@ impl PtyInstance {
     }
 
     pub fn handle_arrow_keys(&mut self, event: KeyEvent) {
-        let alternative_screen = self.parser.read().unwrap().screen().alternate_screen();
-        debug!("Alternate Screen: {:?}", alternative_screen);
-        if !alternative_screen {
+        let handles_arrow_keys = self.handles_arrow_keys();
+        debug!(
+            "Handling arrow keys: {:?}, Interactive: {}",
+            event, handles_arrow_keys
+        );
+
+        if handles_arrow_keys {
+            // Interactive program (enquirer, vim, git log, etc.) - send keys to program
+            match event.code {
+                KeyCode::Up => {
+                    self.write_input(b"\x1b[A").ok();
+                }
+                KeyCode::Down => {
+                    self.write_input(b"\x1b[B").ok();
+                }
+                _ => {}
+            }
+        } else {
+            // Non-interactive program - handle scrolling ourselves
             match event.code {
                 KeyCode::Up => {
                     let amount = self
@@ -156,16 +172,6 @@ impl PtyInstance {
                         .lock()
                         .calculate_momentum(ScrollDirection::Down);
                     self.scroll_down(amount);
-                }
-                _ => {}
-            }
-        } else {
-            match event.code {
-                KeyCode::Up => {
-                    self.write_input(b"\x1b[A").ok();
-                }
-                KeyCode::Down => {
-                    self.write_input(b"\x1b[B").ok();
                 }
                 _ => {}
             }
@@ -173,9 +179,22 @@ impl PtyInstance {
     }
 
     pub fn send_mouse_event(&mut self, event: MouseEvent) {
-        let alternative_screen = self.parser.read().unwrap().screen().alternate_screen();
-        debug!("Alternate Screen: {:?}", alternative_screen);
-        if !alternative_screen {
+        let is_interactive = self.handles_arrow_keys();
+        debug!("Mouse event: {:?}, Interactive: {}", event, is_interactive);
+
+        if is_interactive {
+            // Interactive program - send scroll as arrow keys
+            match event.kind {
+                MouseEventKind::ScrollUp => {
+                    self.write_input(b"\x1b[A").ok();
+                }
+                MouseEventKind::ScrollDown => {
+                    self.write_input(b"\x1b[B").ok();
+                }
+                _ => {}
+            }
+        } else {
+            // Non-interactive program - handle scrolling ourselves
             match event.kind {
                 MouseEventKind::ScrollUp => {
                     let amount = self
@@ -190,16 +209,6 @@ impl PtyInstance {
                         .lock()
                         .calculate_momentum(ScrollDirection::Down);
                     self.scroll_down(amount);
-                }
-                _ => {}
-            }
-        } else {
-            match event.kind {
-                MouseEventKind::ScrollUp => {
-                    self.write_input(b"\x1b[A").ok();
-                }
-                MouseEventKind::ScrollDown => {
-                    self.write_input(b"\x1b[B").ok();
                 }
                 _ => {}
             }
@@ -249,11 +258,129 @@ impl PtyInstance {
         }
     }
 
+    /// Checks if the process is likely in interactive/raw mode
+    /// Uses both alternate screen detection and cursor movement patterns
+    pub fn handles_arrow_keys(&self) -> bool {
+        if let Ok(parser) = self.parser.read() {
+            let screen = parser.screen();
+
+            // Strong indicator: alternate screen mode (vim, less, git log, htop)
+            if screen.alternate_screen() {
+                return true;
+            }
+
+            // Check if recent output contains cursor movement sequences
+            if self.has_cursor_movement_in_output() {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    /// Simple check: does the recent output contain cursor movement escape sequences?
+    /// This catches enquirer-style programs that move cursor but don't use alternate screen
+    fn has_cursor_movement_in_output(&self) -> bool {
+        if let Ok(parser) = self.parser.read() {
+            let raw_output = parser.get_raw_output();
+            let output_str = std::str::from_utf8(raw_output).unwrap_or("");
+
+            // Check for any cursor control sequences in one pass
+            [
+                "\x1b[?25l",
+                "\x1b[?25h",
+                "\x1b[H",
+                "\x1b[A",
+                "\x1b[B",
+                "\x1b[C",
+                "\x1b[D",
+            ]
+            .iter()
+            .any(|seq| output_str.contains(seq))
+        } else {
+            false
+        }
+    }
+
     /// Process output with an existing parser
     pub fn process_output(&self, output: &[u8]) {
         if let Ok(mut parser_guard) = self.parser.write() {
             let normalized = normalize_newlines(output);
             parser_guard.process(&normalized)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::{Arc, RwLock};
+    use vt100_ctt::Parser;
+
+    fn create_test_pty_instance(alternate_screen: bool) -> PtyInstance {
+        let parser = Arc::new(RwLock::new(Parser::new(24, 80, 1000)));
+
+        // Set alternate screen mode if requested
+        if alternate_screen {
+            if let Ok(mut parser_guard) = parser.write() {
+                parser_guard.process(b"\x1b[?1049h");
+            }
+        }
+
+        PtyInstance {
+            parser,
+            writer: None,
+            rows: 24,
+            cols: 80,
+            scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
+        }
+    }
+
+    #[test]
+    fn test_handles_arrow_keys_initially_false() {
+        let pty = create_test_pty_instance(false);
+        assert!(
+            !pty.handles_arrow_keys(),
+            "Should initially not be interactive"
+        );
+    }
+
+    #[test]
+    fn test_handles_arrow_keys_alternate_screen() {
+        let pty = create_test_pty_instance(true);
+        assert!(
+            pty.handles_arrow_keys(),
+            "Should detect alternate screen as interactive"
+        );
+    }
+
+    #[test]
+    fn test_handles_arrow_keys_cursor_movement() {
+        let mut pty = create_test_pty_instance(false);
+
+        // Initially should not be interactive
+        assert!(!pty.handles_arrow_keys());
+
+        // Process output with cursor hide sequence (enquirer-style)
+        pty.process_output(b"\x1b[?25l");
+        assert!(
+            pty.handles_arrow_keys(),
+            "Should detect cursor hide as interactive"
+        );
+    }
+
+    #[test]
+    fn test_handles_arrow_keys_enquirer_style_output() {
+        let mut pty = create_test_pty_instance(false);
+
+        // Simulate enquirer output with cursor positioning
+        let enquirer_output =
+            b"? Select option \x1b[?25l\x1b[1;1H> Option 1\x1b[2;1H  Option 2\x1b[?25h";
+        pty.process_output(enquirer_output);
+
+        assert!(
+            pty.handles_arrow_keys(),
+            "Should detect enquirer-style cursor manipulation"
+        );
     }
 }

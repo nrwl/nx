@@ -1,4 +1,0 @@
----
-type: chapter
-title: Intro
----

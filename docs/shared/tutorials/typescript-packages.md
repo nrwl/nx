@@ -5,17 +5,17 @@ description: In this tutorial you'll create a TypeScript monorepo with Nx.
 
 # Building and Testing TypeScript Packages in Nx
 
-In this tutorial, you'll learn how to create a new TypeScript monorepo using the Nx platform.
+This tutorial walks you through creating a TypeScript monorepo with Nx. You'll build a small example project to understand the core concepts and workflows.
 
-What will you learn?
+What you'll learn:
 
-- how to create a new TypeScript workspace with [GitHub Actions](https://github.com/features/actions) preconfigured
-- how to run a single task (i.e. build your packages) or run multiple tasks in parallel
-- how to modularize your codebase with local libraries for better code organization
-- how to benefit from caching that works both locally and in CI
-- how to set up self-healing CI to apply fixes directly from your local editor
+- How to structure multiple TypeScript packages in a single repository
+- How Nx's caching speeds up your local development and CI pipelines
+- How to run builds and tests efficiently across multiple packages
+- How to share code between packages using local libraries
+- How to fix CI failures directly from your editor with Nx Cloud
 
-## Prerequisite: Tutorial Setup
+## Ready to start?
 
 {% callout type="note" title="Prerequisites" %}
 This tutorial requires a [GitHub account](https://github.com) to demonstrate the full value of **Nx** - including task running, caching, and CI integration.
@@ -23,9 +23,9 @@ This tutorial requires a [GitHub account](https://github.com) to demonstrate the
 
 ### Step 1: Creating a new Nx TypeScript workspace
 
-Let's start by creating a new TypeScript monorepo with Nx Cloud and GitHub Actions preconfigured. You'll be guided through an interactive setup process to create your workspace. After completing the setup, return here to continue with this tutorial.
+Let's create your workspace. The setup process takes about 2 minutes and will configure TypeScript, testing, and CI/CD automatically.
 
-{% call-to-action title="Create a new TypeScript monorepo" url="https://cloud.nx.app/create-nx-workspace?preset=typescript" description="With Nx and GitHub Actions fully set up" /%}
+{% call-to-action title="Set up your Nx workspace now" url="<https://cloud.nx.app/create-nx-workspace?preset=typescript>" description="Interactive setup with TypeScript and CI preconfigured" /%}
 
 ### Step 2: Verify Your Setup
 

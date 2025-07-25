@@ -5,15 +5,15 @@ description: In this tutorial you'll add Nx to an existing Gradle repo
 
 # Gradle Tutorial
 
-In this tutorial, you'll learn how to add Nx to a repository with an existing Gradle setup.
+This tutorial walks you through adding Nx to an existing Gradle project. You'll see how Nx enhances your Gradle workflow with caching, task orchestration, and better developer experience.
 
-What will you learn?
+What you'll learn:
 
-- how to add Nx to a Gradle project
-- how to run a single task (i.e. serve your app) or run multiple tasks in parallel
-- how to leverage code generators to scaffold components
-- how to modularize your codebase and impose architectural constraints for better maintainability
-- [how to speed up CI with Nx Cloud ⚡](#fast-ci)
+- How to integrate Nx with your existing Gradle build system
+- How Nx's caching speeds up your Gradle builds locally and in CI
+- How to visualize and understand project dependencies in your Gradle workspace
+- How to run Gradle tasks more efficiently with Nx's task runner
+- How to set up Nx Cloud for distributed caching and faster CI
 
 ## Prerequisites
 

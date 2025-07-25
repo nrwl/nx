@@ -4,7 +4,8 @@
     "module": "commonjs",
     "outDir": "../../dist/packages/expo",
     "types": ["node"],
-    "noEmit": false
+    "noEmit": false,
+    "tsBuildInfoFile": "../../dist/packages/expo/tsconfig.tsbuildinfo"
   },
   "exclude": ["**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
   "include": ["**/*.ts", "**/*.json"],

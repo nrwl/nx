@@ -102,7 +102,7 @@ export function applyWebConfig(
   if (isProd && stylesOptimization) {
     minimizer.push(
       new LightningCssMinimizerRspackPlugin({
-        test: /\.(?:css|scss|sass|less|styl)$/,
+        test: /\.(?:css|scss|sass|less)$/,
       })
     );
   }
@@ -193,24 +193,6 @@ export function applyWebConfig(
         },
       ],
     },
-    {
-      test: /\.module\.styl$/,
-      exclude: globalStylePaths,
-      use: [
-        ...getCommonLoadersForCssModules(options, includePaths),
-        {
-          loader: join(
-            __dirname,
-            '../../../utils/webpack/deprecated-stylus-loader.js'
-          ),
-          options: {
-            stylusOptions: {
-              include: includePaths,
-            },
-          },
-        },
-      ],
-    },
   ];
 
   const globalCssRules: RuleSetRule[] = [
@@ -257,25 +239,6 @@ export function applyWebConfig(
               javascriptEnabled: true,
               ...lessPathOptions,
               ...(lessOptions ?? {}),
-            },
-          },
-        },
-      ],
-    },
-    {
-      test: /\.styl$/,
-      exclude: globalStylePaths,
-      use: [
-        ...getCommonLoadersForGlobalCss(options, includePaths),
-        {
-          loader: join(
-            __dirname,
-            '../../../utils/webpack/deprecated-stylus-loader.js'
-          ),
-          options: {
-            sourceMap: !!options.sourceMap,
-            stylusOptions: {
-              include: includePaths,
             },
           },
         },
@@ -332,30 +295,11 @@ export function applyWebConfig(
         },
       ],
     },
-    {
-      test: /\.styl$/,
-      include: globalStylePaths,
-      use: [
-        ...getCommonLoadersForGlobalStyle(options, includePaths),
-        {
-          loader: join(
-            __dirname,
-            '../../../utils/webpack/deprecated-stylus-loader.js'
-          ),
-          options: {
-            sourceMap: !!options.sourceMap,
-            stylusOptions: {
-              include: includePaths,
-            },
-          },
-        },
-      ],
-    },
   ];
 
   const rules: RuleSetRule[] = [
     {
-      test: /\.css$|\.scss$|\.sass$|\.less$|\.styl$/,
+      test: /\.css$|\.scss$|\.sass$|\.less$/,
       oneOf: [...cssModuleRules, ...globalCssRules, ...globalStyleRules],
     },
   ];
