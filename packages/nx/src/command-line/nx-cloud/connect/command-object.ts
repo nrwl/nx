@@ -10,7 +10,10 @@ export const yargsConnectCommand: CommandModule = {
   builder: (yargs) =>
     linkToNxDevAndExamples(withConnectOptions(yargs), 'connect-to-nx-cloud'),
   handler: async (args: any) => {
-    await (await import('./connect-to-nx-cloud')).connectToNxCloudCommand(args);
+    const checkRemote = process.env.NX_SKIP_CHECK_REMOTE !== 'true';
+    await (
+      await import('./connect-to-nx-cloud')
+    ).connectToNxCloudCommand({ ...args, checkRemote });
     await (
       await import('../../../utils/ab-testing')
     ).recordStat({
