@@ -88,6 +88,11 @@
       "version": "21.1.0-beta.2",
       "description": "Adds **/nx-rules.mdc and **/nx.instructions.md to .gitignore if not present",
       "implementation": "./src/migrations/update-21-1-0/add-gitignore-entry"
+    },
+    "21-3-7-update-nx-wrapper": {
+      "version": "21.3.7",
+      "description": "Updates the nx wrapper.",
+      "implementation": "./src/migrations/update-17-3-0/update-nxw"
     }
   }
 }
