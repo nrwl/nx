@@ -36,6 +36,11 @@ import {
   getYarnLockfileNodes,
   stringifyYarnLockfile,
 } from './yarn-parser';
+import {
+  getBunLockfileDependencies,
+  getBunLockfileNodes,
+  stringifyBunLockfile,
+} from './bun-parser';
 import { pruneProjectGraph } from './project-graph-pruning';
 import { normalizePackageJson } from './utils/package-json';
 import { readJsonFile } from '../../../utils/fileutils';
@@ -86,9 +91,7 @@ export function getLockFileNodes(
       return getNpmLockfileNodes(contents, lockFileHash);
     }
     if (packageManager === 'bun') {
-      // bun uses yarn v1 for the file format
-      const packageJson = readJsonFile('package.json');
-      return getYarnLockfileNodes(contents, lockFileHash, packageJson);
+      return getBunLockfileNodes(contents, lockFileHash);
     }
   } catch (e) {
     if (!isPostInstallProcess()) {
@@ -122,8 +125,7 @@ export function getLockFileDependencies(
       return getNpmLockfileDependencies(contents, lockFileHash, context);
     }
     if (packageManager === 'bun') {
-      // bun uses yarn v1 for the file format
-      return getYarnLockfileDependencies(contents, lockFileHash, context);
+      return getBunLockfileDependencies(contents, lockFileHash, context);
     }
   } catch (e) {
     if (!isPostInstallProcess()) {
@@ -171,7 +173,20 @@ export function getLockFileName(packageManager: PackageManager): string {
     return NPM_LOCK_FILE;
   }
   if (packageManager === 'bun') {
-    return BUN_LOCK_FILE;
+    try {
+      const bunVersion = execSync('bun --version', { encoding: 'utf8' }).trim();
+      // In version 1.2.0, bun switched to a text based lockfile format by default
+      if (gte(bunVersion, '1.2.0')) {
+        return BUN_TEXT_LOCK_FILE;
+      }
+      return BUN_LOCK_FILE;
+    } catch {
+      // If we can't detect version, check which file exists
+      if (existsSync(join(workspaceRoot, BUN_TEXT_LOCK_FILE))) {
+        return BUN_TEXT_LOCK_FILE;
+      }
+      return BUN_LOCK_FILE;
+    }
   }
   throw new Error(`Unknown package manager: ${packageManager}`);
 }
@@ -188,13 +203,19 @@ export function getLockFilePath(packageManager: PackageManager): string {
   }
   if (packageManager === 'bun') {
     try {
-      const bunVersion = execSync('bun --version').toString().trim();
+      const bunVersion = execSync('bun --version', { encoding: 'utf8' })
+        .toString()
+        .trim();
       // In version 1.2.0, bun switched to a text based lockfile format by default
       if (gte(bunVersion, '1.2.0')) {
-        return BUN_TEXT_LOCK_FILE;
+        return BUN_TEXT_LOCK_PATH;
       }
       return BUN_LOCK_PATH;
     } catch {
+      // If we can't detect version, check which file exists
+      if (existsSync(BUN_TEXT_LOCK_PATH)) {
+        return BUN_TEXT_LOCK_PATH;
+      }
       return BUN_LOCK_PATH;
     }
   }
@@ -231,11 +252,8 @@ export function createLockFile(
       return stringifyNpmLockfile(prunedGraph, content, normalizedPackageJson);
     }
     if (packageManager === 'bun') {
-      output.log({
-        title:
-          "Unable to create bun lock files. Run bun install it's just as quick",
-      });
-      return '';
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      return stringifyBunLockfile(prunedGraph, content, normalizedPackageJson);
     }
   } catch (e) {
     if (!isPostInstallProcess()) {
