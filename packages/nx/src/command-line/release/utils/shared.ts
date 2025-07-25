@@ -237,14 +237,6 @@ function stripPlaceholders(str: string, placeholders: string[]): string {
 export function shouldPreferDockerVersionForReleaseGroup(
   releaseGroup: ReleaseGroupWithName
 ): boolean {
-  // Check if the release group has docker configuration at all
-  if (!releaseGroup.docker) {
-    // No docker configuration means we should use the inferred setting
-    // The inference was already done in the config phase, so if docker projects exist,
-    // releaseTagPatternRequireSemver would be false
-    return !releaseGroup.releaseTagPatternRequireSemver;
-  }
-
   // The inference was already done in the config phase, so if docker projects exist,
   // releaseTagPatternRequireSemver would be false
   return !releaseGroup.releaseTagPatternRequireSemver;
@@ -257,6 +249,7 @@ export function shouldSkipVersionActions(
   return (
     dockerOptions.skipVersionActions === true ||
     (Array.isArray(dockerOptions.skipVersionActions) &&
+      // skipVersionActions as string[] already normalized to matching projects in config.ts
       dockerOptions.skipVersionActions.includes(projectName))
   );
 }

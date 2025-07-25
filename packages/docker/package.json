@@ -19,7 +19,7 @@
     "Docker",
     "Containers"
   ],
-  "author": "Colum Ferry",
+  "author": "Victor Savkin",
   "license": "MIT",
   "homepage": "https://nx.dev",
   "main": "index.js",

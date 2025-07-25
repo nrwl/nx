@@ -305,7 +305,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     // TODO(colum): Remove when Docker support is no longer experimental
     if (nxReleaseConfig.docker || releaseGroups.some((rg) => rg.docker)) {
       output.warn({
-        title: 'Warning!',
+        title: 'Warning',
         bodyLines: [
           `Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.`,
         ],

@@ -1,16 +1,21 @@
 import {
-  ExecutorContext,
-  ProjectGraphProjectNode,
+  type ExecutorContext,
+  type ProjectGraphProjectNode,
   logger,
   workspaceRoot,
 } from '@nx/devkit';
 import { execSync } from 'child_process';
-import {
-  DockerReleasePublishSchema,
-  NormalizedDockerReleasePublishSchema,
-} from './schema';
+import type { DockerReleasePublishSchema } from './schema';
 import { existsSync, readFileSync } from 'fs';
 import { getDockerVersionPath } from '../../release/version-utils';
+
+export interface NormalizedDockerReleasePublishSchema {
+  quiet: boolean;
+  imageReference: string;
+  dryRun: boolean;
+}
+
+export const LARGE_BUFFER = 1024 * 1000000;
 
 export default async function dockerReleasePublish(
   schema: DockerReleasePublishSchema,
@@ -75,7 +80,7 @@ function checkDockerImageExistsLocally(imageRef: string) {
   try {
     const result = execSync(
       `docker images --filter "reference=${imageRef}" --quiet`,
-      { encoding: 'utf8' }
+      { encoding: 'utf8', stdio: 'inherit', maxBuffer: LARGE_BUFFER }
     );
     return result.trim().length > 0;
   } catch {

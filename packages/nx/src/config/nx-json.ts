@@ -84,7 +84,7 @@ export type ManifestRootToUpdate =
 
 export interface NxReleaseDockerConfiguration {
   /**
-   * A command to run after validation of nx release configuration, but before versioning begins.
+   * A command to run after validation of nx release configuration, but before docker versioning begins.
    * Useful for preparing docker build artifacts. If --dry-run is passed, the command is still executed,
    * but with the NX_DRY_RUN environment variable set to 'true'.
    */
@@ -92,6 +92,14 @@ export interface NxReleaseDockerConfiguration {
   /**
    * Projects which should use a no-op VersionActions implementation rather than any potentially inferred by default or via Inference Plugins.
    * Can be an array of project names (subset of projects in the release setup/release group) or a boolean (true means all projects).
+   * e.g.
+   * Consider a node application called `api` that does not require its `package.json` file to be versioned yet builds versioned docker images.
+   * To ensure that JS Versioning does not take place, the following would be set in the `docker` config in `nx.release`
+   * ```
+   *   "docker": {
+   *     "skipVersionActions": ["api"]
+   *   }
+   * ```
    */
   skipVersionActions?: string[] | boolean;
   /**
@@ -386,7 +394,7 @@ export interface NxReleaseConfiguration {
       docker?:
         | (NxReleaseDockerConfiguration & {
             /**
-             * A command to run after validation of nx release configuration, but before versioning begins.
+             * A command to run after validation of nx release configuration, but before docker versioning begins.
              * Used for preparing docker build artifacts. If --dry-run is passed, the command is still executed, but
              * with the NX_DRY_RUN environment variable set to 'true'.
              * It will run in addition to the global `preVersionCommand`

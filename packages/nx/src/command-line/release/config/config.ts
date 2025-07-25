@@ -309,7 +309,14 @@ export async function createNxReleaseConfig(
     return {
       preVersionCommand:
         userDockerConfig.preVersionCommand ?? defaultPreVersionCommand,
-      skipVersionActions: userDockerConfig.skipVersionActions,
+      skipVersionActions: userDockerConfig.skipVersionActions
+        ? Array.isArray(userDockerConfig.skipVersionActions)
+          ? findMatchingProjects(
+              userDockerConfig.skipVersionActions,
+              projectGraph.nodes
+            )
+          : userDockerConfig.skipVersionActions
+        : undefined,
       versionSchemes: userDockerConfig.versionSchemes ?? defaultVersionSchemes,
       repositoryName: userDockerConfig.repositoryName,
       registryUrl: userDockerConfig.registryUrl,

@@ -50,6 +50,7 @@ export const createNodesV2: CreateNodesV2<DockerPluginOptions> = [
     const targetsCache = readTargetsCache(cachePath);
     const projectRoots = configFilePaths.map((c) => dirname(c));
     const normalizedOptions = normalizePluginOptions(options);
+    // TODO(colum): investigate hashing only the dockerfile
     const hashes = await calculateHashesForCreateNodes(
       projectRoots,
       normalizedOptions,

@@ -352,6 +352,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     if (versionResult.workspaceVersion !== null) {
       hasNewVersion = Object.values(versionResult.projectsVersionData).some(
         (version) =>
+          /**
+           * There is a scenario where applications will not have a newVersion created by VerisonActions,
+           * however, there will still be a dockerVersion created from the docker release.
+           */
+
           version.newVersion !== null || version.dockerVersion !== null
       );
     }

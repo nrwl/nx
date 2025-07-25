@@ -1675,7 +1675,7 @@ describe('ReleaseGroupProcessor', () => {
   });
 
   describe('versionData', () => {
-    it('should populate versionData even ~when projects are not versioned', async () => {
+    it('should populate versionData even when projects are not versioned', async () => {
       const {
         nxReleaseConfig,
         projectGraph,

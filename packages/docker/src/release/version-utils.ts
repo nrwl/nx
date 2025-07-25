@@ -59,7 +59,7 @@ async function promptForNewVersion(
   const { versionScheme } = await prompt<{ versionScheme: string }>({
     name: 'versionScheme',
     type: 'select',
-    message: `What type of release would you like to make for project "${projectName}"?`,
+    message: `What type of docker release would you like to make for project "${projectName}"?`,
     choices: Object.keys(versionSchemes).map((vs) => ({
       name: vs,
       message: vs,
@@ -102,7 +102,9 @@ function updateProjectVersion(
   if (!isDryRun) {
     execSync(`docker tag ${imageRef} ${fullImageRef}`);
   }
-  const logs = [`Image tagged with ${fullImageRef}.`];
+  const logs = isDryRun
+    ? [`Image would be tagged with ${fullImageRef} but dry run is enabled.`]
+    : [`Image tagged with ${fullImageRef}.`];
   if (isDryRun) {
     logs.push(`No changes were applied as --dry-run is enabled.`);
   } else {

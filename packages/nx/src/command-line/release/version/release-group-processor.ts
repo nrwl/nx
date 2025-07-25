@@ -72,7 +72,8 @@ export const BUMP_TYPE_REASON_TEXT = {
     ', because a dependency project belonging to another release group was bumped, ',
   OTHER_PROJECT_IN_FIXED_GROUP_WAS_BUMPED_DUE_TO_DEPENDENCY:
     ', because of a dependency-only bump to another project in the same fixed release group, ',
-  NOOP_VERSION_ACTIONS: ', because this project uses docker, ',
+  NOOP_VERSION_ACTIONS:
+    ', because this project uses docker and has been configured to skip VersionActions, ',
 } as const;
 
 interface ReleaseGroupProcessorOptions {
@@ -787,7 +788,7 @@ export class ReleaseGroupProcessor {
       handleDockerVersion = _handleDockerVersion;
     } catch (e) {
       console.error(
-        'Could not find `@nx/docker`. Please run `nx add @nx/docker` before attempting to releas Docker images.'
+        'Could not find `@nx/docker`. Please run `nx add @nx/docker` before attempting to release Docker images.'
       );
       throw e;
     }
