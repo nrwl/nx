@@ -61,17 +61,6 @@ class NxProjectGraphReportPlugin : Plugin<Project> {
       task.description = "Create Nx project graph for ${project.name}"
       task.group = "Reporting"
 
-      // Ensure test classes are compiled before nxProjectGraph runs
-      project.tasks.findByName("compileTestJava")?.let { compileTestJava ->
-        task.dependsOn(compileTestJava)
-      }
-      project.tasks.findByName("compileTestKotlin")?.let { compileTestKotlin ->
-        task.dependsOn(compileTestKotlin)
-      }
-      project.tasks.findByName("compileTestGroovy")?.let { compileTestGroovy ->
-        task.dependsOn(compileTestGroovy)
-      }
-
       val outputFileProvider = nxProjectReportTask.map { it.outputFile }
 
       task.doFirst { it.logger.info("${Date()} Running nxProjectGraph for ${project.name}") }
