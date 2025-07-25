@@ -92,7 +92,7 @@
     "21-3-7-update-nx-wrapper": {
       "version": "21.3.7",
       "description": "Updates the nx wrapper.",
-      "implementation": "./src/migrations/update-17-3-0/update-nxw"
+      "implementation": "./src/migrations/update-21-3-7/update-nxw"
     }
   }
 }
