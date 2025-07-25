@@ -130,15 +130,13 @@ Replace `<component-directory>` with the directory where you want to place the c
 
 The Nx CLI provides the [`migrate` command](/features/automate-updating-dependencies) to help you stay up to date with the latest version of Nx.
 
-#### Use upgrade-native Generator
+#### Use upgrade command
 
-To upgrade native iOS and Android code to latest, you can use the [upgrade-native](/technologies/react/react-native/api/generators/upgrade-native) generator:
+To upgrade native iOS and Android code:
 
 ```shell
-nx generate @nx/react-native:upgrade-native apps/<your-app-name>
+nx upgrade <your-app-name>
 ```
-
-This is a command that will replace the iOS and Android native code folder entirely.
 
 #### Upgrade Manually
 
