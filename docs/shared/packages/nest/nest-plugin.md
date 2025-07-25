@@ -125,18 +125,18 @@ By default, the serve command will run in `watch` mode. This allows code to be c
 
 Nest applications also have the `inspect` flag set, so you can attach your debugger to the running instance.
 
-##### VS Code Integration
+##### VSCode Integration
 
-When generating Nest applications, Nx automatically creates a VS Code debugging configuration for seamless development experience:
+When generating Nest applications, Nx automatically creates a VSCode debugging configuration for seamless development experience:
 
 - **Automatic setup**: A `.vscode/launch.json` file is created with pre-configured debugging settings.
 - **Smart port allocation**: Debug ports are automatically assigned starting from 9229, preventing conflicts between multiple applications.
 - **Source map support**: Webpack configurations include `devtoolModuleFilenameTemplate` for accurate source mapping.
 - **Multi-format support**: Supports debugging `.js`, `.mjs`, and `.cjs` output files.
 
-To debug your Nest application in VS Code:
+To debug your Nest application in VSCode:
 
-1. Open your workspace in VS Code.
+1. Open your workspace in VSCode.
 2. Set breakpoints in your TypeScript source files.
 3. Go to the Debug panel `(Ctrl+Shift+D)`.
 4. Select "Debug `{your-app-name}` with Nx" from the dropdown.

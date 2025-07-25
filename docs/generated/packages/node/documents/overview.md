@@ -89,18 +89,18 @@ nx g @nx/node:application apps/my-new-app \
 
 ### Debugging
 
-#### VS Code Integration
+#### VSCode Integration
 
-When generating Node applications, Nx automatically creates a VS Code debugging configuration for seamless development experience:
+When generating Node applications, Nx automatically creates a VSCode debugging configuration for seamless development experience:
 
 - **Automatic setup**: A `.vscode/launch.json` file is created with pre-configured debugging settings.
 - **Smart port allocation**: Debug ports are automatically assigned starting from 9229, preventing conflicts between multiple applications.
 - **Source map support**: Webpack configurations include `devtoolModuleFilenameTemplate` for accurate source mapping.
 - **Multi-format support**: Supports debugging `.js`, `.mjs`, and `.cjs` output files.
 
-To debug your Node application in VS Code:
+To debug your Node application in VSCode:
 
-1. Open your workspace in VS Code.
+1. Open your workspace in VSCode.
 2. Set breakpoints in your TypeScript source files.
 3. Go to the Debug panel `(Ctrl+Shift+D)`.
 4. Select "Debug `{your-app-name}` with Nx" from the dropdown.
