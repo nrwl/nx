@@ -7,7 +7,7 @@ export async function mcpHandler(args: any) {
 
   spawnSync(
     packageManagerCommands.dlx,
-    ['-y', 'nx-mcp@latest', , ...args['_']],
+    ['-y', 'nx-mcp@latest', ...args['_']],
     {
       stdio: 'inherit',
       cwd: workspaceRoot,
