@@ -32,7 +32,6 @@ import {
 import { RankdirPanel } from './feature-projects/panels/rankdir-panel';
 import { useCurrentPath } from './hooks/use-current-path';
 import { getProjectGraphService } from './machines/get-services';
-import { getGraphService } from './machines/graph.service';
 import { DebuggerPanel } from './ui-components/debugger-panel';
 import { ExperimentalFeature } from './ui-components/experimental-feature';
 import { TooltipDisplay } from './ui-tooltips/graph-tooltip-display';
@@ -41,6 +40,13 @@ import {
   useProjectGraphContext,
 } from '@nx/graph/projects';
 import { NxGraphTaskGraphProvider, useTaskGraphContext } from '@nx/graph/tasks';
+import { NxGraphBackground, NxGraphEmpty } from '@nx/graph/ui';
+import { RenderRankDir } from '@nx/graph';
+import {
+  NxGraphContextMenu,
+  NxGraphContextMenuSection,
+  useGraphContextMenu,
+} from '@nx/graph/context-menu';
 
 function useGraphContextFactory(topLevelRoute: string) {
   return useMemo(() => {
@@ -120,17 +126,28 @@ function InnerShell({
     environmentConfig.watch
   );
 
-  const { containerRef, sendRenderConfigEvent, handleEventResult } =
-    useGraphContextFactory(topLevelRoute)();
+  const {
+    containerRef,
+    sendRenderConfigEvent,
+    handleEventResult,
+    graphClient,
+  } = useGraphContextFactory(topLevelRoute)();
+
+  const { graphMenu, closeMenu } = useGraphContextMenu({
+    renderGraphEventBus: graphClient,
+    closeOn: [],
+  });
 
   const nodesVisible = useMemo(() => {
     let count = 0;
+
     if (handleEventResult.type === 'tasks') {
       count = handleEventResult.tasks.length;
     } else {
       count =
         handleEventResult.projects.length + handleEventResult.composites.length;
     }
+
     return count > 0;
   }, [handleEventResult]);
 
@@ -141,13 +158,16 @@ function InnerShell({
     });
   }
 
+  function onRankDirChange(rankDir: RenderRankDir) {
+    sendRenderConfigEvent({ type: 'RankDirChange', rankDir });
+  }
+
   function projectChange(projectGraphId: string) {
     navigate(`/${encodeURIComponent(projectGraphId)}${topLevelRoute}`);
   }
 
   function downloadImage() {
-    const graph = getGraphService();
-    const data = graph.getImage();
+    const data = graphClient.getImage();
 
     let downloadLink = document.createElement('a');
     downloadLink.href = data;
@@ -213,7 +233,7 @@ function InnerShell({
                 </Dropdown>
 
                 <ExperimentalFeature>
-                  <RankdirPanel />
+                  <RankdirPanel onRankDirChange={onRankDirChange} />
                 </ExperimentalFeature>
 
                 <ThemePanel onThemeChange={onThemeChange} />
@@ -254,34 +274,45 @@ function InnerShell({
           />
         ) : null}
 
-        {!nodesVisible || navigationState === 'loading' ? (
-          <div
-            data-cy="no-tasks-selected"
-            className="flex h-full w-full items-center justify-center text-slate-700 dark:text-slate-400"
-          >
-            {navigationState === 'loading' ? (
-              <Spinner></Spinner>
-            ) : (
-              <>
-                <ArrowLeftCircleIcon className="mr-4 h-6 w-6" />
-                <h4>
-                  Please select a{' '}
-                  {topLevelRoute.includes('tasks') ? 'task' : 'project'} in the
-                  sidebar.
-                </h4>
-              </>
-            )}
-          </div>
-        ) : null}
+        <div className="relative h-full w-full">
+          <NxGraphBackground className="dot-grid" />
 
-        <div className="h-full w-full">
           <div
             ref={containerRef}
             className="h-full w-full cursor-pointer"
             id="cytoscape-graph"
           ></div>
 
+          {!nodesVisible || navigationState === 'loading' ? (
+            <NxGraphEmpty>
+              <ArrowLeftCircleIcon className="mr-4 h-6 w-6" />
+              <h4>
+                Please select a{' '}
+                {topLevelRoute.includes('tasks') ? 'task' : 'project'} in the
+                sidebar.
+              </h4>
+            </NxGraphEmpty>
+          ) : null}
+
           <TooltipDisplay />
+
+          {graphMenu ? (
+            <NxGraphContextMenu
+              menu={graphMenu.props}
+              virtualElement={graphMenu.virtualElement}
+              placement="bottom-start"
+            >
+              {{
+                project: ({ data, id }) => (
+                  <>
+                    <NxGraphContextMenuSection>
+                      testing goes here: {id}
+                    </NxGraphContextMenuSection>
+                  </>
+                ),
+              }}
+            </NxGraphContextMenu>
+          ) : null}
 
           <Tooltip
             openAction="hover"

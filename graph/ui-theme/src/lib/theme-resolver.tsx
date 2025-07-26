@@ -1,8 +1,9 @@
 import { getEnvironmentConfig } from '@nx/graph-shared';
+import { RenderTheme } from '@nx/graph';
 
 const htmlEl = document.documentElement;
 export const localStorageThemeKey = 'nx-dep-graph-theme';
-export type Theme = 'light' | 'dark' | 'system';
+export type Theme = RenderTheme | 'system';
 export let currentTheme: Theme;
 
 // listen for (prefers-color-scheme: dark) changes
@@ -83,13 +84,6 @@ export function themeResolver(theme: Theme) {
   }
 
   localStorage.setItem(localStorageThemeKey, theme);
-}
-
-export function selectValueByThemeDynamic<T>(
-  darkModeSetting: T,
-  lightModeSetting: T
-): () => T {
-  return () => selectValueByThemeStatic(darkModeSetting, lightModeSetting);
 }
 
 // The function exists because some places do not support selectDynamically

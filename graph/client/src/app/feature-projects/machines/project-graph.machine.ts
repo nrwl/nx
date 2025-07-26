@@ -33,6 +33,9 @@ const GRAPH_CLIENT_EVENTS = new Set([
   'updateTransitiveDepth',
   'trace',
   'toggleCompositeGraph',
+  'ThemeChange',
+  'RankDirChange',
+  'ResetLayout',
 ]);
 
 export const initialContext: ProjectGraphContext = {
@@ -110,15 +113,6 @@ export const projectGraphMachine = createMachine<
       initGraph: {
         target: 'unselected',
         actions: [send((_, event) => event, { to: (ctx) => ctx.graphActor })],
-      },
-      setSelectedProjectsFromGraph: {
-        actions: [
-          assign((ctx, event) => {
-            ctx.selectedProjects = event.selectedProjectNames;
-            ctx.lastPerfReport = event.perfReport;
-            ctx.compositeGraph.nodes = event.compositeNodes;
-          }),
-        ],
       },
       selectProject: {
         target: 'customSelected',
