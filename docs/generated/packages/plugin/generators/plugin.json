@@ -71,6 +71,10 @@
         "description": "Test runner to use for end to end (E2E) tests.",
         "default": "none"
       },
+      "e2eRootDirectory": {
+        "type": "string",
+        "description": "A root directory where the end to end (E2E) project is placed."
+      },
       "standaloneConfig": {
         "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
         "type": "boolean",
