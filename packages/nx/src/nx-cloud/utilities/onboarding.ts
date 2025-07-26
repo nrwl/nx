@@ -22,7 +22,9 @@ export async function getNxCloudAppOnBoardingUrl(token: string) {
   }
   const onboardingUrl = await createNxCloudOnboardingURL(
     'nx-welcome-app',
-    token
+    token,
+    undefined,
+    false
   );
   return onboardingUrl;
 }

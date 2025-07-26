@@ -1,6 +1,6 @@
 import { logger } from '../../utils/logger';
-import { getGithubSlugOrNull } from '../../utils/git-utils';
 import { getCloudUrl } from './get-cloud-options';
+import { getVcsRemoteInfo } from '../../utils/git-utils';
 
 /**
  * This is currently duplicated in Nx Console. Please let @MaxKless know if you make changes here.
@@ -8,19 +8,27 @@ import { getCloudUrl } from './get-cloud-options';
 export async function createNxCloudOnboardingURL(
   onboardingSource: string,
   accessToken?: string,
-  usesGithub?: boolean,
-  meta?: string
+  meta?: string,
+  forceManual = false,
+  forceGithub = false
 ) {
-  const githubSlug = getGithubSlugOrNull();
-
+  const remoteInfo = getVcsRemoteInfo();
   const apiUrl = getCloudUrl();
 
-  if (usesGithub === undefined || usesGithub === null) {
-    usesGithub = await repoUsesGithub(undefined, githubSlug, apiUrl);
+  const installationSupportsGitHub = await getInstallationSupportsGitHub(
+    apiUrl
+  );
+
+  let usesGithub = false;
+  if (forceGithub) {
+    usesGithub = installationSupportsGitHub;
+  } else if (forceManual) {
+    usesGithub = false;
+  } else {
+    usesGithub =
+      remoteInfo?.domain === 'github.com' && installationSupportsGitHub;
   }
-
   const source = getSource(onboardingSource);
-
   try {
     const response = await require('axios').post(
       `${apiUrl}/nx-cloud/onboarding`,
@@ -28,7 +36,8 @@ export async function createNxCloudOnboardingURL(
         type: usesGithub ? 'GITHUB' : 'MANUAL',
         source,
         accessToken: usesGithub ? null : accessToken,
-        selectedRepositoryName: githubSlug === 'github' ? null : githubSlug,
+        selectedRepositoryName: remoteInfo?.slug ?? null,
+        repositoryDomain: remoteInfo?.domain ?? null,
         meta,
       }
     );
@@ -45,35 +54,12 @@ export async function createNxCloudOnboardingURL(
     ${e}`);
     return getURLifShortenFailed(
       usesGithub,
-      githubSlug === 'github' ? null : githubSlug,
+      usesGithub ? remoteInfo?.slug : null,
       apiUrl,
       source,
       accessToken
     );
   }
-}
-
-export async function repoUsesGithub(
-  github?: boolean,
-  githubSlug?: string,
-  apiUrl?: string
-): Promise<boolean> {
-  if (!apiUrl) {
-    apiUrl = getCloudUrl();
-  }
-  if (!githubSlug) {
-    githubSlug = getGithubSlugOrNull();
-  }
-  const installationSupportsGitHub = await getInstallationSupportsGitHub(
-    apiUrl
-  );
-
-  return (
-    (!!githubSlug || !!github) &&
-    (apiUrl.includes('cloud.nx.app') ||
-      apiUrl.includes('eu.nx.app') ||
-      installationSupportsGitHub)
-  );
 }
 
 function getSource(
