@@ -92,8 +92,8 @@ export function createTaskName(
   configuration?: string
 ) {
   if (configuration) {
-    return `${project}:${target}:${configuration}`;
+    return `task-${project}:${target}:${configuration}`;
   } else {
-    return `${project}:${target}`;
+    return `task-${project}:${target}`;
   }
 }

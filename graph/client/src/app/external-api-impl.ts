@@ -1,7 +1,6 @@
 import { ExternalApi, getExternalApiService } from '@nx/graph-shared';
 import { getRouter } from './get-router';
 import { getProjectGraphService } from './machines/get-services';
-import { getGraphService } from './machines/graph.service';
 
 export class ExternalApiImpl extends ExternalApi {
   _projectGraphService = getProjectGraphService();
@@ -12,7 +11,6 @@ export class ExternalApiImpl extends ExternalApi {
       }
     });
   });
-  _graphService = getGraphService();
 
   router = getRouter();
   externalApiService = getExternalApiService();

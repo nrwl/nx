@@ -3,11 +3,8 @@ import {
   ProjectGraphClientActor,
   ProjectGraphMachineEvents,
 } from './interfaces';
-import {
-  ProjectGraphEvent,
-  ProjectGraphRenderScratchData,
-} from '@nx/graph/projects';
-import { RenderGraphConfigEvent, RenderGraphScratchPad } from '@nx/graph';
+import { ProjectGraphEvent } from '@nx/graph/projects';
+import { RenderGraphConfigEvent } from '@nx/graph';
 
 export const graphClientActor =
   ({
@@ -30,14 +27,9 @@ export const graphClientActor =
         send(event);
       }
 
-      const renderGraphScratchPad: RenderGraphScratchPad<ProjectGraphRenderScratchData> =
-        graphClient['renderGraph']['scratchPad'];
-
-      const renderGraphData = renderGraphScratchPad.get();
-
       callback({
         type: 'setGraphClientState',
-        state: renderGraphData,
+        state: graphClient.graphState.renderScratchData,
       });
     });
   };

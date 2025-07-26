@@ -44,6 +44,7 @@ export interface ProjectGraphClientActor {
 // The events that the machine handles
 export type ProjectGraphMachineEvents =
   | ProjectGraphEvent
+  | RenderGraphConfigEvent
   | {
       type: 'setGraphClient';
       graphClient: ProjectGraphClientActor;
@@ -51,12 +52,6 @@ export type ProjectGraphMachineEvents =
   | {
       type: 'setGraphClientState';
       state: RenderGraphScratchData<ProjectGraphRenderScratchData>;
-    }
-  | {
-      type: 'setSelectedProjectsFromGraph';
-      selectedProjectNames: string[];
-      perfReport: GraphPerfReport;
-      compositeNodes: Array<CompositeNode>;
     }
   | { type: 'selectProject'; projectName: string }
   | { type: 'deselectProject'; projectName: string }
