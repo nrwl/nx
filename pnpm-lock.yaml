@@ -2005,6 +2005,9 @@ importers:
       '@nx/graph-internal-ui-project-details':
         specifier: workspace:*
         version: link:../../graph/ui-project-details
+      '@nx/graph-ui-common':
+        specifier: workspace:*
+        version: link:../../graph/ui-common
       '@nx/nx-dev-feature-analytics':
         specifier: workspace:*
         version: link:../feature-analytics
@@ -31764,6 +31767,7 @@ snapshots:
     dependencies:
       '@nx/devkit': link:packages/devkit
       '@nx/graph-internal-ui-project-details': link:graph/ui-project-details
+      '@nx/graph-ui-common': link:graph/ui-common
       '@nx/nx-dev-feature-analytics': link:nx-dev/feature-analytics
       '@nx/nx-dev-ui-common': link:nx-dev/ui-common
       '@nx/nx-dev-ui-fence': link:nx-dev/ui-fence

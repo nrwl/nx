@@ -33,7 +33,7 @@ import {
   useEnvironmentConfig,
   usePoll,
   useRouteConstructor,
-} from '@nx/graph/legacy/shared';
+} from '@nx/graph-shared';
 import {
   useNavigate,
   useParams,

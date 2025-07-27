@@ -9,16 +9,29 @@ import {
 import {
   ArrowDownTrayIcon,
   ArrowLeftCircleIcon,
+  DocumentMagnifyingGlassIcon,
   InformationCircleIcon,
+  PencilSquareIcon,
+  PlayIcon,
   ViewfinderCircleIcon,
 } from '@heroicons/react/24/outline';
 import {
   fetchProjectGraph,
+  getExternalApiService,
   getProjectGraphDataService,
   useEnvironmentConfig,
   usePoll,
+  useRouteConstructor,
 } from '@nx/graph-shared';
-import { Tooltip, Spinner, ErrorToast, Dropdown } from '@nx/graph-ui-common';
+import {
+  Tooltip,
+  Spinner,
+  ErrorToast,
+  Dropdown,
+  Tag,
+  ProjectNodeTooltipActions,
+  CompositeNodeTooltipActions,
+} from '@nx/graph-ui-common';
 import { getSystemTheme, Theme, ThemePanel } from '@nx/graph-internal-ui-theme';
 import classNames from 'classnames';
 import { useLayoutEffect, useMemo, useState } from 'react';
@@ -34,19 +47,22 @@ import { useCurrentPath } from './hooks/use-current-path';
 import { getProjectGraphService } from './machines/get-services';
 import { DebuggerPanel } from './ui-components/debugger-panel';
 import { ExperimentalFeature } from './ui-components/experimental-feature';
-import { TooltipDisplay } from './ui-tooltips/graph-tooltip-display';
 import {
   NxGraphProjectGraphProvider,
   useProjectGraphContext,
 } from '@nx/graph/projects';
 import { NxGraphTaskGraphProvider, useTaskGraphContext } from '@nx/graph/tasks';
 import { NxGraphBackground, NxGraphEmpty } from '@nx/graph/ui';
-import { RenderRankDir } from '@nx/graph';
+import {
+  ProjectNodeElementData,
+  RenderRankDir,
+  TaskNodeElementData,
+} from '@nx/graph';
 import {
   NxGraphContextMenu,
-  NxGraphContextMenuSection,
   useGraphContextMenu,
 } from '@nx/graph/context-menu';
+import { TaskNodeActions } from './ui-tooltips/task-node-actions';
 
 function useGraphContextFactory(topLevelRoute: string) {
   return useMemo(() => {
@@ -62,16 +78,23 @@ const routes = [
 ];
 
 export function Shell(): JSX.Element {
+  const { environment } = useEnvironmentConfig();
   const currentPath = useCurrentPath();
   const currentRoute = currentPath.currentPath;
 
-  const topLevelRoute = currentRoute.startsWith('/tasks')
-    ? '/tasks'
-    : '/projects';
+  const topLevelRoute = useMemo(
+    () => (currentRoute.startsWith('/tasks') ? '/tasks' : '/projects'),
+    [currentRoute]
+  );
+
+  const renderPlatform = useMemo(
+    () => (environment === 'nx-console' ? 'nx-console' : 'nx'),
+    [environment]
+  );
 
   if (topLevelRoute.includes('projects')) {
     return (
-      <NxGraphProjectGraphProvider renderPlatform="nx" styles={[]}>
+      <NxGraphProjectGraphProvider renderPlatform={renderPlatform} styles={[]}>
         <InnerShell
           topLevelRoute={topLevelRoute}
           workspace={currentPath.workspace}
@@ -81,7 +104,7 @@ export function Shell(): JSX.Element {
   }
 
   return (
-    <NxGraphTaskGraphProvider renderPlatform="nx" styles={[]}>
+    <NxGraphTaskGraphProvider renderPlatform={renderPlatform} styles={[]}>
       <InnerShell
         topLevelRoute={topLevelRoute}
         workspace={currentPath.workspace}
@@ -99,7 +122,9 @@ function InnerShell({
 }) {
   const projectGraphService = getProjectGraphService();
   const projectGraphDataService = getProjectGraphDataService();
+  const externalApiService = getExternalApiService();
 
+  const routeConstructor = useRouteConstructor();
   const environmentConfig = useEnvironmentConfig();
   const navigate = useNavigate();
   const { state: navigationState } = useNavigation();
@@ -184,6 +209,74 @@ function InnerShell({
 
   function resetLayout() {
     sendRenderConfigEvent({ type: 'ResetLayout' });
+  }
+
+  function onProjectConfigClick(projectNodeData: ProjectNodeElementData) {
+    const renderPlatform =
+      graphClient.graphState.renderScratchData.renderPlatform;
+    if (renderPlatform === 'nx-dev') return () => {};
+
+    if (renderPlatform === 'nx-console') {
+      return () => {
+        closeMenu();
+        return externalApiService.postEvent({
+          type: 'open-project-config',
+          payload: projectNodeData,
+        });
+      };
+    }
+
+    return () => {
+      closeMenu();
+      return navigate(
+        routeConstructor(
+          {
+            pathname: `/project-details/${encodeURIComponent(
+              projectNodeData.name
+            )}`,
+          },
+          false
+        )
+      );
+    };
+  }
+
+  function onTaskConfigClick(taskNodeData: TaskNodeElementData) {
+    const renderPlatform =
+      graphClient.graphState.renderScratchData.renderPlatform;
+    if (renderPlatform === 'nx-dev') return () => {};
+
+    const [projectName, targetName] = taskNodeData.name.split(':');
+
+    if (renderPlatform === 'nx-console') {
+      return () =>
+        externalApiService.postEvent({
+          type: 'open-project-config',
+          payload: { projectName, targetName },
+        });
+    }
+
+    return () => {
+      navigate(
+        routeConstructor(
+          {
+            pathname: `/project-details/${encodeURIComponent(projectName)}`,
+            search: `expanded=${targetName}`,
+          },
+          false
+        )
+      );
+    };
+  }
+
+  function onRunTaskClick(taskNodeData: TaskNodeElementData) {
+    const renderPlatform =
+      graphClient.graphState.renderScratchData.renderPlatform;
+    if (renderPlatform !== 'nx-console') return () => {};
+
+    return () => {
+      externalApiService.postEvent({ type: 'run-task', payload: taskNodeData });
+    };
   }
 
   return (
@@ -294,8 +387,6 @@ function InnerShell({
             </NxGraphEmpty>
           ) : null}
 
-          <TooltipDisplay />
-
           {graphMenu ? (
             <NxGraphContextMenu
               menu={graphMenu.props}
@@ -303,12 +394,119 @@ function InnerShell({
               placement="bottom-start"
             >
               {{
-                project: ({ data, id }) => (
-                  <>
-                    <NxGraphContextMenuSection>
-                      testing goes here: {id}
-                    </NxGraphContextMenuSection>
-                  </>
+                // TODO: (chau) refactor this for graph consistency CLOUD-3443
+                project: ({ data }) => (
+                  <div className="flex max-w-[32rem] flex-col gap-4 rounded-md border border-black p-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Tag>{data.projectType}</Tag>
+                        <span className="font-mono">{data.label}</span>
+                      </div>
+
+                      <button
+                        className="shadow-xs flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 ring-1 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
+                        title={
+                          graphClient.graphState.renderScratchData
+                            .renderPlatform === 'nx-console'
+                            ? 'Open project details in editor'
+                            : 'Open project details'
+                        }
+                        onClick={onProjectConfigClick(data)}
+                      >
+                        {graphClient.graphState.renderScratchData
+                          .renderPlatform === 'nx-console' ? (
+                          <PencilSquareIcon className="h-5 w-5" />
+                        ) : (
+                          <DocumentMagnifyingGlassIcon className="h-5 w-5" />
+                        )}
+                      </button>
+                    </div>
+                    {data.tags.length > 0 ? (
+                      <p className="my-2 lowercase">
+                        <strong>tags</strong>
+                        <br></br>
+                        {data.tags.join(', ')}
+                      </p>
+                    ) : null}
+                    {data.description ? (
+                      <p className="mt-4">{data.description}</p>
+                    ) : null}
+                    <ProjectNodeTooltipActions
+                      {...data}
+                      type={data.projectType}
+                    />
+                  </div>
+                ),
+                compositeProject: ({ data, isExpanded }) => (
+                  <div className="flex max-w-[32rem] flex-col gap-4 rounded-md border border-black p-2">
+                    <div className="flex items-center gap-2">
+                      <Tag>Composite</Tag>
+                      <span className="font-mono">{data.label}</span>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      {data.compositeSize > 0 && (
+                        <p>
+                          <strong>Nested directories: </strong>
+                          {data.compositeSize}
+                        </p>
+                      )}
+                      {data.projectSize > 0 && (
+                        <p>
+                          <strong>Projects: </strong>
+                          {data.projectSize}
+                        </p>
+                      )}
+                    </div>
+                    <CompositeNodeTooltipActions
+                      {...data}
+                      compositeCount={data.compositeSize}
+                      projectCount={data.projectSize}
+                      expanded={isExpanded}
+                    />
+                  </div>
+                ),
+                task: ({ data }) => (
+                  <div className="flex max-w-[32rem] flex-col gap-4 rounded-md border border-black p-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Tag>{data.executor}</Tag>
+                        <span className="font-mono">{data.label}</span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          className="shadow-xs flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 ring-1 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
+                          title={
+                            graphClient.graphState.renderScratchData
+                              .renderPlatform === 'nx-console'
+                              ? 'Open project details in editor'
+                              : 'Open project details'
+                          }
+                          onClick={onTaskConfigClick(data)}
+                        >
+                          {graphClient.graphState.renderScratchData
+                            .renderPlatform === 'nx-console' ? (
+                            <PencilSquareIcon className="h-5 w-5" />
+                          ) : (
+                            <DocumentMagnifyingGlassIcon className="h-5 w-5" />
+                          )}
+                        </button>
+                        <button
+                          className="shadow-xs flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 ring-1 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
+                          title="Run Task"
+                          onClick={onRunTaskClick(data)}
+                        >
+                          <PlayIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {data.description ? <p>{data.description}</p> : null}
+
+                    {/* TODO: (chau) handle inputs for Task node */}
+                    <TaskNodeActions id={data.name} />
+                  </div>
                 ),
               }}
             </NxGraphContextMenu>

@@ -16,10 +16,6 @@ export function ProjectNodeTooltipActions({
 }: ProjectNodeTooltipActionsProps) {
   const encodedId = encodeURIComponent(id);
 
-  // function onProjectDetails() {
-  //   setSearchParams({ projectDetails: id });
-  // }
-
   function onFocus() {
     onAction?.({
       type: 'focus-node',
