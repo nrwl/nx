@@ -362,5 +362,5 @@ This setup allows you to rebuild and restart the application automatically when 
 - [Node.js debugging getting started guide](https://nodejs.org/en/docs/guides/debugging-getting-started/#inspector-clients)
 - [VSCode Node.js debugging](https://code.visualstudio.com/docs/nodejs/nodejs-debugging)
 - [IntelliJ IDEA Node.js debugging](https://www.jetbrains.com/help/idea/running-and-debugging-node-js.html)
-- [@nx/node plugin documentation](/packages/node)
-- [@nx/nest plugin documentation](/packages/nest)
+- [@nx/node plugin documentation](/technologies/node/introduction)
+- [@nx/nest plugin documentation](/technologies/node/nest/introduction)

@@ -93,7 +93,7 @@ Debugging is set to use a random port that is available on the system. The port 
 
 #### Docker Debugging
 
-For debugging Node applications running in Docker containers, see the [Docker debugging guide](/recipes/node/debug-nestjs-docker).
+For debugging Node applications running in Docker containers, see the [Docker debugging guide](/technologies/node/recipes/debug-nestjs-docker).
 
 For additional information on how to debug Node applications, see the [Node.js debugging getting started guide](https://nodejs.org/en/docs/guides/debugging-getting-started/#inspector-clients).
 
