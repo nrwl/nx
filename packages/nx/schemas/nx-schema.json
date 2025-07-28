@@ -632,11 +632,6 @@
                     "description": "Configuration for params handling.",
                     "enum": ["ignore", "forward"],
                     "default": "ignore"
-                  },
-                  "requiredToSucceed": {
-                    "type": "boolean",
-                    "description": "Indicates whether the dependency task must succeed for the parent task to run. If set to `true`, the parent task will only run if the dependency task completes successfully. If set to `false`, the parent task will run even if the dependency task fails.",
-                    "default": true
                   }
                 },
                 "oneOf": [
