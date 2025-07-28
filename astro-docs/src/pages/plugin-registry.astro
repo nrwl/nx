@@ -1,0 +1,63 @@
+---
+import { getCollection } from 'astro:content';
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { Card, Icon, Badge } from '@astrojs/starlight/components';
+
+const communityPlugins = await getCollection('community-plugins');
+const plugins = await getCollection('plugin-docs', (entry) => entry.data.docType === 'overview');
+---
+
+<StarlightPage frontmatter={{
+  title: 'Nx Plugins',
+  description: 'Discover all available Nx plugins to enhance your development workflow. Each plugin provides generators, executors, and migrations to help you build modern applications.',
+  tableOfContents: false
+}}
+>
+  <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
+    {plugins.map(plugin => (
+      <Card title={plugin.data.packageName} icon="open-book">
+        <div class="flex flex-col gap-2 min-h-40">
+
+        <div class="line-clamp-3 grow">
+          {plugin.data.description}
+        </div>
+          <p class="flex flex-row gap-1 justify-between items-center">
+            <a href={`/api/plugins/${plugin.data.pluginName}`} >
+              View Plugin
+            </a>
+            <Badge size="small" variant="success" text="Nx Open Source" />
+          </p>
+        </div>
+      </Card>
+    ))}
+    {communityPlugins.map(plugin => (
+      <Card title={plugin.id}>
+        <div class="flex flex-col gap-2 min-h-64">
+          <p class="line-clamp-3 grow">
+            {plugin.data.description}
+          </p>
+
+          <div class="flex flex-wrap align-center justify-between gap-1 text-xs font-medium capitalize text-center">
+            {plugin.data.lastPublishedDate &&
+              <div class="inline-flex gap-1 items-end">
+                <Icon name="seti:clock" class="w-4 h-4 align-bottom inline-block" />
+                {plugin.data.lastPublishedDate.toISOString().slice(0, 10)}</div>}
+            <div class="inline-flex gap-1">
+              <Icon name="star" class="w-4 h-4 inline-block align-bottom" />
+              {plugin.data.githubStars}</div>
+            <div class="inline-flex gap-1">
+              <Icon name="cloud-download" class="w-4 h-4 inline-block align-bottom" />
+              {plugin.data.npmDownloads}</div>
+            {plugin.data.nxVersion &&
+              <div class="inline-flex gap-1">
+                <Icon name="information" class="w-4 h-4 inline-block align-bottom" />
+                {plugin.data.nxVersion}</div>}
+          </div>
+
+          <a href={plugin.data.url}> View Plugin</a>
+        </div>
+      </Card>))}
+  </div>
+
+
+</StarlightPage>
