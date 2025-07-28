@@ -437,7 +437,6 @@ describe('utils', () => {
       });
       expect(result).toEqual({
         target: 'build',
-        requiredToSucceed: true,
       });
     });
 
@@ -456,7 +455,6 @@ describe('utils', () => {
       });
       expect(result).toEqual({
         target: 'build',
-        requiredToSucceed: true,
       });
     });
 
@@ -468,7 +466,6 @@ describe('utils', () => {
       expect(result).toEqual({
         target: 'build',
         dependencies: true,
-        requiredToSucceed: true,
       });
     });
 
@@ -488,7 +485,6 @@ describe('utils', () => {
       expect(result).toEqual({
         target: 'build',
         projects: ['project'],
-        requiredToSucceed: true,
       });
     });
 
@@ -499,7 +495,6 @@ describe('utils', () => {
       });
       expect(result).toEqual({
         target: 'target:with:colons',
-        requiredToSucceed: true,
       });
     });
 
@@ -533,12 +528,10 @@ describe('utils', () => {
         {
           target: 'build-css',
           projects: ['project'],
-          requiredToSucceed: true,
         },
         {
           target: 'build-js',
           projects: ['project'],
-          requiredToSucceed: true,
         },
       ]);
     });
@@ -598,17 +591,14 @@ describe('utils', () => {
         {
           target: 'build-css',
           dependencies: true,
-          requiredToSucceed: true,
         },
         {
           target: 'build-js',
           dependencies: true,
-          requiredToSucceed: true,
         },
         {
           target: 'build-python',
           dependencies: true,
-          requiredToSucceed: true,
         },
       ]);
     });
@@ -656,7 +646,6 @@ describe('utils', () => {
         {
           target: 'build:one',
           projects: ['foo'],
-          requiredToSucceed: true,
         },
       ]);
 
@@ -664,7 +653,6 @@ describe('utils', () => {
         {
           target: 'build:two',
           projects: ['foo'],
-          requiredToSucceed: true,
         },
       ]);
 
@@ -674,7 +662,6 @@ describe('utils', () => {
         {
           target: 'build:one',
           projects: ['bar'],
-          requiredToSucceed: true,
         },
       ]);
 
@@ -682,7 +669,6 @@ describe('utils', () => {
         {
           target: 'build:two',
           projects: ['bar'],
-          requiredToSucceed: true,
         },
       ]);
 

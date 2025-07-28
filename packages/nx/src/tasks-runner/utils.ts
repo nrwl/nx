@@ -92,10 +92,7 @@ export function expandDependencyConfigSyntaxSugar(
   graph: ProjectGraph
 ): TargetDependencyConfig {
   if (typeof dependencyConfigString !== 'string') {
-    return {
-      ...dependencyConfigString,
-      requiredToSucceed: dependencyConfigString.requiredToSucceed ?? true,
-    };
+    return dependencyConfigString;
   }
 
   const [dependencies, targetString] = dependencyConfigString.startsWith('^')
@@ -108,7 +105,6 @@ export function expandDependencyConfigSyntaxSugar(
     return {
       target: targetString,
       dependencies: true,
-      requiredToSucceed: true,
     };
   }
 
@@ -117,8 +113,7 @@ export function expandDependencyConfigSyntaxSugar(
     graph.nodes
   );
 
-  const config = projects ? { projects, target } : { target };
-  return { ...config, requiredToSucceed: true };
+  return projects ? { projects, target } : { target };
 }
 
 // Weakmap let's the cache get cleared by garbage collector if allTargetNames is no longer used
@@ -164,8 +159,6 @@ export function expandWildcardTargetConfiguration(
     target: t,
     projects: dependencyConfig.projects,
     dependencies: dependencyConfig.dependencies,
-    params: dependencyConfig.params,
-    requiredToSucceed: dependencyConfig.requiredToSucceed,
   }));
 }
 
@@ -465,7 +458,6 @@ export function removeTasksFromTaskGraph(
   return {
     dependencies: newGraph.dependencies,
     continuousDependencies: newGraph.continuousDependencies,
-    dependenciesAllowedToFail: newGraph.dependenciesAllowedToFail,
     roots: newGraph.roots,
     tasks: newGraph.mapWithIds,
   };
@@ -476,7 +468,6 @@ function removeIdsFromTaskGraph<T>(
     roots: string[];
     dependencies: Record<string, string[]>;
     continuousDependencies: Record<string, string[]>;
-    dependenciesAllowedToFail: Record<string, string[]>;
   },
   ids: string[],
   mapWithIds: Record<string, T>
@@ -485,12 +476,10 @@ function removeIdsFromTaskGraph<T>(
   roots: string[];
   dependencies: Record<string, string[]>;
   continuousDependencies: Record<string, string[]>;
-  dependenciesAllowedToFail: Record<string, string[]>;
 } {
   const filteredMapWithIds = {};
   const dependencies = {};
   const continuousDependencies = {};
-  const dependenciesAllowedToFail = {};
   const removedSet = new Set(ids);
   for (let id of Object.keys(mapWithIds)) {
     if (!removedSet.has(id)) {
@@ -501,16 +490,12 @@ function removeIdsFromTaskGraph<T>(
       continuousDependencies[id] = graph.continuousDependencies[id].filter(
         (depId) => !removedSet.has(depId)
       );
-      dependenciesAllowedToFail[id] = graph.dependenciesAllowedToFail[
-        id
-      ].filter((depId) => !removedSet.has(depId));
     }
   }
   return {
     mapWithIds: filteredMapWithIds,
     dependencies: dependencies,
     continuousDependencies,
-    dependenciesAllowedToFail,
     roots: Object.keys(filteredMapWithIds).filter(
       (k) =>
         dependencies[k].length === 0 && continuousDependencies[k].length === 0

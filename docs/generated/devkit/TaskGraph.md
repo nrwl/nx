@@ -8,7 +8,6 @@ Graph of Tasks to be executed
 
 - [continuousDependencies](/reference/core-api/devkit/documents/TaskGraph#continuousdependencies): Record<string, string[]>
 - [dependencies](/reference/core-api/devkit/documents/TaskGraph#dependencies): Record<string, string[]>
-- [dependenciesAllowedToFail](/reference/core-api/devkit/documents/TaskGraph#dependenciesallowedtofail): Record<string, string[]>
 - [roots](/reference/core-api/devkit/documents/TaskGraph#roots): string[]
 - [tasks](/reference/core-api/devkit/documents/TaskGraph#tasks): Record<string, Task>
 
@@ -25,14 +24,6 @@ Graph of Tasks to be executed
 • **dependencies**: `Record`\<`string`, `string`[]\>
 
 Map of Task IDs to IDs of tasks which the task depends on
-
----
-
-### dependenciesAllowedToFail
-
-• **dependenciesAllowedToFail**: `Record`\<`string`, `string`[]\>
-
-Map of Task IDs to IDs of dependency tasks that, when failed, will not prevent the task from executing
 
 ---
 
