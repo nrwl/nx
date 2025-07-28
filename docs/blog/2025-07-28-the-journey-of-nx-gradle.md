@@ -19,7 +19,7 @@ Fast forward to 2024, and we made a major change to Nx. Code name **Project Crys
 
 ## The Birth of Nx Gradle
 
-Shortly after inferred projects shipped, we had a reworked version of that early prototype that was ready for some real world testing as `@nx/gradle`. We [announced the plugin](https://nx.dev/blog/manage-your-gradle-project-using-nx) and started to use it internally in our closed-source monorepo. We even had interest from some clients who had Java projects that they wanted to consolidate with their existing Nx monorepo.
+Shortly after inferred projects shipped, we had a reworked version of that early prototype that was ready for some real world testing as `@nx/gradle`. We [announced the plugin](/blog/manage-your-gradle-project-using-nx) and started to use it internally in our closed-source monorepo. We even had interest from some clients who had Java projects that they wanted to consolidate with their existing Nx monorepo.
 
 However, after it’s initial usage, we had started to notice some limitations with this approach. The main limitation was our usage of Gradle's built-in `project-report` feature which didn't provide Nx with enough detail for accurate configuration. We went back to the drawing board and reimagined how to add support for more complex setups that we saw in the real world.
 
