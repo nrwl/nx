@@ -41,7 +41,13 @@ import { Step, Steps } from './lib/tags/steps.component';
 import { step, steps } from './lib/tags/steps.schema';
 import { courseVideo } from './lib/tags/course-video.schema';
 import { VideoLink, videoLink } from './lib/tags/video-link.component';
-import { CourseVideo } from '@nx/nx-dev-ui-common';
+import {
+  CourseVideo,
+  YouTube,
+  Tweet,
+  youtube,
+  tweet,
+} from '@nx/nx-dev-ui-common';
 // import { SvgAnimation, svgAnimation } from './lib/tags/svg-animation.component';
 import { Pill } from './lib/tags/pill.component';
 import { pill } from './lib/tags/pill.schema';
@@ -93,8 +99,8 @@ export const getMarkdocCustomConfig = (
       tabs,
       testimonial,
       toc: tableOfContents,
-      // tweet,
-      // youtube,
+      tweet,
+      youtube,
       'course-video': courseVideo,
       'video-link': videoLink,
       metrics,
@@ -128,8 +134,8 @@ export const getMarkdocCustomConfig = (
     Tabs,
     TableOfContents,
     Testimonial,
-    // Tweet,
-    // YouTube,
+    Tweet,
+    YouTube,
     CourseVideo,
     VideoLink,
     VideoPlayer,
