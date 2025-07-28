@@ -631,8 +631,33 @@ async function startServer(
     }
 
     if (sanitizePath === 'task-graph.json') {
+      const projectName = parsedUrl.searchParams.get('project');
+      const targetName = parsedUrl.searchParams.get('target');
+      const configuration = parsedUrl.searchParams.get('configuration');
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(await createTaskGraphClientResponse()));
+
+      if (projectName && targetName) {
+        // Lazy load specific task graph
+        res.end(
+          JSON.stringify(
+            await createSpecificTaskGraphResponse(
+              projectName,
+              targetName,
+              configuration
+            )
+          )
+        );
+      } else {
+        // Load all task graphs (legacy behavior)
+        res.end(JSON.stringify(await createTaskGraphClientResponse()));
+      }
+      return;
+    }
+
+    if (sanitizePath === 'task-graph-metadata.json') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(await createTaskGraphMetadataResponse()));
       return;
     }
 
@@ -808,6 +833,8 @@ function createFileWatcher() {
 
           currentProjectGraphClientResponse = projectGraphClientResponse;
           currentSourceMapsClientResponse = sourceMapResponse;
+          // Clear task graph cache when project graph changes
+          clearTaskGraphCache();
         } else {
           output.note({ title: 'No graph changes found.' });
         }
@@ -1085,11 +1112,172 @@ function createTaskId(
   }
 }
 
+// Performance optimized functions for lazy loading task graphs
+
+// In-memory cache for task graphs to avoid regeneration
+const taskGraphCache = new Map<string, TaskGraphClientResponse>();
+let taskGraphMetadataCache: {
+  projects: Array<{
+    name: string;
+    targets: Array<{ name: string; configurations?: string[] }>;
+  }>;
+} | null = null;
+
+// Clear cache when project graph changes
+function clearTaskGraphCache() {
+  taskGraphCache.clear();
+  taskGraphMetadataCache = null;
+}
+
+/**
+ * Creates a lightweight metadata response containing only project names and targets
+ * This allows the UI to build the task selection tree without loading all task graphs
+ */
+async function createTaskGraphMetadataResponse(): Promise<{
+  projects: Array<{
+    name: string;
+    targets: Array<{
+      name: string;
+      configurations?: string[];
+    }>;
+  }>;
+}> {
+  // Check cache first
+  if (taskGraphMetadataCache) {
+    return taskGraphMetadataCache;
+  }
+
+  let graph: ProjectGraph;
+  try {
+    graph = await createProjectGraphAsync({ exitOnError: false });
+  } catch (e) {
+    if (e instanceof ProjectGraphError) {
+      graph = e.getPartialProjectGraph();
+    }
+  }
+
+  const projects = Object.values(graph.nodes).map((project) => ({
+    name: project.name,
+    targets: Object.entries(project.data.targets ?? {}).map(
+      ([targetName, target]) => ({
+        name: targetName,
+        configurations: target.configurations
+          ? Object.keys(target.configurations)
+          : undefined,
+      })
+    ),
+  }));
+
+  // Cache the result
+  taskGraphMetadataCache = { projects };
+  return taskGraphMetadataCache;
+}
+
+/**
+ * Creates a task graph response for a specific project and target
+ * This is much faster than generating all task graphs upfront
+ */
+async function createSpecificTaskGraphResponse(
+  projectName: string,
+  targetName: string,
+  configuration?: string
+): Promise<TaskGraphClientResponse> {
+  const taskId = createTaskId(projectName, targetName, configuration);
+
+  // Check cache first
+  const cached = taskGraphCache.get(taskId);
+  if (cached) {
+    return cached;
+  }
+
+  let graph: ProjectGraph;
+  try {
+    graph = await createProjectGraphAsync({ exitOnError: false });
+  } catch (e) {
+    if (e instanceof ProjectGraphError) {
+      graph = e.getPartialProjectGraph();
+    }
+  }
+
+  const nxJson = readNxJson();
+
+  performance.mark(`specific task graph generation:start`);
+
+  // Create only the specific task graph requested
+  const taskGraphs: Record<string, TaskGraph> = {};
+  const taskGraphErrors: Record<string, string> = {};
+
+  try {
+    taskGraphs[taskId] = createTaskGraph(
+      graph,
+      {},
+      [projectName],
+      [targetName],
+      configuration,
+      {}
+    );
+  } catch (err) {
+    taskGraphs[taskId] = {
+      tasks: {},
+      dependencies: {},
+      continuousDependencies: {},
+      roots: [],
+    };
+    taskGraphErrors[taskId] = err.message;
+  }
+
+  performance.mark(`specific task graph generation:end`);
+
+  const planner = new HashPlanner(
+    nxJson,
+    transferProjectGraph(transformProjectGraphForRust(graph))
+  );
+
+  performance.mark('specific task hash plan generation:start');
+  const plans: Record<string, string[]> = {};
+
+  // Get plans for all tasks in the task graph
+  const taskIds = Object.keys(taskGraphs[taskId].tasks);
+  const taskPlans = planner.getPlans(taskIds, taskGraphs[taskId]);
+  Object.assign(plans, taskPlans);
+
+  performance.mark('specific task hash plan generation:end');
+
+  const result = {
+    taskGraphs,
+    plans,
+    errors: taskGraphErrors,
+  };
+
+  // Cache the result
+  taskGraphCache.set(taskId, result);
+
+  performance.measure(
+    `specific task graph generation for ${taskId}`,
+    `specific task graph generation:start`,
+    `specific task graph generation:end`
+  );
+
+  performance.measure(
+    'specific task hash plan generation',
+    'specific task hash plan generation:start',
+    'specific task hash plan generation:end'
+  );
+
+  return result;
+}
+
 async function getExpandedTaskInputs(
   taskId: string
 ): Promise<Record<string, string[]>> {
   const [project] = taskId.split(':');
-  const taskGraphResponse = await createTaskGraphClientResponse(false);
+  // Use the optimized version that only creates the specific task graph needed
+  const [projectName, targetName, configuration] = taskId.split(':');
+  const taskGraphResponse = await createSpecificTaskGraphResponse(
+    projectName,
+    targetName,
+    configuration
+  );
 
   const allWorkspaceFiles = await allFileData();
 
