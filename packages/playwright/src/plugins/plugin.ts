@@ -370,12 +370,7 @@ async function buildPlaywrightTargets(
       ciTargetGroup.push(deleteAtomizedBlobReportOutputTaskName);
 
       // update the ci target
-      targets[options.ciTargetName].dependsOn = dependsOn.map(
-        (d: TargetDependencyConfig) => ({
-          ...d,
-          requiredToSucceed: false,
-        })
-      );
+      targets[options.ciTargetName].dependsOn = dependsOn;
       targets[options.ciTargetName].executor = '@nx/playwright:merge-reports';
       targets[options.ciTargetName].options = {
         blobReportsDir: options.atomizedBlobReportOutputDir,
