@@ -158,7 +158,7 @@
     },
     "granularInputs": {
       "type": "boolean",
-      "description": "Each spec file when run with atomizer will have have more granular inputs. This is to ensure that tests are not affected by each other.",
+      "description": "Each spec file when run with atomizer will have more granular inputs. This is to ensure that tests are not affected by each other.",
       "default": false
     }
   },
