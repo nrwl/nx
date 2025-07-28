@@ -1,241 +1,200 @@
-import {
-  extractUserAndRepoFromGitHubUrl,
-  getGithubSlugOrNull,
-} from './git-utils';
+import { parseVcsRemoteUrl, getVcsRemoteInfo } from './git-utils';
 import { execSync } from 'child_process';
 
 jest.mock('child_process');
 
 describe('git utils tests', () => {
-  describe('getGithubSlugOrNull', () => {
+  describe('parseVcsRemoteUrl', () => {
+    it('should parse GitHub SSH URLs', () => {
+      expect(parseVcsRemoteUrl('git@github.com:nrwl/nx.git')).toEqual({
+        domain: 'github.com',
+        slug: 'nrwl/nx',
+      });
+    });
+
+    it('should parse GitHub SSH URLs with period (ssh)', () => {
+      expect(parseVcsRemoteUrl('git@github.com:nrwl.abc/nx.abc.git')).toEqual({
+        domain: 'github.com',
+        slug: 'nrwl.abc/nx.abc',
+      });
+    });
+
+    it('should parse GitHub HTTPS URLs', () => {
+      expect(parseVcsRemoteUrl('https://github.com/nrwl/nx.git')).toEqual({
+        domain: 'github.com',
+        slug: 'nrwl/nx',
+      });
+    });
+
+    it('should parse GitHub SSH URLs with period (https)', () => {
+      expect(
+        parseVcsRemoteUrl('https://github.com/nrwl.abc/nx.abc.git')
+      ).toEqual({
+        domain: 'github.com',
+        slug: 'nrwl.abc/nx.abc',
+      });
+    });
+
+    it('should parse GitHub Enterprise SSH URLs', () => {
+      expect(
+        parseVcsRemoteUrl('git@github.enterprise.com:org/repo.git')
+      ).toEqual({
+        domain: 'github.enterprise.com',
+        slug: 'org/repo',
+      });
+    });
+
+    it('custom domains ssh', () => {
+      expect(parseVcsRemoteUrl('git@enterprise.com:org/repo.git')).toEqual({
+        domain: 'enterprise.com',
+        slug: 'org/repo',
+      });
+    });
+
+    it('should parse GitHub Enterprise HTTPS URLs', () => {
+      expect(
+        parseVcsRemoteUrl('https://github.enterprise.com/org/repo.git')
+      ).toEqual({
+        domain: 'github.enterprise.com',
+        slug: 'org/repo',
+      });
+    });
+
+    it('custom domains', () => {
+      expect(parseVcsRemoteUrl('https://enterprise.com/org/repo.git')).toEqual({
+        domain: 'enterprise.com',
+        slug: 'org/repo',
+      });
+    });
+
+    it('should parse GitLab SSH URLs', () => {
+      expect(
+        parseVcsRemoteUrl('git@gitlab.com:group.abc/project.abc.git')
+      ).toEqual({
+        domain: 'gitlab.com',
+        slug: 'group.abc/project.abc',
+      });
+    });
+
+    it('should parse GitLab HTTPS URLs', () => {
+      expect(parseVcsRemoteUrl('https://gitlab.com/group/project.git')).toEqual(
+        {
+          domain: 'gitlab.com',
+          slug: 'group/project',
+        }
+      );
+    });
+
+    it('should parse Bitbucket SSH URLs', () => {
+      expect(parseVcsRemoteUrl('git@bitbucket.org:team/repo.git')).toEqual({
+        domain: 'bitbucket.org',
+        slug: 'team/repo',
+      });
+    });
+
+    it('should parse Bitbucket HTTPS URLs', () => {
+      expect(parseVcsRemoteUrl('https://bitbucket.org/team/repo.git')).toEqual({
+        domain: 'bitbucket.org',
+        slug: 'team/repo',
+      });
+    });
+
+    it('should parse HTTPS URLs with authentication', () => {
+      expect(
+        parseVcsRemoteUrl('https://user@gitlab.com/group.abc/project.abc.git')
+      ).toEqual({
+        domain: 'gitlab.com',
+        slug: 'group.abc/project.abc',
+      });
+    });
+
+    it('should parse SSH URLs with alternative format', () => {
+      expect(
+        parseVcsRemoteUrl('ssh://git@gitlab.com/group.abc/project.abc.git')
+      ).toEqual({
+        domain: 'gitlab.com',
+        slug: 'group.abc/project.abc',
+      });
+    });
+
+    it('should parse SSH URLs with port', () => {
+      expect(
+        parseVcsRemoteUrl('ssh://git@gitlab.com:2222/group.abc/project.abc.git')
+      ).toEqual({
+        domain: 'gitlab.com',
+        slug: 'group.abc/project.abc',
+      });
+    });
+
+    it('should handle URLs without .git extension', () => {
+      expect(parseVcsRemoteUrl('git@github.com:nrwl.abc/nx.abc')).toEqual({
+        domain: 'github.com',
+        slug: 'nrwl.abc/nx.abc',
+      });
+    });
+
+    it('should return null for invalid URLs', () => {
+      expect(parseVcsRemoteUrl('not-a-valid-url')).toBeNull();
+      expect(parseVcsRemoteUrl('')).toBeNull();
+      expect(parseVcsRemoteUrl('https://example.com')).toBeNull();
+    });
+  });
+
+  describe('getVcsRemoteInfo', () => {
     afterEach(() => {
       jest.resetAllMocks();
     });
 
-    it('should return the github slug from the remote URL', () => {
+    it('should return VCS info for GitHub remote', () => {
       (execSync as jest.Mock).mockReturnValue(`
-      origin	git@github.com:origin-user/repo-name.git (fetch)
-      origin	git@github.com:origin-user/repo-name.git (push)
-    `);
+        origin	git@github.com:nrwl/nx.git (fetch)
+        origin	git@github.com:nrwl/nx.git (push)
+      `);
 
-      const result = getGithubSlugOrNull();
-
-      expect(result).toBe('origin-user/repo-name');
-      expect(execSync).toHaveBeenCalledWith('git remote -v', {
-        stdio: 'pipe',
-        windowsHide: false,
+      expect(getVcsRemoteInfo()).toEqual({
+        domain: 'github.com',
+        slug: 'nrwl/nx',
       });
     });
 
-    it('should return "github" if there are no remotes', () => {
+    it('should return VCS info for GitLab remote', () => {
+      (execSync as jest.Mock).mockReturnValue(`
+        origin	git@gitlab.com:group/project.git (fetch)
+        origin	git@gitlab.com:group/project.git (push)
+      `);
+
+      expect(getVcsRemoteInfo()).toEqual({
+        domain: 'gitlab.com',
+        slug: 'group/project',
+      });
+    });
+
+    it('should prioritize origin over other remotes', () => {
+      (execSync as jest.Mock).mockReturnValue(`
+        upstream	git@gitlab.com:other/project.git (fetch)
+        upstream	git@gitlab.com:other/project.git (push)
+        origin	git@github.com:nrwl/nx.git (fetch)
+        origin	git@github.com:nrwl/nx.git (push)
+      `);
+
+      expect(getVcsRemoteInfo()).toEqual({
+        domain: 'github.com',
+        slug: 'nrwl/nx',
+      });
+    });
+
+    it('should return null when no remotes exist', () => {
       (execSync as jest.Mock).mockReturnValue('');
 
-      const result = getGithubSlugOrNull();
-
-      expect(result).toBe('github');
-      expect(execSync).toHaveBeenCalledWith('git remote -v', {
-        stdio: 'pipe',
-        windowsHide: false,
-      });
+      expect(getVcsRemoteInfo()).toBeNull();
     });
 
-    it('should return "github" if execSync throws an error', () => {
+    it('should return null when execSync throws', () => {
       (execSync as jest.Mock).mockImplementation(() => {
-        throw new Error('error');
+        throw new Error('git not found');
       });
 
-      const result = getGithubSlugOrNull();
-
-      expect(result).toBe('github');
-      expect(execSync).toHaveBeenCalledWith('git remote -v', {
-        stdio: 'pipe',
-        windowsHide: false,
-      });
-    });
-
-    it('should return the first github remote slug if no origin is present', () => {
-      (execSync as jest.Mock).mockReturnValue(`
-      upstream	git@github.com:upstream-user/repo-name.git (fetch)
-      upstream	git@github.com:upstream-user/repo-name.git (push)
-    `);
-
-      const result = getGithubSlugOrNull();
-
-      expect(result).toBe('upstream-user/repo-name');
-      expect(execSync).toHaveBeenCalledWith('git remote -v', {
-        stdio: 'pipe',
-        windowsHide: false,
-      });
-    });
-
-    it('should return null if remote is set up but not github', () => {
-      (execSync as jest.Mock).mockReturnValue(`
-      upstream	git@gitlab.com:upstream-user/repo-name.git (fetch)
-      upstream	git@gitlab.com:upstream-user/repo-name.git (push)
-    `);
-
-      const result = getGithubSlugOrNull();
-
-      expect(result).toBeNull();
-      expect(execSync).toHaveBeenCalledWith('git remote -v', {
-        stdio: 'pipe',
-        windowsHide: false,
-      });
-    });
-
-    it('should return the first github remote slug for HTTPS URLs', () => {
-      (execSync as jest.Mock).mockReturnValue(`
-      origin	https://github.com/origin-user/repo-name.git (fetch)
-      origin	https://github.com/origin-user/repo-name.git (push)
-    `);
-
-      const result = getGithubSlugOrNull();
-
-      expect(result).toBe('origin-user/repo-name');
-      expect(execSync).toHaveBeenCalledWith('git remote -v', {
-        stdio: 'pipe',
-        windowsHide: false,
-      });
-    });
-  });
-
-  describe('extractUserAndRepoFromGitHubUrl', () => {
-    describe('ssh cases', () => {
-      it('should return the github user + repo info for origin', () => {
-        expect(
-          extractUserAndRepoFromGitHubUrl(
-            `
-          upstream	git@github.com:upstream-user/repo-name.git (fetch)
-          upstream	git@github.com:upstream-user/repo-name.git (push)
-          origin	git@github.com:origin-user/repo-name.git (fetch)
-          origin	git@github.com:origin-user/repo-name.git (push)
-        `
-          )
-        ).toBe('origin-user/repo-name');
-      });
-
-      it('should return the github user + repo info for upstream since no origin', () => {
-        expect(
-          extractUserAndRepoFromGitHubUrl(
-            `
-          upstream	git@github.com:upstream-user/repo-name.git (fetch)
-          upstream	git@github.com:upstream-user/repo-name.git (push)
-          base	git@github.com:base-user/repo-name.git (fetch)
-          base	git@github.com:base-user/repo-name.git (push)
-          other	git@github.com:other-user/repo-name.git (fetch)
-          other	git@github.com:other-user/repo-name.git (push)
-        `
-          )
-        ).toBe('upstream-user/repo-name');
-      });
-
-      it('should return the github user + repo info for base since no origin and upstream', () => {
-        expect(
-          extractUserAndRepoFromGitHubUrl(
-            `
-          base	git@github.com:base-user/repo-name.git (fetch)
-          base	git@github.com:base-user/repo-name.git (push)
-          other	git@github.com:other-user/repo-name.git (fetch)
-          other	git@github.com:other-user/repo-name.git (push)
-        `
-          )
-        ).toBe('base-user/repo-name');
-      });
-
-      it('should return the github user + repo info for the first one since no origin, upstream, or base', () => {
-        expect(
-          extractUserAndRepoFromGitHubUrl(
-            `
-          other	git@github.com:other-user/repo-name.git (fetch)
-          other	git@github.com:other-user/repo-name.git (push)
-          another	git@github.com:another-user/repo-name.git (fetch)
-          another	git@github.com:another-user/repo-name.git (push)
-        `
-          )
-        ).toBe('other-user/repo-name');
-      });
-
-      it('should return null since no github', () => {
-        expect(
-          extractUserAndRepoFromGitHubUrl(
-            `
-          upstream	git@random.com:upstream-user/repo-name.git (fetch)
-          upstream	git@random.com:upstream-user/repo-name.git (push)
-          origin	git@random.com:other-user/repo-name.git (fetch)
-          origin	git@random.com:other-user/repo-name.git (push)
-        `
-          )
-        ).toBe(null);
-      });
-    });
-
-    describe('https cases', () => {
-      it('should return the github user + repo info for origin', () => {
-        expect(
-          extractUserAndRepoFromGitHubUrl(
-            `
-          upstream	https://github.com/upstream-user/repo-name.git (fetch)
-          upstream	https://github.com/upstream-user/repo-name.git (push)
-          origin	https://github.com/origin-user/repo-name.git (fetch)
-          origin	https://github.com/origin-user/repo-name.git (push)
-        `
-          )
-        ).toBe('origin-user/repo-name');
-      });
-
-      it('should return the github user + repo info for upstream since no origin', () => {
-        expect(
-          extractUserAndRepoFromGitHubUrl(
-            `
-          upstream	https://github.com/upstream-user/repo-name.git (fetch)
-          upstream	https://github.com/upstream-user/repo-name.git (push)
-          base	https://github.com/base-user/repo-name.git (fetch)
-          base	https://github.com/base-user/repo-name.git (push)
-          other	https://github.com/other-user/repo-name.git (fetch)
-          other	https://github.com/other-user/repo-name.git (push)
-        `
-          )
-        ).toBe('upstream-user/repo-name');
-      });
-
-      it('should return the github user + repo info for base since no origin and upstream', () => {
-        expect(
-          extractUserAndRepoFromGitHubUrl(
-            `
-          base	https://github.com/base-user/repo-name.git (fetch)
-          base	https://github.com/base-user/repo-name.git (push)
-          other	https://github.com/other-user/repo-name.git (fetch)
-          other	https://github.com/other-user/repo-name.git (push)
-        `
-          )
-        ).toBe('base-user/repo-name');
-      });
-
-      it('should return the github user + repo info for the first one since no origin, upstream, or base', () => {
-        expect(
-          extractUserAndRepoFromGitHubUrl(
-            `
-          other	https://github.com/other-user/repo-name.git (fetch)
-          other	https://github.com/other-user/repo-name.git (push)
-          another	https://github.com/another-user/repo-name.git (fetch)
-          another	https://github.com/another-user/repo-name.git (push)
-        `
-          )
-        ).toBe('other-user/repo-name');
-      });
-
-      it('should return null since no github', () => {
-        expect(
-          extractUserAndRepoFromGitHubUrl(
-            `
-          upstream	https://other.com/upstream-user/repo-name.git (fetch)
-          upstream	https://other.com/upstream-user/repo-name.git (push)
-          origin	https://other.com/other-user/repo-name.git (fetch)
-          origin	https://other.com/other-user/repo-name.git (push)
-        `
-          )
-        ).toBe(null);
-      });
+      expect(getVcsRemoteInfo()).toBeNull();
     });
   });
 });

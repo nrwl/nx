@@ -18,8 +18,8 @@ import {
 } from '../../../utils/ab-testing';
 import { nxVersion } from '../../../utils/versions';
 import { workspaceRoot } from '../../../utils/workspace-root';
+import { getVcsRemoteInfo } from '../../../utils/git-utils';
 import chalk = require('chalk');
-import { getGitRemote } from '../../../utils/git-utils';
 const ora = require('ora');
 const open = require('open');
 
@@ -80,7 +80,7 @@ export async function connectToNxCloudCommand(
     ? 'nx-console'
     : 'nx-connect';
 
-  const hasRemote = !!getGitRemote();
+  const hasRemote = !!getVcsRemoteInfo();
   if (!hasRemote && options.checkRemote) {
     output.error({
       title: 'Missing VCS provider',
@@ -105,7 +105,8 @@ export async function connectToNxCloudCommand(
     const connectCloudUrl = await createNxCloudOnboardingURL(
       installationSource,
       token,
-      options?.generateToken !== true
+      undefined,
+      options?.generateToken === true
     );
     output.log({
       title: '✔ This workspace already has Nx Cloud set up',
@@ -126,7 +127,8 @@ export async function connectToNxCloudCommand(
   const connectCloudUrl = await createNxCloudOnboardingURL(
     'nx-connect',
     token,
-    options?.generateToken !== true
+    undefined,
+    options?.generateToken === true
   );
   try {
     const cloudConnectSpinner = ora(
