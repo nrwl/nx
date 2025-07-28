@@ -678,6 +678,21 @@ function stripOuterQuotes(str: string): string {
 function ensureFileExtensions(files: string[], absoluteDir: string): string[] {
   const extensions = ['.js', '.cjs', '.mjs', '.json', '.ts', '.tsx'];
   return files.map((file) => {
+    // Check if the path ends with a directory separator
+    if (file.endsWith('/') || file.endsWith('\\')) {
+      return file;
+    }
+
+    // Check if the path is a directory
+    try {
+      const absolutePath = join(absoluteDir, file);
+      if (existsSync(absolutePath) && statSync(absolutePath).isDirectory()) {
+        return file;
+      }
+    } catch (error) {
+      // Ignore errors, continue with extension handling
+    }
+
     const providedExt = extname(file);
     if (providedExt && extensions.includes(providedExt)) return file;
 
