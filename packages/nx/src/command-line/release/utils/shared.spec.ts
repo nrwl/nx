@@ -51,16 +51,19 @@ describe('shared', () => {
             currentVersion: '1.0.0',
             dependentProjects: [],
             newVersion: '1.0.1',
+            dockerVersion: null,
           },
           bar: {
             currentVersion: '1.0.0',
             dependentProjects: [],
             newVersion: '1.0.1',
+            dockerVersion: null,
           },
           baz: {
             currentVersion: '1.0.0',
             dependentProjects: [],
             newVersion: '1.0.1',
+            dockerVersion: null,
           },
         };
         const userCommitMessage =
@@ -263,11 +266,13 @@ describe('shared', () => {
             currentVersion: '1.0.0',
             dependentProjects: [],
             newVersion: null,
+            dockerVersion: null,
           },
           b: {
             currentVersion: '1.0.0',
             dependentProjects: [],
             newVersion: null,
+            dockerVersion: null,
           },
         }
       );

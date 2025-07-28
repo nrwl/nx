@@ -74,6 +74,7 @@ pub struct App {
     debug_mode: bool,
     debug_state: TuiWidgetState,
     console_messenger: Option<NxConsoleMessageConnection>,
+    estimated_task_timings: HashMap<String, i64>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -152,6 +153,7 @@ impl App {
             debug_mode: false,
             debug_state: TuiWidgetState::default().set_default_display_level(LevelFilter::Debug),
             console_messenger: None,
+            estimated_task_timings: HashMap::new(),
         })
     }
 
@@ -1764,6 +1766,17 @@ impl App {
             terminal_pane_data.can_be_interactive = false;
         }
 
+        // Get task timing information from TasksList
+        let (start_time, end_time) = self
+            .components
+            .iter()
+            .find_map(|c| c.as_any().downcast_ref::<TasksList>())
+            .map(|tasks_list| tasks_list.get_task_timing(&task_name))
+            .unwrap_or((None, None));
+
+        // Get estimated duration from app's estimated_task_timings
+        let estimated_duration = self.estimated_task_timings.get(&task_name).copied();
+
         let mut state = TerminalPaneState::new(
             task_name,
             task_status,
@@ -1772,6 +1785,9 @@ impl App {
             has_pty,
             is_next_tab_target,
             self.console_messenger.is_some(),
+            estimated_duration,
+            start_time,
+            end_time,
         );
 
         let terminal_pane = TerminalPane::new()
@@ -1796,5 +1812,9 @@ impl App {
                 .alignment(Alignment::Center);
 
         f.render_widget(placeholder, pane_area);
+    }
+
+    pub fn set_estimated_task_timings(&mut self, timings: HashMap<String, i64>) {
+        self.estimated_task_timings = timings;
     }
 }

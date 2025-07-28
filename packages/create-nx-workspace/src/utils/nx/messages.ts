@@ -36,10 +36,7 @@ const outputMessages = {
         return {
           title: `Your remote cache is almost complete.`,
           type: 'success',
-          bodyLines: [
-            getSetupMessage(url, pushedToVcs),
-            `You can also set up a remote cache later by running \`nx g @nx/nx-cloud:init\``,
-          ],
+          bodyLines: [getSetupMessage(url, pushedToVcs)],
         };
       },
     },
@@ -49,6 +46,7 @@ type OutputMessageKey = keyof typeof outputMessages;
 
 class ABTestingMessages {
   private selectedMessages: Record<string, number> = {};
+
   getMessageFactory(key: OutputMessageKey) {
     if (this.selectedMessages[key] === undefined) {
       if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {

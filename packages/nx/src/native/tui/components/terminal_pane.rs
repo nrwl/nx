@@ -17,7 +17,29 @@ use tui_term::widget::PseudoTerminal;
 use crate::native::tui::components::tasks_list::TaskStatus;
 use crate::native::tui::scroll_momentum::{ScrollDirection, ScrollMomentum};
 use crate::native::tui::theme::THEME;
+use crate::native::tui::utils::{format_duration, format_duration_since, format_live_duration};
 use crate::native::tui::{action::Action, pty::PtyInstance};
+
+/// Configuration for terminal pane layout and display constants
+#[derive(Debug, Clone)]
+struct TerminalPaneConfig {
+    /// Minimum width required to display duration information
+    min_duration_display_width: u16,
+    /// Maximum task name length before truncation to allow displaying other columns
+    task_name_max_length: usize,
+    /// Padding around task name separator
+    task_name_separator_padding: usize,
+    /// Spacing for tab text display
+    tab_text_spacing: usize,
+    /// Right margin for UI elements
+    right_margin: u16,
+    /// Width padding for UI elements
+    width_padding: u16,
+    /// Text displayed for tab focus instruction
+    tab_text: &'static str,
+    /// Short tab text displayed when there's no space for the full tab text but there's space for the minimal tab text
+    short_tab_text: &'static str,
+}
 
 pub struct TerminalPaneData {
     pub pty: Option<Arc<PtyInstance>>,
@@ -187,6 +209,9 @@ pub struct TerminalPaneState {
     pub console_available: bool,
     // Cache expected viewport dimensions for consistent scrollbar calculations
     pub expected_viewport_height: Option<u16>,
+    pub estimated_duration: Option<i64>,
+    pub start_time: Option<i64>,
+    pub end_time: Option<i64>,
 }
 
 impl TerminalPaneState {
@@ -198,6 +223,9 @@ impl TerminalPaneState {
         has_pty: bool,
         is_next_tab_target: bool,
         console_available: bool,
+        estimated_duration: Option<i64>,
+        start_time: Option<i64>,
+        end_time: Option<i64>,
     ) -> Self {
         Self {
             task_name,
@@ -210,6 +238,9 @@ impl TerminalPaneState {
             is_next_tab_target,
             console_available,
             expected_viewport_height: None,
+            estimated_duration,
+            start_time,
+            end_time,
         }
     }
 }
@@ -359,6 +390,57 @@ impl<'a> TerminalPane<'a> {
         // Fallback to current calculation
         current_content_rows
     }
+
+    /// Configuration for terminal pane layout and display
+    const CONFIG: TerminalPaneConfig = TerminalPaneConfig {
+        min_duration_display_width: 20, // allows displaying "999.9s (999.9s avg)"
+        task_name_max_length: 30,
+        task_name_separator_padding: 3,
+        tab_text_spacing: 6,
+        right_margin: 3,
+        width_padding: 2,
+        tab_text: "Press <tab> to focus output",
+        short_tab_text: "<tab> to focus",
+    };
+
+    /// Determines whether the duration display should be shown in the terminal pane
+    /// based on task status, configuration, and space constraints.
+    fn should_show_duration_display(&self, state: &TerminalPaneState, area: Rect) -> bool {
+        !state.is_continuous
+            && state.estimated_duration.is_some()
+            && matches!(
+                state.task_status,
+                TaskStatus::InProgress
+                    | TaskStatus::Success
+                    | TaskStatus::Failure
+                    | TaskStatus::LocalCacheKeptExisting
+                    | TaskStatus::LocalCache
+                    | TaskStatus::RemoteCache
+            )
+            && area.width > Self::CONFIG.min_duration_display_width
+    }
+
+    /// Formats the duration display for terminal pane showing live/actual duration vs estimated duration
+    fn format_duration_display(&self, state: &TerminalPaneState) -> Option<String> {
+        let estimated = state.estimated_duration?;
+        let start = state.start_time?;
+
+        let actual_duration = match state.task_status {
+            TaskStatus::InProgress => format_live_duration(start),
+            TaskStatus::Success
+            | TaskStatus::Failure
+            | TaskStatus::LocalCacheKeptExisting
+            | TaskStatus::LocalCache
+            | TaskStatus::RemoteCache => {
+                let end = state.end_time?;
+                format_duration_since(start, end)
+            }
+            _ => return None,
+        };
+
+        let formatted_estimate = format_duration(estimated);
+        Some(format!("{} ({} avg)", actual_duration, formatted_estimate))
+    }
 }
 
 // This lifetime is needed for our terminal pane data, it breaks without it
@@ -428,9 +510,46 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
             }),
         ));
 
-        if state.is_next_tab_target {
-            let tab_target_text =
-                Span::raw("Press <tab> to focus output ").remove_modifier(Modifier::DIM);
+        // Calculate all layout values once to avoid redundant calculations
+        let task_name_display_len = if state.task_name.len() <= Self::CONFIG.task_name_max_length {
+            state.task_name.len() + Self::CONFIG.task_name_separator_padding
+        } else {
+            Self::CONFIG.task_name_max_length + Self::CONFIG.task_name_separator_padding
+        };
+
+        let show_duration = self.should_show_duration_display(state, safe_area);
+        let (duration_width, duration_formatted) = if show_duration {
+            if let Some(text) = self.format_duration_display(state) {
+                let formatted = format!("  {}  ", text);
+                (formatted.len(), Some(formatted))
+            } else {
+                (0, None)
+            }
+        } else {
+            (0, None)
+        };
+
+        // Determine which tab text to show based on available space
+        let tab_text_to_show = if state.is_next_tab_target {
+            let base_width = task_name_display_len
+                + Self::CONFIG.tab_text_spacing
+                + if show_duration { duration_width } else { 0 };
+
+            // Check if we have space for full tab text
+            if safe_area.width as usize >= base_width + Self::CONFIG.tab_text.len() {
+                Some(Self::CONFIG.tab_text)
+            } else if safe_area.width as usize >= base_width + Self::CONFIG.short_tab_text.len() {
+                Some(Self::CONFIG.short_tab_text)
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        // Display the appropriate tab text
+        if let Some(tab_text) = tab_text_to_show {
+            let tab_target_text = Span::raw(tab_text).remove_modifier(Modifier::DIM);
             // In light themes, use the primary fg color for the tab target text to make sure it's clearly visible
             if !THEME.is_dark_mode {
                 title.push(tab_target_text.fg(THEME.primary_fg));
@@ -622,6 +741,11 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                         scrollbar.render(safe_area, buf, &mut state.scrollbar_state);
                     }
 
+                    let show_interactive_status = state.task_status == TaskStatus::InProgress
+                        && state.is_focused
+                        && pty_data.can_be_interactive
+                        && !self.minimal;
+
                     // Show instructions to quit in minimal mode if somehow terminal became non-interactive
                     if self.minimal && !self.is_currently_interactive() {
                         let top_text = Line::from(vec![
@@ -636,11 +760,13 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                             .sum::<usize>();
 
                         // Ensure text doesn't extend past safe area
-                        if mode_width as u16 + 3 < safe_area.width {
+                        if mode_width as u16 + Self::CONFIG.right_margin < safe_area.width {
                             let top_right_area = Rect {
-                                x: safe_area.x + safe_area.width - mode_width as u16 - 3,
+                                x: safe_area.x + safe_area.width
+                                    - mode_width as u16
+                                    - Self::CONFIG.right_margin,
                                 y: safe_area.y,
-                                width: mode_width as u16 + 2,
+                                width: mode_width as u16 + Self::CONFIG.width_padding,
                                 height: 1,
                             };
 
@@ -651,27 +777,26 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                         }
 
                     // Show interactive/readonly status for focused, in progress tasks, when not in minimal mode
-                    } else if state.task_status == TaskStatus::InProgress
-                        && state.is_focused
-                        && pty_data.can_be_interactive
-                        && !self.minimal
-                    {
+                    } else if show_interactive_status {
                         // Bottom right status
                         let bottom_text = if self.is_currently_interactive() {
                             Line::from(vec![
-                                Span::raw("  "),
-                                Span::styled("<ctrl>+z", Style::default().fg(THEME.info)),
                                 Span::styled(
-                                    " to exit interactive  ",
+                                    "  INTERACTIVE ",
                                     Style::default().fg(THEME.primary_fg),
                                 ),
+                                Span::styled("<ctrl>+z", Style::default().fg(THEME.info)),
+                                Span::styled(" to toggle  ", Style::default().fg(THEME.primary_fg)),
                             ])
                         } else {
                             Line::from(vec![
-                                Span::raw("  "),
+                                Span::styled(
+                                    "  NON-INTERACTIVE ",
+                                    Style::default().fg(THEME.secondary_fg),
+                                ),
                                 Span::styled("i", Style::default().fg(THEME.info)),
                                 Span::styled(
-                                    " to make interactive  ",
+                                    " to toggle  ",
                                     Style::default().fg(THEME.secondary_fg),
                                 ),
                             ])
@@ -684,11 +809,13 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                             .sum::<usize>();
 
                         // Ensure status text doesn't extend past safe area
-                        if text_width as u16 + 3 < safe_area.width {
+                        if text_width as u16 + Self::CONFIG.right_margin < safe_area.width {
                             let bottom_right_area = Rect {
-                                x: safe_area.x + safe_area.width - text_width as u16 - 3,
+                                x: safe_area.x + safe_area.width
+                                    - text_width as u16
+                                    - Self::CONFIG.right_margin,
                                 y: safe_area.y + safe_area.height - 1,
-                                width: text_width as u16 + 2,
+                                width: text_width as u16 + Self::CONFIG.width_padding,
                                 height: 1,
                             };
 
@@ -697,52 +824,23 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                                 .style(border_style)
                                 .render(bottom_right_area, buf);
                         }
+                    }
 
-                        // Top right status
-                        let top_text = if self.is_currently_interactive() {
-                            Line::from(vec![Span::styled(
-                                "  INTERACTIVE  ",
-                                Style::default().fg(THEME.primary_fg),
-                            )])
-                        } else {
-                            Line::from(vec![Span::styled(
-                                "  NON-INTERACTIVE  ",
-                                Style::default().fg(THEME.secondary_fg),
-                            )])
-                        };
-
-                        let mode_width = top_text
-                            .spans
-                            .iter()
-                            .map(|span| span.content.len())
-                            .sum::<usize>();
-
-                        // Ensure status text doesn't extend past safe area
-                        if mode_width as u16 + 3 < safe_area.width {
-                            let top_right_area = Rect {
-                                x: safe_area.x + safe_area.width - mode_width as u16 - 3,
-                                y: safe_area.y,
-                                width: mode_width as u16 + 2,
-                                height: 1,
-                            };
-
-                            Paragraph::new(top_text)
-                                .alignment(Alignment::Right)
-                                .style(border_style)
-                                .render(top_right_area, buf);
-                        }
-                    } else if needs_scrollbar {
+                    // Render scrollbar padding when needed, but not for minimal non-interactive panes
+                    if needs_scrollbar && !(self.minimal && !self.is_currently_interactive()) {
                         // Render padding for both top and bottom when scrollbar is present
                         let padding_text = Line::from(vec![Span::raw("  ")]);
                         let padding_width = 2;
 
                         // Ensure paddings don't extend past safe area
-                        if padding_width + 3 < safe_area.width {
+                        if padding_width + Self::CONFIG.right_margin < safe_area.width {
                             // Top padding
                             let top_right_area = Rect {
-                                x: safe_area.x + safe_area.width - padding_width - 3,
+                                x: safe_area.x + safe_area.width
+                                    - padding_width
+                                    - Self::CONFIG.right_margin,
                                 y: safe_area.y,
-                                width: padding_width + 2,
+                                width: padding_width + Self::CONFIG.width_padding,
                                 height: 1,
                             };
 
@@ -751,22 +849,236 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                                 .style(border_style)
                                 .render(top_right_area, buf);
 
-                            // Bottom padding
-                            let bottom_right_area = Rect {
-                                x: safe_area.x + safe_area.width - padding_width - 3,
-                                y: safe_area.y + safe_area.height - 1,
-                                width: padding_width + 2,
-                                height: 1,
-                            };
+                            // Bottom padding (only if interactive status is not being displayed)
+                            if !show_interactive_status {
+                                let bottom_right_area = Rect {
+                                    x: safe_area.x + safe_area.width
+                                        - padding_width
+                                        - Self::CONFIG.right_margin,
+                                    y: safe_area.y + safe_area.height - 1,
+                                    width: padding_width + Self::CONFIG.width_padding,
+                                    height: 1,
+                                };
 
-                            Paragraph::new(padding_text)
-                                .alignment(Alignment::Right)
-                                .style(border_style)
-                                .render(bottom_right_area, buf);
+                                Paragraph::new(padding_text)
+                                    .alignment(Alignment::Right)
+                                    .style(border_style)
+                                    .render(bottom_right_area, buf);
+                            }
+                        }
+                    }
+
+                    // Duration display (shown regardless of focus state when pane is open)
+                    if show_duration {
+                        if let Some(duration_formatted_text) = duration_formatted {
+                            let duration_line = Line::from(vec![Span::styled(
+                                duration_formatted_text,
+                                Style::default().fg(THEME.secondary_fg),
+                            )]);
+
+                            // Calculate remaining width after reserving space for task name
+                            let remaining_width =
+                                safe_area.width.saturating_sub(task_name_display_len as u16);
+
+                            if duration_width as u16
+                                + Self::CONFIG.right_margin
+                                + Self::CONFIG.width_padding
+                                <= remaining_width
+                                && safe_area.height > 1
+                                && safe_area.width >= Self::CONFIG.min_duration_display_width
+                            {
+                                let duration_area = Rect {
+                                    x: safe_area.x + safe_area.width
+                                        - duration_width as u16
+                                        - Self::CONFIG.right_margin,
+                                    y: safe_area.y,
+                                    width: duration_width as u16 + Self::CONFIG.width_padding,
+                                    height: 1,
+                                };
+
+                                Paragraph::new(duration_line)
+                                    .alignment(Alignment::Right)
+                                    .style(border_style)
+                                    .render(duration_area, buf);
+                            }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ratatui::layout::Rect;
+
+    // Helper function to create a TerminalPane for testing
+    fn create_terminal_pane() -> TerminalPane<'static> {
+        TerminalPane::new()
+    }
+
+    // Helper function to create a TerminalPaneState for testing
+    fn create_terminal_pane_state(
+        task_status: TaskStatus,
+        is_continuous: bool,
+        estimated_duration: Option<i64>,
+        start_time: Option<i64>,
+        end_time: Option<i64>,
+    ) -> TerminalPaneState {
+        TerminalPaneState::new(
+            "test-task".to_string(),
+            task_status,
+            is_continuous,
+            false, // is_focused
+            false, // has_pty
+            false, // is_next_tab_target
+            false, // console_available
+            estimated_duration,
+            start_time,
+            end_time,
+        )
+    }
+
+    #[test]
+    fn test_should_show_duration_display_conditions() {
+        let terminal_pane = create_terminal_pane();
+        let area = Rect::new(0, 0, 30, 10); // width = 30, sufficient for display
+
+        // Test that duration display is shown for InProgress tasks with estimated duration
+        let state = create_terminal_pane_state(
+            TaskStatus::InProgress,
+            false,      // not continuous
+            Some(1000), // has estimated duration
+            None,
+            None,
+        );
+        assert!(terminal_pane.should_show_duration_display(&state, area));
+
+        // Test that duration display is shown for Success tasks with estimated duration
+        let state = create_terminal_pane_state(
+            TaskStatus::Success,
+            false,      // not continuous
+            Some(1000), // has estimated duration
+            None,
+            None,
+        );
+        assert!(terminal_pane.should_show_duration_display(&state, area));
+
+        // Test that duration display is shown for Failure tasks with estimated duration
+        let state = create_terminal_pane_state(
+            TaskStatus::Failure,
+            false,      // not continuous
+            Some(1000), // has estimated duration
+            None,
+            None,
+        );
+        assert!(terminal_pane.should_show_duration_display(&state, area));
+
+        // Test that duration display is shown for all cache-related successful completion statuses
+        let state = create_terminal_pane_state(
+            TaskStatus::LocalCacheKeptExisting,
+            false,      // not continuous
+            Some(1000), // has estimated duration
+            None,
+            None,
+        );
+        assert!(terminal_pane.should_show_duration_display(&state, area));
+
+        let state = create_terminal_pane_state(
+            TaskStatus::LocalCache,
+            false,      // not continuous
+            Some(1000), // has estimated duration
+            None,
+            None,
+        );
+        assert!(terminal_pane.should_show_duration_display(&state, area));
+
+        let state = create_terminal_pane_state(
+            TaskStatus::RemoteCache,
+            false,      // not continuous
+            Some(1000), // has estimated duration
+            None,
+            None,
+        );
+        assert!(terminal_pane.should_show_duration_display(&state, area));
+
+        let state = create_terminal_pane_state(
+            TaskStatus::Skipped,
+            false,      // not continuous
+            Some(1000), // has estimated duration
+            None,
+            None,
+        );
+        assert!(!terminal_pane.should_show_duration_display(&state, area));
+
+        // Test that duration display is NOT shown for continuous tasks
+        let state = create_terminal_pane_state(
+            TaskStatus::InProgress,
+            true,       // continuous
+            Some(1000), // has estimated duration
+            None,
+            None,
+        );
+        assert!(!terminal_pane.should_show_duration_display(&state, area));
+
+        // Test that duration display is NOT shown without estimated duration
+        let state = create_terminal_pane_state(
+            TaskStatus::InProgress,
+            false, // not continuous
+            None,  // no estimated duration
+            None,
+            None,
+        );
+        assert!(!terminal_pane.should_show_duration_display(&state, area));
+
+        // Test that duration display is NOT shown with insufficient width
+        let narrow_area = Rect::new(0, 0, 15, 10); // width = 15, insufficient
+        let state = create_terminal_pane_state(
+            TaskStatus::InProgress,
+            false,      // not continuous
+            Some(1000), // has estimated duration
+            None,
+            None,
+        );
+        assert!(!terminal_pane.should_show_duration_display(&state, narrow_area));
+
+        // Test that duration display is NOT shown for NotStarted tasks
+        let state = create_terminal_pane_state(
+            TaskStatus::NotStarted,
+            false,      // not continuous
+            Some(1000), // has estimated duration
+            None,
+            None,
+        );
+        assert!(!terminal_pane.should_show_duration_display(&state, area));
+
+        // Test edge case: exactly at minimum width (insufficient space)
+        let min_area = Rect::new(0, 0, TerminalPane::CONFIG.min_duration_display_width, 10);
+        let state = create_terminal_pane_state(
+            TaskStatus::InProgress,
+            false,      // not continuous
+            Some(1000), // has estimated duration
+            None,
+            None,
+        );
+        assert!(!terminal_pane.should_show_duration_display(&state, min_area));
+
+        // Test edge case: just above minimum width
+        let above_min_area = Rect::new(
+            0,
+            0,
+            TerminalPane::CONFIG.min_duration_display_width + 1,
+            10,
+        );
+        let state = create_terminal_pane_state(
+            TaskStatus::InProgress,
+            false,      // not continuous
+            Some(1000), // has estimated duration
+            None,
+            None,
+        );
+        assert!(terminal_pane.should_show_duration_display(&state, above_min_area));
     }
 }

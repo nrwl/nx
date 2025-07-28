@@ -41,7 +41,7 @@ export async function createNxCloudOnboardingUrl(
       paths: [directory],
     }
     // nx-ignore-next-line
-  )) as typeof import('nx/src/nx-cloud/utilities/url-shorten');
+  )) as any;
 
   const source =
     nxCloud === 'yes'
@@ -51,9 +51,10 @@ export async function createNxCloudOnboardingUrl(
   return await createNxCloudOnboardingURL(
     source,
     token,
+    code,
+    false,
     useGitHub ??
-      (nxCloud === 'yes' || nxCloud === 'github' || nxCloud === 'circleci'),
-    code
+      (nxCloud === 'yes' || nxCloud === 'github' || nxCloud === 'circleci')
   );
 }
 

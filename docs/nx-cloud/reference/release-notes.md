@@ -1,5 +1,66 @@
 # Enterprise Release Notes
 
+### 2025.07.1
+
+- Fix: auth redirect loop when using admin login
+- Fix: improvement to the flaky task retry mechanism
+
+### 2025.07
+
+##### Breaking Change
+
+This upgrade includes a breaking change to the `nx-cloud` cluster: instead of a message queue, the `nx-api` pod needs a valid Valkey (Redis) connection string.
+
+1. Install Valkey:
+   1. You can either use the Bitnami chart: https://github.com/bitnami/charts/tree/main/bitnami/valkey
+   2. Or for a simpler deployment, you can use the Valkey docker image directly: https://hub.docker.com/r/valkey/valkey/
+   3. Or you can install it as a system service: https://valkey.io/topics/installation/
+2. Upgrade to the latest Helm chart `0.16.3`
+3. Apply the following values
+
+```yaml
+enableMessageQueue: false
+
+nxApi:
+  # add these env vars to the nx-api
+  deployment:
+    env:
+      - name: VALKEY_CLIENT_PROVIDER
+        value: 'redisson'
+      - name: VALKEY_PASSWORD
+        valueFrom:
+          # remember to apply this secret to your cluster
+          secretKeyRef:
+            name: valkey-secrets
+            key: VALKEY_PASSWORD
+      - name: VALKEY_PORT
+        value: '6379'
+      - name: VALKEY_PRIMARY_ADDRESS
+        value: 'valkey'
+      - name: VALKEY_USE_SENTINEL
+        value: 'false'
+      - name: VALKEY_USERNAME
+        value: 'default'
+      - name: NX_CLOUD_CONFORMANCE_RULES_BUCKET
+        value:
+          local-cluster-file-server # use this exact value if you are using the file server, otherwise point it to an S3/Azure/Google bucket
+          # it will use the same role-based auth mechanism you already configured for the NxCloud cache
+          # you can also use the same bucket name that you use for the cache (rules will just be stored in a sub-folder)
+```
+
+##### Updates
+
+- Feat: [Polygraph availability](/ci/recipes/enterprise/polygraph) (Conformance, Workspace Graph, Custom Workflows)
+- Feat: Nx 21 [continuous tasks](/blog/nx-21-continuous-tasks) support
+- Feat: Download artifacts button
+  - When you view a task that just ran in CI on the NxCloud UI, there is now a button to download any artifacts that task produced directly from your browser
+  - This is especially useful if you want to view screenshots/videos of failed e2e tests
+- Feat: [Self-healing CI](/ci/features/self-healing-ci)
+  - Speak to your assigned DPE about testing this
+  - You will need an Anthropic API key and access to Claude's servers
+- Feat: Dark Mode UI setting
+- Various fixes and stability improvements to DTE, agent visualization, and other areas of the app
+
 ### 2025.06.3
 
 - Fix: add timeouts to GitLab requests

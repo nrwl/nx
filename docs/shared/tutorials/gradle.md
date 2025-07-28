@@ -241,6 +241,8 @@ This tutorial walked you through how Nx can improve the local development experi
 
 Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
 
+{% call-to-action title="Get Started with Nx Cloud Free 🎯" url="https://cloud.nx.app/create-nx-workspace?preset=gradle" description="Cut CI times by 70% - Enterprise-grade caching & distribution at no cost" /%}
+
 Now that we're working on the CI pipeline, it is important for your changes to be pushed to a GitHub repository.
 
 1. Commit your existing changes with `git add . && git commit -am "updates"`

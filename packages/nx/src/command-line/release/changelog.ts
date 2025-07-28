@@ -67,6 +67,7 @@ import {
   commitChanges,
   createCommitMessageValues,
   createGitTagValues,
+  shouldPreferDockerVersionForReleaseGroup,
   handleDuplicateGitTags,
   isPrerelease,
   noDiffInChangelogMessage,
@@ -1245,13 +1246,19 @@ async function generateChangelogForProjects({
      */
     if (
       !projectsVersionData[project.name] ||
-      projectsVersionData[project.name].newVersion === null
+      (projectsVersionData[project.name].newVersion === null &&
+        !projectsVersionData[project.name].dockerVersion)
     ) {
       continue;
     }
 
+    const preferDockerVersion =
+      shouldPreferDockerVersionForReleaseGroup(releaseGroup);
     const releaseVersion = new ReleaseVersion({
-      version: projectsVersionData[project.name].newVersion,
+      version:
+        preferDockerVersion && projectsVersionData[project.name].dockerVersion
+          ? projectsVersionData[project.name].dockerVersion
+          : projectsVersionData[project.name].newVersion,
       releaseTagPattern: releaseGroup.releaseTagPattern,
       projectName: project.name,
     });

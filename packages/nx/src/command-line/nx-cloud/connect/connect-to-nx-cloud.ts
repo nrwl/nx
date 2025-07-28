@@ -18,6 +18,7 @@ import {
 } from '../../../utils/ab-testing';
 import { nxVersion } from '../../../utils/versions';
 import { workspaceRoot } from '../../../utils/workspace-root';
+import { getVcsRemoteInfo } from '../../../utils/git-utils';
 import chalk = require('chalk');
 const ora = require('ora');
 const open = require('open');
@@ -70,7 +71,7 @@ export async function connectWorkspaceToCloud(
 }
 
 export async function connectToNxCloudCommand(
-  options: { generateToken?: boolean },
+  options: { generateToken?: boolean; checkRemote?: boolean },
   command?: string
 ): Promise<boolean> {
   const nxJson = readNxJson();
@@ -78,6 +79,18 @@ export async function connectToNxCloudCommand(
   const installationSource = process.env.NX_CONSOLE
     ? 'nx-console'
     : 'nx-connect';
+
+  const hasRemote = !!getVcsRemoteInfo();
+  if (!hasRemote && options.checkRemote) {
+    output.error({
+      title: 'Missing VCS provider',
+      bodyLines: [
+        'Push this repository to a VCS provider (e.g., GitHub) and try again.',
+        'Go to https://github.com/new to create a repository on GitHub.',
+      ],
+    });
+    return false;
+  }
 
   if (isNxCloudUsed(nxJson)) {
     const token =
@@ -92,7 +105,8 @@ export async function connectToNxCloudCommand(
     const connectCloudUrl = await createNxCloudOnboardingURL(
       installationSource,
       token,
-      options?.generateToken !== true
+      undefined,
+      options?.generateToken === true
     );
     output.log({
       title: '✔ This workspace already has Nx Cloud set up',
@@ -113,7 +127,8 @@ export async function connectToNxCloudCommand(
   const connectCloudUrl = await createNxCloudOnboardingURL(
     'nx-connect',
     token,
-    options?.generateToken !== true
+    undefined,
+    options?.generateToken === true
   );
   try {
     const cloudConnectSpinner = ora(

@@ -114,6 +114,12 @@ export class TaskOrchestrator {
       }),
       'init' in this.cache ? this.cache.init() : null,
     ]);
+
+    // Pass estimated timings to TUI after TasksSchedule is initialized
+    if (this.tuiEnabled) {
+      const estimatedTimings = this.tasksSchedule.getEstimatedTaskTimings();
+      this.options.lifeCycle.setEstimatedTaskTimings(estimatedTimings);
+    }
   }
 
   async run() {

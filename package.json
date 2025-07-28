@@ -370,7 +370,7 @@
     "enquirer": "~2.3.6",
     "eslint-config-next": "14.2.28",
     "fast-glob": "3.3.3",
-    "form-data": "^4.0.2",
+    "form-data": "^4.0.4",
     "framer-motion": "^11.3.0",
     "front-matter": "^4.0.2",
     "glob": "7.1.4",
