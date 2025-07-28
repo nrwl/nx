@@ -1,13 +1,15 @@
 ---
 title: Publish in CI/CD
-description: Learn how to configure Nx Release to automate your package publishing process in CI/CD pipelines, including authentication, environment setup, and workflow examples.
+description: Learn how to configure Nx Release to automate your package publishing process in CI/CD pipelines across different ecosystems including npm, Docker, and Rust.
 ---
 
 # Publish in CI/CD
 
-Nx Release makes it easy to move your publishing process into your CI/CD pipeline.
+Nx Release makes it easy to move your publishing process into your CI/CD pipeline across different package ecosystems.
 
-## Automatically Skip Publishing Locally
+## General Concepts
+
+### Automatically Skip Publishing Locally
 
 When running `nx release`, after the version updates and changelog generation, you will be prompted with the following question:
 
@@ -24,9 +26,23 @@ To move publishing into an automated pipeline, you will want to skip publishing 
 Skipped publishing packages.
 ```
 
-## Use the Publish Subcommand
+### Use the Publish Subcommand
 
 Nx Release provides a publishing subcommand that performs just the publishing step. Use this in your CI/CD pipeline to publish the packages.
+
+```{% command="nx release publish" %}
+NX   Running target nx-release-publish for 3 projects:
+
+- pkg-1
+- pkg-2
+- pkg-3
+
+...
+```
+
+## Publishing NPM Packages
+
+### Example NPM Publish Output
 
 ```{% command="nx release publish" %}
 NX   Running target nx-release-publish for 3 projects:
@@ -108,9 +124,9 @@ Published to https://registry.npmjs.org with tag "latest"
 NX   Successfully ran target nx-release-publish for 3 projects
 ```
 
-## Publish in Github Actions
+### NPM Publishing in GitHub Actions
 
-A common way to automate publishing packages is via Github Actions. An example of a publish workflow is as follows:
+A common way to automate publishing NPM packages is via GitHub Actions. An example of a publish workflow is as follows:
 
 ```yaml
 # ./.github/workflows/publish.yml
@@ -164,17 +180,17 @@ This workflow will install node, install npm dependencies, then run `nx release 
 2. Push the changes (including the new tag) to the remote repository with `git push && git push --tags`.
 3. The publish workflow will automatically trigger and publish the packages to the npm registry.
 
-## Configure the NODE_AUTH_TOKEN
+### Configure the NODE_AUTH_TOKEN
 
-The `NODE_AUTH_TOKEN` environment variable is needed to authenticate with the npm registry. In the above workflow, it is passed into the Publish packages step via a [Github Secret](https://docs.github.com/en/actions/reference/encrypted-secrets).
+The `NODE_AUTH_TOKEN` environment variable is needed to authenticate with the npm registry. In the above workflow, it is passed into the Publish packages step via a [GitHub Secret](https://docs.github.com/en/actions/reference/encrypted-secrets).
 
-### Generate a NODE_AUTH_TOKEN for NPM
+#### Generate a NODE_AUTH_TOKEN for NPM
 
-To generate the correct `NODE_AUTH_TOKEN` for the npmJS registry specifically, first login to [https://www.npmjs.com/](https://www.npmjs.com/). Select your profile icon, then navigate to "Access Tokens". Generate a new Granular Access Token. Ensure that the token has read and write access to both the packages you are publishing and their organization (if applicable). Copy the generated token and add it as a secret to your Github repository.
+To generate the correct `NODE_AUTH_TOKEN` for the npmJS registry specifically, first login to [https://www.npmjs.com/](https://www.npmjs.com/). Select your profile icon, then navigate to "Access Tokens". Generate a new Granular Access Token. Ensure that the token has read and write access to both the packages you are publishing and their organization (if applicable). Copy the generated token and add it as a secret to your GitHub repository.
 
-### Add the NODE_AUTH_TOKEN to Github Secrets
+#### Add the NODE_AUTH_TOKEN to GitHub Secrets
 
-To add the token as a secret to your Github repository, navigate to your repository, then select "Settings" > "Secrets and Variables" > "Actions". Add a new Repository Secret with the name `NPM_ACCESS_TOKEN` and the value of the token you generated in the previous step.
+To add the token as a secret to your GitHub repository, navigate to your repository, then select "Settings" > "Secrets and Variables" > "Actions". Add a new Repository Secret with the name `NPM_ACCESS_TOKEN` and the value of the token you generated in the previous step.
 
 Note: The `NPM_ACCESS_TOKEN` name is not important other than that it matches the usage in the workflow:
 
@@ -187,9 +203,7 @@ Note: The `NPM_ACCESS_TOKEN` name is not important other than that it matches th
     NPM_CONFIG_PROVENANCE: true
 ```
 
-[(See full workflow above)](#publish-in-github-actions)
-
-## NPM Provenance
+### NPM Provenance
 
 To verify your packages with [npm provenance](https://docs.npmjs.com/generating-provenance-statements), set the `NPM_CONFIG_PROVENANCE` environment variable to `true` in the step where `nx release publish` is performed. The workflow will also need the `id-token: write` permission to generate the provenance data:
 
@@ -212,4 +226,108 @@ jobs:
     NPM_CONFIG_PROVENANCE: true
 ```
 
-[(See full workflow above)](#publish-in-github-actions)
+## Publishing Docker Images (Experimental)
+
+{% callout type="warning" title="Experimental Feature" %}
+Docker support in Nx is currently experimental and may undergo breaking changes without following semantic versioning.
+{% /callout %}
+
+When using Nx Release with Docker images, the publishing process differs from npm packages. Docker images are built and tagged during the versioning phase, then pushed to a registry during the publish phase.
+
+### Docker Registry Authentication
+
+Before publishing Docker images, ensure you're authenticated with your Docker registry:
+
+```yaml {% fileName=".github/workflows/publish.yml" %}
+- name: Login to Docker Hub
+  uses: docker/login-action@v2
+  with:
+    username: ${{ secrets.DOCKER_USERNAME }}
+    password: ${{ secrets.DOCKER_TOKEN }}
+
+- name: Build and tag Docker images
+  run: npx nx release version --dockerVersionScheme=production
+
+- name: Publish Docker images
+  run: npx nx release publish
+```
+
+### Using Different Registries
+
+Configure alternative registries in your `nx.json`:
+
+```jsonc {% fileName="nx.json" %}
+{
+  "release": {
+    "docker": {
+      "registryUrl": "ghcr.io", // GitHub Container Registry
+      "repositoryName": "myorg"
+    }
+  }
+}
+```
+
+### Example GitHub Actions Workflow for Docker
+
+```yaml {% fileName=".github/workflows/docker-publish.yml" %}
+name: Docker Publish
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build applications
+        run: npx nx run-many -t build
+        
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+          
+      - name: Release with Docker
+        run: npx nx release --dockerVersionScheme=production
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+## Publishing Rust Crates
+
+For Rust projects, Nx Release integrates with `cargo publish` to publish crates to crates.io.
+
+### Cargo Authentication
+
+Ensure you have a valid crates.io API token:
+
+```yaml {% fileName=".github/workflows/publish.yml" %}
+- name: Publish Rust crates
+  run: npx nx release publish
+  env:
+    CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+```
+
+For more details on Rust support, see [Publishing Rust Crates](/recipes/nx-release/publish-rust-crates).
+
+## Choosing Your Publishing Strategy
+
+Nx Release supports multiple ecosystems, each with their own authentication and publishing requirements:
+
+- **NPM Packages**: Use `NODE_AUTH_TOKEN` for authentication, supports provenance
+- **Docker Images**: Requires Docker login before publishing, supports calendar versioning
+- **Rust Crates**: Uses `CARGO_REGISTRY_TOKEN` for crates.io authentication
+
+You can use Nx Release with any combination of these ecosystems in a single monorepo, with each project type publishing to its appropriate registry.

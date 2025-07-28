@@ -23,22 +23,22 @@ A release can be thought about in three main phases:
 
 1. **Versioning** - The process of determining the next version of your projects, and updating any projects that depend on them to use the new version.
 2. **Changelog** - The process of deriving a changelog from your commit messages or [version plan](/recipes/nx-release/file-based-versioning-version-plans) files, which can be used to communicate the changes to your users.
-3. **Publishing** - The process of publishing your projects to a registry, such as npm for TypeScript/JavaScript libraries.
+3. **Publishing** - The process of publishing your projects to a registry, such as npm for TypeScript/JavaScript libraries, crates.io for Rust, or Docker registries for container images.
 
 ## Running releases
 
 The `nx release` command is used to run the release process from end to end. It is a wrapper around the three main phases of a release to provide maximum convenience and ease of use.
 
-By default if you just run `nx release` it will prompt you for a semver-compatible version number, or semver keyword (such as major, minor, patch, etc.) and then run the three phases of the release process, including publishing.
+By default, when you run `nx release` it will prompt you for a version keyword (e.g. major, minor, patch) or a custom version number. The release command will then run the three phases of the release process in order: versioning, changelog generation, and publishing.
 
-As with most Nx commands, when trying it out for the first time, it is strongly recommended to use the `--dry-run` flag to see what changes will be made before actually making them.
+When trying it out for the first time, need to pass the `--first-release` flag since there is no previous release to compare against for changelog purposes. It is strongly recommended to use the `--dry-run` flag to see what will be published in the first release without actually pushing anything to the registry.
 
 ```shell
-nx release --dry-run
+nx release --first-release --dry-run
 ```
 
-{% callout type="note" title="Establishing the previous release" %}
-If you are working with a brand new workspace, or one that has never been released before, you will need to establish the previous release before running `nx release`. This is because Nx needs to know what the previous version of your projects was in order to know what to use as the start of the new release's changelog commit range. To do this, run `git tag` with an appropriate initial version. For example, if you have a brand new workspace, you might run `git tag 0.0.0` to establish the initial version.
+{% callout type="info" title="Semantic Versioning" %}
+By default, the version follows semantic versioning (semver) rules. To disable this behavior, set `release.releaseTagPatternRequireSemver` to `false` in your `nx.json` file. This allows you to use custom versioning schemes.
 {% /callout %}
 
 ## Customizing releases
@@ -96,6 +96,65 @@ Changelog render options can be passed as [an object](https://github.com/nrwl/nx
   }
 }
 ```
+
+## Docker and Other Ecosystems
+
+{% callout type="warning" title="Docker is Experimental" %}
+Docker support in Nx Release is currently experimental and may undergo breaking changes without following semantic versioning.
+{% /callout %}
+
+### Docker Releases
+
+Nx Release supports Docker image versioning and publishing with calendar-based version schemes. This is ideal for continuous deployment workflows where every build is potentially releasable.
+
+```jsonc {% fileName="nx.json" %}
+{
+  "release": {
+    "releaseTagPattern": {
+      "pattern": "release/{projectName}/{version}"
+    },
+    "groups": {
+      "apps": {
+        "projects": ["java-backend", "node-backend"],
+        "projectsRelationship": "independent",
+        "docker": {
+          "skipVersionActions": true
+        },
+        "changelog": {
+          "projectChangelogs": true
+        }
+      },
+      "packages": {
+        "projects": ["node-backend", "shared-utils", "shared-logger"]
+      }
+    }
+  }
+}
+```
+
+Use the `--dockerVersionScheme` flag to release Docker images:
+
+```shell
+# Build and tag Docker images
+nx release version --dockerVersionScheme=production
+
+# Push to registry
+nx release publish
+```
+
+This creates version tags like `2501.24.a1b2c3d` based on the current date and commit SHA.
+
+### Key Differences for Docker
+
+- **Calendar Versioning**: Uses date-based versions instead of semantic versioning
+- **skipVersionActions**: Use this to exclude projects that shouldn't have Docker images
+- **Pre-version Commands**: Run `docker:build` targets before versioning
+
+Learn more in the [Docker deployment guide](/recipes/deployment/deploy-node-docker).
+
+### Rust Crate Publishing
+
+Nx Release also supports publishing Rust crates to crates.io. Configure Rust projects similarly to JavaScript projects, and Nx will use `cargo publish` during the publish phase.
 
 ## Using nx release subcommands independently
 

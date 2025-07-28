@@ -96,3 +96,46 @@ nx release --projects='!ui/*'
 ```
 
 All other projects in the workspace will be ignored and only those that match the filter will be versioned, have their changelogs updated, and published.
+
+## Version Scheme Syntax
+
+Nx Release supports flexible version schemes through template placeholders. This is especially useful for Docker images and other artifacts that may benefit from calendar-based versioning.
+
+### Available Placeholders
+
+- `{version}` - The semantic version (e.g., 1.2.3)
+- `{projectName}` - The name of the project being released
+- `{releaseGroupName}` - The name of the release group (when using groups)
+- `{currentDate|FORMAT}` - Current date in the specified format
+  - `YYMM.DD` - Two-digit year, month, and day (e.g., 2501.24)
+  - `YY.MM.DD` - Two-digit year, month, and day with dots
+  - `YYMM.DD.HHmm` - Includes hours and minutes
+- `{shortCommitSha}` - First 7 characters of the current commit SHA
+- `{commitSha}` - Full commit SHA
+
+### Examples
+
+For traditional semantic versioning:
+```jsonc {% fileName="nx.json" %}
+{
+  "release": {
+    "releaseTagPattern": "{projectName}@{version}"
+  }
+}
+```
+
+For Docker with calendar versioning:
+```jsonc {% fileName="nx.json" %}
+{
+  "release": {
+    "docker": {
+      "versionSchemes": {
+        "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
+        "staging": "{currentDate|YYMM.DD}-staging"
+      }
+    }
+  }
+}
+```
+
+Calendar versioning is particularly useful for continuous deployment workflows where every build is potentially releasable, and the date provides immediate context about when the release was created.

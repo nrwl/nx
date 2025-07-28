@@ -526,6 +526,101 @@ The `git` property configures the automated git operations that take place as pa
 }
 ```
 
+### Docker (Experimental)
+
+{% callout type="warning" title="Experimental Feature" %}
+Docker support in Nx is currently experimental and may undergo breaking changes without following semantic versioning.
+{% /callout %}
+
+The `docker` property configures Docker image versioning and publishing when using `nx release`. This enables calendar-based versioning schemes and automated Docker registry publishing as part of your release workflow.
+
+```jsonc {% fileName="nx.json" %}
+{
+  "release": {
+    // Simple configuration - enables Docker with defaults
+    "docker": true
+  }
+}
+```
+
+```jsonc {% fileName="nx.json" %}
+{
+  "release": {
+    "docker": {
+      // Run this command before versioning Docker images
+      "preVersionCommand": "npx nx run-many -t docker:build",
+      
+      // Define versioning schemes for different environments
+      "versionSchemes": {
+        "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
+        "hotfix": "{currentDate|YYMM.DD}.{shortCommitSha}-hotfix",
+        "staging": "{currentDate|YYMM.DD}-staging",
+        "development": "{currentDate|YYMM.DD}-dev-{shortCommitSha}"
+      },
+      
+      // Skip Docker versioning for these projects
+      "skipVersionActions": ["legacy-app", "deprecated-service"],
+      
+      // Default Docker repository name (can be overridden per project)
+      "repositoryName": "myorg",
+      
+      // Docker registry URL
+      "registryUrl": "docker.io"
+    }
+  }
+}
+```
+
+#### Version Scheme Syntax
+
+Docker version schemes support calendar-based patterns using the following placeholders:
+
+- `{currentDate|FORMAT}` - Current date in the specified format
+  - `YYMM.DD` - Two-digit year, month, and day (e.g., 2501.24)
+  - `YY.MM.DD` - Two-digit year, month, and day with dots
+  - `YYMM.DD.HHmm` - Includes hours and minutes
+- `{shortCommitSha}` - First 7 characters of the current commit SHA
+- `{commitSha}` - Full commit SHA
+
+Calendar versioning is ideal for continuous deployment workflows where every build is potentially releasable.
+
+#### Group-Level Docker Configuration
+
+You can configure Docker settings at the release group level:
+
+```jsonc {% fileName="nx.json" %}
+{
+  "release": {
+    "groups": {
+      "backend": {
+        "projects": ["api", "worker"],
+        "docker": {
+          "groupPreVersionCommand": "nx affected -t test",
+          "versionSchemes": {
+            "production": "{currentDate|YY.MM.DD}",
+            "canary": "{currentDate|YYMM.DD.HHmm}"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+#### Project-Level Docker Configuration
+
+Individual projects can override Docker settings in their `project.json`:
+
+```jsonc {% fileName="project.json" %}
+{
+  "release": {
+    "docker": {
+      "repositoryName": "custom-repo/special-app"
+    }
+  }
+}
+```
+
 ## Sync
 
 These are global configuration options for the [`nx sync`](/reference/nx-commands#sync) command. The `nx sync` command runs all global and task-specific [sync generators](/concepts/sync-generators) to ensure that your files are in the correct state to run tasks or start the CI process.
