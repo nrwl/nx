@@ -32,8 +32,7 @@ const messageOptions = {
         },
         { value: 'skip', name: 'No' },
       ],
-      footer:
-        '\nRead more about remote cache at https://nx.dev/ci/features/remote-cache',
+      footer: '\nRead more about Nx Cloud at https://nx.dev/nx-cloud',
       hint: `\n(it's free and can be disabled any time)`,
     },
   ],

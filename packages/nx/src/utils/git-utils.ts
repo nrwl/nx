@@ -231,73 +231,110 @@ export class GitRepository {
   }
 }
 
-export function getGitRemote() {
-  const res = execSync('git remote -v', {
-    stdio: 'pipe',
-    windowsHide: false,
-  })
-    .toString()
-    .trim();
-  return res;
+export interface VcsRemoteInfo {
+  domain: string;
+  slug: string;
 }
 
-/**
- * This is currently duplicated in Nx Console. Please let @MaxKless know if you make changes here.
- */
-export function getGithubSlugOrNull(): string | null {
-  try {
-    const gitRemote = getGitRemote();
-    // If there are no remotes, we default to github
-    if (!gitRemote || gitRemote.length === 0) {
-      return 'github';
-    }
-    return extractUserAndRepoFromGitHubUrl(gitRemote);
-  } catch (e) {
-    // Probably git is not set up, so we default to github
-    return 'github';
-  }
-}
+export function parseVcsRemoteUrl(url: string): VcsRemoteInfo | null {
+  // Remove whitespace and handle common URL formats
+  const cleanUrl = url.trim();
 
-export function extractUserAndRepoFromGitHubUrl(
-  gitRemotes: string
-): string | null {
-  const regex =
-    /^\s*(\w+)\s+(git@github\.com:|https:\/\/github\.com\/)([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\.git/gm;
-  const remotesPriority = ['origin', 'upstream', 'base'];
-  const foundRemotes: { [key: string]: string } = {};
-  let firstGitHubUrl: string | null = null;
-  let match;
-
-  while ((match = regex.exec(gitRemotes)) !== null) {
-    const remoteName = match[1];
-    const url = match[2] + match[3] + '/' + match[4] + '.git';
-    foundRemotes[remoteName] = url;
-
-    if (!firstGitHubUrl) {
-      firstGitHubUrl = url;
-    }
+  // SSH format: git@domain:owner/repo.git
+  const sshMatch = cleanUrl.match(/^git@([^:]+):([^\/]+)\/(.+?)(\.git)?$/);
+  if (sshMatch) {
+    const [, domain, owner, repo] = sshMatch;
+    return {
+      domain,
+      slug: `${owner}/${repo}`,
+    };
   }
 
-  for (const remote of remotesPriority) {
-    if (foundRemotes[remote]) {
-      return parseGitHubUrl(foundRemotes[remote]);
-    }
+  // HTTPS with authentication: https://user@domain/owner/repo.git
+  const httpsAuthMatch = cleanUrl.match(
+    /^https?:\/\/[^@]+@([^\/]+)\/([^\/]+)\/(.+?)(\.git)?$/
+  );
+  if (httpsAuthMatch) {
+    const [, domain, owner, repo] = httpsAuthMatch;
+    return {
+      domain,
+      slug: `${owner}/${repo}`,
+    };
   }
 
-  return firstGitHubUrl ? parseGitHubUrl(firstGitHubUrl) : null;
-}
-
-function parseGitHubUrl(url: string): string | null {
-  const sshPattern =
-    /git@github\.com:([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\.git/;
-  const httpsPattern =
-    /https:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\.git/;
-  let match = url.match(sshPattern) || url.match(httpsPattern);
-
-  if (match) {
-    return `${match[1]}/${match[2]}`;
+  // HTTPS format: https://domain/owner/repo.git (without authentication)
+  const httpsMatch = cleanUrl.match(
+    /^https?:\/\/([^@\/]+)\/([^\/]+)\/(.+?)(\.git)?$/
+  );
+  if (httpsMatch) {
+    const [, domain, owner, repo] = httpsMatch;
+    return {
+      domain,
+      slug: `${owner}/${repo}`,
+    };
   }
+
+  // SSH alternative format: ssh://git@domain/owner/repo.git or ssh://git@domain:port/owner/repo.git
+  const sshAltMatch = cleanUrl.match(
+    /^ssh:\/\/[^@]+@([^:\/]+)(:[0-9]+)?\/([^\/]+)\/(.+?)(\.git)?$/
+  );
+  if (sshAltMatch) {
+    const [, domain, , owner, repo] = sshAltMatch;
+    return {
+      domain,
+      slug: `${owner}/${repo}`,
+    };
+  }
+
   return null;
+}
+
+export function getVcsRemoteInfo(): VcsRemoteInfo | null {
+  try {
+    const gitRemote = execSync('git remote -v', {
+      stdio: 'pipe',
+      windowsHide: false,
+    })
+      .toString()
+      .trim();
+
+    if (!gitRemote || gitRemote.length === 0) {
+      return null;
+    }
+
+    const lines = gitRemote.split('\n').filter((line) => line.trim());
+    const remotesPriority = ['origin', 'upstream', 'base'];
+    const foundRemotes: { [key: string]: VcsRemoteInfo } = {};
+    let firstRemote: VcsRemoteInfo | null = null;
+
+    for (const line of lines) {
+      const match = line.trim().match(/^(\w+)\s+(\S+)\s+\((fetch|push)\)$/);
+      if (match) {
+        const [, remoteName, url] = match;
+        const remoteInfo = parseVcsRemoteUrl(url);
+
+        if (remoteInfo && !foundRemotes[remoteName]) {
+          foundRemotes[remoteName] = remoteInfo;
+
+          if (!firstRemote) {
+            firstRemote = remoteInfo;
+          }
+        }
+      }
+    }
+
+    // Return high-priority remote if found
+    for (const remote of remotesPriority) {
+      if (foundRemotes[remote]) {
+        return foundRemotes[remote];
+      }
+    }
+
+    // Return first found remote
+    return firstRemote;
+  } catch (e) {
+    return null;
+  }
 }
 
 export function commitChanges(

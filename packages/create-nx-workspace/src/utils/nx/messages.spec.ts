@@ -124,7 +124,6 @@ describe('Nx Cloud Messages', () => {
         {
           "bodyLines": [
             "Go to Nx Cloud and finish the setup: https://nx.app/setup/456",
-            "You can also set up a remote cache later by running \`nx g @nx/nx-cloud:init\`",
           ],
           "title": "Your remote cache is almost complete.",
           "type": "success",
@@ -141,7 +140,6 @@ describe('Nx Cloud Messages', () => {
         {
           "bodyLines": [
             "Return to Nx Cloud and finish the setup",
-            "You can also set up a remote cache later by running \`nx g @nx/nx-cloud:init\`",
           ],
           "title": "Your remote cache is almost complete.",
           "type": "success",
@@ -158,7 +156,6 @@ describe('Nx Cloud Messages', () => {
         {
           "bodyLines": [
             "Push your repo, then go to Nx Cloud and finish the setup: https://nx.app/setup/456",
-            "You can also set up a remote cache later by running \`nx g @nx/nx-cloud:init\`",
           ],
           "title": "Your remote cache is almost complete.",
           "type": "success",
@@ -175,7 +172,6 @@ describe('Nx Cloud Messages', () => {
         {
           "bodyLines": [
             "Push your repo, then go to Nx Cloud and finish the setup: https://nx.app/setup/456",
-            "You can also set up a remote cache later by running \`nx g @nx/nx-cloud:init\`",
           ],
           "title": "Your remote cache is almost complete.",
           "type": "success",
@@ -192,7 +188,6 @@ describe('Nx Cloud Messages', () => {
         {
           "bodyLines": [
             "Push your repo, then return to Nx Cloud and finish the setup",
-            "You can also set up a remote cache later by running \`nx g @nx/nx-cloud:init\`",
           ],
           "title": "Your remote cache is almost complete.",
           "type": "success",
@@ -209,22 +204,11 @@ describe('Nx Cloud Messages', () => {
         {
           "bodyLines": [
             "Push your repo, then return to Nx Cloud and finish the setup",
-            "You can also set up a remote cache later by running \`nx g @nx/nx-cloud:init\`",
           ],
           "title": "Your remote cache is almost complete.",
           "type": "success",
         }
       `);
-    });
-
-    it('should always include the additional setup command for alternative installation', () => {
-      const message = messageFactory.createMessage(
-        'https://nx.app/setup/456',
-        VcsPushStatus.PushedToVcs
-      );
-      expect(message.bodyLines).toContain(
-        'You can also set up a remote cache later by running `nx g @nx/nx-cloud:init`'
-      );
     });
 
     it('should always include exactly two body lines for cache setup messages', () => {
@@ -245,10 +229,10 @@ describe('Nx Cloud Messages', () => {
         VcsPushStatus.FailedToPushToVcs
       );
 
-      expect(messageWithUrl.bodyLines).toHaveLength(2);
-      expect(messageWithoutUrl.bodyLines).toHaveLength(2);
-      expect(messageNotPushedWithUrl.bodyLines).toHaveLength(2);
-      expect(messageNotPushedWithoutUrl.bodyLines).toHaveLength(2);
+      expect(messageWithUrl.bodyLines).toHaveLength(1);
+      expect(messageWithoutUrl.bodyLines).toHaveLength(1);
+      expect(messageNotPushedWithUrl.bodyLines).toHaveLength(1);
+      expect(messageNotPushedWithoutUrl.bodyLines).toHaveLength(1);
     });
 
     it('should have consistent title and type across all cache setup scenarios', () => {
