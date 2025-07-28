@@ -881,8 +881,164 @@ describe('@nx/playwright/plugin', () => {
       }
     `);
   });
-});
 
+  it('should create inputs for test isolation', async () => {
+    await mockPlaywrightConfig(tempFs, {
+      testDir: 'tests',
+      reporter: [
+        ['html', { outputFolder: 'test-results/html' }],
+        ['junit', { outputFile: 'test-results/report.xml' }],
+      ],
+    });
+    await tempFs.createFiles({
+      'tests/run-me.spec.ts': '',
+      'tests/run-me-2.spec.ts': '',
+    });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      {
+        targetName: 'e2e',
+        ciTargetName: 'e2e-ci',
+        testIsolation: true,
+      },
+      context
+    );
+
+    const project = results[0][1].projects['.'];
+    const { targets } = project;
+
+    expect(targets['e2e-ci--tests/run-me.spec.ts']).toMatchInlineSnapshot(`
+      {
+        "cache": true,
+        "command": "playwright test tests/run-me.spec.ts --output=test-results/tests-run-me-spec-ts",
+        "inputs": [
+          "{projectRoot}/playwright.config.js",
+          "{projectRoot}/tests/run-me.spec.ts",
+          "{projectRoot}/tests/run-me.spec.ts-snapshots/**",
+          "^production",
+          {
+            "externalDependencies": [
+              "@playwright/test",
+            ],
+          },
+        ],
+        "metadata": {
+          "description": "Runs Playwright Tests in tests/run-me.spec.ts in CI",
+          "help": {
+            "command": "npx playwright test --help",
+            "example": {
+              "options": {
+                "workers": 1,
+              },
+            },
+          },
+          "technologies": [
+            "playwright",
+          ],
+        },
+        "options": {
+          "cwd": "{projectRoot}",
+          "env": {
+            "PLAYWRIGHT_HTML_OUTPUT_DIR": "test-results/html/tests-run-me-spec-ts",
+            "PLAYWRIGHT_HTML_REPORT": "test-results/html/tests-run-me-spec-ts",
+            "PLAYWRIGHT_JUNIT_OUTPUT_FILE": "test-results/tests-run-me-spec-ts/report.xml",
+          },
+        },
+        "outputs": [
+          "{projectRoot}/test-results/tests-run-me-spec-ts",
+          "{projectRoot}/test-results/html/tests-run-me-spec-ts",
+          "{projectRoot}/test-results/tests-run-me-spec-ts/report.xml",
+        ],
+        "parallelism": false,
+      }
+    `);
+  });
+
+  it('should create inputs for test isolation with relative imports', async () => {
+    await mockPlaywrightConfig(tempFs, {
+      testDir: 'tests',
+      reporter: [
+        ['html', { outputFolder: 'test-results/html' }],
+        ['junit', { outputFile: 'test-results/report.xml' }],
+      ],
+    });
+    await tempFs.createFiles({
+      'tests/run-me-2.spec.ts': `import { expect } from '@playwright/test';
+
+      test('should work', () => {
+        expect(true).toBe(true);
+      });`,
+      'tests/run-me.spec.ts': `import { expect } from '@playwright/test';
+      import './run-me-2.spec';
+
+      test('should work', () => {
+        expect(true).toBe(true);
+      });`,
+    });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      {
+        targetName: 'e2e',
+        ciTargetName: 'e2e-ci',
+        testIsolation: true,
+      },
+      context
+    );
+
+    const project = results[0][1].projects['.'];
+    const { targets } = project;
+
+    expect(targets['e2e-ci--tests/run-me.spec.ts']).toMatchInlineSnapshot(`
+      {
+        "cache": true,
+        "command": "playwright test tests/run-me.spec.ts --output=test-results/tests-run-me-spec-ts",
+        "inputs": [
+          "{projectRoot}/playwright.config.js",
+          "{projectRoot}/tests/run-me.spec.ts",
+          "{projectRoot}/tests/run-me.spec.ts-snapshots/**",
+          "{projectRoot}/tests/run-me-2.spec.ts",
+          "{projectRoot}/tests/run-me-2.spec.ts-snapshots/**",
+          "^production",
+          {
+            "externalDependencies": [
+              "@playwright/test",
+            ],
+          },
+        ],
+        "metadata": {
+          "description": "Runs Playwright Tests in tests/run-me.spec.ts in CI",
+          "help": {
+            "command": "npx playwright test --help",
+            "example": {
+              "options": {
+                "workers": 1,
+              },
+            },
+          },
+          "technologies": [
+            "playwright",
+          ],
+        },
+        "options": {
+          "cwd": "{projectRoot}",
+          "env": {
+            "PLAYWRIGHT_HTML_OUTPUT_DIR": "test-results/html/tests-run-me-spec-ts",
+            "PLAYWRIGHT_HTML_REPORT": "test-results/html/tests-run-me-spec-ts",
+            "PLAYWRIGHT_JUNIT_OUTPUT_FILE": "test-results/tests-run-me-spec-ts/report.xml",
+          },
+        },
+        "outputs": [
+          "{projectRoot}/test-results/tests-run-me-spec-ts",
+          "{projectRoot}/test-results/html/tests-run-me-spec-ts",
+          "{projectRoot}/test-results/tests-run-me-spec-ts/report.xml",
+        ],
+        "parallelism": false,
+      }
+    `);
+  });
+});
 async function mockPlaywrightConfig(
   tempFs: TempFs,
   config: PlaywrightTestConfig | string

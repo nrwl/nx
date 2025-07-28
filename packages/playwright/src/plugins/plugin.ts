@@ -34,6 +34,7 @@ const pmc = getPackageManagerCommand();
 export interface PlaywrightPluginOptions {
   targetName?: string;
   ciTargetName?: string;
+  testIsolation?: boolean;
 }
 
 interface NormalizedOptions {
@@ -276,18 +277,29 @@ async function buildPlaywrightTargets(
       const targetName = `${options.ciTargetName}--${relativeSpecFilePath}`;
       ciTargetGroup.push(targetName);
 
-      let inputs: TargetConfiguration['inputs'] = [];
+      let inputs: TargetConfiguration['inputs'] = [
+        ...('production' in namedInputs
+          ? ['default', '^production']
+          : ['default', '^default']),
+        { externalDependencies: ['@playwright/test'] },
+      ];
+
+      const generateSpecInputsByFile = (testFile: string) => {
+        return [
+          `{projectRoot}/${testFile}`,
+          `{projectRoot}/${testFile}-snapshots/**`,
+        ];
+      };
 
       if (options.testIsolation) {
         const visitedFiles = new Set<string>();
         const relativeImports = collectRelativeImports(testFile, visitedFiles);
 
         inputs = [
-          `{workspaceRoot}/${testFile}`,
-          `{workspaceRoot}/${testFile}-snapshots/**`,
-          `{workspaceRoot}/${configFilePath}`,
-          ...relativeImports.map(
-            (importPath) => `{workspaceRoot}/${importPath}`
+          `{projectRoot}/${configFilePath}`,
+          ...generateSpecInputsByFile(testFile),
+          ...relativeImports.flatMap((importPath) =>
+            generateSpecInputsByFile(importPath)
           ),
           ...('production' in namedInputs ? ['^production'] : ['^default']),
           { externalDependencies: ['@playwright/test'] },
@@ -405,6 +417,7 @@ function normalizeOptions(options: PlaywrightPluginOptions): NormalizedOptions {
     ...options,
     targetName: options?.targetName ?? 'e2e',
     ciTargetName: options?.ciTargetName ?? 'e2e-ci',
+    testIsolation: options?.testIsolation ?? false,
   };
 }
 
