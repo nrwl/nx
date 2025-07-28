@@ -156,9 +156,9 @@
       "description": "Skip running playwright install before running playwright tests. This is to ensure that playwright browsers are installed before running tests.",
       "default": false
     },
-    "testIsolation": {
+    "granularInputs": {
       "type": "boolean",
-      "description": "Each spec file when run with atomizer will be run in isolation. This is to ensure that tests are not affected by each other.",
+      "description": "Each spec file when run with atomizer will have have more granular inputs. This is to ensure that tests are not affected by each other.",
       "default": false
     }
   },

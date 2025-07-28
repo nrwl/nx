@@ -34,13 +34,13 @@ const pmc = getPackageManagerCommand();
 export interface PlaywrightPluginOptions {
   targetName?: string;
   ciTargetName?: string;
-  testIsolation?: boolean;
+  granularInputs?: boolean;
 }
 
 interface NormalizedOptions {
   targetName: string;
   ciTargetName?: string;
-  testIsolation?: boolean;
+  granularInputs?: boolean;
 }
 
 type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
@@ -291,7 +291,7 @@ async function buildPlaywrightTargets(
         ];
       };
 
-      if (options.testIsolation) {
+      if (options.granularInputs) {
         const visitedFiles = new Set<string>();
         const relativeImports = collectRelativeImports(testFile, visitedFiles);
 
@@ -417,7 +417,7 @@ function normalizeOptions(options: PlaywrightPluginOptions): NormalizedOptions {
     ...options,
     targetName: options?.targetName ?? 'e2e',
     ciTargetName: options?.ciTargetName ?? 'e2e-ci',
-    testIsolation: options?.testIsolation ?? false,
+    granularInputs: options?.granularInputs ?? false,
   };
 }
 
