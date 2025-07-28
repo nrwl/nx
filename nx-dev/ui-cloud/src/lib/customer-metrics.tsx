@@ -1,15 +1,43 @@
-import { ReactElement } from 'react';
+import { ReactElement, useState } from 'react';
 import { PayfitIcon } from '@nx/nx-dev-ui-icons';
 import { SectionHeading } from '@nx/nx-dev-ui-common';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { PlayIcon } from '@heroicons/react/24/outline';
+import { VideoModal } from '@nx/nx-dev-ui-common';
 
 export function CustomerMetrics(): ReactElement {
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentVideo, setCurrentVideo] = useState('');
+
+  const openVideo = (videoUrl: string) => {
+    setCurrentVideo(videoUrl);
+    setIsOpen(true);
+  };
+
   return (
     <section id="customer-metrics" className="scroll-mt-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-none">
           <div className="mt-6 flex flex-col-reverse gap-x-8 gap-y-20 lg:flex-row lg:items-center">
             <div className="lg:w-full lg:max-w-2xl lg:flex-auto">
-              <div className="group relative block rounded-2xl">
+              <a
+                href="#payfit-testimonial"
+                onClick={() => {
+                  openVideo('https://youtu.be/Vdk-tza4PCs');
+                  sendCustomEvent(
+                    'payfit-quote-click',
+                    'cloud-customer-metrics',
+                    'cloud'
+                  );
+                }}
+                className="group relative block rounded-2xl"
+              >
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/60 opacity-0 backdrop-blur-sm transition duration-300 group-hover:opacity-100 dark:bg-slate-950/60">
+                  <div className="flex items-center gap-2 text-lg font-semibold text-slate-950 drop-shadow dark:text-white">
+                    <PlayIcon className="size-8" />
+                    Watch the interview
+                  </div>
+                </div>
                 <figure className="relative rounded-2xl bg-white shadow-lg ring-1 ring-slate-900/5 dark:bg-slate-800">
                   <blockquote className="p-6 text-lg font-semibold tracking-tight text-black dark:text-white">
                     <p>
@@ -40,7 +68,7 @@ export function CustomerMetrics(): ReactElement {
                     />
                   </figcaption>
                 </figure>
-              </div>
+              </a>
               <SectionHeading
                 as="p"
                 variant="subtitle"
@@ -81,6 +109,12 @@ export function CustomerMetrics(): ReactElement {
           </div>
         </div>
       </div>
+
+      <VideoModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        videoUrl={currentVideo}
+      />
     </section>
   );
 }
