@@ -8,7 +8,7 @@
     "merge-reports": {
       "implementation": "./src/executors/merge-reports/merge-reports.impl",
       "schema": "./src/executors/merge-reports/schema.json",
-      "description": "THIS IS AN INTERNAL EXECUTOR USED BY ATOMIZED TASKS. DO NOT USE IT DIRECTLY. Merge Playwright blob reports and aggregate the results.",
+      "description": "Merge Playwright blob reports and aggregate the results.",
       "hidden": true
     }
   }

@@ -4175,7 +4175,7 @@
         "type": "executor"
       },
       {
-        "description": "THIS IS AN INTERNAL EXECUTOR USED BY ATOMIZED TASKS. DO NOT USE IT DIRECTLY. Merge Playwright blob reports and aggregate the results.",
+        "description": "Merge Playwright blob reports and aggregate the results.",
         "file": "generated/packages/playwright/executors/merge-reports.json",
         "hidden": true,
         "name": "merge-reports",
@@ -4216,12 +4216,12 @@
     "migrations": [
       {
         "description": "Logs a message to inform users of the new feature that merges atomized tasks reports by default in the 'e2e-ci' target. It provides information on how to opt-out of this behavior. It doesn't perform any changes to the workspace.",
-        "file": "generated/packages/playwright/migrations/update-21-3-0-notify-about-merging-atomized-task-reports.json",
+        "file": "generated/packages/playwright/migrations/update-21-4-0-notify-about-merging-atomized-task-reports.json",
         "hidden": false,
-        "name": "update-21-3-0-notify-about-merging-atomized-task-reports",
-        "version": "21.3.0-beta.6",
+        "name": "update-21-4-0-notify-about-merging-atomized-task-reports",
+        "version": "21.4.0-beta.2",
         "originalFilePath": "/packages/playwright",
-        "path": "playwright/migrations/update-21-3-0-notify-about-merging-atomized-task-reports",
+        "path": "playwright/migrations/update-21-4-0-notify-about-merging-atomized-task-reports",
         "type": "migration"
       },
       {
