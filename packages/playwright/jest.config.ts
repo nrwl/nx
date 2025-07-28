@@ -1,5 +1,5 @@
 /* eslint-disable */
-module.exports = {
+export default {
   displayName: 'playwright',
   preset: '../../jest.preset.js',
   transform: {
