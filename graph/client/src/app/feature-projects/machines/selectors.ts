@@ -9,6 +9,10 @@ import {
   WorkspaceLayout,
 } from '../../interfaces';
 import { TracingAlgorithmType } from './interfaces';
+import {
+  CompositeProjectEdgeElementData,
+  CompositeProjectNodeElementData,
+} from '@nx/graph';
 
 export const allProjectsSelector: ProjectGraphSelector<
   ProjectGraphProjectNode[]
@@ -30,9 +34,8 @@ export const lastPerfReportSelector: ProjectGraphSelector<GraphPerfReport> = (
   state
 ) => state.context.lastPerfReport;
 
-export const focusedProjectNameSelector: ProjectGraphSelector<string> = (
-  state
-) => state.context.focusedProject;
+export const focusedProjectIdSelector: ProjectGraphSelector<string> = (state) =>
+  state.context.focusedProject;
 
 export const searchDepthSelector: ProjectGraphSelector<{
   searchDepth: number;
@@ -72,3 +75,7 @@ export const getTracingInfo: ProjectGraphSelector<{
   end: string;
   algorithm: TracingAlgorithmType;
 }> = (state) => state.context.tracing;
+
+export const selectingNodeToExpandSelector: ProjectGraphSelector<
+  CompositeProjectNodeElementData | null
+> = (state) => state.context.selectingNodeToExpand;

@@ -70,6 +70,7 @@ export const initialContext: ProjectGraphContext = {
     enabled: false,
     nodes: [],
   },
+  selectingNodeToExpand: null,
 };
 
 export const projectGraphMachine = createMachine<
@@ -104,15 +105,37 @@ export const projectGraphMachine = createMachine<
       setGraphClientState: {
         actions: [
           assign((ctx, event) => {
-            ctx.collapseEdges = event.state.collapseEdges;
-            ctx.groupByFolder = event.state.groupByFolder;
-            ctx.compositeGraph.enabled = event.state.isComposite;
+            ctx.collapseEdges = event.state.renderScratchData.collapseEdges;
+            ctx.groupByFolder = event.state.renderScratchData.groupByFolder;
+            ctx.compositeGraph.enabled =
+              event.state.renderScratchData.isComposite;
           }),
         ],
       },
       initGraph: {
         target: 'unselected',
         actions: [send((_, event) => event, { to: (ctx) => ctx.graphActor })],
+      },
+      toggleCompositeGraph: {
+        target: 'composite',
+        actions: [send((_, event) => event, { to: (ctx) => ctx.graphActor })],
+      },
+      focusNode: {
+        target: 'focused',
+        actions: [send((_, event) => event, { to: (ctx) => ctx.graphActor })],
+      },
+      filter: {
+        target: 'textFiltered',
+        actions: [
+          send(
+            (ctx, event) => ({
+              type: 'filter',
+              filterBy: event.filterBy,
+              includeEdges: event.includeEdges || ctx.includePath,
+            }),
+            { to: (ctx) => ctx.graphActor }
+          ),
+        ],
       },
       selectProject: {
         target: 'customSelected',

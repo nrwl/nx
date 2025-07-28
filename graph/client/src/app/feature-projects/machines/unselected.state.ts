@@ -3,7 +3,7 @@ import { send } from 'xstate';
 import { ProjectGraphStateNodeConfig } from './interfaces';
 
 export const unselectedStateConfig: ProjectGraphStateNodeConfig = {
-  entry: [],
+  entry: [send(() => ({ type: 'hideAll' }), { to: (ctx) => ctx.graphActor })],
   on: {
     updateGraph: {
       target: 'customSelected',

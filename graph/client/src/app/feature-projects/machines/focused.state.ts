@@ -1,13 +1,11 @@
 import { assign } from '@xstate/immer';
-import { send } from 'xstate';
 import { ProjectGraphStateNodeConfig } from './interfaces';
 
 export const focusedStateConfig: ProjectGraphStateNodeConfig = {
   entry: [
     assign((ctx, event) => {
-      if (event.type !== 'focusProject') return;
-
-      ctx.focusedProject = event.projectName;
+      if (event.type !== 'focusNode') return;
+      ctx.focusedProject = event.nodeId;
     }),
   ],
   exit: [
@@ -28,11 +26,8 @@ export const focusedStateConfig: ProjectGraphStateNodeConfig = {
     setSearchDepth: {
       actions: ['setSearchDepth'],
     },
-    unfocusProject: {
+    unfocusNode: {
       target: 'unselected',
-    },
-    updateGraph: {
-      actions: ['setGraph'],
     },
   },
 };

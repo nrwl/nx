@@ -10,6 +10,8 @@ import type {
 import {
   InitGraphEvent,
   ProjectGraphClient,
+  ProjectGraphClientScratchData,
+  ProjectGraphClientScratchPad,
   ProjectGraphEvent,
   ProjectGraphHandleEventResult,
   ProjectGraphRenderScratchData,
@@ -17,7 +19,11 @@ import {
 } from '@nx/graph/projects';
 import { ActionObject, ActorRef, State, StateNodeConfig } from 'xstate';
 import { GraphRenderEvents } from '../../machines/interfaces';
-import { RenderGraphConfigEvent, RenderGraphScratchData } from '@nx/graph';
+import {
+  CompositeProjectNodeElementData,
+  RenderGraphConfigEvent,
+  RenderGraphScratchData,
+} from '@nx/graph';
 
 // The hierarchical schema for the states
 export interface ProjectGraphSchema {
@@ -51,7 +57,14 @@ export type ProjectGraphMachineEvents =
     }
   | {
       type: 'setGraphClientState';
-      state: RenderGraphScratchData<ProjectGraphRenderScratchData>;
+      state: {
+        renderScratchData: RenderGraphScratchData<ProjectGraphRenderScratchData>;
+        scratchData: ProjectGraphClientScratchData;
+      };
+    }
+  | {
+      type: 'selectExpansion';
+      compositeNodeData: CompositeProjectNodeElementData;
     }
   | { type: 'selectProject'; projectName: string }
   | { type: 'deselectProject'; projectName: string }
@@ -73,7 +86,7 @@ export type ProjectGraphMachineEvents =
   | { type: 'setSearchDepthEnabled'; searchDepthEnabled: boolean }
   | { type: 'setSearchDepth'; searchDepth: number }
   | { type: 'focusProject'; projectName: string }
-  | { type: 'unfocusProject' }
+  | { type: 'unfocusNode' }
   | { type: 'filterByText'; search: string }
   | { type: 'clearTextFilter' }
   | {
@@ -120,6 +133,7 @@ export interface ProjectGraphContext {
     algorithm: TracingAlgorithmType;
   };
   compositeGraph: CompositeGraph;
+  selectingNodeToExpand: CompositeProjectNodeElementData | null;
 }
 
 export type ProjectGraphStateNodeConfig = StateNodeConfig<

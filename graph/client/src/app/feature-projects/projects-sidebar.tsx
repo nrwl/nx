@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getProjectGraphService } from '../machines/get-services';
 import { ExperimentalFeature } from '../ui-components/experimental-feature';
 import { FocusedPanel } from '../ui-components/focused-panel';
@@ -9,12 +9,13 @@ import {
   collapseEdgesSelector,
   compositeContextSelector,
   compositeGraphEnabledSelector,
-  focusedProjectNameSelector,
+  focusedProjectIdSelector,
   getTracingInfo,
   groupByFolderSelector,
   hasAffectedProjectsSelector,
   includePathSelector,
   searchDepthSelector,
+  selectingNodeToExpandSelector,
   textFilterSelector,
 } from './machines/selectors';
 import { CollapseEdgesPanel } from './panels/collapse-edges-panel';
@@ -46,13 +47,17 @@ import { CompositeGraphPanel } from './panels/composite-graph-panel';
 import { CompositeContextPanel } from '../ui-components/composite-context-panel';
 import { useProjectGraphContext } from '@nx/graph/projects';
 import { Spinner } from '@nx/graph-ui-common';
+import {
+  NodeSelectionDialog,
+  NxGraphDialog,
+  useCompositeNodeSelection,
+} from '@nx/graph/dialogs';
 
 function ProjectsSidebarInner() {
   const environmentConfig = useEnvironmentConfig();
-  const { send } = useProjectGraphContext();
 
   const projectGraphService = getProjectGraphService();
-  const focusedProject = useProjectGraphSelector(focusedProjectNameSelector);
+  const focusedProject = useProjectGraphSelector(focusedProjectIdSelector);
   const searchDepthInfo = useProjectGraphSelector(searchDepthSelector);
   const includePath = useProjectGraphSelector(includePathSelector);
   const textFilter = useProjectGraphSelector(textFilterSelector);
@@ -64,16 +69,32 @@ function ProjectsSidebarInner() {
   const compositeEnabled = useProjectGraphSelector(
     compositeGraphEnabledSelector
   );
-
   const compositeContext = useProjectGraphSelector(compositeContextSelector);
+  const selectingNodeToExpand = useProjectGraphSelector(
+    selectingNodeToExpandSelector
+  );
 
   const isTracing = projectGraphService.getSnapshot().matches('tracing');
   const tracingInfo = useProjectGraphSelector(getTracingInfo);
   const projectGraphDataService = getProjectGraphDataService();
 
+  const { handleEventResult } = useProjectGraphContext();
   const routeParams = useParams();
   const currentRoute = useCurrentPath();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  console.log({
+    focusedProject,
+    handleEventResult,
+  });
+
+  const focusedProjectName = useMemo(() => {
+    const focusedProjectNode = handleEventResult.projects.find(
+      (project) => project.id === focusedProject
+    );
+    if (!focusedProjectNode) return '';
+    return focusedProjectNode.name;
+  }, [handleEventResult.projects, focusedProject]);
 
   const selectedProjectRouteData = useRouteLoaderData(
     'selectedWorkspace'
@@ -83,8 +104,13 @@ function ProjectsSidebarInner() {
   const navigate = useNavigate();
   const routeConstructor = useRouteConstructor();
 
+  useEffect(() => {
+    if (!selectingNodeToExpand) return;
+    handleCompositeNodeExpand(selectingNodeToExpand);
+  }, [selectingNodeToExpand]);
+
   function resetFocus() {
-    projectGraphService.send({ type: 'unfocusProject' });
+    projectGraphService.send({ type: 'unfocusNode' });
     navigate(routeConstructor('/projects', true));
   }
 
@@ -100,7 +126,7 @@ function ProjectsSidebarInner() {
   }
 
   function hideAllProjects() {
-    projectGraphService.send({ type: 'deselectAll' });
+    projectGraphService.send({ type: 'hideAll' });
     navigate(
       routeConstructor('/projects', (searchParams) => {
         if (searchParams.has('composite')) {
@@ -253,8 +279,10 @@ function ProjectsSidebarInner() {
   useEffect(() => {
     if (routeParams.focusedProject) {
       projectGraphService.send({
-        type: 'focusProject',
-        projectName: routeParams.focusedProject,
+        type: 'focusNode',
+        nodeId: `project-${routeParams.focusedProject}`,
+        reset: true,
+        variant: 'legacy',
       });
     }
 
@@ -380,7 +408,7 @@ function ProjectsSidebarInner() {
 
   const updateTextFilter = useCallback(
     (textFilter: string) => {
-      projectGraphService.send({ type: 'filterByText', search: textFilter });
+      projectGraphService.send({ type: 'filter', filterBy: textFilter });
       navigate(routeConstructor('/projects', true));
     },
     [projectGraphService]
@@ -397,8 +425,11 @@ function ProjectsSidebarInner() {
         />
       ) : null}
 
-      {focusedProject ? (
-        <FocusedPanel focusedLabel={focusedProject} resetFocus={resetFocus} />
+      {focusedProjectName ? (
+        <FocusedPanel
+          focusedLabel={focusedProjectName}
+          resetFocus={resetFocus}
+        />
       ) : null}
 
       {isTracing ? (

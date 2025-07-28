@@ -36,11 +36,6 @@ export interface EndTraceTooltipAction extends CommonNodeTooltipAction {
   type: 'end-trace';
 }
 
-export interface SelectAndExpandNodeTooltipAction
-  extends CommonNodeTooltipAction {
-  type: 'select-and-expand-node';
-}
-
 export interface ChangeSelectionTooltipAction extends CommonNodeTooltipAction {
   type: 'change-selection';
 }
@@ -50,7 +45,6 @@ export type CompositeNodeTooltipAction =
   | ExpandNodeTooltipAction
   | CollapseNodeTooltipAction
   | ExcludeNodeTooltipAction
-  | SelectAndExpandNodeTooltipAction
   | ChangeSelectionTooltipAction;
 
 export type ProjectNodeTooltipAction =

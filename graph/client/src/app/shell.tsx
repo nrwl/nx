@@ -25,7 +25,6 @@ import {
 } from '@nx/graph-shared';
 import {
   Tooltip,
-  Spinner,
   ErrorToast,
   Dropdown,
   Tag,
@@ -57,12 +56,18 @@ import {
   ProjectNodeElementData,
   RenderRankDir,
   TaskNodeElementData,
+  useRenderGraphEvents,
 } from '@nx/graph';
 import {
   NxGraphContextMenu,
   useGraphContextMenu,
 } from '@nx/graph/context-menu';
 import { TaskNodeActions } from './ui-tooltips/task-node-actions';
+import {
+  NodeSelectionDialog,
+  NxGraphDialog,
+  useCompositeNodeSelection,
+} from '@nx/graph/dialogs';
 
 function useGraphContextFactory(topLevelRoute: string) {
   return useMemo(() => {
@@ -161,6 +166,40 @@ function InnerShell({
   const { graphMenu, closeMenu } = useGraphContextMenu({
     renderGraphEventBus: graphClient,
     closeOn: [],
+  });
+
+  const {
+    nodeSelectionDialog,
+    handleCompositeNodeExpand,
+    handleChangeSelection,
+    handleDialogConfirm,
+    handleDialogCancel,
+  } = useCompositeNodeSelection({
+    onExpand: (
+      compositeNodeId,
+      selectedNodeIds,
+      isChangingSelection = false
+    ) => {
+      projectGraphService.send({
+        type: 'expandCompositeNode',
+        compositeNodeId,
+        selectedNodeIds,
+        changingSelection: isChangingSelection,
+      });
+    },
+  });
+
+  useRenderGraphEvents(graphClient, {
+    CompositeNodeDblClick: ({ data, isExpanded }) => {
+      if (isExpanded) {
+        projectGraphService.send({
+          type: 'collapseCompositeNode',
+          compositeNodeId: data.id,
+        });
+      } else {
+        handleCompositeNodeExpand(data);
+      }
+    },
   });
 
   const nodesVisible = useMemo(() => {
@@ -434,6 +473,14 @@ function InnerShell({
                     <ProjectNodeTooltipActions
                       {...data}
                       type={data.projectType}
+                      onAction={(action) => {
+                        if (action.type === 'focus-node') {
+                          navigate(
+                            routeConstructor(`/projects/${data.name}`, true)
+                          );
+                          return;
+                        }
+                      }}
                     />
                   </div>
                 ),
@@ -463,6 +510,25 @@ function InnerShell({
                       compositeCount={data.compositeSize}
                       projectCount={data.projectSize}
                       expanded={isExpanded}
+                      onAction={(action) => {
+                        if (action.type === 'expand-node') {
+                          handleCompositeNodeExpand(data);
+                          return;
+                        }
+
+                        if (action.type === 'collapse-node') {
+                          projectGraphService.send({
+                            type: 'collapseCompositeNode',
+                            compositeNodeId: data.id,
+                          });
+                          return;
+                        }
+
+                        if (action.type === 'change-selection') {
+                          handleChangeSelection(data);
+                          return;
+                        }
+                      }}
                     />
                   </div>
                 ),
@@ -511,6 +577,34 @@ function InnerShell({
               }}
             </NxGraphContextMenu>
           ) : null}
+
+          {nodeSelectionDialog.isOpen &&
+            nodeSelectionDialog.compositeNodeData && (
+              <NxGraphDialog
+                activeDialog={{
+                  title: 'Select Nodes to Expand',
+                  icon: null,
+                  dialog: (
+                    <NodeSelectionDialog
+                      name={nodeSelectionDialog.compositeNodeData.name}
+                      projectNodes={
+                        nodeSelectionDialog.compositeNodeData.projects
+                      }
+                      compositeProjectNodes={
+                        nodeSelectionDialog.compositeNodeData.composites
+                      }
+                      lastSelectedNodeIds={
+                        nodeSelectionDialog.compositeNodeData
+                          .lastSelectedNodeIds
+                      }
+                      onConfirm={handleDialogConfirm}
+                      onCancel={handleDialogCancel}
+                    />
+                  ),
+                }}
+                onClose={handleDialogCancel}
+              />
+            )}
 
           <Tooltip
             openAction="hover"

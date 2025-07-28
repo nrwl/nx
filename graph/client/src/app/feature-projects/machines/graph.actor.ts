@@ -27,9 +27,6 @@ export const graphClientActor =
         send(event);
       }
 
-      callback({
-        type: 'setGraphClientState',
-        state: graphClient.graphState.renderScratchData,
-      });
+      callback({ type: 'setGraphClientState', state: graphClient.graphState });
     });
   };

@@ -1,13 +1,13 @@
 import { assign } from '@xstate/immer';
-import { send } from 'xstate';
 import { ProjectGraphStateNodeConfig } from './interfaces';
+import { send } from 'xstate';
 
 export const textFilteredStateConfig: ProjectGraphStateNodeConfig = {
   entry: [
     assign((ctx, event) => {
-      if (event.type !== 'filterByText') return;
-
-      ctx.textFilter = event.search;
+      if (event.type !== 'filter' || typeof event.filterBy !== 'string') return;
+      ctx.textFilter = event.filterBy;
+      ctx.includePath = event.includeEdges ?? ctx.includePath;
     }),
   ],
   on: {
@@ -19,7 +19,17 @@ export const textFilteredStateConfig: ProjectGraphStateNodeConfig = {
       }),
     },
     setIncludeProjectsByPath: {
-      actions: ['setIncludeProjectsByPath'],
+      actions: [
+        'setIncludeProjectsByPath',
+        send(
+          (ctx) => ({
+            type: 'filter',
+            filterBy: ctx.textFilter,
+            includeEdges: ctx.includePath,
+          }),
+          { to: (ctx) => ctx.graphActor }
+        ),
+      ],
     },
     incrementSearchDepth: {
       actions: ['incrementSearchDepth'],
