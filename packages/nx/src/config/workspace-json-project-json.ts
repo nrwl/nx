@@ -201,13 +201,6 @@ export interface TargetDependencyConfig {
    * Configuration for params handling.
    */
   params?: 'ignore' | 'forward';
-
-  /**
-   * Whether to skip the parent task when this dependency fails.
-   * Set to `false` to continue execution despite dependency failure.
-   * @default true
-   */
-  requiredToSucceed?: boolean;
 }
 
 export type InputDefinition =
