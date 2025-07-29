@@ -159,6 +159,3 @@ export * from './lib/technologies/vite';
 export * from './lib/technologies/vitest';
 export * from './lib/technologies/vue';
 export * from './lib/technologies/webpack';
-
-// FRAMEWORKS
-export * from './lib/framework-icons';

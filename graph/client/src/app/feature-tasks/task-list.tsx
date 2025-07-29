@@ -6,7 +6,7 @@ import {
   createTaskName,
   getProjectsByType,
   groupProjectsByDirectory,
-} from '../util';
+} from '../util-v2';
 import { WorkspaceLayout } from '../interfaces';
 import { ExclamationCircleIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { ReactNode } from 'react';

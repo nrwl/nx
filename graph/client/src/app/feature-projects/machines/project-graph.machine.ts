@@ -70,7 +70,6 @@ export const initialContext: ProjectGraphContext = {
     enabled: false,
     nodes: [],
   },
-  selectingNodeToExpand: null,
 };
 
 export const projectGraphMachine = createMachine<
@@ -114,15 +113,22 @@ export const projectGraphMachine = createMachine<
       },
       initGraph: {
         target: 'unselected',
-        actions: [send((_, event) => event, { to: (ctx) => ctx.graphActor })],
+        actions: ['sendToGraphActor'],
+      },
+      hideAll: {
+        target: 'unselected',
+        actions: ['sendToGraphActor'],
+      },
+      showAll: {
+        target: 'customSelected',
+        actions: ['sendToGraphActor'],
       },
       toggleCompositeGraph: {
         target: 'composite',
-        actions: [send((_, event) => event, { to: (ctx) => ctx.graphActor })],
       },
       focusNode: {
         target: 'focused',
-        actions: [send((_, event) => event, { to: (ctx) => ctx.graphActor })],
+        actions: ['sendToGraphActor'],
       },
       filter: {
         target: 'textFiltered',
@@ -176,9 +182,6 @@ export const projectGraphMachine = createMachine<
       setTracingStart: {
         target: 'tracing',
       },
-      setTracingEnd: {
-        target: 'tracing',
-      },
       setCollapseEdges: {
         actions: ['setCollapseEdges'],
       },
@@ -204,13 +207,6 @@ export const projectGraphMachine = createMachine<
       setSearchDepth: {
         actions: ['setSearchDepth'],
       },
-      setTracingAlgorithm: {
-        actions: [
-          assign((ctx, event) => {
-            ctx.tracing.algorithm = event.algorithm;
-          }),
-        ],
-      },
       filterByText: {
         target: 'textFiltered',
       },
@@ -219,7 +215,7 @@ export const projectGraphMachine = createMachine<
       },
       '*': {
         cond: 'isGraphClientEvent',
-        actions: [send((_, event) => event, { to: (ctx) => ctx.graphActor })],
+        actions: ['sendToGraphActor'],
       },
     },
   },
@@ -268,6 +264,9 @@ export const projectGraphMachine = createMachine<
         if (event.type !== 'setIncludeProjectsByPath') return;
 
         ctx.includePath = event.includeProjectsByPath;
+      }),
+      sendToGraphActor: send((_, event) => event, {
+        to: (ctx) => ctx.graphActor,
       }),
     },
   }

@@ -75,7 +75,3 @@ export const getTracingInfo: ProjectGraphSelector<{
   end: string;
   algorithm: TracingAlgorithmType;
 }> = (state) => state.context.tracing;
-
-export const selectingNodeToExpandSelector: ProjectGraphSelector<
-  CompositeProjectNodeElementData | null
-> = (state) => state.context.selectingNodeToExpand;

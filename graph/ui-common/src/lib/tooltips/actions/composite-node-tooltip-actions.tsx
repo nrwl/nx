@@ -16,18 +16,19 @@ export function CompositeNodeTooltipActions({
 
   return (
     <div className="grid grid-cols-3 gap-4">
-      <TooltipButton
-        onClick={() =>
-          onAction?.({
-            type: 'focus-node',
-            rawId: id,
-            id: encodedId,
-            tooltipNodeType: 'compositeNode',
-          })
-        }
-      >
-        Focus
-      </TooltipButton>
+      {/* TODO: (chau) re-enable focusing composite node */}
+      {/* <TooltipButton */}
+      {/*   onClick={() => */}
+      {/*     onAction?.({ */}
+      {/*       type: 'focus-node', */}
+      {/*       rawId: id, */}
+      {/*       id: encodedId, */}
+      {/*       tooltipNodeType: 'compositeNode', */}
+      {/*     }) */}
+      {/*   } */}
+      {/* > */}
+      {/*   Focus */}
+      {/* </TooltipButton> */}
       {expanded ? (
         <>
           <TooltipButton

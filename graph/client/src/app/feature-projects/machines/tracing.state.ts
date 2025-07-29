@@ -1,5 +1,6 @@
 import { assign } from '@xstate/immer';
 import { ProjectGraphStateNodeConfig } from './interfaces';
+import { send } from 'xstate';
 
 export const tracingStateConfig: ProjectGraphStateNodeConfig = {
   entry: [
@@ -20,17 +21,48 @@ export const tracingStateConfig: ProjectGraphStateNodeConfig = {
     }),
   ],
   on: {
-    clearTraceStart: {
+    setTracingEnd: {
       actions: [
-        assign((ctx) => {
-          ctx.tracing.start = null;
+        assign((ctx, event) => {
+          ctx.tracing.end = event.projectName;
         }),
+        send(
+          (ctx) => ({
+            type: 'trace',
+            start: `project-${ctx.tracing.start}`,
+            end: `project-${ctx.tracing.end}`,
+            algorithm: ctx.tracing.algorithm,
+          }),
+          { to: (ctx) => ctx.graphActor }
+        ),
       ],
+    },
+    setTracingAlgorithm: {
+      actions: [
+        assign((ctx, event) => {
+          ctx.tracing.algorithm = event.algorithm;
+        }),
+        send(
+          (ctx) => ({
+            type: 'trace',
+            start: `project-${ctx.tracing.start}`,
+            end: `project-${ctx.tracing.end}`,
+            algorithm: ctx.tracing.algorithm,
+          }),
+          { to: (ctx) => ctx.graphActor }
+        ),
+      ],
+    },
+    clearTraceStart: {
+      target: 'unselected',
     },
     clearTraceEnd: {
       actions: [
         assign((ctx) => {
           ctx.tracing.end = null;
+        }),
+        send(() => ({ type: 'showAll', autoExpand: false }), {
+          to: (ctx) => ctx.graphActor,
         }),
       ],
     },

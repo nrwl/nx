@@ -1,0 +1,65 @@
+import type { ProjectNodeElementData, RenderPlatform } from '@nx/graph';
+import { Tag, ProjectNodeTooltipActions } from '@nx/graph-ui-common';
+import {
+  DocumentMagnifyingGlassIcon,
+  PencilSquareIcon,
+} from '@heroicons/react/24/outline';
+
+export interface ProjectNodeContextMenuProps {
+  data: ProjectNodeElementData;
+  renderPlatform: RenderPlatform;
+  onConfigClick: () => void;
+  onAction: (action: {
+    type: 'focus-node' | 'start-trace' | 'end-trace' | 'exclude-node';
+  }) => void;
+  tracingStart?: string;
+}
+
+export function ProjectNodeContextMenu({
+  data,
+  renderPlatform,
+  onConfigClick,
+  onAction,
+  tracingStart,
+}: ProjectNodeContextMenuProps) {
+  return (
+    <div className="flex max-w-[32rem] flex-col gap-4 rounded-md border border-black p-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Tag>{data.projectType}</Tag>
+          <span className="font-mono">{data.label}</span>
+        </div>
+
+        <button
+          className="shadow-xs flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 ring-1 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
+          title={
+            renderPlatform === 'nx-console'
+              ? 'Open project details in editor'
+              : 'Open project details'
+          }
+          onClick={onConfigClick}
+        >
+          {renderPlatform === 'nx-console' ? (
+            <PencilSquareIcon className="h-5 w-5" />
+          ) : (
+            <DocumentMagnifyingGlassIcon className="h-5 w-5" />
+          )}
+        </button>
+      </div>
+      {data.tags.length > 0 ? (
+        <p className="my-2 lowercase">
+          <strong>tags</strong>
+          <br />
+          {data.tags.join(', ')}
+        </p>
+      ) : null}
+      {data.description ? <p className="mt-4">{data.description}</p> : null}
+      <ProjectNodeTooltipActions
+        {...data}
+        start={tracingStart}
+        type={data.projectType}
+        onAction={onAction as any}
+      />
+    </div>
+  );
+}

@@ -10,6 +10,12 @@ export const textFilteredStateConfig: ProjectGraphStateNodeConfig = {
       ctx.includePath = event.includeEdges ?? ctx.includePath;
     }),
   ],
+  exit: [
+    assign((ctx) => {
+      ctx.textFilter = '';
+      ctx.includePath = false;
+    }),
+  ],
   on: {
     clearTextFilter: {
       target: 'unselected',

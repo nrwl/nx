@@ -58,8 +58,7 @@ html.dark .adaptive-icon {
 .dot-grid {
   background-image: radial-gradient(
     circle at 1px 1px,
-    currentColor 1px,
-    transparent 0
+    var(--tw-gradient-stops)
   );
-  background-size: 20px 20px;
+  background-size: 12px 12px;
 }

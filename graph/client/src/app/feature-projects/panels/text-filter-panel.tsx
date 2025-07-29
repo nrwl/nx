@@ -1,4 +1,5 @@
 import { DebouncedTextInput } from '@nx/graph-ui-common';
+import classNames from 'classnames';
 
 export interface TextFilterPanelProps {
   textFilter: string;
@@ -26,7 +27,13 @@ export function TextFilterPanel({
         ></DebouncedTextInput>
       </div>
 
-      <div className="mt-4 px-4">
+      <div
+        className={classNames(
+          'mt-4 px-4',
+          textFilter.length === 0 ? 'cursor-not-allowed opacity-50' : ''
+        )}
+        title="Include related libraries in the search"
+      >
         <div className="flex items-start">
           <div className="flex h-5 items-center">
             <input

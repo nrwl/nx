@@ -15,7 +15,6 @@ import {
   hasAffectedProjectsSelector,
   includePathSelector,
   searchDepthSelector,
-  selectingNodeToExpandSelector,
   textFilterSelector,
 } from './machines/selectors';
 import { CollapseEdgesPanel } from './panels/collapse-edges-panel';
@@ -23,7 +22,6 @@ import { GroupByFolderPanel } from './panels/group-by-folder-panel';
 import { SearchDepth } from './panels/search-depth';
 import { TextFilterPanel } from './panels/text-filter-panel';
 import { TracingPanel } from './panels/tracing-panel';
-import { ProjectList } from './project-list';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
@@ -47,11 +45,7 @@ import { CompositeGraphPanel } from './panels/composite-graph-panel';
 import { CompositeContextPanel } from '../ui-components/composite-context-panel';
 import { useProjectGraphContext } from '@nx/graph/projects';
 import { Spinner } from '@nx/graph-ui-common';
-import {
-  NodeSelectionDialog,
-  NxGraphDialog,
-  useCompositeNodeSelection,
-} from '@nx/graph/dialogs';
+import { ProjectList } from './project-list';
 
 function ProjectsSidebarInner() {
   const environmentConfig = useEnvironmentConfig();
@@ -70,9 +64,6 @@ function ProjectsSidebarInner() {
     compositeGraphEnabledSelector
   );
   const compositeContext = useProjectGraphSelector(compositeContextSelector);
-  const selectingNodeToExpand = useProjectGraphSelector(
-    selectingNodeToExpandSelector
-  );
 
   const isTracing = projectGraphService.getSnapshot().matches('tracing');
   const tracingInfo = useProjectGraphSelector(getTracingInfo);
@@ -83,13 +74,8 @@ function ProjectsSidebarInner() {
   const currentRoute = useCurrentPath();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  console.log({
-    focusedProject,
-    handleEventResult,
-  });
-
   const focusedProjectName = useMemo(() => {
-    const focusedProjectNode = handleEventResult.projects.find(
+    const focusedProjectNode = handleEventResult.nodes.find(
       (project) => project.id === focusedProject
     );
     if (!focusedProjectNode) return '';
@@ -103,11 +89,6 @@ function ProjectsSidebarInner() {
   const params = useParams();
   const navigate = useNavigate();
   const routeConstructor = useRouteConstructor();
-
-  useEffect(() => {
-    if (!selectingNodeToExpand) return;
-    handleCompositeNodeExpand(selectingNodeToExpand);
-  }, [selectingNodeToExpand]);
 
   function resetFocus() {
     projectGraphService.send({ type: 'unfocusNode' });
@@ -278,9 +259,13 @@ function ProjectsSidebarInner() {
 
   useEffect(() => {
     if (routeParams.focusedProject) {
+      const nodeId = routeParams.focusedProject.includes('composite-project')
+        ? routeParams.focusedProject
+        : `project-${routeParams.focusedProject}`;
+
       projectGraphService.send({
         type: 'focusNode',
-        nodeId: `project-${routeParams.focusedProject}`,
+        nodeId,
         reset: true,
         variant: 'legacy',
       });
@@ -488,12 +473,15 @@ function ProjectsSidebarInner() {
             <CollapseEdgesPanel
               collapseEdges={collapseEdges}
               collapseEdgesChanged={collapseEdgesChanged}
+              disabled={!groupByFolder}
             />
           </div>
         </ExperimentalFeature>
       </div>
 
-      {environmentConfig.environment !== 'nx-console' ? <ProjectList /> : null}
+      {environmentConfig.environment !== 'nx-console' ? (
+        <ProjectList handleEventResult={handleEventResult} />
+      ) : null}
     </>
   );
 }

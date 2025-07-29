@@ -62,10 +62,6 @@ export type ProjectGraphMachineEvents =
         scratchData: ProjectGraphClientScratchData;
       };
     }
-  | {
-      type: 'selectExpansion';
-      compositeNodeData: CompositeProjectNodeElementData;
-    }
   | { type: 'selectProject'; projectName: string }
   | { type: 'deselectProject'; projectName: string }
   | { type: 'selectProjects'; projectNames: string[] }
@@ -133,7 +129,6 @@ export interface ProjectGraphContext {
     algorithm: TracingAlgorithmType;
   };
   compositeGraph: CompositeGraph;
-  selectingNodeToExpand: CompositeProjectNodeElementData | null;
 }
 
 export type ProjectGraphStateNodeConfig = StateNodeConfig<
