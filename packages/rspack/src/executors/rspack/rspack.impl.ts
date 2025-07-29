@@ -47,7 +47,9 @@ export default async function* runExecutor(
     success: boolean;
     outfile?: string;
   }>(async ({ next, done }) => {
-    if (options.watch) {
+    const watch = compiler instanceof Compiler ? compiler.options.watch : compiler.options[0].watch;
+
+    if (watch) {
       const watcher = compiler.watch(
         {},
         async (err, stats: Stats | MultiStats) => {
