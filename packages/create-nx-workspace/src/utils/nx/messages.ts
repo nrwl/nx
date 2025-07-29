@@ -7,12 +7,12 @@ function getSetupMessage(
   if (pushedToVcs === VcsPushStatus.PushedToVcs) {
     return url
       ? `Go to Nx Cloud and finish the setup: ${url}`
-      : 'Return to Nx Cloud and finish the setup';
+      : 'Return to Nx Cloud and finish the setup.';
   }
 
   // Default case: FailedToPushToVcs
   const action = url ? 'go' : 'return';
-  const urlSuffix = url ? `: ${url}` : '';
+  const urlSuffix = url ? `: ${url}` : '.';
   return `Push your repo, then ${action} to Nx Cloud and finish the setup${urlSuffix}`;
 }
 

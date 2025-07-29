@@ -34,7 +34,7 @@ describe('Nx Cloud Messages', () => {
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Return to Nx Cloud and finish the setup",
+            "Return to Nx Cloud and finish the setup.",
           ],
           "title": "Your CI setup is almost complete.",
           "type": "success",
@@ -82,7 +82,7 @@ describe('Nx Cloud Messages', () => {
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then return to Nx Cloud and finish the setup",
+            "Push your repo, then return to Nx Cloud and finish the setup.",
           ],
           "title": "Your CI setup is almost complete.",
           "type": "success",
@@ -98,7 +98,7 @@ describe('Nx Cloud Messages', () => {
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then return to Nx Cloud and finish the setup",
+            "Push your repo, then return to Nx Cloud and finish the setup.",
           ],
           "title": "Your CI setup is almost complete.",
           "type": "success",
@@ -139,7 +139,7 @@ describe('Nx Cloud Messages', () => {
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Return to Nx Cloud and finish the setup",
+            "Return to Nx Cloud and finish the setup.",
           ],
           "title": "Your remote cache is almost complete.",
           "type": "success",
@@ -187,7 +187,7 @@ describe('Nx Cloud Messages', () => {
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then return to Nx Cloud and finish the setup",
+            "Push your repo, then return to Nx Cloud and finish the setup.",
           ],
           "title": "Your remote cache is almost complete.",
           "type": "success",
@@ -203,7 +203,7 @@ describe('Nx Cloud Messages', () => {
       expect(message).toMatchInlineSnapshot(`
         {
           "bodyLines": [
-            "Push your repo, then return to Nx Cloud and finish the setup",
+            "Push your repo, then return to Nx Cloud and finish the setup.",
           ],
           "title": "Your remote cache is almost complete.",
           "type": "success",
