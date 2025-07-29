@@ -20,7 +20,16 @@ interface Config {
 
 const SCRIPT_DIR = __dirname;
 const REPOS_DIR = path.join(os.tmpdir(), 'updating-nx', 'repos');
-const CONFIG_FILE = path.join(SCRIPT_DIR, '..', 'config', 'repos.json');
+const CONFIG_FILE = path.join(
+  SCRIPT_DIR,
+  '..',
+  '..',
+  '..',
+  'tools',
+  'update-repos',
+  'config',
+  'repos.json'
+);
 
 function log(message: string) {
   const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
@@ -52,7 +61,9 @@ async function setupClone(
   try {
     // Clone repository using gh cli
     log(`Cloning ${repoName} from ${repoIdentifier}...`);
-    await execAsync(`gh repo clone "${repoIdentifier}" "${cloneDir}"`);
+    await execAsync(
+      `gh repo clone "${repoIdentifier}" "${cloneDir}" -- --depth 1`
+    );
 
     // Checkout the specified branch
     log(`Checking out branch: ${repoBranch}`);

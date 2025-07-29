@@ -22,7 +22,16 @@ type PackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun';
 
 const SCRIPT_DIR = __dirname;
 const REPOS_DIR = path.join(os.tmpdir(), 'updating-nx', 'repos');
-const CONFIG_FILE = path.join(SCRIPT_DIR, '..', 'config', 'repos.json');
+const CONFIG_FILE = path.join(
+  SCRIPT_DIR,
+  '..',
+  '..',
+  '..',
+  'tools',
+  'update-repos',
+  'config',
+  'repos.json'
+);
 
 function log(message: string) {
   const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
@@ -153,10 +162,11 @@ async function getNxVersion(
     try {
       const packageJsonPath = path.join(repoDir, 'package.json');
       const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-      const version = packageJson.dependencies?.nx ||
+      const version =
+        packageJson.dependencies?.nx ||
         packageJson.devDependencies?.nx ||
         'unknown';
-      
+
       // Clean up version string (remove ^ ~ etc.)
       if (version !== 'unknown') {
         const versionMatch = version.match(/(\d+\.\d+\.\d+(?:-[^\s]+)?)/);
@@ -285,11 +295,7 @@ async function updateRepository(repoName: string): Promise<void> {
     log(`📦 Updated Nx version: ${toVersion}`);
 
     // Commit the initial migration setup (package.json, migrations.json)
-    await execWithOutput(
-      'git add .',
-      repoDir,
-      'Staging migration setup files'
-    );
+    await execWithOutput('git add .', repoDir, 'Staging migration setup files');
     await execWithOutput(
       `git commit -m "chore(repo): update nx to ${toVersion}"`,
       repoDir,
@@ -297,11 +303,17 @@ async function updateRepository(repoName: string): Promise<void> {
     );
 
     if (fs.existsSync(migrationsFile)) {
-      log('📋 migrations.json found, running migrations with automatic commits...');
+      log(
+        '📋 migrations.json found, running migrations with automatic commits...'
+      );
 
       // Run migrations with --create-commits flag (Nx will create commits automatically)
       const runMigrationsCmd = getRunMigrationsCommand(packageManager);
-      await execWithOutput(runMigrationsCmd, repoDir, 'Applying Nx migrations (auto-commits enabled)');
+      await execWithOutput(
+        runMigrationsCmd,
+        repoDir,
+        'Applying Nx migrations (auto-commits enabled)'
+      );
 
       log('✅ Nx migrations completed with automatic commits');
     } else {
