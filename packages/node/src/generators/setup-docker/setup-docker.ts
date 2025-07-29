@@ -9,7 +9,7 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
-
+import { initGenerator as dockerInitGenerator } from '@nx/docker';
 import { SetUpDockerOptions } from './schema';
 import { join } from 'path';
 
@@ -20,7 +20,7 @@ function normalizeOptions(
   return {
     ...setupOptions,
     project: setupOptions.project ?? readNxJson(tree).defaultProject,
-    targetName: setupOptions.targetName ?? 'docker-build',
+    targetName: setupOptions.targetName ?? 'docker:build',
     buildTarget: setupOptions.buildTarget ?? 'build',
   };
 }
@@ -34,7 +34,8 @@ function sanitizeProjectName(projectName: string): string {
     .replace(/^-|-$/g, '');
 }
 
-function addDocker(tree: Tree, options: SetUpDockerOptions) {
+async function addDocker(tree: Tree, options: SetUpDockerOptions) {
+  const installTask = await dockerInitGenerator(tree, { skipFormat: true });
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   const outputPath =
@@ -59,20 +60,15 @@ function addDocker(tree: Tree, options: SetUpDockerOptions) {
     projectPath: projectConfig.root,
     sanitizedProjectName,
   });
+
+  return installTask;
 }
 
 export function updateProjectConfig(tree: Tree, options: SetUpDockerOptions) {
   let projectConfig = readProjectConfiguration(tree, options.project);
 
-  // Use sanitized project name for Docker image tag
-  const sanitizedProjectName = sanitizeProjectName(options.project);
-
   projectConfig.targets[`${options.targetName}`] = {
-    dependsOn: [`${options.buildTarget}`],
-    command: `docker build -f ${joinPathFragments(
-      projectConfig.root,
-      'Dockerfile'
-    )} . -t ${sanitizedProjectName}`,
+    dependsOn: [`${options.buildTarget}`, 'prune'],
   };
 
   updateProjectConfiguration(tree, options.project, projectConfig);
@@ -84,8 +80,9 @@ export async function setupDockerGenerator(
 ) {
   const tasks: GeneratorCallback[] = [];
   const options = normalizeOptions(tree, setupOptions);
-  // Should check if the node project exists
-  addDocker(tree, options);
+
+  const installTask = await addDocker(tree, options);
+  tasks.push(installTask);
   updateProjectConfig(tree, options);
 
   if (!options.skipFormat) {
