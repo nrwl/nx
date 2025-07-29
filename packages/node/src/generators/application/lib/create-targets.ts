@@ -126,3 +126,31 @@ export function getNestWebpackBuildConfig(): TargetConfiguration {
     },
   };
 }
+
+export function getPruneTargets(buildTarget: string): {
+  prune: TargetConfiguration;
+  'prune-lockfile': TargetConfiguration;
+  'copy-workspace-modules': TargetConfiguration;
+} {
+  return {
+    'prune-lockfile': {
+      cache: true,
+      executor: '@nx/js:prune-lockfile',
+      options: {
+        buildTarget,
+      },
+    },
+    'copy-workspace-modules': {
+      cache: true,
+      executor: '@nx/js:copy-workspace-modules',
+      options: {
+        buildTarget,
+      },
+    },
+    prune: {
+      cache: true,
+      dependsOn: ['prune-lockfile', 'copy-workspace-modules'],
+      executor: 'nx:noop',
+    },
+  };
+}

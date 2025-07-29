@@ -219,8 +219,30 @@ describe('app', () => {
                   "{options.outputPath}",
                 ],
               },
+              "copy-workspace-modules": {
+                "cache": true,
+                "executor": "@nx/js:copy-workspace-modules",
+                "options": {
+                  "buildTarget": "build",
+                },
+              },
               "lint": {
                 "executor": "@nx/eslint:lint",
+              },
+              "prune": {
+                "cache": true,
+                "dependsOn": [
+                  "prune-lockfile",
+                  "copy-workspace-modules",
+                ],
+                "executor": "nx:noop",
+              },
+              "prune-lockfile": {
+                "cache": true,
+                "executor": "@nx/js:prune-lockfile",
+                "options": {
+                  "buildTarget": "build",
+                },
               },
               "serve": {
                 "configurations": {
@@ -395,8 +417,30 @@ describe('app', () => {
                 "{options.outputPath}",
               ],
             },
+            "copy-workspace-modules": {
+              "cache": true,
+              "executor": "@nx/js:copy-workspace-modules",
+              "options": {
+                "buildTarget": "build",
+              },
+            },
             "lint": {
               "executor": "@nx/eslint:lint",
+            },
+            "prune": {
+              "cache": true,
+              "dependsOn": [
+                "prune-lockfile",
+                "copy-workspace-modules",
+              ],
+              "executor": "nx:noop",
+            },
+            "prune-lockfile": {
+              "cache": true,
+              "executor": "@nx/js:prune-lockfile",
+              "options": {
+                "buildTarget": "build",
+              },
             },
             "serve": {
               "configurations": {
