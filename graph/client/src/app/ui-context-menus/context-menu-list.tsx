@@ -13,8 +13,10 @@ export function ContextMenuList({
   className?: string;
 }) {
   const normalizedSections = Array.isArray(sections) ? sections : [sections];
-  const hasItems = normalizedSections.some((section) => section.items.length > 0);
-  
+  const hasItems = normalizedSections.some(
+    (section) => section.items.length > 0
+  );
+
   if (!hasItems) return null;
 
   const isMultiSection = normalizedSections.length > 1;
@@ -64,4 +66,3 @@ function ListSection({ label, items }: ContextMenuListSection) {
     </div>
   );
 }
-
