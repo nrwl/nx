@@ -11,7 +11,7 @@ Here's how you get set up.
 To connect your workspace, **push it to GitHub** (or your respective source control provider) and then run:
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
 ## Step 2: Configure your CI script
