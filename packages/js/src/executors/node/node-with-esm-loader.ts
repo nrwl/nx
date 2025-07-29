@@ -21,7 +21,7 @@ async function main() {
     await dynamicImportEsm(pathToFileURL(fileToRun).href);
   } catch (error) {
     console.error('ESM loader error:', error);
-    throw error;
+    process.exit(1);
   }
 }
 
