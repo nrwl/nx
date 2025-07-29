@@ -281,24 +281,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Build applications
         run: npx nx run-many -t build
-        
+
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
-          
+
       - name: Release with Docker
         run: npx nx release --dockerVersionScheme=production
         env:

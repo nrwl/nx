@@ -41,140 +41,39 @@ nx release --first-release --dry-run
 By default, the version follows semantic versioning (semver) rules. To disable this behavior, set `release.releaseTagPatternRequireSemver` to `false` in your `nx.json` file. This allows you to use custom versioning schemes.
 {% /callout %}
 
-## Customizing releases
+## Set up your workspace
 
-The `nx release` command is highly customizable. You can customize the versioning, changelog, and publishing phases of the release process independently through a mixture of configuration and CLI arguments.
+Follow our guides to set up Nx Release for your workspace.
 
-The configuration lives in your `nx.json` file under the `release` section.
+{% cards cols="3" %}
 
-```jsonc {% fileName="nx.json" %}
-{
-  // ... more nx.json config
-  "release": {
-    // For example, configures nx release to target all projects
-    // except the one called "ignore-me"
-    "projects": ["*", "!ignore-me"]
-    // ... nx release config
-  }
-}
-```
+{% card title="TypeScript/JavaScript to NPM" description="Publish TypeScript and JavaScript packages to NPM or private registries with semantic versioning." type="documentation" url="/recipes/nx-release/release-npm-packages" icon="typescript" /%}
 
-### Customize changelog output
+{% card title="Docker Images" description="Version and publish Docker images with calendar-based versioning for continuous deployment." type="documentation" url="/recipes/nx-release/release-docker-images" /%}
 
-Changelog render options can be passed as [an object](https://github.com/nrwl/nx/blob/master/packages/nx/release/changelog-renderer/index.ts) under `release.changelog.projectChangelogs.renderOptions` and `release.changelog.workspaceChangelog.renderOptions` in your `nx.json` file. Below are all options with their default values for the built-in changelog renderer.
+{% card title="Rust Crates" description="Publish Rust packages to crates.io with cargo integration." type="documentation" url="/recipes/nx-release/publish-rust-crates" icon="rust" /%}
 
-```jsonc {% fileName="nx.json" %}
-{
-  // ... more nx.json config
-  "release": {
-    "changelog": {
-      "projectChangelogs": {
-        "renderOptions": {
-          // Whether or not the commit authors should be added to the bottom of the changelog in a "Thank You" section.
-          "authors": true,
-          // Whether or not the commit references (such as commit and/or PR links) should be included in the changelog.
-          "commitReferences": true,
-          // Whether or not to include the date in the version title. It can be set to false to disable it, or true to enable with the default of (YYYY-MM-DD).
-          "versionTitleDate": true,
-          // Whether to apply usernames to authors in the Thank You section. Note, this option was called mapAuthorsToGitHubUsernames prior to Nx v21.
-          "applyUsernameToAuthors": true
-        }
-      },
-      "workspaceChangelog": {
-        "renderOptions": {
-          // Whether or not the commit authors should be added to the bottom of the changelog in a "Thank You" section.
-          "authors": true,
-          // Whether or not the commit references (such as commit and/or PR links) should be included in the changelog.
-          "commitReferences": true,
-          // Whether or not to include the date in the version title. It can be set to false to disable it, or true to enable with the default of (YYYY-MM-DD).
-          "versionTitleDate": true,
-          // Whether to apply usernames to authors in the Thank You section. Note, this option was called mapAuthorsToGitHubUsernames prior to Nx v21.
-          "applyUsernameToAuthors": true
-        }
-      }
-    }
-  }
-}
-```
+{% /cards %}
 
-## Docker and Other Ecosystems
+## Basic Configuration
 
-{% callout type="warning" title="Docker is Experimental" %}
-Docker support in Nx Release is currently experimental and may undergo breaking changes without following semantic versioning.
-{% /callout %}
-
-### Docker Releases
-
-Nx Release supports Docker image versioning and publishing with calendar-based version schemes. This is ideal for continuous deployment workflows where every build is potentially releasable.
+Configure Nx Release in your `nx.json` file:
 
 ```jsonc {% fileName="nx.json" %}
 {
   "release": {
-    "releaseTagPattern": {
-      "pattern": "release/{projectName}/{version}"
-    },
-    "groups": {
-      "apps": {
-        "projects": ["java-backend", "node-backend"],
-        "projectsRelationship": "independent",
-        "docker": {
-          "skipVersionActions": true
-        },
-        "changelog": {
-          "projectChangelogs": true
-        }
-      },
-      "packages": {
-        "projects": ["node-backend", "shared-utils", "shared-logger"]
-      }
-    }
+    "projects": ["packages/*"]
   }
 }
 ```
 
-Use the `--dockerVersionScheme` flag to release Docker images:
+The nx release command is customizable. You can customize the versioning, changelog, and publishing phases of the release process independently through a mixture of configuration and CLI arguments.
 
-```shell
-# Build and tag Docker images
-nx release version --dockerVersionScheme=production
+See the [configuration reference](/reference/nx-json#release) for all available options.
 
-# Push to registry
-nx release publish
-```
+## Using the Programmatic API for Nx Release
 
-This creates version tags like `2501.24.a1b2c3d` based on the current date and commit SHA.
-
-### Key Differences for Docker
-
-- **Calendar Versioning**: Uses date-based versions instead of semantic versioning
-- **skipVersionActions**: Use this to exclude projects that shouldn't have Docker images
-- **Pre-version Commands**: Run `docker:build` targets before versioning
-
-Learn more in the [Docker deployment guide](/recipes/deployment/deploy-node-docker).
-
-### Rust Crate Publishing
-
-Nx Release also supports publishing Rust crates to crates.io. Configure Rust projects similarly to JavaScript projects, and Nx will use `cargo publish` during the publish phase.
-
-## Using nx release subcommands independently
-
-As explained above, `nx release` is a wrapper around the three main phases of a release.
-
-If you need more advanced or granular control over your release process you can also run these phases independently using the `nx release version`, `nx release changelog`, and `nx release publish` subcommands.
-
-Each of these subcommands has their own CLI arguments which you can explore using the `--help` flag.
-
-```shell
-nx release version --help
-nx release changelog --help
-nx release publish --help
-```
-
-## Using the programmatic API for nx release
-
-For the maximum control and power over your release process, it is recommended to use the programmatic API for `nx release` in your own custom scripts.
-
-Here is a full working example of creating a custom script which processes its own CLI arguments (with `--dry-run` true by default) and then calls the `nx release` programmatic API.
+For maximum control, use the programmatic API to create custom release workflows:
 
 ```ts {% fileName="tools/scripts/release.ts" %}
 import { releaseChangelog, releasePublish, releaseVersion } from 'nx/release';
@@ -227,3 +126,26 @@ import * as yargs from 'yargs';
   );
 })();
 ```
+
+## Learn More
+
+### Configuration & Customization
+
+- **[Release Groups](/recipes/nx-release/release-projects-independently)** - Version projects independently or together
+- **[Conventional Commits](/recipes/nx-release/automatically-version-with-conventional-commits)** - Automate versioning based on commit messages
+- **[Custom Registries](/recipes/nx-release/configure-custom-registries)** - Publish to private or alternative registries
+- **[CI/CD Integration](/recipes/nx-release/publish-in-ci-cd)** - Automate releases in your pipeline
+- **[Changelog Customization](/recipes/nx-release/configure-changelog-format)** - Control changelog generation and formatting
+- **[Custom Commit Types](/recipes/nx-release/customize-conventional-commit-types)** - Define custom conventional commit types
+- **[Version Prefixes](/recipes/nx-release/configuration-version-prefix)** - Configure version prefix patterns
+
+### Workflows
+
+- **[Automate with GitHub Actions](/recipes/nx-release/automate-github-releases)** - Set up automated releases in GitHub workflows
+- **[Release Projects Independently](/recipes/nx-release/release-projects-independently)** - Manage independent versioning for projects
+- **[Use Conventional Commits](/recipes/nx-release/automatically-version-with-conventional-commits)** - Enable automatic versioning from commits
+- **[Build Before Versioning](/recipes/nx-release/build-before-versioning)** - Run builds before version updates
+
+### References
+
+- **[Configuration in `nx.json`](/reference/nx-json#release)** - All available options for configuring `nx release`

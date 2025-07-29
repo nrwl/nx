@@ -1,15 +1,15 @@
 ---
-title: Get Started with Nx Release
-description: Learn how to use Nx Release to version packages, generate changelogs, and publish packages in your JavaScript monorepo with a step-by-step guide.
+title: Release TypeScript/JavaScript Packages to NPM
+description: Learn how to use Nx Release to version, generate changelogs, and publish TypeScript/JavaScript packages to NPM in your monorepo.
 ---
 
-# Get Started with Nx Release
+# Release TypeScript/JavaScript Packages to NPM
 
-This recipe guides you through versioning packages, generating changelogs, and publishing packages in a JavaScript monorepo with Nx Release.
+This guide walks you through setting up Nx Release to version, generate changelogs, and publish TypeScript/JavaScript packages to NPM from your monorepo.
 
 {% link-card title="Free Course: Versioning and Releasing NPM packages with Nx" type="external" url="https://www.epicweb.dev/tutorials/versioning-and-releasing-npm-packages-with-nx" icon="/documentation/shared/images/nx-release-course-logo.webp" /%}
 
-## Initialize Nx Release in Your Workspace
+## Setting Up Your NPM Release Workflow
 
 ### Install Nx
 
@@ -160,7 +160,7 @@ If the preview looks good, run the command again without the `--dry-run` option 
 nx release --first-release
 ```
 
-The command will proceed as before, prompting for a version bump and showing a preview of the changes. However, this time, it will prompt you to publish the packages to the remote registry. If you say no, the publishing step will be skipped. If you say yes, the command will publish the packages to the npm registry.
+The command will proceed as before, prompting for a version bump and showing a preview of the changes. However, this time, it will prompt you to publish the packages to NPM. If you say no, the publishing step will be skipped. If you say yes, the command will publish the packages to the NPM registry.
 
 ```text {% command="nx release --first-release" %}
 ...
@@ -277,3 +277,9 @@ When using release groups in which the member projects are versioned together, y
 After the first release, the `--first-release` option will no longer be required. Nx Release will expect to find git tags and changelog files for each package. It will also use `npm view` to look up the current version of packages before publishing, ensuring that the package has not already been published and therefore avoid any conflict errors, meaning you can run the same publish action multiple times without any negative side-effects.
 
 Future releases will also generate entries in `CHANGELOG.md` based on the changes since the last release. Nx Release will parse the `feat` and `fix` type commits according to the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification and sort them into appropriate sections of the changelog. An example of these changelogs can be seen on the [Nx releases page](https://github.com/nrwl/nx/releases).
+
+## Next Steps
+
+- Learn about [NPM registry setup and authentication](/recipes/nx-release/setup-npm-registry)
+- Configure [automated releases with CI/CD](/recipes/nx-release/publish-in-ci-cd)
+- Explore [independent project releases](/recipes/nx-release/release-projects-independently)

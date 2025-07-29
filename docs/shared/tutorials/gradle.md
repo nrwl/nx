@@ -371,29 +371,6 @@ organization:
 - Nx Cloud provides remote caching and distributed task execution to speed up CI
 - Nx [intelligently determines which tasks are `affected`](/ci/features/affected) by code changes to reduce waste in CI
 
-## Docker and Gradle Integration
-
-Nx also provides excellent support for containerizing applications built with Gradle. While Docker support is currently experimental, you can:
-
-- Use the `@nx/docker` plugin to automatically infer Docker build targets for projects with Dockerfiles
-- Leverage Nx's calendar-based versioning for Docker images, perfect for continuous deployment
-- Integrate Docker builds into your Nx Release workflow alongside Gradle artifacts
-
-For example, if you have a Spring Boot application built with Gradle:
-
-```shell
-# Build your Gradle application
-nx build my-spring-app
-
-# Build the Docker image
-nx docker:build my-spring-app
-
-# Release with Docker versioning
-nx release --dockerVersionScheme=production
-```
-
-Learn more about [deploying with Docker](/recipes/deployment/deploy-node-docker) in the Nx documentation.
-
 ## Next Steps
 
 Connect with the rest of the Nx community with these resources:

@@ -462,9 +462,25 @@
             "isExternal": false,
             "children": [
               {
-                "name": "Get Started with Nx Release",
-                "path": "/recipes/nx-release/get-started-with-nx-release",
-                "id": "get-started-with-nx-release",
+                "name": "Release TypeScript/JavaScript Packages to NPM",
+                "path": "/recipes/nx-release/release-npm-packages",
+                "id": "release-npm-packages",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Release Docker Images",
+                "path": "/recipes/nx-release/release-docker-images",
+                "id": "release-docker-images",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Release Rust Crates",
+                "path": "/recipes/nx-release/publish-rust-crates",
+                "id": "publish-rust-crates",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -542,9 +558,17 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Publish Rust Crates",
-                "path": "/recipes/nx-release/publish-rust-crates",
-                "id": "publish-rust-crates",
+                "name": "Setup NPM Registry Publishing",
+                "path": "/recipes/nx-release/setup-npm-registry",
+                "id": "setup-npm-registry",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Setup Docker Registry Publishing",
+                "path": "/recipes/nx-release/setup-docker-registry",
+                "id": "setup-docker-registry",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false

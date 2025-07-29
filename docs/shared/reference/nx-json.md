@@ -549,7 +549,7 @@ The `docker` property configures Docker image versioning and publishing when usi
     "docker": {
       // Run this command before versioning Docker images
       "preVersionCommand": "npx nx run-many -t docker:build",
-      
+
       // Define versioning schemes for different environments
       "versionSchemes": {
         "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
@@ -557,13 +557,13 @@ The `docker` property configures Docker image versioning and publishing when usi
         "staging": "{currentDate|YYMM.DD}-staging",
         "development": "{currentDate|YYMM.DD}-dev-{shortCommitSha}"
       },
-      
+
       // Skip Docker versioning for these projects
       "skipVersionActions": ["legacy-app", "deprecated-service"],
-      
+
       // Default Docker repository name (can be overridden per project)
       "repositoryName": "myorg",
-      
+
       // Docker registry URL
       "registryUrl": "docker.io"
     }
