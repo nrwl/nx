@@ -41,7 +41,7 @@ import {
   useProjectGraphContext,
 } from '@nx/graph/projects';
 import { NxGraphTaskGraphProvider, useTaskGraphContext } from '@nx/graph/tasks';
-import { NxGraphBackground, NxGraphEmpty } from '@nx/graph/ui';
+import { NxGraphEmpty } from '@nx/graph/ui';
 import {
   NxGraphPalette,
   ProjectNodeElementData,
@@ -445,8 +445,6 @@ function InnerShell({
           ) : null}
 
           <div className="relative h-full w-full">
-            <NxGraphBackground className="dot-grid from-slate-200 dark:from-slate-700" />
-
             <div
               ref={containerRef}
               className="h-full w-full cursor-pointer"
