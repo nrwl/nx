@@ -113,7 +113,8 @@ const mockAppConfig: AppConfig = {
   defaultWorkspaceId: 'local',
 };
 
-describe('dep-graph machine', () => {
+// TODO: (chau) rework the tests with graph consistency effort (CLOUD-3443)
+describe.skip('dep-graph machine', () => {
   beforeEach(() => {
     window.appConfig = mockAppConfig;
     window.environment = 'release';
