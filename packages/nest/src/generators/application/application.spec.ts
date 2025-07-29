@@ -53,6 +53,28 @@ describe('application generator', () => {
               "command": "webpack-cli build",
             },
           },
+          "copy-workspace-modules": {
+            "cache": true,
+            "executor": "@nx/js:copy-workspace-modules",
+            "options": {
+              "buildTarget": "build",
+            },
+          },
+          "prune": {
+            "cache": true,
+            "dependsOn": [
+              "prune-lockfile",
+              "copy-workspace-modules",
+            ],
+            "executor": "nx:noop",
+          },
+          "prune-lockfile": {
+            "cache": true,
+            "executor": "@nx/js:prune-lockfile",
+            "options": {
+              "buildTarget": "build",
+            },
+          },
           "serve": {
             "configurations": {
               "development": {
@@ -244,6 +266,28 @@ describe('application generator', () => {
                   "command": "webpack-cli build",
                 },
               },
+              "copy-workspace-modules": {
+                "cache": true,
+                "executor": "@nx/js:copy-workspace-modules",
+                "options": {
+                  "buildTarget": "build",
+                },
+              },
+              "prune": {
+                "cache": true,
+                "dependsOn": [
+                  "prune-lockfile",
+                  "copy-workspace-modules",
+                ],
+                "executor": "nx:noop",
+              },
+              "prune-lockfile": {
+                "cache": true,
+                "executor": "@nx/js:prune-lockfile",
+                "options": {
+                  "buildTarget": "build",
+                },
+              },
               "serve": {
                 "configurations": {
                   "development": {
@@ -408,6 +452,28 @@ describe('application generator', () => {
                   "--node-env=production",
                 ],
                 "command": "webpack-cli build",
+              },
+            },
+            "copy-workspace-modules": {
+              "cache": true,
+              "executor": "@nx/js:copy-workspace-modules",
+              "options": {
+                "buildTarget": "build",
+              },
+            },
+            "prune": {
+              "cache": true,
+              "dependsOn": [
+                "prune-lockfile",
+                "copy-workspace-modules",
+              ],
+              "executor": "nx:noop",
+            },
+            "prune-lockfile": {
+              "cache": true,
+              "executor": "@nx/js:prune-lockfile",
+              "options": {
+                "buildTarget": "build",
               },
             },
             "serve": {
