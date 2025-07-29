@@ -1450,6 +1450,8 @@ importers:
 
   graph/ui-common: {}
 
+  graph/ui-icons: {}
+
   graph/ui-project-details:
     dependencies:
       '@nx/graph-shared':
@@ -1461,6 +1463,9 @@ importers:
       '@nx/graph-ui-common':
         specifier: 'workspace:'
         version: link:../ui-common
+      '@nx/graph-ui-icons':
+        specifier: 'workspace:'
+        version: link:../ui-icons
       '@nx/nx-dev-ui-fence':
         specifier: 'workspace:'
         version: link:../../nx-dev/ui-fence
@@ -2008,6 +2013,9 @@ importers:
       '@nx/graph-ui-common':
         specifier: workspace:*
         version: link:../../graph/ui-common
+      '@nx/graph-ui-icons':
+        specifier: workspace:*
+        version: link:../../graph/ui-icons
       '@nx/nx-dev-feature-analytics':
         specifier: workspace:*
         version: link:../feature-analytics
@@ -31768,6 +31776,7 @@ snapshots:
       '@nx/devkit': link:packages/devkit
       '@nx/graph-internal-ui-project-details': link:graph/ui-project-details
       '@nx/graph-ui-common': link:graph/ui-common
+      '@nx/graph-ui-icons': link:graph/ui-icons
       '@nx/nx-dev-feature-analytics': link:nx-dev/feature-analytics
       '@nx/nx-dev-ui-common': link:nx-dev/ui-common
       '@nx/nx-dev-ui-fence': link:nx-dev/ui-fence

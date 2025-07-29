@@ -1,5 +1,5 @@
 import { twMerge } from 'tailwind-merge';
-import { NxCloudIcon } from '@nx/graph-ui-common';
+import { NxCloudIcon } from '@nx/graph-ui-icons';
 
 export interface AtomizerTooltipProps {
   connectedToCloud: boolean;

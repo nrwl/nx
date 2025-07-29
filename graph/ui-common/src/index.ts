@@ -6,7 +6,6 @@ export * from './lib/modal';
 export * from './lib/error-renderer';
 export * from './lib/tooltips';
 export * from './lib/copy-to-clipboard-button';
-export * from './lib/icons';
 export * from './lib/dropdown';
 export * from './lib/debounced-text-input';
 export * from './lib/tag';

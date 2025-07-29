@@ -7,13 +7,16 @@
   "include": [],
   "references": [
     {
+      "path": "../ui-common"
+    },
+    {
       "path": "../../nx-dev/ui-fence"
     },
     {
       "path": "../shared"
     },
     {
-      "path": "../ui-common"
+      "path": "../ui-icons"
     },
     {
       "path": "../ui-code-block"
