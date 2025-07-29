@@ -91,6 +91,7 @@ function createTaskInfo(
     rootDir: context.root,
     outputDir: taskOptions.outputPath,
     assets: taskOptions.assets,
+    includeIgnoredFiles: taskOptions.includeIgnoredAssetFiles,
   });
 
   const {
