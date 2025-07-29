@@ -53,6 +53,7 @@ module.exports = function (modulePath, options) {
     '@nx/js',
     '@nx/next',
     '@nx/storybook',
+    '@nx/rsbuild',
     '@nx/react-native',
     '@nx/express',
     '@nx/web',
