@@ -99,7 +99,7 @@ To enable Self-Healing CI on your workspace:
 If you haven't already connected to Nx Cloud:
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
 You can [start with the free Hobby plan](/pricing) and play around with the new AI features.
@@ -179,7 +179,7 @@ Self-Healing CI completes Nx Cloud's comprehensive approach to eliminating CI fr
 - **Built on proven infrastructure**: Uses the same robust Nx Cloud infrastructure that powers distributed task execution
 - **Part of a broader vision**: Continues our mission to optimize "time to green" and eliminate developer workflow friction
 
-**Ready to try it?** Self-Healing CI is rolling out as an early access feature and is available to everyone right now—no special approval or signup required. If you don't have an Nx Cloud account yet, you can quickly [start with the Hobby plan](/pricing), connect your workspace with `npx nx connect`, and get going immediately.
+**Ready to try it?** Self-Healing CI is rolling out as an early access feature and is available to everyone right now—no special approval or signup required. If you don't have an Nx Cloud account yet, you can quickly [start with the Hobby plan](/pricing), connect your workspace with `npx nx@latest connect`, and get going immediately.
 
 **For enterprise teams:** If you're already using Nx Cloud and want to learn more about how AI features like Self-Healing CI can enhance your existing setup, [reach out to us](/contact). We'd love to help you leverage these capabilities in your organization.
 

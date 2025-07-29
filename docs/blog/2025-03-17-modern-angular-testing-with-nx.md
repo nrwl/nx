@@ -106,7 +106,7 @@ If you view the `my-app-e2e` project (`npx nx show project my-app-e2e`), you wil
 When run on a single machine, `e2e-ci` will be slower because it starts multiple Playwright processes, which is why we only allow it to run through distribution. To [enable distribution](/ci/features/split-e2e-tasks#enable-automated-e2e-task-splitting), you must connect your workspace to [Nx Cloud](/nx-cloud). This is easily done with the `connect` command.
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
 Follow the onboarding steps and you should be connected within five minutes. For more information, check out our [setup guides](/ci/recipes/set-up) for all supported CI providers (GitHub, GitLab, Azure, etc.).

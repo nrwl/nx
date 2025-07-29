@@ -72,7 +72,7 @@ The steps are very simple:
 2. Run `nx g @nx/angular:convert-to-rspack` to migrate your Angular application to Rspack.
 
 There is also a [guide in our documentation](/technologies/angular/angular-rspack/recipes/migrate-from-webpack) that walks you through the process step-by-step.
-Even if you're currently using the Angular CLI, it's as simple as first running `npx nx init` in your workspace and then running `npx nx g convert-to-rspack`.
+Even if you're currently using the Angular CLI, it's as simple as first running `npx nx@latest init` in your workspace and then running `npx nx g convert-to-rspack`.
 
 ## Using Angular Rspack
 
