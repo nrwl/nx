@@ -63,7 +63,7 @@ npx create-nx-workspace@latest
 **Add to an existing project: (recommended also for non-JS projects)**
 
 ```shell
-npx nx init
+npx nx@latest init
 ```
 
 **Get the complete experience:**

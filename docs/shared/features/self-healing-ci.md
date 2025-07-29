@@ -25,7 +25,7 @@ To enable Self-Healing CI in your workspace, you'll need to connect to Nx Cloud 
 If you haven't already connected to Nx Cloud, run the following command:
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
 Next, check the Nx Cloud workspace settings in the Nx Cloud web application to ensure that "Self-Healing CI" is enabled (it should be enabled by default).
