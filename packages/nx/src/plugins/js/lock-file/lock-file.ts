@@ -29,6 +29,7 @@ import {
   BUN_TEXT_LOCK_FILE,
   getBunTextLockfileDependencies,
   getBunTextLockfileNodes,
+  stringifyBunLockfile,
 } from './bun-parser';
 import {
   getNpmLockfileDependencies,
@@ -259,11 +260,8 @@ export function createLockFile(
       return stringifyNpmLockfile(prunedGraph, content, normalizedPackageJson);
     }
     if (packageManager === 'bun') {
-      output.log({
-        title:
-          "Unable to create bun lock files. Run bun install it's just as quick",
-      });
-      return '';
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      return stringifyBunLockfile(prunedGraph, content, normalizedPackageJson);
     }
   } catch (e) {
     if (!isPostInstallProcess()) {

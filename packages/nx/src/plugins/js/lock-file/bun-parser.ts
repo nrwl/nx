@@ -4,6 +4,7 @@ import { satisfies } from 'semver';
 import {
   DependencyType,
   type ProjectGraphExternalNode,
+  type ProjectGraph,
 } from '../../../config/project-graph';
 import { hashArray } from '../../../hasher/file-hasher';
 import type { CreateDependenciesContext } from '../../../project-graph/plugins';
@@ -12,6 +13,7 @@ import {
   validateDependency,
 } from '../../../project-graph/project-graph-builder';
 import { parseJson } from '../../../utils/json';
+import type { NormalizedPackageJson } from './utils/package-json';
 
 const DEPENDENCY_TYPES = [
   'dependencies',
@@ -1507,4 +1509,258 @@ function findBestVersionMatch(
   });
 
   return sortedVersions[0];
+}
+
+/**
+ * Creates a stringified Bun lockfile from a project graph and package.json
+ * This function serializes the external nodes and dependencies into Bun's lockfile format
+ */
+export function stringifyBunLockfile(
+  graph: ProjectGraph,
+  rootLockFileContent: string,
+  packageJson: NormalizedPackageJson
+): string {
+  try {
+    // Parse the existing lockfile to maintain structure and metadata
+    const existingLockfile = parseLockFile(rootLockFileContent, '');
+
+    // Get workspace packages to skip them in the output
+    const workspacePackages = new Set<string>();
+
+    // Add the root package name if it exists
+    if (packageJson.name) {
+      workspacePackages.add(packageJson.name);
+    }
+
+    // Get workspace package names from the existing lockfile
+    if (existingLockfile.workspacePackages) {
+      for (const packageInfo of Object.values(
+        existingLockfile.workspacePackages
+      )) {
+        workspacePackages.add(packageInfo.name);
+      }
+    }
+
+    // Also check workspaces dependencies for workspace: protocol packages
+    if (existingLockfile.workspaces) {
+      for (const workspace of Object.values(existingLockfile.workspaces)) {
+        const allDeps = {
+          ...workspace.dependencies,
+          ...workspace.devDependencies,
+          ...workspace.peerDependencies,
+          ...workspace.optionalDependencies,
+        };
+        for (const [depName, depVersion] of Object.entries(allDeps || {})) {
+          if (
+            typeof depVersion === 'string' &&
+            depVersion.startsWith('workspace:')
+          ) {
+            workspacePackages.add(depName);
+          }
+        }
+      }
+    }
+
+    // Create the new lockfile structure, preserving existing metadata
+    const newLockfile: BunLockFile = {
+      lockfileVersion: existingLockfile.lockfileVersion || 1,
+      workspaces: existingLockfile.workspaces || {},
+      packages: {},
+    };
+
+    // Preserve optional sections if they exist
+    if (existingLockfile.patches) {
+      newLockfile.patches = existingLockfile.patches;
+    }
+    if (existingLockfile.manifests) {
+      newLockfile.manifests = existingLockfile.manifests;
+    }
+    if (existingLockfile.workspacePackages) {
+      newLockfile.workspacePackages = existingLockfile.workspacePackages;
+    }
+
+    // Add external nodes from the graph as packages
+    for (const [nodeName, node] of Object.entries(graph.externalNodes)) {
+      if (
+        node.type === 'npm' &&
+        !workspacePackages.has(node.data.packageName)
+      ) {
+        const packageName = node.data.packageName;
+        const version = node.data.version;
+
+        // Create the package key - check if this should be hoisted (package name only) or versioned
+        // If the original lockfile has the package with just the name, preserve that structure
+        const originalHoistedData = findOriginalBunPackageData(
+          existingLockfile.packages || {},
+          packageName,
+          version
+        );
+
+        const packageKey =
+          existingLockfile.packages && existingLockfile.packages[packageName]
+            ? packageName // Use hoisted name if it exists in original
+            : `${packageName}@${version}`; // Otherwise use versioned name
+
+        // Find original package data if it exists in the root lockfile
+        const originalPackageData = findOriginalBunPackageData(
+          existingLockfile.packages || {},
+          packageName,
+          version
+        );
+
+        if (originalPackageData) {
+          // Use existing package data to preserve integrity hashes and metadata
+          newLockfile.packages[packageKey] = originalPackageData;
+        } else {
+          // Create minimal package entry for new packages
+          const resolvedSpec = `${packageName}@npm:${version}`;
+          const tarballUrl = `https://registry.npmjs.org/${packageName}/-/${packageName}-${version}.tgz`;
+
+          // Create NPM package tuple: [resolvedSpec, tarballUrl, metadata, hash]
+          const packageTuple: NpmPackageTuple = [
+            resolvedSpec,
+            tarballUrl,
+            {}, // Empty metadata - will be filled by bun install
+            node.data.hash || 'placeholder-hash',
+          ];
+
+          newLockfile.packages[packageKey] = packageTuple;
+        }
+      }
+    }
+
+    // Update workspace dependencies in the root workspace
+    if (newLockfile.workspaces['']) {
+      const rootWorkspace = newLockfile.workspaces[''];
+
+      // Add dependencies from package.json to workspace only if they exist and are non-empty
+      if (
+        packageJson.dependencies &&
+        Object.keys(packageJson.dependencies).length > 0
+      ) {
+        rootWorkspace.dependencies = {
+          ...rootWorkspace.dependencies,
+          ...packageJson.dependencies,
+        };
+      }
+      if (
+        packageJson.devDependencies &&
+        Object.keys(packageJson.devDependencies).length > 0
+      ) {
+        rootWorkspace.devDependencies = {
+          ...rootWorkspace.devDependencies,
+          ...packageJson.devDependencies,
+        };
+      }
+      if (
+        packageJson.peerDependencies &&
+        Object.keys(packageJson.peerDependencies).length > 0
+      ) {
+        rootWorkspace.peerDependencies = {
+          ...rootWorkspace.peerDependencies,
+          ...packageJson.peerDependencies,
+        };
+      }
+      if (
+        packageJson.optionalDependencies &&
+        Object.keys(packageJson.optionalDependencies).length > 0
+      ) {
+        rootWorkspace.optionalDependencies = {
+          ...rootWorkspace.optionalDependencies,
+          ...packageJson.optionalDependencies,
+        };
+      }
+    } else {
+      // Create root workspace if it doesn't exist
+      const rootWorkspace: Workspace = {};
+
+      // Only add non-empty dependency sections
+      if (
+        packageJson.dependencies &&
+        Object.keys(packageJson.dependencies).length > 0
+      ) {
+        rootWorkspace.dependencies = packageJson.dependencies;
+      }
+      if (
+        packageJson.devDependencies &&
+        Object.keys(packageJson.devDependencies).length > 0
+      ) {
+        rootWorkspace.devDependencies = packageJson.devDependencies;
+      }
+      if (
+        packageJson.peerDependencies &&
+        Object.keys(packageJson.peerDependencies).length > 0
+      ) {
+        rootWorkspace.peerDependencies = packageJson.peerDependencies;
+      }
+      if (
+        packageJson.optionalDependencies &&
+        Object.keys(packageJson.optionalDependencies).length > 0
+      ) {
+        rootWorkspace.optionalDependencies = packageJson.optionalDependencies;
+      }
+
+      newLockfile.workspaces[''] = rootWorkspace;
+    }
+
+    // Sort package keys for consistent output
+    const sortedPackages: Record<string, PackageTuple> = {};
+    Object.keys(newLockfile.packages)
+      .sort()
+      .forEach((key) => {
+        sortedPackages[key] = newLockfile.packages[key];
+      });
+    newLockfile.packages = sortedPackages;
+
+    // Serialize to JSON with trailing commas (Bun's JSONC format)
+    return JSON.stringify(newLockfile, null, 2) + '\n';
+  } catch (error) {
+    throw new Error(`Failed to stringify Bun lockfile: ${error.message}`);
+  }
+}
+
+/**
+ * Finds original package data from the existing lockfile
+ */
+function findOriginalBunPackageData(
+  packages: Record<string, PackageTuple>,
+  packageName: string,
+  version: string
+): PackageTuple | null {
+  // Try exact package name match first (for hoisted packages)
+  if (packages[packageName]) {
+    const packageData = packages[packageName];
+    if (Array.isArray(packageData) && packageData.length > 0) {
+      const [resolvedSpec] = packageData;
+      if (typeof resolvedSpec === 'string') {
+        const { name, version: resolvedVersion } =
+          getCachedSpecInfo(resolvedSpec);
+        if (name === packageName && resolvedVersion === version) {
+          return packageData;
+        }
+      }
+    }
+  }
+
+  // Try versioned package name
+  const versionedKey = `${packageName}@${version}`;
+  if (packages[versionedKey]) {
+    return packages[versionedKey];
+  }
+
+  // Search through all packages for a match
+  for (const [key, packageData] of Object.entries(packages)) {
+    if (Array.isArray(packageData) && packageData.length > 0) {
+      const [resolvedSpec] = packageData;
+      if (typeof resolvedSpec === 'string') {
+        const { name, version: resolvedVersion } =
+          getCachedSpecInfo(resolvedSpec);
+        if (name === packageName && resolvedVersion === version) {
+          return packageData;
+        }
+      }
+    }
+  }
+
+  return null;
 }
