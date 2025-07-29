@@ -25,6 +25,7 @@ import { ViteIcon } from './technologies/vite';
 import { VitestIcon } from './technologies/vitest';
 import { VueIcon } from './technologies/vue';
 import { WebpackIcon } from './technologies/webpack';
+import { DockerIcon } from './technologies/docker';
 
 export const MonochromaticTechnologyIconsMap: Record<
   string,
@@ -33,6 +34,7 @@ export const MonochromaticTechnologyIconsMap: Record<
   angular: { icon: AngularIcon },
   cypress: { icon: CypressIcon },
   detox: { icon: ReactIcon },
+  docker: { icon: DockerIcon },
   esbuild: { icon: EsbuildIcon },
   eslint: { icon: EslintIcon },
   expo: { icon: ExpoIcon },
