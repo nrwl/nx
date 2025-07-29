@@ -26,7 +26,7 @@ We'll show you how to create a [React Router](https://reactrouter.com/home) appl
 If you already have an existing React Router application and want to add Nx to it you can do so by running the following command:
 
 ```shell
-npx nx init
+npx nx@latest init
 ```
 
 ## Generate a React Router Application

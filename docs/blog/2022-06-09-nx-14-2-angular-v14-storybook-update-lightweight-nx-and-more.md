@@ -75,7 +75,7 @@ In v14 we already simplified Nx (we have a whole section in [our release blog po
 Whenever you need to fine-tune the default settings you can run the following command to get a `nx.json` generated or you can obviously create it by hand:
 
 ```shell
-npx nx init
+npx nx@latest init
 ```
 
 ## Run Nx graph on any monorepo!

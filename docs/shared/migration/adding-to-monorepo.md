@@ -331,7 +331,7 @@ Now that we're working on the CI pipeline, it is important for your changes to b
 Now connect your repository to Nx Cloud with the following command:
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
 A browser window will open to register your repository in your [Nx Cloud](https://cloud.nx.app) account. The link is also printed to the terminal if the windows does not open, or you closed it before finishing the steps. The app will guide you to create a PR to enable Nx Cloud on your repository.
