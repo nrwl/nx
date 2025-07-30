@@ -7,7 +7,7 @@ import { NxHeroVideo } from './nx-hero-video';
 export function Hero(): ReactElement {
   return (
     <div className="mx-auto w-full max-w-7xl px-6 lg:px-8">
-      <div className="z-20 mx-auto mb-32 grid max-w-6xl grid-cols-1 place-items-center pt-48 text-center">
+      <div className="z-20 mx-auto mb-8 grid max-w-6xl grid-cols-1 place-items-center pt-48 text-center">
         <div className="container">
           <SectionHeading as="h1" variant="display" data-cy="primary-heading">
             <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
