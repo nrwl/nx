@@ -12,6 +12,7 @@ import { initGenerator as jsInitGenerator } from '@nx/js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import {
   addProjectToTsSolutionWorkspace,
+  shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
@@ -63,11 +64,16 @@ export async function applicationGeneratorInternal(
 ): Promise<GeneratorCallback> {
   const tasks = [];
 
+  const addTsPlugin = shouldConfigureTsSolutionSetup(
+    tree,
+    schema.addPlugin,
+    schema.useTsSolution
+  );
   const jsInitTask = await jsInitGenerator(tree, {
     ...schema,
     tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     skipFormat: true,
-    addTsPlugin: schema.useTsSolution,
+    addTsPlugin,
     formatter: schema.formatter,
     platform: 'web',
   });
