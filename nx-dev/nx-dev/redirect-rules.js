@@ -386,9 +386,6 @@ const recipesUrls = {
   // This one was folded into a more holistic recipe around managing version reference updates
   '/recipes/nx-release/publish-custom-dist-directory':
     '/recipes/nx-release/updating-version-references#scenario-2-i-want-to-publish-from-a-custom-dist-directory-and-not-update-references-in-my-source-packagejson-files',
-  // Renamed to be more specific about NPM
-  '/recipes/nx-release/get-started-with-nx-release':
-    '/recipes/nx-release/release-npm-packages',
 };
 
 /**

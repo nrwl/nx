@@ -25,7 +25,7 @@ A release can be thought about in three main phases:
 2. **Changelog** - The process of deriving a changelog from your commit messages or [version plan](/recipes/nx-release/file-based-versioning-version-plans) files, which can be used to communicate the changes to your users.
 3. **Publishing** - The process of publishing your projects to a registry, such as npm for TypeScript/JavaScript libraries, crates.io for Rust, or Docker registries for container images.
 
-## Running releases
+## Running Releases
 
 The `nx release` command is used to run the release process from end to end. It is a wrapper around the three main phases of a release to provide maximum convenience and ease of use.
 
@@ -41,7 +41,7 @@ nx release --first-release --dry-run
 By default, the version follows semantic versioning (semver) rules. To disable this behavior, set `release.releaseTagPatternRequireSemver` to `false` in your `nx.json` file. This allows you to use custom versioning schemes.
 {% /callout %}
 
-## Set up your workspace
+## Set Up Your Workspace
 
 Follow our guides to set up Nx Release for your workspace.
 

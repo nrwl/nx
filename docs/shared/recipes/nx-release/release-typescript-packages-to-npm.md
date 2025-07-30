@@ -277,9 +277,3 @@ When using release groups in which the member projects are versioned together, y
 After the first release, the `--first-release` option will no longer be required. Nx Release will expect to find git tags and changelog files for each package. It will also use `npm view` to look up the current version of packages before publishing, ensuring that the package has not already been published and therefore avoid any conflict errors, meaning you can run the same publish action multiple times without any negative side-effects.
 
 Future releases will also generate entries in `CHANGELOG.md` based on the changes since the last release. Nx Release will parse the `feat` and `fix` type commits according to the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification and sort them into appropriate sections of the changelog. An example of these changelogs can be seen on the [Nx releases page](https://github.com/nrwl/nx/releases).
-
-## Next Steps
-
-- Learn about [NPM registry setup and authentication](/recipes/nx-release/setup-npm-registry)
-- Configure [automated releases with CI/CD](/recipes/nx-release/publish-in-ci-cd)
-- Explore [independent project releases](/recipes/nx-release/release-projects-independently)

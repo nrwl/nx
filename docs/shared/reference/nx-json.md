@@ -394,6 +394,18 @@ The default `"releaseTagPattern"` for independent releases at the project level 
 }
 ```
 
+#### Tag Pattern Syntax
+
+The `releaseTagPattern` supports interpolated values:
+
+- `{version}` - The version currently being released
+- `{projectName}` - The name of the project being released
+- `{releaseGroupname}` - The name of the release group being released (if applicable)
+- Example patterns:
+
+- `{projectName}@{version}` - Results in: my-lib@1.0.0
+- `{releaseGroupName}/{projectName}/{version}` - Results in: my-group/my-lib/1.0.0
+
 ### Version
 
 The `version` property configures the versioning phase of the release process. It is used to determine the next version of your projects, and update any projects that depend on them to use the new version.
@@ -558,8 +570,8 @@ The `docker` property configures Docker image versioning and publishing when usi
         "development": "{currentDate|YYMM.DD}-dev-{shortCommitSha}"
       },
 
-      // Skip Docker versioning for these projects
-      "skipVersionActions": ["legacy-app", "deprecated-service"],
+      // Skip Docker versioning for these projects to prevent versioning with other tools like NPM
+      "skipVersionActions": ["api"],
 
       // Default Docker repository name (can be overridden per project)
       "repositoryName": "myorg",
@@ -570,6 +582,8 @@ The `docker` property configures Docker image versioning and publishing when usi
   }
 }
 ```
+
+Read more about it in the [Release Docker Images guide](/recipes/nx-release/release-docker-images).
 
 #### Version Scheme Syntax
 
@@ -589,28 +603,27 @@ Docker version schemes support calendar-based patterns using the following place
 - `{commitSha}` - Full commit SHA
 
 Example patterns:
+
 - `{currentDate|YYMM.DD}.{shortCommitSha}` - Results in: 2501.30.a1b2c3d
 - `{projectName}-{currentDate|YYYY.MM.DD}` - Results in: api-2025.01.30
 - `{currentDate|YY.MM.DD.HHmm}-{commitSha}` - Results in: 25.01.30.1430-abcdef1234567890
 
-Calendar versioning is ideal for continuous deployment workflows where every build is potentially releasable.
-
 #### Group-Level Docker Configuration
 
-You can configure Docker settings at the release group level:
+You can configure [Docker release](/recipes/nx-release/release-docker-images) settings at the release group level:
 
 ```jsonc {% fileName="nx.json" %}
 {
   "release": {
     "groups": {
       "backend": {
-        "projects": ["api", "worker"],
+        "projects": ["api"],
+        "projectsRelationship": "independent",
         "docker": {
-          "groupPreVersionCommand": "nx affected -t test",
-          "versionSchemes": {
-            "production": "{currentDate|YY.MM.DD}",
-            "canary": "{currentDate|YYMM.DD.HHmm}"
-          }
+          "skipVersionActions": true
+        },
+        "changelog": {
+          "projectChangelogs": true
         }
       }
     }
@@ -618,19 +631,7 @@ You can configure Docker settings at the release group level:
 }
 ```
 
-#### Project-Level Docker Configuration
-
-Individual projects can override Docker settings in their `project.json`:
-
-```jsonc {% fileName="project.json" %}
-{
-  "release": {
-    "docker": {
-      "repositoryName": "custom-repo/special-app"
-    }
-  }
-}
-```
+This allows you to have other releases such as [NPM](/recipes/nx-release/release-npm-packages) or [Rust crates](/recipes/nx-release/publish-rust-crates) in the same workspace.
 
 ## Sync
 

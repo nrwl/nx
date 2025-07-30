@@ -62,8 +62,6 @@
       - [Publish in CI/CD](/recipes/nx-release/publish-in-ci-cd)
       - [Automate GitHub Releases](/recipes/nx-release/automate-github-releases)
       - [Automate GitLab Releases](/recipes/nx-release/automate-gitlab-releases)
-      - [Setup NPM Registry Publishing](/recipes/nx-release/setup-npm-registry)
-      - [Setup Docker Registry Publishing](/recipes/nx-release/setup-docker-registry)
       - [Update Your Local Registry Setup to use Nx Release](/recipes/nx-release/update-local-registry-setup)
       - [Configure Changelog Format](/recipes/nx-release/configure-changelog-format)
       - [Build Before Versioning](/recipes/nx-release/build-before-versioning)

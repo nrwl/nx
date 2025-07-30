@@ -1189,28 +1189,6 @@
             "tags": ["nx-release"]
           },
           {
-            "id": "setup-npm-registry",
-            "name": "Setup NPM Registry Publishing",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/nx-release/setup-npm-registry",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-release/setup-npm-registry",
-            "tags": ["nx-release"]
-          },
-          {
-            "id": "setup-docker-registry",
-            "name": "Setup Docker Registry Publishing",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/nx-release/setup-docker-registry",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-release/setup-docker-registry",
-            "tags": ["nx-release"]
-          },
-          {
             "id": "update-local-registry-setup",
             "name": "Update Your Local Registry Setup to use Nx Release",
             "description": "",
@@ -2191,28 +2169,6 @@
         "tags": ["nx-release"]
       },
       {
-        "id": "setup-npm-registry",
-        "name": "Setup NPM Registry Publishing",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/nx-release/setup-npm-registry",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-release/setup-npm-registry",
-        "tags": ["nx-release"]
-      },
-      {
-        "id": "setup-docker-registry",
-        "name": "Setup Docker Registry Publishing",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/nx-release/setup-docker-registry",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-release/setup-docker-registry",
-        "tags": ["nx-release"]
-      },
-      {
         "id": "update-local-registry-setup",
         "name": "Update Your Local Registry Setup to use Nx Release",
         "description": "",
@@ -2391,28 +2347,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-release/automate-gitlab-releases",
-    "tags": ["nx-release"]
-  },
-  "/recipes/nx-release/setup-npm-registry": {
-    "id": "setup-npm-registry",
-    "name": "Setup NPM Registry Publishing",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/nx-release/setup-npm-registry",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-release/setup-npm-registry",
-    "tags": ["nx-release"]
-  },
-  "/recipes/nx-release/setup-docker-registry": {
-    "id": "setup-docker-registry",
-    "name": "Setup Docker Registry Publishing",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/nx-release/setup-docker-registry",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-release/setup-docker-registry",
     "tags": ["nx-release"]
   },
   "/recipes/nx-release/update-local-registry-setup": {

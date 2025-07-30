@@ -771,11 +771,11 @@ Projects with Docker images can override the global Docker configuration:
 
 ```jsonc {% fileName="project.json" %}
 {
-  "name": "my-api",
+  "name": "api",
   "release": {
     "docker": {
       // Override the repository name for this specific project
-      "repositoryName": "custom-repo/my-api"
+      "repositoryName": "acme/api"
     }
   }
 }

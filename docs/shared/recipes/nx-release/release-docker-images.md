@@ -101,7 +101,7 @@ Configure Docker applications in a separate release group called `apps` so it do
 
 The `docker.skipVersionActions` option should be set to `true` to skip versioning for other tooling such as NPM or Rust crates.
 
-The `docker.projectsRelationship` is set to `indepdendent` and `docker.changelog` is set to `projectChangelogs` so that each application maintains has its own release cadence and changelog.
+The `docker.projectsRelationship` is set to `independent` and `docker.changelog` is set to `projectChangelogs` so that each application maintains its own release cadence and changelog.
 
 The `docker.groupPreVersionCommand` is an optional command that runs before the versioning step, allowing you to perform any pre-version checks such as image verification before continuing the release.
 
@@ -126,7 +126,7 @@ For example, from the previous `apps/api` Node.js application, you can set the `
 
 Or if you don't have a `package.json` (e.g. for non-JS projects), set it in `project.json`:
 
-```json {% fileName="apps/api/project.json" highlightLines=["6-8"] %}
+```json {% fileName="apps/api/project.json" highlightLines=["5-7"] %}
 {
   "name": "api",
   "root": "apps/api",
@@ -159,8 +159,8 @@ When prompted, choose to release the version.
 This will:
 
 - Build your Docker images
-- Tag them with calendar versions (e.g., `2501.01.a1b2c3d`)
-- Update app's changelog (e.g. `apps/api/CHANGELOG.md`)
+- Tag them with a calendar version (e.g., `2501.01.a1b2c3d`)
+- Update the app's changelog (e.g. `apps/api/CHANGELOG.md`)
 - Update git tags (you can check with `git --no-pager tag --sort=-version:refname | head -5`)
 - Push the image to the configured Docker registry (e.g., `docker.io/acme/api:2501.01.a1b2c3d`)
 
@@ -172,18 +172,18 @@ Calendar versions follow the pattern `YYMM.DD.SHA`:
 - `DD`: Day of the month
 - `SHA`: Short commit hash
 
-This scheme is ideal for continuous deployment where every commit is potentially releasable.
-
 Note: The timezone is UTC to ensure consistency across different environments.
 
-### Production and Hotfix Releases
+## Future Releases
 
 After the first release, you can run `nx release` without the `--first-release` flag. If you do not specify `--dockerVersionScheme`, then you will be prompted to choose one:
 
 - `production` - for regular releases from the `main` or stable branch
-- `hotfix` - for emergency fixes from a hotfix branch
+- `hotfix` - for bug fixes from a hotfix branch
 
-#### Customizing Version Schemes
+These are the default schemes that come with Nx Release. These schemes support workflows where you have a stable branch that developers continuously integrate with, and a hotfix branch reserved for urgent production fixes.
+
+### Customizing Version Schemes
 
 You can customize Docker version schemes in your `nx.json` to match your deployment workflow. The version patterns support several interpolation tokens:
 
@@ -192,140 +192,12 @@ You can customize Docker version schemes in your `nx.json` to match your deploym
   "release": {
     "dockerVersionScheme": {
       "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
-      "hotfix": "{currentDate|YYMM.DD}-hotfix.{shortCommitSha}",
-      "staging": "{currentDate|YYMM.DD}-staging",
-      "development": "{projectName}-dev-{commitSha}"
+      "staging": "{currentDate|YYMM.DD}-staging.{shortCommitSha}"
     }
   }
 }
 ```
 
-#### Available Pattern Tokens
+The above configuration swaps `hotfix` scheme for `staging`. You can customize this list to fit your needs, and you can also change the patterns for each scheme.
 
-- `{projectName}` - The name of the project being released
-- `{currentDate}` - Current date in ISO format
-- `{currentDate|FORMAT}` - Current date with custom format (see below)
-- `{commitSha}` - Full Git commit SHA
-- `{shortCommitSha}` - First 7 characters of the commit SHA
-
-#### Date Format Options
-
-The `{currentDate|FORMAT}` token supports these format specifiers:
-
-- `YYYY` - 4-digit year (e.g., 2025)
-- `YY` - 2-digit year (e.g., 25)
-- `MM` - 2-digit month (01-12)
-- `DD` - 2-digit day (01-31)
-- `HH` - 2-digit hour in 24-hour format (00-23)
-- `mm` - 2-digit minutes (00-59)
-- `ss` - 2-digit seconds (00-59)
-
-#### Example Configurations
-
-**Production with monthly versions:**
-```json
-"production": "{currentDate|YYYY.MM}.{shortCommitSha}"
-// Result: 2025.01.a1b2c3d
-```
-
-**Hotfix with full timestamp:**
-```json
-"hotfix": "{currentDate|YYMM.DD.HHmm}-hotfix"
-// Result: 2501.15.1430-hotfix
-```
-
-**Project-specific development builds:**
-```json
-"development": "{projectName}-{currentDate|YYMMDD}-{shortCommitSha}"
-// Result: api-250115-a1b2c3d
-```
-
-For complete documentation on all release configuration options, refer to the [Nx Release documentation](/reference/nx-json#release).
-
-## CI/CD Example
-
-{% callout type="info" title="Nx Cloud Agents Compatibility" %}
-Docker operations in `nx release` are currently supported in standard CI/CD environments like GitHub Actions, GitLab CI, and Jenkins. 
-
-For Nx Cloud Agents compatibility, please contact [Nx Enterprise support](https://nx.dev/contact/sales) to explore available options for your team.
-{% /callout %}
-
-Here's a GitHub Actions workflow for automated Docker releases:
-
-```yaml {% fileName=".github/workflows/docker-release.yml" %}
-name: Docker Release
-on:
-  push:
-    branches: [main]
-
-jobs:
-  release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Create Release
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          nx release --dockerVersionScheme=production --yes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-```
-
-## Best Practices
-
-1. **Always use `--dry-run` first** when testing new configurations
-2. **Use calendar versioning** for Docker images instead of semantic versioning
-3. **Tag both `latest` and versioned** images for flexibility
-4. **Automate in CI** to ensure consistent releases
-
-## Troubleshooting
-
-### Build Failures
-
-If Docker builds fail during versioning:
-
-```shell
-# Debug with verbose output
-nx release version --dockerVersionScheme=production --verbose
-
-# Test Docker build independently
-nx run api:docker:build
-```
-
-### Registry Authentication
-
-Ensure you're authenticated to your registry:
-
-```shell
-# Test push manually
-docker push my-org/api:test
-```
-
-### Version Tag Issues
-
-If version interpolation isn't working, check:
-
-1. Your `tags` configuration uses `{version}` placeholder
-2. The `dockerVersionScheme` flag is specified
-3. Git tags are being created correctly
+See the [`docker.versionScheme` documentation](/reference/nx-json#version-scheme-syntax) for more details on how to customize the tag pattern.

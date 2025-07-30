@@ -435,12 +435,6 @@
                   "file": "shared/recipes/nx-release/automate-gitlab-releases"
                 },
                 {
-                  "name": "Setup NPM Registry Publishing",
-                  "id": "setup-npm-registry",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/setup-npm-registry"
-                },
-                {
                   "name": "Update Your Local Registry Setup to use Nx Release",
                   "id": "update-local-registry-setup",
                   "tags": ["nx-release"],

@@ -558,22 +558,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Setup NPM Registry Publishing",
-                "path": "/recipes/nx-release/setup-npm-registry",
-                "id": "setup-npm-registry",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Setup Docker Registry Publishing",
-                "path": "/recipes/nx-release/setup-docker-registry",
-                "id": "setup-docker-registry",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Update Your Local Registry Setup to use Nx Release",
                 "path": "/recipes/nx-release/update-local-registry-setup",
                 "id": "update-local-registry-setup",
