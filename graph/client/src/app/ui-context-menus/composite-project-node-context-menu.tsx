@@ -1,5 +1,5 @@
 import type { CompositeProjectNodeElementData } from '@nx/graph';
-import { Tag, CompositeNodeTooltipActions } from '@nx/graph-ui-common';
+import { Tag, TooltipButton } from '@nx/graph-ui-common';
 
 export interface CompositeProjectNodeContextMenuProps {
   data: CompositeProjectNodeElementData;
@@ -35,13 +35,60 @@ export function CompositeProjectNodeContextMenu({
           </p>
         )}
       </div>
-      <CompositeNodeTooltipActions
-        {...data}
-        compositeCount={data.compositeSize}
-        projectCount={data.projectSize}
-        expanded={isExpanded}
-        onAction={onAction as any}
+      <CompositeNodeContextMenuActions
+        data={data}
+        isExpanded={isExpanded}
+        onAction={onAction}
       />
+    </div>
+  );
+}
+
+interface CompositeNodeContextMenuActionsProps {
+  data: CompositeProjectNodeElementData;
+  isExpanded: boolean;
+  onAction: (action: {
+    type: 'collapse-node' | 'expand-node' | 'change-selection' | 'exclude-node';
+  }) => void;
+}
+
+function CompositeNodeContextMenuActions({
+  isExpanded,
+  onAction,
+}: CompositeNodeContextMenuActionsProps) {
+  return (
+    <div className="grid grid-cols-3 gap-4">
+      {/* TODO: (chau) re-enable focusing composite node */}
+      {/* <TooltipButton */}
+      {/*   onClick={() => */}
+      {/*     onAction?.({ */}
+      {/*       type: 'focus-node', */}
+      {/*       rawId: id, */}
+      {/*       id: encodedId, */}
+      {/*       tooltipNodeType: 'compositeNode', */}
+      {/*     }) */}
+      {/*   } */}
+      {/* > */}
+      {/*   Focus */}
+      {/* </TooltipButton> */}
+      {isExpanded ? (
+        <>
+          <TooltipButton onClick={() => onAction({ type: 'collapse-node' })}>
+            Collapse
+          </TooltipButton>
+
+          <TooltipButton onClick={() => onAction({ type: 'change-selection' })}>
+            Change Selection
+          </TooltipButton>
+        </>
+      ) : (
+        <TooltipButton onClick={() => onAction({ type: 'expand-node' })}>
+          Expand
+        </TooltipButton>
+      )}
+      <TooltipButton onClick={() => onAction({ type: 'exclude-node' })}>
+        Exclude
+      </TooltipButton>
     </div>
   );
 }

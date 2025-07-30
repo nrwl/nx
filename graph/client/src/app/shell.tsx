@@ -54,7 +54,6 @@ import {
   NxGraphContextMenu,
   useGraphContextMenu,
 } from '@nx/graph/context-menu';
-import { TaskNodeActions } from './ui-tooltips/task-node-actions';
 import {
   NodeSelectionDialog,
   NxGraphDialog,
@@ -289,7 +288,10 @@ function InnerShell({
         closeMenu();
         return externalApiService.postEvent({
           type: 'open-project-config',
-          payload: projectNodeData,
+          payload: {
+            projectName: projectNodeData.name,
+            projectId: projectNodeData.id,
+          },
         });
       };
     }
@@ -343,7 +345,13 @@ function InnerShell({
     if (renderPlatform !== 'nx-console') return () => {};
 
     return () => {
-      externalApiService.postEvent({ type: 'run-task', payload: taskNodeData });
+      externalApiService.postEvent({
+        type: 'run-task',
+        payload: {
+          taskId: taskNodeData.id,
+          taskName: taskNodeData.name,
+        },
+      });
     };
   }
 

@@ -36,7 +36,7 @@ interface TracingInfo {
   algorithm: TracingAlgorithmType;
 }
 
-function ProjectListItemV2({
+function ProjectListItem({
   project,
   tracingInfo,
 }: {
@@ -144,7 +144,7 @@ function ProjectListItemV2({
   );
 }
 
-function SubProjectListV2({
+function SubProjectList({
   headerText = '',
   projects,
   tracingInfo,
@@ -201,7 +201,7 @@ function SubProjectListV2({
       <ul className="-ml-3 mt-2">
         {sortedProjects.map((project) => {
           return (
-            <ProjectListItemV2
+            <ProjectListItem
               key={project.projectUINode.name}
               project={project}
               tracingInfo={tracingInfo}
@@ -213,7 +213,7 @@ function SubProjectListV2({
   );
 }
 
-function CompositeNodeListItemV2({
+function CompositeNodeListItem({
   compositeNode,
   compositeNodes,
 }: {
@@ -225,13 +225,7 @@ function CompositeNodeListItemV2({
   const navigate = useNavigate();
   const { handleCompositeNodeExpand } = useCompositeNodeSelectionContext();
 
-  // Find parent name if there's a parentId
-  const parentName = compositeNode.compositeUINode.parentId
-    ? compositeNodes.find(
-        (node) =>
-          node.compositeUINode.id === compositeNode.compositeUINode.parentId
-      )?.compositeUINode.name
-    : undefined;
+  const parentName = compositeNode.compositeUINode.name;
 
   const label = parentName
     ? `${parentName}/${compositeNode.compositeUINode.name}`
@@ -309,7 +303,7 @@ function CompositeNodeListItemV2({
   );
 }
 
-function CompositeNodeListV2({
+function CompositeNodeList({
   compositeNodes,
 }: {
   compositeNodes: SidebarCompositeUINode[];
@@ -322,7 +316,7 @@ function CompositeNodeListV2({
     <ul className="-ml-3 mt-2">
       {compositeNodes.map((node) => {
         return (
-          <CompositeNodeListItemV2
+          <CompositeNodeListItem
             key={node.compositeUINode.id}
             compositeNode={node}
             compositeNodes={compositeNodes}
@@ -413,16 +407,13 @@ export function ProjectList({
   const sortedE2EDirectories = Object.keys(e2eDirectoryGroups).sort();
 
   return (
-    <div
-      id="project-lists-v2"
-      className="mt-8 border-t border-slate-400/10 px-4"
-    >
+    <div id="project-lists" className="mt-8 border-t border-slate-400/10 px-4">
       {compositeGraphEnabled ? (
         <>
           <h2 className="mt-8 border-b border-solid border-slate-200/10 text-lg font-light text-slate-400 dark:text-slate-500">
             composite nodes
           </h2>
-          <CompositeNodeListV2 compositeNodes={compositeNodes} />
+          <CompositeNodeList compositeNodes={compositeNodes} />
         </>
       ) : null}
 
@@ -432,7 +423,7 @@ export function ProjectList({
 
       {sortedAppDirectories.map((directoryName) => {
         return (
-          <SubProjectListV2
+          <SubProjectList
             key={'app-' + directoryName}
             headerText={directoryName}
             projects={appDirectoryGroups[directoryName]}
@@ -447,7 +438,7 @@ export function ProjectList({
 
       {sortedE2EDirectories.map((directoryName) => {
         return (
-          <SubProjectListV2
+          <SubProjectList
             key={'e2e-' + directoryName}
             headerText={directoryName}
             projects={e2eDirectoryGroups[directoryName]}
@@ -462,7 +453,7 @@ export function ProjectList({
 
       {sortedLibDirectories.map((directoryName) => {
         return (
-          <SubProjectListV2
+          <SubProjectList
             key={'lib-' + directoryName}
             headerText={directoryName}
             projects={libDirectoryGroups[directoryName]}

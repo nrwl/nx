@@ -5,7 +5,6 @@ import {
   PencilSquareIcon,
   PlayIcon,
 } from '@heroicons/react/24/outline';
-import { TaskNodeActions } from '../ui-tooltips/task-node-actions';
 import { getProjectGraphDataService } from '@nx/graph-shared';
 import { useEffect, useMemo, useState } from 'react';
 import { ContextMenuList } from './context-menu-list';

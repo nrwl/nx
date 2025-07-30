@@ -1,7 +1,9 @@
 import type { ProjectNodeElementData, RenderPlatform } from '@nx/graph';
-import { Tag, ProjectNodeTooltipActions } from '@nx/graph-ui-common';
+import { Tag, TooltipButton } from '@nx/graph-ui-common';
 import {
   DocumentMagnifyingGlassIcon,
+  FlagIcon,
+  MapPinIcon,
   PencilSquareIcon,
 } from '@heroicons/react/24/outline';
 
@@ -32,12 +34,12 @@ export function ProjectNodeContextMenu({
 
         <button
           className="shadow-xs flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 ring-1 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
+          onClick={onConfigClick}
           title={
             renderPlatform === 'nx-console'
               ? 'Open project details in editor'
               : 'Open project details'
           }
-          onClick={onConfigClick}
         >
           {renderPlatform === 'nx-console' ? (
             <PencilSquareIcon className="h-5 w-5" />
@@ -54,12 +56,53 @@ export function ProjectNodeContextMenu({
         </p>
       ) : null}
       {data.description ? <p className="mt-4">{data.description}</p> : null}
-      <ProjectNodeTooltipActions
-        {...data}
-        start={tracingStart}
-        type={data.projectType}
-        onAction={onAction as any}
+      <ProjectNodeContextMenuActions
+        data={data}
+        tracingStart={tracingStart}
+        onAction={onAction}
       />
+    </div>
+  );
+}
+
+interface ProjectNodeContextMenuActionsProps {
+  data: ProjectNodeElementData;
+  tracingStart?: string;
+  onAction: (action: {
+    type: 'focus-node' | 'exclude-node' | 'start-trace' | 'end-trace';
+  }) => void;
+}
+
+function ProjectNodeContextMenuActions({
+  tracingStart,
+  onAction,
+}: ProjectNodeContextMenuActionsProps) {
+  return (
+    <div className="grid grid-cols-3 gap-4">
+      <TooltipButton onClick={() => onAction({ type: 'focus-node' })}>
+        Focus
+      </TooltipButton>
+      <TooltipButton onClick={() => onAction({ type: 'exclude-node' })}>
+        Exclude
+      </TooltipButton>
+
+      {!tracingStart ? (
+        <TooltipButton
+          className="flex flex-row items-center"
+          onClick={() => onAction({ type: 'start-trace' })}
+        >
+          <MapPinIcon className="mr-2 h-5 w-5 text-slate-500"></MapPinIcon>
+          Start
+        </TooltipButton>
+      ) : (
+        <TooltipButton
+          className="flex flex-row items-center"
+          onClick={() => onAction({ type: 'end-trace' })}
+        >
+          <FlagIcon className="mr-2 h-5 w-5 text-slate-500"></FlagIcon>
+          End
+        </TooltipButton>
+      )}
     </div>
   );
 }
