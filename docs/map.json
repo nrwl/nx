@@ -3098,6 +3098,12 @@
               "file": "generated/cli/add"
             },
             {
+              "name": "mcp",
+              "id": "mcp",
+              "tags": ["mcp"],
+              "file": "generated/cli/mcp"
+            },
+            {
               "name": "login",
               "id": "login",
               "tags": ["login"],

@@ -5614,6 +5614,14 @@
                         "disableCollapsible": false
                       },
                       {
+                        "id": "mcp",
+                        "path": "/reference/core-api/nx/documents/mcp",
+                        "name": "mcp",
+                        "children": [],
+                        "isExternal": false,
+                        "disableCollapsible": false
+                      },
+                      {
                         "id": "login",
                         "path": "/reference/core-api/nx/documents/login",
                         "name": "login",

@@ -3343,6 +3343,17 @@
         "tags": ["add"],
         "originalFilePath": "generated/cli/add"
       },
+      "/reference/core-api/nx/documents/mcp": {
+        "id": "mcp",
+        "name": "mcp",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/mcp",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/core-api/nx/documents/mcp",
+        "tags": ["mcp"],
+        "originalFilePath": "generated/cli/mcp"
+      },
       "/reference/core-api/nx/documents/login": {
         "id": "login",
         "name": "login",
