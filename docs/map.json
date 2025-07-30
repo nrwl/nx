@@ -441,12 +441,6 @@
                   "file": "shared/recipes/nx-release/setup-npm-registry"
                 },
                 {
-                  "name": "Setup Docker Registry Publishing",
-                  "id": "setup-docker-registry",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/setup-docker-registry"
-                },
-                {
                   "name": "Update Your Local Registry Setup to use Nx Release",
                   "id": "update-local-registry-setup",
                   "tags": ["nx-release"],

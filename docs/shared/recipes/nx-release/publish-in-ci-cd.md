@@ -267,6 +267,8 @@ Configure alternative registries in your `nx.json`:
 }
 ```
 
+TODO: Note this doesn't work in Agents, contact Nx Enterprise support if you need it https://nx.dev/contact/sales
+
 ### Example GitHub Actions Workflow for Docker
 
 ```yaml {% fileName=".github/workflows/docker-publish.yml" %}

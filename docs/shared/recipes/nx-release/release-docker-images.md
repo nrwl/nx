@@ -16,12 +16,13 @@ This guide walks you through setting up Nx Release to version and publish Docker
 Before starting, ensure you have:
 
 1. Docker installed and running locally
-2. Make sure that you are on the `next`/beta version of Nx and Nx plugins
+2. Run `docker login` to authenticate with your Docker registry (e.g., `docker login docker.io` for Docker Hub)
+3. Make sure that you are on the `next`/beta version of Nx and Nx plugins (e.g. `npx create-nx-workspace@next` for new workspaces)
 
 ## Install Nx Docker Plugin
 
 ```shell
-nx add @nx/docker
+nx add @nx/docker@next
 ```
 
 This command adds the `@nx/docker` plugin to your `nx.json` so that projects with a `Dockerfile` is automatically configured with Docker targets (e.g. `docker:build` and `docker:run`).
@@ -81,7 +82,13 @@ Configure Docker applications in a separate release group called `apps` so it do
         "projects": ["api"],
         "projectsRelationship": "independent",
         "docker": {
-          "skipVersionActions": true
+          // This should be true to skip versioning with other tools like NPM or Rust crates.
+          "skipVersionActions": true,
+          // You can also use a custom registry like `ghcr.io` for GitHub Container Registry.
+          // `docker.io` is the default so you could leave this out for Docker Hub.
+          "registryUrl": "docker.io",
+          // The pre-version command is run before versioning, useful for verifying the Docker image.
+          "groupPreVersionCommand": "echo BEFORE VERSIONING"
         },
         "changelog": {
           "projectChangelogs": true
@@ -92,9 +99,46 @@ Configure Docker applications in a separate release group called `apps` so it do
 }
 ```
 
+The `docker.skipVersionActions` option should be set to `true` to skip versioning for other tooling such as NPM or Rust crates.
+
 The `docker.projectsRelationship` is set to `indepdendent` and `docker.changelog` is set to `projectChangelogs` so that each application maintains has its own release cadence and changelog.
 
-The `docker.skipVersionActions` option should be set to `true` to skip versioning for other tooling such as NPM or Rust crates.
+The `docker.groupPreVersionCommand` is an optional command that runs before the versioning step, allowing you to perform any pre-version checks such as image verification before continuing the release.
+
+## Set Up App Repository
+
+Docker images have to be pushed to a repository, and this must be set on each application you want to release. This must be set as `release.repositoryName` in the project's `project.json `or `package.json` file.
+
+For example, from the previous `apps/api` Node.js application, you can set the `nx.release.repositoryName` in `package.json`.
+
+```json {% fileName="apps/api/package.json" highlightLines=["5-7"] %}
+{
+  "name": "@acme/api",
+  "version": "0.0.1",
+  "nx": {
+    "release": {
+      "repositoryName": "acme/api"
+    }
+    // ...
+  }
+}
+```
+
+Or if you don't have a `package.json` (e.g. for non-JS projects), set it in `project.json`:
+
+```json {% fileName="apps/api/project.json" highlightLines=["6-8"] %}
+{
+  "name": "api",
+  "root": "apps/api",
+  "projectType": "application",
+  "release": {
+    "repositoryName": "acme/api"
+  }
+  // ...
+}
+```
+
+You should replace `acme` with your organization or username for the Docker registry that you are logged into.
 
 ## Your First Docker Release
 
@@ -116,33 +160,43 @@ This will:
 
 - Build your Docker images
 - Tag them with calendar versions (e.g., `2501.24.a1b2c3d`)
-- Update git tags
+- Update app's changelog (e.g. `apps/api/CHANGELOG.md`)
+- Update git tags (you can check with `git --no-pager tag --sort=-version:refname | head -5`)
+- Push the image to the configured Docker registry (e.g., `docker.io/acme/api:2501.24.a1b2c3d`)
 
 ## Understanding Calendar Versioning
 
-Calendar versions follow the pattern `YYWW.BUILD.SHA`:
+Calendar versions follow the pattern `YYMM.DD.SHA`:
 
-- `YYWW`: Year and week number (e.g., 2501 = 2025, week 01)
-- `BUILD`: Build number for that week
+- `YYMM`: Year and month
+- `DD`: Day of the month
 - `SHA`: Short commit hash
 
 Example: `2501.24.a1b2c3d`
 
 This scheme is ideal for continuous deployment where every commit is potentially releasable.
 
-## Complete Release Workflow
+Date is UTC
+
+## Subsequent Releases
+
+You can run `nx release`
 
 For subsequent releases, use this workflow:
 
-```shell
-# All-in-one command
-nx release --dockerVersionScheme=production
+blah blah hotfix branch and how to configure version schemes
 
-# Or step by step
-nx release version production
-nx release changelog
-nx release publish
+```json
+
+      "versionSchemes": {
+        "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
+        "staging": "{currentDate|YYMM.DD}-staging"
+
+      {commitSha} {projectName}
 ```
+
+TODO: See packages/docker/src/release/version-pattern-utils.ts
+NOTE: UTC timezone
 
 ## CI/CD Example
 
@@ -188,13 +242,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
+WARNING: This doesnt work in Cloud Agents. If you need it contact Nx Enterprise support.
+
 ## Best Practices
 
 1. **Always use `--dry-run` first** when testing new configurations
 2. **Use calendar versioning** for Docker images instead of semantic versioning
 3. **Tag both `latest` and versioned** images for flexibility
 4. **Automate in CI** to ensure consistent releases
-5. **Use multi-stage builds** in your Dockerfiles for smaller images
 
 ## Troubleshooting
 
@@ -226,8 +281,3 @@ If version interpolation isn't working, check:
 1. Your `tags` configuration uses `{version}` placeholder
 2. The `dockerVersionScheme` flag is specified
 3. Git tags are being created correctly
-
-## Next Steps
-
-- Learn about [Docker registry setup](/recipes/nx-release/setup-docker-registry)
-- Configure [automated releases in CI](/recipes/nx-release/publish-in-ci-cd)
