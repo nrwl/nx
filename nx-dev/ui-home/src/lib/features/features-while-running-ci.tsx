@@ -40,9 +40,17 @@ export function FeaturesWhileRunningCI(): ReactElement {
 
             <SectionHeading as="p" variant="subtitle" className="mt-6">
               Nx works with your CI provider to compress the entire validation
-              process. Remote cache and automatic task distribution speed up CI,
-              while self-healing systems automatically rerun flaky tests and fix
-              code issues—instantly.
+              process.{' '}
+              <TextLink href="/ci/features/remote-cache">Remote cache</TextLink>{' '}
+              and{' '}
+              <TextLink href="/ci/features/distribute-task-execution">
+                automatic task distribution
+              </TextLink>{' '}
+              speed up CI, while{' '}
+              <TextLink href="/ci/features/self-healing-ci">
+                self-healing systems
+              </TextLink>{' '}
+              automatically rerun flaky tests and fix code issues—instantly.
             </SectionHeading>
 
             <SectionHeading as="p" variant="subtitle" className="mt-6">
