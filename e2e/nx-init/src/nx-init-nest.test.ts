@@ -25,7 +25,9 @@ describe('nx init (for NestCLI - legacy)', () => {
     removeSync(projectRoot);
   });
 
-  it('should convert NestCLI application to Nx standalone', () => {
+  // TODO(jack,nicholas,colum): Enable this when Nest 11.0.8 issue is resolved
+  // See: https://github.com/nestjs/nest-cli/issues/3110
+  it.skip('should convert NestCLI application to Nx standalone', () => {
     execSync(
       `${pmc.runUninstalledPackage} @nestjs/cli new ${projectName} --package-manager=npm`,
       {
