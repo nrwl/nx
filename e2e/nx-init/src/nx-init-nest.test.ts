@@ -29,7 +29,7 @@ describe('nx init (for NestCLI - legacy)', () => {
   // See: https://github.com/nestjs/nest-cli/issues/3110
   it.skip('should convert NestCLI application to Nx standalone', () => {
     execSync(
-      `${pmc.runUninstalledPackage} @nestjs/cli@11.0.8 new ${projectName} --package-manager=npm`,
+      `${pmc.runUninstalledPackage} @nestjs/cli new ${projectName} --package-manager=npm`,
       {
         cwd: e2eCwd,
         encoding: 'utf-8',
