@@ -336,8 +336,8 @@ Commit the changes and open a new PR on GitHub.
 
 ```shell {% path="~/gradle-tutorial" %}
 git add .
-git commit -m 'demo self-heading ci'
-git push origin self-heading-ci
+git commit -m 'demo self-healing ci'
+git push origin self-healing-ci
 ```
 
 Once pushed, CI will kick off, and we'll run into an error for the `application:build` task.
@@ -345,11 +345,11 @@ When the build task fails, you'll see Nx Cloud begin to analyze the failure and 
 
 You can also see the fix link on the GitHub PR comment that Nx Cloud leaves.
 
-![Nx Cloud PR comment with AI fix suggestion](/shared/tutorials/nx-cloud-gh-comment-self-healing-coment.avif)
+![Nx Cloud PR comment with AI fix suggestion](/shared/tutorial/nx-cloud-gh-comment-self-healing-coment.avif)
 
 From here you can manually apply or reject the fix:
 
-![Nx Cloud apply AI fix suggestion](/shared/tutorials/nx-cloud-apply-fix-self-healing-ci.avif)
+![Nx Cloud apply AI fix suggestion](/shared/tutorial/nx-cloud-apply-fix-self-healing-ci.avif)
 
 For more information about how Nx can improve your CI pipeline, check out our [CI guides](/ci/recipes/set-up)
 
