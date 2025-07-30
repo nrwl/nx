@@ -95,6 +95,12 @@ dependencies {
         expect(buildOutput).toContain(':app:classes');
         expect(buildOutput).toContain(':list:classes');
         expect(buildOutput).toContain(':utilities:classes');
+
+        let bootJarOutput = runCLI("bootJar app", {verbose: true});
+        expect(bootJarOutput).toContain(':app:bootJar');
+
+        bootJarOutput = runCLI("bootJar app2", {verbose: true});
+        expect(bootJarOutput).toContain(':app2:bootJar');
       });
 
       it('should run atomized test target', () => {

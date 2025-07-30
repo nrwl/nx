@@ -78,6 +78,10 @@ export function createGradleProject(
     join(cwd, `buildSrc/settings.gradle${type === 'kotlin' ? '.kts' : ''}`)
   );
 
+  addSpringBootPlugin(
+    join(cwd, `app/build.gradle${type === 'kotlin' ? '.kts' : ''}`)
+  );
+
   e2eConsoleLogger(
     execSync(
       `${gradleCommand} :project-graph:publishToMavenLocal -PskipSign=true`,
@@ -100,5 +104,20 @@ function addLocalPluginManagement(filePath: string) {
     }
 }
 ` + content;
+  writeFileSync(filePath, content);
+}
+
+function addSpringBootPlugin(filePath: string) {
+  let content = readFileSync(filePath).toString();
+
+  // Find the plugins block and add Spring Boot plugin
+  if (content.includes('plugins {')) {
+    content = content.replace(
+      /plugins\s*\{/,
+      `plugins {
+    id 'org.springframework.boot' version '+'`
+    );
+  }
+
   writeFileSync(filePath, content);
 }
