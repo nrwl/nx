@@ -159,12 +159,12 @@ When prompted, choose to release the version.
 This will:
 
 - Build your Docker images
-- Tag them with calendar versions (e.g., `2501.24.a1b2c3d`)
+- Tag them with calendar versions (e.g., `2501.01.a1b2c3d`)
 - Update app's changelog (e.g. `apps/api/CHANGELOG.md`)
 - Update git tags (you can check with `git --no-pager tag --sort=-version:refname | head -5`)
-- Push the image to the configured Docker registry (e.g., `docker.io/acme/api:2501.24.a1b2c3d`)
+- Push the image to the configured Docker registry (e.g., `docker.io/acme/api:2501.01.a1b2c3d`)
 
-## Understanding Calendar Versioning
+### Understanding Calendar Versioning
 
 Calendar versions follow the pattern `YYMM.DD.SHA`:
 
@@ -172,33 +172,83 @@ Calendar versions follow the pattern `YYMM.DD.SHA`:
 - `DD`: Day of the month
 - `SHA`: Short commit hash
 
-Example: `2501.24.a1b2c3d`
-
 This scheme is ideal for continuous deployment where every commit is potentially releasable.
 
-Date is UTC
+Note: The timezone is UTC to ensure consistency across different environments.
 
-## Subsequent Releases
+### Production and Hotfix Releases
 
-You can run `nx release`
+After the first release, you can run `nx release` without the `--first-release` flag. If you do not specify `--dockerVersionScheme`, then you will be prompted to choose one:
 
-For subsequent releases, use this workflow:
+- `production` - for regular releases from the `main` or stable branch
+- `hotfix` - for emergency fixes from a hotfix branch
 
-blah blah hotfix branch and how to configure version schemes
+#### Customizing Version Schemes
 
-```json
+You can customize Docker version schemes in your `nx.json` to match your deployment workflow. The version patterns support several interpolation tokens:
 
-      "versionSchemes": {
-        "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
-        "staging": "{currentDate|YYMM.DD}-staging"
-
-      {commitSha} {projectName}
+```json {% fileName="nx.json" %}
+{
+  "release": {
+    "dockerVersionScheme": {
+      "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
+      "hotfix": "{currentDate|YYMM.DD}-hotfix.{shortCommitSha}",
+      "staging": "{currentDate|YYMM.DD}-staging",
+      "development": "{projectName}-dev-{commitSha}"
+    }
+  }
+}
 ```
 
-TODO: See packages/docker/src/release/version-pattern-utils.ts
-NOTE: UTC timezone
+#### Available Pattern Tokens
+
+- `{projectName}` - The name of the project being released
+- `{currentDate}` - Current date in ISO format
+- `{currentDate|FORMAT}` - Current date with custom format (see below)
+- `{commitSha}` - Full Git commit SHA
+- `{shortCommitSha}` - First 7 characters of the commit SHA
+
+#### Date Format Options
+
+The `{currentDate|FORMAT}` token supports these format specifiers:
+
+- `YYYY` - 4-digit year (e.g., 2025)
+- `YY` - 2-digit year (e.g., 25)
+- `MM` - 2-digit month (01-12)
+- `DD` - 2-digit day (01-31)
+- `HH` - 2-digit hour in 24-hour format (00-23)
+- `mm` - 2-digit minutes (00-59)
+- `ss` - 2-digit seconds (00-59)
+
+#### Example Configurations
+
+**Production with monthly versions:**
+```json
+"production": "{currentDate|YYYY.MM}.{shortCommitSha}"
+// Result: 2025.01.a1b2c3d
+```
+
+**Hotfix with full timestamp:**
+```json
+"hotfix": "{currentDate|YYMM.DD.HHmm}-hotfix"
+// Result: 2501.15.1430-hotfix
+```
+
+**Project-specific development builds:**
+```json
+"development": "{projectName}-{currentDate|YYMMDD}-{shortCommitSha}"
+// Result: api-250115-a1b2c3d
+```
+
+For complete documentation on all release configuration options, refer to the [Nx Release documentation](/reference/nx-json#release).
 
 ## CI/CD Example
+
+{% callout type="info" title="Nx Cloud Agents Compatibility" %}
+Docker operations in `nx release` are currently supported in standard CI/CD environments like GitHub Actions, GitLab CI, and Jenkins. 
+
+For Nx Cloud Agents compatibility, please contact [Nx Enterprise support](https://nx.dev/contact/sales) to explore available options for your team.
+{% /callout %}
 
 Here's a GitHub Actions workflow for automated Docker releases:
 
@@ -241,8 +291,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
-
-WARNING: This doesnt work in Cloud Agents. If you need it contact Nx Enterprise support.
 
 ## Best Practices
 

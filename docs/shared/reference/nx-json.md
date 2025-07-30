@@ -575,12 +575,23 @@ The `docker` property configures Docker image versioning and publishing when usi
 
 Docker version schemes support calendar-based patterns using the following placeholders:
 
-- `{currentDate|FORMAT}` - Current date in the specified format
-  - `YYMM.DD` - Two-digit year, month, and day (e.g., 2501.24)
-  - `YY.MM.DD` - Two-digit year, month, and day with dots
-  - `YYMM.DD.HHmm` - Includes hours and minutes
+- `{projectName}` - The name of the project being released
+- `{currentDate}` - Current date in ISO format (e.g., 2025-01-30T14:30:00Z)
+- `{currentDate|FORMAT}` - Current date with custom format using these tokens:
+  - `YYYY` - 4-digit year (e.g., 2025)
+  - `YY` - 2-digit year (e.g., 25)
+  - `MM` - 2-digit month (01-12)
+  - `DD` - 2-digit day (01-31)
+  - `HH` - 2-digit hour in 24-hour format (00-23)
+  - `mm` - 2-digit minutes (00-59)
+  - `ss` - 2-digit seconds (00-59)
 - `{shortCommitSha}` - First 7 characters of the current commit SHA
 - `{commitSha}` - Full commit SHA
+
+Example patterns:
+- `{currentDate|YYMM.DD}.{shortCommitSha}` - Results in: 2501.30.a1b2c3d
+- `{projectName}-{currentDate|YYYY.MM.DD}` - Results in: api-2025.01.30
+- `{currentDate|YY.MM.DD.HHmm}-{commitSha}` - Results in: 25.01.30.1430-abcdef1234567890
 
 Calendar versioning is ideal for continuous deployment workflows where every build is potentially releasable.
 
