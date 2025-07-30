@@ -134,6 +134,7 @@ export function getPruneTargets(buildTarget: string): {
 } {
   return {
     'prune-lockfile': {
+      dependsOn: ['build'],
       cache: true,
       executor: '@nx/js:prune-lockfile',
       options: {
@@ -141,6 +142,7 @@ export function getPruneTargets(buildTarget: string): {
       },
     },
     'copy-workspace-modules': {
+      dependsOn: ['build'],
       cache: true,
       executor: '@nx/js:copy-workspace-modules',
       options: {

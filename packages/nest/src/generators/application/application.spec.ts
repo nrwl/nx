@@ -55,6 +55,9 @@ describe('application generator', () => {
           },
           "copy-workspace-modules": {
             "cache": true,
+            "dependsOn": [
+              "build",
+            ],
             "executor": "@nx/js:copy-workspace-modules",
             "options": {
               "buildTarget": "build",
@@ -70,6 +73,9 @@ describe('application generator', () => {
           },
           "prune-lockfile": {
             "cache": true,
+            "dependsOn": [
+              "build",
+            ],
             "executor": "@nx/js:prune-lockfile",
             "options": {
               "buildTarget": "build",
@@ -268,6 +274,9 @@ describe('application generator', () => {
               },
               "copy-workspace-modules": {
                 "cache": true,
+                "dependsOn": [
+                  "build",
+                ],
                 "executor": "@nx/js:copy-workspace-modules",
                 "options": {
                   "buildTarget": "build",
@@ -283,6 +292,9 @@ describe('application generator', () => {
               },
               "prune-lockfile": {
                 "cache": true,
+                "dependsOn": [
+                  "build",
+                ],
                 "executor": "@nx/js:prune-lockfile",
                 "options": {
                   "buildTarget": "build",
@@ -456,6 +468,9 @@ describe('application generator', () => {
             },
             "copy-workspace-modules": {
               "cache": true,
+              "dependsOn": [
+                "build",
+              ],
               "executor": "@nx/js:copy-workspace-modules",
               "options": {
                 "buildTarget": "build",
@@ -471,6 +486,9 @@ describe('application generator', () => {
             },
             "prune-lockfile": {
               "cache": true,
+              "dependsOn": [
+                "build",
+              ],
               "executor": "@nx/js:prune-lockfile",
               "options": {
                 "buildTarget": "build",
