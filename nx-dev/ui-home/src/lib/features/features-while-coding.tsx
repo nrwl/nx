@@ -27,7 +27,7 @@ export function FeaturesWhileCoding(): ReactElement {
               </SectionHeading>
               <SectionHeading as="p" variant="subtitle" className="mt-6">
                 Drop Nx into any codebase and it automatically understands your
-                project structure,
+                project structure,{' '}
                 <TextLink href="/features/run-tasks">
                   executing tasks efficiently
                 </TextLink>{' '}

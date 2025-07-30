@@ -1,5 +1,4 @@
-import { WrenchIcon, WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
-import { SectionHeading, Strong, TextLink } from '@nx/nx-dev-ui-common';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 import Image from 'next/image';
 import { ReactElement } from 'react';
 
@@ -25,7 +24,7 @@ export function Problem(): ReactElement {
             id=""
             className="max-w-[32rem] scroll-mt-24 text-center sm:leading-tight"
           >
-            Most of the engineering work isn't that. It's:
+            Most engineering work isn't that. It's:
           </SectionHeading>
           <ul className="mt-4 flex flex-col items-start gap-12 lg:flex-row">
             <ProblemListItem imageId="sharing-code" position={['top', 'left']}>
