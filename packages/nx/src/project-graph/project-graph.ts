@@ -50,7 +50,72 @@ import { DelayedSpinner } from '../utils/delayed-spinner';
 export function readCachedProjectGraph(
   minimumComputedAt?: number
 ): ProjectGraph {
-  const projectGraphCache = readProjectGraphCache(minimumComputedAt);
+  let projectGraphCache = readProjectGraphCache(minimumComputedAt);
+
+  if (!projectGraphCache && !IS_WASM) {
+    // Check if another process is currently building the graph
+    const lockPath = join(workspaceDataDirectory, 'project-graph.lock');
+
+    // If a lock exists, wait synchronously for the other process to finish building
+    if (fileExists(lockPath)) {
+      const maxWaitTime = 120000; // 120 seconds max wait
+      const pollInterval = 200; // 200ms between checks
+      const startTime = Date.now();
+
+      logger.verbose(
+        `[readCachedProjectGraph] Waiting for another process to build the project graph...`
+      );
+
+      // Create a shared buffer for Atomics.wait()
+      const sharedBuffer = new SharedArrayBuffer(4);
+      const sharedArray = new Int32Array(sharedBuffer);
+
+      while (!projectGraphCache && Date.now() - startTime < maxWaitTime) {
+        // Use Atomics.wait for efficient synchronous sleep
+        // This blocks the thread without consuming CPU
+        Atomics.wait(sharedArray, 0, 0, pollInterval);
+
+        // Log progress occasionally
+        const elapsedMs = Date.now() - startTime;
+        if (elapsedMs > 0 && elapsedMs % 5000 < pollInterval) {
+          // Every 5 seconds
+          const elapsedSeconds = Math.round(elapsedMs / 1000);
+          logger.verbose(
+            `[readCachedProjectGraph] Still waiting... (${elapsedSeconds}s elapsed)`
+          );
+        }
+
+        // Check if graph is now available
+        projectGraphCache = readProjectGraphCache(minimumComputedAt);
+
+        // Check if lock still exists
+        if (!fileExists(lockPath)) {
+          // Lock was released but no graph - the other process likely failed
+          logger.verbose(
+            `[readCachedProjectGraph] Lock released but no graph available`
+          );
+          break;
+        }
+      }
+
+      if (!projectGraphCache && Date.now() - startTime >= maxWaitTime) {
+        // Timeout reached - warn about potential stale lock
+        logger.warn({
+          title: 'Project graph lock timeout',
+          bodyLines: [
+            `Waited 120 seconds for another process to build the project graph.`,
+            `This might indicate a stale lock file.`,
+            ``,
+            `To remove the lock file:`,
+            `  rm ${lockPath}`,
+            ``,
+            `Then try your command again.`,
+          ],
+        });
+      }
+    }
+  }
+
   if (!projectGraphCache) {
     const angularSpecificError = fileExists(`${workspaceRoot}/angular.json`)
       ? stripIndents`
