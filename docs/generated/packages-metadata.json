@@ -441,6 +441,16 @@
     "migrations": [
       {
         "description": "",
+        "file": "generated/packages/angular/migrations/21.4.0-ngrx-package-updates.json",
+        "hidden": false,
+        "name": "21.4.0-ngrx-package-updates",
+        "version": "21.4.0-beta.3",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/21.4.0-ngrx-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
         "file": "generated/packages/angular/migrations/21.3.5-jest-package-updates.json",
         "hidden": false,
         "name": "21.3.5-jest-package-updates",
