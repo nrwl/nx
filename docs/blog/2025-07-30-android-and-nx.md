@@ -4,7 +4,7 @@ slug: android-and-nx
 authors: ['Mike Hartington']
 tags: ['nx', 'java', 'android']
 cover_image: /blog/images/2025-07-30/header.avif
-description: 'Learn how to seamlessly integrate an Android mobile app into your existing Nx monorepo—bringing mobile development alongside your web projects while leveraging Gradle builds and the Nx toolchain for improved developer experience.'
+description: 'Learn how to integrate an Android app using Kotlin and Jetpack Compose into an Nx monorepo, enabling full-stack builds and emulator deployment—all from the Nx CLI.'
 ---
 
 {% callout type="deepdive" title="Java Week Series" expanded=true %}
