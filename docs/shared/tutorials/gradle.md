@@ -310,7 +310,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Set up JDK 17 for x64
+      - name: Set up JDK 21 for x64
         uses: actions/setup-java@v4
         with:
           java-version: '21'
@@ -332,7 +332,7 @@ You will also need to install the [Nx Console](/getting-started/editor-setup) ed
 Start by making a new branch to work on.
 
 ```shell {% path="~/gradle-tutorial" %}
-git checkout -b self-heading-ci
+git checkout -b self-healing-ci
 ```
 
 Now for demo purposes, we'll make a mistake in our `DemoApplication` class that will cause the build to fail.
@@ -374,7 +374,7 @@ organization:
 - Nx reflects the Gradle graph into the Nx graph
 - Nx's dependency graph visualisation helps you understand your codebase
 - Nx caches task results and reuses them when the same task is rerun later
-- Nx Cloud provides self-heading CI and remote caching to speed up CI
+- Nx Cloud provides self-healing CI and remote caching to speed up CI
 - Nx [intelligently determines which tasks are `affected`](/ci/features/affected) by code changes to reduce waste in CI
 
 ## Next Steps
