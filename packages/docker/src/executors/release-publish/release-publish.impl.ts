@@ -26,8 +26,8 @@ export default async function dockerReleasePublish(
   if (!options.dryRun) {
     const digest = await dockerPush(options.imageReference, options.quiet);
     logger.log(
-      `Successfully pushed ${options.imageReference}. ${
-        options.quiet && `Digest: ${digest}`
+      `Successfully pushed ${options.imageReference}${
+        options.quiet ? `. Digest: ${digest}` : ''
       }`
     );
   } else {
@@ -92,6 +92,10 @@ async function checkDockerImageExistsLocally(imageRef: string) {
       childProcess.stderr?.on('data', (data) => {
         console.error(data);
       });
+      childProcess.on('error', (error) => {
+        console.error('Docker command failed:', error);
+        res(false);
+      });
       childProcess.on('exit', () => {
         res(result.trim().length > 0);
       });
@@ -103,7 +107,7 @@ async function checkDockerImageExistsLocally(imageRef: string) {
 
 async function dockerPush(imageReference: string, quiet: boolean) {
   try {
-    return await new Promise((res) => {
+    return await new Promise((res, rej) => {
       const childProcess = exec(
         `docker push ${imageReference}${quiet ? ' --quiet' : ''}`,
         {
@@ -121,8 +125,15 @@ async function dockerPush(imageReference: string, quiet: boolean) {
       childProcess.stderr?.on('data', (data) => {
         console.error(data);
       });
-      childProcess.on('exit', () => {
-        res(result.trim());
+      childProcess.on('error', (error) => {
+        rej(error);
+      });
+      childProcess.on('exit', (code) => {
+        if (code === 0) {
+          res(result.trim());
+        } else {
+          rej(new Error(`Docker push failed with exit code ${code}`));
+        }
       });
     });
   } catch (e) {
