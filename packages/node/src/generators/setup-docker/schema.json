@@ -18,7 +18,7 @@
     "targetName": {
       "description": "The name of the target to create",
       "type": "string",
-      "default": "docker-build"
+      "default": "docker:build"
     },
     "buildTargetName": {
       "description": "The name of the build target",

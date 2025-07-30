@@ -198,6 +198,13 @@ module.exports = function (modulePath, options) {
       );
     }
 
+    if (modulePath.startsWith('@nx/docker/generators')) {
+      return path.resolve(
+        options.rootDir,
+        `${packagesPath}docker/generators.ts`
+      );
+    }
+
     // Handle other packages with src/* structure where tests are working
     const srcPackages = [
       'rspack',

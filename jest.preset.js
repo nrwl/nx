@@ -60,8 +60,6 @@ module.exports = {
     '^@nx/plugin/src/(.*)$': '<rootDir>/../plugin/src/$1',
     '^@nx/angular$': '<rootDir>/../angular/index.ts',
     '^@nx/angular/src/(.*)$': '<rootDir>/../angular/src/$1',
-    '^@nx/docker': '<rootDir>/../docker/index.ts',
-    '^@nx/docker/src/(.*)$': '<rootDir>/../docker/src/$1',
     '^@nx/react/src/(.*)$': '<rootDir>/../react/src/$1',
     '^@nx/next$': '<rootDir>/../next/index.ts',
     '^@nx/next/src/(.*)$': '<rootDir>/../next/src/$1',

@@ -93,7 +93,7 @@ export function updateProjectConfig(tree: Tree, options: SetUpDockerOptions) {
     const sanitizedProjectName = sanitizeProjectName(options.project);
 
     projectConfig.targets[`${options.targetName}`] = {
-      dependsOn: [`${options.buildTarget}`],
+      dependsOn: [`${options.buildTarget}`, 'prune'],
       command: `docker build . -t ${sanitizedProjectName}`,
       options: {
         cwd: projectConfig.root,

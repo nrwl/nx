@@ -33,8 +33,8 @@
       "default": "./src/release/version-utils.js"
     },
     "./generators": {
-      "types": "./src/generators/index.d.ts",
-      "default": "./src/generators/index.js"
+      "types": "./generators.d.ts",
+      "default": "./generators.js"
     },
     "./package.json": "./package.json",
     "./generators.json": "./generators.json",
