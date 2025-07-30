@@ -13,6 +13,7 @@ This article is part of the Java Week series:
 
 - **The Journey of Nx Gradle**
 - [Polyglot Projects Made Easy](/blog/spring-boot-with-nx)
+- [Getting Mobile Into Your Monorepo](/blog/android-and-nx)
 
 {% /callout %}
 
