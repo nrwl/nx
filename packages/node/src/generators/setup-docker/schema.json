@@ -28,6 +28,11 @@
     "outputPath": {
       "description": "The output path for the node application",
       "type": "string"
+    },
+    "skipDockerPlugin": {
+      "type": "boolean",
+      "description": "Skip the @nx/docker plugin and use the legacy docker build target instead.",
+      "default": false
     }
   }
 }
