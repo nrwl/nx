@@ -44,6 +44,9 @@ describe('app', () => {
           "targets": {
             "copy-workspace-modules": {
               "cache": true,
+              "dependsOn": [
+                "build",
+              ],
               "executor": "@nx/js:copy-workspace-modules",
               "options": {
                 "buildTarget": "build",
@@ -59,6 +62,9 @@ describe('app', () => {
             },
             "prune-lockfile": {
               "cache": true,
+              "dependsOn": [
+                "build",
+              ],
               "executor": "@nx/js:prune-lockfile",
               "options": {
                 "buildTarget": "build",
@@ -279,6 +285,9 @@ describe('app', () => {
             },
             "copy-workspace-modules": {
               "cache": true,
+              "dependsOn": [
+                "build",
+              ],
               "executor": "@nx/js:copy-workspace-modules",
               "options": {
                 "buildTarget": "build",
@@ -294,6 +303,9 @@ describe('app', () => {
             },
             "prune-lockfile": {
               "cache": true,
+              "dependsOn": [
+                "build",
+              ],
               "executor": "@nx/js:prune-lockfile",
               "options": {
                 "buildTarget": "build",
@@ -665,6 +677,9 @@ describe('app', () => {
             "targets": {
               "copy-workspace-modules": {
                 "cache": true,
+                "dependsOn": [
+                  "build",
+                ],
                 "executor": "@nx/js:copy-workspace-modules",
                 "options": {
                   "buildTarget": "build",
@@ -680,6 +695,9 @@ describe('app', () => {
               },
               "prune-lockfile": {
                 "cache": true,
+                "dependsOn": [
+                  "build",
+                ],
                 "executor": "@nx/js:prune-lockfile",
                 "options": {
                   "buildTarget": "build",
@@ -958,6 +976,9 @@ describe('app', () => {
           "targets": {
             "copy-workspace-modules": {
               "cache": true,
+              "dependsOn": [
+                "build",
+              ],
               "executor": "@nx/js:copy-workspace-modules",
               "options": {
                 "buildTarget": "build",
@@ -973,6 +994,9 @@ describe('app', () => {
             },
             "prune-lockfile": {
               "cache": true,
+              "dependsOn": [
+                "build",
+              ],
               "executor": "@nx/js:prune-lockfile",
               "options": {
                 "buildTarget": "build",
