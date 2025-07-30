@@ -111,14 +111,14 @@ both locally and on CI. We will explore the features of Nx in this tutorial by a
 To add Nx, run
 
 ```shell {% path="~/gradle-tutorial" %}
-npx nx@latest init
+nx init
 ```
 
 This command will download the latest version of Nx and help set up your repository to take advantage of it. Nx will
 also detect Gradle is used in the repo so it will propose adding the `@nx/gradle` plugin to integrate Gradle with Nx.
 
-1. Select the plugin and continue with the setup.
-2. You'll also be prompted to add Nx Cloud, select "yes"
+1. You'll also be prompted to add Nx Cloud, select "yes"
+2. Select the plugin and continue with the setup.
 
 Finally, commit and push all the changes to GitHub and proceed with finishing your Nx Cloud setup.
 
@@ -151,22 +151,9 @@ The `@nx/gradle` plugin reflects the graph of projects in Gradle into the Nx Pro
 are created, deleted, and change their dependencies, Nx will automatically recalculate the graph. Exploring this graph
 visually is vital to understanding how your code is structured and how Nx and Gradle behaves.
 
-{% tabs %}
-{% tab label="Mac/Linux" %}
-
 ```shell {% path="~/gradle-tutorial" %}
-./nx graph
+nx graph
 ```
-
-{% /tab %}
-{% tab label="Windows" %}
-
-```shell {% path="~/gradle-tutorial" %}
-./nx.bat graph
-```
-
-{% /tab %}
-{% /tabs %}
 
 {% graph title="Gradle Projects" height="200px" jsonFile="shared/tutorials/gradle-project-graph.json" %}
 {% /graph %}
@@ -181,7 +168,7 @@ Before we start running tasks, let's explore the tasks available for the `applic
 that we've installed reflects Gradle's tasks to Nx, which allows it to run any of the Gradle tasks defined for that project. You can view the available tasks either through [Nx Console](/getting-started/editor-setup) or from the terminal:
 
 ```shell {% path="~/gradle-tutorial" %}
-./nx show project application --web
+nx show project application
 ```
 
 {% project-details title="Project Details View" jsonFile="shared/tutorials/gradle-pdv.json" expandedTargets=["build"] height="520px" %}
@@ -190,16 +177,16 @@ that we've installed reflects Gradle's tasks to Nx, which allows it to run any o
 The Nx command to run the `build` task for the `application` project is:
 
 ```shell {% path="~/gradle-tutorial" %}
-./nx run application:build
+nx run application:build
 ```
 
 When Nx runs a Gradle task, it hands off the execution of that task to Gradle, so all task dependencies and
 configuration settings in the Gradle configuration are still respected.
 
-By running the task via Nx, however, the task computation was cached for reuse. Now, running `./nx run application:build`
+By running the task via Nx, however, the task computation was cached for reuse. Now, running `nx run application:build`
 again, will complete almost instantly as the result from the previous execution will be used.
 
-```text {% command="./nx run application:build" path="~/gradle-tutorial"%}
+```text {% command="nx run application:build" path="~/gradle-tutorial"%}
 
    ✔  1/1 dependent project tasks succeeded [1 read from cache]
 
@@ -246,7 +233,7 @@ Nx read the output from the cache instead of running the command for 4 out of 4 
 
 Now that we've run one task, let's run all the `build` tasks in the repository with the Nx `run-many` command. This is similar to Gradle's `./gradlew build` command.
 
-```text {% command="./nx run-many -t build" path="~/gradle-tutorial"%}
+```text {% command="nx run-many -t build" path="~/gradle-tutorial"%}
 
    ✔  nx run library:classes  [existing outputs match the cache, left as is]
    ✔  nx run library:build  [existing outputs match the cache, left as is]
@@ -273,7 +260,7 @@ With Nx Cloud connected, your task results are now cached remotely. This means t
 Try running the build again after making a small change to see how Nx intelligently determines which tasks need to be re-run:
 
 ```shell {% path="~/gradle-tutorial" %}
-./nx run-many -t build
+nx run-many -t build
 ```
 
 You'll notice that only the affected projects need to rebuild, while others are restored from cache.
@@ -286,7 +273,7 @@ You can copy the example GitHub Action workflow file and place it in the `.githu
 
 The `npx nx-cloud fix-ci` command that is already included in your GitHub Actions workflow (`github/workflows/ci.yml`) is responsible for enabling self-healing CI and will automatically suggest fixes to your failing tasks.
 
-```yaml {% fileName=".github/workflows/ci.yml" highlightLines=[31,32] %}
+```yaml {% fileName=".github/workflows/ci.yml" highlightLines=[33,34] %}
 name: CI
 
 on:
@@ -318,7 +305,7 @@ jobs:
           architecture: x64
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-      - run: ./nx run-many -t lint test build
+      - run: npx nx run-many -t lint test build
       - run: npx nx-cloud fix-ci
         if: always()
 ```
@@ -358,11 +345,11 @@ When the build task fails, you'll see Nx Cloud begin to analyze the failure and 
 
 You can also see the fix link on the GitHub PR comment that Nx Cloud leaves.
 
-![Nx Cloud PR comment with AI fix suggestion](/shared/tutorials/nx-cloud-gh-comment-self-healing-coment.avif)
+![Nx Cloud PR comment with AI fix suggestion](/shared/tutorial/nx-cloud-gh-comment-self-healing-coment.avif)
 
 From here you can manually apply or reject the fix:
 
-![Nx Cloud apply AI fix suggestion](/shared/tutorials/nx-cloud-apply-fix-self-healing-ci.avif)
+![Nx Cloud apply AI fix suggestion](/shared/tutorial/nx-cloud-apply-fix-self-healing-ci.avif)
 
 For more information about how Nx can improve your CI pipeline, check out our [CI guides](/ci/recipes/set-up)
 
@@ -384,6 +371,6 @@ Connect with the rest of the Nx community with these resources:
 - ⭐️ [Star us on GitHub](https://github.com/nrwl/nx) to show your support and stay updated on new releases!
 - [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about
   Nx.
-- [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
+- [Follow Nx on Twitter](https://twitter.con/nxdevtools) to stay up to date with Nx news
 - [Read our Nx blog](/blog)
 - [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for demos and Nx insights
