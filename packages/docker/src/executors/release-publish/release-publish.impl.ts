@@ -4,7 +4,7 @@ import {
   logger,
   workspaceRoot,
 } from '@nx/devkit';
-import { execSync } from 'child_process';
+import { exec } from 'child_process';
 import type { DockerReleasePublishSchema } from './schema';
 import { existsSync, readFileSync } from 'fs';
 import { getDockerVersionPath } from '../../release/version-utils';
@@ -22,11 +22,13 @@ export default async function dockerReleasePublish(
   context: ExecutorContext
 ) {
   const projectConfig = context.projectGraph.nodes[context.projectName];
-  const options = normalizeOptions(projectConfig, schema);
+  const options = await normalizeOptions(projectConfig, schema);
   if (!options.dryRun) {
-    const digest = dockerPush(options.imageReference, options.quiet);
+    const digest = await dockerPush(options.imageReference, options.quiet);
     logger.log(
-      `Successfully pushed ${options.imageReference}. Digest: ${digest}`
+      `Successfully pushed ${options.imageReference}${
+        options.quiet ? `. Digest: ${digest}` : ''
+      }`
     );
   } else {
     logger.log(
@@ -38,24 +40,24 @@ export default async function dockerReleasePublish(
   };
 }
 
-function normalizeOptions(
+async function normalizeOptions(
   projectConfig: ProjectGraphProjectNode,
   schema: DockerReleasePublishSchema
-): NormalizedDockerReleasePublishSchema {
+): Promise<NormalizedDockerReleasePublishSchema> {
   return {
     quiet: schema.quiet ?? false,
-    imageReference: findImageReference(projectConfig, schema),
+    imageReference: await findImageReference(projectConfig, schema),
     dryRun: process.env.NX_DRY_RUN === 'true' || schema.dryRun || false,
   };
 }
 
-function findImageReference(
+async function findImageReference(
   projectConfig: ProjectGraphProjectNode,
   schema: DockerReleasePublishSchema
 ) {
   let imageRef = readVersionFromFile(projectConfig.data.root);
   if (imageRef) {
-    if (checkDockerImageExistsLocally(imageRef)) {
+    if (await checkDockerImageExistsLocally(imageRef)) {
       return imageRef;
     }
     throw new Error(
@@ -76,27 +78,64 @@ function readVersionFromFile(projectRoot: string) {
   return version.trim();
 }
 
-function checkDockerImageExistsLocally(imageRef: string) {
+async function checkDockerImageExistsLocally(imageRef: string) {
   try {
-    const result = execSync(
-      `docker images --filter "reference=${imageRef}" --quiet`,
-      { encoding: 'utf8', stdio: 'inherit', maxBuffer: LARGE_BUFFER }
-    );
-    return result.trim().length > 0;
+    return await new Promise((res) => {
+      const childProcess = exec(
+        `docker images --filter "reference=${imageRef}" --quiet`,
+        { encoding: 'utf8' }
+      );
+      let result = '';
+      childProcess.stdout?.on('data', (data) => {
+        result += data;
+      });
+      childProcess.stderr?.on('data', (data) => {
+        console.error(data);
+      });
+      childProcess.on('error', (error) => {
+        console.error('Docker command failed:', error);
+        res(false);
+      });
+      childProcess.on('exit', () => {
+        res(result.trim().length > 0);
+      });
+    });
   } catch {
     return false;
   }
 }
 
-function dockerPush(imageReference: string, quiet: boolean) {
+async function dockerPush(imageReference: string, quiet: boolean) {
   try {
-    const result = execSync(
-      `docker push ${imageReference}${quiet ? ' --quiet' : ''}`,
-      {
-        encoding: 'utf8',
-      }
-    );
-    return result.trim();
+    return await new Promise((res, rej) => {
+      const childProcess = exec(
+        `docker push ${imageReference}${quiet ? ' --quiet' : ''}`,
+        {
+          encoding: 'utf8',
+          maxBuffer: LARGE_BUFFER,
+        }
+      );
+      let result = '';
+      childProcess.stdout?.on('data', (data) => {
+        result += data;
+        if (!quiet) {
+          console.log(data);
+        }
+      });
+      childProcess.stderr?.on('data', (data) => {
+        console.error(data);
+      });
+      childProcess.on('error', (error) => {
+        rej(error);
+      });
+      childProcess.on('exit', (code) => {
+        if (code === 0) {
+          res(result.trim());
+        } else {
+          rej(new Error(`Docker push failed with exit code ${code}`));
+        }
+      });
+    });
   } catch (e) {
     logger.error(`Failed to push ${imageReference}`);
     throw e;
