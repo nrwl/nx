@@ -3,6 +3,31 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from '../application/application';
 import { setupDockerGenerator } from './setup-docker';
 
+// Mock the @nx/docker package
+jest.mock('@nx/devkit', () => {
+  const actualDevkit = jest.requireActual('@nx/devkit');
+  return {
+    ...actualDevkit,
+    ensurePackage: jest.fn((pkg, version) => {
+      if (pkg === '@nx/docker') {
+        return {
+          initGenerator: jest.fn(async (tree, options) => {
+            // Mock the @nx/docker init generator
+            const nxJson = actualDevkit.readNxJson(tree);
+            if (!nxJson.plugins) {
+              nxJson.plugins = [];
+            }
+            nxJson.plugins.push('@nx/docker');
+            actualDevkit.updateNxJson(tree, nxJson);
+            return () => {};
+          }),
+        };
+      }
+      return actualDevkit.ensurePackage(pkg, version);
+    }),
+  };
+});
+
 describe('setupDockerGenerator', () => {
   let tree: Tree;
   beforeEach(async () => {
@@ -20,6 +45,7 @@ describe('setupDockerGenerator', () => {
         framework: 'express',
         e2eTestRunner: 'none',
         docker: true,
+        skipDockerPlugin: true, // Use legacy mode for this test
         addPlugin: true,
       });
 
@@ -48,6 +74,7 @@ describe('setupDockerGenerator', () => {
         directory: '.',
         framework: 'fastify',
         docker: true,
+        skipDockerPlugin: true, // Use legacy mode for this test
         addPlugin: true,
       });
 
@@ -67,6 +94,106 @@ describe('setupDockerGenerator', () => {
     });
   });
 
+  describe('skipDockerPlugin', () => {
+    it('should create docker-build target when skipDockerPlugin is true', async () => {
+      const projectName = 'api-with-legacy-docker';
+
+      await applicationGenerator(tree, {
+        directory: projectName,
+        framework: 'express',
+        e2eTestRunner: 'none',
+        docker: true,
+        skipDockerPlugin: true,
+        addPlugin: true,
+      });
+
+      const project = readProjectConfiguration(tree, projectName);
+      const dockerFile = tree.read(`${projectName}/Dockerfile`, 'utf8');
+
+      expect(tree.exists(`${projectName}/Dockerfile`)).toBeTruthy();
+      expect(dockerFile).toContain(`COPY dist/${projectName} ${projectName}/`);
+      expect(dockerFile).toContain(
+        `COPY ${projectName}/package.json ${projectName}/`
+      );
+      expect(dockerFile).toContain(
+        'Build the docker image with `npx nx docker-build'
+      );
+      expect(project.targets).toEqual(
+        expect.objectContaining({
+          'docker-build': {
+            dependsOn: ['build'],
+            command: `docker build -f ${projectName}/Dockerfile . -t ${projectName}`,
+          },
+        })
+      );
+    });
+
+    it('should not create docker-build target when skipDockerPlugin is false', async () => {
+      const projectName = 'api-with-plugin-docker';
+
+      await applicationGenerator(tree, {
+        directory: projectName,
+        framework: 'express',
+        e2eTestRunner: 'none',
+        docker: true,
+        skipDockerPlugin: false,
+        addPlugin: true,
+      });
+
+      const project = readProjectConfiguration(tree, projectName);
+      const dockerFile = tree.read(`${projectName}/Dockerfile`, 'utf8');
+
+      expect(tree.exists(`${projectName}/Dockerfile`)).toBeTruthy();
+      expect(dockerFile).toContain(`COPY dist ${projectName}/`);
+      expect(dockerFile).toContain(`COPY package.json ${projectName}/`);
+      expect(dockerFile).toContain(
+        'Build the docker image with `npx nx docker:build'
+      );
+      expect(project.targets?.['docker-build']).toBeUndefined();
+    });
+
+    it('should use project-relative paths when skipDockerPlugin is false', async () => {
+      const projectName = 'nested-api';
+
+      await applicationGenerator(tree, {
+        directory: `apps/${projectName}`,
+        framework: 'express',
+        e2eTestRunner: 'none',
+        docker: true,
+        skipDockerPlugin: false,
+        addPlugin: true,
+      });
+
+      const dockerFile = tree.read(`apps/${projectName}/Dockerfile`, 'utf8');
+
+      expect(dockerFile).toContain(`COPY dist nested-api/`);
+      expect(dockerFile).toContain(`COPY package.json nested-api/`);
+      expect(dockerFile).not.toContain(`apps/${projectName}`);
+    });
+
+    it('should use workspace-relative paths when skipDockerPlugin is true', async () => {
+      const projectName = 'nested-api-legacy';
+
+      await applicationGenerator(tree, {
+        directory: `apps/${projectName}`,
+        framework: 'express',
+        e2eTestRunner: 'none',
+        docker: true,
+        skipDockerPlugin: true,
+        addPlugin: true,
+      });
+
+      const dockerFile = tree.read(`apps/${projectName}/Dockerfile`, 'utf8');
+
+      expect(dockerFile).toContain(
+        `COPY dist/apps/${projectName} nested-api-legacy/`
+      );
+      expect(dockerFile).toContain(
+        `COPY apps/${projectName}/package.json nested-api-legacy/`
+      );
+    });
+  });
+
   describe('project name sanitization', () => {
     it('should sanitize project names with special characters for Docker commands', async () => {
       const projectName = '@myorg/my-app';
@@ -82,6 +209,7 @@ describe('setupDockerGenerator', () => {
       await setupDockerGenerator(tree, {
         project: projectName,
         outputPath: 'dist/myorg/my-app',
+        skipDockerPlugin: true,
       });
 
       const project = readProjectConfiguration(tree, projectName);
@@ -135,6 +263,7 @@ describe('setupDockerGenerator', () => {
       await setupDockerGenerator(tree, {
         project: projectName,
         outputPath: 'dist/basic-app',
+        skipDockerPlugin: true,
       });
 
       const project = readProjectConfiguration(tree, projectName);
@@ -183,6 +312,7 @@ describe('setupDockerGenerator', () => {
         framework: 'express',
         e2eTestRunner: 'none',
         docker: true,
+        skipDockerPlugin: true, // Use legacy mode for this test
         addPlugin: true,
       });
 
@@ -237,6 +367,7 @@ describe('setupDockerGenerator', () => {
       await setupDockerGenerator(tree, {
         project: projectName,
         outputPath: 'dist/scope/my-app',
+        skipDockerPlugin: true,
       });
 
       const dockerfileContent = tree.read('Dockerfile', 'utf8');

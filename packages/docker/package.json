@@ -35,7 +35,11 @@
     "./package.json": "./package.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
-    "./migrations.json": "./migrations.json"
+    "./migrations.json": "./migrations.json",
+    "./generators": {
+      "types": "./src/generators/index.d.ts",
+      "default": "./src/generators/index.js"
+    }
   },
   "nx-migrations": {
     "migrations": "./migrations.json"

@@ -22,6 +22,7 @@ function normalizeOptions(
     project: setupOptions.project ?? readNxJson(tree).defaultProject,
     targetName: setupOptions.targetName ?? 'docker-build',
     buildTarget: setupOptions.buildTarget ?? 'build',
+    skipDockerPlugin: setupOptions.skipDockerPlugin ?? false,
   };
 }
 
@@ -51,17 +52,40 @@ function addDocker(tree: Tree, options: SetUpDockerOptions) {
   }
 
   const sanitizedProjectName = sanitizeProjectName(options.project);
+  const finalOutputPath = options.outputPath ?? outputPath;
+
+  // Calculate build location based on skipDockerPlugin flag
+  let buildLocation: string;
+  if (options.skipDockerPlugin) {
+    // Legacy mode: use workspace-relative paths
+    buildLocation = finalOutputPath;
+  } else {
+    // New mode: use project-relative paths
+    // Remove the project root prefix from the output path
+    const projectRootWithSlash = projectConfig.root + '/';
+    buildLocation = finalOutputPath.startsWith(projectRootWithSlash)
+      ? finalOutputPath.substring(projectRootWithSlash.length)
+      : finalOutputPath.startsWith(projectConfig.root)
+      ? finalOutputPath.substring(projectConfig.root.length)
+      : 'dist';
+  }
 
   generateFiles(tree, join(__dirname, './files'), projectConfig.root, {
     tmpl: '',
-    buildLocation: options.outputPath ?? outputPath,
+    buildLocation,
     project: options.project,
     projectPath: projectConfig.root,
     sanitizedProjectName,
+    skipDockerPlugin: options.skipDockerPlugin,
   });
 }
 
 export function updateProjectConfig(tree: Tree, options: SetUpDockerOptions) {
+  // Only create custom docker-build target if skipDockerPlugin is true
+  if (!options.skipDockerPlugin) {
+    return;
+  }
+
   let projectConfig = readProjectConfiguration(tree, options.project);
 
   // Use sanitized project name for Docker image tag

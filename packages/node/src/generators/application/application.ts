@@ -32,6 +32,8 @@ import {
   normalizeOptions,
   NormalizedSchema,
 } from './lib';
+// @ts-ignore-next-line
+import { initGenerator as dockerInitGenerator } from '@nx/docker/generators';
 
 function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
   if (options.isUsingTsSolutionConfig) {
@@ -97,6 +99,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
         ...options,
         project: options.name,
         skipFormat: true,
+        skipDockerPlugin: options.skipDockerPlugin,
       });
       tasks.push(dockerTask);
     }
@@ -210,10 +213,20 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   }
 
   if (options.docker) {
+    // Initialize @nx/docker plugin if not skipping
+    if (!options.skipDockerPlugin) {
+      const dockerInitTask = await dockerInitGenerator(tree, {
+        skipFormat: true,
+        skipPackageJson: options.skipPackageJson,
+      });
+      tasks.push(dockerInitTask);
+    }
+
     const dockerTask = await setupDockerGenerator(tree, {
       ...options,
       project: options.name,
       skipFormat: true,
+      skipDockerPlugin: options.skipDockerPlugin,
     });
 
     tasks.push(dockerTask);

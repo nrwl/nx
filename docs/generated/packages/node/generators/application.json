@@ -124,6 +124,11 @@
         "type": "boolean",
         "description": "Add a docker build target"
       },
+      "skipDockerPlugin": {
+        "type": "boolean",
+        "description": "Skip the @nx/docker plugin and use the legacy docker build target instead.",
+        "default": false
+      },
       "useProjectJson": {
         "type": "boolean",
         "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
