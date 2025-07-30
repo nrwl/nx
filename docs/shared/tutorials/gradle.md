@@ -364,7 +364,7 @@ The `See all runs` link goes to a page with the progress and results of tasks th
 
 ![Gradle run details](/shared/tutorials/gradle-run-details.webp)
 
-For more information about how Nx can improve your CI pipeline, check out our [CI guides](/ci/recipes/set-up/)
+For more information about how Nx can improve your CI pipeline, check out our [CI guides](/ci/recipes/set-up)
 
 ## Summary
 
