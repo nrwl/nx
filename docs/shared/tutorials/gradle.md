@@ -356,13 +356,13 @@ git push origin self-heading-ci
 Once pushed, CI will kick off, and we'll run into an error for the `application:build` task.
 When the build task fails, you'll see Nx Cloud begin to analyze the failure and suggest a fix. When a fix is proposed, Nx Console will show a notification for you to review the potential fix. From here you can reject or apply the fix. Applying the fix will commit back to your PR and re-trigger CI to run.
 
-Other enhancements you'll see when you view the PR on GitHub is a comment from Nx Cloud that reports on the status of the CI run.
+You can also see the fix link on the GitHub PR comment that Nx Cloud leaves.
 
-![Nx Cloud report](/shared/tutorials/gradle-github-pr-cloud-report.avif)
+![Nx Cloud PR comment with AI fix suggestion](/shared/tutorials/nx-cloud-gh-comment-self-healing-coment.avif)
 
-The `See all runs` link goes to a page with the progress and results of tasks that were run in the CI pipeline.
+From here you can manually apply or reject the fix:
 
-![Gradle run details](/shared/tutorials/gradle-run-details.webp)
+![Nx Cloud apply AI fix suggestion](/shared/tutorials/nx-cloud-apply-fix-self-healing-ci.avif)
 
 For more information about how Nx can improve your CI pipeline, check out our [CI guides](/ci/recipes/set-up)
 
