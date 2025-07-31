@@ -11,22 +11,11 @@ import {
   SunIcon,
 } from '@heroicons/react/24/outline';
 import classNames from 'classnames';
-import { Fragment, useEffect } from 'react';
-import { Theme } from './theme-resolver';
+import { Fragment } from 'react';
 import { useTheme } from './theme-context';
 
-export function ThemePanel({
-  onThemeChange,
-}: {
-  onThemeChange?: (theme: Theme) => void;
-}): JSX.Element {
+export function ThemePanel(): JSX.Element {
   const { theme, setTheme } = useTheme();
-
-  useEffect(() => {
-    if (onThemeChange) {
-      onThemeChange(theme);
-    }
-  }, [theme]);
 
   return (
     <Menu as="div" className="relative inline-block text-left">

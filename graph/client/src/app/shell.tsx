@@ -21,9 +21,14 @@ import {
   useRouteConstructor,
 } from '@nx/graph-shared';
 import { Tooltip, ErrorToast, Dropdown } from '@nx/graph-ui-common';
-import { getSystemTheme, Theme, ThemePanel } from '@nx/graph-internal-ui-theme';
+import {
+  getSystemTheme,
+  Theme,
+  ThemePanel,
+  useTheme,
+} from '@nx/graph-internal-ui-theme';
 import classNames from 'classnames';
-import { useLayoutEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import {
   Outlet,
   useNavigate,
@@ -157,6 +162,7 @@ function InnerShell({
   const projectGraphDataService = getProjectGraphDataService();
   const externalApiService = getExternalApiService();
 
+  const { resolvedTheme } = useTheme();
   const routeConstructor = useRouteConstructor();
   const environmentConfig = useEnvironmentConfig();
   const navigate = useNavigate();
@@ -230,6 +236,10 @@ function InnerShell({
     },
   });
 
+  useEffect(() => {
+    sendRenderConfigEvent({ type: 'ThemeChange', theme: resolvedTheme });
+  }, [resolvedTheme]);
+
   const nodesVisible = useMemo(() => {
     let count = 0;
 
@@ -242,13 +252,6 @@ function InnerShell({
 
     return count > 0;
   }, [handleEventResult]);
-
-  function onThemeChange(theme: Theme) {
-    sendRenderConfigEvent({
-      type: 'ThemeChange',
-      theme: theme === 'system' ? getSystemTheme() : theme,
-    });
-  }
 
   function onRankDirChange(rankDir: RenderRankDir) {
     sendRenderConfigEvent({ type: 'RankDirChange', rankDir });
@@ -414,7 +417,7 @@ function InnerShell({
                     <RankdirPanel onRankDirChange={onRankDirChange} />
                   </ExperimentalFeature>
 
-                  <ThemePanel onThemeChange={onThemeChange} />
+                  <ThemePanel />
                 </div>
               </div>
 

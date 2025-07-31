@@ -6,28 +6,43 @@ export const localStorageThemeKey = 'nx-dep-graph-theme';
 export type Theme = RenderTheme | 'system';
 export let currentTheme: Theme;
 
+export let mediaListener: ((ev: MediaQueryListEvent) => void) | undefined =
+  undefined;
+export let vscodeDarkOberserver: MutationObserver | undefined = undefined;
+
 // listen for (prefers-color-scheme: dark) changes
-function mediaListener(ev: MediaQueryListEvent) {
-  const resolver = ev.matches ? 'dark' : 'light';
-  toggleHtmlClass(resolver);
-  currentTheme = resolver;
+function mediaListenerFactory(
+  setResolvedTheme: (resolvedTheme: RenderTheme) => void
+) {
+  return (ev: MediaQueryListEvent) => {
+    const resolver = ev.matches ? 'dark' : 'light';
+    toggleHtmlClass(resolver);
+    currentTheme = resolver;
+    setResolvedTheme(resolver);
+  };
 }
 
 // listen for body.vscode-dark changes
-const vscodeDarkOberserver = new MutationObserver((mutations) => {
-  for (let mutation of mutations) {
-    if (mutation.type === 'attributes') {
-      const isVSCodeDark = document.body.classList.contains('vscode-dark');
-      const isVSCodeLight = document.body.classList.contains('vscode-light');
-      if (!isVSCodeDark && !isVSCodeLight) {
-        return;
+function vscodeDarkOberserverFactory(
+  setResolvedTheme: (resolvedTheme: RenderTheme) => void
+) {
+  return new MutationObserver((mutations) => {
+    for (let mutation of mutations) {
+      if (mutation.type === 'attributes') {
+        const isVSCodeDark = document.body.classList.contains('vscode-dark');
+        const isVSCodeLight = document.body.classList.contains('vscode-light');
+        if (!isVSCodeDark && !isVSCodeLight) {
+          return;
+        }
+        const resolver = isVSCodeDark ? 'dark' : 'light';
+        toggleHtmlClass(resolver);
+        currentTheme = resolver;
+
+        setResolvedTheme(resolver);
       }
-      const resolver = isVSCodeDark ? 'dark' : 'light';
-      toggleHtmlClass(resolver);
-      currentTheme = resolver;
     }
-  }
-});
+  });
+}
 
 function toggleHtmlClass(theme: Theme) {
   if (theme === 'dark') {
@@ -37,12 +52,6 @@ function toggleHtmlClass(theme: Theme) {
     htmlEl.classList.add('light');
     htmlEl.classList.remove('dark');
   }
-}
-
-export function themeInit() {
-  const theme =
-    (localStorage.getItem(localStorageThemeKey) as Theme) ?? 'system';
-  themeResolver(theme);
 }
 
 export function getSystemTheme(): 'light' | 'dark' {
@@ -59,9 +68,20 @@ export function getSystemTheme(): 'light' | 'dark' {
   return isDarkMedia || isVSCodeDark ? 'dark' : 'light';
 }
 
-export function themeResolver(theme: Theme) {
+export function themeResolver(
+  theme: Theme,
+  setResolvedTheme: (resolvedTheme: RenderTheme) => void
+) {
   if (!('matchMedia' in window)) {
     return;
+  }
+
+  if (!mediaListener) {
+    mediaListener = mediaListenerFactory(setResolvedTheme);
+  }
+
+  if (!vscodeDarkOberserver) {
+    vscodeDarkOberserver = vscodeDarkOberserverFactory(setResolvedTheme);
   }
 
   const darkMedia = window.matchMedia('(prefers-color-scheme: dark)');
@@ -72,6 +92,7 @@ export function themeResolver(theme: Theme) {
     currentTheme = theme;
   } else {
     const resolver = getSystemTheme();
+
     if (getEnvironmentConfig().environment !== 'nx-console') {
       darkMedia.addEventListener('change', mediaListener);
     }
@@ -84,4 +105,7 @@ export function themeResolver(theme: Theme) {
   }
 
   localStorage.setItem(localStorageThemeKey, theme);
+  setResolvedTheme(currentTheme);
+
+  return currentTheme;
 }
