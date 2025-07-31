@@ -4,15 +4,21 @@ import dev.nx.gradle.data.*
 import java.io.File
 import kotlin.test.*
 import org.gradle.testfixtures.ProjectBuilder
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 
 class ProcessTargetsForProjectTest {
 
   @Test
-  fun `should process targets correctly when atomized is true`() {
+  fun `should process targets correctly when atomized is true`(@TempDir workspaceDir: File) {
     // Arrange
-    val workspaceRoot = createTempDir("workspace").absolutePath
+    val workspaceRoot = workspaceDir.absolutePath
     val projectDir = File(workspaceRoot, "project-a").apply { mkdirs() }
     val project = ProjectBuilder.builder().withProjectDir(projectDir).build()
+
+    // Create a build file so the task dependencies are properly detected
+    val buildFile = File(projectDir, "build.gradle")
+    buildFile.writeText("// test build file")
 
     // Create tasks that would normally trigger atomized targets
     val testFile1 =
@@ -22,20 +28,22 @@ class ProcessTargetsForProjectTest {
         }
 
     val testTask =
-        project.task("test").apply {
+        project.tasks.register("test").get().apply {
           group = "verification"
           description = "Runs the tests"
           inputs.files(project.files(testFile1))
         }
-    project.task("compileTestKotlin").apply { inputs.files(project.files(testFile1)) }
+    project.tasks.register("compileTestKotlin").get().apply {
+      inputs.files(project.files(testFile1))
+    }
 
     val checkTask =
-        project.task("check").apply {
+        project.tasks.register("check").get().apply {
           group = "verification"
           description = "Runs all checks"
           dependsOn(testTask)
         }
-    project.task("build").apply {
+    project.tasks.register("build").get().apply {
       group = "build"
       description = "Assembles and tests"
       dependsOn(checkTask)
@@ -106,11 +114,15 @@ class ProcessTargetsForProjectTest {
   }
 
   @Test
-  fun `should process targets correctly when atomized is false`() {
+  fun `should process targets correctly when atomized is false`(@TempDir workspaceDir: File) {
     // Arrange
-    val workspaceRoot = createTempDir("workspace").absolutePath
+    val workspaceRoot = workspaceDir.absolutePath
     val projectDir = File(workspaceRoot, "project-a").apply { mkdirs() }
     val project = ProjectBuilder.builder().withProjectDir(projectDir).build()
+
+    // Create a build file so the task dependencies are properly detected
+    val buildFile = File(projectDir, "build.gradle")
+    buildFile.writeText("// test build file")
 
     // Create tasks that would normally trigger atomized targets
     val testFile1 =
@@ -120,22 +132,23 @@ class ProcessTargetsForProjectTest {
         }
 
     val testTask =
-        project.task("test").apply {
+        project.tasks.register("test").get().apply {
           group = "verification"
           description = "Runs the tests"
           inputs.files(project.files(testFile1))
         }
-    project
-        .task("compileTestKotlin")
+    project.tasks
+        .register("compileTestKotlin")
+        .get()
         .dependsOn(testTask) // This task name triggers ci test target logic
 
     val checkTask =
-        project.task("check").apply {
+        project.tasks.register("check").get().apply {
           group = "verification"
           description = "Runs all checks"
           dependsOn(testTask)
         }
-    project.task("build").apply {
+    project.tasks.register("build").get().apply {
       group = "build"
       description = "Assembles and tests"
       dependsOn(checkTask)

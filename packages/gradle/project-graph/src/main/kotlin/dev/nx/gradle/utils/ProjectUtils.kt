@@ -50,8 +50,14 @@ fun createNodeForProject(
     nodes = emptyMap()
     externalNodes = emptyMap()
   }
-  val buildFileRelativePath = project.buildFile.relativeTo(File(workspaceRoot)).path
-  return GradleNodeReport(nodes, dependencies, externalNodes, listOf(buildFileRelativePath))
+  val buildFileRelativePath =
+      if (project.buildFile.exists()) {
+        project.buildFile.relativeTo(File(workspaceRoot)).path
+      } else {
+        null
+      }
+  return GradleNodeReport(
+      nodes, dependencies, externalNodes, buildFileRelativePath?.let { listOf(it) } ?: emptyList())
 }
 
 /**
@@ -81,13 +87,24 @@ fun processTargetsForProject(
 
   val ciTestTargetName = targetNameOverrides["ciTestTargetName"]
   val ciIntTestTargetName = targetNameOverrides["ciIntTestTargetName"]
+  val ciDockerTestTargetName = targetNameOverrides["ciDockerTestTargetName"]
   val testTargetName = targetNameOverrides.getOrDefault("testTargetName", "test")
   val intTestTargetName = targetNameOverrides.getOrDefault("intTestTargetName", "intTest")
+  val dockerTestTargetName = targetNameOverrides.getOrDefault("dockerTestTargetName", "dockerTest")
 
   val testTasks = project.getTasksByName("test", false)
   val intTestTasks = project.getTasksByName("intTest", false)
+  val dockerTestTasks = project.getTasksByName("dockerTest", false)
   val hasCiTestTarget = ciTestTargetName != null && testTasks.isNotEmpty() && atomized
   val hasCiIntTestTarget = ciIntTestTargetName != null && intTestTasks.isNotEmpty() && atomized
+  val hasCiDockerTestTarget = ciDockerTestTargetName != null && dockerTestTasks.isNotEmpty() && atomized
+
+  logger.info(
+      "${project.name}: hasCiTestTarget = $hasCiTestTarget (ciTestTargetName=$ciTestTargetName, testTasks.size=${testTasks.size}, atomized=$atomized)")
+  logger.info(
+      "${project.name}: hasCiIntTestTarget = $hasCiIntTestTarget (ciIntTestTargetName=$ciIntTestTargetName, intTestTasks.size=${intTestTasks.size}, atomized=$atomized)")
+  logger.info(
+      "${project.name}: hasCiDockerTestTarget = $hasCiDockerTestTarget (ciDockerTestTargetName=$ciDockerTestTargetName, dockerTestTasks.size=${dockerTestTasks.size}, atomized=$atomized)")
 
   project.tasks.forEach { task ->
     try {
@@ -123,7 +140,7 @@ fun processTargetsForProject(
             targetGroups,
             projectRoot,
             workspaceRoot,
-            ciTestTargetName!!)
+            ciTestTargetName)
       }
 
       if (hasCiIntTestTarget && task.name.startsWith("compileIntTest")) {
@@ -136,10 +153,24 @@ fun processTargetsForProject(
             targetGroups,
             projectRoot,
             workspaceRoot,
-            ciIntTestTargetName!!)
+            ciIntTestTargetName)
       }
 
-      if (ciTestTargetName != null || ciIntTestTargetName != null) {
+      if (hasCiDockerTestTarget && task.name.startsWith("compileDockerTest")) {
+        addTestCiTargets(
+            task.inputs.sourceFiles,
+            projectBuildPath,
+            dockerTestTasks.first(),
+            dockerTestTargetName,
+            targets,
+            targetGroups,
+            projectRoot,
+            workspaceRoot,
+            ciDockerTestTargetName!!) // Safe to use !! because hasCiDockerTestTarget checks
+        // ciDockerTestTargetName != null
+      }
+
+      if (ciTestTargetName != null || ciIntTestTargetName != null || ciDockerTestTargetName != null) {
         val ciCheckTargetName = targetNameOverrides.getOrDefault("ciCheckTargetName", "check-ci")
         if (task.name == "check") {
           val replacedDependencies =
@@ -150,6 +181,9 @@ fun processTargetsForProject(
                 } else if (hasCiIntTestTarget &&
                     dependsOn == "${project.name}:$intTestTargetName") {
                   "${project.name}:$ciIntTestTargetName"
+                } else if (hasCiDockerTestTarget &&
+                    dependsOn == "${project.name}:$dockerTestTargetName") {
+                  "${project.name}:$ciDockerTestTargetName"
                 } else {
                   dep
                 }

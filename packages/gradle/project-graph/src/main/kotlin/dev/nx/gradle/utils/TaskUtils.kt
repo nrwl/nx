@@ -198,26 +198,41 @@ fun getOutputsForTask(task: Task, projectRoot: String, workspaceRoot: String): L
 }
 
 fun getDependsOnTask(task: Task): Set<Task> {
-  val dependsOnFromTaskDependencies: Set<Task> =
-      try {
-        task.taskDependencies.getDependencies(task)
-      } catch (e: Exception) {
-        task.logger.info("Error calling getDependencies for ${task.path}: ${e.message}")
-        task.logger.debug("Stack trace:", e)
-        emptySet()
-      }
+  // Try to safely get dependencies, with fallback for configuration cache issues
+  return try {
+    // First try to get dependencies from task.dependsOn property
+    val dependsOnFromProperty: Set<Task> =
+        try {
+          task.dependsOn.filterIsInstance<Task>().toSet()
+        } catch (e: Exception) {
+          task.logger.info(
+              "Cannot access task.dependsOn for ${task.path}, possibly due to configuration cache: ${e.message}")
+          emptySet()
+        }
 
-  val dependsOnFromDependsOnProperty: Set<Task> = task.dependsOn.filterIsInstance<Task>().toSet()
+    // Then try to get dependencies from taskDependencies (more comprehensive but riskier with
+    // config cache)
+    val dependsOnFromTaskDependencies: Set<Task> =
+        try {
+          task.taskDependencies.getDependencies(task)
+        } catch (e: UnsupportedOperationException) {
+          task.logger.info(
+              "Cannot access taskDependencies for ${task.path} due to configuration cache restrictions")
+          emptySet()
+        } catch (e: Exception) {
+          task.logger.info("Error calling getDependencies for ${task.path}: ${e.message}")
+          emptySet()
+        }
 
-  val combinedDependsOn = dependsOnFromTaskDependencies.union(dependsOnFromDependsOnProperty)
+    val combinedDependsOn = dependsOnFromTaskDependencies.union(dependsOnFromProperty)
 
-  task.logger.info(
-      "Dependencies from taskDependencies.getDependencies for $task: $dependsOnFromTaskDependencies")
-  task.logger.info(
-      "Dependencies from task.dependsOn property for $task: $dependsOnFromDependsOnProperty")
-  task.logger.info("Combined dependencies for $task: $combinedDependsOn")
+    task.logger.info("Dependencies for ${task.path}: ${combinedDependsOn.map { it.path }}")
 
-  return combinedDependsOn
+    combinedDependsOn
+  } catch (e: Exception) {
+    task.logger.info("Unexpected error getting dependencies for ${task.path}: ${e.message}")
+    emptySet()
+  }
 }
 
 /**
@@ -229,6 +244,9 @@ fun getDependsOnTask(task: Task): Set<Task> {
  * @param targetNameOverrides optional map of overrides (e.g., test -> ci)
  * @return list of dependsOn task names (possibly replaced), or null if none found or error occurred
  */
+// Add a thread-local cache to prevent infinite recursion in dependency resolution
+internal val taskDependencyCache = ThreadLocal.withInitial { mutableMapOf<String, List<String>?>() }
+
 fun getDependsOnForTask(
     dependsOnTasks: Set<Task>?,
     task: Task,
@@ -236,12 +254,24 @@ fun getDependsOnForTask(
     targetNameOverrides: Map<String, String> = emptyMap()
 ): List<String>? {
 
+  // Check cache to prevent infinite recursion, but only if dependsOnTasks is null
+  // When dependsOnTasks is provided, we should not use cache since dependencies might be different
+  val cache = taskDependencyCache.get()
+  val taskKey = task.path
+  if (dependsOnTasks == null && cache.containsKey(taskKey)) {
+    task.logger.debug("Returning cached dependencies for ${task.path}")
+    return cache[taskKey]
+  }
+
   fun mapTasksToNames(tasks: Collection<Task>): List<String> {
-    return tasks.map { depTask ->
+    return tasks.mapNotNull { depTask ->
       val depProject = depTask.project
       val taskProject = task.project
 
-      if (task.name != "buildDependents" && depProject != taskProject && dependencies != null) {
+      if (task.name != "buildDependents" &&
+          depProject != taskProject &&
+          dependencies != null &&
+          taskProject.buildFile.exists()) {
         dependencies.add(
             Dependency(
                 taskProject.projectDir.path,
@@ -249,21 +279,55 @@ fun getDependsOnForTask(
                 taskProject.buildFile.path))
       }
 
-      val taskName = targetNameOverrides.getOrDefault(depTask.name + "TargetName", depTask.name)
-      "${depProject.name}:${taskName}"
+      if (depProject.buildFile.path != null && depProject.buildFile.exists()) {
+        val taskName = targetNameOverrides.getOrDefault(depTask.name + "TargetName", depTask.name)
+        "${depProject.name}:${taskName}"
+      } else {
+        null
+      }
     }
   }
 
-  return try {
-    val combinedDependsOn = dependsOnTasks ?: getDependsOnTask(task)
-    if (combinedDependsOn.isNotEmpty()) {
-      return mapTasksToNames(combinedDependsOn)
+  // Add a placeholder to prevent infinite recursion only when not using pre-computed dependencies
+  if (dependsOnTasks == null) {
+    try {
+      cache[taskKey] = null
+      // Compute dependencies
+      val combinedDependsOn = getDependsOnTask(task)
+      val result =
+          if (combinedDependsOn.isNotEmpty()) {
+            mapTasksToNames(combinedDependsOn)
+          } else {
+            null
+          }
+      // Cache the actual result before returning
+      cache[taskKey] = result
+      return result
+    } catch (e: Exception) {
+      task.logger.info("Unexpected error getting dependencies for ${task.path}: ${e.message}")
+      task.logger.debug("Stack trace:", e)
+      return null
+    } finally {
+      // Ensure null placeholder is removed if computation failed and result wasn't cached
+      if (cache[taskKey] == null) {
+        cache.remove(taskKey)
+      }
     }
-    null
-  } catch (e: Exception) {
-    task.logger.info("Unexpected error getting dependencies for ${task.path}: ${e.message}")
-    task.logger.debug("Stack trace:", e)
-    null
+  } else {
+    // When using pre-computed dependencies, don't use cache
+    return try {
+      val result =
+          if (dependsOnTasks.isNotEmpty()) {
+            mapTasksToNames(dependsOnTasks)
+          } else {
+            null
+          }
+      result
+    } catch (e: Exception) {
+      task.logger.info("Unexpected error getting dependencies for ${task.path}: ${e.message}")
+      task.logger.debug("Stack trace:", e)
+      null
+    }
   }
 }
 
@@ -351,8 +415,11 @@ fun getExternalDepFromInputFile(
  */
 fun replaceRootInPath(path: String, projectRoot: String, workspaceRoot: String): String? {
   return when {
-    path.startsWith(projectRoot) -> path.replace(projectRoot, "{projectRoot}")
-    path.startsWith(workspaceRoot) -> path.replace(workspaceRoot, "{workspaceRoot}")
+    path.startsWith(projectRoot + File.separator) -> path.replaceFirst(projectRoot, "{projectRoot}")
+    path == projectRoot -> "{projectRoot}"
+    path.startsWith(workspaceRoot + File.separator) ->
+        path.replaceFirst(workspaceRoot, "{workspaceRoot}")
+    path == workspaceRoot -> "{workspaceRoot}"
     else -> null
   }
 }
