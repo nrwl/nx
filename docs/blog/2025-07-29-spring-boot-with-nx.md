@@ -15,6 +15,7 @@ This article is part of the Java Week series:
 - [The Journey of Nx Gradle](/blog/journey-of-nx-gradle)
 - **Polyglot Projects Made Easy**
 - [Getting Mobile Into Your Monorepo](/blog/android-and-nx)
+- [Seamless Deploys With Docker](/blog/seamless-deploys-with-docker)
 
 {% /callout %}
 
