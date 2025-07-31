@@ -10,6 +10,19 @@ jest.mock('rollup/loadConfigFile', () => {
   };
 });
 
+// Mock getPackageManagerCommand to ensure consistent test environment
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  getPackageManagerCommand: jest.fn(() => ({
+    exec: 'npx',
+  })),
+}));
+
+// Mock isUsingTsSolutionSetup to ensure consistent test environment
+jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
+  isUsingTsSolutionSetup: jest.fn(() => false),
+}));
+
 describe('@nx/rollup/plugin', () => {
   let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
@@ -121,6 +134,7 @@ describe('@nx/rollup/plugin', () => {
           },
         ],
       };
+
       // This isn't JS, but all that really matters here
       // is that the hash is different after updating the
       // config file. The actual config read is mocked below.

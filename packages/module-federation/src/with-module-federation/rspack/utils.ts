@@ -14,6 +14,8 @@ import {
   mapRemotesForSSR,
   getDependentPackagesForProject,
 } from '../../utils';
+import { applyDefaultEagerPackages as applyReactEagerPackages } from '../react/utils';
+import { isReactProject } from '../../utils/framework-detection';
 
 export function getFunctionDeterminateRemoteUrl(isServer = false) {
   const target = 'serve';
@@ -96,6 +98,11 @@ export function getModuleFederationConfig(
     ...sharedLibraries.getLibraries(project.root),
     ...npmPackages,
   };
+
+  // Apply framework-specific eager packages
+  if (isReactProject(mfConfig.name, projectGraph)) {
+    applyReactEagerPackages(sharedDependencies);
+  }
 
   applySharedFunction(sharedDependencies, mfConfig.shared);
   applyAdditionalShared(

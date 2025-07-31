@@ -7,7 +7,7 @@
       "options": {
         "port": 4873,
         "config": ".verdaccio/config.yml",
-        "storage": "build/local-registry/storage",
+        "storage": "dist/local-registry/storage",
         "clear": false
       }
     },
@@ -18,7 +18,8 @@
           "input": "production",
           "projects": ["tag:npm:public"]
         },
-        "{workspaceRoot}/scripts/local-registry"
+        "{workspaceRoot}/scripts/local-registry",
+        "native"
       ],
       "dependsOn": [
         "local-registry",
@@ -28,7 +29,7 @@
         }
       ],
       "command": "node ./scripts/local-registry/run-populate-storage.mjs",
-      "outputs": ["{workspaceRoot}/build/local-registry/storage"]
+      "outputs": ["{workspaceRoot}/dist/local-registry/storage"]
     },
     "nx-release": {
       "dependsOn": [
@@ -37,7 +38,7 @@
           "projects": ["tag:npm:public"]
         }
       ],
-      "command": "ts-node -P ./scripts/tsconfig.release.json ./scripts/nx-release"
+      "command": "ts-node -P ./scripts/tsconfig.release.json ./scripts/nx-release.ts"
     },
     "documentation": {
       "executor": "nx:run-commands",

@@ -4,52 +4,7 @@
     "name": "angular",
     "packageName": "@nx/angular",
     "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
-    "documents": {
-      "/technologies/angular/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
-        "file": "generated/packages/angular/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/angular/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/angular/angular-plugin"
-      },
-      "/technologies/angular/api/documents/nx-and-angular": {
-        "id": "nx-and-angular",
-        "name": "Nx and the Angular CLI",
-        "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
-        "file": "generated/packages/angular/documents/nx-and-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/angular/api/documents/nx-and-angular",
-        "tags": [],
-        "originalFilePath": "shared/guides/nx-and-angular-cli"
-      },
-      "/technologies/angular/api/documents/nx-devkit-angular-devkit": {
-        "id": "nx-devkit-angular-devkit",
-        "name": "Nx Devkit and Angular Devkit",
-        "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
-        "file": "generated/packages/angular/documents/nx-devkit-angular-devkit",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/angular/api/documents/nx-devkit-angular-devkit",
-        "tags": ["create-your-own-plugin"],
-        "originalFilePath": "shared/guides/nx-devkit-angular-devkit"
-      },
-      "/technologies/angular/api/documents/angular-nx-version-matrix": {
-        "id": "angular-nx-version-matrix",
-        "name": "Angular and Nx Version Matrix",
-        "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
-        "file": "generated/packages/angular/documents/angular-nx-version-matrix",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/angular/api/documents/angular-nx-version-matrix",
-        "tags": [],
-        "originalFilePath": "shared/packages/angular/angular-nx-version-matrix"
-      }
-    },
+    "documents": {},
     "root": "/packages/angular",
     "source": "/packages/angular/src",
     "executors": {
@@ -444,14 +399,54 @@
       }
     },
     "migrations": {
-      "/technologies/angular/api/migrations/update-angular-cli-version-20-0-0-rc-3": {
-        "description": "Update the @angular/cli package version to 20.0.0-rc.3.",
-        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-0-0-rc-3.json",
+      "/technologies/angular/api/migrations/21.4.0-ngrx-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.4.0-ngrx-package-updates.json",
         "hidden": false,
-        "name": "update-angular-cli-version-20-0-0-rc-3",
-        "version": "21.2.0-beta.0",
+        "name": "21.4.0-ngrx-package-updates",
+        "version": "21.4.0-beta.3",
         "originalFilePath": "/packages/angular",
-        "path": "/technologies/angular/api/migrations/update-angular-cli-version-20-0-0-rc-3",
+        "path": "/technologies/angular/api/migrations/21.4.0-ngrx-package-updates",
+        "type": "migration"
+      },
+      "/technologies/angular/api/migrations/21.3.5-jest-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.3.5-jest-package-updates.json",
+        "hidden": false,
+        "name": "21.3.5-jest-package-updates",
+        "version": "21.3.5-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/technologies/angular/api/migrations/21.3.5-jest-package-updates",
+        "type": "migration"
+      },
+      "/technologies/angular/api/migrations/update-angular-cli-version-20-1-0": {
+        "description": "Update the @angular/cli package version to ~20.1.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-1-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-20-1-0",
+        "version": "21.3.0-beta.4",
+        "originalFilePath": "/packages/angular",
+        "path": "/technologies/angular/api/migrations/update-angular-cli-version-20-1-0",
+        "type": "migration"
+      },
+      "/technologies/angular/api/migrations/21.3.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.3.0-package-updates.json",
+        "hidden": false,
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.4",
+        "originalFilePath": "/packages/angular",
+        "path": "/technologies/angular/api/migrations/21.3.0-package-updates",
+        "type": "migration"
+      },
+      "/technologies/angular/api/migrations/update-angular-cli-version-20-0-0": {
+        "description": "Update the @angular/cli package version to ~20.0.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-0-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-20-0-0",
+        "version": "21.2.0-beta.3",
+        "originalFilePath": "/packages/angular",
+        "path": "/technologies/angular/api/migrations/update-angular-cli-version-20-0-0",
         "type": "migration"
       },
       "/technologies/angular/api/migrations/migrate-provide-server-rendering-import": {
@@ -459,17 +454,17 @@
         "file": "generated/packages/angular/migrations/migrate-provide-server-rendering-import.json",
         "hidden": false,
         "name": "migrate-provide-server-rendering-import",
-        "version": "21.2.0-beta.0",
+        "version": "21.2.0-beta.3",
         "originalFilePath": "/packages/angular",
         "path": "/technologies/angular/api/migrations/migrate-provide-server-rendering-import",
         "type": "migration"
       },
       "/technologies/angular/api/migrations/replace-provide-server-routing": {
-        "description": "Replace `provideServerRouting` with `provideServerRendering` using `withRoutes`.",
+        "description": "Replace `provideServerRouting` and `provideServerRoutesConfig` with `provideServerRendering` using `withRoutes`.",
         "file": "generated/packages/angular/migrations/replace-provide-server-routing.json",
         "hidden": false,
         "name": "replace-provide-server-routing",
-        "version": "21.2.0-beta.0",
+        "version": "21.2.0-beta.3",
         "originalFilePath": "/packages/angular",
         "path": "/technologies/angular/api/migrations/replace-provide-server-routing",
         "type": "migration"
@@ -479,7 +474,7 @@
         "file": "generated/packages/angular/migrations/set-generator-defaults-for-previous-style-guide.json",
         "hidden": false,
         "name": "set-generator-defaults-for-previous-style-guide",
-        "version": "21.2.0-beta.0",
+        "version": "21.2.0-beta.3",
         "originalFilePath": "/packages/angular",
         "path": "/technologies/angular/api/migrations/set-generator-defaults-for-previous-style-guide",
         "type": "migration"
@@ -489,7 +484,7 @@
         "file": "generated/packages/angular/migrations/update-module-resolution.json",
         "hidden": false,
         "name": "update-module-resolution",
-        "version": "21.2.0-beta.0",
+        "version": "21.2.0-beta.3",
         "originalFilePath": "/packages/angular",
         "path": "/technologies/angular/api/migrations/update-module-resolution",
         "type": "migration"
@@ -499,9 +494,49 @@
         "file": "generated/packages/angular/migrations/21.2.0-package-updates.json",
         "hidden": false,
         "name": "21.2.0-package-updates",
-        "version": "21.2.0-beta.0",
+        "version": "21.2.0-beta.3",
         "originalFilePath": "/packages/angular",
         "path": "/technologies/angular/api/migrations/21.2.0-package-updates",
+        "type": "migration"
+      },
+      "/technologies/angular/api/migrations/21.2.0-angular-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.2.0-angular-eslint-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-angular-eslint-package-updates",
+        "version": "21.2.0-beta.3",
+        "originalFilePath": "/packages/angular",
+        "path": "/technologies/angular/api/migrations/21.2.0-angular-eslint-package-updates",
+        "type": "migration"
+      },
+      "/technologies/angular/api/migrations/21.2.0-@angular-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.2.0-@angular-eslint-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-@angular-eslint-package-updates",
+        "version": "21.2.0-beta.3",
+        "originalFilePath": "/packages/angular",
+        "path": "/technologies/angular/api/migrations/21.2.0-@angular-eslint-package-updates",
+        "type": "migration"
+      },
+      "/technologies/angular/api/migrations/21.2.0-angular-rspack-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.2.0-angular-rspack-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-angular-rspack-package-updates",
+        "version": "21.2.0-beta.3",
+        "originalFilePath": "/packages/angular",
+        "path": "/technologies/angular/api/migrations/21.2.0-angular-rspack-package-updates",
+        "type": "migration"
+      },
+      "/technologies/angular/api/migrations/21.2.0-jest-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.2.0-jest-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-jest-package-updates",
+        "version": "21.2.0-beta.3",
+        "originalFilePath": "/packages/angular",
+        "path": "/technologies/angular/api/migrations/21.2.0-jest-package-updates",
         "type": "migration"
       },
       "/technologies/angular/api/migrations/21.1.0-package-updates": {
@@ -1275,7 +1310,7 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/angular/angular"
+    "path": "/technologies/angular/api"
   },
   "cypress": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -1435,7 +1470,7 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/cypress/cypress"
+    "path": "/technologies/test-tools/cypress/api"
   },
   "detox": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -1526,7 +1561,7 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/detox/detox"
+    "path": "/technologies/test-tools/detox/api"
   },
   "devkit": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -1562,7 +1597,7 @@
     "executors": {},
     "generators": {},
     "migrations": {},
-    "path": "/technologies/devkit/devkit"
+    "path": "/reference/core-api/devkit"
   },
   "esbuild": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -1604,7 +1639,7 @@
       }
     },
     "migrations": {},
-    "path": "/technologies/esbuild/esbuild"
+    "path": "/technologies/build-tools/esbuild/api"
   },
   "eslint": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -1754,48 +1789,14 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/eslint/eslint"
+    "path": "/technologies/eslint/api"
   },
   "eslint-plugin": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "eslint-plugin",
     "packageName": "@nx/eslint-plugin",
     "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
-    "documents": {
-      "/technologies/eslint/eslint-plugin/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
-        "file": "generated/packages/eslint-plugin/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/eslint/eslint-plugin/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/eslint/eslint-plugin"
-      },
-      "/technologies/eslint/eslint-plugin/api/documents/enforce-module-boundaries": {
-        "id": "enforce-module-boundaries",
-        "name": "The `enforce-module-boundaries` rule",
-        "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
-        "file": "generated/packages/eslint-plugin/documents/enforce-module-boundaries",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/eslint/eslint-plugin/api/documents/enforce-module-boundaries",
-        "tags": [],
-        "originalFilePath": "shared/packages/eslint/enforce-module-boundaries"
-      },
-      "/technologies/eslint/eslint-plugin/api/documents/dependency-checks": {
-        "id": "dependency-checks",
-        "name": "The `dependency-checks` rule",
-        "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
-        "file": "generated/packages/eslint-plugin/documents/dependency-checks",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/eslint/eslint-plugin/api/documents/dependency-checks",
-        "tags": [],
-        "originalFilePath": "shared/packages/eslint/dependency-checks"
-      }
-    },
+    "documents": {},
     "root": "/packages/eslint-plugin",
     "source": "/packages/eslint-plugin/src",
     "executors": {},
@@ -1812,7 +1813,7 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/eslint-plugin/eslint-plugin"
+    "path": "/technologies/eslint/eslint-plugin/api"
   },
   "expo": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -2041,7 +2042,7 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/expo/expo"
+    "path": "/technologies/react/expo/api"
   },
   "express": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -2073,7 +2074,7 @@
       }
     },
     "migrations": {},
-    "path": "/technologies/express/express"
+    "path": "/technologies/node/express/api"
   },
   "gradle": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -2115,6 +2116,16 @@
       }
     },
     "migrations": {
+      "/technologies/java/api/migrations/change-plugin-version-0-1-2": {
+        "description": "Change dev.nx.gradle.project-graph to version 0.1.2 in build file",
+        "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-2.json",
+        "hidden": false,
+        "name": "change-plugin-version-0-1-2",
+        "version": "21.3.0-beta.0",
+        "originalFilePath": "/packages/gradle",
+        "path": "/technologies/java/api/migrations/change-plugin-version-0-1-2",
+        "type": "migration"
+      },
       "/technologies/java/api/migrations/change-plugin-version-0-1-0": {
         "description": "Change dev.nx.gradle.project-graph to version 0.1.0 in build file",
         "file": "generated/packages/gradle/migrations/change-plugin-version-0-1-0.json",
@@ -2176,7 +2187,7 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/gradle/gradle"
+    "path": "/technologies/java/api"
   },
   "jest": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -2227,6 +2238,56 @@
       }
     },
     "migrations": {
+      "/technologies/test-tools/jest/api/migrations/21.3.3-jest-util-package-updates": {
+        "description": "",
+        "file": "generated/packages/jest/migrations/21.3.3-jest-util-package-updates.json",
+        "hidden": false,
+        "name": "21.3.3-jest-util-package-updates",
+        "version": "21.3.3-beta.3",
+        "originalFilePath": "/packages/jest",
+        "path": "/technologies/test-tools/jest/api/migrations/21.3.3-jest-util-package-updates",
+        "type": "migration"
+      },
+      "/technologies/test-tools/jest/api/migrations/21.3.3-package-updates": {
+        "description": "",
+        "file": "generated/packages/jest/migrations/21.3.3-package-updates.json",
+        "hidden": false,
+        "name": "21.3.3-package-updates",
+        "version": "21.3.3-beta.0",
+        "originalFilePath": "/packages/jest",
+        "path": "/technologies/test-tools/jest/api/migrations/21.3.3-package-updates",
+        "type": "migration"
+      },
+      "/technologies/test-tools/jest/api/migrations/rename-test-path-pattern": {
+        "description": "Rename the CLI option `testPathPattern` to `testPathPatterns`.",
+        "file": "generated/packages/jest/migrations/rename-test-path-pattern.json",
+        "hidden": false,
+        "name": "rename-test-path-pattern",
+        "version": "21.3.0-beta.3",
+        "originalFilePath": "/packages/jest",
+        "path": "/technologies/test-tools/jest/api/migrations/rename-test-path-pattern",
+        "type": "migration"
+      },
+      "/technologies/test-tools/jest/api/migrations/replace-removed-matcher-aliases": {
+        "description": "Replace removed matcher aliases in Jest v30 with their corresponding matcher",
+        "file": "generated/packages/jest/migrations/replace-removed-matcher-aliases.json",
+        "hidden": false,
+        "name": "replace-removed-matcher-aliases",
+        "version": "21.3.0-beta.3",
+        "originalFilePath": "/packages/jest",
+        "path": "/technologies/test-tools/jest/api/migrations/replace-removed-matcher-aliases",
+        "type": "migration"
+      },
+      "/technologies/test-tools/jest/api/migrations/21.3.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/jest/migrations/21.3.0-package-updates.json",
+        "hidden": false,
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.3",
+        "originalFilePath": "/packages/jest",
+        "path": "/technologies/test-tools/jest/api/migrations/21.3.0-package-updates",
+        "type": "migration"
+      },
       "/technologies/test-tools/jest/api/migrations/remove-tsconfig-option-from-jest-executor": {
         "description": "Remove the previously deprecated and unused `tsConfig` option from the `@nx/jest:jest` executor.",
         "file": "generated/packages/jest/migrations/remove-tsconfig-option-from-jest-executor.json",
@@ -2278,7 +2339,7 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/jest/jest"
+    "path": "/technologies/test-tools/jest/api"
   },
   "js": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -2289,6 +2350,15 @@
     "root": "/packages/js",
     "source": "/packages/js/src",
     "executors": {
+      "/technologies/typescript/api/executors/copy-workspace-modules": {
+        "description": "Copies Workspace Modules into the output directory after a build to prepare it for use with Docker or alternatives.",
+        "file": "generated/packages/js/executors/copy-workspace-modules.json",
+        "hidden": false,
+        "name": "copy-workspace-modules",
+        "originalFilePath": "/packages/js/src/executors/copy-workspace-modules/schema.json",
+        "path": "/technologies/typescript/api/executors/copy-workspace-modules",
+        "type": "executor"
+      },
       "/technologies/typescript/api/executors/tsc": {
         "description": "Build a project using TypeScript.",
         "file": "generated/packages/js/executors/tsc.json",
@@ -2314,6 +2384,15 @@
         "name": "node",
         "originalFilePath": "/packages/js/src/executors/node/schema.json",
         "path": "/technologies/typescript/api/executors/node",
+        "type": "executor"
+      },
+      "/technologies/typescript/api/executors/prune-lockfile": {
+        "description": "Creates a pruned lockfile based on the project dependencies and places it into the output directory.",
+        "file": "generated/packages/js/executors/prune-lockfile.json",
+        "hidden": false,
+        "name": "prune-lockfile",
+        "originalFilePath": "/packages/js/src/executors/prune-lockfile/schema.json",
+        "path": "/technologies/typescript/api/executors/prune-lockfile",
         "type": "executor"
       },
       "/technologies/typescript/api/executors/release-publish": {
@@ -2491,50 +2570,47 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/js/js"
+    "path": "/technologies/typescript/api"
   },
   "module-federation": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "module-federation",
     "packageName": "@nx/module-federation",
     "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
-    "documents": {
-      "/technologies/module-federation/api/documents/nx-module-federation-plugin": {
-        "id": "nx-module-federation-plugin",
-        "name": "NxModuleFederationPlugin",
-        "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
-        "file": "generated/packages/module-federation/documents/nx-module-federation-plugin",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/module-federation/api/documents/nx-module-federation-plugin",
-        "tags": [],
-        "originalFilePath": "shared/packages/module-federation/nx-module-federation-plugin"
-      },
-      "/technologies/module-federation/api/documents/nx-module-federation-dev-server-plugin": {
-        "id": "nx-module-federation-dev-server-plugin",
-        "name": "NxModuleFederationDevServerPlugin",
-        "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
-        "file": "generated/packages/module-federation/documents/nx-module-federation-dev-server-plugin",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/module-federation/api/documents/nx-module-federation-dev-server-plugin",
-        "tags": [],
-        "originalFilePath": "shared/packages/module-federation/nx-module-federation-dev-server-plugin"
-      }
-    },
+    "documents": {},
     "root": "/packages/module-federation",
     "source": "/packages/module-federation/src",
     "executors": {},
     "generators": {},
     "migrations": {
-      "/technologies/module-federation/api/migrations/20.5.0": {
+      "/technologies/module-federation/api/migrations/21.3.0-package-updates": {
         "description": "",
-        "file": "generated/packages/module-federation/migrations/20.5.0.json",
+        "file": "generated/packages/module-federation/migrations/21.3.0-package-updates.json",
         "hidden": false,
-        "name": "20.5.0",
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.8",
+        "originalFilePath": "/packages/module-federation",
+        "path": "/technologies/module-federation/api/migrations/21.3.0-package-updates",
+        "type": "migration"
+      },
+      "/technologies/module-federation/api/migrations/21.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/module-federation/migrations/21.2.0-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-package-updates",
+        "version": "21.2.0-beta.6",
+        "originalFilePath": "/packages/module-federation",
+        "path": "/technologies/module-federation/api/migrations/21.2.0-package-updates",
+        "type": "migration"
+      },
+      "/technologies/module-federation/api/migrations/20.5.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/module-federation/migrations/20.5.0-package-updates.json",
+        "hidden": false,
+        "name": "20.5.0-package-updates",
         "version": "20.5.0-beta.5",
         "originalFilePath": "/packages/module-federation",
-        "path": "/technologies/module-federation/api/migrations/20.5.0",
+        "path": "/technologies/module-federation/api/migrations/20.5.0-package-updates",
         "type": "migration"
       },
       "/technologies/module-federation/api/migrations/20.4.0-package-updates": {
@@ -2548,7 +2624,7 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/module-federation/module-federation"
+    "path": "/technologies/module-federation/api"
   },
   "nest": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -2723,8 +2799,19 @@
         "type": "generator"
       }
     },
-    "migrations": {},
-    "path": "/technologies/nest/nest"
+    "migrations": {
+      "/technologies/node/nest/api/migrations/21.2.0-beta.2-package-updates": {
+        "description": "",
+        "file": "generated/packages/nest/migrations/21.2.0-beta.2-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-beta.2-package-updates",
+        "version": "21.2.0-beta.2",
+        "originalFilePath": "/packages/nest",
+        "path": "/technologies/node/nest/api/migrations/21.2.0-beta.2-package-updates",
+        "type": "migration"
+      }
+    },
+    "path": "/technologies/node/nest/api"
   },
   "next": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -2870,7 +2957,7 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/next/next"
+    "path": "/technologies/react/next/api"
   },
   "node": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -2931,7 +3018,7 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/node/node"
+    "path": "/technologies/node/api"
   },
   "nuxt": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -2983,7 +3070,7 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/nuxt/nuxt"
+    "path": "/technologies/vue/nuxt/api"
   },
   "nx": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -3266,6 +3353,17 @@
         "tags": ["add"],
         "originalFilePath": "generated/cli/add"
       },
+      "/reference/core-api/nx/documents/mcp": {
+        "id": "mcp",
+        "name": "mcp",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/mcp",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/core-api/nx/documents/mcp",
+        "tags": ["mcp"],
+        "originalFilePath": "generated/cli/mcp"
+      },
       "/reference/core-api/nx/documents/login": {
         "id": "login",
         "name": "login",
@@ -3287,6 +3385,39 @@
         "path": "/reference/core-api/nx/documents/logout",
         "tags": ["login"],
         "originalFilePath": "generated/cli/logout"
+      },
+      "/reference/core-api/nx/documents/fix-ci": {
+        "id": "fix-ci",
+        "name": "fix-ci",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/fix-ci",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/core-api/nx/documents/fix-ci",
+        "tags": ["nx-cloud", "ci"],
+        "originalFilePath": "generated/cli/fix-ci"
+      },
+      "/reference/core-api/nx/documents/record": {
+        "id": "record",
+        "name": "record",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/record",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/core-api/nx/documents/record",
+        "tags": ["nx-cloud", "ci"],
+        "originalFilePath": "generated/cli/record"
+      },
+      "/reference/core-api/nx/documents/start-ci-run": {
+        "id": "start-ci-run",
+        "name": "start-ci-run",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/start-ci-run",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/core-api/nx/documents/start-ci-run",
+        "tags": ["nx-cloud", "ci"],
+        "originalFilePath": "generated/cli/start-ci-run"
       }
     },
     "root": "/packages/nx",
@@ -3493,7 +3624,7 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/nx/nx"
+    "path": "/reference/core-api/nx"
   },
   "playwright": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -3565,7 +3696,7 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/playwright/playwright"
+    "path": "/technologies/test-tools/playwright/api"
   },
   "plugin": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -3651,7 +3782,7 @@
       }
     },
     "migrations": {},
-    "path": "/technologies/plugin/plugin"
+    "path": "/reference/core-api/plugin"
   },
   "react": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -4008,7 +4139,7 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/react/react"
+    "path": "/technologies/react/api"
   },
   "react-native": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -4156,33 +4287,6 @@
         "path": "/technologies/react/react-native/api/generators/component",
         "type": "generator"
       },
-      "/technologies/react/react-native/api/generators/storybook-configuration": {
-        "description": "Set up Storybook for a React Native application or library.",
-        "file": "generated/packages/react-native/generators/storybook-configuration.json",
-        "hidden": false,
-        "name": "storybook-configuration",
-        "originalFilePath": "/packages/react-native/src/generators/storybook-configuration/schema.json",
-        "path": "/technologies/react/react-native/api/generators/storybook-configuration",
-        "type": "generator"
-      },
-      "/technologies/react/react-native/api/generators/component-story": {
-        "description": "Generate Storybook story for a React Native component.",
-        "file": "generated/packages/react-native/generators/component-story.json",
-        "hidden": false,
-        "name": "component-story",
-        "originalFilePath": "/packages/react-native/src/generators/component-story/schema.json",
-        "path": "/technologies/react/react-native/api/generators/component-story",
-        "type": "generator"
-      },
-      "/technologies/react/react-native/api/generators/stories": {
-        "description": "Create stories for all components declared in an application or library.",
-        "file": "generated/packages/react-native/generators/stories.json",
-        "hidden": false,
-        "name": "stories",
-        "originalFilePath": "/packages/react-native/src/generators/stories/schema.json",
-        "path": "/technologies/react/react-native/api/generators/stories",
-        "type": "generator"
-      },
       "/technologies/react/react-native/api/generators/upgrade-native": {
         "description": "Destructive command to upgrade native iOS and Android code to latest.",
         "file": "generated/packages/react-native/generators/upgrade-native.json",
@@ -4263,7 +4367,7 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/react-native/react-native"
+    "path": "/technologies/react/react-native/api"
   },
   "remix": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -4451,7 +4555,7 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/remix/remix"
+    "path": "/technologies/react/remix/api"
   },
   "rollup": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -4513,7 +4617,7 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/rollup/rollup"
+    "path": "/technologies/build-tools/rollup/api"
   },
   "rsbuild": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -4545,7 +4649,7 @@
       }
     },
     "migrations": {},
-    "path": "/technologies/rsbuild/rsbuild"
+    "path": "/technologies/build-tools/rsbuild/api"
   },
   "rspack": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -4677,6 +4781,16 @@
       }
     },
     "migrations": {
+      "/technologies/build-tools/rspack/api/migrations/21.3.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/rspack/migrations/21.3.0-package-updates.json",
+        "hidden": false,
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.8",
+        "originalFilePath": "/packages/rspack",
+        "path": "/technologies/build-tools/rspack/api/migrations/21.3.0-package-updates",
+        "type": "migration"
+      },
       "/technologies/build-tools/rspack/api/migrations/21.0.1-package-updates": {
         "description": "",
         "file": "generated/packages/rspack/migrations/21.0.1-package-updates.json",
@@ -4748,48 +4862,14 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/rspack/rspack"
+    "path": "/technologies/build-tools/rspack/api"
   },
   "storybook": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "storybook",
     "packageName": "@nx/storybook",
     "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
-    "documents": {
-      "/technologies/test-tools/storybook/api/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "This is an overview page for the Storybook plugin in Nx. It explains what Storybook is and how to set it up in your Nx workspace.",
-        "file": "generated/packages/storybook/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/test-tools/storybook/api/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/plugin-overview"
-      },
-      "/technologies/test-tools/storybook/api/documents/best-practices": {
-        "id": "best-practices",
-        "name": "Storybook best practices for making the most out of Nx",
-        "description": "The purpose of this guide is to help you set up Storybook in your Nx workspace so that you can get the most out of Nx and its powerful capabilities.",
-        "file": "generated/packages/storybook/documents/best-practices",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/test-tools/storybook/api/documents/best-practices",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/best-practices"
-      },
-      "/technologies/test-tools/storybook/api/documents/storybook-7-setup": {
-        "id": "storybook-7-setup",
-        "name": "Storybook 7",
-        "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
-        "file": "generated/packages/storybook/documents/storybook-7-setup",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/technologies/test-tools/storybook/api/documents/storybook-7-setup",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/storybook-7-setup"
-      }
-    },
+    "documents": {},
     "root": "/packages/storybook",
     "source": "/packages/storybook/src",
     "executors": {
@@ -4831,15 +4911,6 @@
         "path": "/technologies/test-tools/storybook/api/generators/configuration",
         "type": "generator"
       },
-      "/technologies/test-tools/storybook/api/generators/cypress-project": {
-        "description": "Add cypress E2E app to test a ui library that is set up for Storybook.",
-        "file": "generated/packages/storybook/generators/cypress-project.json",
-        "hidden": false,
-        "name": "cypress-project",
-        "originalFilePath": "/packages/storybook/src/generators/cypress-project/schema.json",
-        "path": "/technologies/test-tools/storybook/api/generators/cypress-project",
-        "type": "generator"
-      },
       "/technologies/test-tools/storybook/api/generators/convert-to-inferred": {
         "description": "Convert existing Storybook project(s) using `@nx/storybook:*` executors to use `@nx/storybook/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
         "file": "generated/packages/storybook/generators/convert-to-inferred.json",
@@ -4847,15 +4918,6 @@
         "name": "convert-to-inferred",
         "originalFilePath": "/packages/storybook/src/generators/convert-to-inferred/schema.json",
         "path": "/technologies/test-tools/storybook/api/generators/convert-to-inferred",
-        "type": "generator"
-      },
-      "/technologies/test-tools/storybook/api/generators/migrate-7": {
-        "description": "Migrate to Storybook version 7.",
-        "file": "generated/packages/storybook/generators/migrate-7.json",
-        "hidden": false,
-        "name": "migrate-7",
-        "originalFilePath": "/packages/storybook/src/generators/migrate-7/schema.json",
-        "path": "/technologies/test-tools/storybook/api/generators/migrate-7",
         "type": "generator"
       },
       "/technologies/test-tools/storybook/api/generators/migrate-8": {
@@ -4866,9 +4928,48 @@
         "originalFilePath": "/packages/storybook/src/generators/migrate-8/schema.json",
         "path": "/technologies/test-tools/storybook/api/generators/migrate-8",
         "type": "generator"
+      },
+      "/technologies/test-tools/storybook/api/generators/migrate-9": {
+        "description": "Migrate to Storybook version 9.",
+        "file": "generated/packages/storybook/generators/migrate-9.json",
+        "hidden": false,
+        "name": "migrate-9",
+        "originalFilePath": "/packages/storybook/src/generators/migrate-9/schema.json",
+        "path": "/technologies/test-tools/storybook/api/generators/migrate-9",
+        "type": "generator"
       }
     },
     "migrations": {
+      "/technologies/test-tools/storybook/api/migrations/update-21-2-0-migrate-storybook-v9": {
+        "description": "Update workspace to use Storybook v9",
+        "file": "generated/packages/storybook/migrations/update-21-2-0-migrate-storybook-v9.json",
+        "hidden": false,
+        "name": "update-21-2-0-migrate-storybook-v9",
+        "version": "21.2.0-beta.3",
+        "originalFilePath": "/packages/storybook",
+        "path": "/technologies/test-tools/storybook/api/migrations/update-21-2-0-migrate-storybook-v9",
+        "type": "migration"
+      },
+      "/technologies/test-tools/storybook/api/migrations/update-21-2-0-remove-addon-dependencies": {
+        "description": "Remove deprecated Storybook addon dependencies",
+        "file": "generated/packages/storybook/migrations/update-21-2-0-remove-addon-dependencies.json",
+        "hidden": false,
+        "name": "update-21-2-0-remove-addon-dependencies",
+        "version": "21.2.0-beta.3",
+        "originalFilePath": "/packages/storybook",
+        "path": "/technologies/test-tools/storybook/api/migrations/update-21-2-0-remove-addon-dependencies",
+        "type": "migration"
+      },
+      "/technologies/test-tools/storybook/api/migrations/21.1.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/storybook/migrations/21.1.0-package-updates.json",
+        "hidden": false,
+        "name": "21.1.0-package-updates",
+        "version": "21.2.0-beta.3",
+        "originalFilePath": "/packages/storybook",
+        "path": "/technologies/test-tools/storybook/api/migrations/21.1.0-package-updates",
+        "type": "migration"
+      },
       "/technologies/test-tools/storybook/api/migrations/20.8.0-package-updates": {
         "description": "",
         "file": "generated/packages/storybook/migrations/20.8.0-package-updates.json",
@@ -4910,7 +5011,7 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/storybook/storybook"
+    "path": "/technologies/test-tools/storybook/api"
   },
   "vite": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -5006,6 +5107,26 @@
       }
     },
     "migrations": {
+      "/technologies/build-tools/vite/api/migrations/21.3.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/vite/migrations/21.3.0-package-updates.json",
+        "hidden": false,
+        "name": "21.3.0-package-updates",
+        "version": "21.3.0-beta.3",
+        "originalFilePath": "/packages/vite",
+        "path": "/technologies/build-tools/vite/api/migrations/21.3.0-package-updates",
+        "type": "migration"
+      },
+      "/technologies/build-tools/vite/api/migrations/21.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/vite/migrations/21.2.0-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-package-updates",
+        "version": "21.2.0-beta.3",
+        "originalFilePath": "/packages/vite",
+        "path": "/technologies/build-tools/vite/api/migrations/21.2.0-package-updates",
+        "type": "migration"
+      },
       "/technologies/build-tools/vite/api/migrations/21.1.2-package-updates": {
         "description": "",
         "file": "generated/packages/vite/migrations/21.1.2-package-updates.json",
@@ -5107,7 +5228,7 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/vite/vite"
+    "path": "/technologies/build-tools/vite/api"
   },
   "vue": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -5205,7 +5326,7 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/vue/vue"
+    "path": "/technologies/vue/api"
   },
   "web": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -5256,7 +5377,7 @@
       }
     },
     "migrations": {},
-    "path": "/technologies/web/web"
+    "path": "/reference/core-api/web"
   },
   "webpack": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -5395,7 +5516,7 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/webpack/webpack"
+    "path": "/technologies/build-tools/webpack/api"
   },
   "workspace": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -5573,32 +5694,20 @@
         "type": "migration"
       }
     },
-    "path": "/technologies/workspace/workspace"
+    "path": "/reference/core-api/workspace"
   },
   "azure-cache": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "azure-cache",
     "packageName": "@nx/azure-cache",
     "description": "A Nx plugin which provides a Nx cache which can be self hosted on Azure Blob Storage.",
-    "documents": {
-      "/reference/core-api/azure-cache/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx plugin which provides a Nx cache which can be self hosted on Azure Blob Storage.",
-        "file": "external-generated/packages/azure-cache/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/azure-cache/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/azure-cache/azure-cache-plugin"
-      }
-    },
+    "documents": {},
     "root": "/libs/nx-packages/azure-cache",
     "source": "/libs/nx-packages/azure-cache/src",
     "executors": {},
     "generators": {},
     "migrations": {},
-    "path": "/technologies/azure-cache/azure-cache"
+    "path": "/reference/core-api/azure-cache"
   },
   "conformance": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -5651,29 +5760,26 @@
         "originalFilePath": "/libs/nx-packages/conformance/src/generators/create-rule/schema.json",
         "path": "/reference/core-api/conformance/generators/create-rule",
         "type": "generator"
+      },
+      "/reference/core-api/conformance/generators/preset": {
+        "description": "Nx workspace preset which includes a working conformance rule",
+        "file": "external-generated/packages/conformance/generators/preset.json",
+        "hidden": false,
+        "name": "preset",
+        "originalFilePath": "/libs/nx-packages/conformance/src/generators/preset/schema.json",
+        "path": "/reference/core-api/conformance/generators/preset",
+        "type": "generator"
       }
     },
     "migrations": {},
-    "path": "/technologies/conformance/conformance"
+    "path": "/reference/core-api/conformance"
   },
   "owners": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "owners",
     "packageName": "@nx/owners",
     "description": "A Nx plugin which provides the ability to configure and maintain codeowners for projects in Nx workspaces.",
-    "documents": {
-      "/reference/core-api/owners/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx plugin which provides the ability to configure and maintain codeowners for projects in Nx workspaces.",
-        "file": "external-generated/packages/owners/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/owners/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/owners/owners-plugin"
-      }
-    },
+    "documents": {},
     "root": "/libs/nx-packages/owners",
     "source": "/libs/nx-packages/owners/src",
     "executors": {},
@@ -5698,76 +5804,40 @@
       }
     },
     "migrations": {},
-    "path": "/technologies/owners/owners"
+    "path": "/reference/core-api/owners"
   },
   "gcs-cache": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "gcs-cache",
     "packageName": "@nx/gcs-cache",
     "description": "A Nx plugin which provides a Nx cache which can be self hosted on Google Cloud Storage.",
-    "documents": {
-      "/reference/core-api/gcs-cache/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx plugin which provides a Nx cache which can be self hosted on Google Cloud Storage.",
-        "file": "external-generated/packages/gcs-cache/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/gcs-cache/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/gcs-cache/gcs-cache-plugin"
-      }
-    },
+    "documents": {},
     "root": "/libs/nx-packages/gcs-cache",
     "source": "/libs/nx-packages/gcs-cache/src",
     "executors": {},
     "generators": {},
     "migrations": {},
-    "path": "/technologies/gcs-cache/gcs-cache"
+    "path": "/reference/core-api/gcs-cache"
   },
   "s3-cache": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "s3-cache",
     "packageName": "@nx/s3-cache",
     "description": "A Nx plugin which provides a Nx cache which can be self hosted on Amazon S3.",
-    "documents": {
-      "/reference/core-api/s3-cache/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx plugin which provides a Nx cache which can be self hosted on Amazon S3.",
-        "file": "external-generated/packages/s3-cache/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/s3-cache/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/s3-cache/s3-cache-plugin"
-      }
-    },
+    "documents": {},
     "root": "/libs/nx-packages/s3-cache",
     "source": "/libs/nx-packages/s3-cache/src",
     "executors": {},
     "generators": {},
     "migrations": {},
-    "path": "/technologies/s3-cache/s3-cache"
+    "path": "/reference/core-api/s3-cache"
   },
   "shared-fs-cache": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "shared-fs-cache",
     "packageName": "@nx/shared-fs-cache",
     "description": "A Nx plugin to enable you to use a shared file system directory",
-    "documents": {
-      "/reference/core-api/shared-fs-cache/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx plugin to enable you to use a shared file system directory",
-        "file": "external-generated/packages/shared-fs-cache/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/core-api/shared-fs-cache/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/shared-fs-cache/shared-fs-cache-plugin"
-      }
-    },
+    "documents": {},
     "root": "/libs/nx-packages/shared-fs-cache",
     "source": "/libs/nx-packages/shared-fs-cache/src",
     "executors": {},
@@ -5783,6 +5853,6 @@
       }
     },
     "migrations": {},
-    "path": "/technologies/shared-fs-cache/shared-fs-cache"
+    "path": "/reference/core-api/shared-fs-cache"
   }
 }

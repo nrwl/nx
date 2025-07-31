@@ -72,7 +72,7 @@ The steps are very simple:
 2. Run `nx g @nx/angular:convert-to-rspack` to migrate your Angular application to Rspack.
 
 There is also a [guide in our documentation](/technologies/angular/angular-rspack/recipes/migrate-from-webpack) that walks you through the process step-by-step.
-Even if you're currently using the Angular CLI, it's as simple as first running `npx nx init` in your workspace and then running `npx nx g convert-to-rspack`.
+Even if you're currently using the Angular CLI, it's as simple as first running `npx nx@latest init` in your workspace and then running `npx nx g convert-to-rspack`.
 
 ## Using Angular Rspack
 
@@ -121,7 +121,7 @@ export default createConfig(
 
 {% callout type="deepdive" title="createConfig Information" %}
 The `createConfig` function is used to create an Rspack configuration object setup for Angular applications.
-You can read more about it [here](/nx-api/angular-rspack/documents/create-config).
+You can read more about it [here](/technologies/angular/angular-rspack/api/create-config).
 {% /callout %}
 
 ### Building and Serving your Application

@@ -4,8 +4,8 @@ import {
   CheckCircleIcon,
   ExclamationCircleIcon,
 } from '@heroicons/react/24/solid';
-import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev-ui-common';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 import Link from 'next/link';
 
 export function RemoteCacheSolutions(): ReactElement {
@@ -20,6 +20,7 @@ export function RemoteCacheSolutions(): ReactElement {
             Free remote caching solutions for any team.
           </SectionHeading>
         </header>
+
         <div className="mt-24 flow-root">
           <div className="-mt-16 grid max-w-full grid-cols-1 gap-12 sm:mx-auto lg:mt-0 lg:grid-cols-3 xl:-mx-4">
             {/* NX CLOUD */}
@@ -186,22 +187,19 @@ export function RemoteCacheSolutions(): ReactElement {
                 </div>
                 <ul className="mt-4 divide-y divide-slate-200 border-t border-slate-200 text-sm dark:divide-slate-800 dark:border-slate-800">
                   <li className="flex items-start justify-start gap-x-2 py-2.5">
-                    <CheckCircleIcon
-                      aria-hidden="true"
-                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
-                    />
-                    <span>Free for all users</span>
-                  </li>
-                  <li className="flex items-start justify-start gap-x-2 py-2.5">
                     <ExclamationCircleIcon
                       aria-hidden="true"
                       className="h-6 w-5 flex-none text-yellow-600 dark:text-yellow-500"
                     />
-                    <span>
-                      Not recommended for organizations requiring HIPAA or SOC 2
-                      compliance (
+                    <div>
+                      <Strong>
+                        Bucket-based solutions are vulnerable to cache poisoning
+                        attacks. Most regulated organizations prohibit their
+                        use.
+                      </Strong>{' '}
+                      Consult your security team before using. (
                       <Link
-                        href="/enterprise/security"
+                        href="/enterprise/security#compliance-section"
                         prefetch={false}
                         title="Remote caching security"
                         className="font-semibold underline"
@@ -209,7 +207,14 @@ export function RemoteCacheSolutions(): ReactElement {
                         learn more
                       </Link>
                       )
-                    </span>
+                    </div>
+                  </li>
+                  <li className="flex items-start justify-start gap-x-2 py-2.5">
+                    <CheckCircleIcon
+                      aria-hidden="true"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                    />
+                    <span>Free for all users</span>
                   </li>
                   <li className="flex items-start justify-start gap-x-2 py-2.5">
                     <CheckCircleIcon

@@ -1,5 +1,5 @@
-import { MigrationMetadata } from '@nx/nx-dev/models-package';
-import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
+import { MigrationMetadata } from '@nx/nx-dev-models-package';
+import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
 import { ReactNode } from 'react';
 import { Heading3 } from './ui/headings';
 

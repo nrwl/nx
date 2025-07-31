@@ -11,7 +11,7 @@ import {
 import * as http from 'http';
 import { minimatch } from 'minimatch';
 import { URL } from 'node:url';
-import * as open from 'open';
+const open = require('open');
 import {
   basename,
   dirname,
@@ -240,6 +240,7 @@ function filterGraph(
 export async function generateGraph(
   args: {
     file?: string;
+    print?: boolean;
     host?: string;
     port?: number;
     groupByFolder?: boolean;
@@ -353,7 +354,7 @@ export async function generateGraph(
         splitArgsIntoNxArgsAndOverrides(
           args,
           'affected',
-          { printWarnings: args.file !== 'stdout' },
+          { printWarnings: !args.print && args.file !== 'stdout' },
           readNxJson()
         ).nxArgs,
         rawGraph
@@ -390,25 +391,24 @@ export async function generateGraph(
     args.exclude || []
   );
 
-  if (args.file) {
-    // stdout is a magical constant that doesn't actually write a file
-    if (args.file === 'stdout') {
-      console.log(
-        JSON.stringify(
-          await createJsonOutput(
-            prunedGraph,
-            rawGraph,
-            args.projects,
-            args.targets
-          ),
-          null,
-          2
-        )
-      );
-      await output.drain();
-      process.exit(0);
-    }
+  if (args.print || args.file === 'stdout') {
+    console.log(
+      JSON.stringify(
+        await createJsonOutput(
+          prunedGraph,
+          rawGraph,
+          args.projects,
+          args.targets
+        ),
+        null,
+        2
+      )
+    );
+    await output.drain();
+    process.exit(0);
+  }
 
+  if (args.file) {
     const workspaceFolder = workspaceRoot;
     const ext = extname(args.file);
     const fullFilePath = isAbsolute(args.file)

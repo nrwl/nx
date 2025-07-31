@@ -1,5 +1,5 @@
-import { SectionHeading } from '@nx/nx-dev/ui-common';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { CommandLineIcon } from '@heroicons/react/24/outline';
 import { ReactElement } from 'react';
 

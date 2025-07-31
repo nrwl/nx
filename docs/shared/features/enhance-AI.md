@@ -61,13 +61,17 @@ For other MCP-compatible clients (that do not have Nx Console available) like Cl
   "servers": {
     "nx-mcp": {
       "command": "npx",
-      "args": ["nx-mcp@latest", "/path/to/your/workspace"]
+      "args": ["nx-mcp@latest"]
     }
   }
 }
 ```
 
-Replace `/path/to/your/workspace` with the absolute path to your Nx workspace.
+For Claude Code:
+
+```shell
+claude mcp add nx-mcp npx nx-mcp@latest
+```
 
 ## Powerful Use Cases
 

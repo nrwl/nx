@@ -1,5 +1,5 @@
-import { ButtonLink } from '@nx/nx-dev/ui-common';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { ButtonLink } from '@nx/nx-dev-ui-common';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import React, { ReactElement } from 'react';
 import Link from 'next/link';
 
@@ -56,7 +56,7 @@ export function CallToAction(): ReactElement {
       </div>
 
       {/* Content */}
-      <div className="mx-auto max-w-2xl text-center">
+      <div className="mx-auto max-w-3xl text-center">
         <h2 className="text-3xl font-medium tracking-tight text-slate-950 sm:text-5xl dark:text-white">
           Transform your AI assistant in minutes
         </h2>
@@ -75,14 +75,6 @@ export function CallToAction(): ReactElement {
               →
             </span>
           </Link>
-          {/* <Link
-            href="https://youtu.be/RNilYmJJzdk"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-semibold leading-6 text-slate-900 dark:text-white"
-          >
-            Watch 3-min Demo <span aria-hidden="true">→</span>
-          </Link> */}
         </div>
       </div>
     </section>

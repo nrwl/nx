@@ -1,12 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { App<%= componentType %> } from './app<%= componentFileSuffix %>';<% if(!minimal) { %>
-import { NxWelcome<%= componentType %> } from './nx-welcome<%= componentFileSuffix %>';<% } %><% if(routing) { %>
-import { RouterModule } from '@angular/router';<% } %>
+import { NxWelcome<%= componentType %> } from './nx-welcome<%= componentFileSuffix %>';<% } %>
 
 describe('App<%= componentType %>', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [App<%= componentType %><% if(!minimal) { %>, NxWelcome<%= componentType %><% } %><% if(routing) { %>, RouterModule.forRoot([])<% } %>],
+      imports: [App<%= componentType %><% if(!minimal) { %>, NxWelcome<%= componentType %><% } %>],
     }).compileComponents();
   });
 

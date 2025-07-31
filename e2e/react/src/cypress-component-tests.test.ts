@@ -9,7 +9,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '../../utils';
+} from '@nx/e2e-utils';
 import { join } from 'path';
 
 describe('React Cypress Component Tests', () => {

@@ -84,7 +84,7 @@ This makes app or lib generators behave in the following way:
 - `nx g app my-app --directory=nested` creates a new application named `nested-my-app` in the `/demos/nested/my-app` folder
 - `nx g lib my-lib --directory=shared/ui` creates a new library named `shared-ui-my-lib` in the `/packages/shared/ui/my-lib` folder
 
-If you accidentally generate a project in the wrong folder, use the [move generator](/nx-api/workspace/generators/move) to move it to the correct location.
+If you accidentally generate a project in the wrong folder, use the [move generator](/reference/core-api/workspace/generators/move) to move it to the correct location.
 
 ## Code Generators
 

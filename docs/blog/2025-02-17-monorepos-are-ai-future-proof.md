@@ -17,6 +17,9 @@ youtubeUrl: https://youtu.be/RNilYmJJzdk
 - [Save Time: Connecting Your Editor, CI and LLMs](/blog/nx-editor-ci-llm-integration)
 - [Enhancing Nx Generators with AI: Predictability Meets Intelligence](/blog/nx-generators-ai-integration)
 - [Your AI Assistant Can Now Read Your Terminal: Real-Time Development Error Fixing](/blog/nx-terminal-integration-ai)
+- [Introducing Self-Healing CI for Nx and Nx Cloud](/blog/nx-self-healing-ci)
+- [Analyze Your Nx Cloud Runs With Your AI Assistant](/blog/nx-cloud-analyze-via-nx-mcp)
+- [Automatically Fix your CI Failures with JetBrains AI Assistant](/blog/jetbrains-ci-autofix)
 
 {% /callout %}
 
@@ -140,7 +143,7 @@ And this is just the beginning. While Nx already understands your local monorepo
 
 ## Try It Out Yourself
 
-If you want to test this out, [create a new Nx workspace](/getting-started/intro#try-nx-yourself) and make sure you have [Nx Console](/getting-started/editor-setup) installed or updated to the latest version.
+If you want to test this out, [create a new Nx workspace](/getting-started/start-new-project) and make sure you have [Nx Console](/getting-started/editor-setup) installed or updated to the latest version.
 
 > If you already have an existing NPM/Yarn/PNPM workspace, you can add Nx with `nx init`. Check out [our free course](/courses/pnpm-nx-next) to learn more.
 

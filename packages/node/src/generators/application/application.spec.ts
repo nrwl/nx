@@ -42,6 +42,34 @@ describe('app', () => {
           "sourceRoot": "my-node-app/src",
           "tags": [],
           "targets": {
+            "copy-workspace-modules": {
+              "cache": true,
+              "dependsOn": [
+                "build",
+              ],
+              "executor": "@nx/js:copy-workspace-modules",
+              "options": {
+                "buildTarget": "build",
+              },
+            },
+            "prune": {
+              "cache": true,
+              "dependsOn": [
+                "prune-lockfile",
+                "copy-workspace-modules",
+              ],
+              "executor": "nx:noop",
+            },
+            "prune-lockfile": {
+              "cache": true,
+              "dependsOn": [
+                "build",
+              ],
+              "executor": "@nx/js:prune-lockfile",
+              "options": {
+                "buildTarget": "build",
+              },
+            },
             "serve": {
               "configurations": {
                 "development": {
@@ -254,6 +282,34 @@ describe('app', () => {
               "outputs": [
                 "{options.outputPath}",
               ],
+            },
+            "copy-workspace-modules": {
+              "cache": true,
+              "dependsOn": [
+                "build",
+              ],
+              "executor": "@nx/js:copy-workspace-modules",
+              "options": {
+                "buildTarget": "build",
+              },
+            },
+            "prune": {
+              "cache": true,
+              "dependsOn": [
+                "prune-lockfile",
+                "copy-workspace-modules",
+              ],
+              "executor": "nx:noop",
+            },
+            "prune-lockfile": {
+              "cache": true,
+              "dependsOn": [
+                "build",
+              ],
+              "executor": "@nx/js:prune-lockfile",
+              "options": {
+                "buildTarget": "build",
+              },
             },
             "serve": {
               "configurations": {
@@ -619,6 +675,34 @@ describe('app', () => {
           "name": "@proj/myapp",
           "nx": {
             "targets": {
+              "copy-workspace-modules": {
+                "cache": true,
+                "dependsOn": [
+                  "build",
+                ],
+                "executor": "@nx/js:copy-workspace-modules",
+                "options": {
+                  "buildTarget": "build",
+                },
+              },
+              "prune": {
+                "cache": true,
+                "dependsOn": [
+                  "prune-lockfile",
+                  "copy-workspace-modules",
+                ],
+                "executor": "nx:noop",
+              },
+              "prune-lockfile": {
+                "cache": true,
+                "dependsOn": [
+                  "build",
+                ],
+                "executor": "@nx/js:prune-lockfile",
+                "options": {
+                  "buildTarget": "build",
+                },
+              },
               "serve": {
                 "configurations": {
                   "development": {
@@ -890,6 +974,34 @@ describe('app', () => {
           "sourceRoot": "myapp/src",
           "tags": [],
           "targets": {
+            "copy-workspace-modules": {
+              "cache": true,
+              "dependsOn": [
+                "build",
+              ],
+              "executor": "@nx/js:copy-workspace-modules",
+              "options": {
+                "buildTarget": "build",
+              },
+            },
+            "prune": {
+              "cache": true,
+              "dependsOn": [
+                "prune-lockfile",
+                "copy-workspace-modules",
+              ],
+              "executor": "nx:noop",
+            },
+            "prune-lockfile": {
+              "cache": true,
+              "dependsOn": [
+                "build",
+              ],
+              "executor": "@nx/js:prune-lockfile",
+              "options": {
+                "buildTarget": "build",
+              },
+            },
             "serve": {
               "configurations": {
                 "development": {
@@ -949,6 +1061,27 @@ describe('app', () => {
         }
       `);
       expect(readJson(tree, 'myapp-e2e/package.json').nx).toBeUndefined();
+    });
+  });
+
+  describe('Nest.js with webpack bundler', () => {
+    it('should generate correct build target configuration with webpack-cli args', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-nest-app',
+        bundler: 'webpack',
+        framework: 'nest',
+        addPlugin: true,
+      });
+
+      const project = readProjectConfiguration(tree, 'my-nest-app');
+      const buildTarget = project.targets.build;
+
+      expect(buildTarget.executor).toBe('nx:run-commands');
+      expect(buildTarget.options.command).toBe('webpack-cli build');
+      expect(buildTarget.options.args).toEqual(['--node-env=production']);
+      expect(buildTarget.configurations.development.args).toEqual([
+        '--node-env=development',
+      ]);
     });
   });
 });

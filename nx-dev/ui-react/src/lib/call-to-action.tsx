@@ -1,6 +1,6 @@
-import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
-import { GradleIcon, ReactIcon } from '@nx/nx-dev/ui-icons';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { ButtonLink, SectionHeading } from '@nx/nx-dev-ui-common';
+import { GradleIcon, ReactIcon } from '@nx/nx-dev-ui-icons';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import React, { ReactElement } from 'react';
 import Link from 'next/link';
 

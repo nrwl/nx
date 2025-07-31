@@ -1,32 +1,30 @@
-import type { Meta, StoryObj } from '@storybook/vue3';
+import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import <%= componentName %> from './<%= componentImportFileName %>';
 <% if ( interactionTests ) { %>
-import { within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { expect } from 'storybook/test';
 <% } %>
 
-const meta: Meta<typeof <%= componentName %>> = {
+const meta = {
   component: <%= componentName %>,
   title: '<%= componentName %>',
-};
+} satisfies Meta<typeof <%= componentName %>>;
 export default meta;
-type Story = StoryObj<typeof meta>;
 
+type Story = StoryObj<typeof meta>;
 
 export const Primary = {
   args: {<% for (let prop of props) { %>
-    <%= prop.name %>:  <%- prop.defaultValue %>,<% } %>
+    <%= prop.name %>: <%- prop.defaultValue %>,<% } %>
   },
-};
+} satisfies Story;
+<%_ if ( interactionTests ) { _%>
 
-<% if ( interactionTests ) { %>
-export const Heading: Story = {
+export const Heading = {
   args: {<% for (let prop of props) { %>
-    <%= prop.name %>:  <%- prop.defaultValue %>,<% } %>
+    <%= prop.name %>: <%- prop.defaultValue %>,<% } %>
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.getByText(/Welcome to <%=componentName%>!/gi)).toBeTruthy();
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/<%=componentName%>/gi)).toBeTruthy();
   },
-};
-<% } %>
+} satisfies Story;
+<%_ } _%>

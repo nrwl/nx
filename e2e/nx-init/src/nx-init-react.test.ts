@@ -10,15 +10,13 @@ import {
   runCLI,
   runCommand,
   updateFile,
-} from '@nx/e2e/utils';
-import { copySync, renameSync } from 'fs-extra';
-import { sync as globSync } from 'glob';
-import { join } from 'path';
-import {
   createNonNxProjectDirectory,
   tmpProjPath,
   updateJson,
-} from '../../utils';
+} from '@nx/e2e-utils';
+import { copySync, renameSync } from 'fs-extra';
+import { sync as globSync } from 'glob';
+import { join } from 'path';
 
 describe('nx init (React)', () => {
   let pmc: ReturnType<typeof getPackageManagerCommand>;

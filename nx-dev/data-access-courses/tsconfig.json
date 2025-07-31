@@ -10,6 +10,12 @@
   "include": [],
   "references": [
     {
+      "path": "../data-access-documents"
+    },
+    {
+      "path": "../ui-markdoc"
+    },
+    {
       "path": "./tsconfig.lib.json"
     }
   ],

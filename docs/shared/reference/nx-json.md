@@ -65,7 +65,11 @@ The following is an expanded example showing all options. Your `nx.json` will li
       "buildable": true
     }
   },
-  "extends": "nx/presets/npm.json"
+  "extends": "nx/presets/npm.json",
+  "tui": {
+    "enabled": true,
+    "autoExit": true
+  }
 }
 ```
 
@@ -425,7 +429,8 @@ Some important changes in Nx 21:
 - The `release.version.generatorOptions` object has been removed, with its properties moved to the top level of `release.version`
 - `packageRoot` has been replaced by the more flexible `manifestRootsToUpdate` array
 - Ecosystem-specific options like `skipLockFileUpdate` are now under `versionActionsOptions`
-- `preserveLocalDependencyProtocols` (also now at the top level)now defaults to `true` (previously `false` when it was a generatorOption)
+- `preserveLocalDependencyProtocols` (also now at the top level) now defaults to `true` (previously `false` when it was a generatorOption)
+- `tui` object has been added to control the new [Terminal UI](/recipes/running-tasks/terminal-ui)
 
 ### Changelog
 
@@ -582,6 +587,8 @@ For more details on configuring Nx Cloud, see the [Nx Cloud Configuration Option
 
 The `maxCacheSize` property in `nx.json` allows you to set a limit on the size of the local cache. If it is not set, Nx defaults to a maximum size of 10% of the size of the disk where the cache is stored, up to a maximum of 10GB. This means that if your disk is 100GB, the maximum cache size will be 10GB. If the cache exceeds the specified size, Nx removes the least recently used cache entries until the total size is below 90% of the specified limit.
 
+You can also override this value using the `NX_MAX_CACHE_SIZE` environment variable, which accepts the same units and takes precedence over the `maxCacheSize` option in `nx.json`.
+
 This behavior can be opted out by setting `maxCacheSize` to `0`.
 
 Valid values for `maxCacheSize` can be specified in bytes, kilobytes (KB), megabytes (MB), or gigabytes (GB). For example, any of the following would be valid values:
@@ -606,3 +613,19 @@ Valid values for `maxCacheSize` can be specified in bytes, kilobytes (KB), megab
 ```
 
 Regardless of the `maxCacheSize` setting, Nx will remove cache entries that have not been accessed in the last 7 days.
+
+## TUI
+
+The `tui` property in `nx.json` configures the [Terminal UI](/recipes/running-tasks/terminal-ui). It allows you to enable or disable the TUI and configure its behavior.
+
+```json {% fileName="nx.json" %}
+{
+  "tui": {
+    // Enable the Nx TUI
+    "enabled": true,
+    // Automatically exit the TUI when completed
+    // Use a number to specify the seconds to keep the TUI open for after completion
+    "autoExit": true
+  }
+}
+```

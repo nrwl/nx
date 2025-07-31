@@ -1,4 +1,4 @@
-import { ensurePackage, Tree, workspaceRoot } from '@nx/devkit';
+import { ensurePackage, workspaceRoot } from '@nx/devkit';
 import { dirname } from 'path';
 import type * as ts from 'typescript';
 import { typescriptVersion } from '../utils/versions';

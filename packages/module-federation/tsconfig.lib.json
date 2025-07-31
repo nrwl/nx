@@ -1,10 +1,24 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
-    "declaration": true,
-    "types": ["node"]
+    "outDir": "../../dist/packages/module-federation",
+    "types": ["node"],
+    "tsBuildInfoFile": "../../dist/packages/module-federation/tsconfig.tsbuildinfo"
   },
-  "include": ["**/*.ts"],
+  "include": ["**/*.ts", "**/*.json"],
+  "references": [
+    {
+      "path": "../web/tsconfig.lib.json"
+    },
+    {
+      "path": "../js/tsconfig.lib.json"
+    },
+    {
+      "path": "../nx/tsconfig.lib.json"
+    },
+    {
+      "path": "../devkit/tsconfig.lib.json"
+    }
+  ],
   "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"]
 }

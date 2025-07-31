@@ -1,19 +1,14 @@
 'use client';
 import {
-  BugAntIcon,
-  DocumentCheckIcon,
   ExclamationTriangleIcon,
-  EyeSlashIcon,
-  FingerPrintIcon,
-  LinkSlashIcon,
-  ServerIcon,
+  ShieldExclamationIcon,
 } from '@heroicons/react/24/outline';
 import {
   ButtonLink,
   SectionDescription,
   SectionHeading,
   Strong,
-} from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev-ui-common';
 import { ReactElement } from 'react';
 import Link from 'next/link';
 
@@ -27,26 +22,79 @@ export function FailingCompliance(): ReactElement {
               Rolling Your Own Cache Fails in Regulated Sectors
             </SectionHeading>
             <SectionHeading as="p" variant="subtitle" className="mt-6">
-              Unmanaged caching may be convenient now—but it’s a liability down
-              the road.
+              Unmanaged caching may be convenient now — but it’s a liability
+              down the road.
             </SectionHeading>
 
             <SectionDescription as="p" className="mt-6">
-              If you operate in a regulated sector—
+              If you operate in a regulated sector —{' '}
               <Strong>
                 finance, healthcare, government, defense, aerospace, or
                 pharmaceuticals
+              </Strong>{' '}
+              — self-hosting your remote cache may expose you to{' '}
+              <Strong>
+                serious risks like the{' '}
+                <abbr
+                  title="Cache Race-condition Exploit Enables Poisoning"
+                  className="cursor-help"
+                >
+                  CREEP
+                </abbr>{' '}
+                cache poisoning vulnerability
               </Strong>
-              —self-hosting your remote cache may expose you to{' '}
-              <Strong>serious risks like cache poisoning</Strong>.
+              .
             </SectionDescription>
 
-            <SectionDescription as="p" className="mt-6">
+            <div className="mt-6 flex justify-center">
+              <div className="max-w-sm rounded-lg border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-800 dark:bg-slate-800/60">
+                <div className="flex items-start">
+                  <ShieldExclamationIcon
+                    aria-hidden="true"
+                    className="size-5 flex-shrink-0 text-red-500 dark:text-white"
+                  />
+                  <div className="ml-4 flex-1">
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">
+                      <abbr
+                        title="Cache Race-condition Exploit Enables Poisoning"
+                        className="cursor-help"
+                      >
+                        CREEP
+                      </abbr>{' '}
+                      (CVE-2025-36852)
+                    </p>
+                    <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                      Critical Cache Poisoning Vulnerability Affects Multiple
+                      Build Systems.
+                    </p>
+                    <div className="mt-2 flex justify-end">
+                      <Link
+                        href="/blog/cve-2025-36852-critical-cache-poisoning-vulnerability-creep"
+                        target="_blank"
+                        title="CVE - CREEP"
+                        prefetch={false}
+                        className="text-xs/7 font-semibold"
+                      >
+                        Learn more <span aria-hidden="true">→</span>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <SectionDescription as="p" className="mt-8">
               Community-built cache solutions reading and writing directly from
-              the file storage are vulnerable to the Cache Poisoning by
-              Construction attack resulting in any contributor with pull request
-              privileges being able to potentially inject compromised artifacts
-              into production environments without detection.{' '}
+              the file storage are vulnerable to the{' '}
+              <abbr
+                title="Cache Race-condition Exploit Enables Poisoning"
+                className="cursor-help"
+              >
+                CREEP
+              </abbr>{' '}
+              attack resulting in any contributor with pull request privileges
+              being able to potentially inject compromised artifacts into
+              production environments without detection.{' '}
               <Strong>
                 This vulnerability completely circumvents conventional security
                 protections like encryption, access control and key management
@@ -129,11 +177,23 @@ export function FailingCompliance(): ReactElement {
             </ul>
 
             <div className="mt-10 text-center">
+              <SectionDescription as="p">
+                Questions about{' '}
+                <abbr
+                  title="Cache Race-condition Exploit Enables Poisoning"
+                  className="cursor-help"
+                >
+                  CREEP
+                </abbr>{' '}
+                or your security posture? <br />
+                Contact our team for a personalized assessment.
+              </SectionDescription>
               <ButtonLink
                 href="/contact/sales"
                 variant="primary"
                 size="default"
                 title="Talk to an expert"
+                className="mt-4"
               >
                 Talk to an expert
               </ButtonLink>

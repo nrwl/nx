@@ -47,6 +47,12 @@ function withWatchOptions(yargs: Argv) {
       description:
         'Run watch mode in verbose mode, where commands are logged before execution.',
     })
+    .option('initialRun', {
+      type: 'boolean',
+      description: 'Run the command once before watching for changes.',
+      alias: 'i',
+      default: false,
+    })
     .conflicts({
       all: 'projects',
     })

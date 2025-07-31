@@ -1,7 +1,7 @@
 import { prompt } from 'enquirer';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
-import * as ora from 'ora';
+const ora = require('ora');
 import type { Observable } from 'rxjs';
 import {
   NxJsonConfiguration,
@@ -17,7 +17,7 @@ import {
   getTaskDetails,
   hashTasksThatDoNotDependOnOutputsOfOtherTasks,
 } from '../hasher/hash-task';
-import { logError, logInfo, RunMode } from '../native';
+import { logDebug, RunMode } from '../native';
 import {
   runPostTasksExecution,
   runPreTasksExecution,
@@ -200,7 +200,8 @@ async function getTerminalOutputLifeCycle(
         nxArgs ?? {},
         nxJson.tui ?? {},
         titleText,
-        workspaceRoot
+        workspaceRoot,
+        taskGraph
       );
       lifeCycles.unshift(appLifeCycle);
 
@@ -216,13 +217,13 @@ async function getTerminalOutputLifeCycle(
         // @ts-ignore
         return (chunk, encoding, callback) => {
           if (isError) {
-            logError(
+            logDebug(
               Buffer.isBuffer(chunk)
                 ? chunk.toString(encoding)
                 : chunk.toString()
             );
           } else {
-            logInfo(
+            logDebug(
               Buffer.isBuffer(chunk)
                 ? chunk.toString(encoding)
                 : chunk.toString()

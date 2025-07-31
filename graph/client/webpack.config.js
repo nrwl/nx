@@ -6,7 +6,7 @@ const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 
 module.exports = {
   output: {
-    path: join(__dirname, '../../build/apps/graph'),
+    path: join(__dirname, '../../dist/apps/graph'),
   },
   devServer: {
     port: getPort(process.env.NX_TASK_TARGET_CONFIGURATION),

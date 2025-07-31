@@ -1,11 +1,14 @@
 import {
   checkFilesExist,
   cleanupProject,
+  killPorts,
   newProject,
+  readFile,
   runCLI,
   runCLIAsync,
+  runE2ETests,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Build React applications and libraries with Vite', () => {
   beforeAll(() => {
@@ -58,6 +61,26 @@ describe('Build React applications and libraries with Vite', () => {
 
     await runCLIAsync(`build ${viteApp}`);
     checkFilesExist(`dist/apps/${viteApp}/index.html`);
+  }, 300_000);
+
+  it('should generate app with custom port', async () => {
+    const viteApp = uniq('viteapp');
+    const customPort = 8081;
+
+    runCLI(
+      `generate @nx/react:app apps/${viteApp} --bundler=vite --port=${customPort} --unitTestRunner=vitest --no-interactive --linter=eslint --e2eTestRunner=playwright`
+    );
+
+    const viteConfig = readFile(`apps/${viteApp}/vite.config.ts`);
+    expect(viteConfig).toContain(`port: ${customPort}`);
+
+    if (runE2ETests()) {
+      const e2eResults = runCLI(`e2e ${viteApp}-e2e`, {
+        verbose: true,
+      });
+      expect(e2eResults).toContain('Successfully ran target e2e for project');
+      expect(await killPorts()).toBeTruthy();
+    }
   }, 300_000);
 
   it('should test and lint app with bundler=vite and inSourceTests', async () => {

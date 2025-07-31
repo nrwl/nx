@@ -1,5 +1,5 @@
-import { WebinarDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
-import { CallToAction } from '@nx/nx-dev/ui-markdoc';
+import { WebinarDataEntry } from '@nx/nx-dev-data-access-documents/node-only';
+import { CallToAction } from '@nx/nx-dev-ui-markdoc';
 import Image from 'next/image';
 import Link from 'next/link';
 import { WebinarListItem } from './webinar-list-item';

@@ -2,20 +2,24 @@
 
 Implementing an efficient CI setup for monorepos - while crucial - can be challenging and maintenance heavy. That is [not your fault, though](/ci/intro/why-nx-cloud). Nx Cloud comes with a series of features that help make CI for monorepos faster, more reliable and more cost-effective.
 
-## Core Features
+## How Can Nx Improve Your CI Pipeline?
 
-- Test only the code that might have been [affected](/ci/features/affected) by a PR
-- Never run the same task on the same code twice with [remote caching](/ci/features/remote-cache)
-- Efficiently [distribute task execution across multiple machines](/ci/features/distribute-task-execution)
-- Quickly troubleshoot errors that occur in CI
-- Create a simple but powerful pipeline configuration that easily scales with your codebase
+The benefits of Nx are not restricted to local development. Nx Cloud helps scale your project on CI by making it simple to create and maintain a pipeline that [eliminates wasted time](/ci/concepts/reduce-waste) and [efficiently parallelizes work](/ci/concepts/parallelization-distribution).
+
+Your CI pipeline with Nx can:
+
+- Run only tasks [affected](/ci/features/affected) by that PR
+- [Share the task cache](/ci/features/remote-cache) to dramatically speed up your PRs (Nx Replay)
+- [Distribute task execution](/ci/features/distribute-task-execution) across multiple agent machines (Nx Agents)
+- Automatically [split long e2e tasks](/ci/features/split-e2e-tasks) into smaller tasks (Atomizer)
+- Identify and Re-run [Flaky Tasks](/ci/features/flaky-tasks)
 
 ## Try Nx Cloud Yourself!
 
 [Create an account on Nx Cloud](https://cloud.nx.app) and connect your repository.
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
 ## Learn about Nx on CI
@@ -26,9 +30,9 @@ npx nx connect
 
 {% link-card title="E2E Test Auto-Splitting and Distribution" type="video" url="https://youtu.be/0YxcxIR7QU0" icon="nxagents" /%}
 
-{% link-card title="Circle CI with Nx" type="tutorial" url="/ci/intro/tutorials/circle" icon="circleci" /%}
+{% link-card title="Circle CI with Nx" type="tutorial" url="/ci/recipes/set-up/monorepo-ci-circle-ci" icon="circleci" /%}
 
-{% link-card title="GitHub Actions with Nx" type="tutorial" url="/ci/intro/tutorials/github-actions" icon="github" /%}
+{% link-card title="GitHub Actions with Nx" type="tutorial" url="/ci/recipes/set-up/monorepo-ci-github-actions" icon="github" /%}
 
 {% /cards %}
 

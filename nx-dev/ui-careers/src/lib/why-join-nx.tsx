@@ -3,7 +3,7 @@ import {
   GlobeAltIcon,
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev-ui-common';
 
 const features = [
   {

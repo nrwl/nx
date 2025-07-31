@@ -6,10 +6,10 @@ use std::sync::Arc;
 use tracing::debug;
 
 use crate::native::logger::enable_logger;
-use crate::native::tasks::types::{Task, TaskResult};
+use crate::native::tasks::types::{Task, TaskGraph, TaskResult};
 use crate::native::{
+    ide::nx_console::messaging::NxConsoleMessageConnection,
     pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
-    tui::nx_console::messaging::NxConsoleMessageConnection,
 };
 
 use super::app::App;
@@ -82,6 +82,7 @@ impl AppLifeCycle {
         tui_config: TuiConfig,
         title_text: String,
         workspace_root: String,
+        task_graph: TaskGraph,
     ) -> Self {
         // Get the target names from nx_args.targets
         let rust_tui_cli_args = tui_cli_args.into();
@@ -100,6 +101,7 @@ impl AppLifeCycle {
                     pinned_tasks,
                     rust_tui_config,
                     title_text,
+                    task_graph,
                 )
                 .unwrap(),
             )),
@@ -295,6 +297,15 @@ impl AppLifeCycle {
     #[napi(js_name = "__setCloudMessage")]
     pub async fn __set_cloud_message(&self, message: String) -> napi::Result<()> {
         self.app.lock().set_cloud_message(Some(message));
+        Ok(())
+    }
+
+    #[napi]
+    pub fn set_estimated_task_timings(
+        &mut self,
+        timings: std::collections::HashMap<String, i64>,
+    ) -> napi::Result<()> {
+        self.app.lock().set_estimated_task_timings(timings);
         Ok(())
     }
 }

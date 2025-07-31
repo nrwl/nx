@@ -15,6 +15,12 @@ jest.mock<typeof import('@nx/js')>('@nx/js', () => {
   };
 });
 
+// TODO Investigate how to ensure that the test is not being influenced by the current workspace setup
+// Currently, we are using ts solution and it is generating the wrong results if not mocked this way.
+jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
+  isUsingTsSolutionSetup: jest.fn(() => false),
+}));
+
 describe('normalizeOptions', () => {
   const context: ExecutorContext = {
     root: '/',

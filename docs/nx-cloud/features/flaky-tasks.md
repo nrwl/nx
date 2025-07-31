@@ -11,7 +11,7 @@ Flaky Task Detection is enabled by default if your workspace is connected to Nx 
 To connect your workspace to Nx Cloud run:
 
 ```shell
-npx nx connect
+npx nx@latest connect
 ```
 
 See the [connect to Nx Cloud recipe](/ci/intro/connect-to-nx-cloud) for all the details.

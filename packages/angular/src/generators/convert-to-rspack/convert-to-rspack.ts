@@ -1,18 +1,27 @@
 import {
-  type Tree,
-  readProjectConfiguration,
   addDependenciesToPackageJson,
-  formatFiles,
-  GeneratorCallback,
-  runTasksInSerial,
   ensurePackage,
+  formatFiles,
+  joinPathFragments,
+  normalizePath,
+  readJson,
+  readNxJson,
+  readProjectConfiguration,
+  runTasksInSerial,
   updateProjectConfiguration,
   workspaceRoot,
-  joinPathFragments,
-  readJson,
   writeJson,
+  type ExpandedPluginConfiguration,
+  type GeneratorCallback,
+  type TargetConfiguration,
+  type Tree,
 } from '@nx/devkit';
-import type { ConvertToRspackSchema } from './schema';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
+import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
+import type { RspackPluginOptions } from '@nx/rspack/plugin';
+import { prompt } from 'enquirer';
+import { relative, resolve } from 'path';
+import { join } from 'path/posix';
 import {
   angularRspackVersion,
   nxVersion,
@@ -23,11 +32,7 @@ import { createConfig } from './lib/create-config';
 import { getCustomWebpackConfig } from './lib/get-custom-webpack-config';
 import { updateTsconfig } from './lib/update-tsconfig';
 import { validateSupportedBuildExecutor } from './lib/validate-supported-executor';
-import { join } from 'path/posix';
-import { relative } from 'path';
-import { existsSync } from 'fs';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
-import { prompt } from 'enquirer';
+import type { ConvertToRspackSchema } from './schema';
 
 const SUPPORTED_EXECUTORS = [
   '@angular-devkit/build-angular:browser',
@@ -242,11 +247,6 @@ function handleBuildTargetOptions(
     delete options.customWebpackConfig;
   }
 
-  if (options.outputs) {
-    // handled by the Rspack inference plugin
-    delete options.outputs;
-  }
-
   for (const [key, value] of Object.entries(options)) {
     let optionName = key;
     let optionValue =
@@ -348,8 +348,9 @@ export async function convertToRspack(
     root: project.root,
   };
   const configurationOptions: Record<string, Record<string, any>> = {};
-  const buildTargetNames: string[] = [];
-  const serveTargetNames: string[] = [];
+  let buildTarget: { name: string; config: TargetConfiguration } | undefined;
+  let serveTarget: { name: string; config: TargetConfiguration } | undefined;
+  const targetsToRemove: string[] = [];
   let customWebpackConfigPath: string | undefined;
 
   validateSupportedBuildExecutor(Object.values(project.targets));
@@ -380,7 +381,8 @@ export async function convertToRspack(
           );
         }
       }
-      buildTargetNames.push(targetName);
+      buildTarget = { name: targetName, config: target };
+      targetsToRemove.push(targetName);
     } else if (
       target.executor === '@angular-devkit/build-angular:server' ||
       target.executor === '@nx/angular:webpack-server'
@@ -392,7 +394,7 @@ export async function convertToRspack(
         project.root
       );
       createConfigOptions.server = './src/main.server.ts';
-      buildTargetNames.push(targetName);
+      targetsToRemove.push(targetName);
     } else if (
       target.executor === '@angular-devkit/build-angular:dev-server' ||
       target.executor === '@nx/angular:dev-server' ||
@@ -407,7 +409,7 @@ export async function convertToRspack(
           project.root
         );
 
-        if (target.options.port !== DEFAULT_PORT) {
+        if (target.options.port && target.options.port !== DEFAULT_PORT) {
           projectServePort = target.options.port;
         }
       }
@@ -425,7 +427,8 @@ export async function convertToRspack(
           );
         }
       }
-      serveTargetNames.push(targetName);
+      serveTarget = { name: targetName, config: target };
+      targetsToRemove.push(targetName);
     } else if (target.executor === '@angular-devkit/build-angular:prerender') {
       if (target.options) {
         const prerenderOptions = {
@@ -447,10 +450,10 @@ export async function convertToRspack(
           }
         }
       }
-      buildTargetNames.push(targetName);
+      targetsToRemove.push(targetName);
     } else if (target.executor === '@angular-devkit/build-angular:app-shell') {
       createConfigOptions.appShell = true;
-      buildTargetNames.push(targetName);
+      targetsToRemove.push(targetName);
     }
   }
 
@@ -467,27 +470,228 @@ export async function convertToRspack(
   );
   updateTsconfig(tree, project.root);
 
-  for (const targetName of [...buildTargetNames, ...serveTargetNames]) {
+  for (const targetName of targetsToRemove) {
     delete project.targets[targetName];
-  }
-
-  if (projectServePort !== DEFAULT_PORT) {
-    project.targets.serve ??= {};
-    project.targets.serve.options ??= {};
-    project.targets.serve.options.port = projectServePort;
   }
 
   updateProjectConfiguration(tree, projectName, project);
 
+  // ensure plugin is registered
   const { rspackInitGenerator } = ensurePackage<typeof import('@nx/rspack')>(
     '@nx/rspack',
     nxVersion
   );
-
   await rspackInitGenerator(tree, {
     addPlugin: true,
     framework: 'angular',
   });
+
+  // find the inferred target names
+  const nxJson = readNxJson(tree);
+  let inferredBuildTargetName = 'build';
+  let inferredServeTargetName = 'serve';
+  const pluginRegistration = nxJson.plugins.find(
+    (p): p is ExpandedPluginConfiguration<RspackPluginOptions> =>
+      typeof p === 'string' ? false : p.plugin === '@nx/rspack/plugin'
+  );
+  if (pluginRegistration) {
+    inferredBuildTargetName =
+      pluginRegistration.options.buildTargetName ?? inferredBuildTargetName;
+    inferredServeTargetName =
+      pluginRegistration.options.serveTargetName ?? inferredServeTargetName;
+  }
+
+  if (buildTarget) {
+    // these are all replaced by the inferred task
+    delete buildTarget.config.options;
+    delete buildTarget.config.configurations;
+    delete buildTarget.config.defaultConfiguration;
+    delete buildTarget.config.executor;
+
+    const shouldOverrideInputs = (inputs: TargetConfiguration['inputs']) => {
+      if (!inputs?.length) {
+        return false;
+      }
+
+      if (inputs.length === 2) {
+        // check whether the existing inputs would match the inferred task
+        // inputs with the exception of the @rspack/cli external dependency
+        // which webpack tasks wouldn't have
+        const namedInputs = getNamedInputs(project.root, {
+          nxJsonConfiguration: nxJson,
+          configFiles: [],
+          workspaceRoot,
+        });
+
+        if ('production' in namedInputs) {
+          return !['production', '^production'].every((input) =>
+            inputs.includes(input)
+          );
+        }
+
+        return !['default', '^default'].every((input) =>
+          inputs.includes(input)
+        );
+      }
+
+      return true;
+    };
+
+    if (shouldOverrideInputs(buildTarget.config.inputs)) {
+      // keep existing inputs and add the @rspack/cli external dependency
+      buildTarget.config.inputs = [
+        ...buildTarget.config.inputs,
+        { externalDependencies: ['@rspack/cli'] },
+      ];
+    } else {
+      delete buildTarget.config.inputs;
+    }
+
+    if (buildTarget.config.cache) {
+      delete buildTarget.config.cache;
+    }
+
+    if (
+      buildTarget.config.dependsOn?.length === 1 &&
+      buildTarget.config.dependsOn[0] === `^${buildTarget.name}`
+    ) {
+      delete buildTarget.config.dependsOn;
+    } else if (buildTarget.config.dependsOn) {
+      buildTarget.config.dependsOn = buildTarget.config.dependsOn.map((dep) =>
+        dep === `^${buildTarget.name}` ? `^${inferredBuildTargetName}` : dep
+      );
+    }
+
+    const newOutputPath = joinPathFragments(
+      project.root,
+      createConfigOptions.outputPath.base
+    );
+    const shouldOverrideOutputs = (outputs: TargetConfiguration['outputs']) => {
+      if (!outputs?.length) {
+        // this means the target was wrongly configured, so, we don't override
+        // anything and let the inferred outputs be used
+        return false;
+      }
+
+      if (outputs.length === 1) {
+        if (outputs[0] === '{options.outputPath}') {
+          // the inferred task output is created after the createConfig
+          // outputPath option, so we don't need to keep this
+          return false;
+        }
+
+        const normalizedOutputPath = outputs[0]
+          .replace('{workspaceRoot}/', '')
+          .replace('{projectRoot}', project.root)
+          .replace('{projectName}', '');
+        if (
+          normalizedOutputPath === newOutputPath ||
+          normalizedOutputPath.replace(/\/browser\/?$/, '') === newOutputPath
+        ) {
+          return false;
+        }
+      }
+
+      return true;
+    };
+    const normalizeOutput = (
+      path: string,
+      workspaceRoot: string,
+      projectRoot: string
+    ) => {
+      const fullProjectRoot = resolve(workspaceRoot, projectRoot);
+      const fullPath = resolve(workspaceRoot, path);
+      const pathRelativeToProjectRoot = normalizePath(
+        relative(fullProjectRoot, fullPath)
+      );
+      if (pathRelativeToProjectRoot.startsWith('..')) {
+        return joinPathFragments(
+          '{workspaceRoot}',
+          relative(workspaceRoot, fullPath)
+        );
+      }
+
+      return joinPathFragments('{projectRoot}', pathRelativeToProjectRoot);
+    };
+
+    if (shouldOverrideOutputs(buildTarget.config.outputs)) {
+      buildTarget.config.outputs = buildTarget.config.outputs.map((output) => {
+        if (output === '{options.outputPath}') {
+          // the target won't have an outputPath option, so we replace it with the new output path
+          return normalizeOutput(newOutputPath, workspaceRoot, project.root);
+        }
+
+        const normalizedOutputPath = output
+          .replace('{workspaceRoot}/', '')
+          .replace('{projectRoot}', project.root)
+          .replace('{projectName}', '');
+        if (
+          /\/browser\/?$/.test(normalizedOutputPath) &&
+          normalizedOutputPath.replace(/\/browser\/?$/, '') === newOutputPath
+        ) {
+          return normalizeOutput(newOutputPath, workspaceRoot, project.root);
+        }
+
+        return output;
+      });
+    } else {
+      delete buildTarget.config.outputs;
+    }
+
+    if (
+      buildTarget.config.syncGenerators?.length === 1 &&
+      buildTarget.config.syncGenerators[0] === '@nx/js:typescript-sync'
+    ) {
+      delete buildTarget.config.syncGenerators;
+    } else if (buildTarget.config.syncGenerators?.length) {
+      buildTarget.config.syncGenerators = Array.from(
+        new Set([
+          ...buildTarget.config.syncGenerators,
+          '@nx/js:typescript-sync',
+        ])
+      );
+    }
+
+    if (Object.keys(buildTarget.config).length) {
+      // there's extra target metadata left that wouldn't be inferred, we keep it
+      project.targets[inferredBuildTargetName] = buildTarget.config;
+    }
+  }
+  if (serveTarget) {
+    delete serveTarget.config.options;
+    delete serveTarget.config.configurations;
+    delete serveTarget.config.defaultConfiguration;
+    delete serveTarget.config.executor;
+
+    if (serveTarget.config.continuous) {
+      delete serveTarget.config.continuous;
+    }
+    if (
+      serveTarget.config.syncGenerators?.length === 1 &&
+      serveTarget.config.syncGenerators[0] === '@nx/js:typescript-sync'
+    ) {
+      delete serveTarget.config.syncGenerators;
+    } else if (serveTarget.config.syncGenerators?.length) {
+      serveTarget.config.syncGenerators = Array.from(
+        new Set([
+          ...serveTarget.config.syncGenerators,
+          '@nx/js:typescript-sync',
+        ])
+      );
+    }
+
+    if (projectServePort !== DEFAULT_PORT) {
+      serveTarget.config.options = {};
+      serveTarget.config.options.port = projectServePort;
+    }
+
+    if (Object.keys(serveTarget.config).length) {
+      // there's extra target metadata left that wouldn't be inferred, we keep it
+      project.targets[inferredServeTargetName] = serveTarget.config;
+    }
+  }
+
+  updateProjectConfiguration(tree, projectName, project);
 
   // This is needed to prevent a circular execution of the build target
   const rootPkgJson = readJson(tree, 'package.json');

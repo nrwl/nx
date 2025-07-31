@@ -8,7 +8,7 @@ import {
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { TargetConfiguration } from '@nx/devkit';
-import { TerminalOutput } from '@nx/nx-dev/ui-fence';
+import { TerminalOutput } from '@nx/nx-dev-ui-fence';
 import { Tooltip } from '@nx/graph/legacy/tooltips';
 import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';
 
@@ -59,7 +59,7 @@ export function ShowOptionsHelp({
       null,
       2
     );
-  }, [helpExampleOptions, helpExampleArgs]);
+  }, [helpExampleOptions, helpExampleArgs, targetName]);
 
   let runHelpActionElement: null | ReactNode;
   if (environment === 'docs') {
@@ -87,11 +87,14 @@ export function ShowOptionsHelp({
               }
             : async () => {
                 setPending(true);
-                const result = await fetch(
+                const result = (await fetch(
                   `/help?project=${encodeURIComponent(
                     projectName
                   )}&target=${encodeURIComponent(targetName)}`
-                ).then((resp) => resp.json());
+                ).then((resp) => resp.json())) as {
+                  text: string;
+                  success: boolean;
+                };
                 setResult(result);
                 setPending(false);
               }
@@ -122,6 +125,7 @@ export function ShowOptionsHelp({
           <a
             className="text-blue-500 hover:underline"
             target="_blank"
+            rel="noopener noreferrer"
             href="https://nx.dev/recipes/running-tasks/pass-args-to-commands#pass-args-to-commands"
           >
             passing them

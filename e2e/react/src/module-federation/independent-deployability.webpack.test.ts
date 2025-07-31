@@ -7,7 +7,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { stripIndents } from 'nx/src/utils/strip-indents';
 import { readPort, runCLI } from './utils';
 

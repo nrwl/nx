@@ -33,6 +33,11 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
 
   const directory = options.name;
 
+  // Cannot skip install for create-nx-workspace or else it'll fail.
+  // Even though --skipInstall is not an option to create-nx-workspace, we pass through extra options to presets.
+  // See: https://github.com/nrwl/nx/issues/31834
+  delete (options as any).skipInstall;
+
   const args = unparse({
     ...options,
   }).join(' ');
@@ -67,7 +72,7 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
     await execAndWait(fullCommand, tmpDir);
 
     workspaceSetupSpinner.succeed(
-      `Successfully created the workspace: ${directory}.`
+      `Successfully created the workspace: ${directory}`
     );
   } catch (e) {
     workspaceSetupSpinner.fail();

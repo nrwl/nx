@@ -10,7 +10,8 @@ import {
   checkFilesExist,
   runE2ETests,
   updateFile,
-} from 'e2e/utils';
+  readJson,
+} from '@nx/e2e-utils';
 
 describe('@nx/react-native', () => {
   let proj: string;
@@ -43,6 +44,25 @@ describe('@nx/react-native', () => {
   it('should test and lint', async () => {
     expect(() => runCLI(`test ${appName}`)).not.toThrow();
     expect(() => runCLI(`lint ${appName}`)).not.toThrow();
+  });
+
+  it('should have dependencies synced after React Native app creation', () => {
+    // Check that the app's package.json exists
+    checkFilesExist(`${appName}/package.json`);
+
+    // Read the app's package.json
+    const appPackageJson = readJson(`${appName}/package.json`);
+
+    // Verify that the app package.json has dependencies section
+    expect(appPackageJson.dependencies).toBeDefined();
+
+    // Verify that React Native specific dependencies are synced
+    expect(appPackageJson.dependencies).toEqual(
+      expect.objectContaining({
+        react: '*',
+        'react-native': '*',
+      })
+    );
   });
 
   it('should bundle the app', async () => {
@@ -125,7 +145,7 @@ describe('@nx/react-native', () => {
 
   it('should create storybook with application', async () => {
     runCLI(
-      `generate @nx/react-native:storybook-configuration ${appName} --generateStories --no-interactive`
+      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`
     );
     checkFilesExist(
       `${appName}/.storybook/main.ts`,
@@ -148,7 +168,7 @@ describe('@nx/react-native', () => {
 
   it('should create storybook with library', async () => {
     runCLI(
-      `generate @nx/react-native:storybook-configuration ${libName} --generateStories --no-interactive`
+      `generate @nx/react:storybook-configuration ${libName} --generateStories --no-interactive`
     );
     checkFilesExist(
       `${libName}/.storybook/main.ts`,
@@ -162,7 +182,7 @@ describe('@nx/react-native', () => {
   it('should run build with vite bundler and e2e with playwright', async () => {
     const appName2 = uniq('my-app');
     runCLI(
-      `generate @nx/react-native:application ${appName2} --directory=apps/${appName2} --bundler=vite --e2eTestRunner=playwright --install=false --no-interactive --unitTestRunner=jest --linter=eslint`
+      `generate @nx/react:application ${appName2} --directory=apps/${appName2} --bundler=vite --e2eTestRunner=playwright --install=false --no-interactive --unitTestRunner=jest --linter=eslint`
     );
     expect(() => runCLI(`build ${appName2}`)).not.toThrow();
     if (runE2ETests()) {
@@ -178,7 +198,7 @@ describe('@nx/react-native', () => {
     }
 
     runCLI(
-      `generate @nx/react-native:storybook-configuration ${appName2} --generateStories --no-interactive`
+      `generate @nx/react:storybook-configuration ${appName2} --generateStories --no-interactive`
     );
     checkFilesExist(
       `apps/${appName2}/.storybook/main.ts`,

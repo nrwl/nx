@@ -148,7 +148,7 @@ Nx’s modular design helps as each plugin is responsible for a particular area 
 
 ![](/blog/images/2023-07-26/LNYWLmdgxQ07bqyt.avif)
 
-_(Source:_ [_/getting-started/why-nx_](/getting-started/why-nx)_)_
+_(Source:_ [_/getting-started/intro_](/getting-started/intro)_)_
 
 These plugins are usually technology-specific, like a plugin to help you manage React, Next, Remix, or Angular projects and tooling like ESLint, Cypress, Playwright, Vite, Jest, and so on. There are no limits as you can [create your own](/extending-nx/intro/getting-started). They are **optional**, in that you can use Nx and React and set everything up on your own. But it might be worth relying on them for some better DX and automation, such as the update mechanism we’re currently looking at.
 

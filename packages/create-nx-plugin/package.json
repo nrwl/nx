@@ -29,7 +29,7 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "create-nx-workspace": "file:../create-nx-workspace",
+    "create-nx-workspace": "workspace:*",
     "picocolors": "^1.1.0",
     "enquirer": "~2.3.6",
     "tslib": "^2.3.0",

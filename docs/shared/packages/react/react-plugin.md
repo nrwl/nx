@@ -4,6 +4,8 @@ description: Learn how to use the @nx/react plugin to create and manage React ap
 keywords: [react]
 ---
 
+# @nx/react
+
 The React plugin contains executors and generators for managing React applications and libraries within an Nx workspace.
 It provides:
 
@@ -136,6 +138,6 @@ The library in `dist` is publishable to npm or a private registry.
 ## More Documentation
 
 - [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
-- [Using Cypress](/nx-api/cypress)
-- [Using Jest](/nx-api/jest)
+- [Using Cypress](/technologies/test-tools/cypress/introduction)
+- [Using Jest](/technologies/test-tools/jest/introduction)
 - [Using Storybook](/technologies/test-tools/storybook/recipes/overview-react)

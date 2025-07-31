@@ -4,9 +4,16 @@
   "sourceRoot": "packages/devkit",
   "projectType": "library",
   "targets": {
-    "build-base": {
-      "executor": "@nx/js:tsc",
+    "build": {
+      "outputs": ["{workspaceRoot}/dist/packages/devkit/README.md"],
+      "command": "node ./scripts/copy-readme.js devkit",
+      "dependsOn": ["^build", "build-base", "legacy-post-build"]
+    },
+
+    "legacy-post-build": {
+      "executor": "@nx/workspace-plugin:legacy-post-build",
       "options": {
+        "tsConfig": "./tsconfig.lib.json",
         "assets": [
           {
             "input": "packages/devkit",
@@ -42,10 +49,6 @@
           }
         ]
       }
-    },
-    "build": {
-      "outputs": ["{workspaceRoot}/build/packages/devkit/README.md"],
-      "command": "node ./scripts/copy-readme.js devkit"
     }
   }
 }

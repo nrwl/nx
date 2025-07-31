@@ -1,13 +1,13 @@
-import { getBasicNxSection } from '@nx/nx-dev/data-access-menu';
-import { DocViewer } from '@nx/nx-dev/feature-doc-viewer';
-import { PackageSchemaSubList } from '@nx/nx-dev/feature-package-schema-viewer/src/lib/package-schema-sub-list';
+import { getBasicNxSection } from '@nx/nx-dev-data-access-menu';
+import { DocViewer } from '@nx/nx-dev-feature-doc-viewer';
+import { PackageSchemaSubList } from '@nx/nx-dev-feature-package-schema-viewer/src/lib/package-schema-sub-list';
 import {
   pkgToGeneratedApiDocs,
   ProcessedDocument,
   RelatedDocument,
-} from '@nx/nx-dev/models-document';
-import { MenuItem } from '@nx/nx-dev/models-menu';
-import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev-models-document';
+import { MenuItem } from '@nx/nx-dev-models-menu';
+import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev-ui-common';
 import { GetStaticPaths, GetStaticProps } from 'next';
 import { menusApi } from '../lib/menus.api';
 import { useNavToggle } from '../lib/navigation-toggle.effect';
@@ -15,17 +15,17 @@ import { nxDocumentationApi } from '../lib/nx.api';
 import { nxNewPackagesApi } from '../lib/new-packages.api';
 import { tagsApi } from '../lib/tags.api';
 import { fetchGithubStarCount } from '../lib/githubStars.api';
-import { ScrollableContent } from '@nx/ui-scrollable-content';
+import { ScrollableContent } from '@nx/nx-dev-ui-scrollable-content';
 import {
   PackageSchemaList,
   PackageSchemaViewer,
-} from '@nx/nx-dev/feature-package-schema-viewer';
+} from '@nx/nx-dev-feature-package-schema-viewer';
 import {
   type MigrationMetadata,
   type ProcessedPackageMetadata,
   type SchemaMetadata,
-} from '@nx/nx-dev/models-package';
-import { DocumentsApi } from '@nx/nx-dev/data-access-documents/node-only';
+} from '@nx/nx-dev-models-package';
+import { DocumentsApi } from '@nx/nx-dev-data-access-documents/node-only';
 
 type NxDocumentationProps =
   | {
@@ -288,6 +288,9 @@ export const getStaticProps: GetStaticProps = async ({
           githubStarsCount: await fetchGithubStarCount(),
         },
         menu,
+        relatedDocuments: tagsApi
+          .getAssociatedItemsFromTags(document.tags)
+          .filter((item) => item.path !== '/' + params.segments.join('/')), // Remove currently displayed item
       },
     };
   } catch (e) {

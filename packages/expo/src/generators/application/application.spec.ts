@@ -90,6 +90,68 @@ describe('app', () => {
     expect(appTree.exists('my-app/.eslintrc.json')).toBe(true);
   });
 
+  it('should generate test files and install test dependencies if unitTestRunner is jest', async () => {
+    await expoApplicationGenerator(appTree, {
+      directory: 'my-app',
+      linter: 'eslint',
+      e2eTestRunner: 'none',
+      skipFormat: false,
+      js: false,
+      unitTestRunner: 'jest',
+    });
+
+    expect(appTree.exists('my-app/jest.config.ts')).toBeTruthy();
+    expect(appTree.exists('my-app/src/app/App.spec.tsx')).toBeTruthy();
+    expect(appTree.exists('my-app/tsconfig.spec.json')).toBeTruthy();
+    expect(readJson(appTree, 'my-app/tsconfig.json').references).toEqual(
+      expect.arrayContaining([
+        {
+          path: './tsconfig.spec.json',
+        },
+      ])
+    );
+    const packageJson = readJson(appTree, 'package.json');
+    expect(packageJson.devDependencies['react-test-renderer']).toBeDefined();
+    expect(
+      packageJson.devDependencies['@testing-library/react-native']
+    ).toBeDefined();
+    expect(
+      packageJson.devDependencies['@testing-library/jest-native']
+    ).toBeDefined();
+    expect(packageJson.devDependencies['jest-expo']).toBeDefined();
+  });
+
+  it('should not generate test files or install test dependencies if unitTestRunner is none', async () => {
+    await expoApplicationGenerator(appTree, {
+      directory: 'my-app',
+      linter: 'eslint',
+      e2eTestRunner: 'none',
+      skipFormat: false,
+      js: false,
+      unitTestRunner: 'none',
+    });
+
+    expect(appTree.exists('my-app/jest.config.ts')).toBe(false);
+    expect(appTree.exists('my-app/src/app/App.spec.tsx')).toBe(false);
+    expect(appTree.exists('my-app/tsconfig.spec.json')).toBe(false);
+    expect(readJson(appTree, 'my-app/tsconfig.json').references).not.toEqual(
+      expect.arrayContaining([
+        {
+          path: './tsconfig.spec.json',
+        },
+      ])
+    );
+    const packageJson = readJson(appTree, 'package.json');
+    expect(packageJson.devDependencies['react-test-renderer']).toBeUndefined();
+    expect(
+      packageJson.devDependencies['@testing-library/react-native']
+    ).toBeUndefined();
+    expect(
+      packageJson.devDependencies['@testing-library/jest-native']
+    ).toBeUndefined();
+    expect(packageJson.devDependencies['jest-expo']).toBeUndefined();
+  });
+
   describe('detox', () => {
     it('should create e2e app with directory', async () => {
       await expoApplicationGenerator(appTree, {

@@ -35,6 +35,7 @@ CHANGELOG.md
 .next
 out
 
+
 # Angular Cache
 .angular
 
@@ -75,6 +76,7 @@ storybook-static
 .claude/settings.local.json
 
 .cursor/rules/nx-rules.mdc
+.cursor/mcp.json
 .github/instructions/nx.instructions.md
 
 # Added by Claude Task Master
@@ -96,7 +98,14 @@ node_modules/
 *.njsproj
 *.sln
 *.sw?
+.specstory/**
+.cursorindexingignore
 # OS specific
 # Task files
 tasks.json
-tasks/ 
+tasks/
+
+# Upstream docs local configuration (machine-specific)
+.upstreamdocs.local.json
+
+astro-docs/.netlify

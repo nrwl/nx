@@ -1,13 +1,12 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
-    "types": [
-      "node",
-      "@nx/react/typings/cssmodule.d.ts",
-      "@nx/react/typings/image.d.ts"
-    ],
-    "lib": ["DOM", "es2019"]
+    "outDir": "dist",
+    "declaration": true,
+    "types": ["node"],
+    "lib": ["DOM", "es2022"],
+    "composite": true,
+    "jsx": "react-jsx"
   },
   "exclude": [
     "jest.config.ts",
@@ -20,5 +19,9 @@
     "src/**/*.spec.jsx",
     "src/**/*.test.jsx"
   ],
-  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"]
+  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
+  "files": [
+    "../../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../../node_modules/@nx/react/typings/image.d.ts"
+  ]
 }

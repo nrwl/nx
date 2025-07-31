@@ -239,7 +239,7 @@ describe('convertConfigToRspackPluginGenerator', () => {
       convertConfigToRspackPluginGenerator(tree, {
         project: project.name,
       })
-    ).rejects.toThrowError('Could not find any projects to migrate.');
+    ).rejects.toThrow('Could not find any projects to migrate.');
   });
 
   it('should not migrate a rspack config that does not use withNx', async () => {
@@ -254,7 +254,7 @@ describe('convertConfigToRspackPluginGenerator', () => {
       convertConfigToRspackPluginGenerator(tree, {
         project: project.name,
       })
-    ).rejects.toThrowError('Could not find any projects to migrate.');
+    ).rejects.toThrow('Could not find any projects to migrate.');
 
     expect(
       tree.read(`${project.name}/rspack.config.js`, 'utf-8')
@@ -277,7 +277,7 @@ describe('convertConfigToRspackPluginGenerator', () => {
 
     await expect(
       convertConfigToRspackPluginGenerator(tree, { project: project.name })
-    ).rejects.toThrowError(
+    ).rejects.toThrow(
       `The project ${project.name} is using Module Federation. At the moment, we don't support migrating projects that use Module Federation.`
     );
   });
@@ -298,7 +298,7 @@ describe('convertConfigToRspackPluginGenerator', () => {
 
     await expect(
       convertConfigToRspackPluginGenerator(tree, { project: project.name })
-    ).rejects.toThrowError(
+    ).rejects.toThrow(
       `The project ${project.name} is using the '@nx/js:node' executor. At the moment, we do not support migrating such projects.`
     );
   });
@@ -324,7 +324,7 @@ describe('convertConfigToRspackPluginGenerator', () => {
 
     await expect(
       convertConfigToRspackPluginGenerator(tree, { project: project.name })
-    ).rejects.toThrowError(`Could not find any projects to migrate.`);
+    ).rejects.toThrow(`Could not find any projects to migrate.`);
     expect(tree.read(`${project.name}/rspack.config.js`, 'utf-8'))
       .toMatchInlineSnapshot(`
       "

@@ -1,13 +1,12 @@
 import {
   cleanupProject,
   expectTestsPass,
-  getSelectedPackageManager,
   newProject,
   readJson,
   runCLI,
   runCLIAsync,
   uniq,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('Angular Package', () => {
   describe('ngrx', () => {
@@ -43,10 +42,7 @@ describe('Angular Package', () => {
 
       expect(runCLI(`build ${myapp}`)).toMatch(/main-[a-zA-Z0-9]+\.js/);
       expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
-      // TODO: remove this condition
-      if (getSelectedPackageManager() !== 'pnpm') {
-        expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
-      }
+      expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
     }, 1000000);
 
     it('should work with creators', async () => {
@@ -78,10 +74,7 @@ describe('Angular Package', () => {
 
       expect(runCLI(`build ${myapp}`)).toMatch(/main-[a-zA-Z0-9]+\.js/);
       expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
-      // TODO: remove this condition
-      if (getSelectedPackageManager() !== 'pnpm') {
-        expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
-      }
+      expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
     }, 1000000);
 
     it('should work with creators using --module', async () => {
@@ -113,10 +106,7 @@ describe('Angular Package', () => {
 
       expect(runCLI(`build ${myapp}`)).toMatch(/main-[a-zA-Z0-9]+\.js/);
       expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
-      // TODO: remove this condition
-      if (getSelectedPackageManager() !== 'pnpm') {
-        expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
-      }
+      expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
     }, 1000000);
   });
 });

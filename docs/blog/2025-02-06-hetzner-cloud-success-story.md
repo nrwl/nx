@@ -48,7 +48,7 @@ Hetzner Cloud needed a solution that would streamline their development process,
 After evaluating Nx and Turborepo, Hetzner Cloud selected Nx for its advanced monorepo management capabilities. They started a [Nx Enterprise](/enterprise) contract and closely collaborated with the Nx Developer Productivity Engineers to assess Hetzner's current software landscape and evaluate the best strategy. Their goal was not necessarily to create a monorepo in the first place, but to modularize their monolithic application. Nx provided the right tools to:
 
 - **Break down the monolith** into modular packages without affecting deployment.
-- **Define clear domain boundaries** using [module boundary rules](/features/enforce-module-boundaries) and [conformance rules](/nx-api/conformance).
+- **Define clear domain boundaries** using [module boundary rules](/features/enforce-module-boundaries) and [conformance rules](/reference/core-api/conformance).
 - **Improve ownership management** by having a more modular structure with clear boundaries allowing for easier allocaton of owernship. Something that could further be improved in the future by using [CodeOwners](/nx-enterprise/powerpack/owners).
 
 Beyond modularization, Nx helped consolidate fragmented projects into a single, structured workspace. This reduced the overhead of maintaining multiple repositories and simplified dependency management. Using the [Nx Graph](/features/explore-graph), the team gained visibility into their project relationships, making it easier to coordinate work and optimize collaboration.
@@ -86,4 +86,4 @@ Consolidating projects into a single repository **eliminated the complexity of m
 
 Hetzner Cloud continues to **work closely with the Nx Developer Productivity Engineering (DPE) team** to monitor and refine their setup. By actively collaborating, they ensure that their monorepo remains optimized and that their CI is continuously improved. This ongoing partnership allows Hetzner Cloud to adapt to new challenges, fine-tune configurations, and further push the boundaries of efficiency in their development workflow.
 
-{% call-to-action title="Want to achieve similar results?" url="/enterprise" icon="nxcloud" description="Learn more about Nx Enterprise or get started with a free trial." /%}
+{% call-to-action title="Reach out to our team!" url="/contact/sales" icon="nxcloud" description="Looking to transform your teams velocity? Reach out to learn more about Nx Enterprise and see how we can help your team achieve similar results." /%}

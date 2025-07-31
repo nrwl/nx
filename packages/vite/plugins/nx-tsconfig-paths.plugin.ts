@@ -20,6 +20,7 @@ import { Plugin } from 'vite';
 import { nxViteBuildCoordinationPlugin } from './nx-vite-build-coordination.plugin';
 import { findFile } from '../src/utils/nx-tsconfig-paths-find-file';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectTsConfigPath } from '../src/utils/options-utils';
 
 export interface nxViteTsPathsOptions {
   /**
@@ -103,16 +104,18 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
           exitOnError: false,
           resetDaemonClient: true,
         });
+        // When using incremental building and the serve target is called
+        // we need to get the deps for the 'build' target instead.
+        const depsBuildTarget =
+          process.env.NX_TASK_TARGET_TARGET === 'serve'
+            ? 'build'
+            : process.env.NX_TASK_TARGET_TARGET;
         const { dependencies } = calculateProjectBuildableDependencies(
           undefined,
           projectGraph,
           workspaceRoot,
           process.env.NX_TASK_TARGET_PROJECT,
-          // When using incremental building and the serve target is called
-          // we need to get the deps for the 'build' target instead.
-          process.env.NX_TASK_TARGET_TARGET === 'serve'
-            ? 'build'
-            : process.env.NX_TASK_TARGET_TARGET,
+          depsBuildTarget,
           process.env.NX_TASK_TARGET_CONFIGURATION
         );
         // This tsconfig is used via the Vite ts paths plugin.
@@ -130,7 +133,7 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
             .filter((dep) => dep.node.type === 'lib')
             .map((dep) => dep.node.name)
             .join(',');
-          const buildCommand = `npx nx run-many --target=${process.env.NX_TASK_TARGET_TARGET} --projects=${buildableLibraryDependencies}`;
+          const buildCommand = `npx nx run-many --target=${depsBuildTarget} --projects=${buildableLibraryDependencies}`;
           config.plugins.push(nxViteBuildCoordinationPlugin({ buildCommand }));
         }
       }
@@ -210,17 +213,21 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
   } as Plugin;
 
   function getTsConfig(preferredTsConfigPath: string): string {
+    const projectTsConfigPath = getProjectTsConfigPath(projectRoot);
     return [
       resolve(preferredTsConfigPath),
+      projectTsConfigPath ? resolve(projectTsConfigPath) : null,
       resolve(join(workspaceRoot, 'tsconfig.base.json')),
       resolve(join(workspaceRoot, 'tsconfig.json')),
       resolve(join(workspaceRoot, 'jsconfig.json')),
-    ].find((tsPath) => {
-      if (existsSync(tsPath)) {
-        logIt('Found tsconfig at', tsPath);
-        return tsPath;
-      }
-    });
+    ]
+      .filter(Boolean)
+      .find((tsPath) => {
+        if (existsSync(tsPath)) {
+          logIt('Found tsconfig at', tsPath);
+          return tsPath;
+        }
+      });
   }
 
   function logIt(...msg: any[]) {

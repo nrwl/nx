@@ -6,10 +6,10 @@ import {
 } from '@heroicons/react/24/outline';
 import { Framework } from '@nx/graph/legacy/icons';
 import * as uiIcons from '@nx/graph/legacy/icons';
-import * as nxDevIcons from '@nx/nx-dev/ui-icons';
+import * as nxDevIcons from '@nx/nx-dev-ui-icons';
 import * as heroIcons from '@heroicons/react/24/outline';
 
-import { cx } from '@nx/nx-dev/ui-primitives';
+import { cx } from '@nx/nx-dev-ui-primitives';
 import { ReactNode } from 'react';
 import Link from 'next/link';
 const { frameworkIcons } = uiIcons;
@@ -217,13 +217,15 @@ export function Card({
         </div>
       )}
       <div className="relative flex flex-col p-3 pr-8">
-        <span className="flex items-center font-semibold underline">
+        <h3 className="m-0 flex items-center text-base font-bold text-slate-900 dark:text-white">
           <span className="absolute inset-0" aria-hidden="true"></span>
           {!hasYoutubeId ? iconMap[type] : null}
           {title}
-        </span>
+        </h3>
         {description ? (
-          <p className="mt-1.5 w-full text-sm no-underline">{description}</p>
+          <p className="mt-2 w-full text-sm font-normal text-slate-600 no-underline dark:text-slate-300">
+            {description}
+          </p>
         ) : null}
 
         {/*HOVER ICON*/}

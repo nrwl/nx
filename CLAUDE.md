@@ -1,12 +1,16 @@
 When responding to queries about this repository:
 
 1. Use the `nx_workspace` mcp tool for understanding the workspace architecture when appropriate
-2. Suggest relevant commands from the "Essential Commands" section when applicable
-3. Highlight Nx's focus on monorepos and its key features like smart task execution, code generation, and project graph analysis
-4. Mention the plugin ecosystem and support for various frameworks when relevant
-5. Emphasize the importance of running the full validation suite before committing changes
+2. When working in projects, use the `nx_project` mcp tool to analyze and understand the specific project structure and
+   dependencies
+3. Suggest relevant commands from the "Essential Commands" section when applicable
+4. Highlight Nx's focus on monorepos and its key features like smart task execution, code generation, and project graph
+   analysis
+5. Mention the plugin ecosystem and support for various frameworks when relevant
+6. Emphasize the importance of running the full validation suite before committing changes
 
-Always strive to provide accurate, helpful responses that align with the best practices and workflows described in this file.
+Always strive to provide accurate, helpful responses that align with the best practices and workflows described in this
+file.
 
 ## GitHub Issue Response Mode
 
@@ -40,7 +44,8 @@ In this mode:
 3. Make all necessary code changes. Please make multiple commits so that the changes are easier to review.
 4. Run appropriate tests and validation
 5. If the tests, are not passing, please fix the issues and continue doing this up to 3 more times until the tests pass
-6. Once the tests pass, push a branch and then suggest opening a PR which has a description of the changes made, and that
+6. Once the tests pass, push a branch and then suggest opening a PR which has a description of the changes made, and
+   that
    it make sure that it explicitly says "Fixes #ISSUE_NUMBER" to automatically close the issue when the PR is merged.
 
 ## Avoid making changes to generated files
@@ -61,7 +66,9 @@ After code changes are made, please make sure to format the files with prettier 
 nx prepush
 ```
 
-If the prepush validation suite fails, please fix the issues before proceeding with your work. This ensures that all code adheres to the project's standards and passes all tests.
+If the prepush validation suite fails, please fix the issues before proceeding with your work. This ensures that all
+code adheres to the project's standards and passes all tests. DO NOT make a new commit to fix these issues. Instead,
+amend the current commit.
 
 ### Testing Changes
 
@@ -103,9 +110,11 @@ gh issue list --label "bug" --state "open" --json number,title,body,labels --jq 
 gh issue list --assignee "@me" --json number,title,body,state --jq '.[]'
 ```
 
-**Tip**: Instead of running `gh issue view` multiple times, use `gh issue list` with JSON output and filtering to gather information about multiple issues in a single command. This is much more efficient than viewing issues one at a time.
+**Tip**: Instead of running `gh issue view` multiple times, use `gh issue list` with JSON output and filtering to gather
+information about multiple issues in a single command. This is much more efficient than viewing issues one at a time.
 
-**Always provide clickable links**: When discussing GitHub issues or PRs, always include the full GitHub URL so the user can easily open them in their browser. For example:
+**Always provide clickable links**: When discussing GitHub issues or PRs, always include the full GitHub URL so the user
+can easily open them in their browser. For example:
 
 - Issue #12345: https://github.com/nrwl/nx/issues/12345
 - PR #67890: https://github.com/nrwl/nx/pull/67890
@@ -138,7 +147,8 @@ Use the testing workflow from the "Essential Commands" section.
 
 ## Pull Request Template
 
-**IMPORTANT**: When creating a pull request, you MUST fill in the template found in `.github/PULL_REQUEST_TEMPLATE.md`. Do not leave the template sections empty. The template includes:
+**IMPORTANT**: When creating a pull request, you MUST fill in the template found in `.github/PULL_REQUEST_TEMPLATE.md`.
+Do not leave the template sections empty. The template includes:
 
 ### Required Sections
 
@@ -167,6 +177,8 @@ Fixes #ISSUE_NUMBER
 ### Guidelines
 
 - Ensure your commit message follows the conventional commit format (use `pnpm commit`)
+  - Use `fix:`, `feat:`, `chore:`, etc. as appropriate types.
+  - Scope is **required** for all commits. Possible scopes are listed in `scripts/commitizen.js`.
 - Read the submission guidelines in CONTRIBUTING.md before posting
 - For complex changes, you can request a dedicated Nx release by mentioning the Nx team
 - Always link the related issue using "Fixes #ISSUE_NUMBER" to automatically close it when merged

@@ -1,5 +1,5 @@
 'use client';
-import { Menu } from '@nx/nx-dev/models-menu';
+import { Menu } from '@nx/nx-dev-models-menu';
 import { Sidebar, SidebarMobile } from './sidebar';
 import { useMemo } from 'react';
 

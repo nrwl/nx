@@ -22,11 +22,12 @@ import {
   ServerStackIcon,
   ArrowTrendingUpIcon,
   CommandLineIcon,
+  UsersIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
 import { DiscordIcon } from '../discord-icon';
 import { BuildingOfficeIcon } from '@heroicons/react/24/solid';
-import { NxAgentsIcon, NxReplayIcon } from '@nx/nx-dev/ui-icons';
+import { NxAgentsIcon, NxReplayIcon } from '@nx/nx-dev-ui-icons';
 
 export interface MenuItem {
   name: string;
@@ -316,6 +317,17 @@ export const enterpriseItems: MenuItem[] = [
       'Protect your codebase from artifact poisoning with infrastructure-first security.',
     icon: ShieldCheckIcon,
     href: '/enterprise/security',
+    isNew: false,
+    isHighlight: false,
+  },
+];
+export const professionalServicesItems: MenuItem[] = [
+  {
+    name: 'Nx Labs',
+    description:
+      'From expert training to hands-on engineering support, we meet teams where they are and help them move forward with confidence.',
+    href: '/contact/labs',
+    icon: UsersIcon,
     isNew: false,
     isHighlight: false,
   },

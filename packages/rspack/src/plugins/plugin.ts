@@ -4,7 +4,6 @@ import {
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
-  getPackageManagerCommand,
   ProjectConfiguration,
   readJsonFile,
   workspaceRoot,
@@ -16,6 +15,7 @@ import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-
 import { existsSync, readdirSync } from 'fs';
 import { hashArray, hashFile, hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { getPackageManagerCommand } from 'nx/src/utils/package-manager';
 import { dirname, extname, isAbsolute, join, relative, resolve } from 'path';
 import { readRspackOptions } from '../utils/read-rspack-options';
 import { resolveUserDefinedRspackConfig } from '../utils/resolve-user-defined-rspack-config';
@@ -45,7 +45,7 @@ function readTargetsCache(cachePath: string): Record<string, RspackTargets> {
 }
 
 function writeTargetsToCache(
-  cachePath,
+  cachePath: string,
   results?: Record<string, RspackTargets>
 ) {
   writeJsonFile(cachePath, results);
@@ -246,6 +246,12 @@ async function createRspackTargets(
       spa: true,
     },
   };
+
+  // for `convert-to-inferred` we need to leave the port undefined or the options will not match
+  if (rspackConfig.devServer?.port && rspackConfig.devServer?.port !== 4200) {
+    targets[options.serveStaticTargetName].options.port =
+      rspackConfig.devServer.port;
+  }
 
   if (isTsSolutionSetup) {
     targets[options.buildTargetName].syncGenerators = [

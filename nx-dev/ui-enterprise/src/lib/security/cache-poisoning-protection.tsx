@@ -8,7 +8,7 @@ import {
   SectionDescription,
   SectionHeading,
   Strong,
-} from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev-ui-common';
 import { ReactElement } from 'react';
 
 export function CachePoisoningProtection(): ReactElement {
@@ -28,7 +28,7 @@ export function CachePoisoningProtection(): ReactElement {
               Cache Poisoning Protection, By Design
             </SectionHeading>
             <SectionHeading as="p" variant="subtitle" className="mt-6">
-              Protect your main branch – and your customers – from compromised
+              Protect your main branch — and your customers — from compromised
               builds.
             </SectionHeading>
 
@@ -61,7 +61,7 @@ export function CachePoisoningProtection(): ReactElement {
                   />
                   Writes only from trusted CI branches{' '}
                 </span>
-                – By default, the cache artifacts are reused within each pull
+                — By default, the cache artifacts are reused within each pull
                 request. Only artifacts from trusted CI pipelines should enter
                 the shared cache used by everyone. PR environments can't poison
                 main.
@@ -74,7 +74,7 @@ export function CachePoisoningProtection(): ReactElement {
                   />
                   Artifact traceability{' '}
                 </span>
-                – Artifacts are tied to the identity and permissions of the user
+                — Artifacts are tied to the identity and permissions of the user
                 or process that created them.
               </li>
               <li className="relative pl-9">
@@ -85,7 +85,7 @@ export function CachePoisoningProtection(): ReactElement {
                   />
                   Automatic invalidation{' '}
                 </span>
-                – Revoke a token and every artifact it produced becomes
+                — Revoke a token and every artifact it produced becomes
                 unusable.
               </li>
             </ul>

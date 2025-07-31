@@ -1,6 +1,6 @@
 'use client';
-import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev/ui-common';
-import { RustIcon, TypeScriptIcon } from '@nx/nx-dev/ui-icons';
+import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev-ui-common';
+import { RustIcon, TypeScriptIcon } from '@nx/nx-dev-ui-icons';
 import { ReactElement } from 'react';
 
 export function Hero(): ReactElement {
@@ -31,36 +31,33 @@ export function Hero(): ReactElement {
             variant="subtitle"
             className="mx-auto mt-6 max-w-3xl"
           >
-            <Strong>Build system</Strong>, optimized for monorepos, with{' '}
-            <Strong>AI-powered</Strong> <br className="hidden md:block" />
-            architectural awareness and <Strong>advanced CI</Strong>{' '}
-            capabilities.
+            An{' '}
+            <strong className="rounded-lg bg-gradient-to-r from-pink-500 to-fuchsia-500 bg-clip-text text-transparent">
+              AI-first
+            </strong>{' '}
+            build platform that connects everything{' '}
+            <strong className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
+              from your editor to CI
+            </strong>
+            . <br className="hidden md:block" />
+            Helping you deliver fast, without breaking things.
           </SectionHeading>
           <div className="mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row">
             <ButtonLink
-              href="/getting-started/intro?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_hero_get_started"
-              title="Get started"
+              href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=homepage_links&utm_campaign=try-nx-cloud"
+              title="Get started with Nx & Nx Cloud"
               variant="primary"
               size="default"
             >
-              Get started
-            </ButtonLink>
-
-            <ButtonLink
-              href="ci/intro/ci-with-nx?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_hero_get_started&utm_source=nxdev"
-              title="Learn about Nx on CI"
-              variant="contrast"
-              size="default"
-            >
-              Learn about Nx on CI
+              Get started with Nx & Nx Cloud
             </ButtonLink>
             <ButtonLink
-              href="/nx-cloud"
-              title="Try Nx Cloud for free"
+              href="/getting-started/intro?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_hero_get_started"
+              title="Get started"
               variant="secondary"
               size="default"
             >
-              Try Nx Cloud for free
+              Documentation
             </ButtonLink>
           </div>
 

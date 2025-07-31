@@ -5,10 +5,10 @@ import {
   CarouselSlide,
   CarouselViewport,
 } from './carousel';
-import { PayfitIcon, UkgIcon } from '@nx/nx-dev/ui-icons';
+import { PayfitIcon, UkgIcon } from '@nx/nx-dev-ui-icons';
 import { PlayIcon } from '@heroicons/react/24/outline';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
-import { VideoModal } from '@nx/nx-dev/ui-common';
+import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { VideoModal } from '@nx/nx-dev-ui-common';
 
 export function Carousel({
   items,

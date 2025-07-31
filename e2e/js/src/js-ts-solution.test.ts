@@ -9,7 +9,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 
 describe('JS - TS solution setup', () => {
   beforeAll(() => {
@@ -90,28 +90,34 @@ ${content}`
     addImports(viteParentLib);
 
     const pm = getSelectedPackageManager();
+    // Add local packages as dependencies to each consumer package.json
+    // This is required for all package managers to satisfy dependency checks
+    const addDeps = (parentLib: string, includeRollupChildLib = false) => {
+      updateJson(`packages/${parentLib}/package.json`, (json) => {
+        json.dependencies ??= {};
+        json.dependencies[`@proj/${esbuildChildLib}`] =
+          pm === 'pnpm' ? 'workspace:*' : '*';
+        if (includeRollupChildLib) {
+          json.dependencies[`@proj/${rollupChildLib}`] =
+            pm === 'pnpm' ? 'workspace:*' : '*';
+        }
+        json.dependencies[`@proj/${swcChildLib}`] =
+          pm === 'pnpm' ? 'workspace:*' : '*';
+        json.dependencies[`@proj/${tscChildLib}`] =
+          pm === 'pnpm' ? 'workspace:*' : '*';
+        json.dependencies[`@proj/${viteChildLib}`] =
+          pm === 'pnpm' ? 'workspace:*' : '*';
+        return json;
+      });
+    };
+
+    addDeps(esbuildParentLib);
+    addDeps(rollupParentLib, true);
+    addDeps(swcParentLib);
+    addDeps(tscParentLib);
+    addDeps(viteParentLib);
+
     if (pm === 'pnpm') {
-      // for pnpm we need to add the local packages as dependencies to each consumer package.json
-      const addDeps = (parentLib: string, includeRollupChildLib = false) => {
-        updateJson(`packages/${parentLib}/package.json`, (json) => {
-          json.dependencies ??= {};
-          json.dependencies[`@proj/${esbuildChildLib}`] = 'workspace:*';
-          if (includeRollupChildLib) {
-            json.dependencies[`@proj/${rollupChildLib}`] = 'workspace:*';
-          }
-          json.dependencies[`@proj/${swcChildLib}`] = 'workspace:*';
-          json.dependencies[`@proj/${tscChildLib}`] = 'workspace:*';
-          json.dependencies[`@proj/${viteChildLib}`] = 'workspace:*';
-          return json;
-        });
-      };
-
-      addDeps(esbuildParentLib);
-      addDeps(rollupParentLib, true);
-      addDeps(swcParentLib);
-      addDeps(tscParentLib);
-      addDeps(viteParentLib);
-
       const pmc = getPackageManagerCommand({ packageManager: pm });
       runCommand(pmc.install);
     }

@@ -4,51 +4,54 @@
  */
 
 import { execSync } from 'node:child_process';
-import { readFileSync, existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gte } from 'semver';
-
+import {
+  ProjectGraph,
+  ProjectGraphExternalNode,
+} from '../../../config/project-graph';
+import {
+  CreateDependenciesContext,
+  CreateNodesContext,
+} from '../../../project-graph/plugins';
+import { RawProjectGraphDependency } from '../../../project-graph/project-graph-builder';
+import { readJsonFile } from '../../../utils/fileutils';
+import { output } from '../../../utils/output';
+import { PackageJson } from '../../../utils/package-json';
 import {
   detectPackageManager,
   PackageManager,
 } from '../../../utils/package-manager';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import {
-  ProjectGraph,
-  ProjectGraphExternalNode,
-} from '../../../config/project-graph';
-import { RawProjectGraphDependency } from '../../../project-graph/project-graph-builder';
-import { PackageJson } from '../../../utils/package-json';
-import { output } from '../../../utils/output';
-
+  BUN_LOCK_FILE,
+  BUN_TEXT_LOCK_FILE,
+  getBunTextLockfileDependencies,
+  getBunTextLockfileNodes,
+} from './bun-parser';
 import {
+  getNpmLockfileDependencies,
   getNpmLockfileNodes,
   stringifyNpmLockfile,
-  getNpmLockfileDependencies,
 } from './npm-parser';
 import {
   getPnpmLockfileDependencies,
   getPnpmLockfileNodes,
   stringifyPnpmLockfile,
 } from './pnpm-parser';
+import { pruneProjectGraph } from './project-graph-pruning';
+import { normalizePackageJson } from './utils/package-json';
 import {
   getYarnLockfileDependencies,
   getYarnLockfileNodes,
   stringifyYarnLockfile,
 } from './yarn-parser';
-import { pruneProjectGraph } from './project-graph-pruning';
-import { normalizePackageJson } from './utils/package-json';
-import { readJsonFile } from '../../../utils/fileutils';
-import {
-  CreateDependenciesContext,
-  CreateNodesContext,
-} from '../../../project-graph/plugins';
 
 const YARN_LOCK_FILE = 'yarn.lock';
 const NPM_LOCK_FILE = 'package-lock.json';
 const PNPM_LOCK_FILE = 'pnpm-lock.yaml';
-const BUN_LOCK_FILE = 'bun.lockb';
-const BUN_TEXT_LOCK_FILE = 'bun.lock';
+
 export const LOCKFILES = [
   YARN_LOCK_FILE,
   NPM_LOCK_FILE,
@@ -86,9 +89,17 @@ export function getLockFileNodes(
       return getNpmLockfileNodes(contents, lockFileHash);
     }
     if (packageManager === 'bun') {
-      // bun uses yarn v1 for the file format
-      const packageJson = readJsonFile('package.json');
-      return getYarnLockfileNodes(contents, lockFileHash, packageJson);
+      const lockFilePath = getLockFilePath(packageManager);
+      if (lockFilePath.endsWith(BUN_TEXT_LOCK_FILE)) {
+        // Use new text-based parser
+        return getBunTextLockfileNodes(contents, lockFileHash);
+      } else {
+        // Fallback to yarn parser for binary format
+        const packageJson = readJsonFile(
+          join(context.workspaceRoot, 'package.json')
+        );
+        return getYarnLockfileNodes(contents, lockFileHash, packageJson);
+      }
     }
   } catch (e) {
     if (!isPostInstallProcess()) {
@@ -122,8 +133,13 @@ export function getLockFileDependencies(
       return getNpmLockfileDependencies(contents, lockFileHash, context);
     }
     if (packageManager === 'bun') {
-      // bun uses yarn v1 for the file format
-      return getYarnLockfileDependencies(contents, lockFileHash, context);
+      const lockFilePath = getLockFilePath(packageManager);
+      if (lockFilePath.endsWith(BUN_TEXT_LOCK_FILE)) {
+        return getBunTextLockfileDependencies(contents, lockFileHash, context);
+      } else {
+        // Fallback to yarn parser for binary format
+        return getYarnLockfileDependencies(contents, lockFileHash, context);
+      }
     }
   } catch (e) {
     if (!isPostInstallProcess()) {
@@ -171,12 +187,15 @@ export function getLockFileName(packageManager: PackageManager): string {
     return NPM_LOCK_FILE;
   }
   if (packageManager === 'bun') {
-    return BUN_LOCK_FILE;
+    const lockFilePath = getLockFilePath(packageManager);
+    return lockFilePath.endsWith(BUN_TEXT_LOCK_FILE)
+      ? BUN_TEXT_LOCK_FILE
+      : BUN_LOCK_FILE;
   }
   throw new Error(`Unknown package manager: ${packageManager}`);
 }
 
-function getLockFilePath(packageManager: PackageManager): string {
+export function getLockFilePath(packageManager: PackageManager): string {
   if (packageManager === 'yarn') {
     return YARN_LOCK_PATH;
   }
@@ -188,10 +207,19 @@ function getLockFilePath(packageManager: PackageManager): string {
   }
   if (packageManager === 'bun') {
     try {
+      // Check if text format exists first (prefer over binary)
+      if (existsSync(BUN_TEXT_LOCK_PATH)) {
+        return BUN_TEXT_LOCK_PATH;
+      }
+      // Fall back to binary format
+      if (existsSync(BUN_LOCK_PATH)) {
+        return BUN_LOCK_PATH;
+      }
+
       const bunVersion = execSync('bun --version').toString().trim();
-      // In version 1.2.0, bun switched to a text based lockfile format by default
+      // Version-based fallback
       if (gte(bunVersion, '1.2.0')) {
-        return BUN_TEXT_LOCK_FILE;
+        return BUN_TEXT_LOCK_PATH;
       }
       return BUN_LOCK_PATH;
     } catch {
@@ -235,6 +263,7 @@ export function createLockFile(
         title:
           "Unable to create bun lock files. Run bun install it's just as quick",
       });
+      return '';
     }
   } catch (e) {
     if (!isPostInstallProcess()) {

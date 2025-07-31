@@ -76,20 +76,32 @@
       },
       "currentVersionResolver": "registry",
       "preserveLocalDependencyProtocols": false,
-      "manifestRootsToUpdate": ["build/packages/{projectName}"],
+      "manifestRootsToUpdate": ["dist/packages/{projectName}"],
       "versionActionsOptions": {
         "skipLockFileUpdate": true
       }
     }
   },
   "targetDefaults": {
+    "cleanup-tsconfig": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node ./scripts/cleanup-tsconfig-files.js dist/packages/{projectName}"
+      }
+    },
     "nx-release-publish": {
       "options": {
-        "packageRoot": "build/packages/{projectName}"
+        "packageRoot": "dist/packages/{projectName}"
       }
     },
     "build": {
-      "dependsOn": ["build-base", "build-native"],
+      "dependsOn": [
+        "^build",
+        "typecheck",
+        "legacy-post-build",
+        "build-base",
+        "build-native"
+      ],
       "inputs": ["production", "^production"],
       "cache": true
     },
@@ -100,12 +112,7 @@
     "build-base": {
       "dependsOn": ["^build-base", "build-native"],
       "inputs": ["production", "^production"],
-      "options": {
-        "outputPath": "build/{projectRoot}",
-        "tsConfig": "{projectRoot}/tsconfig.lib.json",
-        "main": "{projectRoot}/index.ts"
-      },
-      "outputs": ["{options.outputPath}"],
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
       "cache": true
     },
     "test-native": {
@@ -185,10 +192,25 @@
     },
     "copy-docs": {
       "cache": true
+    },
+    "legacy-post-build": {
+      "dependsOn": ["build-base"],
+      "cache": true,
+      "inputs": ["production", "^production"],
+      "outputs": ["{workspaceRoot}/dist/packages/{projectName}"]
     }
   },
   "plugins": [
     "@monodon/rust",
+    {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "typecheck": true,
+        "build": {
+          "targetName": "build-base"
+        }
+      }
+    },
     {
       "plugin": "@nx/playwright/plugin",
       "options": {
@@ -263,24 +285,27 @@
   "parallel": 1,
   "bust": 1,
   "defaultBase": "master",
+  "sync": {
+    "applyChanges": true
+  },
   "conformance": {
     "rules": [
       {
-        "rule": "@nx/workspace-plugin/conformance-rules/blog-description",
+        "rule": "./tools/workspace-plugin/src/conformance-rules/blog-description",
         "projects": ["docs"],
         "options": {
           "mdGlobPattern": "{blog,shared}/**/!(sitemap).md"
         }
       },
       {
-        "rule": "@nx/workspace-plugin/conformance-rules/blog-cover-image",
+        "rule": "./tools/workspace-plugin/src/conformance-rules/blog-cover-image",
         "projects": ["docs"],
         "options": {
           "mdGlobPattern": "blog/**/!(sitemap).md"
         }
       },
       {
-        "rule": "@nx/workspace-plugin/conformance-rules/project-package-json",
+        "rule": "./tools/workspace-plugin/src/conformance-rules/project-package-json",
         "projects": [
           "!.",
           "!create-nx-*",
@@ -314,12 +339,12 @@
         ]
       },
       {
-        "rule": "@nx/workspace-plugin/conformance-rules/migration-groups",
+        "rule": "./tools/workspace-plugin/src/conformance-rules/migration-groups",
         "options": {
           "versionRange": ">= 19.8",
           "groups": [
+            ["angular-eslint"],
             [
-              "angular-eslint",
               "@angular-eslint/eslint-plugin",
               "@angular-eslint/eslint-plugin-template",
               "@angular-eslint/template-parser",
@@ -339,67 +364,32 @@
               "@typescript-eslint/typescript-estree"
             ],
             [
-              "@storybook/addon-controls",
-              "@storybook/addon-essentials",
-              "@storybook/addon-jest",
-              "@storybook/addon-mdx-gfm",
               "@storybook/addon-onboarding",
               "@storybook/addon-themes",
               "@storybook/angular",
-              "@storybook/blocks",
-              "@storybook/builder-manager",
               "@storybook/builder-webpack5",
-              "@storybook/cli",
-              "@storybook/components",
-              "@storybook/core",
-              "@storybook/core-common",
-              "@storybook/core-events",
-              "@storybook/core-server",
               "@storybook/core-webpack",
-              "@storybook/csf-tools",
               "@storybook/html",
               "@storybook/html-vite",
-              "@storybook/html-webpack5",
-              "@storybook/manager",
-              "@storybook/manager-api",
               "@storybook/nextjs",
               "@storybook/preact",
               "@storybook/preact-vite",
-              "@storybook/preact-webpack5",
-              "@storybook/preset-create-react-app",
-              "@storybook/preset-html-webpack",
-              "@storybook/preset-preact-webpack",
-              "@storybook/preset-react-webpack",
-              "@storybook/preset-server-webpack",
-              "@storybook/preset-vue3-webpack",
               "@storybook/react",
               "@storybook/react-vite",
               "@storybook/react-webpack5",
-              "@storybook/router",
               "@storybook/server",
               "@storybook/server-webpack5",
               "@storybook/svelte",
               "@storybook/svelte-vite",
               "@storybook/sveltekit",
-              "@storybook/theming",
-              "@storybook/types",
               "@storybook/vue3",
               "@storybook/vue3-vite",
-              "@storybook/vue3-webpack5",
               "@storybook/web-components",
-              "@storybook/web-components-vite",
-              "@storybook/web-components-webpack5"
+              "@storybook/web-components-vite"
             ]
           ]
         }
       }
     ]
-  },
-  "generators": {
-    "@nx/react": {
-      "library": {
-        "unitTestRunner": "jest"
-      }
-    }
   }
 }

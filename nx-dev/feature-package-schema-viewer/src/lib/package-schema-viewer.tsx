@@ -1,8 +1,8 @@
 import {
   ProcessedPackageMetadata,
   SchemaMetadata,
-} from '@nx/nx-dev/models-package';
-import { Breadcrumbs, Footer } from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev-models-package';
+import { Breadcrumbs, Footer } from '@nx/nx-dev-ui-common';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import Content from './content';
@@ -26,7 +26,7 @@ export function PackageSchemaViewer({
     seo: {
       title: `${pkg.packageName}:${schema.name} | Nx`,
       description:
-        'Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.',
+        'An AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.',
       imageUrl: `https://nx.dev/images/open-graph/${router.asPath
         .replace('/', '')
         .replace(/\//gi, '-')}.jpg`,

@@ -315,6 +315,15 @@ nx daemon
 {% link-card title="Nx Daemon" type="Concept" url="/concepts/nx-daemon" /%}
 {% /cards %}
 
+### mcp
+
+Starts the Nx [MCP server](https://modelcontextprotocol.io/introduction) for exposing Nx tools to various AI systems (VSCode, Cursor, Claude, ...)
+
+{% cards %}
+{% link-card title="MCP" type="API Reference" url="/reference/core-api/nx/documents/mcp" /%}
+{% link-card title="Enhance Your LLM" type="Feature" url="/features/enhance-AI" /%}
+{% /cards %}
+
 ## Integrate with Nx Cloud
 
 ### connect
@@ -354,6 +363,44 @@ nx logout
 {% cards %}
 {% link-card title="nx logout" type="API Reference" url="/reference/core-api/nx/documents/logout" /%}
 {% link-card title="Personal Access Tokens" type="Recipe" url="/ci/recipes/security/personal-access-tokens" /%}
+{% /cards %}
+
+### record
+
+Records command execution for distributed task execution. This command is an alias for [`nx-cloud record`](/ci/reference/nx-cloud-cli#npx-nxcloud-record).
+
+```shell
+nx record -- nx run my-app:build
+```
+
+{% cards %}
+{% link-card title="nx record" type="API Reference" url="/reference/core-api/nx/documents/record" /%}
+{% link-card title="Distribute Task Execution" type="Feature" url="/ci/features/distribute-task-execution" /%}
+{% /cards %}
+
+### start-ci-run
+
+Starts a new CI run for distributed task execution. This command is an alias for [`nx-cloud start-ci-run`](/ci/reference/nx-cloud-cli#npx-nxcloud-start-ci-run).
+
+```shell
+nx start-ci-run
+```
+
+{% cards %}
+{% link-card title="nx start-ci-run" type="API Reference" url="/reference/core-api/nx/documents/start-ci-run" /%}
+{% link-card title="Distribute Task Execution" type="Feature" url="/ci/features/distribute-task-execution" /%}
+{% /cards %}
+
+### fix-ci
+
+Fixes CI failures with AI-powered suggestions. This command is an alias for [`nx-cloud fix-ci`](/ci/reference/nx-cloud-cli#npx-nxcloud-fix-ci).
+
+```shell
+nx fix-ci
+```
+
+{% cards %}
+{% link-card title="nx fix-ci" type="API Reference" url="/reference/core-api/nx/documents/fix-ci" /%}
 {% /cards %}
 
 ## Create Commands

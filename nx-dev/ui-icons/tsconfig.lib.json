@@ -1,9 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/out-tsc/nx-dev/ui-icons",
     "types": ["node"],
-    "lib": ["dom"]
+    "lib": ["dom"],
+    "composite": true,
+    "declaration": true
   },
   "files": [
     "../../node_modules/@nx/react/typings/cssmodule.d.ts",

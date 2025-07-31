@@ -19,7 +19,7 @@ import {
   uniq,
   updateFile,
   updateJson,
-} from '@nx/e2e/utils';
+} from '@nx/e2e-utils';
 import { renameSync, writeFileSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
@@ -188,10 +188,37 @@ describe('Nx Commands', () => {
       expect(listOutput).toContain('@nx/workspace');
 
       // temporarily make it look like this isn't installed
-      renameSync(
-        tmpProjPath('node_modules/@nx/next'),
-        tmpProjPath('node_modules/@nx/next_tmp')
-      );
+      // For pnpm, we need to rename the actual package in .pnpm directory, not just the symlink
+      const { readdirSync, statSync } = require('fs');
+      const pnpmDir = tmpProjPath('node_modules/.pnpm');
+      let renamedPnpmEntry = null;
+
+      if (require('fs').existsSync(pnpmDir)) {
+        const entries = readdirSync(pnpmDir);
+        const nextEntries = entries.filter((entry) =>
+          entry.includes('nx+next@')
+        );
+
+        // Rename all nx+next entries
+        const renamedEntries = [];
+        for (const entry of nextEntries) {
+          const tmpName = entry.replace('@nx+next@', 'tmp_nx_next_');
+          renameSync(
+            tmpProjPath(`node_modules/.pnpm/${entry}`),
+            tmpProjPath(`node_modules/.pnpm/${tmpName}`)
+          );
+          renamedEntries.push(entry);
+        }
+        renamedPnpmEntry = renamedEntries;
+      }
+
+      // Also rename the symlink
+      if (require('fs').existsSync(tmpProjPath('node_modules/@nx/next'))) {
+        renameSync(
+          tmpProjPath('node_modules/@nx/next'),
+          tmpProjPath('node_modules/@nx/next_tmp')
+        );
+      }
 
       listOutput = runCLI('list');
       expect(listOutput).toContain('NX   Also available');
@@ -218,7 +245,7 @@ describe('Nx Commands', () => {
       // check for builders
       expect(listOutput).toContain('package');
 
-      // // look for uninstalled core plugin
+      // look for uninstalled core plugin
       listOutput = runCLI('list @nx/next');
 
       expect(listOutput).toContain('NX   @nx/next is not currently installed');
@@ -230,11 +257,23 @@ describe('Nx Commands', () => {
         'NX   @wibble/fish is not currently installed'
       );
 
-      // put back the @nx/angular module (or all the other e2e tests after this will fail)
-      renameSync(
-        tmpProjPath('node_modules/@nx/next_tmp'),
-        tmpProjPath('node_modules/@nx/next')
-      );
+      // put back the @nx/next module (or all the other e2e tests after this will fail)
+      if (renamedPnpmEntry && Array.isArray(renamedPnpmEntry)) {
+        for (const entry of renamedPnpmEntry) {
+          const tmpName = entry.replace('@nx+next@', 'tmp_nx_next_');
+          renameSync(
+            tmpProjPath(`node_modules/.pnpm/${tmpName}`),
+            tmpProjPath(`node_modules/.pnpm/${entry}`)
+          );
+        }
+      }
+
+      if (require('fs').existsSync(tmpProjPath('node_modules/@nx/next_tmp'))) {
+        renameSync(
+          tmpProjPath('node_modules/@nx/next_tmp'),
+          tmpProjPath('node_modules/@nx/next')
+        );
+      }
     }, 120000);
   });
 
@@ -501,6 +540,15 @@ describe('migrate', () => {
                       }},
                     }
                   });
+                } else if (packageName === 'nx-token-migration-package') {
+                  return Promise.resolve({
+                    version: '2.0.0',
+                    generators: {
+                      'some-migration': {
+                        version: '2.0.0'
+                      }
+                    }
+                  });
                 } else {
                   return Promise.resolve({version: '9.0.0'});
                 }
@@ -514,6 +562,12 @@ describe('migrate', () => {
   });
 
   it('should run migrations', () => {
+    // Ensure package.json has a trailing newline so migration can preserve it
+    const packageJsonContent = readFile('package.json');
+    if (!packageJsonContent.endsWith('\n')) {
+      updateFile('package.json', packageJsonContent + '\n');
+    }
+
     updateJson('nx.json', (j: NxJsonConfiguration) => {
       j.installation = {
         version: getPublishedVersion(),
@@ -554,6 +608,7 @@ describe('migrate', () => {
     );
     // should keep new line on package
     const packageContent = readFile('package.json');
+    console.log('[DEBUG]: Package contents', packageContent);
     expect(packageContent.charCodeAt(packageContent.length - 1)).toEqual(10);
 
     // creates migrations.json
@@ -699,6 +754,154 @@ describe('migrate', () => {
     });
 
     expect(output).toContain(`Migrations file 'migrations.json' doesn't exist`);
+  });
+
+  it('should handle Nx tokens correctly in Angular CLI migration schematics', () => {
+    const app1 = uniq('app1');
+
+    updateFile(
+      `apps/${app1}/project.json`,
+      JSON.stringify(
+        {
+          name: app1,
+          projectType: 'application',
+          sourceRoot: `apps/${app1}/src`,
+          prefix: 'app',
+          targets: {
+            build: {
+              outputs: ['{options.outputPath}'],
+              executor: '@angular/build:application',
+              options: {
+                outputPath: '{workspaceRoot}/dist/{projectName}',
+                browser: '{projectRoot}/src/main.ts',
+                polyfills: ['zone.js'],
+                tsConfig: '{projectRoot}/tsconfig.app.json',
+                assets: [
+                  {
+                    glob: '**/*',
+                    input: '{projectRoot}/public',
+                  },
+                ],
+                styles: [
+                  '{projectRoot}/src/styles.css',
+                  '{workspaceRoot}/shared/styles.css',
+                ],
+              },
+            },
+          },
+        },
+        null,
+        2
+      )
+    );
+
+    // Create an Angular CLI migration schematic that reads and modifies the angular.json (Nx project.json)
+    updateFile(
+      `./node_modules/nx-token-migration-package/package.json`,
+      JSON.stringify({
+        name: 'nx-token-migration-package',
+        version: '1.0.0',
+        'ng-update': {
+          migrations: './migrations.json',
+        },
+      })
+    );
+    updateFile(
+      `./node_modules/nx-token-migration-package/migrations.json`,
+      JSON.stringify({
+        schematics: {
+          'some-migration': {
+            version: '2.0.0',
+            factory: './some-migration',
+            description: 'A description of the migration',
+          },
+        },
+      })
+    );
+    // Create a migration schematic that validates Nx tokens are properly resolved
+    updateFile(
+      `./node_modules/nx-token-migration-package/some-migration.js`,
+      `
+        const { readWorkspace, writeWorkspace } = require('@schematics/angular/utility');
+
+        exports.default = function migration() {
+          return async function (host) {
+            const workspace = await readWorkspace(host);
+            const project = workspace.projects.get('${app1}');
+            const buildTarget = project.targets.get('build');
+
+            // write the build target data to a file to verify it outside of the migration
+            host.create('project-data.json', JSON.stringify(buildTarget, null, 2));
+
+            // make some changes to verify to the build target to verify how it's written
+            // back to the project.json file
+            buildTarget.options.outputPath = 'dist/apps/${app1}';
+            buildTarget.options.styles = ['apps/${app1}/src/base_styles.css', 'shared/styles.css'];
+
+            writeWorkspace(host, workspace);
+          };
+        };
+      `
+    );
+
+    // Run the migration
+    const output = runCLI(
+      'migrate nx-token-migration-package@2.0.0 --from="nx-token-migration-package@1.0.0"',
+      {
+        env: {
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      }
+    );
+    runCLI('migrate --run-migrations=migrations.json', {
+      env: {
+        NX_MIGRATE_SKIP_INSTALL: 'true',
+        NX_MIGRATE_USE_LOCAL: 'true',
+      },
+      verbose: true,
+    });
+
+    // Verify that the Angular CLI migration schematic read the build target
+    // with the Nx tokens resolved to actual values
+    const angularJsonBuildTarget = readJson('project-data.json');
+    expect(angularJsonBuildTarget.options).toStrictEqual({
+      outputPath: `dist/${app1}`,
+      browser: `apps/${app1}/src/main.ts`,
+      polyfills: ['zone.js'],
+      tsConfig: `apps/${app1}/tsconfig.app.json`,
+      assets: [
+        {
+          glob: '**/*',
+          input: `apps/${app1}/public`,
+        },
+      ],
+      styles: [`apps/${app1}/src/styles.css`, 'shared/styles.css'],
+    });
+    // Verify that the project.json file has been updated with the new values
+    // and the Nx tokens have been restored where appropriate
+    const projectJson = readJson(`apps/${app1}/project.json`);
+    expect(projectJson.targets.build.options).toStrictEqual({
+      // this was changed, so only the {workspaceRoot} token is restored
+      outputPath: `{workspaceRoot}/dist/apps/${app1}`,
+      // these were all unchanged, so the Nx tokens are restored
+      browser: '{projectRoot}/src/main.ts',
+      polyfills: ['zone.js'],
+      tsConfig: '{projectRoot}/tsconfig.app.json',
+      assets: [
+        {
+          glob: '**/*',
+          input: '{projectRoot}/public',
+        },
+      ],
+      styles: [
+        // this was changed, but it still starts with {projectRoot}, so the
+        // {projectRoot} token is restored
+        '{projectRoot}/src/base_styles.css',
+        // this was unchanged, so the {workspaceRoot} token is restored
+        '{workspaceRoot}/shared/styles.css',
+      ],
+    });
   });
 });
 

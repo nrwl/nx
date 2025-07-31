@@ -7,10 +7,16 @@
   "include": [],
   "references": [
     {
-      "path": "./tsconfig.lib.json"
+      "path": "../js"
     },
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../nx"
+    },
+    {
+      "path": "../devkit"
+    },
+    {
+      "path": "./tsconfig.lib.json"
     }
   ]
 }

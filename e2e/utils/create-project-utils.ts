@@ -13,6 +13,7 @@ import {
   getLatestLernaVersion,
   getPublishedVersion,
   getSelectedPackageManager,
+  getStrippedEnvironmentVariables,
   isVerbose,
   isVerboseE2ERun,
 } from './get-env-info';
@@ -21,7 +22,7 @@ import { output, readJsonFile } from '@nx/devkit';
 import { angularCliVersion as defaultAngularCliVersion } from '@nx/workspace/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
 import { execSync, ExecSyncOptions } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { performance, PerformanceMeasure } from 'node:perf_hooks';
 import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
@@ -129,7 +130,7 @@ export function newProject({
         packageInstallEnd.name
       );
       // stop the daemon
-      execSync(`${getPackageManagerCommand().runNx} reset`, {
+      execSync(`${getPackageManagerCommand({ packageManager }).runNx} reset`, {
         cwd: `${e2eCwd}/proj`,
         stdio: isVerbose() ? 'inherit' : 'pipe',
       });
@@ -151,12 +152,18 @@ export function newProject({
     } else if (packageManager === 'pnpm') {
       // pnpm creates sym links to the pnpm store,
       // we need to run the install again after copying the temp folder
-      execSync(getPackageManagerCommand().install, {
-        cwd: projectDirectory,
-        stdio: 'pipe',
-        env: { CI: 'true', ...process.env },
-        encoding: 'utf-8',
-      });
+      try {
+        execSync(getPackageManagerCommand().install, {
+          cwd: projectDirectory,
+          stdio: 'pipe',
+          env: { CI: 'true', ...process.env },
+          encoding: 'utf-8',
+        });
+      } catch (e) {
+        console.log('newProject() - reinstall pnpm dependencies failed');
+        console.error('Full error:', e);
+        throw e;
+      }
     }
 
     const newProjectEnd = performance.mark('new-project:end');
@@ -348,7 +355,7 @@ export function runCreateWorkspace(
       env: {
         CI: 'true',
         NX_VERBOSE_LOGGING: isCI ? 'true' : 'false',
-        ...process.env,
+        ...getStrippedEnvironmentVariables(),
       },
       encoding: 'utf-8',
     });
@@ -439,7 +446,7 @@ export function packageInstall(
   try {
     const install = execSync(command, {
       cwd,
-      stdio: isVerbose() ? 'inherit' : 'ignore',
+      stdio: isVerbose() ? 'inherit' : 'pipe',
       env: process.env,
       encoding: 'utf-8',
     });

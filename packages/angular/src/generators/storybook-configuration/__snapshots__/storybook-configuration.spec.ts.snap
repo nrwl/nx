@@ -8,7 +8,7 @@ const config: StorybookConfig = {
   stories: [
     
     '../**/*.@(mdx|stories.@(js|jsx|ts|tsx))' ],
-  addons: ['@storybook/addon-essentials' , '@storybook/addon-interactions' ],
+  addons: [],
   framework: {
     name: '@storybook/angular',
     options: {
@@ -33,14 +33,14 @@ export default config;
 exports[`StorybookConfiguration generator should configure storybook with interaction tests and install dependencies 1`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
 import { TestButton } from './test-button';
-import { within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { expect } from 'storybook/test';
 
 const meta: Meta<TestButton> = {
   component: TestButton,
   title: 'TestButton',
 };
 export default meta;
+
 type Story = StoryObj<TestButton>;
 
 export const Primary: Story = {
@@ -59,9 +59,8 @@ export const Heading: Story = {
     age: 0,
     isOn: false,
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    expect(canvas.getByText(/test-button works!/gi)).toBeTruthy();
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/test-button/gi)).toBeTruthy();
   },
 };
 "
@@ -70,14 +69,14 @@ export const Heading: Story = {
 exports[`StorybookConfiguration generator should configure storybook with interaction tests and install dependencies 2`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
 import { TestOther } from './test-other';
-import { within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { expect } from 'storybook/test';
 
 const meta: Meta<TestOther> = {
   component: TestOther,
   title: 'TestOther',
 };
 export default meta;
+
 type Story = StoryObj<TestOther>;
 
 export const Primary: Story = {
@@ -86,9 +85,8 @@ export const Primary: Story = {
 
 export const Heading: Story = {
   args: {},
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    expect(canvas.getByText(/test-other works!/gi)).toBeTruthy();
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/test-other/gi)).toBeTruthy();
   },
 };
 "

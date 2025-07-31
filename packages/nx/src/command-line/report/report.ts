@@ -33,10 +33,8 @@ import {
   DbCache,
   dbCacheEnabled,
   formatCacheSize,
-  parseMaxCacheSize,
+  resolveMaxCacheSize,
 } from '../../tasks-runner/cache';
-import { getDefaultMaxCacheSize } from '../../native';
-import { cacheDir } from '../../utils/cache-directory';
 
 const nxPackageJson = readJsonFile<typeof import('../../../package.json')>(
   join(__dirname, '../../../package.json')
@@ -196,7 +194,7 @@ export async function reportHandler() {
     bodyLines.push('Local workspace plugins:');
 
     for (const plugin of localPlugins) {
-      bodyLines.push(`\t ${chalk.green(plugin)}`);
+      bodyLines.push(`${chalk.green(plugin)}`);
     }
   }
 
@@ -305,10 +303,7 @@ export async function getReportData(): Promise<ReportData> {
 
   let cache = dbCacheEnabled()
     ? {
-        max:
-          nxJson.maxCacheSize !== undefined
-            ? parseMaxCacheSize(nxJson.maxCacheSize)
-            : getDefaultMaxCacheSize(cacheDir),
+        max: resolveMaxCacheSize(nxJson),
         used: new DbCache({ nxCloudRemoteCache: null }).getUsedCacheSpace(),
       }
     : null;

@@ -231,23 +231,28 @@ export function interpolateArgsIntoCommand(
   >,
   forwardAllArgs: boolean
 ): string {
+  if (command.indexOf('{args.') > -1 && command.indexOf('{args}') > -1) {
+    throw new Error(
+      'Command should not contain both {args} and {args.*} values. Please choose one to use.'
+    );
+  }
   if (command.indexOf('{args.') > -1) {
     const regex = /{args\.([^}]+)}/g;
     return command.replace(regex, (_, group: string) =>
       opts.parsedArgs[group] !== undefined ? opts.parsedArgs[group] : ''
     );
+  } else if (command.indexOf('{args}') > -1) {
+    const regex = /{args}/g;
+    const args = [
+      ...unknownOptionsToArgsArray(opts),
+      ...unparsedOptionsToArgsArray(opts),
+    ];
+    const argsString = `${args.join(' ')} ${opts.args ?? ''}`;
+    return command.replace(regex, argsString);
   } else if (forwardAllArgs) {
     let args = '';
     if (Object.keys(opts.unknownOptions ?? {}).length > 0) {
-      const unknownOptionsArgs = Object.keys(opts.unknownOptions)
-        .filter(
-          (k) =>
-            typeof opts.unknownOptions[k] !== 'object' &&
-            opts.parsedArgs[k] === opts.unknownOptions[k]
-        )
-        .map((k) => `--${k}=${opts.unknownOptions[k]}`)
-        .map(wrapArgIntoQuotesIfNeeded)
-        .join(' ');
+      const unknownOptionsArgs = unknownOptionsToArgsArray(opts).join(' ');
       if (unknownOptionsArgs) {
         args += ` ${unknownOptionsArgs}`;
       }
@@ -256,20 +261,55 @@ export function interpolateArgsIntoCommand(
       args += ` ${opts.args}`;
     }
     if (opts.__unparsed__?.length > 0) {
-      const filteredParsedOptions = filterPropKeysFromUnParsedOptions(
-        opts.__unparsed__,
-        opts.parsedArgs
-      );
+      const filteredParsedOptions = unparsedOptionsToArgsArray(opts);
       if (filteredParsedOptions.length > 0) {
-        args += ` ${filteredParsedOptions
-          .map(wrapArgIntoQuotesIfNeeded)
-          .join(' ')}`;
+        args += ` ${filteredParsedOptions.join(' ')}`;
       }
     }
     return `${command}${args}`;
   } else {
     return command;
   }
+}
+
+function unknownOptionsToArgsArray(
+  opts: Pick<
+    NormalizedRunCommandsOptions,
+    | 'args'
+    | 'parsedArgs'
+    | '__unparsed__'
+    | 'unknownOptions'
+    | 'unparsedCommandArgs'
+  >
+) {
+  return Object.keys(opts.unknownOptions ?? {})
+    .filter(
+      (k) =>
+        typeof opts.unknownOptions[k] !== 'object' &&
+        opts.parsedArgs[k] === opts.unknownOptions[k]
+    )
+    .map((k) => `--${k}=${opts.unknownOptions[k]}`)
+    .map(wrapArgIntoQuotesIfNeeded);
+}
+
+function unparsedOptionsToArgsArray(
+  opts: Pick<
+    NormalizedRunCommandsOptions,
+    | 'args'
+    | 'parsedArgs'
+    | '__unparsed__'
+    | 'unknownOptions'
+    | 'unparsedCommandArgs'
+  >
+) {
+  const filteredParsedOptions = filterPropKeysFromUnParsedOptions(
+    opts.__unparsed__,
+    opts.parsedArgs
+  );
+  if (filteredParsedOptions.length > 0) {
+    return filteredParsedOptions.map(wrapArgIntoQuotesIfNeeded);
+  }
+  return [];
 }
 
 function parseArgs(
