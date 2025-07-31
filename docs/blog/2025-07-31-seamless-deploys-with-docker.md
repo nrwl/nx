@@ -5,7 +5,7 @@ authors: ['Mike Hartington']
 tags: ['nx', 'java', 'docker']
 cover_image: /blog/images/2025-07-31/header.avif
 description: 'Learn how to package, run, and deploy a Java backend from an Nx monorepo using the new Nx Docker plugin—automating builds, streamlining releases, and shipping production-ready containers.'
-youtubeUrl: https://youtu.be/pbAQErStl9o
+youtubeUrl: https://youtu.be/TOPxKJXUaqw
 ---
 
 {% callout type="deepdive" title="Java Week Series" expanded=true %}
