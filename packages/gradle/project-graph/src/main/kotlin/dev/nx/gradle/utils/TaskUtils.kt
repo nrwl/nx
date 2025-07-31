@@ -64,7 +64,15 @@ fun processTask(
           task.description ?: "Run ${projectBuildPath}.${task.name}", projectBuildPath, task.name)
   target["metadata"] = metadata
 
-  target["options"] = mapOf("taskName" to "${projectBuildPath}:${task.name}")
+  target["options"] =
+      if (continuous) {
+        mapOf(
+            "taskName" to "${projectBuildPath}:${task.name}",
+            "continuous" to true,
+            "excludeDependsOn" to false)
+      } else {
+        mapOf("taskName" to "${projectBuildPath}:${task.name}")
+      }
 
   return target
 }
