@@ -621,6 +621,8 @@ You can configure [Docker release](/recipes/nx-release/release-docker-images) se
         "projectsRelationship": "independent",
         "docker": {
           "skipVersionActions": true
+          // Run a script before tagging Docker version
+          "groupPreVersionCommand": "echo Preparing backend release",
         },
         "changelog": {
           "projectChangelogs": true

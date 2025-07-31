@@ -238,7 +238,11 @@ Docker operations in `nx release` are currently supported in standard CI/CD envi
 For Nx Cloud Agents compatibility, please contact [Nx Enterprise support](/contact/sales) to explore available options for your team.
 {% /callout %}
 
-When using Nx Release with Docker images, the publishing process differs from npm packages. Docker images are built and tagged during the versioning phase, then pushed to a registry during the publish phase.
+When using Nx Release with Docker images, the publishing process differs from npm packages.
+
+Docker images are built with the `npx nx run-many -t docker:build` command, which is the default for [`preVersionCommand`](/recipes/nx-release/build-before-versioning#build-before-docker-versioning) in `nx.json`.
+
+You may also run the build command manually before running `nx release`. After the images are built, they are tagged during the versioning phase, then pushed to a registry during the publish phase.
 
 ### Docker Registry Authentication
 
@@ -258,6 +262,8 @@ Before publishing Docker images, ensure you're authenticated with your Docker re
   run: npx nx release publish
 ```
 
+For changelogs, you can run `npx nx release changelog <version>` locally with the new version from the pipeline. For example, if the new version is `2501.01.be49ad6` you would run `npx nx release changelog 2501.01.be49ad6`. This will create or update the `CHANGELOG.md` files in your projects.
+
 ### Using Different Registries
 
 Configure alternative registries in your `nx.json`:
@@ -266,8 +272,7 @@ Configure alternative registries in your `nx.json`:
 {
   "release": {
     "docker": {
-      "registryUrl": "ghcr.io", // GitHub Container Registry
-      "repositoryName": "myorg"
+      "registryUrl": "ghcr.io" // GitHub Container Registry
     }
   }
 }
@@ -305,35 +310,9 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
-      - name: Release with Docker
-        run: npx nx release --dockerVersionScheme=production
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and tag Docker images
+        run: npx nx release version --dockerVersionScheme=production
+
+      - name: Publish Docker images
+        run: npx nx release publish
 ```
-
-## Publishing Rust Crates
-
-For Rust projects, Nx Release integrates with `cargo publish` to publish crates to crates.io.
-
-### Cargo Authentication
-
-Ensure you have a valid crates.io API token:
-
-```yaml {% fileName=".github/workflows/publish.yml" %}
-- name: Publish Rust crates
-  run: npx nx release publish
-  env:
-    CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-```
-
-For more details on Rust support, see [Publishing Rust Crates](/recipes/nx-release/publish-rust-crates).
-
-## Choosing Your Publishing Strategy
-
-Nx Release supports multiple ecosystems, each with their own authentication and publishing requirements:
-
-- **NPM Packages**: Use `NODE_AUTH_TOKEN` for authentication, supports provenance
-- **Docker Images**: Requires Docker login before publishing, supports calendar versioning
-- **Rust Crates**: Uses `CARGO_REGISTRY_TOKEN` for crates.io authentication
-
-You can use Nx Release with any combination of these ecosystems in a single monorepo, with each project type publishing to its appropriate registry.
