@@ -1,7 +1,9 @@
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
+  joinPathFragments,
   Tree,
+  updateJson,
 } from '@nx/devkit';
 import { esbuildVersion } from '@nx/js/src/utils/versions';
 import {
@@ -56,6 +58,18 @@ export function addProjectDependencies(
     },
     fastify: {},
   };
+
+  const projectPackageJson = joinPathFragments(
+    options.appProjectRoot,
+    'package.json'
+  );
+  if (tree.exists(projectPackageJson)) {
+    updateJson(tree, projectPackageJson, (json) => {
+      json.dependencies ??= { ...frameworkDependencies };
+      return json;
+    });
+  }
+
   return addDependenciesToPackageJson(
     tree,
     {

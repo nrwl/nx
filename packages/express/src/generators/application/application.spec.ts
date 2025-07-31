@@ -228,12 +228,14 @@ describe('app', () => {
                 "options": {
                   "buildTarget": "build",
                 },
+                "outputs": [
+                  "myapp/dist/workspace_modules",
+                ],
               },
               "lint": {
                 "executor": "@nx/eslint:lint",
               },
               "prune": {
-                "cache": true,
                 "dependsOn": [
                   "prune-lockfile",
                   "copy-workspace-modules",
@@ -249,6 +251,10 @@ describe('app', () => {
                 "options": {
                   "buildTarget": "build",
                 },
+                "outputs": [
+                  "myapp/dist/package.json",
+                  "myapp/dist/package-lock.json",
+                ],
               },
               "serve": {
                 "configurations": {
@@ -432,12 +438,14 @@ describe('app', () => {
               "options": {
                 "buildTarget": "build",
               },
+              "outputs": [
+                "myapp/dist/workspace_modules",
+              ],
             },
             "lint": {
               "executor": "@nx/eslint:lint",
             },
             "prune": {
-              "cache": true,
               "dependsOn": [
                 "prune-lockfile",
                 "copy-workspace-modules",
@@ -453,6 +461,10 @@ describe('app', () => {
               "options": {
                 "buildTarget": "build",
               },
+              "outputs": [
+                "myapp/dist/package.json",
+                "myapp/dist/package-lock.json",
+              ],
             },
             "serve": {
               "configurations": {
