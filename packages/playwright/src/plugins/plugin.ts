@@ -31,14 +31,16 @@ const pmc = getPackageManagerCommand();
 export interface PlaywrightPluginOptions {
   targetName?: string;
   ciTargetName?: string;
-  mergeOutputs?: boolean;
+  mergeReports?: boolean;
+  mergeReportsTargetName?: string;
   atomizedBlobReportOutputDir?: string;
 }
 
 interface NormalizedOptions {
   targetName: string;
   ciTargetName: string;
-  mergeOutputs: boolean;
+  mergeReports: boolean;
+  mergeReportsTargetName: string;
   atomizedBlobReportOutputDir: string;
 }
 
@@ -246,12 +248,6 @@ async function buildPlaywrightTargets(
 
     const dependsOn: TargetDependencyConfig[] = [];
 
-    const deleteAtomizedBlobReportOutputTaskName = `${options.ciTargetName}-delete-atomized-blob-report-output`;
-    const deleteAtomizedBlobReportOutputTask: TargetConfiguration = {
-      command: `rm -rf "${options.atomizedBlobReportOutputDir}"`,
-      options: { cwd: '{projectRoot}' },
-    };
-
     const testFiles = await getAllTestFiles({
       context,
       path: testDir,
@@ -292,7 +288,7 @@ async function buildPlaywrightTargets(
           env: getAtomizedTaskOutputEnvVars(
             reporterOutputs,
             outputSubfolder,
-            options.mergeOutputs,
+            options.mergeReports,
             options.atomizedBlobReportOutputDir
           ),
         },
@@ -301,7 +297,7 @@ async function buildPlaywrightTargets(
           reporterOutputs,
           context.workspaceRoot,
           projectRoot,
-          options.mergeOutputs,
+          options.mergeReports,
           options.atomizedBlobReportOutputDir,
           outputSubfolder
         ),
@@ -310,7 +306,7 @@ async function buildPlaywrightTargets(
         } ${relativeSpecFilePath} --output=${join(
           testOutput,
           outputSubfolder
-        )}${options.mergeOutputs ? ` --reporter=blob` : ''}`,
+        )}${options.mergeReports ? ` --reporter=blob` : ''}`,
         metadata: {
           technologies: ['playwright'],
           description: `Runs Playwright Tests in ${relativeSpecFilePath} in CI`,
@@ -325,16 +321,6 @@ async function buildPlaywrightTargets(
         },
       };
 
-      if (options.mergeOutputs) {
-        targets[targetName].dependsOn = [
-          ...(targets[targetName].dependsOn ?? []),
-          {
-            target: deleteAtomizedBlobReportOutputTaskName,
-            projects: 'self',
-          },
-        ];
-      }
-
       dependsOn.push({
         target: targetName,
         projects: 'self',
@@ -345,9 +331,11 @@ async function buildPlaywrightTargets(
     targets[options.ciTargetName] ??= {};
 
     targets[options.ciTargetName] = {
+      executor: 'nx:noop',
       cache: ciBaseTargetConfig.cache,
       inputs: ciBaseTargetConfig.inputs,
       outputs: ciBaseTargetConfig.outputs,
+      dependsOn,
       metadata: {
         technologies: ['playwright'],
         description: 'Runs Playwright Tests in CI',
@@ -363,30 +351,27 @@ async function buildPlaywrightTargets(
       },
     };
 
-    if (options.mergeOutputs && dependsOn.length) {
-      // add task to delete the atomized blob report output
-      targets[deleteAtomizedBlobReportOutputTaskName] =
-        deleteAtomizedBlobReportOutputTask;
-      ciTargetGroup.push(deleteAtomizedBlobReportOutputTaskName);
-
-      // update the ci target
-      targets[options.ciTargetName].dependsOn = dependsOn;
-      targets[options.ciTargetName].executor = '@nx/playwright:merge-reports';
-      targets[options.ciTargetName].options = {
-        blobReportsDir: options.atomizedBlobReportOutputDir,
-        config: posix.relative(projectRoot, configFilePath),
-        expectedSuites: dependsOn.length,
-      };
-    } else {
-      targets[options.ciTargetName].executor = 'nx:noop';
-      targets[options.ciTargetName].dependsOn = dependsOn;
-    }
-
     if (!webserverCommandTasks.length) {
       targets[options.ciTargetName].parallelism = false;
     }
-
     ciTargetGroup.push(options.ciTargetName);
+
+    if (options.mergeReports) {
+      targets[options.mergeReportsTargetName] = {
+        executor: '@nx/playwright:merge-reports',
+        options: {
+          blobReportsDir: options.atomizedBlobReportOutputDir,
+          config: posix.relative(projectRoot, configFilePath),
+          expectedSuites: dependsOn.length,
+        },
+        metadata: {
+          technologies: ['playwright'],
+          description:
+            'Merges Playwright blob reports and aggregate the results.',
+        },
+      };
+      ciTargetGroup.push(options.mergeReportsTargetName);
+    }
   }
 
   return { targets, metadata };
@@ -430,7 +415,9 @@ function normalizeOptions(options: PlaywrightPluginOptions): NormalizedOptions {
     ...options,
     targetName: options?.targetName ?? 'e2e',
     ciTargetName: options?.ciTargetName ?? 'e2e-ci',
-    mergeOutputs: options?.mergeOutputs ?? true,
+    mergeReports: options?.mergeReports ?? false,
+    mergeReportsTargetName:
+      options?.mergeReportsTargetName ?? 'e2e-ci--merge-reports',
     atomizedBlobReportOutputDir:
       options?.atomizedBlobReportOutputDir ?? '.nx-atomized-blob-reports',
   };
