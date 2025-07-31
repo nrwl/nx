@@ -99,11 +99,11 @@ Configure Docker applications in a separate release group called `apps` so it do
 }
 ```
 
-The `docker.skipVersionActions` option should be set to `true` to skip versioning for other tooling such as NPM or Rust crates.
+The `release.groups.apps.docker.skipVersionActions` option should be set to `true` to skip versioning for other tooling such as NPM or Rust crates.
 
-The `docker.projectsRelationship` is set to `independent` and `release.groups.apps.changelog` is set to `projectChangelogs` so that each application within the group maintains its own release cadence and changelog.
+The `release.groups.apps.projectsRelationship` is set to `independent` and `release.groups.apps.changelog` is set to `projectChangelogs` so that each application within the group maintains its own release cadence and changelog.
 
-The `docker.groupPreVersionCommand` is an optional command that runs before the versioning step, allowing you to perform any pre-version checks such as image verification before continuing the release.
+The `release.groups.apps.docker.groupPreVersionCommand` is an optional command that runs before the versioning step, allowing you to perform any pre-version checks such as image verification before continuing the release.
 
 ## Set Up App Repository
 
@@ -154,7 +154,7 @@ nx release --dockerVersionScheme=production --first-release --dry-run
 
 When you are ready, run the release command again without `--dry-run`:
 
-```
+```shell
 nx release --dockerVersionScheme=production --first-release
 ```
 
