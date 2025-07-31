@@ -4,7 +4,7 @@ export default {
     '^.+\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
-  maxWorkers: 2,
+  maxWorkers: 1,
   globals: {},
   globalSetup: '../utils/global-setup.ts',
   globalTeardown: '../utils/global-teardown.ts',
