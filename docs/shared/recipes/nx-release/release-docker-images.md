@@ -74,9 +74,7 @@ Configure Docker applications in a separate release group called `apps` so it do
 ```jsonc {% fileName="nx.json" %}
 {
   "release": {
-    "releaseTagPattern": {
-      "pattern": "release/{projectName}/{version}"
-    },
+    "releaseTagPattern": "release/{projectName}/{version}",
     "groups": {
       "apps": {
         "projects": ["api"],
