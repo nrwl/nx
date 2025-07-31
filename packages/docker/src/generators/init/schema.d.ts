@@ -4,5 +4,4 @@ export interface InitGeneratorSchema {
   updatePackageScripts?: boolean;
   skipFormat?: boolean;
   skipPackageJson?: boolean;
-  addPlugin?: boolean;
 }

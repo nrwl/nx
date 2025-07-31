@@ -214,6 +214,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       ...options,
       project: options.name,
       skipFormat: true,
+      skipDockerPlugin: options.skipDockerPlugin ?? false,
     });
 
     tasks.push(dockerTask);

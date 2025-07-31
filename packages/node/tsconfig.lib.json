@@ -16,6 +16,9 @@
   "include": ["**/*.ts", "**/*.json"],
   "references": [
     {
+      "path": "../docker/tsconfig.lib.json"
+    },
+    {
       "path": "../eslint/tsconfig.lib.json"
     },
     {
