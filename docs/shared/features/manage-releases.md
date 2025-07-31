@@ -31,7 +31,7 @@ The `nx release` command is used to run the release process from end to end. It 
 
 By default, when you run `nx release` it will prompt you for a version keyword (e.g. major, minor, patch) or a custom version number. The release command will then run the three phases of the release process in order: versioning, changelog generation, and publishing.
 
-When trying it out for the first time, need to pass the `--first-release` flag since there is no previous release to compare against for changelog purposes. It is strongly recommended to use the `--dry-run` flag to see what will be published in the first release without actually pushing anything to the registry.
+When trying it out for the first time, you need to pass the `--first-release` flag since there is no previous release to compare against for changelog purposes. It is strongly recommended to use the `--dry-run` flag to see what will be published in the first release without actually pushing anything to the registry.
 
 ```shell
 nx release --first-release --dry-run
