@@ -101,15 +101,15 @@ Configure Docker applications in a separate release group called `apps` so it do
 
 The `docker.skipVersionActions` option should be set to `true` to skip versioning for other tooling such as NPM or Rust crates.
 
-The `docker.projectsRelationship` is set to `independent` and `docker.changelog` is set to `projectChangelogs` so that each application maintains its own release cadence and changelog.
+The `docker.projectsRelationship` is set to `independent` and `release.groups.apps.changelog` is set to `projectChangelogs` so that each application within the group maintains its own release cadence and changelog.
 
 The `docker.groupPreVersionCommand` is an optional command that runs before the versioning step, allowing you to perform any pre-version checks such as image verification before continuing the release.
 
 ## Set Up App Repository
 
-Docker images have to be pushed to a repository, and this must be set on each application you want to release. This must be set as `release.repositoryName` in the project's `project.json `or `package.json` file.
+Docker images have to be pushed to a repository, and this must be set on each application you want to release. This must be set as `release.docker.repositoryName` in the project's `project.json `or `package.json` file.
 
-For example, from the previous `apps/api` Node.js application, you can set the `nx.release.repositoryName` in `package.json`.
+For example, from the previous `apps/api` Node.js application, you can set the `nx.release.docker.repositoryName` in `package.json`.
 
 ```json {% fileName="apps/api/package.json" highlightLines=["5-7"] %}
 {
@@ -117,7 +117,9 @@ For example, from the previous `apps/api` Node.js application, you can set the `
   "version": "0.0.1",
   "nx": {
     "release": {
-      "repositoryName": "acme/api"
+      "docker": {
+        "repositoryName": "acme/api"
+      }
     }
     // ...
   }
@@ -132,7 +134,9 @@ Or if you don't have a `package.json` (e.g. for non-JS projects), set it in `pro
   "root": "apps/api",
   "projectType": "application",
   "release": {
-    "repositoryName": "acme/api"
+    "docker": {
+      "repositoryName": "acme/api"
+    }
   }
   // ...
 }
@@ -154,7 +158,7 @@ When you are ready, run the release command again without `--dry-run`:
 nx release --dockerVersionScheme=production --first-release
 ```
 
-When prompted, choose to release the version.
+When prompted to publish the image, choose `yes`, or you can pass the `--yes` flag to skip the prompt.
 
 This will:
 
