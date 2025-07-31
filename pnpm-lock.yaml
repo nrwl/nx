@@ -2820,6 +2820,9 @@ importers:
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
+      '@nx/docker':
+        specifier: workspace:*
+        version: link:../docker
       '@nx/eslint':
         specifier: workspace:*
         version: link:../eslint
