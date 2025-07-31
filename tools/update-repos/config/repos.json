@@ -1,0 +1,19 @@
+{
+  "repositories": {
+    "nx": {
+      "repo": "nrwl/nx",
+      "branch": "master",
+      "packageManager": "pnpm"
+    },
+    "ocean": {
+      "repo": "nrwl/ocean",
+      "branch": "main",
+      "packageManager": "npm"
+    },
+    "nx-examples": {
+      "repo": "nrwl/nx-examples",
+      "branch": "master",
+      "packageManager": "yarn"
+    }
+  }
+}
