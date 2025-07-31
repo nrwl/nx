@@ -1,6 +1,16 @@
 distribute-on:
   default: auto linux-large, 1 linux-extra-large
 assignment-rules:
+  # e2e-release tests must run sequentially due to shared git state and publishing operations
+  - projects:
+      - e2e-release
+    targets:
+      - e2e-ci**
+    run-on:
+      - agent: linux-large
+        parallelism: 1
+
+  # All other e2e tests can run in parallel
   - targets:
       - e2e-ci**
     run-on:

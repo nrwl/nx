@@ -1,6 +1,7 @@
 import {
   checkFilesExist,
   cleanupProject,
+  getAvailablePort,
   newProject,
   runCLI,
   runCLIAsync,
@@ -87,9 +88,10 @@ describe('Build React applications and libraries with Rsbuild', () => {
 
   it('should support bundling with Rsbuild and Jest', async () => {
     const rsbuildApp = uniq('rsbuildapp');
+    const port = await getAvailablePort();
 
     runCLI(
-      `generate @nx/react:app apps/${rsbuildApp} --bundler=rsbuild --unitTestRunner=jest --no-interactive --linter=eslint`
+      `generate @nx/react:app apps/${rsbuildApp} --port=${port} --bundler=rsbuild --unitTestRunner=jest --no-interactive --linter=eslint`
     );
 
     const appTestResults = await runCLIAsync(`test ${rsbuildApp}`);

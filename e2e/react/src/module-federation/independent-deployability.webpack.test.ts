@@ -1,5 +1,6 @@
 import {
   cleanupProject,
+  getAvailablePort,
   killProcessAndPorts,
   newProject,
   runCommandUntil,
@@ -310,12 +311,12 @@ describe('Independent Deployability', () => {
   it('should support host and remote with library type var', async () => {
     const shell = uniq('shell');
     const remote = uniq('remote');
+    const shellPort = await getAvailablePort();
 
     runCLI(
       `generate @nx/react:host ${shell} --remotes=${remote} --bundler=webpack --e2eTestRunner=cypress --no-interactive --skipFormat`
     );
 
-    const shellPort = readPort(shell);
     const remotePort = readPort(remote);
 
     // update host and remote to use library type var
