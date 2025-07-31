@@ -19,7 +19,7 @@ This article is part of the Java Week series:
 
 {% /callout %}
 
-We've exlored how you can add a Java app to an existing Nx workspace, but just getting the code in the same place doesn't really help _ship_ our code. With JavaScript apps, you simple need to have a static hosting provider or have a platform that can run node. But Java? Where do you even begin? Let's look at how we can get our Java backend deployed and automate it using Nx. We'll also get a sneak peek at a new plugin we've been working on.
+We've explored how you can add a Java app to an existing Nx workspace, but just getting the code in the same place doesn't really help _ship_ our code. With JavaScript apps, you simple need to have a static hosting provider or have a platform that can run node. But Java? Where do you even begin? Let's look at how we can get our Java backend deployed and automate it using Nx. We'll also get a sneak peek at a new plugin we've been working on.
 
 ## The Challenge: From Monorepo to Production
 
@@ -143,7 +143,7 @@ With the Docker image published, deployment becomes as simple as pointing any pr
 
 The Docker plugin is still experimental, but its integration into Nx’s existing build and release workflows makes deploying backends seamless. It takes care of the tedious steps, allowing you to focus on building features rather than managing deployment scripts.
 
-If you're interested in know more, let us know! Join our community Discord and be on the look out for the official release of the Docker plugin.
+If you're interested in knowing more, let us know! Join our community Discord and be on the look out for the official release of the Docker plugin.
 
 ---
 
