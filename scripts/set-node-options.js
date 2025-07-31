@@ -21,7 +21,7 @@ if (args.length === 0) {
   process.exit(1);
 }
 
-const child = spawn(args.join(' '), [], {
+const child = spawn(args[0], args.slice(1), {
   stdio: 'inherit',
   shell: true,
   env: process.env,
